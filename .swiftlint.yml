@@ -14,10 +14,13 @@ opt_in_rules:
   - empty_count
   - explicit_init
   - first_where
-  - sorted_imports
   - toggle_bool
   - vertical_whitespace_closing_braces
   - vertical_whitespace_opening_braces
+
+# sorted_imports is intentionally NOT enabled: it conflicts with
+# SwiftFormat's --importgrouping testable-bottom rule. SwiftFormat
+# owns import ordering.
 
 analyzer_rules:
   - unused_import
