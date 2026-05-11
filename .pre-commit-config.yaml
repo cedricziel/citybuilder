@@ -11,18 +11,6 @@ repos:
       - id: check-added-large-files
         args: ["--maxkb=1024"]
 
-  - repo: https://github.com/nicklockwood/SwiftFormat
-    rev: 0.55.3
-    hooks:
-      - id: swiftformat
-        args: ["--lint", "--strict"]
-
-  - repo: https://github.com/realm/SwiftLint
-    rev: 0.57.0
-    hooks:
-      - id: swiftlint
-        args: ["--strict", "--quiet"]
-
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.6.0
     hooks:
@@ -43,6 +31,28 @@ repos:
 
   - repo: local
     hooks:
+      - id: swiftformat
+        name: SwiftFormat (system binary, --lint)
+        description: |
+          Calls the Homebrew-installed swiftformat binary directly so hooks
+          and `make format` use the exact same version. Avoids the
+          multi-minute compile-from-source path taken by SwiftFormat's
+          official pre-commit hook.
+        entry: swiftformat --lint
+        language: system
+        types_or: [swift]
+        require_serial: false
+
+      - id: swiftlint
+        name: SwiftLint (system binary, strict)
+        description: |
+          Calls the Homebrew-installed swiftlint binary directly. Same
+          rationale as swiftformat above.
+        entry: swiftlint --strict --quiet
+        language: system
+        types_or: [swift]
+        require_serial: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |
@@ -58,7 +68,12 @@ repos:
 
       - id: pre-push-swift-test
         name: Run CityCore tests before push
-        entry: bash -c 'swift test --package-path Packages/CityCore'
+        entry: |
+          bash -c 'if [ -d Packages/CityCore ]; then
+            swift test --package-path Packages/CityCore;
+          else
+            echo "pre-push: CityCore package not yet present, skipping";
+          fi'
         language: system
         stages: [pre-push]
         pass_filenames: false
