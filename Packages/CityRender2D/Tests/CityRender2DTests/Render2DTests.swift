@@ -45,11 +45,11 @@ func scenarioSnapshotDrivenRendering() {
         return
     }
     let desired = SnapshotReconciler.desiredSprites(in: snap, xRange: xRange, yRange: yRange)
-    // 16 grass tiles, no occupied markers.
+    // 16 grass tiles, no buildings yet.
     let terrainCount = desired.count(where: { if case .terrain = $0.kind { true } else { false } })
-    let markerCount = desired.count(where: { $0.kind == .occupiedMarker })
+    let buildingCount = desired.count(where: { if case .building = $0.kind { true } else { false } })
     #expect(terrainCount == 16)
-    #expect(markerCount == 0)
+    #expect(buildingCount == 0)
 }
 
 // MARK: - Culling

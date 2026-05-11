@@ -26,6 +26,31 @@ public final class IsoWorldScene: SKScene {
         camera = cameraNode
     }
 
+    #if canImport(UIKit)
+    override public func touchesEnded(_ touches: Set<UITouch>, with _: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        dispatchTap(at: location)
+    }
+
+    #elseif canImport(AppKit)
+    override public func mouseUp(with event: NSEvent) {
+        let location = event.location(in: self)
+        dispatchTap(at: location)
+    }
+    #endif
+
+    private func dispatchTap(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot() else { return }
+        if let intent = InputTranslator.tapIntent(
+            atScreenPoint: sceneLocation,
+            mapWidth: snapshot.mapWidth,
+            mapHeight: snapshot.mapHeight
+        ) {
+            intentSink?(intent)
+        }
+    }
+
     override public func update(_: TimeInterval) {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
@@ -75,8 +100,8 @@ public final class IsoWorldScene: SKScene {
         switch spec.kind {
         case let .terrain(kind):
             return makeTerrainNode(kind: kind)
-        case .occupiedMarker:
-            return makeOccupiedMarker()
+        case let .building(kind, state, footprint):
+            return makeBuildingNode(kind: kind, state: state, footprint: footprint)
         }
     }
 
@@ -90,14 +115,45 @@ public final class IsoWorldScene: SKScene {
         return node
     }
 
-    private func makeOccupiedMarker() -> SKNode {
-        let radius = IsoMath.tileHeight / 3
-        let node = SKShapeNode(circleOfRadius: radius)
-        node.fillColor = SKColor(red: 0.95, green: 0.85, blue: 0.35, alpha: 1)
-        node.strokeColor = SKColor.black.withAlphaComponent(0.3)
-        node.lineWidth = 0.5
+    /// Draw a building as a single diamond spanning its footprint. Real
+    /// per-kind art lands later; this placeholder is shaped and colored
+    /// so the four-pillar artefact (one marker per occupied tile) is
+    /// gone and the player can tell buildings apart.
+    private func makeBuildingNode(kind: BuildingKind, state: BuildingState, footprint: Footprint) -> SKNode {
+        let path = makeBuildingDiamondPath(footprint: footprint)
+        let node = SKShapeNode(path: path)
+        node.fillColor = BuildingPalette.color(for: kind)
+        if state == .constructing {
+            node.fillColor = node.fillColor.withAlphaComponent(0.55)
+        }
+        node.strokeColor = SKColor.black.withAlphaComponent(0.5)
+        node.lineWidth = 1.0
         node.zPosition = 10
         return node
+    }
+
+    /// Iso projection of a rectangular footprint anchored at (0,0) where
+    /// (0,0) is the anchor tile in scene coordinates. The four corners
+    /// project to a parallelogram which we connect with a closed path.
+    private func makeBuildingDiamondPath(footprint: Footprint) -> CGPath {
+        let halfWidth = IsoMath.tileWidth / 2
+        let halfHeight = IsoMath.tileHeight / 2
+        let dx = CGFloat(footprint.width)
+        let dy = CGFloat(footprint.height)
+        // Project the four corners of the footprint (col, row) into screen
+        // space using the same formula as IsoMath.screenPoint(forTile:),
+        // expressed relative to the anchor tile (0,0).
+        let top = CGPoint(x: 0, y: halfHeight)
+        let right = CGPoint(x: dx * halfWidth, y: -dx * halfHeight + halfHeight)
+        let bottom = CGPoint(x: (dx - dy) * halfWidth, y: -(dx + dy) * halfHeight + halfHeight)
+        let left = CGPoint(x: -dy * halfWidth, y: -dy * halfHeight + halfHeight)
+        let path = CGMutablePath()
+        path.move(to: top)
+        path.addLine(to: right)
+        path.addLine(to: bottom)
+        path.addLine(to: left)
+        path.closeSubpath()
+        return path
     }
 
     private func makeDiamondPath() -> CGPath {
@@ -130,6 +186,19 @@ public enum TerrainPalette {
     }
 }
 
+public enum BuildingPalette {
+    public static func color(for kind: BuildingKind) -> SKColor {
+        switch kind {
+        case .house: SKColor(red: 0.78, green: 0.55, blue: 0.32, alpha: 1)
+        case .warehouse: SKColor(red: 0.55, green: 0.45, blue: 0.35, alpha: 1)
+        case .road: SKColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1)
+        case .lumberjackHut: SKColor(red: 0.45, green: 0.30, blue: 0.18, alpha: 1)
+        case .sawmill: SKColor(red: 0.65, green: 0.45, blue: 0.22, alpha: 1)
+        case .townCenter: SKColor(red: 0.85, green: 0.60, blue: 0.25, alpha: 1)
+        }
+    }
+}
+
 #if canImport(SwiftUI)
 /// SwiftUI host for the snapshot-driven iso scene. App shells construct
 /// this with a closure that yields the current snapshot.
@@ -137,12 +206,20 @@ public enum TerrainPalette {
 public struct IsoWorldView: View {
     @State private var scene: IsoWorldScene
 
-    public init(snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?) {
+    public init(
+        snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
+        intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil
+    ) {
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
         prepared.scaleMode = .resizeFill
         let bridge = SnapshotProviderBridge(provider: snapshotProvider)
         prepared.dataSource = bridge
+        if let intentSink {
+            prepared.intentSink = { intent in
+                Task { @MainActor in intentSink(intent) }
+            }
+        }
         // Retain the bridge by parking it on the scene.
         prepared.userData = ["__snapshotBridge": bridge]
         _scene = State(initialValue: prepared)

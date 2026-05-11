@@ -7,7 +7,10 @@ import Foundation
 public struct SpriteSpec: Hashable, Sendable {
     public enum Kind: Hashable, Sendable {
         case terrain(TerrainType)
-        case occupiedMarker
+        /// One sprite per building, anchored at the building's anchor tile.
+        /// The renderer is responsible for drawing the building large
+        /// enough to cover its footprint.
+        case building(kind: BuildingKind, state: BuildingState, footprint: Footprint)
     }
 
     public let coord: TileCoordinate
@@ -38,10 +41,17 @@ public enum SnapshotReconciler {
                 let coord = TileCoordinate(x: tileX, y: tileY)
                 guard let terrainHere = snapshot.terrain(at: coord) else { continue }
                 result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere)))
-                if snapshot.occupiedTiles[coord] != nil {
-                    result.insert(SpriteSpec(coord: coord, kind: .occupiedMarker))
-                }
             }
+        }
+        // Emit one sprite per building (at its anchor) when its anchor is
+        // inside the visible range. Multi-tile buildings draw as a single
+        // visual unit so the "four pillars" artefact goes away.
+        for building in snapshot.buildings.values where xRange.contains(building.anchor.x) && yRange.contains(building.anchor.y) {
+            let footprint = BuildingCatalog.spec(for: building.kind).footprint
+            result.insert(SpriteSpec(
+                coord: building.anchor,
+                kind: .building(kind: building.kind, state: building.state, footprint: footprint)
+            ))
         }
         return result
     }
