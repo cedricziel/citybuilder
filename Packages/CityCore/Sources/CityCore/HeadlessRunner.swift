@@ -35,7 +35,8 @@ public enum HeadlessRunner {
 
     /// Run the simulation for `ticks` ticks, optionally starting from a saved
     /// world at `loadFrom`. When `loadFrom` is nil, the world starts as a
-    /// fresh `World.newGame()`.
+    /// fresh `World.newGame()`. Discards per-tick events — opt in to event
+    /// collection with `runCollectingEvents` instead.
     public static func run(loadFrom path: String?, ticks: Int) throws -> Summary {
         guard ticks >= 0 else { throw RunError.negativeTicks(value: ticks) }
 
@@ -43,7 +44,30 @@ public enum HeadlessRunner {
         for _ in 0 ..< ticks {
             world.tick()
         }
-        return Summary(
+        return summary(for: world)
+    }
+
+    /// Variant that accumulates every per-tick `WorldEvent` across the run.
+    /// Used by the CLI's `--events-out FILE` flag and by integration tests
+    /// that want to assert on the event log. `WorldEvent` is not Codable;
+    /// callers are expected to perform their own presentation-side encoding
+    /// (e.g. the CLI's `WorldEventJSON` helper).
+    public static func runCollectingEvents(
+        loadFrom path: String?,
+        ticks: Int
+    ) throws -> (summary: Summary, events: [WorldEvent]) {
+        guard ticks >= 0 else { throw RunError.negativeTicks(value: ticks) }
+
+        var world = try loadWorld(from: path)
+        var allEvents: [WorldEvent] = []
+        for _ in 0 ..< ticks {
+            allEvents.append(contentsOf: world.tick().events)
+        }
+        return (summary(for: world), allEvents)
+    }
+
+    private static func summary(for world: World) -> Summary {
+        Summary(
             tickCount: world.tickCount,
             simulatedTime: world.simulatedTime,
             mapWidth: world.mapWidth,

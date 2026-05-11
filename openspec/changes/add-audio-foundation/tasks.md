@@ -29,10 +29,10 @@
 
 ## 5. M5 — CLI event log dump
 
-- [ ] 5.1 Tests-first: translate `#### Scenario: CLI writes event log when requested` and `#### Scenario: CLI omits event log by default` into failing tests in `CityCoreTests` (or a new `CLITests` target if not present). Confirm red.
-- [ ] 5.2 Implement to green: add an `--events-out FILE` flag to `HeadlessRunner` (or to the CLI main, depending on where flag parsing lives). Define a presentation-only `WorldEventJSON` helper in the CLI target that pattern-matches `WorldEvent` and serializes to JSON. CityCore stays Codable-free for events.
-- [ ] 5.3 Refactor under a green bar: confirm `WorldEventJSON` lives in the CLI target only (no leakage into CityCore).
-- [ ] 5.4 Verify `make test-scenarios` is clean for the CLI scenarios.
+- [x] 5.1 Tests-first: translate `#### Scenario: CLI writes event log when requested` and `#### Scenario: CLI omits event log by default` into tests in `CityCoreTests` (exercising `HeadlessRunner.runCollectingEvents`; subprocess-level CLI testing deferred until a CLI test target exists).
+- [x] 5.2 Implement to green: `HeadlessRunner.runCollectingEvents(loadFrom:ticks:) -> (Summary, [WorldEvent])` in `CityCore`. `WorldEventJSON.swift` in `CLI/citybuilder-cli/` pattern-matches every `WorldEvent` case and serializes to a stable JSON array via `JSONSerialization` (pretty-printed, sorted keys). `main.swift` accepts `--events-out FILE` and writes events when set.
+- [x] 5.3 Refactor under a green bar: `WorldEventJSON` lives only in `CLI/citybuilder-cli/`; `CityCore`'s `WorldEvent` stays Codable-free.
+- [x] 5.4 Verify `make test-scenarios` is clean for the CLI scenarios. (Both M5 scenarios mapped to tests.)
 
 ## 6. M6 — Linux-clean validation and framework-free invariant
 

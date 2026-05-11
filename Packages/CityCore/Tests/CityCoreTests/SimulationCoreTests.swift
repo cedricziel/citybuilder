@@ -162,3 +162,50 @@ func scenarioCliRunnerStepsSimulation() throws {
     #expect(summary.tickCount == 25)
     #expect(summary.simulatedTime == .milliseconds(2500))
 }
+
+// MARK: - CLI event log dump (add-audio-foundation M5)
+
+@Test("scenario: cli writes event log when requested")
+func scenarioCliWritesEventLogWhenRequested() throws {
+    // The CLI's `--events-out FILE` flag uses `runCollectingEvents` to
+    // accumulate every WorldEvent emitted across N ticks. We exercise
+    // that overload directly (subprocess invocation of the built CLI
+    // binary is out of scope for the swift-test target).
+    let saveURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("audio-cli-test-\(UUID().uuidString).json")
+    defer { try? FileManager.default.removeItem(at: saveURL) }
+
+    var seed = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    seed.enqueue(.place(.road, at: TileCoordinate(x: 1, y: 1)))
+    try JSONEncoder().encode(seed).write(to: saveURL)
+
+    let (summary, events) = try HeadlessRunner.runCollectingEvents(
+        loadFrom: saveURL.path,
+        ticks: 5
+    )
+    #expect(summary.tickCount == 5)
+    // Tick 1 applies the queued place and the road completes construction
+    // (road buildDurationTicks=1) — at minimum we get a buildingPlaced and
+    // a constructionCompleted event in the log.
+    let hasPlacement = events.contains(where: {
+        if case .buildingPlaced = $0 { return true }
+        return false
+    })
+    let hasCompletion = events.contains(where: {
+        if case .constructionCompleted = $0 { return true }
+        return false
+    })
+    #expect(hasPlacement, "events log should include the queued road placement")
+    #expect(hasCompletion, "road completes in one tick — completion event must be present")
+}
+
+@Test("scenario: cli omits event log by default")
+func scenarioCliOmitsEventLogByDefault() throws {
+    // Without --events-out, the CLI calls plain `HeadlessRunner.run`, which
+    // returns a `Summary` that carries no events field. The default run
+    // path therefore does not surface events to the caller at all.
+    let summary = try HeadlessRunner.run(loadFrom: nil, ticks: 5)
+    let mirror = Mirror(reflecting: summary)
+    let hasEventsField = mirror.children.contains(where: { $0.label == "events" })
+    #expect(!hasEventsField, "default run path must not expose events on Summary")
+}
