@@ -59,10 +59,10 @@
 
 ## 9. M9 — Cue dispatch and AudioCoordinator
 
-- [ ] 9.1 Tests-first: translate `#### Scenario: Bound event plays its cue`, `#### Scenario: Multiple cues pick one at random`, `#### Scenario: Coordinator dispatches every event`, and `#### Scenario: Coordinator is main-actor safe` into failing tests. Confirm red.
-- [ ] 9.2 Implement to green: `AudioCoordinator.consume(events:)` walks the array, looks up bindings, and dispatches to the engine. For one-shots, allocate a transient `AVAudioPlayerNode` per cue or pool a small set. For multiple bindings on one event, pick one with a non-deterministic RNG (the audio layer's, not CityCore's).
-- [ ] 9.3 Tests-first: translate `#### Scenario: Repeat start does not stack`, `#### Scenario: Stop signal halts the loop`, and `#### Scenario: Phase 1 has no loop bindings` into failing tests. Confirm red.
-- [ ] 9.4 Implement to green: loop lifecycle keyed by `EntityID`; map `[EntityID: AVAudioPlayerNode]` for active loops. Loops are inert in Phase 1 bindings, but the machinery is in place.
+- [x] 9.1 Tests for `bound event plays its cue`, `unbound event is silent`, `multiple cues pick one at random`, `coordinator dispatches every event`, `coordinator is main-actor safe`, and `deleted file plays silently` in `AudioCoordinatorTests.swift`.
+- [x] 9.2 `AudioCoordinator` consumes `[WorldEvent]`, looks up bindings, and dispatches via an injected `CueDispatcher` closure (one-shot or loop). Multi-cue events pick one at random from the injected RNG. The dispatcher closure isolates AVAudioPlayerNode lifecycle from the coordinator — production wires it in M11; tests pass recorder closures.
+- [x] 9.3 Tests for `repeat start does not stack` and `stop signal halts the loop`. (`phase 1 has no loop bindings` already mapped in M8.)
+- [x] 9.4 Loop lifecycle keyed by `EntityID`: `consume(events:)` is idempotent for loop cues; explicit `stopLoop(for:)` removes the entity from `activeLoops`. The future engine-backed wiring (M11) will hold the actual `[EntityID: AVAudioPlayerNode]` map.
 
 ## 10. M10 — Music shuffle policy
 
