@@ -18,8 +18,13 @@ public struct CityRootView: View {
         ZStack(alignment: .top) {
             session.worldView
                 .ignoresSafeArea()
-                .gesture(panGesture)
-                .gesture(zoomGesture)
+                // simultaneousGesture (vs .gesture) so the underlying
+                // SpriteKit scene still receives touch / mouse events for
+                // tap-tile selection. A bare .gesture(DragGesture(...))
+                // claims the touch sequence and starves the scene's
+                // touchesEnded / mouseUp handlers.
+                .simultaneousGesture(panGesture)
+                .simultaneousGesture(zoomGesture)
             VStack {
                 HUDFrameView(viewModel: session.hud)
                 BuildPaletteView { kind in
