@@ -1,0 +1,98 @@
+## 1. M1 — Fixed-point math + determinism CI gate (CityCore, no game changes)
+
+- [ ] 1.1 Tests-first: translate every `#### Scenario:` under `Requirement: Fixed-point numeric type` and `Requirement: 2D vector type` in `specs/fixed-point-math/spec.md` into failing tests in `CityCoreTests/FixedTests.swift`. Confirm red.
+- [ ] 1.2 Implement to green: introduce `Fixed` (`Int32` raw, scale 4096) with `+`, `-`, `*`, `/`, comparison, `Codable`, `Hashable`, `Sendable`. Introduce `Fixed2D` with vector ops and `distance(to:)`.
+- [ ] 1.3 Tests-first: translate every `#### Scenario:` under `Requirement: Trigonometric lookup tables` into failing tests. Confirm red.
+- [ ] 1.4 Implement to green: generate the 1024-entry sin/cos LUT as `let` static data, implement `Fixed.sin`, `.cos`, `.atan2` via lookup + interpolation.
+- [ ] 1.5 Add SwiftLint custom rule `tick_float_ban` and tests: translate every `#### Scenario:` under `Requirement: Float ban in tick-time code` into rule unit tests. Confirm rule fires on positive cases and stays silent on negatives.
+- [ ] 1.6 Add Linux CI matrix entry that builds `CityCore` via the Swift Linux toolchain. Wire the cross-platform determinism gate: a fixture archipelago `World`, 6000 ticks, JSON-encode, compare bytes between macOS and Linux job artifacts.
+- [ ] 1.7 Verify `make test-scenarios` is clean for all `fixed-point-math` scenarios.
+
+## 2. M2 — Continuous-position entity scaffolding (CityCore)
+
+- [ ] 2.1 Tests-first: translate `#### Scenario: Ship has a single canonical position type`, `#### Scenario: Ship cargo is bounded by capacity`, `#### Scenario: Snapshot inclusion / Ship resumes mid-segment after load`, and `#### Scenario: Docked ship resumes manifest progress after load` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
+- [ ] 2.2 Implement to green: add `Ship` and `Route` component arrays to the `World` ECS-light storage. Add `ShipState` and `RouteState` enums. Make every new type `Codable`.
+- [ ] 2.3 Implement to green: extend `World` Codable to include `ships` and `routes`. Verify round-trip preserves all fields.
+- [ ] 2.4 Verify `make test-scenarios` is clean for the M2 scenarios.
+
+## 3. M3 — Route entity, validation, manifest verbs (CityCore, headless)
+
+- [ ] 3.1 Tests-first: translate every `#### Scenario:` under `Requirement: Route entity`, `Requirement: Waypoint kinds`, and `Requirement: Route validation` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
+- [ ] 3.2 Implement to green: add `Waypoint` enum, `Route` struct with `waypoints`, `manifest`, `speed`, `state`. Implement `validate(route:) -> ValidationResult` with sub-tile segment sampling (step ≤ 0.25 tile).
+- [ ] 3.3 Tests-first: translate every `#### Scenario:` under `Requirement: Manifest actions` and `Requirement: Route lifecycle commands` into failing tests. Confirm red.
+- [ ] 3.4 Implement to green: add `ManifestAction` enum, command types `CreateRoute`, `EditRoute`, `DeleteRoute`, `AssignShipToRoute`, `UnassignShip`. Implement command validation and application at tick boundary.
+- [ ] 3.5 Verify `make test-scenarios` is clean for the M3 scenarios.
+
+## 4. M4 — Port and Shipyard buildings + goods-buffer generalization (CityCore)
+
+- [ ] 4.1 Tests-first: translate every `#### Scenario:` under `Requirement: Shore-placement rule` and `Requirement: Per-tile face designation` from `specs/buildings-and-construction/spec.md` into failing tests. Confirm red.
+- [ ] 4.2 Implement to green: extend placement validator with `shorePlacement` rule and `landFace`/`seaFace` tile classification. Add `shore_requires_land_tile` and `shore_requires_water_tile` reason codes.
+- [ ] 4.3 Tests-first: translate every `#### Scenario:` under `Requirement: Port building kind`, `Requirement: Port acts as a goods buffer`, `Requirement: Port road connectivity`, and `Requirement: Ship anchor occupancy` from `specs/port-and-shipyard/spec.md` into failing tests. Confirm red.
+- [ ] 4.4 Implement to green: add `Port` building kind with default 2×3 footprint, opting into shore-placement with minima (≥1 land, ≥1 water). Implement `shipAnchor` reservation and anchor occupancy.
+- [ ] 4.5 Tests-first: translate every `#### Scenario:` under `Requirement: Goods buffer storage`, `Requirement: Carrier entities`, and `Requirement: Carrier movement` from `specs/warehouses-and-logistics/spec.md` into failing tests. Confirm red.
+- [ ] 4.6 Implement to green: generalize warehouse storage and carrier targeting into a `GoodsBuffer` abstraction shared by `Warehouse` and `Port`. Add deterministic tie-breaking by `EntityID`.
+- [ ] 4.7 Tests-first: translate every `#### Scenario:` under `Requirement: Shipyard building kind`, `Requirement: Ship default class`, and `Requirement: Port and shipyard demolition` into failing tests. Confirm red.
+- [ ] 4.8 Implement to green: add `Shipyard` producer building emitting `Ship` entities. Wire demolition to break dependent routes.
+- [ ] 4.9 Verify `make test-scenarios` is clean for all M4 scenarios.
+
+## 5. M5 — Ship entity, per-tick integration, state machine (CityCore)
+
+- [ ] 5.1 Tests-first: translate every `#### Scenario:` under `Requirement: Ship state machine`, `Requirement: Per-tick ship integration`, `Requirement: Dock timeout policy`, and `Requirement: Multiple ships per route` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
+- [ ] 5.2 Implement to green: add `tickShips(World, inout WorldDelta)` system. Integrate position using `Fixed` arithmetic only; update heading via `Fixed.atan2`. Implement arrival-epsilon detection and waypoint advancement.
+- [ ] 5.3 Implement to green: implement the four-state machine (`.idle`, `.sailing`, `.docked`, `.returning`) with all transitions specified in the spec. Implement dock timeout with catalog-tuned default (3000 ticks = 5 simulated minutes).
+- [ ] 5.4 Implement to green: implement manifest execution at docked state including capacity caps, port-stock caps, declared order semantics, and the "skip on timeout" behavior.
+- [ ] 5.5 Verify the determinism CI gate stays green with the new ship system in the scenario fixture.
+- [ ] 5.6 Verify `make test-scenarios` is clean for all M5 scenarios.
+
+## 6. M6 — World layout, island metadata, climate (CityCore)
+
+- [ ] 6.1 Tests-first: translate every `#### Scenario:` under `Requirement: World layout`, `Requirement: Island metadata`, and `Requirement: Climate band metadata` from `specs/world-terrain/spec.md` into failing tests. Confirm red.
+- [ ] 6.2 Implement to green: add `WorldLayout` enum (`.singleIsland`, `.archipelago`), seeded generator for `.archipelago` (hand-authored seeded layout — no procgen variety needed for v0; one deterministic ~300×300 layout is sufficient).
+- [ ] 6.3 Implement to green: derive `Island` list as connected components of non-water buildable tiles; assign stable `IslandID`; cache and invalidate only on terrain change.
+- [ ] 6.4 Implement to green: assign `climate` per island via the north/south rule. Persist with `World`.
+- [ ] 6.5 Verify `make test-scenarios` is clean for all M6 scenarios.
+
+## 7. M7 — Save schema v2 + migration framework (CityPersistence)
+
+- [ ] 7.1 Tests-first: translate every `#### Scenario:` under `Requirement: Codable snapshot save format`, `Requirement: Versioned migration pipeline`, `Requirement: v1→v2 migration semantics`, and `Requirement: Migration fixture coverage` from `specs/persistence-save-load/spec.md` into failing tests. Confirm red.
+- [ ] 7.2 Implement to green: bump write version to 2. Add `Migration` protocol + ordered `MigrationRegistry`. Implement `Migration_v1_to_v2` with the six transformations in the spec.
+- [ ] 7.3 Author and check in a v1 fixture save at `Tests/CityPersistenceTests/Fixtures/saves/v1_single_island.json` representing an MVP game with at least 1 warehouse, 1 production chain mid-run, and ≥0 carriers in flight.
+- [ ] 7.4 Add a CI step that fails if any new write version is added without a corresponding migration and fixture.
+- [ ] 7.5 Verify `make test-scenarios` is clean for all M7 scenarios.
+
+## 7.5 M7.5 — Sprite generation: ship + port + shipyard PNGs (scripts/generate-sprites.swift)
+
+**Prerequisite**: `add-sprite-atlas-layout` archived. New PNGs are written directly into `Resources/Units.atlas/` and `Resources/Buildings.atlas/`.
+
+- [ ] 7.5.1 Tests-first: translate every `#### Scenario:` under `Requirement: Ship sprite inventory`, `Requirement: Shore-building sprite inventory`, and `Requirement: Sprite catalog declares new content` from `specs/sprite-asset-pipeline/spec.md` into failing tests in `CityRender2DTests`. Confirm red.
+- [ ] 7.5.2 Extend `scripts/generate-sprites.swift` with `drawShipHull(facing:frame:)`, `drawMastAndSail(facing:frame:)`, and `drawWake(facing:frame:)` helpers. Output 16 PNGs to `Resources/Units.atlas/ship-<facing>-<frame>.png` for facings {n, ne, e, se, s, sw, w, nw} × frames {0, 1}.
+- [ ] 7.5.3 Extend `scripts/generate-sprites.swift` with `drawPort(orientation:state:frame:)`. Output 24 PNGs to `Resources/Buildings.atlas/building-port-<orientation>[-<state>-<frame>].png` for orientations {n, s, e, w} × {1 idle + 3 constructing + 2 operational}.
+- [ ] 7.5.4 Extend `scripts/generate-sprites.swift` with `drawShipyard(orientation:state:frame:)`. Output 24 PNGs to `Resources/Buildings.atlas/building-shipyard-<orientation>[-<state>-<frame>].png` for the same matrix as Port.
+- [ ] 7.5.5 Extend the sprite catalog declared in CityRender2D to include all 64 new sprite names so the asset-presence check from atlas-layout fires if any are missing.
+- [ ] 7.5.6 Verify `make test-scenarios` is clean for all 7.5 scenarios.
+
+## 8. M8 — Renderer: ship facing-snap + route polylines (CityRender2D)
+
+- [ ] 8.1 Tests-first: translate every `#### Scenario:` under `Requirement: Ship facing selection`, `Requirement: Ship sprite rendering`, `Requirement: Shore-building orientation derivation`, and `Requirement: Off-screen ship culling` from `specs/rendering-2_5d/spec.md` into failing tests (test the projection math, facing-quantization math, orientation-derivation math, and culling math directly). Confirm red.
+- [ ] 8.2 Implement to green: add `ShipsLayer` SKNode container. Reconcile ship sprites against snapshots. Position via iso projection of `Fixed2D` with sub-tile interpolation between snapshots. Texture selected from 8 pre-rendered facings via `nearestFacing(heading:)`; texture-swap on facing change; `zRotation` is always 0.
+- [ ] 8.3 Implement to green: extend the existing visible-range culling pattern to ship sprites.
+- [ ] 8.4 Implement to green: for shore buildings (Port, Shipyard), derive orientation from `landFace`/`seaFace` tile classification (sim-side) and select the matching `-<orientation>-` sprite variant.
+- [ ] 8.5 Tests-first: translate every `#### Scenario:` under `Requirement: Route polyline overlay` into failing tests (projection + ordering tests; the SKShapeNode tree is not directly asserted). Confirm red.
+- [ ] 8.6 Implement to green: add `RoutesLayer` SKNode between terrain and buildings layers. Draw a polyline only for the currently selected route OR while route-authoring mode is active.
+- [ ] 8.7 Verify `make test-scenarios` is clean for all M8 scenarios applicable to render math.
+
+## 9. M9 — UI: route-authoring mode + manifest editor (CityUI)
+
+- [ ] 9.1 Tests-first: translate every `#### Scenario:` under `Requirement: Route-authoring input mode` from `specs/rendering-2_5d/spec.md` into view-model tests in `CityUITests/RouteAuthoringTests.swift`. Confirm red.
+- [ ] 9.2 Implement to green: introduce `RouteAuthoringViewModel` with `inProgressWaypoints`, `validationState`, `tapHandler(tileOrBuilding:)`, `commit()`, `cancel()`. Wire to `IsoWorldScene` taps via a delegate.
+- [ ] 9.3 Implement to green: SwiftUI overlay UI (Enter mode / Cancel / Commit buttons + per-segment validation feedback) and a manifest editor sheet for each `.port` waypoint with two action verbs.
+- [ ] 9.4 Implement to green: route-list view that shows all routes, allows selection (drives the polyline overlay), and exposes "Edit", "Pause/Resume", "Delete" affordances mapped to the existing command set.
+- [ ] 9.5 Verify `make test-scenarios` is clean for all M9 scenarios.
+
+## 10. M10 — Polish, performance, full determinism sweep
+
+- [ ] 10.1 Verify the determinism CI gate is green across all systems introduced by this change. Add a longer (60-minute, 36000-tick) determinism fixture to catch drift that only appears at scale.
+- [ ] 10.2 Profile a maxed-out archipelago game (10+ ports, 30+ ships, many active routes) and confirm tick budget stays under 5 ms on iPhone baseline (per MVP performance budget).
+- [ ] 10.3 Profile render frame budget at 60 fps on iPad baseline with route polylines and ship sprites active. Cull aggressively if over budget.
+- [ ] 10.4 Final `make test-scenarios` sweep: every `#### Scenario:` from all six spec files in this change maps to at least one passing test.
+- [ ] 10.5 Final `make lint && make format` clean.
