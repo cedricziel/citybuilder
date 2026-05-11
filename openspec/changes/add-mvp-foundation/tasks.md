@@ -20,7 +20,7 @@
 
 ## 2. M1 — `CityCore` simulation skeleton
 
-- [ ] 2.1 Tests-first: translate every `#### Scenario:` from `specs/simulation-core/spec.md` and `specs/world-terrain/spec.md` into failing `swift-testing` tests in `CityCoreTests`. Confirm `make test` is red.
+- [x] 2.1 Tests-first: translate every `#### Scenario:` from `specs/simulation-core/spec.md` and `specs/world-terrain/spec.md` into failing `swift-testing` tests in `CityCoreTests`. Confirm `make test` is red.
 - [ ] 2.2 Implement to green: `EntityID`, dense component storage, and a fully `Codable` `World` struct
 - [ ] 2.3 Implement to green: `Tick` loop at fixed 100 ms with seeded RNG persisted in `World`
 - [ ] 2.4 Implement to green: `Command` enum and an input queue applied at tick boundaries
