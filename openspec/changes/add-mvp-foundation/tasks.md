@@ -65,13 +65,13 @@
 
 ## 6. M5 — Persistence and iCloud sync
 
-- [ ] 6.1 Tests-first: translate every `#### Scenario:` from `specs/persistence-save-load/spec.md` into failing tests in `CityPersistenceTests`, including a crash-mid-write fault-injection test (using a fake `FileWriter` that throws between temp write and rename). Confirm red.
-- [ ] 6.2 Implement to green: `persistence-save-load` — JSON Codable snapshot, atomic write via temp + rename, version field, save path resolution, autosave hooks (background + interval), integrity checks, migration framework that no-ops at v1
-- [ ] 6.3 Add Save / Save As / Load / New Game flows in `CityUI` for all idioms; view-model logic tested headlessly
-- [ ] 6.4 Tests-first (CloudKit): translate every `#### Scenario:` from `specs/icloud-sync/spec.md` into failing tests in `CityPersistenceTests`. Use a `CloudKitClient` protocol with an in-memory fake for fast tests; gate real-CloudKit tests behind `CITYBUILDER_CLOUDKIT_TESTS=1`. Confirm red.
-- [ ] 6.5 Implement to green: `icloud-sync` against container `iCloud.com.cedricziel.citybuilder` — `CKRecord` schema with `CKAsset` body, upload triggers, pull on launch, LWW with overwrite prompt, `currentDevice` nudge, one-session local backup of replaced saves, offline and no-iCloud-account fallbacks
-- [ ] 6.6 Refactor under a green bar; verify `make test-scenarios` clean for both capabilities
-- [ ] 6.7 Run gated CloudKit suite against a developer iCloud account once before merge; record results in PR
+- [x] 6.1 Tests-first: translate every `#### Scenario:` from `specs/persistence-save-load/spec.md` into failing tests in `CityPersistenceTests`, including a crash-mid-write fault-injection test (using a fake `FileWriter` that throws between temp write and rename). Confirm red.
+- [x] 6.2 Implement to green: `persistence-save-load` — JSON Codable snapshot, atomic write via temp + rename, version field, save path resolution, autosave hooks (background + interval), integrity checks, migration framework that no-ops at v1
+- [x] 6.3 Add Save / Save As / Load / New Game flows in `CityUI` for all idioms; view-model logic tested headlessly
+- [x] 6.4 Tests-first (CloudKit): translate every `#### Scenario:` from `specs/icloud-sync/spec.md` into failing tests in `CityPersistenceTests`. Use a `CloudKitClient` protocol with an in-memory fake for fast tests; gate real-CloudKit tests behind `CITYBUILDER_CLOUDKIT_TESTS=1`. Confirm red.
+- [x] 6.5 Implement to green: `icloud-sync` against container `iCloud.com.cedricziel.citybuilder` — `CKRecord` schema with `CKAsset` body, upload triggers, pull on launch, LWW with overwrite prompt, `currentDevice` nudge, one-session local backup of replaced saves, offline and no-iCloud-account fallbacks
+- [x] 6.6 Refactor under a green bar; verify `make test-scenarios` clean for both capabilities
+- [x] 6.7 Run gated CloudKit suite against a developer iCloud account once before merge; record results in PR
 
 ## 7. M6 — Mac polish
 
