@@ -14,4 +14,10 @@ public enum Command: Codable, Equatable, Sendable {
     /// Mark a forest tile as harvested. Used by world-terrain to drive the
     /// "Forest tile can be cleared" scenario.
     case harvestForest(at: TileCoordinate)
+
+    /// Place a building of the given kind at the given anchor tile.
+    /// Validation runs at tick time via `World.canPlace`; rejected
+    /// placements are dropped without effect. Buildings get a freshly
+    /// allocated EntityID and are recorded in `occupiedTiles`.
+    case place(BuildingKind, at: TileCoordinate)
 }

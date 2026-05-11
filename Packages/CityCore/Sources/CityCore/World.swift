@@ -28,6 +28,9 @@ public struct World: Codable, Sendable, Equatable {
     /// Coordinates currently claimed by a building footprint. Buildings are
     /// modeled as opaque entity IDs for M1; full catalog arrives in M3.
     public internal(set) var occupiedTiles: [TileCoordinate: EntityID]
+    /// Next entity ID to allocate. Auto-increments deterministically as
+    /// buildings are placed.
+    public internal(set) var nextEntityRaw: UInt32 = 1
 
     /// ---- pending player commands ----------------------------------
     public internal(set) var pendingCommands: [Command]
@@ -130,6 +133,16 @@ public struct World: Codable, Sendable, Equatable {
             // `world-terrain` ("Forest tile can be cleared").
             guard contains(coord), terrain(at: coord) == .forest else { return }
             terrainGrid[coord.y * mapWidth + coord.x] = .grass
+        case let .place(kind, coord):
+            // Validation runs here at the tick boundary. Rejected
+            // placements drop silently in M2; UI feedback comes in M3
+            // when the full building/construction pipeline lands.
+            _ = kind
+            if case .allowed = canPlace(kind, at: coord) {
+                let id = EntityID(raw: nextEntityRaw)
+                nextEntityRaw &+= 1
+                occupiedTiles[coord] = id
+            }
         }
     }
 }
