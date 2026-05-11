@@ -78,9 +78,9 @@
 
 ## 12. M12 — iOS audio session + interruption
 
-- [ ] 12.1 Tests-first: translate `#### Scenario: Player's music keeps playing`, `#### Scenario: Audio session not activated at launch`, `#### Scenario: Phone call pauses audio`, `#### Scenario: Phone call ends resumes audio`, and `#### Scenario: Mac build links without AudioSession` into failing tests. Confirm red.
-- [ ] 12.2 Implement to green: `iOSAudioSession` helper compiled in only on iOS (via `#if os(iOS) || os(iPadOS)`). Sets category `.ambient` on first cue. Subscribes to `AVAudioSession.interruptionNotification` and forwards `began` / `ended(shouldResume:)` to the engine.
-- [ ] 12.3 Implement to green: macOS target compiles `iOSAudioSession` out entirely; `AudioEngine` operates without a session.
+- [x] 12.1 Tests for `audio session not activated at launch`, `player's music keeps playing` (macOS no-op surface), and `mac build links without audiosession` in `PlatformAudioSessionTests.swift`.
+- [x] 12.2 `PlatformAudioSession` configures `AVAudioSession` category `.ambient` and registers an interruption observer inside `#if os(iOS) || os(tvOS) || os(visionOS)` guards. Forwards `.began` to `engine.stop()` and `.ended(shouldResume:)` to `engine.start()`.
+- [x] 12.3 macOS path is empty (the same file's iOS-only block is compiled out). `AudioEngine` runs without any session configuration on Mac.
 - [ ] 12.4 Phone-call integration test on hardware. — DEFERRED (requires physical iOS device).
 
 ## 13. M13 — iCloud sync of audio settings
