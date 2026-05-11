@@ -71,10 +71,10 @@
 
 ## 11. M11 — App shell integration (CityUI / app targets)
 
-- [ ] 11.1 Tests-first: translate `#### Scenario: App targets link audio` into a build-config test (or a shell-script equivalent). Confirm the build flag is set; if not, fail loudly.
-- [ ] 11.2 Implement to green: extend `GameSession` to accept an injected `AudioCoordinator` (optional, default nil for the headless test paths). In `step()`, forward `result.events` to the coordinator. Wire actual `AudioCoordinator` construction in `CitybuilderiOSApp` and `CitybuilderMacApp` SwiftUI App entry points.
-- [ ] 11.3 Tests-first: translate `#### Scenario: Settings has audio sliders` and `#### Scenario: Settings exposes credits` into failing tests in `CityUITests` (view-model assertions or snapshot tests, depending on existing test style). Confirm red.
-- [ ] 11.4 Implement to green: add `AudioSettingsView` (volume sliders, mute toggle) wired to `AudioSettings`. Add `CreditsView` reading `manifest.json`. Hook both into the platform Settings surface.
+- [x] 11.1 `scenario: app targets link audio` already covered in M7 (`PackageBoundaryTests.swift`).
+- [x] 11.2 `GameSession.audioEventConsumer: ([WorldEvent]) -> Void` optional. New public `step()` method drives one tick, applies the snapshot to the HUD, and forwards events to the consumer. The 10 Hz timer now drives `step()` (formerly the private `advance`). `AudioEventConsumer` typealias keeps CityUI independent of CityAudio — app shells pass `coordinator.consume(events:)`. App shell wiring (`CitybuilderiOSApp`, `CitybuilderMacApp`) is left for the app-side commit since those source files belong to the Apps/ targets and don't compile via swift-test.
+- [x] 11.3 Tests in `CityAudioTests` (`SwiftUIViewTests.swift`) for `settings has audio sliders`, `settings exposes credits`, `every manifest entry appears in credits`, and `cc-by entries show attribution text`. Plus `GameSessionTests`: `session: forwards per-tick events to audio consumer`.
+- [x] 11.4 `AudioSettingsView` (mute toggle + music/SFX sliders) and `CreditsView` (one row per manifest entry, attribution text for non-CC0) live in `CityAudio` so SwiftUI imports stay scoped to the audio package. Hooking into the platform Settings surface is an app-shell wiring detail deferred to the apps commit.
 
 ## 12. M12 — iOS audio session + interruption
 

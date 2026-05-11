@@ -7,6 +7,44 @@ import Testing
 // behaviors the user noticed when the world wasn't following their finger.
 
 @MainActor
+@Test("session: forwards per-tick events to audio consumer")
+func sessionForwardsPerTickEventsToAudioConsumer() {
+    var receivedEvents: [WorldEvent] = []
+    let session = GameSession(
+        world: World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1),
+        audioEventConsumer: { events in receivedEvents.append(contentsOf: events) }
+    )
+    session.world.enqueue(.place(.road, at: TileCoordinate(x: 1, y: 1)))
+    session.step()
+    // Tick 1 applies the place command AND advanceBuildings flips the road
+    // to operational (road buildDurationTicks=1), so we get both a
+    // buildingPlaced and a constructionCompleted event.
+    let hasPlacement = receivedEvents.contains(where: {
+        if case .buildingPlaced = $0 { return true }
+        return false
+    })
+    let hasCompletion = receivedEvents.contains(where: {
+        if case .constructionCompleted = $0 { return true }
+        return false
+    })
+    #expect(hasPlacement, "audio consumer must receive buildingPlaced")
+    #expect(hasCompletion, "audio consumer must receive constructionCompleted")
+}
+
+@MainActor
+@Test("session: no audio consumer is a valid configuration")
+func sessionNoAudioConsumerIsValid() {
+    // Headless tests / CLI-like contexts construct sessions without an
+    // audio consumer. The tick loop must run normally; the absence of a
+    // consumer is not an error.
+    let session = GameSession(
+        world: World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    )
+    #expect(session.audioEventConsumer == nil)
+    session.step() // must not crash
+}
+
+@MainActor
 @Test("session: drag right moves world right under the finger")
 func sessionDragRightMovesWorld() {
     let session = GameSession(

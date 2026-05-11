@@ -101,6 +101,12 @@ public struct CityRootView: View {
     }
 }
 
+/// Consumer of the per-tick `[WorldEvent]` stream produced by
+/// `World.tick()`. The app shells pass an `AudioCoordinator.consume(events:)`
+/// closure (from `CityAudio`); headless tests pass nil or a recorder.
+/// Decouples `CityUI` from `CityAudio` so the package boundary stays clean.
+public typealias AudioEventConsumer = ([WorldEvent]) -> Void
+
 /// Owns the live World and exposes snapshots + HUD bindings to the views.
 /// Marked @Observable so SwiftUI rebinds when the HUD numbers move.
 /// MainActor-isolated because the timer-driven `advance()` mutates state
@@ -110,22 +116,31 @@ public struct CityRootView: View {
 public final class GameSession {
     public var world: World
     public let hud: HUDViewModel
+    /// Optional sink for the per-tick `WorldEvent` stream. When non-nil,
+    /// every tick's events are forwarded after the snapshot is applied.
+    /// Per spec `audio-playback` "AudioCoordinator consumes per-tick events".
+    public var audioEventConsumer: AudioEventConsumer?
 
-    public init(world: World = World.newGame()) {
+    public init(world: World = World.newGame(), audioEventConsumer: AudioEventConsumer? = nil) {
         self.world = world
         self.hud = HUDViewModel(money: 0, population: 0)
+        self.audioEventConsumer = audioEventConsumer
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.advance()
+                self?.step()
             }
         }
     }
 
     private var tickTimer: Timer?
 
-    private func advance() {
-        world.tick()
+    /// Advance the simulation one tick. Drains the per-tick event stream
+    /// into the registered `audioEventConsumer` (if any) and refreshes
+    /// the HUD. Called by the 10 Hz timer and reachable from tests.
+    public func step() {
+        let result = world.tick()
         hud.apply(world.snapshot())
+        audioEventConsumer?(result.events)
     }
 
     /// The build tool currently armed for placement / demolition. When
