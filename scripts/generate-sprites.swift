@@ -223,6 +223,15 @@ func terrainCanvas() -> Pixmap {
 }
 
 func grassSprite() -> Pixmap {
+    grassFrame(frame: 0)
+}
+
+/// Two-frame gentle grass shimmer. Frame 0 matches the original static
+/// grass sprite (dark tufts at step 13, light highlights at step 19).
+/// Frame 1 inverts which stipple is dense vs. sparse so a handful of
+/// pixels swap dark↔light — a barely-there "breath" at 0.6 s/frame
+/// suggesting wind without making the ground feel busy.
+func grassFrame(frame: Int) -> Pixmap {
     let p = terrainCanvas()
     drawIsoDiamond(
         p,
@@ -234,7 +243,8 @@ func grassSprite() -> Pixmap {
         edge: P.grassDark,
         highlight: P.grassLight
     )
-    // Sparse grass tufts (darker pixels).
+    let darkStep = (frame == 0) ? 13 : 19
+    let lightStep = (frame == 0) ? 19 : 13
     stippleDiamond(
         p,
         originX: 0,
@@ -242,9 +252,8 @@ func grassSprite() -> Pixmap {
         width: 64,
         height: 32,
         color: P.grassDark,
-        step: 13
+        step: darkStep
     )
-    // Light highlights.
     stippleDiamond(
         p,
         originX: 0,
@@ -252,7 +261,7 @@ func grassSprite() -> Pixmap {
         width: 64,
         height: 32,
         color: P.grassLight,
-        step: 19
+        step: lightStep
     )
     return p
 }
@@ -1309,6 +1318,9 @@ for frame in 0 ... 3 {
 }
 for frame in 0 ... 1 {
     beachFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-beach-\(frame).png")
+}
+for frame in 0 ... 1 {
+    grassFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-grass-\(frame).png")
 }
 
 print("Generating building operational-animation frames...")

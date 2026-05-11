@@ -33,8 +33,8 @@ The renderer SHALL play a looped idle animation on every visible tile whose terr
 - **WHEN** a `terrain(.water)` tile enters the visible range
 - **THEN** its `SKSpriteNode` has an `SKAction` running under the key `"anim"` that cycles its texture through the water frame list and never finishes on its own
 
-#### Scenario: Grass tile arms no action
-- **WHEN** a `terrain(.grass)` tile enters the visible range
+#### Scenario: Forest tile arms no action
+- **WHEN** a `terrain(.forest)` tile enters the visible range
 - **THEN** its `SKSpriteNode` has no `SKAction` arming with the key `"anim"`
 
 #### Scenario: Off-screen water stops animating

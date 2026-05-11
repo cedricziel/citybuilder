@@ -179,12 +179,12 @@ func scenarioWaterTileArmsALoopedAction() {
     }
 }
 
-@Test("scenario: grass tile arms no action")
-func scenarioGrassTileArmsNoAction() {
-    // The catalog declares no entry for grass, so loopingAction is nil
-    // regardless of bundle state. Grass tiles MUST never arm an action.
-    #expect(SpriteAnimation.loopingAction(for: .terrain(.grass)) == nil)
-    #expect(SpriteAnimation.entry(for: .terrain(.grass)) == nil)
+@Test("scenario: forest tile arms no action")
+func scenarioForestTileArmsNoAction() {
+    // The catalog declares no entry for forest, so loopingAction is nil
+    // regardless of bundle state. Forest tiles MUST never arm an action.
+    #expect(SpriteAnimation.loopingAction(for: .terrain(.forest)) == nil)
+    #expect(SpriteAnimation.entry(for: .terrain(.forest)) == nil)
 }
 
 @Test("scenario: off-screen water stops animating")

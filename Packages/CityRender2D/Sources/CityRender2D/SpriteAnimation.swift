@@ -41,7 +41,8 @@ public enum SpriteAnimation {
             switch kind {
             case .water: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
             case .beach: Entry(frameCount: 2, timePerFrame: 0.45, loop: .forever)
-            case .grass, .forest, .mountain: nil
+            case .grass: Entry(frameCount: 2, timePerFrame: 0.60, loop: .forever)
+            case .forest, .mountain: nil
             }
         case let .buildingOperational(kind):
             switch kind {
