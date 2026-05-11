@@ -18,15 +18,22 @@ public struct CityRootView: View {
         ZStack(alignment: .top) {
             session.worldView
                 .ignoresSafeArea()
-            HUDFrameView(viewModel: session.hud)
-                .padding()
-                .allowsHitTesting(false)
+            VStack {
+                HUDFrameView(viewModel: session.hud)
+                BuildPaletteView { kind in
+                    session.placeAtCameraCenter(kind)
+                }
+            }
+            .padding()
         }
     }
 }
 
 /// Owns the live World and exposes snapshots + HUD bindings to the views.
 /// Marked @Observable so SwiftUI rebinds when the HUD numbers move.
+/// MainActor-isolated because the timer-driven `advance()` mutates state
+/// that SwiftUI reads on the main thread.
+@MainActor
 @Observable
 public final class GameSession {
     public var world: World
@@ -35,6 +42,28 @@ public final class GameSession {
     public init(world: World = World.newGame()) {
         self.world = world
         self.hud = HUDViewModel(money: 0, population: 0)
+        self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.advance()
+            }
+        }
+    }
+
+    private var tickTimer: Timer?
+
+    private func advance() {
+        world.tick()
+        hud.apply(world.snapshot())
+    }
+
+    /// Enqueue a place command targeted at the camera-center tile. The
+    /// command applies at the next tick boundary.
+    public func placeAtCameraCenter(_ kind: BuildingKind) {
+        let coord = TileCoordinate(
+            x: Int(world.camera.centerX.rounded()),
+            y: Int(world.camera.centerY.rounded())
+        )
+        world.enqueue(.place(kind, at: coord))
     }
 
     @MainActor
