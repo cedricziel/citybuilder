@@ -41,7 +41,11 @@ targets:
     platform: iOS
     sources:
       - path: Apps/CitybuilderiOS
-      - path: Resources/Sprites
+      - path: Resources/Terrain.atlas
+        buildPhase: resources
+      - path: Resources/Buildings.atlas
+        buildPhase: resources
+      - path: Resources/Units.atlas
         buildPhase: resources
     info:
       path: Apps/CitybuilderiOS/Info.plist
@@ -90,7 +94,11 @@ targets:
     platform: macOS
     sources:
       - path: Apps/CitybuilderMac
-      - path: Resources/Sprites
+      - path: Resources/Terrain.atlas
+        buildPhase: resources
+      - path: Resources/Buildings.atlas
+        buildPhase: resources
+      - path: Resources/Units.atlas
         buildPhase: resources
     info:
       path: Apps/CitybuilderMac/Info.plist
