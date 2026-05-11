@@ -19,16 +19,46 @@ public enum HeadlessRunner {
         }
     }
 
-    public enum RunError: Error, Equatable {
+    public enum RunError: Error, Equatable, CustomStringConvertible {
         case loadFailed(path: String, underlying: String)
-        case notImplemented
+        case negativeTicks(value: Int)
+
+        public var description: String {
+            switch self {
+            case let .loadFailed(path, underlying):
+                "could not load save '\(path)': \(underlying)"
+            case let .negativeTicks(value):
+                "ticks must be non-negative (got \(value))"
+            }
+        }
     }
 
     /// Run the simulation for `ticks` ticks, optionally starting from a saved
-    /// world at `loadFrom`. M1 STUB until task 2.7 — currently always throws.
+    /// world at `loadFrom`. When `loadFrom` is nil, the world starts as a
+    /// fresh `World.newGame()`.
     public static func run(loadFrom path: String?, ticks: Int) throws -> Summary {
-        _ = path
-        _ = ticks
-        throw RunError.notImplemented
+        guard ticks >= 0 else { throw RunError.negativeTicks(value: ticks) }
+
+        var world = try loadWorld(from: path)
+        for _ in 0 ..< ticks {
+            world.tick()
+        }
+        return Summary(
+            tickCount: world.tickCount,
+            simulatedTime: world.simulatedTime,
+            mapWidth: world.mapWidth,
+            mapHeight: world.mapHeight
+        )
+    }
+
+    private static func loadWorld(from path: String?) throws -> World {
+        guard let path else { return World.newGame() }
+        do {
+            let url = URL(fileURLWithPath: path)
+            let data = try Data(contentsOf: url)
+            return try JSONDecoder().decode(World.self, from: data)
+        } catch {
+            throw RunError.loadFailed(path: path, underlying: "\(error)")
+        }
     }
 }
