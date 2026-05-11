@@ -1,14 +1,20 @@
+import CityCore
 import CityRender2D
+import CityUI
 import SwiftUI
 
 @main
 struct CitybuilderMacApp: App {
+    init() {
+        SnapshotRendererRegistry.shared.factory = { provider in
+            AnyView(IsoWorldView(snapshotProvider: provider))
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            // MARK: SPIKE — replace with the real CityUI shell during M2.
-
-            HelloIsoView()
-                .frame(minWidth: 800, minHeight: 600)
+            CityRootView()
+                .frame(minWidth: 900, minHeight: 600)
         }
     }
 }
