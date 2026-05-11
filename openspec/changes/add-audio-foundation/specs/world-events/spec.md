@@ -115,6 +115,21 @@ Each event MUST be emitted at most once per occurrence per tick.
 - **WHEN** the bankruptcy grace expires on tick T and `economy.gameOver` flips to true
 - **THEN** the events for tick T contain exactly one `gameOver`, and no further `gameOver` events are emitted on subsequent ticks while the world is in the game-over state
 
+#### Scenario: Building placement emits an event
+
+- **WHEN** a `.place(kind, at:)` command is applied successfully on tick T
+- **THEN** the events for tick T contain exactly one `buildingPlaced` whose `kind` and `anchor` match the command, and whose `building` is the newly-allocated `EntityID`
+
+#### Scenario: Demolish emits an event
+
+- **WHEN** a `.demolish(at:)` command is applied successfully on tick T
+- **THEN** the events for tick T contain exactly one `buildingDemolished` whose `kind` and `anchor` match the building that was removed
+
+#### Scenario: Forest harvest emits an event
+
+- **WHEN** a `.harvestForest(at:)` command is applied on a forest tile on tick T
+- **THEN** the events for tick T contain exactly one `forestHarvested(at:)` with the cleared tile
+
 ### Requirement: Events do not influence simulation state
 
 Event emission SHALL be a side effect of state changes that have already been computed. Emitting an event MUST NOT read or write any other field of `World`. Two simulations whose only difference is that one drains `TickResult.events` and the other does not MUST produce byte-identical `World` values.

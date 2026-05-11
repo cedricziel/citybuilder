@@ -4,7 +4,7 @@ import Foundation
 /// economy. Each is a pure function of `(inout World) -> Void` so future
 /// changes (parallelization, ordering tweaks) are easy.
 extension World {
-    mutating func runProductionSystem() {
+    mutating func runProductionSystem(events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             var progress = productions[id] ?? ProductionProgress()
@@ -26,14 +26,24 @@ extension World {
                 ? hasAdjacentForest(anchor: building.anchor, footprint: footprint)
                 : true
 
+            // Capture the prior-tick stall state so transitions emit
+            // exactly once on the edge (start of stall, end of stall).
+            let wasStalled = progress.isStalled
+
             guard hasInputs, canStoreOutputs, lumberjackHasForest else {
                 progress.isStalled = true
+                if !wasStalled {
+                    events.append(.productionStalled(producer: id))
+                }
                 productions[id] = progress
                 stockpiles[id] = stockpile
                 continue
             }
 
             progress.isStalled = false
+            if wasStalled {
+                events.append(.productionResumed(producer: id))
+            }
             progress.ticksThisCycle &+= 1
             if progress.ticksThisCycle >= recipe.cycleTicks {
                 // Consume inputs from stockpile.
@@ -49,6 +59,7 @@ extension World {
                     clearAdjacentForest(anchor: building.anchor, footprint: footprint)
                 }
                 progress.ticksThisCycle = 0
+                events.append(.productionCycleCompleted(producer: id, kind: building.kind))
             }
             productions[id] = progress
             stockpiles[id] = stockpile
@@ -58,15 +69,15 @@ extension World {
     /// Carrier lifecycle: advance in-flight carriers along their path,
     /// deposit goods on arrival, then spawn fresh carriers from producers
     /// whose output stockpiles have something to ship.
-    mutating func runCarrierSystem() {
-        advanceCarriers()
-        spawnCarriersFromProducers()
+    mutating func runCarrierSystem(events: inout [WorldEvent]) {
+        advanceCarriers(events: &events)
+        spawnCarriersFromProducers(events: &events)
     }
 
-    private mutating func advanceCarriers() {
+    private mutating func advanceCarriers(events: inout [WorldEvent]) {
         for (id, carrier) in carriers {
             if carrier.hasArrived {
-                applyCarrierArrival(carrier)
+                applyCarrierArrival(carrier, events: &events)
                 if case let .deliver(_, _, fromProducer, _) = carrier.mission {
                     carrierCountByProducer[fromProducer, default: 1] -= 1
                 }
@@ -79,16 +90,32 @@ extension World {
         }
     }
 
-    private mutating func applyCarrierArrival(_ carrier: Carrier) {
+    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) {
+        // `currentTile` is `nil` only on a malformed empty path; arrived
+        // carriers always have a positive pathIndex < path.count. Use
+        // `path.last` as the safe destination fallback.
+        let arrivalTile = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
         switch carrier.mission {
         case let .deliver(good, amount, _, toWarehouse):
             stockpiles[toWarehouse]?.deposit(good, amount: amount)
+            events.append(.carrierArrived(
+                carrier: carrier.id,
+                at: arrivalTile,
+                good: good,
+                amount: amount
+            ))
         case let .retrieve(good, amount, _, toConsumer):
             stockpiles[toConsumer]?.deposit(good, amount: amount)
+            events.append(.carrierArrived(
+                carrier: carrier.id,
+                at: arrivalTile,
+                good: good,
+                amount: amount
+            ))
         }
     }
 
-    private mutating func spawnCarriersFromProducers() {
+    private mutating func spawnCarriersFromProducers(events: inout [WorldEvent]) {
         for (producerId, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
@@ -116,6 +143,7 @@ extension World {
                 )
                 carriers[carrierId] = carrier
                 carrierCountByProducer[producerId, default: 0] += 1
+                events.append(.carrierDeparted(carrier: carrierId, from: road, good: good))
                 break // one carrier per producer per tick
             }
         }
@@ -167,14 +195,16 @@ extension World {
         return best
     }
 
-    mutating func runEconomySystem() {
+    mutating func runEconomySystem(events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
             var totalPop: Int64 = 0
             for pop in populations.values {
                 totalPop += Int64(pop.population)
             }
-            economy.credit(totalPop * Economy.taxPerPopUnit)
+            let amount = totalPop * Economy.taxPerPopUnit
+            economy.credit(amount)
+            events.append(.taxesCollected(amount: amount))
         }
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
             var totalUpkeep: Int64 = 0
@@ -182,14 +212,27 @@ extension World {
                 totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
             }
             economy.deduct(totalUpkeep)
+            events.append(.upkeepPaid(amount: totalUpkeep))
         }
+        // Track bankruptcy state transitions so events fire on the edges only.
+        let priorDeficitTicks = economy.bankruptcyDeficitTicks
+        let priorGameOver = economy.gameOver
         if economy.balance < 0 {
             economy.bankruptcyDeficitTicks &+= 1
+            if priorDeficitTicks == 0 {
+                events.append(.bankruptcyWarning(deficitTicks: economy.bankruptcyDeficitTicks))
+            }
             if economy.bankruptcyDeficitTicks >= Economy.bankruptcyGraceTicks {
                 economy.gameOver = true
+                if !priorGameOver {
+                    events.append(.gameOver)
+                }
             }
         } else {
             economy.bankruptcyDeficitTicks = 0
+            if priorDeficitTicks > 0 {
+                events.append(.bankruptcyResolved)
+            }
         }
     }
 

@@ -141,22 +141,22 @@ public struct World: Codable, Sendable, Equatable {
         let startNanos = currentMonotonicNanoseconds()
 
         // Per-tick event scratch buffer. Local — not stored on World, per
-        // `world-events` spec ("Events not in World"). Systems append to
-        // this via `inout` in M4; for now it remains empty.
+        // `world-events` spec ("Events not in World"). Each system threads
+        // it through via `inout` and appends emissions as side effects.
         var events: [WorldEvent] = []
 
         let drained = pendingCommands
         pendingCommands.removeAll(keepingCapacity: true)
         for command in drained {
-            apply(command)
+            apply(command, events: &events)
         }
         tickCount &+= 1
         simulatedTime += .tick
-        advanceBuildings()
-        runProductionSystem()
-        runCarrierSystem()
+        advanceBuildings(events: &events)
+        runProductionSystem(events: &events)
+        runCarrierSystem(events: &events)
         runPopulationSystem()
-        runEconomySystem()
+        runEconomySystem(events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
@@ -168,13 +168,18 @@ public struct World: Codable, Sendable, Equatable {
         )
     }
 
-    private mutating func advanceBuildings() {
+    private mutating func advanceBuildings(events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .constructing {
             var updated = building
             updated.ticksSincePlacement &+= 1
             let spec = BuildingCatalog.spec(for: building.kind)
             if updated.ticksSincePlacement >= spec.buildDurationTicks {
                 updated.state = .operational
+                events.append(.constructionCompleted(
+                    building: id,
+                    kind: building.kind,
+                    anchor: building.anchor
+                ))
             }
             buildings[id] = updated
         }
@@ -187,7 +192,7 @@ public struct World: Codable, Sendable, Equatable {
         DispatchTime.now().uptimeNanoseconds
     }
 
-    private mutating func apply(_ command: Command) {
+    private mutating func apply(_ command: Command, events: inout [WorldEvent]) {
         switch command {
         case .noop:
             return
@@ -196,18 +201,29 @@ public struct World: Codable, Sendable, Equatable {
             // `world-terrain` ("Forest tile can be cleared").
             guard contains(coord), terrain(at: coord) == .forest else { return }
             terrainGrid[coord.y * mapWidth + coord.x] = .grass
+            events.append(.forestHarvested(at: coord))
         case let .place(kind, anchor):
-            applyPlace(kind: kind, anchor: anchor)
+            applyPlace(kind: kind, anchor: anchor, events: &events)
         case let .demolish(anchor):
-            applyDemolish(anchor: anchor)
+            applyDemolish(anchor: anchor, events: &events)
         }
     }
 
-    private mutating func applyPlace(kind: BuildingKind, anchor: TileCoordinate) {
-        guard case .allowed = canPlace(kind, at: anchor) else { return }
+    private mutating func applyPlace(
+        kind: BuildingKind,
+        anchor: TileCoordinate,
+        events: inout [WorldEvent]
+    ) {
+        guard case .allowed = canPlace(kind, at: anchor) else {
+            events.append(.placementRejected(kind: kind, anchor: anchor))
+            return
+        }
         let spec = BuildingCatalog.spec(for: kind)
         // Insufficient funds rejects the placement (spec economy).
-        if economy.balance < spec.cost { return }
+        if economy.balance < spec.cost {
+            events.append(.placementRejected(kind: kind, anchor: anchor))
+            return
+        }
         economy.deduct(spec.cost)
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
@@ -223,6 +239,7 @@ public struct World: Codable, Sendable, Equatable {
         if let capacity = Self.stockpileCapacity(for: kind) {
             stockpiles[id] = Stockpile(capacity: capacity)
         }
+        events.append(.buildingPlaced(building: id, kind: kind, anchor: anchor))
     }
 
     /// Default stockpile capacity per building kind. nil means "this kind
@@ -236,7 +253,7 @@ public struct World: Codable, Sendable, Equatable {
         }
     }
 
-    private mutating func applyDemolish(anchor: TileCoordinate) {
+    private mutating func applyDemolish(anchor: TileCoordinate, events: inout [WorldEvent]) {
         guard let id = occupiedTiles[anchor],
               let building = buildings[id]
         else { return }
@@ -251,5 +268,6 @@ public struct World: Codable, Sendable, Equatable {
         if building.kind == .road {
             roadGraph.removeRoad(at: building.anchor)
         }
+        events.append(.buildingDemolished(building: id, kind: building.kind, anchor: building.anchor))
     }
 }
