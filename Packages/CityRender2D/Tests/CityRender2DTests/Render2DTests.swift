@@ -88,22 +88,114 @@ func scenarioOffScreenTileNotInScene() {
 
 @Test("scenario: two-finger pan")
 func scenarioTwoFingerPan() {
+    // "World follows finger" is the load-bearing invariant. We assert it
+    // directly: take the tile the finger was over before the drag, apply
+    // the pan to the camera, and check that the same tile is now under
+    // the new finger position. Anything else (raw deltas, iso math
+    // internals) can change without breaking the test.
     let camera = Camera(centerX: 10, centerY: 10, zoom: 1.0)
-    let intent = InputTranslator.panIntent(
-        screenDelta: CGSize(width: 64, height: 0),
-        camera: camera
+    let fingerStart = CGPoint(x: 0, y: 0)
+    let screenDelta = CGSize(width: 64, height: 32)
+    let fingerEnd = CGPoint(x: fingerStart.x + screenDelta.width, y: fingerStart.y + screenDelta.height)
+
+    // Sample which world tile sits under the finger at the start, in
+    // camera-relative scene space.
+    let startSceneY = -fingerStart.y // SwiftUI down-positive → scene y-up
+    let startPoint = CGPoint(
+        x: fingerStart.x + CGFloat(camera.centerX - camera.centerY) * (IsoMath.tileWidth / 2),
+        y: startSceneY - CGFloat(camera.centerX + camera.centerY) * (IsoMath.tileHeight / 2)
     )
+    let tileUnderStart = IsoMath.nearestTile(toScreenPoint: startPoint)
+
+    // Apply the pan intent.
+    let intent = InputTranslator.panIntent(screenDelta: screenDelta, camera: camera)
     guard case let .panCamera(deltaX, deltaY) = intent else {
         Issue.record("expected panCamera intent")
         return
     }
-    // 64 px horizontal at zoom 1 with tileWidth 64 → 1 tile worth of
-    // horizontal pan. The iso inverse splits it into +1 col / -1 row.
-    #expect(abs(deltaX - 1.0) < 0.0001)
-    #expect(abs(deltaY - 0.0) < 0.0001 || abs(deltaY + 2.0) < 0.0001 || abs(deltaY + 0.0) > 0)
-    // Permissive on the iso split exact value — what matters is that pan
-    // moves the camera proportionally to the input.
-    #expect(deltaX != 0 || deltaY != 0)
+    var moved = camera
+    moved.pan(deltaX: deltaX, deltaY: deltaY)
+
+    // Sample which world tile sits under the finger at the end (in the
+    // moved camera's frame).
+    let endSceneY = -fingerEnd.y
+    let endPoint = CGPoint(
+        x: fingerEnd.x + CGFloat(moved.centerX - moved.centerY) * (IsoMath.tileWidth / 2),
+        y: endSceneY - CGFloat(moved.centerX + moved.centerY) * (IsoMath.tileHeight / 2)
+    )
+    let tileUnderEnd = IsoMath.nearestTile(toScreenPoint: endPoint)
+
+    #expect(tileUnderEnd == tileUnderStart, "world tile under the finger must not change during a drag")
+}
+
+@Test("pan direction: drag right shifts camera so world follows")
+func panDragRightMovesWorldRight() {
+    let camera = Camera(centerX: 10, centerY: 10, zoom: 1.0)
+    guard case let .panCamera(dCol, dRow) = InputTranslator.panIntent(
+        screenDelta: CGSize(width: 64, height: 0),
+        camera: camera
+    )
+    else {
+        Issue.record("expected panCamera intent")
+        return
+    }
+    // Pure horizontal drag-right: camera col decreases, row increases, equal
+    // magnitude. Net effect: camera screen-x moves LEFT, world content
+    // shifts RIGHT under the finger.
+    #expect(dCol < 0, "right drag must decrease centerCol")
+    #expect(dRow > 0, "right drag must increase centerRow")
+    #expect(abs(dCol + dRow) < 0.0001, "horizontal drag is anti-symmetric: dCol == -dRow")
+}
+
+@Test("pan direction: drag down shifts camera so world follows")
+func panDragDownMovesWorldDown() {
+    let camera = Camera(centerX: 10, centerY: 10, zoom: 1.0)
+    guard case let .panCamera(dCol, dRow) = InputTranslator.panIntent(
+        screenDelta: CGSize(width: 0, height: 32),
+        camera: camera
+    )
+    else {
+        Issue.record("expected panCamera intent")
+        return
+    }
+    // Pure vertical drag-down: both col and row DECREASE equally. Camera
+    // scene-y INCREASES (less negative), camera moves UP in scene, world
+    // content shifts DOWN with the finger.
+    #expect(dCol < 0, "down drag must decrease centerCol")
+    #expect(dRow < 0, "down drag must decrease centerRow")
+    #expect(abs(dCol - dRow) < 0.0001, "vertical drag is symmetric along the iso diagonal: dCol == dRow")
+}
+
+@Test("pan direction: drag up scrolls content down")
+func panDragUpMovesWorldUp() {
+    let camera = Camera(centerX: 10, centerY: 10, zoom: 1.0)
+    guard case let .panCamera(dCol, dRow) = InputTranslator.panIntent(
+        screenDelta: CGSize(width: 0, height: -32),
+        camera: camera
+    )
+    else {
+        Issue.record("expected panCamera intent")
+        return
+    }
+    // Drag-up is symmetric to drag-down: both col and row INCREASE so the
+    // camera moves DOWN in scene and the world content shifts UP — which
+    // looks like "scroll down" in scrollbar terms.
+    #expect(dCol > 0)
+    #expect(dRow > 0)
+}
+
+@Test("pan zoom: deltas scale inversely with zoom")
+func panZoomScalesDeltas() {
+    let cam1 = Camera(centerX: 10, centerY: 10, zoom: 1.0)
+    let cam2 = Camera(centerX: 10, centerY: 10, zoom: 2.0)
+    guard case let .panCamera(dx1, _) = InputTranslator.panIntent(screenDelta: CGSize(width: 64, height: 0), camera: cam1),
+          case let .panCamera(dx2, _) = InputTranslator.panIntent(screenDelta: CGSize(width: 64, height: 0), camera: cam2)
+    else {
+        Issue.record("expected panCamera intents")
+        return
+    }
+    // At 2x zoom, the same screen drag covers half as many tiles.
+    #expect(abs(abs(dx2) * 2 - abs(dx1)) < 0.0001)
 }
 
 @Test("scenario: pinch zoom respects bounds")

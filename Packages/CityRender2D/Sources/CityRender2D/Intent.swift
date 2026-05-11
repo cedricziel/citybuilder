@@ -31,20 +31,30 @@ public enum InputTranslator {
         return .tapTile(coord)
     }
 
-    /// Two-finger pan gesture: screen-space delta is converted to a
-    /// tile-space camera delta accounting for the current zoom.
+    /// Drag-canvas pan: screen-space delta converted to a tile-space camera
+    /// delta so the world tile under the finger / pointer stays under it.
+    ///
+    /// Derivation (`screenDelta` is SwiftUI/UIKit y-down-positive):
+    ///   camera_dx_scene = -dxScreen
+    ///   camera_dy_scene = +dyScreen   (y-down SwiftUI → y-up scene)
+    ///   screen_x = (col − row)·halfW          ⇒ dCol−dRow = -dxScreen/halfW
+    ///   scene_y  = -(col + row)·halfH         ⇒ dCol+dRow = -dyScreen/halfH
+    ///   ⇒ dCol = -(dxScreen/tileWidth + dyScreen/tileHeight) / zoom
+    ///     dRow =  (dxScreen/tileWidth − dyScreen/tileHeight) / zoom
+    ///
+    /// Verified: drag right → dCol<0, dRow>0; drag down → dCol<0, dRow<0.
+    /// Camera moves opposite the input direction so the world appears to
+    /// track the finger / pointer.
     public static func panIntent(
         screenDelta: CGSize,
         camera: Camera
     ) -> Intent {
-        let zoomFactor = max(camera.zoom, 0.0001)
-        let dxTiles = Double(screenDelta.width) / (Double(IsoMath.tileWidth) * zoomFactor)
-        let dyTiles = Double(screenDelta.height) / (Double(IsoMath.tileHeight) * zoomFactor)
-        // Iso inverse: a screen-space (dx, dy) splits into both col and row.
-        return .panCamera(
-            deltaCenterX: dxTiles - dyTiles,
-            deltaCenterY: -dxTiles - dyTiles
-        )
+        let zoom = max(camera.zoom, 0.0001)
+        let dxOverW = Double(screenDelta.width) / Double(IsoMath.tileWidth)
+        let dyOverH = Double(screenDelta.height) / Double(IsoMath.tileHeight)
+        let dCol = -(dxOverW + dyOverH) / zoom
+        let dRow = (dxOverW - dyOverH) / zoom
+        return .panCamera(deltaCenterX: dCol, deltaCenterY: dRow)
     }
 
     /// Pinch gesture: the recognizer's scale factor flows through unchanged;
