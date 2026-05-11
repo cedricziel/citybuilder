@@ -18,14 +18,58 @@ public struct CityRootView: View {
         ZStack(alignment: .top) {
             session.worldView
                 .ignoresSafeArea()
+                .gesture(panGesture)
+                .gesture(zoomGesture)
             VStack {
                 HUDFrameView(viewModel: session.hud)
                 BuildPaletteView { kind in
                     session.placeAtCameraCenter(kind)
                 }
+                Spacer()
+                let inspector = session.inspector
+                if !inspector.bullets.isEmpty {
+                    HStack {
+                        InspectorView(viewModel: inspector)
+                        Spacer()
+                    }
+                }
             }
             .padding()
         }
+    }
+
+    /// One-finger drag (iOS) / left-mouse drag (Mac) pans the camera.
+    /// Deltas are kept in screen pixels; the GameSession translates to
+    /// tile-space via CityRender2D.InputTranslator.
+    private var panGesture: some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                session.handlePanDelta(
+                    deltaX: value.translation.width - session.lastPanX,
+                    deltaY: value.translation.height - session.lastPanY
+                )
+                session.lastPanX = value.translation.width
+                session.lastPanY = value.translation.height
+            }
+            .onEnded { _ in
+                session.lastPanX = 0
+                session.lastPanY = 0
+            }
+    }
+
+    /// Pinch on iOS / two-finger trackpad on Mac. SwiftUI's
+    /// MagnificationGesture reports a cumulative scale factor; we apply
+    /// the delta since the last reading.
+    private var zoomGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { magnitude in
+                let factor = magnitude / session.lastMagnification
+                session.handlePinch(factor: factor)
+                session.lastMagnification = magnitude
+            }
+            .onEnded { _ in
+                session.lastMagnification = 1.0
+            }
     }
 }
 
@@ -66,12 +110,64 @@ public final class GameSession {
         world.enqueue(.place(kind, at: coord))
     }
 
+    // Gesture state. SwiftUI's DragGesture reports cumulative translation;
+    // we track the previous reading to derive per-frame deltas.
+    public var lastPanX: CGFloat = 0
+    public var lastPanY: CGFloat = 0
+    public var lastMagnification: CGFloat = 1.0
+
+    /// Iso projection constants. Kept here (rather than imported from
+    /// CityRender2D) so CityUI does not depend on the renderer package.
+    private static let tileWidth: Double = 64
+    private static let tileHeight: Double = 32
+
+    /// Translate a screen-space pan delta (pixels) into a tile-space
+    /// camera delta and apply it. Reverses the iso projection.
+    public func handlePanDelta(deltaX: CGFloat, deltaY: CGFloat) {
+        let zoom = max(world.camera.zoom, 0.0001)
+        let pxX = Double(deltaX)
+        let pxY = Double(deltaY)
+        let dxTiles = pxX / (Self.tileWidth * zoom)
+        let dyTiles = pxY / (Self.tileHeight * zoom)
+        // Invert iso so dragging-right moves the camera left over the
+        // world (the world slides under your finger).
+        world.camera.pan(
+            deltaX: -(dxTiles - dyTiles),
+            deltaY: -(-dxTiles - dyTiles)
+        )
+    }
+
+    /// Apply a pinch factor (relative to last reading) to the zoom.
+    public func handlePinch(factor: CGFloat) {
+        world.camera.multiplyZoom(by: Double(factor))
+    }
+
+    /// Tap at a tile coordinate. Sets the inspector selection.
+    public func handleTap(at tile: TileCoordinate) {
+        selectedTile = tile
+    }
+
+    public var selectedTile: TileCoordinate?
+
+    /// Inspector model derived from the current snapshot + selection.
+    public var inspector: InspectorViewModel {
+        guard let selectedTile else { return InspectorViewModel(bullets: []) }
+        return InspectorViewModel.make(
+            from: world.snapshot(),
+            tile: selectedTile,
+            buildings: world.buildings
+        )
+    }
+
     @MainActor
     public var worldView: some View {
         let provider: @MainActor @Sendable () -> WorldSnapshot? = { [weak self] in
             self?.world.snapshot()
         }
-        return SnapshotHostView(snapshotProvider: provider)
+        let tapSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
+            self?.handleTap(at: tile)
+        }
+        return SnapshotHostView(snapshotProvider: provider, tapSink: tapSink)
     }
 }
 
@@ -81,8 +177,12 @@ public final class GameSession {
 @MainActor
 struct SnapshotHostView: View {
     let snapshotProvider: @MainActor @Sendable () -> WorldSnapshot?
+    let tapSink: @MainActor @Sendable (TileCoordinate) -> Void
     var body: some View {
-        SnapshotRendererRegistry.shared.makeView(snapshotProvider: snapshotProvider)
+        SnapshotRendererRegistry.shared.makeView(
+            snapshotProvider: snapshotProvider,
+            tapSink: tapSink
+        )
     }
 }
 
@@ -99,7 +199,10 @@ public final class SnapshotRendererRegistry {
     /// Returns a SwiftUI view that draws the world from the given snapshot
     /// provider. Default is a placeholder text view; CityRender2D registers
     /// a real implementation on app launch.
-    public var factory: (@escaping @MainActor @Sendable () -> WorldSnapshot?) -> AnyView = { _ in
+    public typealias SnapshotProvider = @MainActor @Sendable () -> WorldSnapshot?
+    public typealias TapSink = @MainActor @Sendable (TileCoordinate) -> Void
+
+    public var factory: (@escaping SnapshotProvider, @escaping TapSink) -> AnyView = { _, _ in
         AnyView(
             Color.black.overlay(
                 Text("World renderer not registered")
@@ -108,7 +211,10 @@ public final class SnapshotRendererRegistry {
         )
     }
 
-    func makeView(snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?) -> AnyView {
-        factory(snapshotProvider)
+    func makeView(
+        snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
+        tapSink: @escaping @MainActor @Sendable (TileCoordinate) -> Void
+    ) -> AnyView {
+        factory(snapshotProvider, tapSink)
     }
 }

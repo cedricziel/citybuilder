@@ -6,8 +6,12 @@ import SwiftUI
 @main
 struct CitybuilderMacApp: App {
     init() {
-        SnapshotRendererRegistry.shared.factory = { provider in
-            AnyView(IsoWorldView(snapshotProvider: provider))
+        SnapshotRendererRegistry.shared.factory = { provider, tapSink in
+            AnyView(IsoWorldView(snapshotProvider: provider) { intent in
+                if case let .tapTile(coord) = intent {
+                    tapSink(coord)
+                }
+            })
         }
     }
 
