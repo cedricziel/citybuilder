@@ -21,7 +21,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CityUITests",
-            dependencies: ["CityUI"],
+            dependencies: ["CityUI", "CityCore"],
             path: "Tests/CityUITests"
         )
     ]

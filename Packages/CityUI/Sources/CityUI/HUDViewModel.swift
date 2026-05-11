@@ -14,11 +14,9 @@ public final class HUDViewModel {
     }
 
     /// Apply a snapshot. Pure function from snapshot → HUD state.
-    /// Money/population aggregation arrives in M4; for M2 the HUD just
-    /// reflects the tick count so the wiring is observably alive.
     public func apply(_ snapshot: WorldSnapshot) {
-        money = Int64(snapshot.tickCount)
-        population = UInt64(snapshot.occupiedTiles.count)
+        money = snapshot.economy.balance
+        population = snapshot.totalPopulation
     }
 
     public var formattedMoney: String {

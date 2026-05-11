@@ -1,3 +1,4 @@
+import CityCore
 import Testing
 @testable import CityUI
 
@@ -17,4 +18,13 @@ func hudViewModelFormatsNegativeMoney() {
 func hudViewModelFormatsPopulation() {
     let hud = HUDViewModel(money: 0, population: 42)
     #expect(hud.formattedPopulation == "Pop. 42")
+}
+
+@Test("HUDViewModel reads economy balance + population from snapshot")
+func hudViewModelAppliesSnapshot() {
+    let world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    let hud = HUDViewModel()
+    hud.apply(world.snapshot())
+    #expect(hud.money == Economy.startingBalance)
+    #expect(hud.population == 0)
 }

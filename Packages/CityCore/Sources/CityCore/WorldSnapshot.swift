@@ -14,6 +14,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let mapHeight: Int
     public let terrainGrid: [TerrainType]
     public let occupiedTiles: [TileCoordinate: EntityID]
+    public let buildings: [EntityID: Building]
+    public let economy: Economy
+    public let totalPopulation: UInt64
     public let camera: Camera
 
     public init(
@@ -23,6 +26,9 @@ public struct WorldSnapshot: Hashable, Sendable {
         mapHeight: Int,
         terrainGrid: [TerrainType],
         occupiedTiles: [TileCoordinate: EntityID],
+        buildings: [EntityID: Building],
+        economy: Economy,
+        totalPopulation: UInt64,
         camera: Camera
     ) {
         self.tickCount = tickCount
@@ -31,6 +37,9 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.mapHeight = mapHeight
         self.terrainGrid = terrainGrid
         self.occupiedTiles = occupiedTiles
+        self.buildings = buildings
+        self.economy = economy
+        self.totalPopulation = totalPopulation
         self.camera = camera
     }
 
@@ -46,13 +55,17 @@ public extension World {
     /// Extract a render-ready snapshot. O(N) in map size; intended to be
     /// called once per render frame, not once per draw call.
     func snapshot() -> WorldSnapshot {
-        WorldSnapshot(
+        let pop = populations.values.reduce(UInt64(0)) { $0 + UInt64($1.population) }
+        return WorldSnapshot(
             tickCount: tickCount,
             simulatedTime: simulatedTime,
             mapWidth: mapWidth,
             mapHeight: mapHeight,
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
+            buildings: buildings,
+            economy: economy,
+            totalPopulation: pop,
             camera: camera
         )
     }
