@@ -123,18 +123,23 @@ public final class GameSession {
 
     /// Translate a screen-space pan delta (pixels) into a tile-space
     /// camera delta and apply it. Reverses the iso projection.
+    ///
+    /// Coordinate conventions:
+    /// - SwiftUI DragGesture.translation: x right-positive, y down-positive
+    /// - SpriteKit scene (and IsoMath): x right-positive, y up-positive
+    /// So the y term gets flipped before the iso inverse.
     public func handlePanDelta(deltaX: CGFloat, deltaY: CGFloat) {
         let zoom = max(world.camera.zoom, 0.0001)
-        let pxX = Double(deltaX)
-        let pxY = Double(deltaY)
-        let dxTiles = pxX / (Self.tileWidth * zoom)
-        let dyTiles = pxY / (Self.tileHeight * zoom)
-        // Invert iso so dragging-right moves the camera left over the
-        // world (the world slides under your finger).
-        world.camera.pan(
-            deltaX: -(dxTiles - dyTiles),
-            deltaY: -(-dxTiles - dyTiles)
-        )
+        let dxTiles = Double(deltaX) / (Self.tileWidth * zoom)
+        let dyTiles = -Double(deltaY) / (Self.tileHeight * zoom)
+        // Inverse iso projection (mirroring IsoMath.tileCoordinate):
+        //   col = ( x / halfW + y / halfH) / 2
+        //   row = ( y / halfH - x / halfW) / 2
+        // Negated so the camera moves opposite the finger and the world
+        // slides under it.
+        let colDelta = -(dxTiles + dyTiles)
+        let rowDelta = -(dyTiles - dxTiles)
+        world.camera.pan(deltaX: colDelta, deltaY: rowDelta)
     }
 
     /// Apply a pinch factor (relative to last reading) to the zoom.
