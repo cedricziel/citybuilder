@@ -120,11 +120,31 @@ func scenarioSaveLoadRoundTrip() throws {
 @Test("scenario: tick time instrumented")
 func scenarioTickTimeInstrumented() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
-    let metrics = world.tick()
+    let result = world.tick()
     // wallClockNanoseconds is UInt64 — non-negative by type. Asserting
     // that we got a value back is the contract: tick must surface
     // measurable wall-clock cost via a metrics interface.
-    #expect(metrics.wallClockNanoseconds < 1_000_000_000, "stub tick must complete in under one second")
+    #expect(result.metrics.wallClockNanoseconds < 1_000_000_000, "stub tick must complete in under one second")
+}
+
+// MARK: - TickResult aggregate (add-audio-foundation M1)
+
+@Test("scenario: tick returns tickresult")
+func scenarioTickReturnsTickResult() {
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    let result: World.TickResult = world.tick()
+    // .metrics carries the existing wall-clock instrumentation.
+    _ = result.metrics
+    // .events is an immutable [WorldEvent]; empty until M2/M4 emission lands.
+    #expect(result.events.isEmpty)
+}
+
+@Test("scenario: tickmetrics still observable")
+func scenarioTickMetricsStillObservable() {
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    let result = world.tick()
+    // The exact accessor existing callers had — just nested one level deeper.
+    #expect(result.metrics.wallClockNanoseconds < 1_000_000_000)
 }
 
 // MARK: - Headless CLI

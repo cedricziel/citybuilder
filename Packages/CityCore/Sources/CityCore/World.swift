@@ -68,6 +68,20 @@ public struct World: Codable, Sendable, Equatable {
         }
     }
 
+    /// Aggregate return value of `tick()`: the existing wall-clock metrics
+    /// plus a transient `[WorldEvent]` produced during the tick. Events are
+    /// not Codable and are not persisted; they exist only for the lifetime
+    /// of the returned `TickResult` so downstream layers (audio, analytics)
+    /// can react to what happened. Per spec `world-events`.
+    public struct TickResult: Sendable, Equatable {
+        public let metrics: TickMetrics
+        public let events: [WorldEvent]
+        public init(metrics: TickMetrics, events: [WorldEvent]) {
+            self.metrics = metrics
+            self.events = events
+        }
+    }
+
     /// ---- construction ---------------------------------------------
     public init(seed: UInt64) {
         self.init(seed: seed, mapWidth: 0, mapHeight: 0, terrainGrid: [])
@@ -123,8 +137,13 @@ public struct World: Codable, Sendable, Equatable {
     /// render layers and CI perf gates can observe per-tick cost without
     /// polluting the deterministic world state.
     @discardableResult
-    public mutating func tick() -> TickMetrics {
+    public mutating func tick() -> TickResult {
         let startNanos = currentMonotonicNanoseconds()
+
+        // Per-tick event scratch buffer. Local — not stored on World, per
+        // `world-events` spec ("Events not in World"). Systems append to
+        // this via `inout` in M4; for now it remains empty.
+        var events: [WorldEvent] = []
 
         let drained = pendingCommands
         pendingCommands.removeAll(keepingCapacity: true)
@@ -141,7 +160,12 @@ public struct World: Codable, Sendable, Equatable {
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
-        return TickMetrics(wallClockNanoseconds: elapsed)
+        return TickResult(
+            metrics: TickMetrics(wallClockNanoseconds: elapsed),
+            // Stable sort guarantees byte-identical event sequences across
+            // replays regardless of `Dictionary` iteration order in systems.
+            events: events.stablySortedForEmission()
+        )
     }
 
     private mutating func advanceBuildings() {

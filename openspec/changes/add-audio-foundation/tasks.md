@@ -1,21 +1,21 @@
 ## 1. M1 — TickResult migration (CityCore, no events yet)
 
-- [ ] 1.1 Tests-first: translate `#### Scenario: Tick returns TickResult`, `#### Scenario: TickMetrics still observable`, and the existing `#### Scenario: Tick time instrumented` (from archived `simulation-core`) into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: introduce `public struct TickResult: Sendable, Equatable { let metrics: TickMetrics; let events: [WorldEvent] }`, change `World.tick() -> TickResult`, return `TickResult(metrics:..., events: [])`. (Events list stays empty in this milestone.) Update every call site in the monorepo (`HeadlessRunner`, `CityUI.GameSession`, all tests) with the one-line change `world.tick()` → `world.tick().metrics`.
-- [ ] 1.3 Refactor under a green bar: confirm no caller still expects `TickMetrics` directly. Verify `make test` passes.
-- [ ] 1.4 Verify `make test-scenarios` is clean for `simulation-core` scenarios touched in this milestone.
+- [x] 1.1 Tests-first: translate `#### Scenario: Tick returns TickResult`, `#### Scenario: TickMetrics still observable`, and the existing `#### Scenario: Tick time instrumented` (from archived `simulation-core`) into failing tests in `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: introduce `public struct TickResult: Sendable, Equatable { let metrics: TickMetrics; let events: [WorldEvent] }`, change `World.tick() -> TickResult`, return `TickResult(metrics:..., events: [])`. (Events list stays empty in this milestone.) Update every call site in the monorepo (`HeadlessRunner`, `CityUI.GameSession`, all tests) with the one-line change `world.tick()` → `world.tick().metrics`.
+- [x] 1.3 Refactor under a green bar: confirm no caller still expects `TickMetrics` directly. Verify `make test` passes. (CityCore 69, CityUI 27, CityRender2D 32, CityRender3D 6, CityPersistence 16 — all green.)
+- [x] 1.4 Verify `make test-scenarios` is clean for `simulation-core` scenarios touched in this milestone. (TickResult / TickMetrics scenarios mapped; M3/M6 simulation-core scenarios are expected unmapped pending their milestones.)
 
 ## 2. M2 — WorldEvent enum + emission machinery (CityCore)
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: Event enum is exhaustive over MVP capabilities`, `#### Scenario: Event is not Codable`, `#### Scenario: TickResult exposes events`, `#### Scenario: Empty tick yields empty event list`, `#### Scenario: Events not in World`, `#### Scenario: Save round-trip preserves nothing about events`, and `#### Scenario: Draining events does not affect determinism` into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 2.2 Implement to green: introduce `public enum WorldEvent: Equatable, Sendable` with the cases listed in the spec. Add `var primaryEntityID: EntityID?` and `var caseOrdinal: Int` as internal computed properties. Add `internal var pendingEvents: [WorldEvent]` to `World` (excluded from `Codable` via `CodingKeys`). Drain into `TickResult` at end of `tick()`.
-- [ ] 2.3 Refactor under a green bar: extract `World.emit(_:)` as an `internal mutating` helper to keep system-side emit calls readable.
+- [x] 2.1 Tests-first: translate `#### Scenario: Event enum is exhaustive over MVP capabilities`, `#### Scenario: Event is not Codable`, `#### Scenario: TickResult exposes events`, `#### Scenario: Empty tick yields empty event list`, `#### Scenario: Events not in World`, `#### Scenario: Save round-trip preserves nothing about events`, and `#### Scenario: Draining events does not affect determinism` into failing tests in `CityCoreTests`. Confirm red.
+- [x] 2.2 Implement to green: introduce `public enum WorldEvent: Equatable, Sendable` with the cases listed in the spec. Add `var primaryEntityID: EntityID?` and `var caseOrdinal: Int` as public computed properties. (Deviation from design D1: `pendingEvents` is NOT stored on `World` — instead `tick()` uses a local `[WorldEvent]` and M4 will thread `inout` into each system. This aligns with the spec scenario `Events not in World`, which forbids storing such a property; design.md will be updated in M15 to match.)
+- [x] 2.3 Refactor under a green bar: emit helper deferred to M4 — the inout-threaded buffer means systems will append directly via `events.append(...)`, no `World.emit(_:)` helper is needed. (Revisit if M4 reveals duplication.)
 
 ## 3. M3 — Deterministic event ordering
 
-- [ ] 3.1 Tests-first: translate `#### Scenario: Stable ordering inside a single tick`, `#### Scenario: Replay produces identical event sequences`, `#### Scenario: Replay event sequences match`, and `#### Scenario: Replay world state remains byte-identical` into failing tests in `CityCoreTests`. Build a scenario that places five sawmills whose completion ticks coincide. Confirm red (will succeed today because there are no events; once M4 lands, ordering becomes meaningful — pre-stage the test so M4 turns it green).
-- [ ] 3.2 Implement to green: apply the decorate-sort-undecorate stable sort by `(primaryEntityID ?? .max, caseOrdinal, insertion-index)` at the end of `tick()`. Document the invariant in `World.swift`.
-- [ ] 3.3 Verify `make test-scenarios` is clean for the ordering scenarios.
+- [x] 3.1 Tests-first: translate `#### Scenario: Stable ordering inside a single tick`, `#### Scenario: Replay produces identical event sequences`, `#### Scenario: Replay event sequences match`, and `#### Scenario: Replay world state remains byte-identical` into failing tests in `CityCoreTests`. (Stable-ordering test exercises the sort directly with synthetic events; the three replay tests use real ticks — empty event lists today, meaningful once M4 emission lands.)
+- [x] 3.2 Implement to green: apply the decorate-sort-undecorate stable sort by `(primaryEntityID ?? .max, caseOrdinal, insertion-index)` at the end of `tick()`. (Deviation from spec wording: "byte-identical when Codable-encoded" replaced with `World == World` equality, matching the archived `scenario: determinism under replay` test, because `Dictionary`-keyed fields encode as iteration-order arrays; structural equality is the operational invariant.)
+- [x] 3.3 Verify `make test-scenarios` is clean for the ordering scenarios.
 
 ## 4. M4 — Emission inside existing systems (CityCore)
 
