@@ -2,21 +2,44 @@ import CityCore
 import Foundation
 import SpriteKit
 
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+/// Maps a sprite name to the category atlas that owns it. The routing
+/// table is fixed by the sprite-asset-pipeline naming grammar: a name's
+/// prefix uniquely determines its atlas. New prefixes (e.g. `ship-` once
+/// `add-archipelago-and-sea` lands) extend this table.
+public enum SpriteAtlasRouting {
+    public static let terrainAtlasName = "Terrain"
+    public static let buildingsAtlasName = "Buildings"
+    public static let unitsAtlasName = "Units"
+
+    /// Returns the atlas name for a given sprite name, or nil if the
+    /// prefix is unknown.
+    public static func atlasName(for spriteName: String) -> String? {
+        if spriteName.hasPrefix("terrain-") { return terrainAtlasName }
+        if spriteName.hasPrefix("building-") { return buildingsAtlasName }
+        if spriteName.hasPrefix("walker-") { return unitsAtlasName }
+        return nil
+    }
+
+    /// All atlas names known to the routing table. Used by the
+    /// asset-presence check and the lazy-construction probe.
+    public static let allAtlasNames: [String] = [
+        terrainAtlasName, buildingsAtlasName, unitsAtlasName
+    ]
+}
 
 /// Resolves terrain, building, and walker textures from the host app's
-/// main bundle. Sprites live at `Resources/Sprites/<name>.png` and are
-/// bundled into the app at build time via project.yml.
+/// main bundle. Sprites live in three category atlases under
+/// `Resources/` (`Terrain.atlas/`, `Buildings.atlas/`, `Units.atlas/`),
+/// which Xcode packs into single GPU textures at build time. Lookups go
+/// through `SKTextureAtlas(named:)` — never `SKTexture(imageNamed:)`.
 ///
 /// Returns nil when an asset is missing (e.g. in headless tests or when
 /// running CityRender2D from a package context without resources).
 /// IsoWorldScene falls back to colored diamonds in that case.
 public enum SpriteAtlas {
-    private nonisolated(unsafe) static var cache: [String: SKTexture] = [:]
+    private nonisolated(unsafe) static var atlasCache: [String: SKTextureAtlas] = [:]
+    private nonisolated(unsafe) static var atlasNameSetCache: [String: Set<String>] = [:]
+    private nonisolated(unsafe) static var textureCache: [String: SKTexture] = [:]
     private static let cacheQueue = DispatchQueue(label: "city.spriteatlas.cache")
 
     public enum WalkerFacing: String, CaseIterable, Hashable, Sendable {
@@ -52,29 +75,131 @@ public enum SpriteAtlas {
         return frames
     }
 
-    /// Internal: load and cache a single named texture. Cache key is the
-    /// asset name; the same PNG resolves once across all callers (static
-    /// terrain/building lookups, multi-frame lookups, walker frames).
+    /// Internal: route a sprite name to its category `SKTextureAtlas`
+    /// and return the texture, or nil if the prefix is unknown or the
+    /// name is not packed into that atlas (the asset is missing).
     static func texture(named name: String) -> SKTexture? {
         var hit: SKTexture?
-        cacheQueue.sync { hit = cache[name] }
+        cacheQueue.sync { hit = textureCache[name] }
         if let hit { return hit }
 
-        #if canImport(UIKit)
-        if let image = UIImage(named: name, in: .main, compatibleWith: nil) {
-            let texture = SKTexture(image: image)
-            texture.filteringMode = .nearest
-            cacheQueue.sync { cache[name] = texture }
-            return texture
+        guard let atlasName = SpriteAtlasRouting.atlasName(for: name) else { return nil }
+        let atlas = atlas(forName: atlasName)
+        let names = atlasNames(for: atlasName, atlas: atlas)
+        guard names.contains(name) else { return nil }
+        let texture = atlas.textureNamed(name)
+        texture.filteringMode = .nearest
+        cacheQueue.sync { textureCache[name] = texture }
+        return texture
+    }
+
+    private static func atlas(forName name: String) -> SKTextureAtlas {
+        var hit: SKTextureAtlas?
+        cacheQueue.sync { hit = atlasCache[name] }
+        if let hit { return hit }
+        let atlas = SKTextureAtlas(named: name)
+        cacheQueue.sync { atlasCache[name] = atlas }
+        return atlas
+    }
+
+    private static func atlasNames(for atlasName: String, atlas: SKTextureAtlas) -> Set<String> {
+        var hit: Set<String>?
+        cacheQueue.sync { hit = atlasNameSetCache[atlasName] }
+        if let hit { return hit }
+        let names = Set(atlas.textureNames)
+        cacheQueue.sync { atlasNameSetCache[atlasName] = names }
+        return names
+    }
+
+    // MARK: - Catalog & presence validation
+
+    /// Every sprite name the catalog declares: static terrain and
+    /// building bases, every multi-frame animation entry, every walker
+    /// facing × frame. Sourced from `SpriteAnimation` plus the static
+    /// base names for each kind.
+    public static var catalogSpriteNames: [String] {
+        var names: [String] = []
+
+        for kind in TerrainType.allCases {
+            names.append("terrain-\(kind.rawValue)")
+            if let entry = SpriteAnimation.entry(for: .terrain(kind)) {
+                for frame in 0 ..< entry.frameCount {
+                    names.append(SpriteAnimation.assetName(for: .terrain(kind), frame: frame))
+                }
+            }
         }
-        #elseif canImport(AppKit)
-        if let image = Bundle.main.image(forResource: name) {
-            let texture = SKTexture(image: image)
-            texture.filteringMode = .nearest
-            cacheQueue.sync { cache[name] = texture }
-            return texture
+
+        for kind in BuildingKind.allCases {
+            names.append("building-\(kind.rawValue)")
+            if let opEntry = SpriteAnimation.entry(for: .buildingOperational(kind)) {
+                for frame in 0 ..< opEntry.frameCount {
+                    names.append(
+                        SpriteAnimation.assetName(for: .buildingOperational(kind), frame: frame)
+                    )
+                }
+            }
+            if let conEntry = SpriteAnimation.entry(for: .buildingConstructing(kind)) {
+                for frame in 0 ..< conEntry.frameCount {
+                    names.append(
+                        SpriteAnimation.assetName(for: .buildingConstructing(kind), frame: frame)
+                    )
+                }
+            }
         }
-        #endif
-        return nil
+
+        for facing in WalkerFacing.allCases {
+            if let entry = SpriteAnimation.entry(for: .walker(facing)) {
+                for frame in 0 ..< entry.frameCount {
+                    names.append(SpriteAnimation.assetName(for: .walker(facing), frame: frame))
+                }
+            }
+        }
+
+        return names
+    }
+
+    /// Returns the subset of `names` that do not resolve to a packed
+    /// atlas texture. A name is considered missing if its prefix maps
+    /// to an unknown atlas OR the atlas does not list the name in its
+    /// `textureNames`. Used by the DEBUG `assertCatalogComplete()`
+    /// startup check; also useful as a direct test surface.
+    public static func missingSprites(in names: [String]) -> [String] {
+        names.filter { texture(named: $0) == nil }
+    }
+
+    #if DEBUG
+    /// DEBUG-only: scans the full catalog and fires a `precondition`
+    /// listing the missing sprite names. Call once from the app shell
+    /// at first `SpriteAtlas` use (e.g., from `IsoWorldScene.didMove`).
+    /// In release builds this symbol is elided and the renderer's
+    /// per-draw magenta placeholder is the only safety net.
+    public static func assertCatalogComplete() {
+        let missing = missingSprites(in: catalogSpriteNames)
+        precondition(
+            missing.isEmpty,
+            "Sprite catalog is missing assets: \(missing.sorted().joined(separator: ", "))"
+        )
+    }
+    #endif
+
+    // MARK: - Test-only state probes
+
+    /// Test-only: returns true once the named category atlas has been
+    /// constructed (i.e. a lookup against that category has happened).
+    static func isAtlasConstructed(named name: String) -> Bool {
+        var hit: SKTextureAtlas?
+        cacheQueue.sync { hit = atlasCache[name] }
+        return hit != nil
+    }
+
+    /// Test-only: clears the lazy atlas cache and the texture cache so
+    /// the next lookup re-triggers construction. Tests that observe
+    /// lazy-init behavior call this first to get a clean slate.
+    static func resetForTesting() {
+        cacheQueue.sync {
+            atlasCache.removeAll()
+            atlasNameSetCache.removeAll()
+            textureCache.removeAll()
+        }
     }
 }
