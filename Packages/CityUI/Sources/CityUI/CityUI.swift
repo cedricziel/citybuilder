@@ -31,7 +31,7 @@ public struct CityRootView: View {
                     session.selectTool(tool)
                 }
                 if session.selectedTool != .inspect {
-                    Text("Tap a tile to \(session.selectedTool.displayName.lowercased())")
+                    Text(armedCaption)
                         .font(.caption2)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -56,6 +56,10 @@ public struct CityRootView: View {
     private var panGesture: some Gesture {
         DragGesture(minimumDistance: 1)
             .onChanged { value in
+                // When a build tool is armed, drag is "paint" — handled
+                // by the SKScene's mouseDragged / touchesMoved. The pan
+                // gesture stays out of the way.
+                guard session.selectedTool == .inspect else { return }
                 session.handlePanDelta(
                     deltaX: value.translation.width - session.lastPanX,
                     deltaY: value.translation.height - session.lastPanY
@@ -72,6 +76,18 @@ public struct CityRootView: View {
     /// Pinch on iOS / two-finger trackpad on Mac. SwiftUI's
     /// MagnificationGesture reports a cumulative scale factor; we apply
     /// the delta since the last reading.
+    private var armedCaption: String {
+        let name = session.selectedTool.displayName
+        let cost = session.armedToolCost
+        if cost > 0 {
+            return "Tap or drag to place \(name.lowercased()) — $\(cost)"
+        }
+        if session.selectedTool == .demolish {
+            return "Tap or drag to demolish"
+        }
+        return "Tap a tile to \(name.lowercased())"
+    }
+
     private var zoomGesture: some Gesture {
         MagnificationGesture()
             .onChanged { magnitude in
@@ -207,6 +223,65 @@ public final class GameSession {
 
     public var selectedTile: TileCoordinate?
 
+    /// Tile currently under the pointer / fingertip. Drives the ghost
+    /// preview. nil when no hover position is known (e.g. on iPhone
+    /// before a drag starts, or when the pointer leaves the world view).
+    public var hoveredTile: TileCoordinate?
+
+    /// Apply a hover update from the renderer. `nil` clears the hover.
+    public func handleHover(at tile: TileCoordinate?) {
+        hoveredTile = tile
+    }
+
+    /// Apply a drag update. While a build tool is armed, this is the
+    /// "paint" pathway — every new tile under the finger gets a place /
+    /// demolish command enqueued. In inspect mode, drag is a no-op (pan
+    /// camera handles the gesture instead).
+    public func handleDrag(at tile: TileCoordinate) {
+        switch selectedTool {
+        case .inspect:
+            return
+        case let .place(kind):
+            world.enqueue(.place(kind, at: tile))
+        case .demolish:
+            world.enqueue(.demolish(at: tile))
+        }
+    }
+
+    /// Ghost preview state derived from the armed tool + hovered tile.
+    /// `valid` runs the same canPlace check the simulation will use at
+    /// the tick boundary, so the green / red tint matches reality.
+    public func ghostState() -> GhostPreview? {
+        guard let tile = hoveredTile else { return nil }
+        switch selectedTool {
+        case .inspect, .demolish:
+            return nil
+        case let .place(kind):
+            let valid: Bool
+            if case .allowed = world.canPlace(kind, at: tile) {
+                let spec = BuildingCatalog.spec(for: kind)
+                valid = world.economy.balance >= spec.cost
+            } else {
+                valid = false
+            }
+            return GhostPreview(kind: kind, tile: tile, valid: valid)
+        }
+    }
+
+    public struct GhostPreview: Equatable, Sendable {
+        public let kind: BuildingKind
+        public let tile: TileCoordinate
+        public let valid: Bool
+    }
+
+    /// Cost of the currently-armed building (0 if no place tool armed).
+    public var armedToolCost: Int64 {
+        if case let .place(kind) = selectedTool {
+            return BuildingCatalog.spec(for: kind).cost
+        }
+        return 0
+    }
+
     /// Inspector model derived from the current snapshot + selection.
     public var inspector: InspectorViewModel {
         guard let selectedTile else { return InspectorViewModel(bullets: []) }
@@ -225,7 +300,22 @@ public final class GameSession {
         let tapSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
             self?.handleTap(at: tile)
         }
-        return SnapshotHostView(snapshotProvider: provider, tapSink: tapSink)
+        let dragSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
+            self?.handleDrag(at: tile)
+        }
+        let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void = { [weak self] tile in
+            self?.handleHover(at: tile)
+        }
+        let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview? = { [weak self] in
+            self?.ghostState()
+        }
+        return SnapshotHostView(
+            snapshotProvider: provider,
+            tapSink: tapSink,
+            dragSink: dragSink,
+            hoverSink: hoverSink,
+            ghostProvider: ghostProvider
+        )
     }
 }
 
@@ -236,10 +326,16 @@ public final class GameSession {
 struct SnapshotHostView: View {
     let snapshotProvider: @MainActor @Sendable () -> WorldSnapshot?
     let tapSink: @MainActor @Sendable (TileCoordinate) -> Void
+    let dragSink: @MainActor @Sendable (TileCoordinate) -> Void
+    let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void
+    let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview?
     var body: some View {
         SnapshotRendererRegistry.shared.makeView(
             snapshotProvider: snapshotProvider,
-            tapSink: tapSink
+            tapSink: tapSink,
+            dragSink: dragSink,
+            hoverSink: hoverSink,
+            ghostProvider: ghostProvider
         )
     }
 }
@@ -259,8 +355,17 @@ public final class SnapshotRendererRegistry {
     /// a real implementation on app launch.
     public typealias SnapshotProvider = @MainActor @Sendable () -> WorldSnapshot?
     public typealias TapSink = @MainActor @Sendable (TileCoordinate) -> Void
+    public typealias DragSink = @MainActor @Sendable (TileCoordinate) -> Void
+    public typealias HoverSink = @MainActor @Sendable (TileCoordinate?) -> Void
+    public typealias GhostProvider = @MainActor @Sendable () -> GameSession.GhostPreview?
 
-    public var factory: (@escaping SnapshotProvider, @escaping TapSink) -> AnyView = { _, _ in
+    public var factory: (
+        @escaping SnapshotProvider,
+        @escaping TapSink,
+        @escaping DragSink,
+        @escaping HoverSink,
+        @escaping GhostProvider
+    ) -> AnyView = { _, _, _, _, _ in
         AnyView(
             Color.black.overlay(
                 Text("World renderer not registered")
@@ -270,9 +375,12 @@ public final class SnapshotRendererRegistry {
     }
 
     func makeView(
-        snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
-        tapSink: @escaping @MainActor @Sendable (TileCoordinate) -> Void
+        snapshotProvider: @escaping SnapshotProvider,
+        tapSink: @escaping TapSink,
+        dragSink: @escaping DragSink,
+        hoverSink: @escaping HoverSink,
+        ghostProvider: @escaping GhostProvider
     ) -> AnyView {
-        factory(snapshotProvider, tapSink)
+        factory(snapshotProvider, tapSink, dragSink, hoverSink, ghostProvider)
     }
 }
