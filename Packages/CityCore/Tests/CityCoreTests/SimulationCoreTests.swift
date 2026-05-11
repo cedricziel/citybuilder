@@ -120,12 +120,11 @@ func scenarioSaveLoadRoundTrip() throws {
 @Test("scenario: tick time instrumented")
 func scenarioTickTimeInstrumented() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
-    world.tick()
-    let metrics = world.lastTickMetrics
-    #expect(metrics != nil, "tick must expose wall-clock duration via a metrics interface")
-    if let metrics {
-        #expect(metrics.wallClockNanoseconds >= 0)
-    }
+    let metrics = world.tick()
+    // wallClockNanoseconds is UInt64 — non-negative by type. Asserting
+    // that we got a value back is the contract: tick must surface
+    // measurable wall-clock cost via a metrics interface.
+    #expect(metrics.wallClockNanoseconds < 1_000_000_000, "stub tick must complete in under one second")
 }
 
 // MARK: - Headless CLI

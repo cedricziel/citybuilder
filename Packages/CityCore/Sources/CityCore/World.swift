@@ -32,15 +32,16 @@ public struct World: Codable, Sendable, Equatable {
     /// ---- pending player commands ----------------------------------
     public internal(set) var pendingCommands: [Command]
 
-    /// ---- tick instrumentation -------------------------------------
-    public struct TickMetrics: Codable, Sendable, Equatable {
+    /// Tick metrics are observability output, not part of the deterministic
+    /// world state. They are returned by `tick()` rather than stored on
+    /// World so two simulations with identical inputs remain Equatable
+    /// regardless of wall-clock noise.
+    public struct TickMetrics: Sendable, Equatable {
         public let wallClockNanoseconds: UInt64
         public init(wallClockNanoseconds: UInt64) {
             self.wallClockNanoseconds = wallClockNanoseconds
         }
     }
-
-    public internal(set) var lastTickMetrics: TickMetrics?
 
     /// ---- construction ---------------------------------------------
     public init(seed: UInt64) {
@@ -58,7 +59,6 @@ public struct World: Codable, Sendable, Equatable {
         self.terrainGrid = terrainGrid
         self.occupiedTiles = [:]
         self.pendingCommands = []
-        self.lastTickMetrics = nil
     }
 
     /// ---- terrain queries ------------------------------------------
@@ -84,11 +84,15 @@ public struct World: Codable, Sendable, Equatable {
         pendingCommands.append(command)
     }
 
-    /// ---- tick -----------------------------------------------------
-    public mutating func tick() {
-        // M1 STUB: real systems run here. Until M1 task 2.3 ships, this
-        // only advances tickCount and simulatedTime and drains the
-        // command queue without applying effects.
+    /// Advances the simulation by one fixed tick (100 ms). Drains the
+    /// pending-command queue at the boundary, applies each command, then
+    /// returns observability metrics (wall-clock elapsed nanoseconds) so
+    /// render layers and CI perf gates can observe per-tick cost without
+    /// polluting the deterministic world state.
+    @discardableResult
+    public mutating func tick() -> TickMetrics {
+        let startNanos = currentMonotonicNanoseconds()
+
         let drained = pendingCommands
         pendingCommands.removeAll(keepingCapacity: true)
         for command in drained {
@@ -96,6 +100,17 @@ public struct World: Codable, Sendable, Equatable {
         }
         tickCount &+= 1
         simulatedTime += .tick
+
+        let endNanos = currentMonotonicNanoseconds()
+        let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
+        return TickMetrics(wallClockNanoseconds: elapsed)
+    }
+
+    /// Monotonic clock reading in nanoseconds. Built on `DispatchTime` so it
+    /// works identically on Apple platforms and Linux (Dispatch is part of
+    /// swift-corelibs-libdispatch). Not affected by wall-clock adjustments.
+    private func currentMonotonicNanoseconds() -> UInt64 {
+        DispatchTime.now().uptimeNanoseconds
     }
 
     private mutating func apply(_ command: Command) {
