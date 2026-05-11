@@ -62,6 +62,25 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 5. Run `make lint && make format` before committing.
 6. Use Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `perf:`, `build:`, `ci:`); the `commit-msg` hook enforces this.
 
+## Adding a new animated sprite
+
+The renderer animates sprites through one catalog. To add a new animated
+terrain or building:
+
+1. Add the per-frame artwork helpers to `scripts/generate-sprites.swift`,
+   then emit the frames as `terrain-<kind>-<index>.png`,
+   `building-<kind>-operational-<index>.png`, or
+   `building-<kind>-constructing-<index>.png`.
+2. Run `swift scripts/generate-sprites.swift` and commit the new PNGs
+   under `Resources/Sprites/`.
+3. Add an entry to `SpriteAnimation.entry(for:)` in
+   `Packages/CityRender2D/Sources/CityRender2D/SpriteAnimation.swift`
+   declaring `frameCount`, `timePerFrame`, and `loop` (`.forever` for
+   idle, `.progress` for construction).
+
+The scene's reconciler picks the new entry up automatically — no
+`IsoWorldScene` changes are needed.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
