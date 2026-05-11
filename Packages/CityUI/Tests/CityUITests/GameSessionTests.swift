@@ -91,8 +91,8 @@ func sessionPinchScalesZoom() {
 }
 
 @MainActor
-@Test("session: tap selects tile and populates inspector")
-func sessionTapSelectsTileAndPopulatesInspector() {
+@Test("session: tap with .inspect tool selects tile and populates inspector")
+func sessionTapInspectMode() {
     let session = GameSession(
         world: World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
     )
@@ -100,7 +100,7 @@ func sessionTapSelectsTileAndPopulatesInspector() {
     session.world.enqueue(.place(.house, at: anchor))
     session.world.tick()
 
-    // Tap on the anchor tile.
+    #expect(session.selectedTool == .inspect, "fresh session defaults to inspect")
     session.handleTap(at: anchor)
 
     let inspector = session.inspector
@@ -109,11 +109,46 @@ func sessionTapSelectsTileAndPopulatesInspector() {
 }
 
 @MainActor
-@Test("session: tap on empty tile produces empty inspector")
-func sessionTapOnEmptyTileEmptiesInspector() {
+@Test("session: arming a build tool routes tap to .place command")
+func sessionTapWithPlaceTool() {
     let session = GameSession(
         world: World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
     )
-    session.handleTap(at: TileCoordinate(x: 2, y: 2))
-    #expect(session.inspector.bullets.isEmpty)
+    session.selectTool(.place(.road))
+    #expect(session.selectedTool == .place(.road))
+
+    let target = TileCoordinate(x: 3, y: 3)
+    session.handleTap(at: target)
+    session.world.tick()
+
+    #expect(session.world.occupiedTiles[target] != nil, "tap with road tool must place a road")
+    #expect(session.selectedTool == .place(.road), "tool stays armed after a placement")
+}
+
+@MainActor
+@Test("session: tapping the armed tool again disarms it")
+func sessionToolToggle() {
+    let session = GameSession(
+        world: World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    )
+    session.selectTool(.place(.house))
+    session.selectTool(.place(.house))
+    #expect(session.selectedTool == .inspect, "tapping the armed tool again returns to inspect")
+}
+
+@MainActor
+@Test("session: demolish tool routes tap to .demolish command")
+func sessionTapWithDemolishTool() {
+    let session = GameSession(
+        world: World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    )
+    let anchor = TileCoordinate(x: 1, y: 1)
+    session.world.enqueue(.place(.house, at: anchor))
+    session.world.tick()
+    #expect(session.world.occupiedTiles[anchor] != nil)
+
+    session.selectTool(.demolish)
+    session.handleTap(at: anchor)
+    session.world.tick()
+    #expect(session.world.occupiedTiles[anchor] == nil, "demolish tool removes the building on tap")
 }

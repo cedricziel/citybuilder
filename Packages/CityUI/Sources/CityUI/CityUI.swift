@@ -27,12 +27,19 @@ public struct CityRootView: View {
                 .simultaneousGesture(zoomGesture)
             VStack {
                 HUDFrameView(viewModel: session.hud)
-                BuildPaletteView { kind in
-                    session.placeAtCameraCenter(kind)
+                BuildPaletteView(armed: session.selectedTool) { tool in
+                    session.selectTool(tool)
+                }
+                if session.selectedTool != .inspect {
+                    Text("Tap a tile to \(session.selectedTool.displayName.lowercased())")
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.thinMaterial, in: Capsule())
                 }
                 Spacer()
                 let inspector = session.inspector
-                if !inspector.bullets.isEmpty {
+                if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
                     HStack {
                         InspectorView(viewModel: inspector)
                         Spacer()
@@ -105,8 +112,29 @@ public final class GameSession {
         hud.apply(world.snapshot())
     }
 
-    /// Enqueue a place command targeted at the camera-center tile. The
-    /// command applies at the next tick boundary.
+    /// The build tool currently armed for placement / demolition. When
+    /// `.inspect`, taps select the tile for the inspector. When `.place`
+    /// or `.demolish`, taps enqueue the corresponding command and leave
+    /// the tool armed so the player can place a run of roads or houses
+    /// in a row without re-arming.
+    public var selectedTool: BuildTool = .inspect
+
+    /// Toggle a tool: tap the same palette button twice to disarm.
+    public func selectTool(_ tool: BuildTool) {
+        if selectedTool == tool {
+            selectedTool = .inspect
+        } else {
+            selectedTool = tool
+        }
+    }
+
+    public func clearTool() {
+        selectedTool = .inspect
+    }
+
+    /// Place the armed building at the camera-center tile. Useful for
+    /// keyboard-driven flows and tests; the main interaction is
+    /// tap-on-tile through `handleTap`.
     public func placeAtCameraCenter(_ kind: BuildingKind) {
         let coord = TileCoordinate(
             x: Int(world.camera.centerX.rounded()),
@@ -161,9 +189,20 @@ public final class GameSession {
         world.camera.multiplyZoom(by: Double(factor))
     }
 
-    /// Tap at a tile coordinate. Sets the inspector selection.
+    /// Tap at a tile coordinate. Behavior depends on the armed tool:
+    /// - .inspect (default): select the tile for the inspector.
+    /// - .place(kind): enqueue a `.place` command. Tool stays armed so
+    ///   the player can place a run of roads or houses without re-arming.
+    /// - .demolish: enqueue a `.demolish` command.
     public func handleTap(at tile: TileCoordinate) {
-        selectedTile = tile
+        switch selectedTool {
+        case .inspect:
+            selectedTile = tile
+        case let .place(kind):
+            world.enqueue(.place(kind, at: tile))
+        case .demolish:
+            world.enqueue(.demolish(at: tile))
+        }
     }
 
     public var selectedTile: TileCoordinate?
