@@ -42,14 +42,14 @@
 
 ## 4. M3 — Buildings, roads, warehouses (the gameplay backbone)
 
-- [ ] 4.1 Tests-first: translate every `#### Scenario:` from `specs/buildings-and-construction/spec.md`, `specs/road-network/spec.md`, and the non-carrier portions of `specs/warehouses-and-logistics/spec.md` into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 4.2 Implement to green: `buildings-and-construction` — catalog, footprints, construction state machine, demolition, build cost deduction
-- [ ] 4.3 Implement to green: `road-network` — road tile placement, incrementally-maintained road graph, connectivity query, A* pathfinding with cache invalidation
-- [ ] 4.4 Implement to green: warehouse storage, deposit/withdraw API, capacity enforcement (the non-carrier portion of `warehouses-and-logistics`)
-- [ ] 4.5 Refactor under a green bar; verify `make test-scenarios` reports zero unmapped scenarios for these three capabilities
-- [ ] 4.6 Add SpriteKit rendering for buildings and roads using snapshot-driven node reconciliation (reconciliation logic itself is unit-tested at the snapshot level, not via the scene tree)
-- [ ] 4.7 Add inspector panel in `CityUI` that shows building details on tap/click; view-model logic tested headlessly
-- [ ] 4.8 Confirm `CityCore` coverage floors hold; diff-cover green on the PR
+- [x] 4.1 Tests-first: translate every `#### Scenario:` from `specs/buildings-and-construction/spec.md`, `specs/road-network/spec.md`, and the non-carrier portions of `specs/warehouses-and-logistics/spec.md` into failing tests in `CityCoreTests`. Confirm red.
+- [x] 4.2 Implement to green: `buildings-and-construction` — catalog, footprints, construction state machine, demolition, build cost deduction
+- [x] 4.3 Implement to green: `road-network` — road tile placement, incrementally-maintained road graph, connectivity query, A* pathfinding with cache invalidation
+- [x] 4.4 Implement to green: warehouse storage, deposit/withdraw API, capacity enforcement (the non-carrier portion of `warehouses-and-logistics`)
+- [x] 4.5 Refactor under a green bar; verify `make test-scenarios` reports zero unmapped scenarios for these three capabilities
+- [x] 4.6 Add SpriteKit rendering for buildings and roads using snapshot-driven node reconciliation (reconciliation logic itself is unit-tested at the snapshot level, not via the scene tree)
+- [x] 4.7 Add inspector panel in `CityUI` that shows building details on tap/click; view-model logic tested headlessly
+- [x] 4.8 Confirm `CityCore` coverage floors hold; diff-cover green on the PR
 
 ## 5. M4 — Production chain, carriers, population, economy
 
