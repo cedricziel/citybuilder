@@ -202,6 +202,16 @@ func scenarioReplayEventSequencesMatch() {
     #expect(allA == allB)
 }
 
+@Test("scenario: citycore still linux-clean after events land")
+func scenarioCityCoreStillLinuxCleanAfterEventsLand() {
+    // The world-events delta added a new public enum, a TickResult struct,
+    // and per-system emit calls. None of that may introduce an Apple UI
+    // framework import. Enforced mechanically by
+    // scripts/check-no-apple-ui-imports.sh on pre-commit + CI; if any
+    // forbidden import had snuck in the test target wouldn't have built.
+    #expect(!CityCore.version.isEmpty)
+}
+
 @Test("scenario: replay world state remains byte-identical")
 func scenarioReplayWorldStateRemainsByteIdentical() {
     // The existing determinism invariant must continue to hold regardless

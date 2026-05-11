@@ -60,6 +60,13 @@ repos:
         files: ^Packages/CityCore/Sources/.*\.swift$
         pass_filenames: false
 
+      - id: check-cli-no-audio
+        name: citybuilder-cli must not import audio frameworks (spec audio-playback)
+        entry: ./scripts/check-cli-no-audio.sh
+        language: system
+        files: ^CLI/citybuilder-cli/.*\.swift$
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |

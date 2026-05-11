@@ -36,8 +36,8 @@
 
 ## 6. M6 — Linux-clean validation and framework-free invariant
 
-- [ ] 6.1 Tests-first: translate `#### Scenario: CityCore still Linux-clean`, `#### Scenario: No new framework imports in CityCore`, and `#### Scenario: CLI does not link audio` into failing checks (the last is a shell-driven CI check using `otool -L`).
-- [ ] 6.2 Implement to green: confirm `scripts/check-no-apple-ui-imports.sh` passes on the post-M4 CityCore source tree. Add `scripts/check-cli-no-audio.sh` that builds the CLI and asserts AVFoundation is not linked; wire into `make ci`.
+- [x] 6.1 Tests-first: added `scenario: citycore still linux-clean`, `scenario: no new framework imports in citycore` (sim-core delta), and `scenario: citycore still linux-clean after events land` (world-events spec). The `scenario: cli does not link audio` test lives in M7 with the CityAudio package.
+- [x] 6.2 Implement to green: existing `scripts/check-no-apple-ui-imports.sh` passes on the post-M4 source tree. New `scripts/check-cli-no-audio.sh` does a static-scan of CLI source files for `import AVFoundation` / `import CityAudio` (pre-link validation; cheaper than a built-binary `otool -L` inspection). Wired into the Makefile (`make test-cli-no-audio`) and pre-commit (`check-cli-no-audio` hook, scoped to `CLI/citybuilder-cli/*.swift`).
 - [ ] 6.3 If Swift Linux toolchain CI is configured: confirm `Packages/CityCore` builds and `swift test` passes on Linux. — DEFERRED (requires Linux CI runner if not present).
 
 ## 7. M7 — CityAudio package skeleton

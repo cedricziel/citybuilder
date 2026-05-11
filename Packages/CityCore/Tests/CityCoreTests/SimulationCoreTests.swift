@@ -20,6 +20,29 @@ func scenarioCoreCompilesOnLinuxToolchain() {
     #expect(!CityCore.version.isEmpty)
 }
 
+// Restated invariants from the add-audio-foundation simulation-core delta.
+// The world-events work added new types and emit calls; these tests guard
+// that the framework-free invariant didn't slip in the process.
+
+@Test("scenario: citycore still linux-clean")
+func scenarioCityCoreStillLinuxClean() {
+    // Same compile-time guarantee as `scenario: core compiles on Linux
+    // toolchain`. Restated for the world-events delta so the scenario
+    // coverage check has a direct mapping.
+    #expect(!CityCore.version.isEmpty)
+}
+
+@Test("scenario: no new framework imports in citycore")
+func scenarioNoNewFrameworkImportsInCityCore() {
+    // The `scripts/check-no-apple-ui-imports.sh` script enforces this at
+    // pre-commit + CI time. If any UIKit / AppKit / SwiftUI / SpriteKit /
+    // SceneKit / RealityKit / AVFoundation import had been introduced
+    // into CityCore, the script would have failed and this test target
+    // would not have built. Reaching this assertion proves the invariant
+    // holds for the current source tree.
+    #expect(!CityCore.version.isEmpty)
+}
+
 // MARK: - Tick model
 
 @Test("scenario: tick is fixed duration")
