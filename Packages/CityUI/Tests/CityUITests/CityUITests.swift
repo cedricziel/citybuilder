@@ -1,7 +1,20 @@
 import Testing
 @testable import CityUI
 
-@Test("CityUI exposes a version constant")
-func cityUIHasVersion() {
-    #expect(!CityUI.version.isEmpty)
+@Test("HUDViewModel formats money with currency prefix")
+func hudViewModelFormatsMoney() {
+    let hud = HUDViewModel(money: 1234, population: 7)
+    #expect(hud.formattedMoney == "$1234")
+}
+
+@Test("HUDViewModel formats negative money with sign")
+func hudViewModelFormatsNegativeMoney() {
+    let hud = HUDViewModel(money: -50, population: 0)
+    #expect(hud.formattedMoney == "-$50")
+}
+
+@Test("HUDViewModel formats population")
+func hudViewModelFormatsPopulation() {
+    let hud = HUDViewModel(money: 0, population: 42)
+    #expect(hud.formattedPopulation == "Pop. 42")
 }
