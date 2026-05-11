@@ -46,14 +46,20 @@ public struct TickResult: Sendable, Equatable {
 }
 
 public mutating func tick() -> TickResult {
-    pendingEvents.removeAll(keepingCapacity: true)   // scratch reset
-    // ... existing tick body, systems call self.emit(_:) when they need to ...
-    let sorted = stableSort(pendingEvents)
-    return TickResult(metrics: TickMetrics(...), events: sorted)
+    var events: [WorldEvent] = []   // local scratch buffer — not stored on World
+    // ... apply commands and run each system, threading `&events` in ...
+    advanceBuildings(events: &events)
+    runProductionSystem(events: &events)
+    runCarrierSystem(events: &events)
+    runPopulationSystem()
+    runEconomySystem(events: &events)
+    return TickResult(metrics: TickMetrics(...), events: events.stablySortedForEmission())
 }
 ```
 
-The scratch buffer is `internal`, not stored in `World`'s Codable surface (an exclusion `enum CodingKeys` makes that explicit, or it is `@_implementationOnly` from the encoder's perspective — TBD during implementation, but the spec requires it stays out of save artifacts).
+The scratch buffer is a local `var` inside `tick()`, threaded into each system via an `inout [WorldEvent]` parameter. It is deliberately **not** a stored property on `World` — that satisfies the `world-events` spec scenario `Events not in World` literally (a `Mirror`-based check finds no such property) and removes the need for any `CodingKeys` exclusion. Each system function and command-apply helper takes an `inout` events parameter and appends directly with `events.append(.someCase(...))`.
+
+(Implementation note: the original D1 draft proposed a stored `pendingEvents: [WorldEvent]` on `World` with an exclusion in `CodingKeys`. We switched to the inout-threaded approach during M2 implementation when the spec scenario above made the stored form harder to defend.)
 
 **Alternatives considered:**
 

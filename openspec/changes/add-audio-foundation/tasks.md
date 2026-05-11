@@ -91,18 +91,19 @@
 
 ## 14. M14 — Initial content binding (Phase 1)
 
-- [ ] 14.1 Audition the staged candidates in `Resources/Audio/_candidates/` (three OGA medieval tracks, Kenney UI pack, OGA wood/metal pack, Magnesus forest birds, SDFY coin pickup). Pick: one music track, one UI-click, one placement thunk, one construction chime, one coin tick, one game-over sting.
-- [ ] 14.2 Transcode picked sources to ship formats: music to `.m4a` AAC ~96 kbps (target < 3 MB); SFX to `.caf` IMA4 (target < 50 KB each). Use `afconvert` (ships with macOS, no new dependency).
-- [ ] 14.3 Place files under `Resources/Audio/` in their bus-named subfolders (`music/`, `ui/`, `construction/`, `economy/`). Author `Resources/Audio/manifest.json` with full license metadata. Author `Resources/Audio/bindings.json` mapping the six events to these files.
-- [ ] 14.4 Verify `scripts/check-audio-manifest.sh` passes on the new content.
-- [ ] 14.5 Remove `Resources/Audio/_candidates/` from version control (move outside the working tree if we want to keep auditioning, but not in the repo).
-- [ ] 14.6 Sanity-check on real hardware: launch the app, place a building, hear the thunk. — DEFERRED (requires Mac and at least one iOS device).
+- [ ] 14.1 Audition the staged candidates in `Resources/Audio/_candidates/` (three OGA medieval tracks, Kenney UI pack, OGA wood/metal pack, Magnesus forest birds, SDFY coin pickup). Pick: one music track, one UI-click, one placement thunk, one construction chime, one coin tick, one game-over sting. — **REQUIRES USER** (audition needs ears).
+- [ ] 14.2 Transcode picked sources to ship formats: music to `.m4a` AAC ~96 kbps; SFX to `.caf` IMA4. — **REQUIRES USER** (gated on 14.1).
+- [x] 14.3 (Partial) `Resources/Audio/manifest.json` and `Resources/Audio/bindings.json` scaffolded as empty (well-formed) stubs so the parsers and CI validators have something to read. Content fills in after the audition.
+- [x] 14.4 `scripts/check-audio-manifest.swift` passes on the scaffolded empty files.
+- [x] 14.5 `_candidates/` is already gitignored (added in the proposal commit).
+- [ ] 14.6 Sanity-check on real hardware: launch the app, place a building, hear the thunk. — DEFERRED (requires Mac and at least one iOS device, and gated on 14.1/14.2).
 
 ## 15. M15 — Polish, docs, and CI
 
-- [ ] 15.1 Update `README.md` with a section on the audio system: where bindings/manifest live, how to add a new sound, how the credits screen is fed.
-- [ ] 15.2 Document the `--events-out` CLI flag.
-- [ ] 15.3 Verify `make ci` includes `scripts/check-audio-manifest.sh` and `scripts/check-cli-no-audio.sh`.
-- [ ] 15.4 Final `make lint && make format`. Confirm pre-commit, commit-msg, and pre-push hooks pass on every commit in the branch.
-- [ ] 15.5 Verify `make test-scenarios` is clean for `world-events`, `audio-playback`, `simulation-core`, `platform-shells`, and `icloud-sync`.
-- [ ] 15.6 Profile a 5-minute play session on Mac with audio enabled. Capture CPU and audio-render-cycle stats. Document baseline so Phase 2 (loops) has a regression comparison. — DEFERRED (requires interactive profiling).
+- [x] 15.1 README updated: `CityAudio` in the package map, plus an "Adding a new audio cue" section covering file placement, manifest entry, binding entry, and the audition workflow.
+- [x] 15.2 `--events-out` documented in the CLI's `--help` output and in the README.
+- [x] 15.3 `make test-audio-manifest` and `make test-cli-no-audio` are Makefile targets and pre-commit hooks (`check-audio-manifest`, `check-cli-no-audio`). The repo doesn't have a `make ci` umbrella today — these run individually.
+- [x] 15.4 `make lint && make format` clean across every commit on the branch.
+- [x] 15.5 `make test-scenarios` clean for in-scope scenarios; the remaining unmapped entries are explicitly DEFERRED (phone-call interruption, cross-device sync).
+- [ ] 15.6 Profile a 5-minute play session on Mac with audio enabled. — DEFERRED (requires interactive profiling).
+- [x] 15.7 Design D1 updated to reflect the `inout`-threaded scratch buffer (matches the implementation in M2-M4) rather than the originally-proposed stored `pendingEvents` on `World`.

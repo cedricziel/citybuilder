@@ -44,7 +44,8 @@ Open `Citybuilder.xcodeproj` in Xcode and pick `CitybuilderiOS` or `CitybuilderM
 │   ├── CityPersistence/     # save/load + CloudKit sync
 │   ├── CityUI/              # shared SwiftUI views
 │   ├── CityRender2D/        # SpriteKit isometric renderer
-│   └── CityRender3D/        # SceneKit building portraits
+│   ├── CityRender3D/        # SceneKit building portraits
+│   └── CityAudio/           # AVFoundation engine, bindings, manifest, credits view
 ├── scripts/
 │   ├── check-coverage.sh
 │   └── check-scenario-coverage.swift
@@ -80,6 +81,36 @@ terrain or building:
 
 The scene's reconciler picks the new entry up automatically — no
 `IsoWorldScene` changes are needed.
+
+## Adding a new audio cue
+
+The audio layer plays cues in response to `WorldEvent` cases emitted by
+`World.tick()`. To bind a new sound:
+
+1. Drop the audio file under `Resources/Audio/<bus>/<name>.<ext>` where
+   `<bus>` is one of `music`, `sfx`, `loop`, or `ambient`. Preferred
+   formats: `.caf` (IMA4) for SFX, `.m4a` (AAC ~96 kbps) for music loops.
+   Use `afconvert` (ships with macOS) — no Homebrew dependency needed.
+2. Add an entry to `Resources/Audio/manifest.json` with the file path,
+   title, author, source URL, and license. For non-CC0 licenses, also
+   include the `attribution` string the credits screen will display.
+3. Add a binding in `Resources/Audio/bindings.json`: map the `WorldEvent`
+   case name to a `Cue` (file, bus, optional `volume`, optional `loop`).
+4. Run `make test-audio-manifest` to verify the file is tracked and any
+   CC-BY attribution is present. Pre-commit and CI run the same check.
+
+The CLI runner (`citybuilder-cli`) does **not** link the audio package —
+the headless path stays Foundation-only. Use `--events-out events.json`
+to dump the full `[WorldEvent]` log from a run for scenario assertions
+or replay validation.
+
+Audio audition workflow:
+
+- Free CC0 / CC-BY assets can be staged under `Resources/Audio/_candidates/`
+  for local listening; the folder is gitignored and never ships.
+- Pick winners, transcode with `afconvert`, drop into the appropriate
+  bus subfolder, add the manifest + binding entries, and the engine
+  picks them up on next launch.
 
 ## CI
 
