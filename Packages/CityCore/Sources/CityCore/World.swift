@@ -33,6 +33,14 @@ public struct World: Codable, Sendable, Equatable {
     /// Per-building stockpiles. Warehouses, producers, and consumers all
     /// participate via the same Stockpile type.
     public internal(set) var stockpiles: [EntityID: Stockpile] = [:]
+    /// Per-producer production progress.
+    public internal(set) var productions: [EntityID: ProductionProgress] = [:]
+    /// Per-house population state.
+    public internal(set) var populations: [EntityID: HousePopulation] = [:]
+    /// In-flight carriers keyed by ID.
+    public internal(set) var carriers: [EntityID: Carrier] = [:]
+    /// Counter for carrier in-flight count per producer.
+    public internal(set) var carrierCountByProducer: [EntityID: Int] = [:]
     /// Connectivity graph over road tiles. Updated incrementally by
     /// place(.road) and demolish on road tiles.
     public internal(set) var roadGraph: RoadGraph = .init()
@@ -42,6 +50,9 @@ public struct World: Codable, Sendable, Equatable {
 
     /// ---- pending player commands ----------------------------------
     public internal(set) var pendingCommands: [Command]
+
+    /// ---- economy ---------------------------------------------------
+    public internal(set) var economy: Economy = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -120,9 +131,12 @@ public struct World: Codable, Sendable, Equatable {
         for command in drained {
             apply(command)
         }
-        advanceBuildings()
         tickCount &+= 1
         simulatedTime += .tick
+        advanceBuildings()
+        runProductionSystem()
+        runPopulationSystem()
+        runEconomySystem()
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
@@ -167,6 +181,9 @@ public struct World: Codable, Sendable, Equatable {
     private mutating func applyPlace(kind: BuildingKind, anchor: TileCoordinate) {
         guard case .allowed = canPlace(kind, at: anchor) else { return }
         let spec = BuildingCatalog.spec(for: kind)
+        // Insufficient funds rejects the placement (spec economy).
+        if economy.balance < spec.cost { return }
+        economy.deduct(spec.cost)
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         let initialState: BuildingState = spec.buildDurationTicks == 0 ? .operational : .constructing

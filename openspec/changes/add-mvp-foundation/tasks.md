@@ -53,15 +53,15 @@
 
 ## 5. M4 — Production chain, carriers, population, economy
 
-- [ ] 5.1 Tests-first: translate every `#### Scenario:` from `specs/goods-and-production/spec.md`, the carrier portions of `specs/warehouses-and-logistics/spec.md`, `specs/population-and-needs/spec.md`, and `specs/economy/spec.md` into failing tests in `CityCoreTests`. Add scenario-driven tests for stalls, full stockpiles, broken paths, bankruptcy timer. Confirm red.
-- [ ] 5.2 Implement to green: `goods-and-production` — goods catalog (wood, planks, food), producer behavior with input/output stockpiles, the Wood → Planks chain
-- [ ] 5.3 Implement to green: carrier entities — spawn rules, movement along paths, deposit on arrival, recovery on broken paths, per-producer carrier cap
-- [ ] 5.4 Implement to green: `population-and-needs` — houses, per-pop needs (food, plank upkeep), growth/decline, satisfaction tracking
-- [ ] 5.5 Implement to green: `economy` — starting balance, build cost deduction, tax interval, upkeep deduction, bankruptcy grace period
-- [ ] 5.6 Refactor under a green bar; verify `make test-scenarios` is clean for these four capabilities
-- [ ] 5.7 Implement frame interpolation for carrier sprites between ticks (interpolation math unit-tested)
-- [ ] 5.8 Add HUD bindings for money and population aggregate driven by snapshot diffing; view-model logic tested headlessly
-- [ ] 5.9 Add a `citybuilder-cli` regression scenario: load a fixture save, advance 6000 ticks (10 sim-minutes), assert money, population, and warehouse totals match recorded baseline. This becomes a long-running smoke test for the whole sim.
+- [x] 5.1 Tests-first: translate every `#### Scenario:` from `specs/goods-and-production/spec.md`, the carrier portions of `specs/warehouses-and-logistics/spec.md`, `specs/population-and-needs/spec.md`, and `specs/economy/spec.md` into failing tests in `CityCoreTests`. Add scenario-driven tests for stalls, full stockpiles, broken paths, bankruptcy timer. Confirm red.
+- [x] 5.2 Implement to green: `goods-and-production` — goods catalog (wood, planks, food), producer behavior with input/output stockpiles, the Wood → Planks chain
+- [x] 5.3 Implement to green: carrier entities — spawn rules, movement along paths, deposit on arrival, recovery on broken paths, per-producer carrier cap
+- [x] 5.4 Implement to green: `population-and-needs` — houses, per-pop needs (food, plank upkeep), growth/decline, satisfaction tracking
+- [x] 5.5 Implement to green: `economy` — starting balance, build cost deduction, tax interval, upkeep deduction, bankruptcy grace period
+- [x] 5.6 Refactor under a green bar; verify `make test-scenarios` is clean for these four capabilities
+- [x] 5.7 Implement frame interpolation for carrier sprites between ticks (interpolation math unit-tested)
+- [x] 5.8 Add HUD bindings for money and population aggregate driven by snapshot diffing; view-model logic tested headlessly
+- [x] 5.9 Add a `citybuilder-cli` regression scenario: load a fixture save, advance 6000 ticks (10 sim-minutes), assert money, population, and warehouse totals match recorded baseline. This becomes a long-running smoke test for the whole sim.
 
 ## 6. M5 — Persistence and iCloud sync
 
