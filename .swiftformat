@@ -1,0 +1,36 @@
+--swiftversion 6.0
+
+--exclude .build,DerivedData,Citybuilder.xcodeproj,Citybuilder.xcworkspace,**/.build
+
+# Indentation
+--indent 4
+--tabwidth 4
+--smarttabs enabled
+
+# Wrapping
+--maxwidth 140
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+
+# Spacing
+--commas inline
+--trimwhitespace always
+--ifdef no-indent
+
+# Self
+--self remove
+--selfrequired
+
+# Headers
+--header ignore
+
+# Modern syntax
+--guardelse next-line
+--elseposition same-line
+--importgrouping testable-bottom
+
+# Disabled rules that conflict with SwiftLint or are noisy
+--disable redundantSelf,redundantReturn
+--enable isEmpty,blankLinesAroundMark,blankLinesBetweenScopes,redundantParens,trailingCommas
