@@ -1,0 +1,159 @@
+name: Citybuilder
+
+options:
+  bundleIdPrefix: com.cedricziel
+  developmentLanguage: en
+  deploymentTarget:
+    iOS: "18.0"
+    macOS: "15.0"
+  groupSortPosition: top
+  generateEmptyDirectories: true
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.1.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+
+packages:
+  CityCore:
+    path: Packages/CityCore
+  CityPersistence:
+    path: Packages/CityPersistence
+  CityUI:
+    path: Packages/CityUI
+  CityRender2D:
+    path: Packages/CityRender2D
+  CityRender3D:
+    path: Packages/CityRender3D
+
+targets:
+  # iOS + iPadOS universal app -------------------------------------------
+  CitybuilderiOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Apps/CitybuilderiOS
+    info:
+      path: Apps/CitybuilderiOS/Info.plist
+      properties:
+        CFBundleDisplayName: Citybuilder
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationPortrait
+        "UISupportedInterfaceOrientations~ipad":
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+    entitlements:
+      path: Apps/CitybuilderiOS/Citybuilder.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.cedricziel.citybuilder
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.cedricziel.citybuilder
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder
+        PRODUCT_NAME: Citybuilder
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: "NO"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+    dependencies:
+      - package: CityCore
+      - package: CityPersistence
+      - package: CityUI
+      - package: CityRender2D
+      - package: CityRender3D
+
+  # Native macOS app -----------------------------------------------------
+  CitybuilderMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: Apps/CitybuilderMac
+    info:
+      path: Apps/CitybuilderMac/Info.plist
+      properties:
+        CFBundleDisplayName: Citybuilder
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: "Copyright © 2026 Cedric Ziel. All rights reserved."
+    entitlements:
+      path: Apps/CitybuilderMac/Citybuilder.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.cedricziel.citybuilder
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.cedricziel.citybuilder
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.files.user-selected.read-write: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder
+        PRODUCT_NAME: Citybuilder
+    dependencies:
+      - package: CityCore
+      - package: CityPersistence
+      - package: CityUI
+      - package: CityRender2D
+      - package: CityRender3D
+
+  # Headless simulation runner ------------------------------------------
+  citybuilder-cli:
+    type: tool
+    platform: macOS
+    sources:
+      - CLI/citybuilder-cli
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder.cli
+        PRODUCT_NAME: citybuilder-cli
+    dependencies:
+      - package: CityCore
+      - package: CityPersistence
+
+schemes:
+  CitybuilderiOS:
+    build:
+      targets:
+        CitybuilderiOS: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+
+  CitybuilderMac:
+    build:
+      targets:
+        CitybuilderMac: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+
+  citybuilder-cli:
+    build:
+      targets:
+        citybuilder-cli: all
+    run:
+      config: Debug
