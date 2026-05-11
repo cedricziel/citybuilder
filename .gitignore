@@ -32,3 +32,6 @@ coverage/*.json
 
 # pre-commit
 .pre-commit-cache/
+
+# Audio audition candidates — never ship, never commit
+Resources/Audio/_candidates/
