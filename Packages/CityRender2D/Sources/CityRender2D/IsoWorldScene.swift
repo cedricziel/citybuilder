@@ -122,21 +122,33 @@ public final class IsoWorldScene: SKScene {
     }
 
     /// Draw a building with its pre-rendered isometric pixel-art sprite.
-    /// Sprite anchor is bottom-center so the diamond base aligns to the
-    /// anchor tile position in the scene.
+    /// The sprite contains its footprint diamond at the bottom; we place
+    /// it so that diamond aligns with the actual iso footprint.
+    ///
+    /// Geometry:
+    /// - Sprite anchor (0.5, 0) → bottom-center at the sprite's position.
+    /// - The sprite's diamond center is `footprintH * tileH / 2` above the
+    ///   anchor (the diamond is the bottom `footprintH * tileH` pixels).
+    /// - The world footprint center sits `(footprintH - 1) * tileH / 2`
+    ///   BELOW the anchor tile center (each extra tile adds halfH drop in
+    ///   iso projection).
+    /// - Therefore the sprite must be placed at:
+    ///       y = -((footprintH - 1) * tileH / 2) - footprintH * tileH / 2
+    ///         = -tileH * (2 * footprintH - 1) / 2
+    /// - For 1x1: y = -tileH/2 (= -16). 2x2: -48. 3x3: -80.
+    /// - Non-square footprints also need x = (footprintW - footprintH) * tileW / 4.
     private func makeBuildingNode(kind: BuildingKind, state: BuildingState, footprint: Footprint) -> SKNode {
         if let texture = SpriteAtlas.buildingTexture(for: kind) {
             let node = SKSpriteNode(texture: texture)
-            // The sprite stack stands on the iso anchor tile: anchor
-            // bottom-center of the sprite to the diamond's top point.
             node.anchorPoint = CGPoint(x: 0.5, y: 0)
-            // Pull down so the diamond base aligns with the anchor tile's
-            // diamond, which is at scene y = 0 relative to the anchor.
-            // The sprite includes the bottom diamond, so we offset down by
-            // half the tile height to center the diamond on the tile.
-            node.position = CGPoint(x: 0, y: -IsoMath.tileHeight * CGFloat(footprint.height) / 2)
+            let halfH = IsoMath.tileHeight / 2
+            let footprintH = CGFloat(footprint.height)
+            let footprintW = CGFloat(footprint.width)
+            let offsetY = -halfH * (2 * footprintH - 1)
+            let offsetX = (footprintW - footprintH) * IsoMath.tileWidth / 4
+            node.position = CGPoint(x: offsetX, y: offsetY)
             if state == .constructing { node.alpha = 0.55 }
-            node.zPosition = 10 + CGFloat(footprint.height) // rear-to-front sort
+            node.zPosition = 10 + footprintH // rear-to-front sort
             return node
         }
         // Fallback: colored parallelogram.

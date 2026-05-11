@@ -1,6 +1,6 @@
 --swiftversion 6.0
 
---exclude .build,DerivedData,Citybuilder.xcodeproj,Citybuilder.xcworkspace,**/.build
+--exclude .build,DerivedData,Citybuilder.xcodeproj,Citybuilder.xcworkspace,**/.build,scripts
 
 # Indentation
 --indent 4
