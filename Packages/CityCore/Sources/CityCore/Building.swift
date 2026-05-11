@@ -3,13 +3,43 @@ import Foundation
 /// Building identifier used by spec scenarios. The catalog metadata (size,
 /// cost, build duration, behavior) lives on `BuildingSpec` so this enum stays
 /// stable across milestones — the catalog grows; the IDs do not move.
-public enum BuildingKind: String, CaseIterable, Codable, Sendable {
+///
+/// Raw values are hyphen-separated (sprite-asset-pipeline naming grammar).
+/// The custom `Codable` conformance accepts the legacy underscore form
+/// (`lumberjack_hut`, `town_center`) when decoding so saves written before
+/// the rename continue to load.
+public enum BuildingKind: String, CaseIterable, Sendable {
     case house
     case warehouse
     case road
-    case lumberjackHut = "lumberjack_hut"
+    case lumberjackHut = "lumberjack-hut"
     case sawmill
-    case townCenter = "town_center"
+    case townCenter = "town-center"
+}
+
+extension BuildingKind: Codable {
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        let canonical = switch raw {
+        case "lumberjack_hut": "lumberjack-hut"
+        case "town_center": "town-center"
+        default: raw
+        }
+        guard let kind = BuildingKind(rawValue: canonical) else {
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unknown BuildingKind raw value: \(raw)"
+                )
+            )
+        }
+        self = kind
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
 }
 
 /// Footprint of a building in tiles. The anchor tile is at offset (0, 0);

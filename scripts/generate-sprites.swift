@@ -10,8 +10,8 @@
 //   Resources/Terrain.atlas/terrain-<kind>-<frame>.png (water/beach/grass)
 //   Resources/Buildings.atlas/building-<kind>.png      (static)
 //   Resources/Buildings.atlas/building-<kind>-operational-<frame>.png
-//                                                   (sawmill/lumberjack_hut/
-//                                                    town_center idle anim)
+//                                                   (sawmill/lumberjack-hut/
+//                                                    town-center idle anim)
 //   Resources/Buildings.atlas/building-<kind>-constructing-<frame>.png
 //                                                   (3-stage scaffold rise,
 //                                                    every building kind)
@@ -1120,9 +1120,9 @@ enum BuildingKindRaw: String, CaseIterable {
     case house
     case warehouse
     case road
-    case lumberjackHut = "lumberjack_hut"
+    case lumberjackHut = "lumberjack-hut"
     case sawmill
-    case townCenter = "town_center"
+    case townCenter = "town-center"
 }
 
 /// Compute the body rect for a kind from its canonical sprite. Mirrors
@@ -1337,9 +1337,9 @@ write(mountainSprite(), name: "terrain-mountain")
 print("Generating building sprites...")
 write(houseSprite(), name: "building-house")
 write(warehouseSprite(), name: "building-warehouse")
-write(lumberjackHutSprite(), name: "building-lumberjack_hut")
+write(lumberjackHutSprite(), name: "building-lumberjack-hut")
 write(sawmillSprite(), name: "building-sawmill")
-write(townCenterSprite(), name: "building-town_center")
+write(townCenterSprite(), name: "building-town-center")
 write(roadSprite(), name: "building-road")
 
 print("Generating walker sprites...")
@@ -1370,11 +1370,11 @@ for frame in 0 ... 3 {
 for frame in 0 ... 1 {
     write(
         lumberjackHutSprite(frame: frame),
-        name: "building-lumberjack_hut-operational-\(frame)"
+        name: "building-lumberjack-hut-operational-\(frame)"
     )
 }
 for frame in 0 ... 1 {
-    write(townCenterSprite(frame: frame), name: "building-town_center-operational-\(frame)")
+    write(townCenterSprite(frame: frame), name: "building-town-center-operational-\(frame)")
 }
 
 print("Generating building constructing-animation frames...")
