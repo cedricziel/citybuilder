@@ -1,4 +1,4 @@
-.PHONY: help generate build test test-coverage test-scenarios lint format hooks clean
+.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free lint format hooks clean
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -41,6 +41,9 @@ test-coverage: test
 
 test-scenarios:
 	swift ./scripts/check-scenario-coverage.swift
+
+test-citycore-framework-free:
+	./scripts/check-no-apple-ui-imports.sh
 
 lint:
 	@if find Apps CLI Packages -name '*.swift' -print -quit 2>/dev/null | grep -q .; then \

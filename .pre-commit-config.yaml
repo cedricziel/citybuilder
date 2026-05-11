@@ -53,6 +53,13 @@ repos:
         types_or: [swift]
         require_serial: false
 
+      - id: citycore-framework-free
+        name: CityCore must not import Apple UI frameworks (design D1)
+        entry: ./scripts/check-no-apple-ui-imports.sh
+        language: system
+        files: ^Packages/CityCore/Sources/.*\.swift$
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |
