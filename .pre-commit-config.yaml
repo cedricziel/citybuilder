@@ -67,6 +67,13 @@ repos:
         files: ^CLI/citybuilder-cli/.*\.swift$
         pass_filenames: false
 
+      - id: check-audio-manifest
+        name: every bundled audio file has a manifest entry (spec audio-playback)
+        entry: swift ./scripts/check-audio-manifest.swift
+        language: system
+        files: ^Resources/Audio/.*$
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |

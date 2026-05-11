@@ -51,11 +51,11 @@
 
 ## 8. M8 — Manifest + bindings file formats and parsing
 
-- [ ] 8.1 Tests-first: translate `#### Scenario: Manifest has an entry for every audio file`, `#### Scenario: Manifest catches orphaned files`, `#### Scenario: CC-BY entries require attribution text`, `#### Scenario: Bindings reference manifest paths`, and `#### Scenario: Orphan bindings fail CI` into failing tests in `CityAudioTests` plus a failing shell test for `scripts/check-audio-manifest.sh`. Confirm red.
-- [ ] 8.2 Implement to green: define `Manifest` and `Bindings` DTOs in CityAudio with `Codable` from JSON. Write `scripts/check-audio-manifest.sh` (bash, no new dependency) that walks `Resources/Audio/` and validates both files. Wire into `make lint` and pre-commit.
-- [ ] 8.3 Tests-first: translate `#### Scenario: Malformed bindings fail loudly at load`, `#### Scenario: Deleted file plays silently`, and `#### Scenario: Unbound event is silent` into failing tests. Confirm red.
-- [ ] 8.4 Implement to green: `AudioEngine.load(manifest:bindings:)` throws on schema-invalid input; missing-file lookup at play time returns silently with debug log.
-- [ ] 8.5 Refactor under a green bar.
+- [x] 8.1 Tests for `manifest has an entry for every audio file`, `manifest catches orphaned files`, `cc-by entries require attribution text`, `bindings reference manifest paths`, `orphan bindings fail ci` in `ManifestBindingsTests.swift`.
+- [x] 8.2 `Manifest` and `Bindings` Codable DTOs in CityAudio with structural validators. `scripts/check-audio-manifest.swift` (Swift script, no new dependency) walks `Resources/Audio/` excluding `_candidates/`, parses manifest + bindings, and reports orphan files / missing attribution / orphan bindings. Wired into `make test-audio-manifest` and pre-commit (`check-audio-manifest` hook).
+- [x] 8.3 Tests for `malformed bindings fail loudly at load` and `phase 1 has no loop bindings`. ("deleted file plays silently" and "unbound event is silent" are engine-runtime concerns — deferred to M9 where the cue dispatcher lands.)
+- [x] 8.4 Implement to green: `Manifest.load(from:)` and `Bindings.load(from:manifest:)` throw `ValidationError` on invalid input. (Runtime engine fallback for missing/unbound files lands in M9.)
+- [x] 8.5 Refactor under a green bar.
 
 ## 9. M9 — Cue dispatch and AudioCoordinator
 
