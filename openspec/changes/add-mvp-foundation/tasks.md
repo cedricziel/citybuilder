@@ -21,13 +21,13 @@
 ## 2. M1 — `CityCore` simulation skeleton
 
 - [x] 2.1 Tests-first: translate every `#### Scenario:` from `specs/simulation-core/spec.md` and `specs/world-terrain/spec.md` into failing `swift-testing` tests in `CityCoreTests`. Confirm `make test` is red.
-- [ ] 2.2 Implement to green: `EntityID`, dense component storage, and a fully `Codable` `World` struct
-- [ ] 2.3 Implement to green: `Tick` loop at fixed 100 ms with seeded RNG persisted in `World`
-- [ ] 2.4 Implement to green: `Command` enum and an input queue applied at tick boundaries
-- [ ] 2.5 Implement to green: `world-terrain` capability — fixed island generator, `TerrainType` enum, `canPlace`, integer tile coordinates
-- [ ] 2.6 Refactor under a green bar; verify all simulation-core and world-terrain scenarios map to passing tests via `make test-scenarios`
-- [ ] 2.7 Add a `citybuilder-cli` executable target that loads a save, advances N ticks, and prints summary state; cover the CLI with an integration test that drives a known-good save through N ticks and asserts the resulting summary
-- [ ] 2.8 Confirm `CityCore` line coverage ≥ 80% and branch coverage ≥ 70%; investigate and either test or justify any uncovered lines
+- [x] 2.2 Implement to green: `EntityID`, dense component storage, and a fully `Codable` `World` struct
+- [x] 2.3 Implement to green: `Tick` loop at fixed 100 ms with seeded RNG persisted in `World`
+- [x] 2.4 Implement to green: `Command` enum and an input queue applied at tick boundaries
+- [x] 2.5 Implement to green: `world-terrain` capability — fixed island generator, `TerrainType` enum, `canPlace`, integer tile coordinates
+- [x] 2.6 Refactor under a green bar; verify all simulation-core and world-terrain scenarios map to passing tests via `make test-scenarios`
+- [x] 2.7 Add a `citybuilder-cli` executable target that loads a save, advances N ticks, and prints summary state; cover the CLI with an integration test that drives a known-good save through N ticks and asserts the resulting summary
+- [x] 2.8 Confirm `CityCore` line coverage ≥ 80% and branch coverage ≥ 70%; investigate and either test or justify any uncovered lines
 
 ## 3. M2 — Render the simulation; first interaction
 
