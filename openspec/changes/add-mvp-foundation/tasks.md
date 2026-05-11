@@ -2,7 +2,7 @@
 
 ## 1. M0 — Repo scaffold (XcodeGen), packages, TDD plumbing, and SpriteKit "hello iso" spike
 
-- [ ] 1.1 Initialize git repo at `/Users/cedricziel/private/code/citybuilder`; add a `.gitignore` that excludes `*.xcodeproj`, `*.xcworkspace`, `.build/`, `DerivedData/`, and Xcode user data
+- [x] 1.1 Initialize git repo at `/Users/cedricziel/private/code/citybuilder`; add a `.gitignore` that excludes `*.xcodeproj`, `*.xcworkspace`, `.build/`, `DerivedData/`, and Xcode user data
 - [ ] 1.2 Add a `Makefile` with targets `generate` (runs `xcodegen generate`), `build`, `test`, `lint` (SwiftLint strict), `format` (SwiftFormat), and `hooks` (installs pre-commit hooks); document `brew install xcodegen pre-commit swiftlint swiftformat` in the README
 - [ ] 1.3 Author `.pre-commit-config.yaml` with pinned versions for: `swiftformat`, `swiftlint` (strict), `check-yaml`, `end-of-file-fixer`, `trailing-whitespace`, `check-merge-conflict`, `check-added-large-files` (1 MB threshold), a local hook `forbid-xcodeproj` blocking staged `.xcodeproj`/`.xcworkspace`, and `conventional-pre-commit` on `commit-msg`
 - [ ] 1.4 Author `.swiftlint.yml` and `.swiftformat` config files at repo root with project-wide rules; commit baseline configs that pass on an empty repo
