@@ -381,17 +381,54 @@ func mountainSprite() -> Pixmap {
         edge: P.mountainDark,
         highlight: P.mountainLight
     )
-    // Add a chunky rocky peak sitting on the diamond.
+    // Two-faced rocky peak: left (sun-lit) is `mountainLight`, right
+    // (shaded) is `mountain`, with a single-pixel `mountainDark` outline
+    // along the silhouette. The snow cap sits on top with a wavy lower
+    // edge (so it doesn't read as a hat brim). Scattered crag pixels on
+    // the shaded face give the surface some texture without resorting
+    // to the column-parity stripes the previous version had.
     let peakCenter = 32
-    for r in 0 ..< 10 {
-        let halfW = max(1, 6 - r / 2)
-        let yy = 6 + r
+    let peakRows = 14
+    let topY = 4
+    // Wavy snow edge — for each column offset (dx), the snow extends
+    // down this many rows from `topY`. Hand-tuned for a "rocky cap".
+    let snowDepthByDx: [Int: Int] = [
+        -6: 2, -5: 3, -4: 4, -3: 5, -2: 6, -1: 5,
+        0: 6, 1: 5, 2: 5, 3: 4, 4: 4, 5: 3, 6: 2
+    ]
+    for row in 0 ..< peakRows {
+        let halfW = max(2, 7 - row / 3)
+        let yy = topY + row
         for dx in -halfW ... halfW {
-            let color: Color = if r < 3 { P.snow }
-            else if dx == -halfW || dx == halfW { P.mountainDark }
-            else { (dx & 1 == 0) ? P.mountain : P.mountainLight }
+            let isLeftFace = dx < 0
+            let isRim = (dx == -halfW || dx == halfW)
+            let snowHere = row < (snowDepthByDx[dx] ?? 0)
+            let color: Color
+            if snowHere {
+                color = (isRim && row > 1) ? P.mountainDark : P.snow
+            } else if isRim {
+                color = P.mountainDark
+            } else if isLeftFace {
+                color = P.mountainLight
+            } else {
+                color = P.mountain
+            }
             p.set(peakCenter + dx, yy, color)
         }
+    }
+    // A handful of crag-detail pixels on the shaded face for texture.
+    let crags: [(Int, Int)] = [
+        (peakCenter + 2, topY + 8),
+        (peakCenter + 4, topY + 10),
+        (peakCenter + 1, topY + 11),
+        (peakCenter + 3, topY + 12)
+    ]
+    for (cx, cy) in crags { p.set(cx, cy, P.mountainDark) }
+    // Anchor the peak into the diamond with a darker scree skirt at the
+    // base so the mountain doesn't appear to float.
+    for dx in -8 ... 8 {
+        let yy = topY + peakRows
+        p.set(peakCenter + dx, yy, P.mountainDark)
     }
     return p
 }
