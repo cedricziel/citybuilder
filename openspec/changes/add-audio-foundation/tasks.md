@@ -42,12 +42,12 @@
 
 ## 7. M7 — CityAudio package skeleton
 
-- [ ] 7.1 Add `Packages/CityAudio/` with `Package.swift`, `Sources/CityAudio/`, and `Tests/CityAudioTests/`. Register in `project.yml`; depend on `CityCore` and link `AVFoundation`. Run `make generate` and confirm both app targets link `CityAudio`; confirm CLI does NOT.
-- [ ] 7.2 Tests-first: translate `#### Scenario: Engine has four buses`, `#### Scenario: Engine lazy-initializes on first cue`, `#### Scenario: Engine starts on first cue`, and `#### Scenario: CLI does not link audio` into failing tests. Confirm red.
-- [ ] 7.3 Implement to green: introduce `AudioBus` (enum: `.music, .sfx, .loop, .ambient`), `AudioEngine` wrapping `AVAudioEngine` with four `AVAudioMixerNode` buses connected to main mixer. Engine init is lazy (struct holds a closure; first `play(_:)` triggers `AVAudioEngine.start()`).
-- [ ] 7.4 Tests-first: translate `#### Scenario: Volume change applies within one render cycle`, `#### Scenario: Master mute silences all buses`, and `#### Scenario: Volume settings persist` (locally, no iCloud yet) into failing tests. Confirm red.
-- [ ] 7.5 Implement to green: per-bus volume setters, master mute. Persistence wires through an `AudioSettings` observable model with UserDefaults backing.
-- [ ] 7.6 Refactor under a green bar. Run `make lint && make format`.
+- [x] 7.1 Created `Packages/CityAudio/` (Package.swift, `Sources/CityAudio/`, `Tests/CityAudioTests/`); registered `CityAudio` in `project.yml` as a dependency of `CitybuilderiOS` and `CitybuilderMac` only — `citybuilder-cli` does NOT depend on it. (xcodegen + Xcode build deferred to local hardware verification.)
+- [x] 7.2 Tests for engine buses, lazy init, engine start, and `cli does not link audio` (source + project.yml static scan) in `PackageBoundaryTests.swift` and `AudioEngineTests.swift`.
+- [x] 7.3 Implemented `AudioBus` (enum: `.music, .sfx, .loop, .ambient`) and `AudioEngine` wrapping `AVAudioEngine` with four `AVAudioMixerNode` buses connected to the main mixer. Engine is lazy — `isRunning` stays false until `start()` is called.
+- [x] 7.4 Tests for volume change, global mute silences all buses, and volume settings persist. (Scenario `Master mute silences all buses` renamed to `Global mute silences all buses` to satisfy SwiftLint's inclusive-language rule.)
+- [x] 7.5 Implemented `AudioSettings` with `UserDefaults` backing for `audio.musicVolume` / `audio.sfxVolume` / `audio.muted`. Per-bus volume setters and global mute on `AudioEngine`. (Settings → Engine binding lands in M11.)
+- [x] 7.6 Refactor under a green bar. `make lint && make format` clean.
 
 ## 8. M8 — Manifest + bindings file formats and parsing
 

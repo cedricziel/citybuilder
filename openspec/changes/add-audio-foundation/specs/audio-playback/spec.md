@@ -101,7 +101,7 @@ CityUI SHALL render a `CreditsView` that loads `manifest.json` and shows one sec
 - **WHEN** the music bus volume is set to 0.5
 - **THEN** the next audio render cycle plays the music bus at half amplitude
 
-#### Scenario: Master mute silences all buses
+#### Scenario: Global mute silences all buses
 
 - **WHEN** `engine.isMuted` is set to true
 - **THEN** every bus produces no audible output regardless of its individual `outputVolume`, until mute is cleared
