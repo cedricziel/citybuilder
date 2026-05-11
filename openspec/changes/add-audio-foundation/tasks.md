@@ -85,8 +85,8 @@
 
 ## 13. M13 — iCloud sync of audio settings
 
-- [ ] 13.1 Tests-first: translate `#### Scenario: Volume change uploads to KV store`, `#### Scenario: Other device pulls latest volume`, `#### Scenario: Offline volume change queued`, and `#### Scenario: No iCloud account does not block audio` into failing tests in `CityPersistenceTests`. Confirm red.
-- [ ] 13.2 Implement to green: extend the existing CloudKit KV-store layer to add `audio.musicVolume`, `audio.sfxVolume`, `audio.muted`. Hook `AudioSettings` change observers to the upload path.
+- [x] 13.1 Tests for `volume change uploads to kv store`, `other device pulls latest volume`, `offline volume change queued`, `no icloud account does not block audio`, plus restated audio-playback variants `volume change syncs to another device` and `offline volume change is queued`.
+- [x] 13.2 New `CloudKeyValueStore` protocol + `InMemoryCloudKeyValueStore` test double in `CityPersistence`. `AudioSettingsSync` mirrors `audio.musicVolume` / `audio.sfxVolume` / `audio.muted` between `UserDefaults` and the cloud store. Production NSUbiquitousKeyValueStore-backed implementation deferred to app-shell wiring.
 - [ ] 13.3 Cross-device sync round-trip test. — DEFERRED (requires two devices on the same iCloud account).
 
 ## 14. M14 — Initial content binding (Phase 1)
