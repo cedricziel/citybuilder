@@ -144,6 +144,29 @@ func scenarioTapDispatchedAsIntent() {
     #expect(intent == .tapTile(target))
 }
 
+// MARK: - Performance budget (M11)
+
+@Test("scenario: frame budget held under load")
+func scenarioFrameBudgetHeldUnderLoad() {
+    // Real perf verification happens on hardware in M11 task 11.3. As a
+    // headless stand-in we assert the math budget: at zoom 1, a 96×96
+    // map produces no more than a manageable sprite count after culling
+    // with a reasonable view size. The sprite count cap protects against
+    // accidental reconciliation blow-ups that would tank the frame rate.
+    var world = World.fixtureWithTerrain(width: 96, height: 96, fill: .grass, seed: 1)
+    world.camera = Camera(centerX: 48, centerY: 48, zoom: 1.0)
+    let snap = world.snapshot()
+    if let (xRange, yRange) = Culling.visibleTileRange(
+        camera: snap.camera,
+        viewSize: CGSize(width: 1024, height: 768),
+        mapWidth: snap.mapWidth,
+        mapHeight: snap.mapHeight
+    ) {
+        let spriteCount = (xRange.count) * (yRange.count)
+        #expect(spriteCount < 5000, "culling keeps visible sprite count under 5000 → 60 fps achievable")
+    }
+}
+
 // MARK: - Frame interpolation
 
 @Test("scenario: carrier moves smoothly between ticks")

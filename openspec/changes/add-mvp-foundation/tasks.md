@@ -75,27 +75,27 @@
 
 ## 7. M6 — Mac polish
 
-- [ ] 7.1 Tests-first: translate Mac-relevant scenarios from `specs/platform-shells/spec.md` (hotkey pause, hover tooltip, menu bar, window resize relayout) into failing view-model / controller tests where logic is headless-testable. Confirm red.
-- [ ] 7.2 Implement to green: Mac keyboard hotkeys for primary actions (pause, save, load, build menu, road tool, demolish tool, camera)
-- [ ] 7.3 Implement to green: hover tooltips on Mac and iPad-with-pointer for tiles and buildings (tooltip selection logic is a pure function of hover target + delay state, fully unit-tested)
-- [ ] 7.4 Implement to green: macOS menu bar commands mirroring HUD primary actions
-- [ ] 7.5 Verify window resize relayouts HUD within one frame; verify fullscreen behavior
+- [x] 7.1 Tests-first: translate Mac-relevant scenarios from `specs/platform-shells/spec.md` (hotkey pause, hover tooltip, menu bar, window resize relayout) into failing view-model / controller tests where logic is headless-testable. Confirm red.
+- [x] 7.2 Implement to green: Mac keyboard hotkeys for primary actions (pause, save, load, build menu, road tool, demolish tool, camera)
+- [x] 7.3 Implement to green: hover tooltips on Mac and iPad-with-pointer for tiles and buildings (tooltip selection logic is a pure function of hover target + delay state, fully unit-tested)
+- [x] 7.4 Implement to green: macOS menu bar commands mirroring HUD primary actions
+- [x] 7.5 Verify window resize relayouts HUD within one frame; verify fullscreen behavior
 
 ## 8. M7 — iPhone compact play
 
-- [ ] 8.1 Tests-first: translate iPhone-relevant scenarios from `specs/platform-shells/spec.md` (compact HUD, default zoom, collapsed categories) into view-model tests asserting adaptive layout decisions for the `compact` size class. Confirm red.
-- [ ] 8.2 Implement to green: iPhone-specific adaptive layout for HUD and build palette (bottom-sheet palette, collapsed categories)
-- [ ] 8.3 Implement to green: tuned default zoom and camera bounds for iPhone screen
-- [ ] 8.4 Implement to green: advanced controls hidden behind a "More" menu while keeping all functionality reachable
-- [ ] 8.5 Validate full gameplay on iPhone with a maxed-out MVP island; capture performance baseline
+- [x] 8.1 Tests-first: translate iPhone-relevant scenarios from `specs/platform-shells/spec.md` (compact HUD, default zoom, collapsed categories) into view-model tests asserting adaptive layout decisions for the `compact` size class. Confirm red.
+- [x] 8.2 Implement to green: iPhone-specific adaptive layout for HUD and build palette (bottom-sheet palette, collapsed categories)
+- [x] 8.3 Implement to green: tuned default zoom and camera bounds for iPhone screen
+- [x] 8.4 Implement to green: advanced controls hidden behind a "More" menu while keeping all functionality reachable
+- [x] 8.5 Validate full gameplay on iPhone with a maxed-out MVP island; capture performance baseline
 
 ## 9. M8 — 3D building portraits (optional polish)
 
-- [ ] 9.1 Tests-first: translate every `#### Scenario:` from `specs/building-portraits-3d/spec.md` into headless tests of the inspector view-model (affordance shown only when USDZ exists, rotation math, lifecycle of load/unload). Confirm red.
-- [ ] 9.2 Implement to green: `building-portraits-3d` — SceneView-based overlay sheet, USDZ loading per building, drag-to-rotate and pinch-to-zoom
-- [ ] 9.3 Implement to green: "View in 3D" affordance to inspector when a USDZ asset is declared for the building
-- [ ] 9.4 Verify lazy load and memory release on dismiss with Instruments (manual verification; record in PR)
-- [ ] 9.5 Add an automated check that the simulation tick count under the overlay matches expected ticks for elapsed time (covers the "simulation continues during portrait" scenario)
+- [x] 9.1 Tests-first: translate every `#### Scenario:` from `specs/building-portraits-3d/spec.md` into headless tests of the inspector view-model (affordance shown only when USDZ exists, rotation math, lifecycle of load/unload). Confirm red.
+- [x] 9.2 Implement to green: `building-portraits-3d` — SceneView-based overlay sheet, USDZ loading per building, drag-to-rotate and pinch-to-zoom
+- [x] 9.3 Implement to green: "View in 3D" affordance to inspector when a USDZ asset is declared for the building
+- [x] 9.4 Verify lazy load and memory release on dismiss with Instruments (manual verification; record in PR)
+- [x] 9.5 Add an automated check that the simulation tick count under the overlay matches expected ticks for elapsed time (covers the "simulation continues during portrait" scenario)
 
 ## 10. Continuity, Handoff, and Apple Pencil
 
