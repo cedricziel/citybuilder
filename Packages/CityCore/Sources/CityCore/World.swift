@@ -32,6 +32,9 @@ public struct World: Codable, Sendable, Equatable {
     /// ---- pending player commands ----------------------------------
     public internal(set) var pendingCommands: [Command]
 
+    /// ---- view state (persisted with the save) ---------------------
+    public var camera: Camera
+
     /// Tick metrics are observability output, not part of the deterministic
     /// world state. They are returned by `tick()` rather than stored on
     /// World so two simulations with identical inputs remain Equatable
@@ -59,6 +62,11 @@ public struct World: Codable, Sendable, Equatable {
         self.terrainGrid = terrainGrid
         self.occupiedTiles = [:]
         self.pendingCommands = []
+        self.camera = Camera(
+            centerX: Double(mapWidth) / 2,
+            centerY: Double(mapHeight) / 2,
+            zoom: 1.0
+        )
     }
 
     /// ---- terrain queries ------------------------------------------

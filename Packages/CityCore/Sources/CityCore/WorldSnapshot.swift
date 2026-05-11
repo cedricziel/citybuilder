@@ -1,0 +1,59 @@
+import Foundation
+
+/// Immutable, render-friendly slice of `World` taken once per frame. The
+/// renderer consumes snapshots and MUST NOT hold a reference to `World`
+/// itself (spec rendering-2_5d "Snapshot-driven rendering").
+///
+/// Carriers and other moving entities will gain their own collections in
+/// later milestones; for M1 the snapshot exposes terrain, occupancy, the
+/// tick clock, and the camera so the renderer has everything it needs.
+public struct WorldSnapshot: Hashable, Sendable {
+    public let tickCount: UInt64
+    public let simulatedTime: SimulationDuration
+    public let mapWidth: Int
+    public let mapHeight: Int
+    public let terrainGrid: [TerrainType]
+    public let occupiedTiles: [TileCoordinate: EntityID]
+    public let camera: Camera
+
+    public init(
+        tickCount: UInt64,
+        simulatedTime: SimulationDuration,
+        mapWidth: Int,
+        mapHeight: Int,
+        terrainGrid: [TerrainType],
+        occupiedTiles: [TileCoordinate: EntityID],
+        camera: Camera
+    ) {
+        self.tickCount = tickCount
+        self.simulatedTime = simulatedTime
+        self.mapWidth = mapWidth
+        self.mapHeight = mapHeight
+        self.terrainGrid = terrainGrid
+        self.occupiedTiles = occupiedTiles
+        self.camera = camera
+    }
+
+    public func terrain(at coord: TileCoordinate) -> TerrainType? {
+        guard coord.x >= 0, coord.x < mapWidth, coord.y >= 0, coord.y < mapHeight else {
+            return nil
+        }
+        return terrainGrid[coord.y * mapWidth + coord.x]
+    }
+}
+
+public extension World {
+    /// Extract a render-ready snapshot. O(N) in map size; intended to be
+    /// called once per render frame, not once per draw call.
+    func snapshot() -> WorldSnapshot {
+        WorldSnapshot(
+            tickCount: tickCount,
+            simulatedTime: simulatedTime,
+            mapWidth: mapWidth,
+            mapHeight: mapHeight,
+            terrainGrid: terrainGrid,
+            occupiedTiles: occupiedTiles,
+            camera: camera
+        )
+    }
+}
