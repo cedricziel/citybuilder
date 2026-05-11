@@ -39,6 +39,8 @@ targets:
     platform: iOS
     sources:
       - path: Apps/CitybuilderiOS
+      - path: Resources/Sprites
+        buildPhase: resources
     info:
       path: Apps/CitybuilderiOS/Info.plist
       properties:
@@ -85,6 +87,8 @@ targets:
     platform: macOS
     sources:
       - path: Apps/CitybuilderMac
+      - path: Resources/Sprites
+        buildPhase: resources
     info:
       path: Apps/CitybuilderMac/Info.plist
       properties:

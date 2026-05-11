@@ -106,8 +106,14 @@ public final class IsoWorldScene: SKScene {
     }
 
     private func makeTerrainNode(kind: TerrainType) -> SKNode {
-        let path = makeDiamondPath()
-        let node = SKShapeNode(path: path)
+        if let texture = SpriteAtlas.terrainTexture(for: kind) {
+            let node = SKSpriteNode(texture: texture)
+            node.zPosition = 0
+            return node
+        }
+        // Fallback to the colored diamond when the sprite asset is missing
+        // (e.g., in headless unit tests with no resource bundle).
+        let node = SKShapeNode(path: makeDiamondPath())
         node.fillColor = TerrainPalette.color(for: kind)
         node.strokeColor = SKColor.black.withAlphaComponent(0.15)
         node.lineWidth = 0.5
@@ -115,11 +121,25 @@ public final class IsoWorldScene: SKScene {
         return node
     }
 
-    /// Draw a building as a single diamond spanning its footprint. Real
-    /// per-kind art lands later; this placeholder is shaped and colored
-    /// so the four-pillar artefact (one marker per occupied tile) is
-    /// gone and the player can tell buildings apart.
+    /// Draw a building with its pre-rendered isometric pixel-art sprite.
+    /// Sprite anchor is bottom-center so the diamond base aligns to the
+    /// anchor tile position in the scene.
     private func makeBuildingNode(kind: BuildingKind, state: BuildingState, footprint: Footprint) -> SKNode {
+        if let texture = SpriteAtlas.buildingTexture(for: kind) {
+            let node = SKSpriteNode(texture: texture)
+            // The sprite stack stands on the iso anchor tile: anchor
+            // bottom-center of the sprite to the diamond's top point.
+            node.anchorPoint = CGPoint(x: 0.5, y: 0)
+            // Pull down so the diamond base aligns with the anchor tile's
+            // diamond, which is at scene y = 0 relative to the anchor.
+            // The sprite includes the bottom diamond, so we offset down by
+            // half the tile height to center the diamond on the tile.
+            node.position = CGPoint(x: 0, y: -IsoMath.tileHeight * CGFloat(footprint.height) / 2)
+            if state == .constructing { node.alpha = 0.55 }
+            node.zPosition = 10 + CGFloat(footprint.height) // rear-to-front sort
+            return node
+        }
+        // Fallback: colored parallelogram.
         let path = makeBuildingDiamondPath(footprint: footprint)
         let node = SKShapeNode(path: path)
         node.fillColor = BuildingPalette.color(for: kind)
