@@ -66,8 +66,8 @@
 
 ## 10. M10 — Music shuffle policy
 
-- [ ] 10.1 Tests-first: translate `#### Scenario: Single track loops with default gap` and `#### Scenario: Three tracks avoid recent repeats` into failing tests. Confirm red.
-- [ ] 10.2 Implement to green: `MusicPlaylist` type. Single-track mode loops the same file with the configured gap. Multi-track mode uses a no-repeat-within-last-two shuffle. Test with deterministic RNG seed inside the test (the audio RNG is configurable for testability even though production is non-deterministic).
+- [x] 10.1 Tests for `single track loops with default gap` and `three tracks avoid recent repeats` in `MusicPlaylistTests.swift`.
+- [x] 10.2 `MusicPlaylist` returns the bound track unchanged when only one is configured; multi-track mode shuffles with a no-repeat-within-last-two rule via injectable RNG. Default gap 30 s, overridable.
 
 ## 11. M11 — App shell integration (CityUI / app targets)
 
