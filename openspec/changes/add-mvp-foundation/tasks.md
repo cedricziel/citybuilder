@@ -31,14 +31,14 @@
 
 ## 3. M2 — Render the simulation; first interaction
 
-- [ ] 3.1 Tests-first: translate every `#### Scenario:` from `specs/rendering-2_5d/spec.md` that does not require a live SpriteKit scene into pure tests in `CityRender2DTests` — iso projection math, culling math (in/out of view), input-intent translation, snapshot diffing for node reconciliation. Confirm red.
-- [ ] 3.2 Implement to green: `WorldSnapshot` value type and a snapshot extraction method on `World` (with round-trip tests in `CityCoreTests`)
-- [ ] 3.3 Implement to green: snapshot-driven renderer in `CityRender2D` that replaces the hello-iso spike; delete the spike or rewrite test-first
-- [ ] 3.4 Implement to green: visible-tile culling with margin (math-tested; integration assertion confirms off-screen sprites absent from the scene tree)
-- [ ] 3.5 Tests-first then implement: camera state persisted on `World` so it restores on load — scenario already in spec
-- [ ] 3.6 Build `CityUI` first views: HUD frame with money + population placeholders, build palette stub. View-model logic MUST be tested headlessly via `swift-testing`; visual snapshot tests are deferred per D13.
-- [ ] 3.7 Tests-first then implement: input mapping in `CityRender2D` that dispatches tap/drag/pinch/pan as `Intent` to a controller; the intent translation is pure and fully unit-tested
-- [ ] 3.8 Implement placement of a single hardcoded building type via the build palette and a `place` command, with an integration test that drives `place` through the command queue and asserts the resulting snapshot
+- [x] 3.1 Tests-first: translate every `#### Scenario:` from `specs/rendering-2_5d/spec.md` that does not require a live SpriteKit scene into pure tests in `CityRender2DTests` — iso projection math, culling math (in/out of view), input-intent translation, snapshot diffing for node reconciliation. Confirm red.
+- [x] 3.2 Implement to green: `WorldSnapshot` value type and a snapshot extraction method on `World` (with round-trip tests in `CityCoreTests`)
+- [x] 3.3 Implement to green: snapshot-driven renderer in `CityRender2D` that replaces the hello-iso spike; delete the spike or rewrite test-first
+- [x] 3.4 Implement to green: visible-tile culling with margin (math-tested; integration assertion confirms off-screen sprites absent from the scene tree)
+- [x] 3.5 Tests-first then implement: camera state persisted on `World` so it restores on load — scenario already in spec
+- [x] 3.6 Build `CityUI` first views: HUD frame with money + population placeholders, build palette stub. View-model logic MUST be tested headlessly via `swift-testing`; visual snapshot tests are deferred per D13.
+- [x] 3.7 Tests-first then implement: input mapping in `CityRender2D` that dispatches tap/drag/pinch/pan as `Intent` to a controller; the intent translation is pure and fully unit-tested
+- [x] 3.8 Implement placement of a single hardcoded building type via the build palette and a `place` command, with an integration test that drives `place` through the command queue and asserts the resulting snapshot
 
 ## 4. M3 — Buildings, roads, warehouses (the gameplay backbone)
 
