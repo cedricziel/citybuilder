@@ -6,8 +6,26 @@
 // palette, blocky pixels, strong outlines, simple cell-shaded surfaces.
 //
 // Output (run from repo root):
-//   Resources/Sprites/terrain-<kind>.png   (64x32 each)
-//   Resources/Sprites/building-<kind>.png  (footprint-dependent)
+//   Resources/Sprites/terrain-<kind>.png             (64x32 each, static)
+//   Resources/Sprites/terrain-<kind>-<frame>.png     (water/beach idle anim)
+//   Resources/Sprites/building-<kind>.png            (static, footprint-dependent)
+//   Resources/Sprites/building-<kind>-operational-<frame>.png
+//                                                   (sawmill/lumberjack_hut/
+//                                                    town_center idle anim)
+//   Resources/Sprites/building-<kind>-constructing-<frame>.png
+//                                                   (3-stage scaffold rise,
+//                                                    every building kind)
+//   Resources/Sprites/walker-<facing>-<frame>.png   (2-frame walk × 4 facings)
+//
+// Frame naming follows the SpriteAnimation catalog in CityRender2D:
+//   SpriteAnimation.assetName(for:frame:) MUST match these paths.
+//
+// Frame helpers:
+//   drawWaterShimmer    cycles foam ripples horizontally for 4-frame water
+//   drawSmokeOffset     shifts and fades chimney puffs per frame
+//   drawSawBlade(...angleStep:) rotates the spinning saw spoke marks
+//   drawFlagWave        offsets the flag's trailing edge per frame
+//   drawScaffold        overlays rising scaffold poles + tarpaulin
 //
 // Run via:
 //   swift scripts/generate-sprites.swift
@@ -274,6 +292,13 @@ func forestSprite() -> Pixmap {
 }
 
 func beachSprite() -> Pixmap {
+    beachFrame(frame: 0)
+}
+
+/// Two-frame beach cycle. Frame 0 matches the original static beach
+/// sprite. Frame 1 adds a single foam wash line near the upper-left
+/// edge so the shoreline appears to breathe.
+func beachFrame(frame: Int) -> Pixmap {
     let p = terrainCanvas()
     drawIsoDiamond(
         p,
@@ -285,7 +310,6 @@ func beachSprite() -> Pixmap {
         edge: P.beachDark,
         highlight: P.beachLight
     )
-    // A few pebble specks.
     stippleDiamond(
         p,
         originX: 0,
@@ -295,10 +319,26 @@ func beachSprite() -> Pixmap {
         color: P.beachDark,
         step: 17
     )
+    if frame == 1 {
+        // Wave wash near the back edge of the diamond — a short curve of
+        // light pixels suggesting a tide line.
+        let foam: [(Int, Int)] = [
+            (18, 8), (22, 7), (26, 7), (30, 6), (34, 7), (38, 7), (42, 8)
+        ]
+        for (x, y) in foam { p.set(x, y, P.waterFoam) }
+    }
     return p
 }
 
 func waterSprite() -> Pixmap {
+    waterFrame(frame: 0)
+}
+
+/// One frame of the water shimmer cycle. Frame 0 matches the original
+/// static water sprite so existing references stay visually consistent.
+/// Frames 1-3 cycle the foam ripple positions horizontally and shift the
+/// wave-line crests vertically by one pixel.
+func waterFrame(frame: Int) -> Pixmap {
     let p = terrainCanvas()
     drawIsoDiamond(
         p,
@@ -310,14 +350,21 @@ func waterSprite() -> Pixmap {
         edge: P.waterDark,
         highlight: P.waterLight
     )
-    // Two foam ripples — pairs of lighter pixels in a wavy line.
-    let ripple = [(20, 12), (24, 13), (28, 12), (32, 13), (36, 12), (40, 13), (44, 12)]
-    for (x, y) in ripple {
-        p.set(x, y, P.waterFoam)
+    let xShift = frame * 2 // 0, 2, 4, 6 — wraps via stride bounds checks
+    let yShift = (frame % 2 == 0) ? 0 : 1
+    // Upper ripple: pairs of lighter pixels in a wavy line.
+    let upperBaseX = 20 + xShift
+    for i in 0 ... 6 {
+        let x = upperBaseX + i * 4
+        let y = 12 + (i % 2 == 0 ? 0 : 1) + yShift
+        if x < 60 { p.set(x, y, P.waterFoam) }
     }
-    let ripple2 = [(26, 20), (30, 21), (34, 20), (38, 21)]
-    for (x, y) in ripple2 {
-        p.set(x, y, P.waterFoam)
+    // Lower ripple (out of phase with upper).
+    let lowerBaseX = 26 + ((frame + 2) * 2 % 8)
+    for i in 0 ... 3 {
+        let x = lowerBaseX + i * 4
+        let y = 20 + (i % 2 == 0 ? 0 : 1) - yShift
+        if x < 56, y >= 0 { p.set(x, y, P.waterFoam) }
     }
     return p
 }
@@ -458,16 +505,34 @@ func drawChimney(_ p: Pixmap, x: Int, y: Int, w: Int = 4, h: Int = 6) {
 }
 
 func drawSmoke(_ p: Pixmap, atX cx: Int, atY cy: Int) {
+    drawSmoke(p, atX: cx, atY: cy, frame: 0)
+}
+
+/// Frame-aware smoke. Each puff rises by 1px and fades slightly per
+/// frame; the bottom puff is replaced by a smaller fresh puff so the
+/// stream looks continuous rather than ascending out of existence.
+func drawSmoke(_ p: Pixmap, atX cx: Int, atY cy: Int, frame: Int) {
+    let lift = frame
     let puffs: [(Int, Int, Int)] = [
-        (cx, cy, 2), (cx - 2, cy - 3, 2), (cx + 1, cy - 5, 3), (cx - 1, cy - 8, 2)
+        (cx, cy - lift, 2),
+        (cx - 2, cy - 3 - lift, 2),
+        (cx + 1, cy - 5 - lift, 3),
+        (cx - 1, cy - 8 - lift, max(1, 2 - frame / 2))
     ]
     for (px, py, r) in puffs {
         for dy in -r ... r {
             for dx in -r ... r where dx * dx + dy * dy <= r * r {
-                let color = (dx + dy) % 2 == 0 ? Color(220, 220, 220, 200) : Color(190, 190, 190, 180)
-                p.set(px + dx, py + dy, color)
+                let base = (dx + dy) % 2 == 0
+                    ? Color(220, 220, 220, 200)
+                    : Color(190, 190, 190, 180)
+                p.set(px + dx, py + dy, base)
             }
         }
+    }
+    // Fresh small puff at the chimney mouth so the stream regenerates.
+    if frame > 0 {
+        p.set(cx, cy + 1, Color(230, 230, 230, 210))
+        p.set(cx + 1, cy + 1, Color(220, 220, 220, 200))
     }
 }
 
@@ -506,16 +571,23 @@ func drawPlankStack(_ p: Pixmap, atX baseX: Int, atY baseY: Int) {
 }
 
 func drawSawBlade(_ p: Pixmap, atX cx: Int, atY cy: Int, radius r: Int = 6) {
+    drawSawBlade(p, atX: cx, atY: cy, radius: r, frame: 0)
+}
+
+/// Frame-aware blade. The spoke marks rotate around the hub per frame
+/// so the blade reads as spinning. `frame` cycles through 4 spoke
+/// orientations (0, 30°, 60°, 90° — close enough to suggest rotation
+/// without sub-pixel math).
+func drawSawBlade(_ p: Pixmap, atX cx: Int, atY cy: Int, radius r: Int = 6, frame: Int) {
     for dy in -r ... r {
         for dx in -r ... r {
             let distSq = dx * dx + dy * dy
             if distSq <= r * r {
                 let color: Color
                 if distSq >= (r - 1) * (r - 1) {
-                    // Teeth: alternating outline / steel
                     color = (dx + dy) % 2 == 0 ? P.outline : Color(210, 210, 220)
                 } else if distSq <= 2 {
-                    color = P.outline // hub
+                    color = P.outline
                 } else {
                     color = Color(180, 180, 200)
                 }
@@ -523,28 +595,137 @@ func drawSawBlade(_ p: Pixmap, atX cx: Int, atY cy: Int, radius r: Int = 6) {
             }
         }
     }
-    // Spoke marks for spinning effect
-    p.set(cx, cy - r + 2, P.outline)
-    p.set(cx + r - 2, cy, P.outline)
-    p.set(cx, cy + r - 2, P.outline)
-    p.set(cx - r + 2, cy, P.outline)
+    // Four spoke positions cycle per frame. Each puts 4 spoke pixels
+    // at a different angle, suggesting rotation.
+    let spokeOffsets: [[(Int, Int)]] = [
+        [(0, -r + 2), (r - 2, 0), (0, r - 2), (-r + 2, 0)],
+        [(2, -r + 3), (r - 3, 2), (-2, r - 3), (-r + 3, -2)],
+        [(r - 3, -2), (2, r - 3), (-r + 3, 2), (-2, -r + 3)],
+        [(r - 2, 0), (0, r - 2), (-r + 2, 0), (0, -r + 2)]
+    ]
+    for (dx, dy) in spokeOffsets[frame % spokeOffsets.count] {
+        p.set(cx + dx, cy + dy, P.outline)
+    }
 }
 
 func drawFlag(_ p: Pixmap, poleX: Int, poleTopY: Int, poleHeight: Int) {
+    drawFlag(p, poleX: poleX, poleTopY: poleTopY, poleHeight: poleHeight, frame: 0)
+}
+
+/// Frame-aware flag. Two frames trade the trailing edge's curl: frame 0
+/// trails high (taut), frame 1 trails lower (sagging gust).
+func drawFlag(_ p: Pixmap, poleX: Int, poleTopY: Int, poleHeight: Int, frame: Int) {
     for dy in 0 ..< poleHeight {
         p.set(poleX, poleTopY + dy, P.outline)
     }
-    // Flag waving slightly
-    let flag: [(Int, Int)] = [
-        (poleX + 1, poleTopY + 1), (poleX + 2, poleTopY + 1), (poleX + 3, poleTopY + 1), (poleX + 4, poleTopY + 1), (poleX + 5, poleTopY + 1), (poleX + 6, poleTopY + 1),
-        (poleX + 1, poleTopY + 2), (poleX + 2, poleTopY + 2), (poleX + 3, poleTopY + 2), (poleX + 4, poleTopY + 2), (poleX + 5, poleTopY + 2),
-        (poleX + 1, poleTopY + 3), (poleX + 2, poleTopY + 3), (poleX + 3, poleTopY + 3), (poleX + 4, poleTopY + 3),
+    let taut: [(Int, Int)] = [
+        (poleX + 1, poleTopY + 1), (poleX + 2, poleTopY + 1), (poleX + 3, poleTopY + 1),
+        (poleX + 4, poleTopY + 1), (poleX + 5, poleTopY + 1), (poleX + 6, poleTopY + 1),
+        (poleX + 1, poleTopY + 2), (poleX + 2, poleTopY + 2), (poleX + 3, poleTopY + 2),
+        (poleX + 4, poleTopY + 2), (poleX + 5, poleTopY + 2),
+        (poleX + 1, poleTopY + 3), (poleX + 2, poleTopY + 3), (poleX + 3, poleTopY + 3),
+        (poleX + 4, poleTopY + 3),
         (poleX + 1, poleTopY + 4), (poleX + 2, poleTopY + 4), (poleX + 3, poleTopY + 4)
     ]
-    for (fx, fy) in flag { p.set(fx, fy, P.roofRed) }
-    p.set(poleX + 6, poleTopY + 2, P.outline)
-    p.set(poleX + 5, poleTopY + 3, P.outline)
-    p.set(poleX + 4, poleTopY + 4, P.outline)
+    let sag: [(Int, Int)] = [
+        (poleX + 1, poleTopY + 1), (poleX + 2, poleTopY + 1), (poleX + 3, poleTopY + 1),
+        (poleX + 4, poleTopY + 1), (poleX + 5, poleTopY + 1),
+        (poleX + 1, poleTopY + 2), (poleX + 2, poleTopY + 2), (poleX + 3, poleTopY + 2),
+        (poleX + 4, poleTopY + 2), (poleX + 5, poleTopY + 2), (poleX + 6, poleTopY + 2),
+        (poleX + 1, poleTopY + 3), (poleX + 2, poleTopY + 3), (poleX + 3, poleTopY + 3),
+        (poleX + 4, poleTopY + 3), (poleX + 5, poleTopY + 3),
+        (poleX + 1, poleTopY + 4), (poleX + 2, poleTopY + 4),
+        (poleX + 1, poleTopY + 5)
+    ]
+    let pixels = (frame == 0) ? taut : sag
+    for (fx, fy) in pixels { p.set(fx, fy, P.roofRed) }
+    if frame == 0 {
+        p.set(poleX + 6, poleTopY + 2, P.outline)
+        p.set(poleX + 5, poleTopY + 3, P.outline)
+        p.set(poleX + 4, poleTopY + 4, P.outline)
+    } else {
+        p.set(poleX + 7, poleTopY + 2, P.outline)
+        p.set(poleX + 6, poleTopY + 3, P.outline)
+        p.set(poleX + 3, poleTopY + 4, P.outline)
+        p.set(poleX + 2, poleTopY + 5, P.outline)
+    }
+}
+
+/// Overlay a wooden scaffold cage on top of the building's body. `stage`
+/// 0..totalStages-1 controls how high the scaffold rises and how much
+/// of the underlying building shows through (tarpaulin cover).
+///
+/// Stage 0: foundation only, scaffold base just above tile.
+/// Stage 1: scaffold reaches mid-body height, lower walls visible.
+/// Stage 2: scaffold reaches full body height, near-complete.
+func drawScaffold(
+    _ p: Pixmap,
+    bodyX: Int, bodyY: Int, bodyW: Int, bodyH: Int,
+    stage: Int, totalStages: Int
+) {
+    let stages = max(1, totalStages)
+    let clamped = max(0, min(stage, stages - 1))
+    let progress = Double(clamped + 1) / Double(stages)
+    let scaffoldH = Int(progress * Double(bodyH))
+    let scaffoldTopY = bodyY + bodyH - scaffoldH
+
+    // Tarpaulin: light beige rectangle covering the upper portion of
+    // the building, hiding the not-yet-finished walls. Stage advances
+    // shrink it from the top so the building "reveals" itself.
+    let coverTop = bodyY
+    let coverBottom = scaffoldTopY
+    if coverBottom > coverTop {
+        p.fillRect(
+            x: bodyX, y: coverTop,
+            w: bodyW, h: coverBottom - coverTop,
+            Color(200, 184, 144)
+        )
+        // Tarpaulin shading: a few horizontal lines.
+        for row in stride(from: coverTop + 2, to: coverBottom, by: 3) {
+            for x in (bodyX + 1) ..< (bodyX + bodyW - 1) {
+                p.set(x, row, Color(168, 152, 116))
+            }
+        }
+        // Outline
+        for dy in coverTop ..< coverBottom {
+            p.set(bodyX, dy, P.outline)
+            p.set(bodyX + bodyW - 1, dy, P.outline)
+        }
+        for dx in bodyX ..< (bodyX + bodyW) {
+            p.set(dx, coverTop, P.outline)
+        }
+    }
+
+    // Scaffold poles: four vertical posts in front, one cross-brace.
+    let postCols = [bodyX + 2, bodyX + bodyW / 3, bodyX + 2 * bodyW / 3, bodyX + bodyW - 3]
+    let postBottom = bodyY + bodyH + 1
+    let postTop = scaffoldTopY - 2
+    for col in postCols where col > bodyX && col < bodyX + bodyW {
+        let yStart = max(0, postTop)
+        if postBottom >= yStart {
+            for y in yStart ... postBottom {
+                p.set(col, y, P.woodWallDark)
+            }
+        }
+    }
+    // Horizontal walking plank at the top of the current scaffold.
+    if postTop >= 0 {
+        for x in (bodyX + 1) ..< (bodyX + bodyW - 1) {
+            p.set(x, postTop, P.woodWall)
+            p.set(x, postTop + 1, P.woodWallDark)
+        }
+    }
+    // Diagonal cross-brace on the lower section for visual texture.
+    let braceY0 = postBottom - 4
+    let braceY1 = postBottom
+    let braceX0 = bodyX + 2
+    let braceX1 = bodyX + bodyW / 3
+    let steps = max(1, braceX1 - braceX0)
+    for i in 0 ... steps {
+        let x = braceX0 + i
+        let y = braceY0 + (braceY1 - braceY0) * i / steps
+        p.set(x, y, P.woodWallDark)
+    }
 }
 
 func setupBuildingCanvas(footprintW: Int, footprintH: Int, totalHeight: Int) -> (canvas: Pixmap, baseY: Int) {
@@ -562,7 +743,9 @@ func setupBuildingCanvas(footprintW: Int, footprintH: Int, totalHeight: Int) -> 
 
 // MARK: - Per-building hand-drawn sprites
 
-func houseSprite() -> Pixmap {
+func houseSprite() -> Pixmap { houseSprite(frame: 0) }
+
+func houseSprite(frame: Int) -> Pixmap {
     // 2x2 footprint, modest cottage with chimney + smoke.
     // Body bottom sits AT the diamond midline so the building visually
     // embeds into the tile; only the front V of the foundation shows.
@@ -593,9 +776,11 @@ func houseSprite() -> Pixmap {
     // Roof
     drawPitchedRoof(p, bodyX: bodyX, bodyY: bodyY, bodyW: bodyW, height: 16,
                     overhang: 3, fill: P.roofRed, dark: P.roofRedDark, highlight: Color(220, 100, 80))
-    // Chimney + smoke
+    // Chimney + smoke (frame-aware for house too — even idle houses
+    // have a chimney that could puff, but for now only the static
+    // sprite is published so frame defaults to 0).
     drawChimney(p, x: bodyX + bodyW - 18, y: bodyY - 22)
-    drawSmoke(p, atX: bodyX + bodyW - 16, atY: bodyY - 26)
+    drawSmoke(p, atX: bodyX + bodyW - 16, atY: bodyY - 26, frame: frame)
     return p
 }
 
@@ -657,7 +842,9 @@ func warehouseSprite() -> Pixmap {
     return p
 }
 
-func lumberjackHutSprite() -> Pixmap {
+func lumberjackHutSprite() -> Pixmap { lumberjackHutSprite(frame: 0) }
+
+func lumberjackHutSprite(frame: Int) -> Pixmap {
     // 2x2 footprint: rough log cabin with stacked logs and a chopping block.
     let footprintH = 2
     let tileH = footprintH * 32
@@ -684,6 +871,9 @@ func lumberjackHutSprite() -> Pixmap {
     // Forest-green shingle roof
     drawPitchedRoof(p, bodyX: bodyX, bodyY: bodyY, bodyW: bodyW, height: 14,
                     overhang: 3, fill: P.forest, dark: P.forestDark, highlight: P.forestLight)
+    // Small stone chimney at the back of the roof + frame-aware smoke.
+    drawChimney(p, x: bodyX + bodyW - 14, y: bodyY - 10, w: 3, h: 6)
+    drawSmoke(p, atX: bodyX + bodyW - 13, atY: bodyY - 14, frame: frame)
     // Log pile to the right of the hut, in the front of the tile.
     drawLogPile(p, atX: bodyX + bodyW + 2, atY: baseY + tileH - 14)
     // Chopping block with axe to the left, front of tile.
@@ -703,7 +893,9 @@ func lumberjackHutSprite() -> Pixmap {
     return p
 }
 
-func sawmillSprite() -> Pixmap {
+func sawmillSprite() -> Pixmap { sawmillSprite(frame: 0) }
+
+func sawmillSprite(frame: Int) -> Pixmap {
     // 2x2: stone foundation, half-timbered walls, big circular saw + plank stacks.
     let footprintH = 2
     let tileH = footprintH * 32
@@ -736,16 +928,18 @@ func sawmillSprite() -> Pixmap {
                     overhang: 3, fill: P.woodWallDark, dark: Color(60, 40, 22),
                     highlight: P.woodWall)
     // Big saw blade on the side of the building (next to the wall).
-    drawSawBlade(p, atX: bodyX + bodyW + 8, atY: bodyBottom - 10, radius: 8)
+    drawSawBlade(p, atX: bodyX + bodyW + 8, atY: bodyBottom - 10, radius: 8, frame: frame)
     // Plank stack at the front of the tile.
     drawPlankStack(p, atX: bodyX - 16, atY: baseY + tileH - 6)
     // Chimney with smoke
     drawChimney(p, x: bodyX + 6, y: bodyY - 16, w: 4, h: 8)
-    drawSmoke(p, atX: bodyX + 8, atY: bodyY - 20)
+    drawSmoke(p, atX: bodyX + 8, atY: bodyY - 20, frame: frame)
     return p
 }
 
-func townCenterSprite() -> Pixmap {
+func townCenterSprite() -> Pixmap { townCenterSprite(frame: 0) }
+
+func townCenterSprite(frame: Int) -> Pixmap {
     // 3x3: grand civic building with a bell tower and flag.
     let footprintH = 3
     let tileH = footprintH * 32
@@ -831,7 +1025,7 @@ func townCenterSprite() -> Pixmap {
                     overhang: 2, fill: P.roofRed, dark: P.roofRedDark,
                     highlight: Color(220, 100, 80))
     // Flagpole + flag on top
-    drawFlag(p, poleX: towerX + towerW / 2, poleTopY: towerY - 22, poleHeight: 14)
+    drawFlag(p, poleX: towerX + towerW / 2, poleTopY: towerY - 22, poleHeight: 14, frame: frame)
     return p
 }
 
@@ -860,6 +1054,103 @@ func roadSprite() -> Pixmap {
         }
     }
     return p
+}
+
+// MARK: - Constructing frames (scaffold overlay)
+
+/// Per-kind body rectangle in the building canvas. Matches the
+/// `body{X,Y,W,H}` locals in each `<kind>Sprite` function so the
+/// scaffold cage lines up with the actual walls.
+struct BodyRectInCanvas { let x: Int; let y: Int; let w: Int; let h: Int }
+
+enum BuildingKindRaw: String, CaseIterable {
+    case house
+    case warehouse
+    case road
+    case lumberjackHut = "lumberjack_hut"
+    case sawmill
+    case townCenter = "town_center"
+}
+
+/// Compute the body rect for a kind from its canonical sprite. Mirrors
+/// the `bodyX/bodyY/bodyW/bodyH` math inside each per-kind sprite fn.
+func bodyRect(for kind: BuildingKindRaw, canvasW: Int, canvasH: Int) -> BodyRectInCanvas {
+    switch kind {
+    case .house:
+        let footprintH = 2
+        let tileH = footprintH * 32
+        let baseY = canvasH - tileH
+        let bodyH = 30
+        let bodyW = 56
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyBottom = baseY + tileH / 2
+        return BodyRectInCanvas(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+    case .warehouse:
+        let footprintH = 3
+        let tileH = footprintH * 32
+        let baseY = canvasH - tileH
+        let bodyH = 44
+        let bodyW = 96
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyBottom = baseY + tileH / 2
+        return BodyRectInCanvas(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+    case .lumberjackHut:
+        let footprintH = 2
+        let tileH = footprintH * 32
+        let baseY = canvasH - tileH
+        let bodyH = 26
+        let bodyW = 52
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyBottom = baseY + tileH / 2
+        return BodyRectInCanvas(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+    case .sawmill:
+        let footprintH = 2
+        let tileH = footprintH * 32
+        let baseY = canvasH - tileH
+        let bodyH = 30
+        let bodyW = 56
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyBottom = baseY + tileH / 2
+        return BodyRectInCanvas(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+    case .townCenter:
+        let footprintH = 3
+        let tileH = footprintH * 32
+        let baseY = canvasH - tileH
+        let bodyH = 56
+        let bodyW = 104
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyBottom = baseY + tileH / 2
+        return BodyRectInCanvas(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+    case .road:
+        // Road is 1×1, no body. Scaffold covers a small mound on the tile.
+        let bodyW = 32
+        let bodyH = 14
+        let bodyX = (canvasW - bodyW) / 2
+        let bodyY = canvasH - 32 + 2
+        return BodyRectInCanvas(x: bodyX, y: bodyY, w: bodyW, h: bodyH)
+    }
+}
+
+func baseBuilding(for kind: BuildingKindRaw) -> Pixmap {
+    switch kind {
+    case .house: return houseSprite()
+    case .warehouse: return warehouseSprite()
+    case .lumberjackHut: return lumberjackHutSprite()
+    case .sawmill: return sawmillSprite()
+    case .townCenter: return townCenterSprite()
+    case .road: return roadSprite()
+    }
+}
+
+func constructingFrame(for kind: BuildingKindRaw, stage: Int) -> Pixmap {
+    let base = baseBuilding(for: kind)
+    let rect = bodyRect(for: kind, canvasW: base.width, canvasH: base.height)
+    drawScaffold(
+        base,
+        bodyX: rect.x, bodyY: rect.y, bodyW: rect.w, bodyH: rect.h,
+        stage: stage, totalStages: 3
+    )
+    return base
 }
 
 // MARK: - Walker sprites (8×12 each, 4 facings × 2 frames = 8 PNGs)
@@ -972,6 +1263,36 @@ for facing in Facing.allCases {
     for frame in 0 ... 1 {
         let sprite = walkerSprite(facing: facing, frame: frame)
         sprite.savePNG(to: "\(outputDir)/walker-\(facing.rawValue)-\(frame).png")
+    }
+}
+
+print("Generating terrain idle-animation frames...")
+for frame in 0 ... 3 {
+    waterFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-water-\(frame).png")
+}
+for frame in 0 ... 1 {
+    beachFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-beach-\(frame).png")
+}
+
+print("Generating building operational-animation frames...")
+for frame in 0 ... 3 {
+    sawmillSprite(frame: frame)
+        .savePNG(to: "\(outputDir)/building-sawmill-operational-\(frame).png")
+}
+for frame in 0 ... 1 {
+    lumberjackHutSprite(frame: frame)
+        .savePNG(to: "\(outputDir)/building-lumberjack_hut-operational-\(frame).png")
+}
+for frame in 0 ... 1 {
+    townCenterSprite(frame: frame)
+        .savePNG(to: "\(outputDir)/building-town_center-operational-\(frame).png")
+}
+
+print("Generating building constructing-animation frames...")
+for kind in BuildingKindRaw.allCases {
+    for stage in 0 ... 2 {
+        constructingFrame(for: kind, stage: stage)
+            .savePNG(to: "\(outputDir)/building-\(kind.rawValue)-constructing-\(stage).png")
     }
 }
 
