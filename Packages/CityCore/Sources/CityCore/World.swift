@@ -135,6 +135,7 @@ public struct World: Codable, Sendable, Equatable {
         simulatedTime += .tick
         advanceBuildings()
         runProductionSystem()
+        runCarrierSystem()
         runPopulationSystem()
         runEconomySystem()
 

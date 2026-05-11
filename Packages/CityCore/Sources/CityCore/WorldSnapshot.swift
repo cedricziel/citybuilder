@@ -15,6 +15,7 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let terrainGrid: [TerrainType]
     public let occupiedTiles: [TileCoordinate: EntityID]
     public let buildings: [EntityID: Building]
+    public let carriers: [Carrier]
     public let economy: Economy
     public let totalPopulation: UInt64
     public let camera: Camera
@@ -27,6 +28,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         terrainGrid: [TerrainType],
         occupiedTiles: [TileCoordinate: EntityID],
         buildings: [EntityID: Building],
+        carriers: [Carrier],
         economy: Economy,
         totalPopulation: UInt64,
         camera: Camera
@@ -38,6 +40,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.terrainGrid = terrainGrid
         self.occupiedTiles = occupiedTiles
         self.buildings = buildings
+        self.carriers = carriers
         self.economy = economy
         self.totalPopulation = totalPopulation
         self.camera = camera
@@ -64,6 +67,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
+            carriers: Array(carriers.values),
             economy: economy,
             totalPopulation: pop,
             camera: camera

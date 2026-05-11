@@ -55,6 +55,118 @@ extension World {
         }
     }
 
+    /// Carrier lifecycle: advance in-flight carriers along their path,
+    /// deposit goods on arrival, then spawn fresh carriers from producers
+    /// whose output stockpiles have something to ship.
+    mutating func runCarrierSystem() {
+        advanceCarriers()
+        spawnCarriersFromProducers()
+    }
+
+    private mutating func advanceCarriers() {
+        for (id, carrier) in carriers {
+            if carrier.hasArrived {
+                applyCarrierArrival(carrier)
+                if case let .deliver(_, _, fromProducer, _) = carrier.mission {
+                    carrierCountByProducer[fromProducer, default: 1] -= 1
+                }
+                carriers.removeValue(forKey: id)
+            } else {
+                var updated = carrier
+                updated.pathIndex += 1
+                carriers[id] = updated
+            }
+        }
+    }
+
+    private mutating func applyCarrierArrival(_ carrier: Carrier) {
+        switch carrier.mission {
+        case let .deliver(good, amount, _, toWarehouse):
+            stockpiles[toWarehouse]?.deposit(good, amount: amount)
+        case let .retrieve(good, amount, _, toConsumer):
+            stockpiles[toConsumer]?.deposit(good, amount: amount)
+        }
+    }
+
+    private mutating func spawnCarriersFromProducers() {
+        for (producerId, building) in buildings where building.state == .operational {
+            guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
+            let inFlight = carrierCountByProducer[producerId, default: 0]
+            guard inFlight < CarrierConfig.perProducerCap else { continue }
+            // Pick the first output good currently in the producer's stockpile.
+            guard let producerStock = stockpiles[producerId] else { continue }
+            let footprint = BuildingCatalog.spec(for: building.kind).footprint
+            guard let road = anyAdjacentRoad(anchor: building.anchor, footprint: footprint) else { continue }
+
+            for (good, _) in recipe.outputs where producerStock.quantity(of: good) >= 1 {
+                guard let (warehouseId, path) = findRoadConnectedWarehouse(
+                    fromRoad: road,
+                    good: good
+                )
+                else { continue }
+
+                // Withdraw 1 unit and create the carrier.
+                stockpiles[producerId]?.withdraw(good, amount: 1)
+                let carrierId = EntityID(raw: nextEntityRaw)
+                nextEntityRaw &+= 1
+                let carrier = Carrier(
+                    id: carrierId,
+                    path: path,
+                    mission: .deliver(good: good, amount: 1, fromProducer: producerId, toWarehouse: warehouseId)
+                )
+                carriers[carrierId] = carrier
+                carrierCountByProducer[producerId, default: 0] += 1
+                break // one carrier per producer per tick
+            }
+        }
+    }
+
+    /// Returns any road tile orthogonally adjacent to the footprint, or nil
+    /// if the building isn't road-connected.
+    private func anyAdjacentRoad(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
+        let occupied = Set(footprint.tiles(anchor: anchor))
+        for tile in occupied {
+            for neighbor in [
+                TileCoordinate(x: tile.x + 1, y: tile.y),
+                TileCoordinate(x: tile.x - 1, y: tile.y),
+                TileCoordinate(x: tile.x, y: tile.y + 1),
+                TileCoordinate(x: tile.x, y: tile.y - 1)
+            ] where !occupied.contains(neighbor) && roadGraph.isConnected(neighbor) {
+                return neighbor
+            }
+        }
+        return nil
+    }
+
+    /// Find the road-connected warehouse with capacity for `good`. Returns
+    /// (warehouseId, road path) on the shortest path; nil if none reachable.
+    private func findRoadConnectedWarehouse(
+        fromRoad start: TileCoordinate,
+        good: Good
+    ) -> (EntityID, [TileCoordinate])? {
+        var best: (EntityID, [TileCoordinate])?
+        for (id, building) in buildings where building.kind == .warehouse && building.state == .operational {
+            let warehouseFootprint = BuildingCatalog.spec(for: .warehouse).footprint
+            guard let warehouseRoad = anyAdjacentRoad(
+                anchor: building.anchor,
+                footprint: warehouseFootprint
+            )
+            else { continue }
+            guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
+            _ = good // future: check warehouse accepts this good type
+            guard let path = PathFinder.path(
+                from: start,
+                to: warehouseRoad,
+                in: roadGraph
+            )
+            else { continue }
+            if best == nil || path.count < best!.1.count {
+                best = (id, path)
+            }
+        }
+        return best
+    }
+
     mutating func runEconomySystem() {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {

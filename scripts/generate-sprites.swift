@@ -862,6 +862,90 @@ func roadSprite() -> Pixmap {
     return p
 }
 
+// MARK: - Walker sprites (8×12 each, 4 facings × 2 frames = 8 PNGs)
+
+enum Facing: String, CaseIterable {
+    case ne, se, sw, nw
+    var tunicColor: Color {
+        switch self {
+        case .ne: return Color(180, 60, 50)   // red tunic
+        case .se: return Color(180, 140, 80)  // brown tunic
+        case .sw: return Color(80, 100, 180)  // blue tunic
+        case .nw: return Color(150, 110, 70)  // tan tunic
+        }
+    }
+}
+
+func walkerSprite(facing: Facing, frame: Int) -> Pixmap {
+    let p = Pixmap(width: 8, height: 12)
+    let skin = Color(232, 196, 152)
+    let hair = Color(80, 50, 28)
+    let tunic = facing.tunicColor
+    let tunicShade = tunic.darker(40)
+    let pants = Color(64, 50, 36)
+    let outline = P.outline
+    let sack = Color(140, 110, 60)
+    let sackShade = sack.darker(40)
+
+    // Head (3×3 with hair on top, centered cols 2-4).
+    p.fillRect(x: 2, y: 1, w: 3, h: 2, skin)
+    // Hair (1 px on top row, slight forelock).
+    p.set(2, 0, hair); p.set(3, 0, hair); p.set(4, 0, hair)
+    p.set(2, 1, hair) // forelock on the sun-facing side
+    // Head outline
+    p.set(1, 1, outline); p.set(5, 1, outline)
+    p.set(1, 2, outline); p.set(5, 2, outline)
+    p.set(2, 3, outline); p.set(4, 3, outline)
+    // Eyes (single dark pixel each) — only on N-facing variants since
+    // S-facing shows the back of the head.
+    if facing == .ne || facing == .nw {
+        p.set(2, 2, outline)
+        p.set(4, 2, outline)
+    }
+
+    // Body / tunic (cols 1-5, rows 4-7).
+    p.fillRect(x: 1, y: 4, w: 5, h: 4, tunic)
+    // Tunic shading: the right column gets a darker shade (shadow side).
+    for dy in 0 ..< 4 { p.set(5, 4 + dy, tunicShade) }
+    // Belt at the bottom of the tunic.
+    for dx in 1 ... 5 { p.set(dx, 7, outline) }
+    // Outline body sides
+    for dy in 0 ..< 4 {
+        p.set(0, 4 + dy, outline)
+        p.set(6, 4 + dy, outline)
+    }
+    // Arms (skin tone pixels just outside the tunic).
+    p.set(0, 5, skin); p.set(6, 5, skin)
+    p.set(0, 6, outline); p.set(6, 6, outline)
+
+    // Sack on shoulder (NW corner of the body).
+    p.fillRect(x: 1, y: 3, w: 2, h: 2, sack)
+    p.set(0, 3, outline); p.set(3, 3, outline)
+    p.set(1, 4, sackShade)
+
+    // Legs / feet. Frame 0 = mid-stride, frame 1 = legs apart.
+    let legColor = pants
+    if frame == 0 {
+        // Both legs together-ish (stride passing through center).
+        p.fillRect(x: 2, y: 8, w: 1, h: 3, legColor)
+        p.fillRect(x: 4, y: 8, w: 1, h: 3, legColor)
+        // Feet.
+        p.set(1, 11, outline); p.set(2, 11, outline)
+        p.set(4, 11, outline); p.set(5, 11, outline)
+    } else {
+        // Legs apart (one forward, one back) — distinct walking pose.
+        p.fillRect(x: 1, y: 8, w: 1, h: 2, legColor)
+        p.set(1, 10, legColor)
+        p.fillRect(x: 5, y: 8, w: 1, h: 2, legColor)
+        p.set(5, 10, legColor)
+        // Feet.
+        p.set(0, 10, outline); p.set(1, 10, outline)
+        p.set(5, 10, outline); p.set(6, 10, outline)
+    }
+
+    return p
+}
+
 // MARK: - Main
 
 let cwd = FileManager.default.currentDirectoryPath
@@ -882,5 +966,13 @@ lumberjackHutSprite().savePNG(to: "\(outputDir)/building-lumberjack_hut.png")
 sawmillSprite().savePNG(to: "\(outputDir)/building-sawmill.png")
 townCenterSprite().savePNG(to: "\(outputDir)/building-town_center.png")
 roadSprite().savePNG(to: "\(outputDir)/building-road.png")
+
+print("Generating walker sprites...")
+for facing in Facing.allCases {
+    for frame in 0 ... 1 {
+        let sprite = walkerSprite(facing: facing, frame: frame)
+        sprite.savePNG(to: "\(outputDir)/walker-\(facing.rawValue)-\(frame).png")
+    }
+}
 
 print("Done. Sprites in \(outputDir)/")

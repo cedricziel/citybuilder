@@ -22,6 +22,23 @@ public enum SpriteAtlas {
         texture(named: "building-\(kind.rawValue)")
     }
 
+    public enum WalkerFacing: String, CaseIterable {
+        case ne, se, sw, nw
+    }
+
+    /// Returns the two-frame walk cycle for a given facing. nil if any
+    /// frame is missing (graceful fallback to a static sprite or nothing).
+    public static func walkerAnimation(facing: WalkerFacing) -> [SKTexture]? {
+        var frames: [SKTexture] = []
+        for frame in 0 ... 1 {
+            guard let tex = texture(named: "walker-\(facing.rawValue)-\(frame)") else {
+                return nil
+            }
+            frames.append(tex)
+        }
+        return frames
+    }
+
     private static func texture(named name: String) -> SKTexture? {
         var hit: SKTexture?
         cacheQueue.sync { hit = cache[name] }
