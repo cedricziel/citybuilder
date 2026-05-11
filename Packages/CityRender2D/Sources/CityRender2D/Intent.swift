@@ -9,6 +9,7 @@ import Foundation
 /// Per spec rendering-2_5d "Input mapping".
 public enum Intent: Hashable, Sendable {
     case tapTile(TileCoordinate)
+    case dragTile(TileCoordinate)
     case panCamera(deltaCenterX: Double, deltaCenterY: Double)
     case pinchZoom(factor: Double)
     case hoverTile(TileCoordinate?)

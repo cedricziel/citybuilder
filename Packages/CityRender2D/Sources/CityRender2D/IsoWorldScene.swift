@@ -29,11 +29,42 @@ public final class IsoWorldScene: SKScene {
     private var carrierVisuals: [UInt32: CarrierVisual] = [:]
     private let cameraNode = SKCameraNode()
 
-    override public func didMove(to _: SKView) {
+    /// Ghost preview node shown at the hovered tile when a build tool is
+    /// armed. The scene polls `ghostProvider` on every update; the
+    /// controller (GameSession) returns the current ghost state.
+    private var ghostNode: SKSpriteNode?
+    public var ghostProvider: (() -> GhostState?)?
+
+    public struct GhostState {
+        public let kind: BuildingKind
+        public let tile: TileCoordinate
+        public let valid: Bool
+        public init(kind: BuildingKind, tile: TileCoordinate, valid: Bool) {
+            self.kind = kind; self.tile = tile; self.valid = valid
+        }
+    }
+
+    /// Last tile reported by a drag movement so we don't spam dragTile
+    /// intents for the same tile while the finger / pointer moves within it.
+    private var lastDragTile: TileCoordinate?
+
+    override public func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.05, green: 0.08, blue: 0.12, alpha: 1)
         scaleMode = .resizeFill
         addChild(cameraNode)
         camera = cameraNode
+        #if canImport(AppKit)
+        // mouseMoved only fires when the host window allows it; opt in here
+        // so hover-driven ghost preview works on macOS.
+        view.window?.acceptsMouseMovedEvents = true
+        let trackingArea = NSTrackingArea(
+            rect: view.bounds,
+            options: [.activeInKeyWindow, .inVisibleRect, .mouseMoved, .mouseEnteredAndExited],
+            owner: view,
+            userInfo: nil
+        )
+        view.addTrackingArea(trackingArea)
+        #endif
     }
 
     #if canImport(UIKit)
@@ -41,24 +72,69 @@ public final class IsoWorldScene: SKScene {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
         dispatchTap(at: location)
+        lastDragTile = nil
+    }
+
+    override public func touchesMoved(_ touches: Set<UITouch>, with _: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        dispatchDrag(at: location)
+    }
+
+    override public func touchesCancelled(_: Set<UITouch>, with _: UIEvent?) {
+        lastDragTile = nil
     }
 
     #elseif canImport(AppKit)
     override public func mouseUp(with event: NSEvent) {
         let location = event.location(in: self)
         dispatchTap(at: location)
+        lastDragTile = nil
+    }
+
+    override public func mouseDragged(with event: NSEvent) {
+        let location = event.location(in: self)
+        dispatchDrag(at: location)
+    }
+
+    override public func mouseMoved(with event: NSEvent) {
+        let location = event.location(in: self)
+        dispatchHover(at: location)
+    }
+
+    override public func mouseExited(with _: NSEvent) {
+        intentSink?(.hoverTile(nil))
     }
     #endif
 
-    private func dispatchTap(at sceneLocation: CGPoint) {
-        guard let snapshot = dataSource?.currentSnapshot() else { return }
-        if let intent = InputTranslator.tapIntent(
-            atScreenPoint: sceneLocation,
-            mapWidth: snapshot.mapWidth,
-            mapHeight: snapshot.mapHeight
-        ) {
-            intentSink?(intent)
+    private func tile(forScene location: CGPoint, mapWidth: Int, mapHeight: Int) -> TileCoordinate? {
+        let coord = IsoMath.nearestTile(toScreenPoint: location)
+        guard coord.x >= 0, coord.x < mapWidth, coord.y >= 0, coord.y < mapHeight else {
+            return nil
         }
+        return coord
+    }
+
+    private func dispatchTap(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot(),
+              let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
+        else { return }
+        intentSink?(.tapTile(coord))
+    }
+
+    private func dispatchDrag(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot(),
+              let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
+        else { return }
+        guard coord != lastDragTile else { return }
+        lastDragTile = coord
+        intentSink?(.dragTile(coord))
+    }
+
+    private func dispatchHover(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot() else { return }
+        let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
+        intentSink?(.hoverTile(coord))
     }
 
     override public func update(_: TimeInterval) {
@@ -66,6 +142,42 @@ public final class IsoWorldScene: SKScene {
         applyCamera(snapshot.camera)
         reconcileSprites(with: snapshot)
         reconcileCarriers(with: snapshot)
+        reconcileGhost()
+    }
+
+    private func reconcileGhost() {
+        guard let ghost = ghostProvider?() else {
+            ghostNode?.removeFromParent()
+            ghostNode = nil
+            return
+        }
+        guard let texture = SpriteAtlas.buildingTexture(for: ghost.kind) else {
+            ghostNode?.removeFromParent()
+            ghostNode = nil
+            return
+        }
+        let node = ghostNode ?? SKSpriteNode(texture: texture)
+        node.texture = texture
+        node.anchorPoint = CGPoint(x: 0.5, y: 0)
+        let halfH = IsoMath.tileHeight / 2
+        let footprint = BuildingCatalog.spec(for: ghost.kind).footprint
+        let footprintH = CGFloat(footprint.height)
+        let footprintW = CGFloat(footprint.width)
+        let tileScreen = IsoMath.screenPoint(forTile: ghost.tile)
+        node.position = CGPoint(
+            x: tileScreen.x + (footprintW - footprintH) * IsoMath.tileWidth / 4,
+            y: tileScreen.y - halfH * (2 * footprintH - 1)
+        )
+        node.zPosition = 1000 // always on top
+        node.alpha = 0.5
+        node.color = ghost.valid
+            ? SKColor(red: 0.4, green: 1.0, blue: 0.4, alpha: 1)
+            : SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1)
+        node.colorBlendFactor = 0.55
+        if ghostNode == nil {
+            ghostNode = node
+            addChild(node)
+        }
     }
 
     private func reconcileCarriers(with snapshot: WorldSnapshot) {
@@ -318,7 +430,8 @@ public struct IsoWorldView: View {
 
     public init(
         snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
-        intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil
+        intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
+        ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil
     ) {
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
@@ -329,6 +442,9 @@ public struct IsoWorldView: View {
             prepared.intentSink = { intent in
                 Task { @MainActor in intentSink(intent) }
             }
+        }
+        if let ghostProvider {
+            prepared.ghostProvider = { ghostProvider() }
         }
         // Retain the bridge by parking it on the scene.
         prepared.userData = ["__snapshotBridge": bridge]
