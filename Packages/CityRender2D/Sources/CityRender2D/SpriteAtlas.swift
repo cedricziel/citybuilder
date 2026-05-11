@@ -2,6 +2,12 @@ import CityCore
 import Foundation
 import SpriteKit
 
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
+
 /// Maps a sprite name to the category atlas that owns it. The routing
 /// table is fixed by the sprite-asset-pipeline naming grammar: a name's
 /// prefix uniquely determines its atlas. New prefixes (e.g. `ship-` once
@@ -109,6 +115,72 @@ public enum SpriteAtlas {
         let names = Set(atlas.textureNames)
         cacheQueue.sync { atlasNameSetCache[atlasName] = names }
         return names
+    }
+
+    // MARK: - Release-mode placeholder + log-once
+
+    /// 32×32 magenta sprite used as the visible placeholder when a
+    /// catalogued sprite name fails to resolve at draw time. Spec:
+    /// `rendering-2_5d` / `Missing-sprite fallback in release`.
+    public nonisolated(unsafe) static let placeholderTexture: SKTexture = makePlaceholderTexture()
+
+    /// Test-only hook: when set, called instead of `NSLog` for the
+    /// first miss observed for each name. Tests use this to assert
+    /// the log-once invariant without intercepting the system log.
+    nonisolated(unsafe) static var missLogHook: ((String) -> Void)?
+
+    private nonisolated(unsafe) static var loggedMisses: Set<String> = []
+
+    /// Returns the named texture, or `placeholderTexture` if the
+    /// lookup fails. The missing name is logged exactly once per
+    /// process lifetime so a catalog bug that escaped the debug-only
+    /// `assertCatalogComplete()` check still surfaces loudly in
+    /// release without crashing the renderer.
+    public static func textureOrPlaceholder(named name: String) -> SKTexture {
+        if let tex = texture(named: name) { return tex }
+        logMissOnce(name)
+        return placeholderTexture
+    }
+
+    private static func logMissOnce(_ name: String) {
+        var shouldLog = false
+        cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
+        guard shouldLog else { return }
+        if let hook = missLogHook {
+            hook(name)
+        } else {
+            NSLog("[CityRender2D] missing sprite: %@", name)
+        }
+    }
+
+    private static func makePlaceholderTexture() -> SKTexture {
+        let size = CGSize(width: 32, height: 32)
+        let rect = CGRect(origin: .zero, size: size)
+        #if canImport(UIKit)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { ctx in
+            UIColor.magenta.setFill()
+            ctx.fill(rect)
+        }
+        let texture = SKTexture(image: image)
+        #elseif canImport(AppKit)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        NSColor.magenta.setFill()
+        rect.fill()
+        image.unlockFocus()
+        let texture = SKTexture(image: image)
+        #else
+        let texture = SKTexture()
+        #endif
+        texture.filteringMode = .nearest
+        return texture
+    }
+
+    /// Test-only: clears the per-process miss-log set so a follow-up
+    /// test observes the first-miss path.
+    static func resetMissLogForTesting() {
+        cacheQueue.sync { loggedMisses.removeAll() }
     }
 
     // MARK: - Catalog & presence validation
