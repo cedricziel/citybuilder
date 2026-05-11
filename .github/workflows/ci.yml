@@ -1,0 +1,116 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: lint + build + test + coverage
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout (with full history for diff-cover)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Print toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+          uname -a
+
+      - name: Install Homebrew tools
+        run: |
+          brew install xcodegen swiftlint swiftformat pre-commit pipx
+          pipx ensurepath
+          pipx install diff-cover
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+
+      - name: pre-commit run --all-files
+        run: pre-commit run --all-files --show-diff-on-failure
+
+      - name: make generate
+        run: make generate
+
+      - name: Verify CityCore is framework-free
+        run: make test-citycore-framework-free
+
+      - name: swift test (all packages)
+        run: |
+          for pkg in CityCore CityPersistence CityUI CityRender2D CityRender3D; do
+            echo "::group::swift test $pkg"
+            swift test --package-path "Packages/$pkg" --enable-code-coverage
+            echo "::endgroup::"
+          done
+
+      - name: Coverage gate (CityCore floors + diff-cover vs main)
+        env:
+          COVERAGE_BASE_REF: origin/main
+          COVERAGE_STRICT: "1"
+        run: make test-coverage
+
+      - name: Scenario-to-test coverage report
+        env:
+          SCENARIO_COVERAGE_STRICT: "0"
+        run: make test-scenarios
+
+      - name: Build CitybuilderiOS
+        run: |
+          xcodebuild \
+            -project Citybuilder.xcodeproj \
+            -scheme CitybuilderiOS \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify --renderer github-actions
+        shell: bash
+
+      - name: Build CitybuilderMac
+        run: |
+          xcodebuild \
+            -project Citybuilder.xcodeproj \
+            -scheme CitybuilderMac \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify --renderer github-actions
+        shell: bash
+
+      - name: Build citybuilder-cli
+        run: |
+          xcodebuild \
+            -project Citybuilder.xcodeproj \
+            -scheme citybuilder-cli \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify --renderer github-actions
+        shell: bash
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
