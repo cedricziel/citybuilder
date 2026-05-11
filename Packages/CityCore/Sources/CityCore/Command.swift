@@ -20,4 +20,7 @@ public enum Command: Codable, Equatable, Sendable {
     /// placements are dropped without effect. Buildings get a freshly
     /// allocated EntityID and are recorded in `occupiedTiles`.
     case place(BuildingKind, at: TileCoordinate)
+
+    /// Demolish the building anchored at the given tile (if any).
+    case demolish(at: TileCoordinate)
 }

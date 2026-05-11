@@ -28,6 +28,14 @@ public struct World: Codable, Sendable, Equatable {
     /// Coordinates currently claimed by a building footprint. Buildings are
     /// modeled as opaque entity IDs for M1; full catalog arrives in M3.
     public internal(set) var occupiedTiles: [TileCoordinate: EntityID]
+    /// Buildings keyed by EntityID. Construction state lives here.
+    public internal(set) var buildings: [EntityID: Building] = [:]
+    /// Per-building stockpiles. Warehouses, producers, and consumers all
+    /// participate via the same Stockpile type.
+    public internal(set) var stockpiles: [EntityID: Stockpile] = [:]
+    /// Connectivity graph over road tiles. Updated incrementally by
+    /// place(.road) and demolish on road tiles.
+    public internal(set) var roadGraph: RoadGraph = .init()
     /// Next entity ID to allocate. Auto-increments deterministically as
     /// buildings are placed.
     public internal(set) var nextEntityRaw: UInt32 = 1
@@ -82,11 +90,14 @@ public struct World: Codable, Sendable, Equatable {
         return terrainGrid[coord.y * mapWidth + coord.x]
     }
 
-    public func canPlace(_: BuildingKind, at coord: TileCoordinate) -> PlacementResult {
-        guard contains(coord) else { return .rejected(.outOfBounds) }
-        if occupiedTiles[coord] != nil { return .rejected(.tileOccupied) }
-        let terrainHere = terrain(at: coord) ?? .water
-        if terrainHere == .water { return .rejected(.terrainNotBuildable) }
+    public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate) -> PlacementResult {
+        let spec = BuildingCatalog.spec(for: kind)
+        for tile in spec.footprint.tiles(anchor: anchor) {
+            guard contains(tile) else { return .rejected(.outOfBounds) }
+            if occupiedTiles[tile] != nil { return .rejected(.tileOccupied) }
+            let terrainHere = terrain(at: tile) ?? .water
+            if terrainHere == .water { return .rejected(.terrainNotBuildable) }
+        }
         return .allowed
     }
 
@@ -109,12 +120,25 @@ public struct World: Codable, Sendable, Equatable {
         for command in drained {
             apply(command)
         }
+        advanceBuildings()
         tickCount &+= 1
         simulatedTime += .tick
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
         return TickMetrics(wallClockNanoseconds: elapsed)
+    }
+
+    private mutating func advanceBuildings() {
+        for (id, building) in buildings where building.state == .constructing {
+            var updated = building
+            updated.ticksSincePlacement &+= 1
+            let spec = BuildingCatalog.spec(for: building.kind)
+            if updated.ticksSincePlacement >= spec.buildDurationTicks {
+                updated.state = .operational
+            }
+            buildings[id] = updated
+        }
     }
 
     /// Monotonic clock reading in nanoseconds. Built on `DispatchTime` so it
@@ -133,16 +157,57 @@ public struct World: Codable, Sendable, Equatable {
             // `world-terrain` ("Forest tile can be cleared").
             guard contains(coord), terrain(at: coord) == .forest else { return }
             terrainGrid[coord.y * mapWidth + coord.x] = .grass
-        case let .place(kind, coord):
-            // Validation runs here at the tick boundary. Rejected
-            // placements drop silently in M2; UI feedback comes in M3
-            // when the full building/construction pipeline lands.
-            _ = kind
-            if case .allowed = canPlace(kind, at: coord) {
-                let id = EntityID(raw: nextEntityRaw)
-                nextEntityRaw &+= 1
-                occupiedTiles[coord] = id
-            }
+        case let .place(kind, anchor):
+            applyPlace(kind: kind, anchor: anchor)
+        case let .demolish(anchor):
+            applyDemolish(anchor: anchor)
+        }
+    }
+
+    private mutating func applyPlace(kind: BuildingKind, anchor: TileCoordinate) {
+        guard case .allowed = canPlace(kind, at: anchor) else { return }
+        let spec = BuildingCatalog.spec(for: kind)
+        let id = EntityID(raw: nextEntityRaw)
+        nextEntityRaw &+= 1
+        let initialState: BuildingState = spec.buildDurationTicks == 0 ? .operational : .constructing
+        let building = Building(id: id, kind: kind, anchor: anchor, state: initialState)
+        buildings[id] = building
+        for tile in spec.footprint.tiles(anchor: anchor) {
+            occupiedTiles[tile] = id
+        }
+        if kind == .road {
+            roadGraph.addRoad(at: anchor)
+        }
+        if let capacity = Self.stockpileCapacity(for: kind) {
+            stockpiles[id] = Stockpile(capacity: capacity)
+        }
+    }
+
+    /// Default stockpile capacity per building kind. nil means "this kind
+    /// has no stockpile" — e.g. roads and the town center.
+    private static func stockpileCapacity(for kind: BuildingKind) -> Int? {
+        switch kind {
+        case .warehouse: 200
+        case .lumberjackHut, .sawmill: 16
+        case .house, .townCenter: 8
+        case .road: nil
+        }
+    }
+
+    private mutating func applyDemolish(anchor: TileCoordinate) {
+        guard let id = occupiedTiles[anchor],
+              let building = buildings[id]
+        else { return }
+        // Anchor lookup uses the literal tile — but multi-tile buildings
+        // resolve via the building's recorded anchor.
+        let spec = BuildingCatalog.spec(for: building.kind)
+        for tile in spec.footprint.tiles(anchor: building.anchor) {
+            occupiedTiles.removeValue(forKey: tile)
+        }
+        buildings.removeValue(forKey: id)
+        stockpiles.removeValue(forKey: id)
+        if building.kind == .road {
+            roadGraph.removeRoad(at: building.anchor)
         }
     }
 }
