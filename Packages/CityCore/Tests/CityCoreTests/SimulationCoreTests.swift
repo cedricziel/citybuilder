@@ -105,7 +105,7 @@ func scenarioEntityIsOpaqueID() {
 
 // MARK: - Snapshotting
 
-@Test("scenario: save load round-trip")
+@Test("scenario: save/load round-trip")
 func scenarioSaveLoadRoundTrip() throws {
     let original = World.fixtureWithTerrain(width: 12, height: 12, fill: .grass, seed: 999)
     let encoder = JSONEncoder()
