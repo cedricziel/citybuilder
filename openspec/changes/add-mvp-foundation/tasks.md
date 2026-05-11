@@ -99,22 +99,22 @@
 
 ## 10. Continuity, Handoff, and Apple Pencil
 
-- [ ] 10.1 Adopt `NSUserActivity` for the current game so Handoff advertises it across devices
-- [ ] 10.2 Implement Apple Pencil hover preview for placement on supported iPads
+- [x] 10.1 Adopt `NSUserActivity` for the current game so Handoff advertises it across devices
+- [x] 10.2 Implement Apple Pencil hover preview for placement on supported iPads
 - [ ] 10.3 Validate Handoff across iPhone, iPad, Mac with the same Apple ID
 
 ## 11. Performance and quality gates
 
-- [ ] 11.1 Add per-tick wall-clock instrumentation in `CityCore` and a debug overlay in `CityRender2D` that surfaces it; assert the budget (< 5 ms per tick on baseline iPhone for a maxed-out fixture island) with a `swift-testing` performance test that fails CI on regression
-- [ ] 11.2 Tune carrier caps, A* heuristic, and warehouse selection so tick stays under 5 ms on baseline iPhone with maxed-out island
-- [ ] 11.3 Tune renderer culling, batching, and interpolation so frame time stays under 16.7 ms on baseline iPad with maxed-out island; record frame-time samples and assert P95 ≤ 16.7 ms in a manual perf test gate
-- [ ] 11.4 Audit `make test-scenarios` end-to-end: every `#### Scenario:` in `specs/**/*.md` MUST map to at least one passing test. Treat unmapped scenarios as hard failures from this point on.
+- [x] 11.1 Add per-tick wall-clock instrumentation in `CityCore` and a debug overlay in `CityRender2D` that surfaces it; assert the budget (< 5 ms per tick on baseline iPhone for a maxed-out fixture island) with a `swift-testing` performance test that fails CI on regression
+- [x] 11.2 Tune carrier caps, A* heuristic, and warehouse selection so tick stays under 5 ms on baseline iPhone with maxed-out island
+- [x] 11.3 Tune renderer culling, batching, and interpolation so frame time stays under 16.7 ms on baseline iPad with maxed-out island; record frame-time samples and assert P95 ≤ 16.7 ms in a manual perf test gate
+- [x] 11.4 Audit `make test-scenarios` end-to-end: every `#### Scenario:` in `specs/**/*.md` MUST map to at least one passing test. Treat unmapped scenarios as hard failures from this point on.
 - [ ] 11.5 Run a full end-to-end playthrough on all three platforms; capture screenshots and a profile
 
 ## 12. Release preparation
 
 - [ ] 12.1 Author App Store metadata for all three platforms; verify Universal Purchase visibility
 - [ ] 12.2 Configure CloudKit production schema (record types, fields) on container `iCloud.com.cedricziel.citybuilder` matching the development environment
-- [ ] 12.3 Confirm save-format `version` is 1 and migration framework round-trips a v1 save
-- [ ] 12.4 Write release notes and an MVP scope statement
+- [x] 12.3 Confirm save-format `version` is 1 and migration framework round-trips a v1 save
+- [x] 12.4 Write release notes and an MVP scope statement
 - [ ] 12.5 Submit to TestFlight for internal validation
