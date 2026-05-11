@@ -1,20 +1,121 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Context shown to the AI when generating any artifact.
+context: |
+  # Citybuilder — Apple-exclusive city-builder ("Anno-like")
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  ## Stack
+  - Swift 6 with strict concurrency. Targeting iOS 18, iPadOS 18, macOS 15.
+  - Apple frameworks only at runtime: SwiftUI, SpriteKit, SceneKit, CloudKit,
+    Foundation. No third-party runtime dependencies in MVP.
+  - Build tooling: XcodeGen (project.yml is the single source of truth),
+    SwiftLint strict, SwiftFormat, pre-commit, swift-testing.
+
+  ## Repository layout
+  - Xcode project is GENERATED from project.yml. `*.xcodeproj` is gitignored —
+    edits go in project.yml, then `make generate`.
+  - Two app targets share one bundle id (com.cedricziel.citybuilder) for
+    Universal Purchase: CitybuilderiOS (universal iPhone + iPad idiom)
+    and CitybuilderMac (native AppKit/SwiftUI, NOT Catalyst). One CLI
+    target citybuilder-cli for headless simulation.
+  - Five local Swift packages under Packages/:
+      CityCore       — framework-free simulation core (Foundation only).
+                       MUST NOT import any Apple UI framework. Compiles on
+                       Linux. Enforced by scripts/check-no-apple-ui-imports.sh
+                       which gates every commit.
+      CityPersistence — atomic-write save/load + CloudKit sync data model
+      CityUI         — shared SwiftUI views, GameSession owner of the live
+                       World, HUD, palette, inspector, gesture handlers
+      CityRender2D   — pure iso math + culling + intent translation +
+                       snapshot reconciler + SpriteKit scene
+      CityRender3D   — SceneKit building portraits (M8, opt-in)
+
+  ## Architecture invariants
+  - Deterministic 10 Hz fixed tick. RNG is splitmix64, seeded in the save.
+    Two simulations with identical inputs MUST produce equal World values.
+  - Inputs flow as Commands queued for the next tick boundary, never
+    applied mid-tick.
+  - Renderer reads WorldSnapshot per frame, never mutates the live World.
+    Frame interpolation closes the 10 Hz sim / 60-120 Hz display gap.
+  - Spec scenarios ARE the test inventory: every `#### Scenario:` heading
+    MUST map to at least one swift-testing test. Enforced by
+    scripts/check-scenario-coverage.swift.
+
+  ## TDD policy (mandatory)
+  - Red-green-refactor for every new behavior. No production code lands
+    without a failing test written first.
+  - Begin each milestone task by translating the relevant `#### Scenario:`
+    blocks into failing tests, then implement the minimum to green.
+  - CI gates merges on: all tests pass, CityCore line coverage ≥ 80%,
+    diff-cover green for changed CityCore lines, every spec scenario
+    maps to a test (M11.4 onward).
+  - The pre-push hook runs `swift test --package-path Packages/CityCore`
+    locally; CI runs every package.
+  - "I'll add tests in a follow-up PR" is not acceptable.
+
+  ## Commit + workflow discipline
+  - Conventional Commits enforced by the commit-msg hook
+    (feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert).
+  - Atomic commits: one logical change per commit, ordered by dependency.
+    Tightly-coupled artifacts can share a commit; unrelated edits cannot.
+    See feedback memory for the full rationale.
+  - Run `make lint && make format` before commits. Pre-commit hooks
+    enforce SwiftFormat (--lint) and SwiftLint --strict.
+  - `make hooks` installs pre-commit, commit-msg, and pre-push hooks.
+
+  ## Per-package responsibility map
+  When adding a new capability:
+    - Simulation logic (terrain, buildings, economy, carriers, etc.)
+      → CityCore. Must stay framework-free.
+    - Save format, file I/O, CloudKit sync → CityPersistence.
+    - SwiftUI views, GameSession state, gesture wiring, HUD/palette/
+      inspector → CityUI.
+    - SpriteKit scene, iso projection math, snapshot reconciliation,
+      sprite atlas, animation → CityRender2D.
+    - 3D building portraits → CityRender3D.
+    - Cross-cutting changes touch project.yml, the generator script,
+      and CI workflow.
+
+  ## Sprite / asset pipeline
+  - PNGs in Resources/Sprites/ bundled flat into both app targets.
+  - scripts/generate-sprites.swift procedurally generates "olden days"
+    pixel-art tiles + buildings + walker animations (Caesar III / Anno
+    1602 aesthetic, small palette, no gradients, nearest-neighbor
+    filtering). Hand-edited PNGs would also work — the script is the
+    current source of truth but PNGs can be replaced.
+
+  ## What lives where in OpenSpec
+  - openspec/changes/<change>/ — proposals, design, tasks, specs deltas.
+    Apply via /opsx:apply.
+  - openspec/specs/<capability>/spec.md — archived final state of each
+    capability after a change is archived.
+
+# Per-artifact rules. The AI reads these in addition to the schema's
+# defaults so artifacts adopt the project's style.
+rules:
+  proposal:
+    - 'Keep proposals tight (1-2 pages). Lead with Why, then What Changes, then Capabilities (new + modified), then Impact.'
+    - 'Capabilities use kebab-case names (e.g. road-network, not RoadNetwork or road network).'
+    - 'A "BREAKING" prefix goes in front of any change that alters an existing capability''s requirements or save-format compatibility.'
+    - 'The Impact section must call out any new build-time tool dependency. We only have xcodegen / pre-commit / swiftlint / swiftformat installed via Homebrew; adding to that list is a contributor-onboarding concern.'
+
+  design:
+    - 'Include a Decisions section with explicit alternatives considered for each non-obvious choice. The existing change records D1-D13 as the model — copy that style.'
+    - 'When a decision affects CityCore, explicitly call out the framework-free invariant and how the design preserves it.'
+    - 'Include a Risks / Trade-offs section formatted as [Risk] → Mitigation.'
+    - 'For changes that touch the simulation, include a paragraph on determinism — how the new behavior keeps World byte-identical under replay.'
+
+  specs:
+    - 'Every Requirement (### header) MUST have at least one Scenario (#### header).'
+    - 'Scenarios use exactly 4 hashtags and WHEN/THEN format.'
+    - 'Each scenario title maps to a test by lowercasing it: a heading "#### Scenario: Foo bar baz" must be backed by @Test("scenario: foo bar baz") somewhere in Packages/*/Tests.'
+    - 'SHALL / MUST for normative requirements. Never "should" or "may".'
+    - 'Place tests in the package that owns the capability (simulation capabilities → CityCoreTests; render capabilities → CityRender2DTests; persistence → CityPersistenceTests; UI view-model logic → CityUITests).'
+
+  tasks:
+    - 'Use "- [ ] N.M description" checkbox format. The /opsx:apply parser depends on it.'
+    - 'Group by milestone with "## N. M<n> — name" headings.'
+    - 'Every implementation milestone OPENS with a "Tests-first" task: translate every #### Scenario from the milestone''s specs into failing swift-testing tests and confirm red. Implementation tasks follow, each phrased as "Implement to green: <capability>".'
+    - 'End milestones with a "Refactor under a green bar" task and a "verify make test-scenarios clean for this milestone''s capabilities" task.'
+    - 'Tasks should be small enough to complete in one session (roughly 2 hours of focused work).'
+    - 'Device-dependent tasks (hardware fps validation, Handoff across devices, full playthrough, TestFlight) end with "— DEFERRED (requires <hardware/account>)" so the apply runner can skip them gracefully.'
