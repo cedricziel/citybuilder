@@ -564,12 +564,17 @@ func setupBuildingCanvas(footprintW: Int, footprintH: Int, totalHeight: Int) -> 
 
 func houseSprite() -> Pixmap {
     // 2x2 footprint, modest cottage with chimney + smoke.
-    let totalH = 32 + 32 + 28 + 16 // baseY space for chimney smoke + roof + body + tile
-    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: 2, totalHeight: totalH)
-    let bodyH = 22
+    // Body bottom sits AT the diamond midline so the building visually
+    // embeds into the tile; only the front V of the foundation shows.
+    let footprintH = 2
+    let tileH = footprintH * 32
+    let totalH = 32 + 32 + 32 + tileH / 2 // chimney + roof + body + diamond-bottom-half
+    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: footprintH, totalHeight: totalH)
+    let bodyH = 30
     let bodyW = 56
     let bodyX = (p.width - bodyW) / 2
-    let bodyY = baseY - bodyH
+    let bodyBottom = baseY + tileH / 2 // diamond midline
+    let bodyY = bodyBottom - bodyH
     drawBody(p, rect: BodyRect(x: bodyX, y: bodyY, w: bodyW, h: bodyH),
              wallLeft: P.woodWallLight, wallRight: P.woodWall,
              wallTopShadow: P.woodWallDark)
@@ -596,12 +601,15 @@ func houseSprite() -> Pixmap {
 
 func warehouseSprite() -> Pixmap {
     // 3x3 footprint, stone warehouse with stacked crates.
-    let totalH = 96 + 32 + 20 + 8
-    let (p, baseY) = setupBuildingCanvas(footprintW: 3, footprintH: 3, totalHeight: totalH)
-    let bodyH = 32
+    let footprintH = 3
+    let tileH = footprintH * 32
+    let totalH = 24 + 24 + 44 + tileH / 2 + 8
+    let (p, baseY) = setupBuildingCanvas(footprintW: 3, footprintH: footprintH, totalHeight: totalH)
+    let bodyH = 44
     let bodyW = 96
     let bodyX = (p.width - bodyW) / 2
-    let bodyY = baseY - bodyH
+    let bodyBottom = baseY + tileH / 2
+    let bodyY = bodyBottom - bodyH
     drawBody(p, rect: BodyRect(x: bodyX, y: bodyY, w: bodyW, h: bodyH),
              wallLeft: P.stoneWallLight, wallRight: P.stoneWall,
              wallTopShadow: P.stoneWallDark)
@@ -629,8 +637,9 @@ func warehouseSprite() -> Pixmap {
     drawPitchedRoof(p, bodyX: bodyX, bodyY: bodyY, bodyW: bodyW, height: 20,
                     overhang: 4, fill: P.roofGrey, dark: P.roofGreyDark,
                     highlight: Color(140, 140, 150))
-    // Crates beside the building
-    let crateY = baseY + 8
+    // Crates beside the building, at the front-of-tile (lower diamond
+    // half) so they don't disappear behind the wall.
+    let crateY = baseY + tileH - 16
     let crateX = bodyX - 14
     for (cx, cy) in [(crateX, crateY), (crateX + 10, crateY), (crateX + 5, crateY - 8)] {
         p.fillRect(x: cx, y: cy, w: 10, h: 8, P.woodWall)
@@ -650,12 +659,15 @@ func warehouseSprite() -> Pixmap {
 
 func lumberjackHutSprite() -> Pixmap {
     // 2x2 footprint: rough log cabin with stacked logs and a chopping block.
-    let totalH = 64 + 22 + 16 + 4
-    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: 2, totalHeight: totalH)
-    let bodyH = 18
+    let footprintH = 2
+    let tileH = footprintH * 32
+    let totalH = 16 + 16 + 26 + tileH / 2 + 4
+    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: footprintH, totalHeight: totalH)
+    let bodyH = 26
     let bodyW = 52
     let bodyX = (p.width - bodyW) / 2
-    let bodyY = baseY - bodyH
+    let bodyBottom = baseY + tileH / 2
+    let bodyY = bodyBottom - bodyH
     drawBody(p, rect: BodyRect(x: bodyX, y: bodyY, w: bodyW, h: bodyH),
              wallLeft: P.woodWall, wallRight: P.woodWallDark,
              wallTopShadow: Color(60, 40, 22))
@@ -672,11 +684,11 @@ func lumberjackHutSprite() -> Pixmap {
     // Forest-green shingle roof
     drawPitchedRoof(p, bodyX: bodyX, bodyY: bodyY, bodyW: bodyW, height: 14,
                     overhang: 3, fill: P.forest, dark: P.forestDark, highlight: P.forestLight)
-    // Log pile to the right of the hut
-    drawLogPile(p, atX: bodyX + bodyW + 2, atY: baseY + 6)
-    // Chopping block with axe to the left
+    // Log pile to the right of the hut, in the front of the tile.
+    drawLogPile(p, atX: bodyX + bodyW + 2, atY: baseY + tileH - 14)
+    // Chopping block with axe to the left, front of tile.
     let stumpX = bodyX - 12
-    let stumpY = baseY + 8
+    let stumpY = baseY + tileH - 12
     p.fillRect(x: stumpX, y: stumpY, w: 8, h: 6, P.woodWall)
     for dx in 0 ..< 8 { p.set(stumpX + dx, stumpY, P.woodWallDark) }
     for dx in 0 ..< 8 { p.set(stumpX + dx, stumpY + 5, P.outline) }
@@ -693,12 +705,15 @@ func lumberjackHutSprite() -> Pixmap {
 
 func sawmillSprite() -> Pixmap {
     // 2x2: stone foundation, half-timbered walls, big circular saw + plank stacks.
-    let totalH = 64 + 26 + 18 + 6
-    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: 2, totalHeight: totalH)
-    let bodyH = 22
+    let footprintH = 2
+    let tileH = footprintH * 32
+    let totalH = 18 + 20 + 30 + tileH / 2 + 6
+    let (p, baseY) = setupBuildingCanvas(footprintW: 2, footprintH: footprintH, totalHeight: totalH)
+    let bodyH = 30
     let bodyW = 56
     let bodyX = (p.width - bodyW) / 2
-    let bodyY = baseY - bodyH
+    let bodyBottom = baseY + tileH / 2
+    let bodyY = bodyBottom - bodyH
     drawBody(p, rect: BodyRect(x: bodyX, y: bodyY, w: bodyW, h: bodyH),
              wallLeft: P.stoneWallLight, wallRight: P.stoneWall,
              wallTopShadow: P.stoneWallDark)
@@ -720,10 +735,10 @@ func sawmillSprite() -> Pixmap {
     drawPitchedRoof(p, bodyX: bodyX, bodyY: bodyY, bodyW: bodyW, height: 16,
                     overhang: 3, fill: P.woodWallDark, dark: Color(60, 40, 22),
                     highlight: P.woodWall)
-    // Big saw blade on the side of the building
-    drawSawBlade(p, atX: bodyX + bodyW + 8, atY: baseY - 8, radius: 8)
-    // Plank stack in front
-    drawPlankStack(p, atX: bodyX - 16, atY: baseY + 10)
+    // Big saw blade on the side of the building (next to the wall).
+    drawSawBlade(p, atX: bodyX + bodyW + 8, atY: bodyBottom - 10, radius: 8)
+    // Plank stack at the front of the tile.
+    drawPlankStack(p, atX: bodyX - 16, atY: baseY + tileH - 6)
     // Chimney with smoke
     drawChimney(p, x: bodyX + 6, y: bodyY - 16, w: 4, h: 8)
     drawSmoke(p, atX: bodyX + 8, atY: bodyY - 20)
@@ -732,12 +747,15 @@ func sawmillSprite() -> Pixmap {
 
 func townCenterSprite() -> Pixmap {
     // 3x3: grand civic building with a bell tower and flag.
-    let totalH = 96 + 44 + 24 + 24 // base + body + roof + tower
-    let (p, baseY) = setupBuildingCanvas(footprintW: 3, footprintH: 3, totalHeight: totalH)
-    let bodyH = 40
+    let footprintH = 3
+    let tileH = footprintH * 32
+    let totalH = 24 + 22 + 14 + 56 + tileH / 2 // flag + tower roof + tower + body + diamond-bottom-half
+    let (p, baseY) = setupBuildingCanvas(footprintW: 3, footprintH: footprintH, totalHeight: totalH)
+    let bodyH = 56
     let bodyW = 104
     let bodyX = (p.width - bodyW) / 2
-    let bodyY = baseY - bodyH
+    let bodyBottom = baseY + tileH / 2
+    let bodyY = bodyBottom - bodyH
     drawBody(p, rect: BodyRect(x: bodyX, y: bodyY, w: bodyW, h: bodyH),
              wallLeft: Color(220, 212, 188), wallRight: P.stoneWallLight,
              wallTopShadow: P.stoneWall)
