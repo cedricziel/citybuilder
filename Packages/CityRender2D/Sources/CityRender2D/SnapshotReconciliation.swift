@@ -10,7 +10,19 @@ public struct SpriteSpec: Hashable, Sendable {
         /// One sprite per building, anchored at the building's anchor tile.
         /// The renderer is responsible for drawing the building large
         /// enough to cover its footprint.
-        case building(kind: BuildingKind, state: BuildingState, footprint: Footprint)
+        ///
+        /// `constructionFrameIndex` is the scaffold-stage index when the
+        /// building is in `.constructing` state (nil otherwise). It is
+        /// part of the spec key so the diff-based reconciler naturally
+        /// replaces the node when the scaffold advances to the next
+        /// stage. Frames change only a handful of times per building,
+        /// so this is cheap.
+        case building(
+            kind: BuildingKind,
+            state: BuildingState,
+            footprint: Footprint,
+            constructionFrameIndex: Int?
+        )
     }
 
     public let coord: TileCoordinate
@@ -47,10 +59,16 @@ public enum SnapshotReconciler {
         // inside the visible range. Multi-tile buildings draw as a single
         // visual unit so the "four pillars" artefact goes away.
         for building in snapshot.buildings.values where xRange.contains(building.anchor.x) && yRange.contains(building.anchor.y) {
-            let footprint = BuildingCatalog.spec(for: building.kind).footprint
+            let spec = BuildingCatalog.spec(for: building.kind)
+            let frameIndex: Int? = constructionFrameIndex(for: building, spec: spec)
             result.insert(SpriteSpec(
                 coord: building.anchor,
-                kind: .building(kind: building.kind, state: building.state, footprint: footprint)
+                kind: .building(
+                    kind: building.kind,
+                    state: building.state,
+                    footprint: spec.footprint,
+                    constructionFrameIndex: frameIndex
+                )
             ))
         }
         return result
@@ -66,6 +84,23 @@ public enum SnapshotReconciler {
             self.added = added
             self.removed = removed
         }
+    }
+
+    /// Scaffold-stage index for a constructing building, or nil for any
+    /// other state. Factored out of `desiredSprites` so the formatting
+    /// stays clean and the helper is unit-testable in isolation.
+    private static func constructionFrameIndex(
+        for building: Building,
+        spec: BuildingSpec
+    ) -> Int? {
+        guard building.state == .constructing,
+              let entry = SpriteAnimation.entry(for: .buildingConstructing(building.kind))
+        else { return nil }
+        return constructionFrame(
+            ticksSincePlacement: building.ticksSincePlacement,
+            duration: spec.buildDurationTicks,
+            frameCount: entry.frameCount
+        )
     }
 
     public static func diff(
