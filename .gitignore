@@ -27,7 +27,8 @@ xcuserdata/
 # Coverage / profiling
 *.profraw
 *.profdata
-coverage/
+coverage/*.lcov
+coverage/*.json
 
 # pre-commit
 .pre-commit-cache/
