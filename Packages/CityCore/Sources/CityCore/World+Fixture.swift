@@ -14,13 +14,17 @@ public extension World {
         return World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
     }
 
-    /// Constructs a fresh new game with the fixed MVP island terrain.
-    ///
-    /// M1 STUB: returns an empty world (mapWidth = 0) until the fixed-island
-    /// generator lands in task 2.5. Tests asserting island properties will
-    /// stay red until then.
+    /// Constructs a fresh new game with the fixed MVP island terrain
+    /// produced by `IslandGenerator`. Identical for every player and every
+    /// session per spec `world-terrain` ("Map is identical across launches").
     static func newGame() -> World {
-        World(seed: 0)
+        let grid = IslandGenerator.generate()
+        return World(
+            seed: 0,
+            mapWidth: IslandGenerator.width,
+            mapHeight: IslandGenerator.height,
+            terrainGrid: grid
+        )
     }
 
     /// First in-bounds tile (row-major scan) whose terrain matches `kind`.
