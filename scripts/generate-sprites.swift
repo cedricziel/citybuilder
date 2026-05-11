@@ -6,16 +6,22 @@
 // palette, blocky pixels, strong outlines, simple cell-shaded surfaces.
 //
 // Output (run from repo root):
-//   Resources/Sprites/terrain-<kind>.png             (64x32 each, static)
-//   Resources/Sprites/terrain-<kind>-<frame>.png     (water/beach idle anim)
-//   Resources/Sprites/building-<kind>.png            (static, footprint-dependent)
-//   Resources/Sprites/building-<kind>-operational-<frame>.png
+//   Resources/Terrain.atlas/terrain-<kind>.png         (64x32 each, static)
+//   Resources/Terrain.atlas/terrain-<kind>-<frame>.png (water/beach/grass)
+//   Resources/Buildings.atlas/building-<kind>.png      (static)
+//   Resources/Buildings.atlas/building-<kind>-operational-<frame>.png
 //                                                   (sawmill/lumberjack_hut/
 //                                                    town_center idle anim)
-//   Resources/Sprites/building-<kind>-constructing-<frame>.png
+//   Resources/Buildings.atlas/building-<kind>-constructing-<frame>.png
 //                                                   (3-stage scaffold rise,
 //                                                    every building kind)
-//   Resources/Sprites/walker-<facing>-<frame>.png   (2-frame walk × 4 facings)
+//   Resources/Units.atlas/walker-<facing>-<frame>.png  (2-frame walk × 4 facings)
+//
+// Routing rule: PNGs are routed into a `<Category>.atlas/` subfolder by
+// filename prefix:
+//   `terrain-`  → Terrain.atlas
+//   `building-` → Buildings.atlas
+//   `walker-`   → Units.atlas
 //
 // Frame naming follows the SpriteAnimation catalog in CityRender2D:
 //   SpriteAnimation.assetName(for:frame:) MUST match these paths.
@@ -28,7 +34,8 @@
 //   drawScaffold        overlays rising scaffold poles + tarpaulin
 //
 // Run via:
-//   swift scripts/generate-sprites.swift
+//   swift scripts/generate-sprites.swift                # writes to Resources/
+//   swift scripts/generate-sprites.swift <outputRoot>   # writes to <outputRoot>/
 
 import AppKit
 import Foundation
@@ -1285,64 +1292,99 @@ func walkerSprite(facing: Facing, frame: Int) -> Pixmap {
 
 // MARK: - Main
 
-let cwd = FileManager.default.currentDirectoryPath
-let outputDir = "\(cwd)/Resources/Sprites"
-try? FileManager.default.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
+/// Resolve the output root. If a single positional CLI argument is
+/// provided, treat it as the root directory under which the category
+/// atlases live. Otherwise default to `<cwd>/Resources` (current repo
+/// layout). The atlas-folder routing is performed by `atlasFolder(for:)`
+/// based on sprite-name prefix.
+let argv = CommandLine.arguments
+let outputRoot: String = if argv.count >= 2 {
+    URL(fileURLWithPath: argv[1]).standardizedFileURL.path
+} else {
+    "\(FileManager.default.currentDirectoryPath)/Resources"
+}
+
+func atlasFolder(for spriteName: String) -> String {
+    if spriteName.hasPrefix("terrain-") { return "Terrain.atlas" }
+    if spriteName.hasPrefix("building-") { return "Buildings.atlas" }
+    if spriteName.hasPrefix("walker-") { return "Units.atlas" }
+    fatalError("Unknown sprite-name prefix for routing: \(spriteName)")
+}
+
+func ensureAtlas(_ folder: String) {
+    let path = "\(outputRoot)/\(folder)"
+    try? FileManager.default.createDirectory(
+        atPath: path, withIntermediateDirectories: true
+    )
+}
+
+ensureAtlas("Terrain.atlas")
+ensureAtlas("Buildings.atlas")
+ensureAtlas("Units.atlas")
+
+func write(_ sprite: Pixmap, name: String) {
+    let folder = atlasFolder(for: name)
+    sprite.savePNG(to: "\(outputRoot)/\(folder)/\(name).png")
+}
 
 print("Generating terrain sprites...")
-grassSprite().savePNG(to: "\(outputDir)/terrain-grass.png")
-forestSprite().savePNG(to: "\(outputDir)/terrain-forest.png")
-beachSprite().savePNG(to: "\(outputDir)/terrain-beach.png")
-waterSprite().savePNG(to: "\(outputDir)/terrain-water.png")
-mountainSprite().savePNG(to: "\(outputDir)/terrain-mountain.png")
+write(grassSprite(), name: "terrain-grass")
+write(forestSprite(), name: "terrain-forest")
+write(beachSprite(), name: "terrain-beach")
+write(waterSprite(), name: "terrain-water")
+write(mountainSprite(), name: "terrain-mountain")
 
 print("Generating building sprites...")
-houseSprite().savePNG(to: "\(outputDir)/building-house.png")
-warehouseSprite().savePNG(to: "\(outputDir)/building-warehouse.png")
-lumberjackHutSprite().savePNG(to: "\(outputDir)/building-lumberjack_hut.png")
-sawmillSprite().savePNG(to: "\(outputDir)/building-sawmill.png")
-townCenterSprite().savePNG(to: "\(outputDir)/building-town_center.png")
-roadSprite().savePNG(to: "\(outputDir)/building-road.png")
+write(houseSprite(), name: "building-house")
+write(warehouseSprite(), name: "building-warehouse")
+write(lumberjackHutSprite(), name: "building-lumberjack_hut")
+write(sawmillSprite(), name: "building-sawmill")
+write(townCenterSprite(), name: "building-town_center")
+write(roadSprite(), name: "building-road")
 
 print("Generating walker sprites...")
 for facing in Facing.allCases {
     for frame in 0 ... 1 {
-        let sprite = walkerSprite(facing: facing, frame: frame)
-        sprite.savePNG(to: "\(outputDir)/walker-\(facing.rawValue)-\(frame).png")
+        write(
+            walkerSprite(facing: facing, frame: frame),
+            name: "walker-\(facing.rawValue)-\(frame)"
+        )
     }
 }
 
 print("Generating terrain idle-animation frames...")
 for frame in 0 ... 3 {
-    waterFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-water-\(frame).png")
+    write(waterFrame(frame: frame), name: "terrain-water-\(frame)")
 }
 for frame in 0 ... 1 {
-    beachFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-beach-\(frame).png")
+    write(beachFrame(frame: frame), name: "terrain-beach-\(frame)")
 }
 for frame in 0 ... 1 {
-    grassFrame(frame: frame).savePNG(to: "\(outputDir)/terrain-grass-\(frame).png")
+    write(grassFrame(frame: frame), name: "terrain-grass-\(frame)")
 }
 
 print("Generating building operational-animation frames...")
 for frame in 0 ... 3 {
-    sawmillSprite(frame: frame)
-        .savePNG(to: "\(outputDir)/building-sawmill-operational-\(frame).png")
+    write(sawmillSprite(frame: frame), name: "building-sawmill-operational-\(frame)")
 }
 for frame in 0 ... 1 {
-    lumberjackHutSprite(frame: frame)
-        .savePNG(to: "\(outputDir)/building-lumberjack_hut-operational-\(frame).png")
+    write(
+        lumberjackHutSprite(frame: frame),
+        name: "building-lumberjack_hut-operational-\(frame)"
+    )
 }
 for frame in 0 ... 1 {
-    townCenterSprite(frame: frame)
-        .savePNG(to: "\(outputDir)/building-town_center-operational-\(frame).png")
+    write(townCenterSprite(frame: frame), name: "building-town_center-operational-\(frame)")
 }
 
 print("Generating building constructing-animation frames...")
 for kind in BuildingKindRaw.allCases {
     for stage in 0 ... 2 {
-        constructingFrame(for: kind, stage: stage)
-            .savePNG(to: "\(outputDir)/building-\(kind.rawValue)-constructing-\(stage).png")
+        write(
+            constructingFrame(for: kind, stage: stage),
+            name: "building-\(kind.rawValue)-constructing-\(stage)"
+        )
     }
 }
 
-print("Done. Sprites in \(outputDir)/")
+print("Done. Atlases written under \(outputRoot)/")
