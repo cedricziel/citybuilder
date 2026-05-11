@@ -1,19 +1,14 @@
+import CityRender2D
 import SwiftUI
 
 @main
 struct CitybuilderMacApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
-        }
-    }
-}
+            // MARK: SPIKE — replace with the real CityUI shell during M2.
 
-struct ContentView: View {
-    var body: some View {
-        Text("Citybuilder Mac")
-            .font(.largeTitle)
-            .padding()
-            .frame(minWidth: 800, minHeight: 600)
+            HelloIsoView()
+                .frame(minWidth: 800, minHeight: 600)
+        }
     }
 }
