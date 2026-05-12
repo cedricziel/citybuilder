@@ -16,6 +16,14 @@ private func shoreWorld(width: Int = 16, height: Int = 12) -> World {
         }
     }
     world.economy.credit(100_000)
+    world.islands = IslandDetector.detectIslands(
+        width: world.mapWidth,
+        height: world.mapHeight,
+        terrain: world.terrainGrid,
+        mapHeightForClimate: world.mapHeight,
+        seed: 11
+    )
+    world.seedUnlimitedTestInventory()
     return world
 }
 

@@ -30,6 +30,7 @@ private func shoreWorld(width: Int = 12, height: Int = 8) -> World {
         seed: 7
     )
     world.economy.credit(100_000)
+    world.seedUnlimitedTestInventory()
     return world
 }
 

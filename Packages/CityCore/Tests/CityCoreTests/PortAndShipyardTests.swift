@@ -16,6 +16,16 @@ private func shoreWorld(width: Int = 12, height: Int = 6) -> World {
         }
     }
     world.economy.credit(100_000)
+    // Run island detection so canPlace's per-island material lookup
+    // can scope to the buildable region (left half of the map).
+    world.islands = IslandDetector.detectIslands(
+        width: world.mapWidth,
+        height: world.mapHeight,
+        terrain: world.terrainGrid,
+        mapHeightForClimate: world.mapHeight,
+        seed: 7
+    )
+    world.seedUnlimitedTestInventory()
     return world
 }
 

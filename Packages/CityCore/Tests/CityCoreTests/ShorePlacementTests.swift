@@ -13,6 +13,14 @@ private func mixedWorld() -> World {
             world.terrainGrid[tileY * world.mapWidth + tileX] = .water
         }
     }
+    world.islands = IslandDetector.detectIslands(
+        width: world.mapWidth,
+        height: world.mapHeight,
+        terrain: world.terrainGrid,
+        mapHeightForClimate: world.mapHeight,
+        seed: 1
+    )
+    world.seedUnlimitedTestInventory()
     return world
 }
 
