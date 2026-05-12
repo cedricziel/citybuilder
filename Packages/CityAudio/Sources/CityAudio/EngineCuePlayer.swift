@@ -100,11 +100,18 @@ public final class EngineCuePlayer {
     }
 
     private func scheduleLooped(player: AVAudioPlayerNode, file: AVAudioFile, path: String) {
-        // Re-schedule on completion to achieve a seamless loop. We look the
-        // player back up by `path` rather than capturing the AVAudioPlayerNode
-        // (which isn't Sendable). If `stopLoop(path:)` ran before completion,
-        // the lookup returns nil and we don't re-schedule — natural lifecycle.
-        player.scheduleFile(file, at: nil) { [weak self] in
+        // Re-schedule on completion to achieve a continuous loop. Critically
+        // we use `.dataPlayedBack` rather than the default `.dataConsumed` —
+        // dataConsumed fires the moment the file is read into the player's
+        // input buffer (within milliseconds for a small file), so a recursive
+        // re-schedule would queue thousands of identical files within seconds.
+        // dataPlayedBack fires only when the buffer is actually finished playing.
+        //
+        // We look the player back up by `path` rather than capturing the
+        // AVAudioPlayerNode (which isn't Sendable). If `stopLoop(path:)` ran
+        // before playback finished, the lookup returns nil and we don't
+        // re-schedule — natural lifecycle.
+        player.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 guard let current = self.loopPlayers[path] else { return }
