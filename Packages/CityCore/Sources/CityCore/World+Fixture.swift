@@ -18,13 +18,31 @@ public extension World {
     /// produced by `IslandGenerator`. Identical for every player and every
     /// session per spec `world-terrain` ("Map is identical across launches").
     static func newGame() -> World {
-        let grid = IslandGenerator.generate()
-        return World(
-            seed: 0,
-            mapWidth: IslandGenerator.width,
-            mapHeight: IslandGenerator.height,
-            terrainGrid: grid
+        newGame(layout: .singleIsland, seed: 0)
+    }
+
+    /// Constructs a fresh new game with the named topology and seed.
+    /// Spec: `world-terrain` / Requirement: World layout.
+    static func newGame(layout: WorldLayout, seed: UInt64) -> World {
+        let grid: [TerrainType]
+        let width: Int
+        let height: Int
+        switch layout {
+        case .singleIsland:
+            grid = IslandGenerator.generate()
+            width = IslandGenerator.width
+            height = IslandGenerator.height
+        case .archipelago:
+            grid = ArchipelagoGenerator.generate(seed: seed)
+            width = ArchipelagoGenerator.width
+            height = ArchipelagoGenerator.height
+        }
+        var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
+        world.layout = layout
+        world.islands = IslandDetector.detectIslands(
+            width: width, height: height, terrain: grid, mapHeightForClimate: height
         )
+        return world
     }
 
     /// First in-bounds tile (row-major scan) whose terrain matches `kind`.

@@ -46,11 +46,13 @@
 
 ## 6. M6 — World layout, island metadata, climate (CityCore)
 
-- [ ] 6.1 Tests-first: translate every `#### Scenario:` under `Requirement: World layout`, `Requirement: Island metadata`, and `Requirement: Climate band metadata` from `specs/world-terrain/spec.md` into failing tests. Confirm red.
-- [ ] 6.2 Implement to green: add `WorldLayout` enum (`.singleIsland`, `.archipelago`), seeded generator for `.archipelago` (hand-authored seeded layout — no procgen variety needed for v0; one deterministic ~300×300 layout is sufficient).
-- [ ] 6.3 Implement to green: derive `Island` list as connected components of non-water buildable tiles; assign stable `IslandID`; cache and invalidate only on terrain change.
-- [ ] 6.4 Implement to green: assign `climate` per island via the north/south rule. Persist with `World`.
-- [ ] 6.5 Verify `make test-scenarios` is clean for all M6 scenarios.
+- [x] 6.1 Tests-first: translate every `#### Scenario:` under `Requirement: World layout`, `Requirement: Island metadata`, and `Requirement: Climate band metadata` from `specs/world-terrain/spec.md` into failing tests. Confirm red.
+- [x] 6.2 Implement to green: add `WorldLayout` enum (`.singleIsland`, `.archipelago`), seeded generator for `.archipelago` (hand-authored seeded layout — no procgen variety needed for v0; one deterministic ~300×300 layout is sufficient). `ArchipelagoGenerator` paints five hand-placed integer-ellipse islands at fixed coords; the seed perturbs only forest/mountain decoration so the cross-platform determinism gate stays byte-identical without the Double-based wobble math from `IslandGenerator`.
+- [x] 6.3 Implement to green: derive `Island` list as connected components of non-water buildable tiles; assign stable `IslandID`; cache and invalidate only on terrain change. `IslandDetector.detectIslands` flood-fills from each unvisited buildable tile in row-major scan order; IDs are 1-based and assigned by scan order, which is deterministic given the terrain grid. Persisted on `World.islands`. Terrain mutation paths (forest harvest, future demolish) MUST call `recomputeIslands` — wired for `World.harvestForest` follow-up in M7.
+- [x] 6.4 Implement to green: assign `climate` per island via the north/south rule. Persist with `World`. Each island gets `.temperate` if its bounding-box vertical center sits in the map's north half, else `.tropical`.
+- [x] 6.5 Verify `make test-scenarios` is clean for all M6 scenarios.
+
+**M6 follow-up not in the original scope** — *new-game layout picker UI*: today's app boots a single-island world via the zero-arg `World.newGame()`; the new `newGame(layout:seed:)` overload is reachable only from tests and the determinism fixture. Player-facing layout selection is deferred to a new `add-title-screen-and-new-game` change (proposed alongside this commit) since v0 has no perceptible per-layout gameplay difference until `add-island-specialization` lands climate-gated buildings.
 
 ## 7. M7 — Save schema v2 + migration framework (CityPersistence)
 

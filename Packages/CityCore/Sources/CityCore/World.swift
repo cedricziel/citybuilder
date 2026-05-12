@@ -24,6 +24,14 @@ public struct World: Codable, Sendable, Equatable {
     public let mapHeight: Int
     /// Row-major terrain grid of length mapWidth * mapHeight.
     public internal(set) var terrainGrid: [TerrainType]
+    /// Named topology chosen at new-game creation. Persisted with
+    /// the world; loaded saves restore the original choice.
+    public internal(set) var layout: WorldLayout = .singleIsland
+    /// Derived island metadata — one entry per maximal connected
+    /// component of non-water buildable tiles. Recomputed only when
+    /// terrain changes; serialized so `IslandID` values stay stable
+    /// across save/load.
+    public internal(set) var islands: [Island] = []
 
     /// Coordinates currently claimed by a building footprint. Buildings are
     /// modeled as opaque entity IDs for M1; full catalog arrives in M3.
