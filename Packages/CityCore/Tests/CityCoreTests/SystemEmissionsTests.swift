@@ -201,8 +201,21 @@ func scenarioCarrierArrivalEmitsOnceAtTheDestinationTick() {
 
 @Test("scenario: tax interval emits a single event")
 func scenarioTaxIntervalEmitsASingleEvent() {
+    // Seed a house with population so taxes > 0 on the interval boundary.
+    // (Empty cities are tested separately by the "tax interval is silent
+    // when no income" scenario.)
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
-    // Tick 49 times — interval is 50, so no tax events yet.
+    let houseId = EntityID(raw: 1)
+    world.buildings[houseId] = Building(
+        id: houseId,
+        kind: .house,
+        anchor: TileCoordinate(x: 1, y: 1),
+        state: .operational
+    )
+    var pop = HousePopulation()
+    pop.population = 3
+    world.populations[houseId] = pop
+
     var preTaxEvents: [WorldEvent] = []
     for _ in 0 ..< 49 {
         preTaxEvents.append(contentsOf: world.tick().events)
@@ -211,13 +224,43 @@ func scenarioTaxIntervalEmitsASingleEvent() {
         if case .taxesCollected = $0 { return true }
         return false
     }))
-    // Tick 50 — first tax event.
     let taxTick = world.tick()
     let taxes = taxTick.events.filter {
         if case .taxesCollected = $0 { return true }
         return false
     }
     #expect(taxes.count == 1)
+}
+
+@Test("scenario: tax interval is silent when no income")
+func scenarioTaxIntervalIsSilentWhenNoIncome() {
+    // An empty city (zero population) crosses the 50-tick tax boundary
+    // without firing the event — the audio coin cue stays silent rather
+    // than playing a 5-second heartbeat for amount=0.
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    var allEvents: [WorldEvent] = []
+    for _ in 0 ..< 60 {
+        allEvents.append(contentsOf: world.tick().events)
+    }
+    #expect(!allEvents.contains(where: {
+        if case .taxesCollected = $0 { return true }
+        return false
+    }))
+}
+
+@Test("scenario: upkeep interval is silent when no upkeep")
+func scenarioUpkeepIntervalIsSilentWhenNoUpkeep() {
+    // A city with no operational buildings (or only zero-upkeep ones) does
+    // not emit `upkeepPaid` per interval.
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    var allEvents: [WorldEvent] = []
+    for _ in 0 ..< 60 {
+        allEvents.append(contentsOf: world.tick().events)
+    }
+    #expect(!allEvents.contains(where: {
+        if case .upkeepPaid = $0 { return true }
+        return false
+    }))
 }
 
 @Test("scenario: bankruptcy warning emits once at deficit start")

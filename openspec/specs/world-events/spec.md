@@ -105,8 +105,18 @@ Each event MUST be emitted at most once per occurrence per tick.
 
 #### Scenario: Tax interval emits a single event
 
-- **WHEN** the tick count reaches a multiple of `Economy.taxIntervalTicks`
+- **WHEN** the tick count reaches a multiple of `Economy.taxIntervalTicks` and the credited amount is positive
 - **THEN** the events for that tick contain exactly one `taxesCollected` whose `amount` equals the credited amount
+
+#### Scenario: Tax interval is silent when no income
+
+- **WHEN** the tick count reaches a multiple of `Economy.taxIntervalTicks` and the credited amount is zero (no population)
+- **THEN** no `taxesCollected` event is emitted for that tick — the audio layer's coin cue stays silent rather than firing as a 5-second heartbeat on an empty city
+
+#### Scenario: Upkeep interval is silent when no upkeep
+
+- **WHEN** the tick count reaches a multiple of `Economy.upkeepIntervalTicks` and the deducted amount is zero (no operational buildings with non-zero upkeep)
+- **THEN** no `upkeepPaid` event is emitted for that tick
 
 #### Scenario: Bankruptcy warning emits once at deficit start
 

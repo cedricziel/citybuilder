@@ -215,7 +215,12 @@ extension World {
             }
             let amount = totalPop * Economy.taxPerPopUnit
             economy.credit(amount)
-            events.append(.taxesCollected(amount: amount))
+            // Only emit when actual money flowed — `taxesCollected` is a
+            // meaningful event the audio layer binds to a coin sound, not
+            // a 5-second heartbeat for empty cities.
+            if amount > 0 {
+                events.append(.taxesCollected(amount: amount))
+            }
         }
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
             var totalUpkeep: Int64 = 0
@@ -223,7 +228,11 @@ extension World {
                 totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
             }
             economy.deduct(totalUpkeep)
-            events.append(.upkeepPaid(amount: totalUpkeep))
+            // Same as above — empty cities and free-upkeep buildings shouldn't
+            // generate a per-interval no-op event.
+            if totalUpkeep > 0 {
+                events.append(.upkeepPaid(amount: totalUpkeep))
+            }
         }
         // Track bankruptcy state transitions so events fire on the edges only.
         let priorDeficitTicks = economy.bankruptcyDeficitTicks
