@@ -40,6 +40,12 @@ func scenarioDeterminismGatePassesWhenMathIsPlatformAgnostic() throws {
     // identical JSON, which the diff job confirms.
     #expect(yml.contains("DeterminismFixture > determinism/macos.json"))
     #expect(yml.contains("DeterminismFixture > determinism/linux.json"))
+    // M10 adds the 60-minute (36000-tick) drift check. Both platforms
+    // produce a parallel JSON whose hash is diffed alongside the
+    // 6000-tick baseline.
+    #expect(yml.contains("DeterminismFixture 36000 > determinism/macos-36k.json"))
+    #expect(yml.contains("DeterminismFixture 36000 > determinism/linux-36k.json"))
+    #expect(yml.contains("diff -q determinism/macos-36k.json determinism/linux-36k.json"))
     // The compare job is wired as a dependency of both producers so
     // it cannot run before they finish.
     #expect(yml.contains("needs: [ci, determinism-linux]"))
