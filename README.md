@@ -112,6 +112,42 @@ Audio audition workflow:
   bus subfolder, add the manifest + binding entries, and the engine
   picks them up on next launch.
 
+## Island HUD
+
+The HUD has three layers that read off the `WorldSnapshot`:
+
+- **Money + Population badges** — global state, always visible.
+- **Island name badge** — derived from `WorldSnapshot.camera.centerTile()`
+  through `WorldSnapshot.island(at:)`. When the camera enters an island
+  the name appears; over open water it sticks to the last island so the
+  player keeps a reference frame. It only goes blank when the camera
+  has never been on any island since the world loaded.
+- **Stocks row** — one chip per good with non-zero stock OR non-zero
+  capacity on the current island. Producer-internal stockpiles (sawmill
+  / lumberjack hut output buffers) are excluded; only warehouse, port,
+  and shipyard buffers count.
+
+Island names are deterministic per world seed. The picker draws from a
+64-entry table (`IslandNameTable.entries` in `CityCore`) keyed by the
+island's bounding-box center and `IslandID`. Names persist across
+save/load via the `Island.name` Codable field.
+
+### Adding a new good icon
+
+1. Add a `goodNew…Sprite()` helper in `scripts/generate-sprites.swift`,
+   following the existing `goodWoodSprite` / `goodPlanksSprite` /
+   `goodFoodSprite` pattern (24×24 Pixmap, dark 1-pixel outline so the
+   icon reads against the HUD's translucent chrome).
+2. Add a `case "newgood": return goodNewSprite()` arm to
+   `drawGoodIcon(_:)` and add `"newgood"` to the main-script loop.
+3. Run `swift scripts/generate-sprites.swift` and commit the new PNG
+   under `Resources/Icons.atlas/`.
+4. Extend `Good` in `Packages/CityCore/Sources/CityCore/Goods.swift`
+   with the matching raw value. The HUD reads icons via
+   `GoodIconLoader.image(for:)`, which maps `good.rawValue` →
+   `Bundle.main.url(forResource: "good-<rawValue>", withExtension:
+   "png")`.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
