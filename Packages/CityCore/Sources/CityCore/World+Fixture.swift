@@ -40,7 +40,11 @@ public extension World {
         var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
         world.layout = layout
         world.islands = IslandDetector.detectIslands(
-            width: width, height: height, terrain: grid, mapHeightForClimate: height
+            width: width,
+            height: height,
+            terrain: grid,
+            mapHeightForClimate: height,
+            seed: seed
         )
         return world
     }
