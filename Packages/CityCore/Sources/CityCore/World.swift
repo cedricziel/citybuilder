@@ -72,6 +72,12 @@ public struct World: Codable, Sendable, Equatable {
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
 
+    /// Virtual material credits granted by test fixtures so paid
+    /// placements succeed without bootstrapping a producer chain.
+    /// Never set outside tests; persists through Codable so existing
+    /// save formats stay compatible (default empty).
+    public internal(set) var testMaterialCredits: [Good: Int] = [:]
+
     /// Tick metrics are observability output, not part of the deterministic
     /// world state. They are returned by `tick()` rather than stored on
     /// World so two simulations with identical inputs remain Equatable
@@ -168,6 +174,12 @@ public struct World: Codable, Sendable, Equatable {
         if let shore = spec.shorePlacement {
             if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
             if waterCount < shore.minWaterTiles { return .rejected(.shoreRequiresWaterTile) }
+        }
+        if !spec.materialCost.isEmpty {
+            let shortfall = materialShortfall(cost: spec.materialCost, anchor: anchor)
+            if !shortfall.isEmpty {
+                return .rejected(.insufficientMaterials(shortfall))
+            }
         }
         return .allowed
     }
@@ -333,6 +345,9 @@ public struct World: Codable, Sendable, Equatable {
         }
         if let capacity = Self.stockpileCapacity(for: kind) {
             stockpiles[id] = Stockpile(capacity: capacity)
+        }
+        if !spec.materialCost.isEmpty {
+            deductMaterials(cost: spec.materialCost, anchor: anchor)
         }
         events.append(.buildingPlaced(building: id, kind: kind, anchor: anchor))
     }

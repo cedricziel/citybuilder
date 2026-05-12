@@ -4,6 +4,11 @@ public extension World {
     /// Constructs a deterministic test fixture world filled with a single
     /// terrain type. Used by unit tests that need a small known map without
     /// invoking the fixed-island generator.
+    /// Auto-grants unlimited test material credits so paid placements
+    /// succeed without bootstrapping production chains. Tests that need
+    /// exact material accounting (see `MaterialPlacementTests`) use
+    /// `World.newGame(...)` instead, which carries only the town
+    /// center's starter inventory.
     static func fixtureWithTerrain(
         width: Int,
         height: Int,
@@ -11,7 +16,9 @@ public extension World {
         seed: UInt64
     ) -> World {
         let grid = Array(repeating: fill, count: width * height)
-        return World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
+        var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
+        world.seedUnlimitedTestInventory()
+        return world
     }
 
     /// Constructs a fresh new game with the fixed MVP island terrain
@@ -94,6 +101,8 @@ public extension World {
         for radius in 0 ... maxRadius {
             for deltaY in -radius ... radius {
                 for deltaX in -radius ... radius {
+                    // Only check the perimeter at each radius to avoid
+                    // re-testing interior tiles already covered.
                     if radius > 0, abs(deltaX) != radius, abs(deltaY) != radius {
                         continue
                     }
@@ -126,5 +135,16 @@ public extension World {
             }
         }
         return nil
+    }
+
+    /// Test helper: grant unlimited construction materials on every
+    /// island so test fixtures can place paid buildings via
+    /// `.place` commands without first running a production chain.
+    /// Implemented as a virtual credit, not a real warehouse — placing
+    /// a 3x3 stub building would collide with tight test grids.
+    /// canPlace + applyPlace consult this credit in addition to the
+    /// real goods-buffer stockpiles.
+    mutating func seedUnlimitedTestInventory() {
+        testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
     }
 }
