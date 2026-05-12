@@ -1,5 +1,7 @@
 #if canImport(AppKit)
+import CoreGraphics
 import Foundation
+import ImageIO
 import Testing
 
 // Harness tests for `scripts/generate-sprites.swift`. The script ships
@@ -62,5 +64,42 @@ func scenarioGenerateScriptRoutesOutputsToCategoryAtlases() throws {
     // The flat layout must NOT be written anymore.
     let flat = tmp.appendingPathComponent("Sprites").path
     #expect(!FileManager.default.fileExists(atPath: flat), "flat Sprites/ must not exist")
+}
+
+@Test("scenario: generator emits three good icons")
+func scenarioGeneratorEmitsThreeGoodIcons() throws {
+    let tmp = FileManager.default.temporaryDirectory
+        .appendingPathComponent("good-icon-gen-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: tmp) }
+
+    let status = try runGenerator(outputRoot: tmp)
+    #expect(status == 0, "generate-sprites.swift exited with status \(status)")
+
+    let iconsDir = tmp.appendingPathComponent("Icons.atlas")
+    let files = ["good-wood.png", "good-planks.png", "good-food.png"]
+    for file in files {
+        let url = iconsDir.appendingPathComponent(file)
+        #expect(
+            FileManager.default.fileExists(atPath: url.path),
+            "expected Icons.atlas/\(file) to exist"
+        )
+        // Non-empty PNG (cheap proof that the writer ran).
+        let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
+        let size = (attrs[.size] as? NSNumber)?.intValue ?? 0
+        #expect(size > 0, "Icons.atlas/\(file) must be non-empty")
+
+        // Sanity-check the image dimensions (24×24, per spec). Use
+        // ImageIO so the test reads the PNG header directly without
+        // pulling in AppKit dependencies in shared code.
+        let source = CGImageSourceCreateWithURL(url as CFURL, nil)
+        let cg = source.flatMap { CGImageSourceCreateImageAtIndex($0, 0, nil) }
+        if let cg {
+            #expect(cg.width == 24, "Icons.atlas/\(file) width should be 24")
+            #expect(cg.height == 24, "Icons.atlas/\(file) height should be 24")
+        } else {
+            Issue.record("Icons.atlas/\(file) could not be decoded as an image")
+        }
+    }
 }
 #endif

@@ -221,6 +221,144 @@ enum P {
     static let outline = Color(28, 22, 18)
     static let roadStone = Color(132, 128, 116)
     static let roadStoneDark = Color(96, 92, 80)
+
+    // Good icons (24×24 HUD chips)
+    static let goodWood = Color(168, 124, 70)
+    static let goodWoodDark = Color(108, 76, 36)
+    static let goodWoodLight = Color(208, 164, 104)
+    static let goodWoodRing = Color(72, 42, 22)
+
+    static let goodPlanks = Color(216, 178, 116)
+    static let goodPlanksDark = Color(160, 124, 72)
+    static let goodPlanksGrain = Color(120, 84, 40)
+
+    static let goodFoodCrust = Color(180, 130, 70)
+    static let goodFoodCrustDark = Color(124, 82, 36)
+    static let goodFoodCrumb = Color(232, 196, 132)
+    static let goodFoodHighlight = Color(248, 224, 168)
+}
+
+// MARK: - Good icon sprites (24×24, HUD chips)
+
+func goodIconCanvas() -> Pixmap {
+    Pixmap(width: 24, height: 24)
+}
+
+/// Draws a 1-pixel dark outline around the rectangle's perimeter using
+/// `P.outline` so the icon reads against the translucent HUD chrome.
+func outlineRect(_ canvas: Pixmap, x: Int, y: Int, w: Int, h: Int) {
+    for dx in 0 ..< w {
+        canvas.set(x + dx, y, P.outline)
+        canvas.set(x + dx, y + h - 1, P.outline)
+    }
+    for dy in 0 ..< h {
+        canvas.set(x, y + dy, P.outline)
+        canvas.set(x + w - 1, y + dy, P.outline)
+    }
+}
+
+/// Wood: a horizontal log with darker stripe ends and rings.
+func goodWoodSprite() -> Pixmap {
+    let canvas = goodIconCanvas()
+    // Log body: 18 wide, 8 tall, centered vertically.
+    let leftX = 3, topY = 8
+    let bodyW = 18, bodyH = 8
+    canvas.fillRect(x: leftX, y: topY, w: bodyW, h: bodyH, P.goodWood)
+    // Top highlight + bottom shade band.
+    canvas.fillRect(x: leftX, y: topY, w: bodyW, h: 1, P.goodWoodLight)
+    canvas.fillRect(x: leftX, y: topY + bodyH - 1, w: bodyW, h: 1, P.goodWoodDark)
+    // Outline.
+    outlineRect(canvas, x: leftX - 1, y: topY - 1, w: bodyW + 2, h: bodyH + 2)
+    // Cap rings at each end.
+    for dy in 1 ... 6 {
+        canvas.set(leftX, topY + dy, P.goodWoodRing)
+        canvas.set(leftX + bodyW - 1, topY + dy, P.goodWoodRing)
+    }
+    // Center growth-ring dot on each cap.
+    canvas.set(leftX, topY + 3, P.goodWoodDark)
+    canvas.set(leftX + bodyW - 1, topY + 4, P.goodWoodDark)
+    return canvas
+}
+
+/// Planks: two stacked planks with horizontal grain lines.
+func goodPlanksSprite() -> Pixmap {
+    let canvas = goodIconCanvas()
+    // Two planks: each 18×5, slight offset.
+    let leftX = 3
+    let topYs = [6, 13]
+    for topY in topYs {
+        canvas.fillRect(x: leftX, y: topY, w: 18, h: 5, P.goodPlanks)
+        // Top highlight row.
+        canvas.fillRect(x: leftX, y: topY, w: 18, h: 1, P.goodPlanksGrain.lighter(20))
+        // Grain lines (1px).
+        for column in stride(from: leftX + 2, to: leftX + 18, by: 3) {
+            canvas.set(column, topY + 2, P.goodPlanksDark)
+        }
+        // Bottom shade.
+        canvas.fillRect(x: leftX, y: topY + 4, w: 18, h: 1, P.goodPlanksDark)
+        outlineRect(canvas, x: leftX - 1, y: topY - 1, w: 20, h: 7)
+    }
+    return canvas
+}
+
+/// Food: a round loaf with a crust and bright crumb interior.
+func goodFoodSprite() -> Pixmap {
+    let canvas = goodIconCanvas()
+    // Circle mask painted row-by-row with halfwidth lookup.
+    // Loaf is centered at (12, 12), radius 9.
+    let centerX = 12, centerY = 12, radius = 9
+    for dy in -radius ... radius {
+        let dyAbs = abs(dy)
+        // Discrete half-width ≈ sqrt(r² - dy²).
+        let halfWidth: Int
+        switch dyAbs {
+        case 0: halfWidth = 9
+        case 1: halfWidth = 9
+        case 2: halfWidth = 9
+        case 3: halfWidth = 8
+        case 4: halfWidth = 8
+        case 5: halfWidth = 7
+        case 6: halfWidth = 7
+        case 7: halfWidth = 6
+        case 8: halfWidth = 4
+        default: halfWidth = 0
+        }
+        guard halfWidth > 0 else { continue }
+        let pixelY = centerY + dy
+        let startX = centerX - halfWidth
+        let endX = centerX + halfWidth
+        for px in startX ... endX {
+            canvas.set(px, pixelY, P.goodFoodCrust)
+        }
+        // Rim shading: ends darker, middle lighter.
+        canvas.set(startX, pixelY, P.goodFoodCrustDark)
+        canvas.set(endX, pixelY, P.goodFoodCrustDark)
+        // Crumb fill: inner 3px from edge.
+        if halfWidth >= 4 {
+            for px in (startX + 3) ..< (endX - 2) {
+                canvas.set(px, pixelY, P.goodFoodCrumb)
+            }
+        }
+    }
+    // Slash on top + highlight glint.
+    canvas.set(centerX - 2, centerY - 3, P.goodFoodCrustDark)
+    canvas.set(centerX - 1, centerY - 4, P.goodFoodCrustDark)
+    canvas.set(centerX, centerY - 4, P.goodFoodCrustDark)
+    canvas.set(centerX + 1, centerY - 3, P.goodFoodCrustDark)
+    canvas.set(centerX - 3, centerY - 1, P.goodFoodHighlight)
+    canvas.set(centerX - 2, centerY - 1, P.goodFoodHighlight)
+    return canvas
+}
+
+/// Routes a logical good name to its drawing function. Returning a
+/// Pixmap (24×24) makes the main-script dispatch a single call site.
+func drawGoodIcon(_ good: String) -> Pixmap {
+    switch good {
+    case "wood": return goodWoodSprite()
+    case "planks": return goodPlanksSprite()
+    case "food": return goodFoodSprite()
+    default: fatalError("Unknown good \(good)")
+    }
 }
 
 // MARK: - Terrain sprites (64x32)
@@ -1566,6 +1704,7 @@ func atlasFolder(for spriteName: String) -> String {
     if spriteName.hasPrefix("building-") { return "Buildings.atlas" }
     if spriteName.hasPrefix("walker-") { return "Units.atlas" }
     if spriteName.hasPrefix("ship-") { return "Units.atlas" }
+    if spriteName.hasPrefix("good-") { return "Icons.atlas" }
     fatalError("Unknown sprite-name prefix for routing: \(spriteName)")
 }
 
@@ -1579,6 +1718,7 @@ func ensureAtlas(_ folder: String) {
 ensureAtlas("Terrain.atlas")
 ensureAtlas("Buildings.atlas")
 ensureAtlas("Units.atlas")
+ensureAtlas("Icons.atlas")
 
 func write(_ sprite: Pixmap, name: String) {
     let folder = atlasFolder(for: name)
@@ -1685,6 +1825,11 @@ for orientation in shoreOrientations {
             name: "building-shipyard-\(orientation)-operational-\(frame)"
         )
     }
+}
+
+print("Generating HUD good icons (3 × 24×24)...")
+for good in ["wood", "planks", "food"] {
+    write(drawGoodIcon(good), name: "good-\(good)")
 }
 
 print("Done. Atlases written under \(outputRoot)/")
