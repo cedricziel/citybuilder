@@ -16,6 +16,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let occupiedTiles: [TileCoordinate: EntityID]
     public let buildings: [EntityID: Building]
     public let carriers: [Carrier]
+    public let ships: [Ship]
+    public let routes: [EntityID: Route]
     public let economy: Economy
     public let totalPopulation: UInt64
     public let camera: Camera
@@ -29,6 +31,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         occupiedTiles: [TileCoordinate: EntityID],
         buildings: [EntityID: Building],
         carriers: [Carrier],
+        ships: [Ship] = [],
+        routes: [EntityID: Route] = [:],
         economy: Economy,
         totalPopulation: UInt64,
         camera: Camera
@@ -41,6 +45,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.occupiedTiles = occupiedTiles
         self.buildings = buildings
         self.carriers = carriers
+        self.ships = ships
+        self.routes = routes
         self.economy = economy
         self.totalPopulation = totalPopulation
         self.camera = camera
@@ -68,6 +74,8 @@ public extension World {
             occupiedTiles: occupiedTiles,
             buildings: buildings,
             carriers: Array(carriers.values),
+            ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
+            routes: routes,
             economy: economy,
             totalPopulation: pop,
             camera: camera
