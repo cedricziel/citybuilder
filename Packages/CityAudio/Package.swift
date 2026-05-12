@@ -11,17 +11,18 @@ let package = Package(
         .library(name: "CityAudio", targets: ["CityAudio"])
     ],
     dependencies: [
-        .package(path: "../CityCore")
+        .package(path: "../CityCore"),
+        .package(path: "../CityPersistence")
     ],
     targets: [
         .target(
             name: "CityAudio",
-            dependencies: ["CityCore"],
+            dependencies: ["CityCore", "CityPersistence"],
             path: "Sources/CityAudio"
         ),
         .testTarget(
             name: "CityAudioTests",
-            dependencies: ["CityAudio", "CityCore"],
+            dependencies: ["CityAudio", "CityCore", "CityPersistence"],
             path: "Tests/CityAudioTests"
         )
     ]

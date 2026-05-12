@@ -29,7 +29,7 @@ struct CitybuilderMacApp: App {
                 )
             )
         }
-        let audio = AudioStack()
+        let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         _session = State(initialValue: GameSession(audioEventConsumer: { events in
             audio.consume(events: events)
@@ -44,6 +44,9 @@ struct CitybuilderMacApp: App {
         Settings {
             TabView {
                 AudioSettingsView(settings: audio.settings)
+                    .onDisappear {
+                        Task { await audio.syncSettingsToCloud() }
+                    }
                     .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
                 CreditsView(manifest: audio.manifest)
                     .tabItem { Label("Credits", systemImage: "info.circle") }

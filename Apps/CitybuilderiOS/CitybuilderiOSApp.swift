@@ -29,7 +29,7 @@ struct CitybuilderiOSApp: App {
                 )
             )
         }
-        let audio = AudioStack()
+        let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         _session = State(initialValue: GameSession(audioEventConsumer: { events in
             audio.consume(events: events)
@@ -38,7 +38,43 @@ struct CitybuilderiOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CityRootView(session: session)
+            CityRootView(session: session) {
+                AudioSettingsSheet(audio: audio)
+            }
+        }
+    }
+}
+
+/// Tab container hosting `AudioSettingsView` + `CreditsView`. Pushed onto
+/// the iOS HUD's settings sheet. On Mac the same two views live in the
+/// `Settings` scene instead.
+private struct AudioSettingsSheet: View {
+    let audio: AudioStack
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            TabView {
+                AudioSettingsView(settings: audio.settings)
+                    .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                CreditsView(manifest: audio.manifest)
+                    .tabItem { Label("Credits", systemImage: "info.circle") }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        // Mirror the latest values to iCloud on dismiss so
+                        // cross-device sync stays prompt without observing
+                        // every slider tick.
+                        Task {
+                            await audio.syncSettingsToCloud()
+                        }
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

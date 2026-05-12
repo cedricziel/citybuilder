@@ -1,4 +1,47 @@
 {
   "version": 1,
-  "entries": []
+  "entries": [
+    {
+      "path": "music/bards-tale.m4a",
+      "title": "Medieval: The Bard's Tale",
+      "author": "Brandon75689",
+      "source": "https://opengameart.org/content/medieval-the-bards-tale",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/click.caf",
+      "title": "Interface Click 001",
+      "author": "Kenney",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/place-thunk.caf",
+      "title": "Wood Hammer 01",
+      "author": "rubberduck",
+      "source": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+      "license": "CC0"
+    },
+    {
+      "path": "construction/chime.caf",
+      "title": "Interface Confirmation 001",
+      "author": "Kenney",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0"
+    },
+    {
+      "path": "economy/coin.caf",
+      "title": "Coin Pickup",
+      "author": "SoundDesignForYou",
+      "source": "https://freesound.org/people/SoundDesignForYou/sounds/646672/",
+      "license": "CC0"
+    },
+    {
+      "path": "economy/game-over.caf",
+      "title": "Interface Bong 001",
+      "author": "Kenney",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0"
+    }
+  ]
 }

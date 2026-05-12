@@ -9,9 +9,20 @@ import SwiftUI
 /// reference. Renderer and HUD receive snapshots, never the model itself.
 public struct CityRootView: View {
     @State private var session: GameSession
+    @State private var settingsPresented: Bool = false
+    private let settingsContent: (() -> AnyView)?
+
+    public init(
+        session: GameSession = GameSession(),
+        @ViewBuilder settings: @escaping () -> some View
+    ) {
+        _session = State(initialValue: session)
+        self.settingsContent = { AnyView(settings()) }
+    }
 
     public init(session: GameSession = GameSession()) {
         _session = State(initialValue: session)
+        self.settingsContent = nil
     }
 
     public var body: some View {
@@ -26,7 +37,21 @@ public struct CityRootView: View {
                 .simultaneousGesture(panGesture)
                 .simultaneousGesture(zoomGesture)
             VStack {
-                HUDFrameView(viewModel: session.hud)
+                HStack {
+                    HUDFrameView(viewModel: session.hud)
+                    if settingsContent != nil {
+                        Button {
+                            settingsPresented = true
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .imageScale(.large)
+                                .padding(8)
+                                .background(.thinMaterial, in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Settings")
+                    }
+                }
                 BuildPaletteView(armed: session.selectedTool) { tool in
                     session.selectTool(tool)
                 }
@@ -47,6 +72,11 @@ public struct CityRootView: View {
                 }
             }
             .padding()
+        }
+        .sheet(isPresented: $settingsPresented) {
+            if let content = settingsContent {
+                content()
+            }
         }
     }
 
