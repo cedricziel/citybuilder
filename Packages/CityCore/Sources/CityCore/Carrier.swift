@@ -8,6 +8,17 @@ public struct Carrier: Hashable, Codable, Sendable {
     public enum Mission: Hashable, Codable, Sendable {
         case deliver(good: Good, amount: Int, fromProducer: EntityID, toWarehouse: EntityID)
         case retrieve(good: Good, amount: Int, fromWarehouse: EntityID, toConsumer: EntityID)
+        /// Spec: `add-construction-stalls` / `warehouses-and-logistics`
+        /// Producer→site delivery for materials a `.waitingForMaterials`
+        /// building still needs. Arrival increments
+        /// `materialsDelivered[good]` and may flip the substate to
+        /// `.actively` when the recipe is satisfied.
+        case deliverToConstructionSite(
+            good: Good,
+            amount: Int,
+            fromProducer: EntityID,
+            toBuilding: EntityID
+        )
     }
 
     public let id: EntityID
