@@ -41,6 +41,14 @@ func scenarioWalkerNameRoutesToUnitsAtlas() {
     }
 }
 
+@Test("scenario: spriteatlasrouting routes good- to icons atlas")
+func scenarioSpriteAtlasRoutingRoutesGoodToIconsAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "good-wood") == "Icons")
+    #expect(SpriteAtlasRouting.atlasName(for: "good-planks") == "Icons")
+    #expect(SpriteAtlasRouting.atlasName(for: "good-food") == "Icons")
+    #expect(SpriteAtlasRouting.iconsAtlasName == "Icons")
+}
+
 @Test("scenario: public api surface unchanged")
 func scenarioPublicApiSurfaceUnchanged() {
     // Compile-time assertion: each public symbol the pre-migration

@@ -77,6 +77,29 @@ func scenarioUnknownPrefixRejected() {
     }
 }
 
+// MARK: - Good-prefix grammar (add-island-hud-overlay → M4)
+
+@Test("scenario: sprite-name grammar accepts good- prefix")
+func scenarioSpriteNameGrammarAcceptsGoodPrefix() {
+    for good in ["good-wood", "good-planks", "good-food"] {
+        let result = SpriteName.validate(good)
+        if case let .failure(reason) = result {
+            Issue.record("expected \(good) to pass; got \(reason.rawValue)")
+        }
+    }
+}
+
+@Test("scenario: validator rejects good- with underscore")
+func scenarioValidatorRejectsGoodWithUnderscore() {
+    let result = SpriteName.validate("good-iron_ore")
+    switch result {
+    case let .failure(reason):
+        #expect(reason.rawValue == "sprite_name_uses_underscore")
+    case .success:
+        Issue.record("expected underscore rejection on good-iron_ore")
+    }
+}
+
 // MARK: - Catalog conformance
 
 @Test("scenario: every catalog sprite name conforms to the grammar")

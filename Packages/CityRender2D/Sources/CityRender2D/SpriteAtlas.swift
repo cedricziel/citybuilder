@@ -16,6 +16,7 @@ public enum SpriteAtlasRouting {
     public static let terrainAtlasName = "Terrain"
     public static let buildingsAtlasName = "Buildings"
     public static let unitsAtlasName = "Units"
+    public static let iconsAtlasName = "Icons"
 
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
@@ -24,13 +25,14 @@ public enum SpriteAtlasRouting {
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         if spriteName.hasPrefix("walker-") { return unitsAtlasName }
         if spriteName.hasPrefix("ship-") { return unitsAtlasName }
+        if spriteName.hasPrefix("good-") { return iconsAtlasName }
         return nil
     }
 
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        terrainAtlasName, buildingsAtlasName, unitsAtlasName
+        terrainAtlasName, buildingsAtlasName, unitsAtlasName, iconsAtlasName
     ]
 }
 
