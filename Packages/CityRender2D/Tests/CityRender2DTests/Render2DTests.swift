@@ -1,7 +1,7 @@
-import CityCore
 import CoreGraphics
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityRender2D
 
 // Tests for spec rendering-2_5d (M2 scope). Each `#### Scenario:` heading
@@ -27,6 +27,63 @@ func scenarioVariableFootprintBuildingDrawnCorrectly() {
 }
 
 // MARK: - Snapshot-driven rendering
+
+@Test("scenario: shore building sprite carries its cardinal orientation")
+func scenarioShoreBuildingSpriteCarriesItsCardinalOrientation() {
+    // Regression test for the magenta-port bug: a shore building placed
+    // with sea tiles to the east of the land tiles MUST surface through
+    // the reconciler's SpriteSpec with `orientation: .e` so the renderer
+    // looks up `building-port-e` rather than the non-existent
+    // `building-port`. Non-shore buildings on the same snapshot MUST
+    // continue to carry `orientation: nil`.
+    var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
+    // Make the right-hand column water so a 2x1-ish shore footprint at
+    // x=3 sits with land to the west and water to the east.
+    for tileY in 0 ..< 8 {
+        world.terrainGrid[tileY * 8 + 4] = .water
+    }
+    world.camera = Camera(centerX: 4, centerY: 4, zoom: 1.0)
+    let portId = EntityID(raw: 7)
+    let port = Building(
+        id: portId,
+        kind: .port,
+        anchor: TileCoordinate(x: 3, y: 3),
+        state: .operational,
+        landFaceTiles: [TileCoordinate(x: 3, y: 3)],
+        seaFaceTiles: [TileCoordinate(x: 4, y: 3)]
+    )
+    world.buildings[portId] = port
+    world.occupiedTiles[TileCoordinate(x: 3, y: 3)] = portId
+    let houseId = EntityID(raw: 8)
+    world.buildings[houseId] = Building(
+        id: houseId,
+        kind: .house,
+        anchor: TileCoordinate(x: 1, y: 1),
+        state: .operational
+    )
+    world.occupiedTiles[TileCoordinate(x: 1, y: 1)] = houseId
+
+    let snap = world.snapshot()
+    let desired = SnapshotReconciler.desiredSprites(
+        in: snap,
+        xRange: 0 ... 7,
+        yRange: 0 ... 7
+    )
+
+    var portOrientation: ShoreOrientation??
+    var houseOrientation: ShoreOrientation??
+    for spec in desired {
+        if case let .building(kind, _, _, _, orientation) = spec.kind {
+            if kind == .port { portOrientation = orientation }
+            if kind == .house { houseOrientation = orientation }
+        }
+    }
+    #expect(
+        portOrientation == .some(.some(.e)),
+        "port with sea tiles east of land must orient east; got \(String(describing: portOrientation))"
+    )
+    #expect(houseOrientation == .some(.none), "non-shore building must carry nil orientation")
+}
 
 @Test("scenario: snapshot-driven rendering")
 func scenarioSnapshotDrivenRendering() {

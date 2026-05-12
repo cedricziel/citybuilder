@@ -12,12 +12,13 @@ extension IsoWorldScene {
         switch spec.kind {
         case let .terrain(kind):
             makeTerrainNode(kind: kind)
-        case let .building(kind, state, footprint, frameIndex):
+        case let .building(kind, state, footprint, frameIndex, orientation):
             makeBuildingNode(
                 kind: kind,
                 state: state,
                 footprint: footprint,
-                constructionFrameIndex: frameIndex
+                constructionFrameIndex: frameIndex,
+                orientation: orientation
             )
         }
     }
@@ -44,13 +45,28 @@ extension IsoWorldScene {
         kind: BuildingKind,
         state: BuildingState,
         footprint: Footprint,
-        constructionFrameIndex: Int?
+        constructionFrameIndex: Int?,
+        orientation: ShoreOrientation?
     ) -> SKNode {
-        let texture = textureForBuilding(
-            kind: kind,
-            state: state,
-            constructionFrameIndex: constructionFrameIndex
-        ) ?? SpriteAtlas.textureOrPlaceholder(named: "building-\(kind.rawValue)")
+        let texture: SKTexture
+        if let orientation {
+            // Shore buildings live under the `building-<kind>-<orientation>-*`
+            // grammar; resolve the right state-keyed name and skip the
+            // non-orientation fallback (which would magenta out).
+            let name = ShoreOrientationMath.textureName(
+                kind: kind,
+                orientation: orientation,
+                state: state,
+                frame: state == .constructing ? (constructionFrameIndex ?? 0) : 0
+            )
+            texture = SpriteAtlas.textureOrPlaceholder(named: name)
+        } else {
+            texture = textureForBuilding(
+                kind: kind,
+                state: state,
+                constructionFrameIndex: constructionFrameIndex
+            ) ?? SpriteAtlas.textureOrPlaceholder(named: "building-\(kind.rawValue)")
+        }
         let node = buildingSpriteNode(
             texture: texture,
             state: state,

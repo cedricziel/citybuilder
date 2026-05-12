@@ -21,7 +21,11 @@ public struct SpriteSpec: Hashable, Sendable {
             kind: BuildingKind,
             state: BuildingState,
             footprint: Footprint,
-            constructionFrameIndex: Int?
+            constructionFrameIndex: Int?,
+            // Cardinal orientation for shore buildings (port, shipyard);
+            // nil for non-shore buildings. The renderer uses it to pick
+            // the `building-<kind>-<orientation>-*` sprite variant.
+            orientation: ShoreOrientation?
         )
     }
 
@@ -61,13 +65,24 @@ public enum SnapshotReconciler {
         for building in snapshot.buildings.values where xRange.contains(building.anchor.x) && yRange.contains(building.anchor.y) {
             let spec = BuildingCatalog.spec(for: building.kind)
             let frameIndex: Int? = constructionFrameIndex(for: building, spec: spec)
+            // Shore buildings (port, shipyard) carry landFace/seaFace tile
+            // lists from placement; derive a cardinal orientation so the
+            // renderer can pick the right `-n/-e/-s/-w` sprite variant.
+            // Non-shore buildings leave both lists empty → nil orientation.
+            let orientation: ShoreOrientation? = building.landFaceTiles.isEmpty
+                ? nil
+                : ShoreOrientationMath.orientation(
+                    landFaceTiles: building.landFaceTiles,
+                    seaFaceTiles: building.seaFaceTiles
+                )
             result.insert(SpriteSpec(
                 coord: building.anchor,
                 kind: .building(
                     kind: building.kind,
                     state: building.state,
                     footprint: spec.footprint,
-                    constructionFrameIndex: frameIndex
+                    constructionFrameIndex: frameIndex,
+                    orientation: orientation
                 )
             ))
         }
