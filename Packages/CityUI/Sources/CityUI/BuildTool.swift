@@ -21,6 +21,8 @@ public enum BuildTool: Hashable, Sendable {
             case .lumberjackHut: return "Lumberjack"
             case .sawmill: return "Sawmill"
             case .townCenter: return "Town Ctr."
+            case .port: return "Port"
+            case .shipyard: return "Shipyard"
             }
         }
     }

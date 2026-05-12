@@ -18,11 +18,11 @@ private func waterWorld(width: Int = 16, height: Int = 16) -> World {
 private func placeStandInPort(_ world: inout World, at anchor: TileCoordinate) -> PortID {
     let id = EntityID(raw: world.nextEntityRaw)
     world.nextEntityRaw &+= 1
-    // M3 stand-in: any extant building counts as a port. M4 narrows
-    // the predicate to `kind == .port` once Port lands as a real
-    // BuildingKind. Using `.warehouse` here keeps catalog lookups
-    // valid.
-    let building = Building(id: id, kind: .warehouse, anchor: anchor, state: .operational)
+    // Direct insertion bypasses placement validation (the test world
+    // is all-water so shore-placement minima would reject) but the
+    // route validator only checks `kind == .port` via
+    // `isPortBuilding(id:)`, which this satisfies.
+    let building = Building(id: id, kind: .port, anchor: anchor, state: .operational)
     world.buildings[id] = building
     world.occupiedTiles[anchor] = id
     return id

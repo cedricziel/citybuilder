@@ -25,6 +25,11 @@ public enum PlacementRejection: String, Codable, Sendable {
     case outOfBounds = "out_of_bounds"
     case terrainNotBuildable = "terrain_not_buildable"
     case tileOccupied = "tile_occupied"
+    /// Shore-placement building's footprint covered no land tiles
+    /// (spec `buildings-and-construction` / Shore-placement rule).
+    case shoreRequiresLandTile = "shore_requires_land_tile"
+    /// Shore-placement building's footprint covered no water tiles.
+    case shoreRequiresWaterTile = "shore_requires_water_tile"
 }
 
 public enum PlacementResult: Equatable, Sendable {

@@ -28,8 +28,14 @@ public enum ProductionCatalog {
             ProductionRecipe(outputs: [.wood: 1], cycleTicks: 30)
         case .sawmill:
             ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1], cycleTicks: 25)
-        case .house, .warehouse, .road, .townCenter:
+        case .house, .warehouse, .road, .townCenter, .port:
             nil
+        case .shipyard:
+            // Shipyard recipe: 20 wood + 10 planks per ship hull. The
+            // recipe completion side-effect is "emit a Ship entity" —
+            // handled by a special-case M5 system, not by the generic
+            // output-stockpile flow that other producers use.
+            ProductionRecipe(inputs: [.wood: 20, .planks: 10], outputs: [:], cycleTicks: 200)
         }
     }
 }

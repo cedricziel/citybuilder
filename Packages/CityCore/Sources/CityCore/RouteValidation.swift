@@ -42,12 +42,9 @@ public extension World {
         return .valid
     }
 
-    /// True when `id` resolves to a port-kind building. M3 stand-in:
-    /// any extant building counts. M4 will narrow this to
-    /// `buildings[id]?.kind == .port` once `.port` lands as a real
-    /// BuildingKind.
+    /// True when `id` resolves to a port-kind building.
     func isPortBuilding(id: EntityID) -> Bool {
-        buildings[id] != nil
+        buildings[id]?.kind == .port
     }
 
     /// Anchor position of a waypoint in Fixed2D space. For `.port` we

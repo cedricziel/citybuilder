@@ -49,7 +49,7 @@ public enum SpriteAnimation {
             case .sawmill: Entry(frameCount: 4, timePerFrame: 0.18, loop: .forever)
             case .lumberjackHut: Entry(frameCount: 2, timePerFrame: 0.35, loop: .forever)
             case .townCenter: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
-            case .house, .warehouse, .road: nil
+            case .house, .warehouse, .road, .port, .shipyard: nil
             }
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)

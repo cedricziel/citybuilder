@@ -124,13 +124,47 @@ public struct World: Codable, Sendable, Equatable {
 
     public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate) -> PlacementResult {
         let spec = BuildingCatalog.spec(for: kind)
-        for tile in spec.footprint.tiles(anchor: anchor) {
+        let tiles = spec.footprint.tiles(anchor: anchor)
+        var landCount = 0
+        var waterCount = 0
+        for tile in tiles {
             guard contains(tile) else { return .rejected(.outOfBounds) }
             if occupiedTiles[tile] != nil { return .rejected(.tileOccupied) }
             let terrainHere = terrain(at: tile) ?? .water
-            if terrainHere == .water { return .rejected(.terrainNotBuildable) }
+            if terrainHere == .water {
+                if spec.shorePlacement == nil {
+                    return .rejected(.terrainNotBuildable)
+                }
+                waterCount += 1
+            } else {
+                landCount += 1
+            }
+        }
+        if let shore = spec.shorePlacement {
+            if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
+            if waterCount < shore.minWaterTiles { return .rejected(.shoreRequiresWaterTile) }
         }
         return .allowed
+    }
+
+    /// Classifies a candidate building's footprint into land-face and
+    /// sea-face tiles at placement time. Order-preserving (footprint
+    /// tile iteration order) so the result is deterministic.
+    func classifyFootprint(
+        kind: BuildingKind, anchor: TileCoordinate
+    ) -> (land: [TileCoordinate], sea: [TileCoordinate]) {
+        let spec = BuildingCatalog.spec(for: kind)
+        var land: [TileCoordinate] = []
+        var sea: [TileCoordinate] = []
+        for tile in spec.footprint.tiles(anchor: anchor) {
+            let terrainHere = terrain(at: tile) ?? .water
+            if terrainHere == .water {
+                sea.append(tile)
+            } else {
+                land.append(tile)
+            }
+        }
+        return (land, sea)
     }
 
     /// ---- command queue --------------------------------------------
@@ -245,7 +279,25 @@ public struct World: Codable, Sendable, Equatable {
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         let initialState: BuildingState = spec.buildDurationTicks == 0 ? .operational : .constructing
-        let building = Building(id: id, kind: kind, anchor: anchor, state: initialState)
+        let (landFace, seaFace): ([TileCoordinate], [TileCoordinate])
+        let shipAnchor: TileCoordinate?
+        if spec.shorePlacement != nil {
+            let classified = classifyFootprint(kind: kind, anchor: anchor)
+            landFace = classified.land
+            seaFace = classified.sea
+            // Anchor selection: first sea-face tile in deterministic
+            // footprint iteration order. Ports use it for docking;
+            // other shore buildings may ignore it.
+            shipAnchor = (kind == .port) ? seaFace.first : nil
+        } else {
+            landFace = []
+            seaFace = []
+            shipAnchor = nil
+        }
+        let building = Building(
+            id: id, kind: kind, anchor: anchor, state: initialState,
+            landFaceTiles: landFace, seaFaceTiles: seaFace, shipAnchor: shipAnchor
+        )
         buildings[id] = building
         for tile in spec.footprint.tiles(anchor: anchor) {
             occupiedTiles[tile] = id
@@ -267,6 +319,8 @@ public struct World: Codable, Sendable, Equatable {
         case .lumberjackHut, .sawmill: 16
         case .house, .townCenter: 8
         case .road: nil
+        case .port: 200
+        case .shipyard: 64
         }
     }
 
@@ -284,6 +338,34 @@ public struct World: Codable, Sendable, Equatable {
         stockpiles.removeValue(forKey: id)
         if building.kind == .road {
             roadGraph.removeRoad(at: building.anchor)
+        }
+        // Port demolition: any route whose waypoints reference this
+        // port transitions to `.broken(unknownPort)`, and every ship
+        // currently assigned to such a route flips to `.returning`.
+        // Spec: `port-and-shipyard` / Port and shipyard demolition.
+        if building.kind == .port {
+            for (routeID, route) in routes {
+                let referencesPort = route.waypoints.contains { waypoint in
+                    if case let .port(portID) = waypoint { return portID == id }
+                    return false
+                }
+                guard referencesPort else { continue }
+                routes[routeID]?.state = .broken(reason: .unknownPort(portID: id))
+            }
+            for (shipID, ship) in ships {
+                guard let routeID = ship.routeID, routes[routeID]?.state != .active else {
+                    continue
+                }
+                ships[shipID]?.state = .returning
+            }
+            // Second pass: any ship sailing a route that JUST became
+            // broken on this demolish needs to flip too.
+            for (shipID, ship) in ships {
+                guard let routeID = ship.routeID,
+                      case .broken = routes[routeID]?.state
+                else { continue }
+                ships[shipID]?.state = .returning
+            }
         }
         events.append(.buildingDemolished(building: id, kind: building.kind, anchor: building.anchor))
     }

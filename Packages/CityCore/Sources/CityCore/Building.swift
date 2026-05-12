@@ -15,6 +15,11 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case lumberjackHut = "lumberjack-hut"
     case sawmill
     case townCenter = "town-center"
+    /// Shore building, accepts deposits/withdrawals from both carriers
+    /// (land side) and ships (sea side). Spec: `port-and-shipyard`.
+    case port
+    /// Shore producer that emits Ship entities. Spec: `port-and-shipyard`.
+    case shipyard
 }
 
 extension BuildingKind: Codable {
@@ -68,6 +73,19 @@ public struct Footprint: Hashable, Codable, Sendable {
     }
 }
 
+/// Shore-placement opt-in. A building kind that allows its footprint
+/// to straddle land and water tiles declares minima for each face.
+/// Per `buildings-and-construction` / Shore-placement rule.
+public struct ShorePlacement: Hashable, Sendable {
+    public let minLandTiles: Int
+    public let minWaterTiles: Int
+
+    public init(minLandTiles: Int, minWaterTiles: Int) {
+        self.minLandTiles = minLandTiles
+        self.minWaterTiles = minWaterTiles
+    }
+}
+
 /// Per-kind metadata. The catalog is a Swift constant table (design D9).
 public struct BuildingSpec: Hashable, Sendable {
     public let kind: BuildingKind
@@ -75,19 +93,24 @@ public struct BuildingSpec: Hashable, Sendable {
     public let cost: Int64
     public let upkeep: Int64
     public let buildDurationTicks: UInt64
+    /// Opt-in to shore-placement. Nil means the building rejects any
+    /// water-tile coverage (the default for land-only buildings).
+    public let shorePlacement: ShorePlacement?
 
     public init(
         kind: BuildingKind,
         footprint: Footprint,
         cost: Int64,
         upkeep: Int64 = 0,
-        buildDurationTicks: UInt64 = 30
+        buildDurationTicks: UInt64 = 30,
+        shorePlacement: ShorePlacement? = nil
     ) {
         self.kind = kind
         self.footprint = footprint
         self.cost = cost
         self.upkeep = upkeep
         self.buildDurationTicks = buildDurationTicks
+        self.shorePlacement = shorePlacement
     }
 }
 
@@ -116,6 +139,16 @@ public enum BuildingCatalog {
         .townCenter: BuildingSpec(
             kind: .townCenter, footprint: Footprint(width: 3, height: 3),
             cost: 0, upkeep: 0, buildDurationTicks: 1
+        ),
+        .port: BuildingSpec(
+            kind: .port, footprint: Footprint(width: 2, height: 3),
+            cost: 250, upkeep: 1, buildDurationTicks: 35,
+            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1)
+        ),
+        .shipyard: BuildingSpec(
+            kind: .shipyard, footprint: Footprint(width: 2, height: 3),
+            cost: 350, upkeep: 2, buildDurationTicks: 45,
+            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1)
         )
     ]
 
@@ -145,18 +178,58 @@ public struct Building: Hashable, Codable, Sendable {
     public let anchor: TileCoordinate
     public var state: BuildingState
     public var ticksSincePlacement: UInt64
+    /// Subset of the footprint tiles that sit on a buildable land
+    /// terrain at placement time. Empty for non-shore-placement
+    /// buildings (whose whole footprint is land).
+    public let landFaceTiles: [TileCoordinate]
+    /// Subset of the footprint tiles that sit on water at placement
+    /// time. Empty for non-shore-placement buildings.
+    public let seaFaceTiles: [TileCoordinate]
+    /// Reserved water-side tile for ship docking. Non-nil only for
+    /// `BuildingKind.port` (and any future shore building that needs
+    /// it). Drawn from `seaFaceTiles` deterministically at place time.
+    public let shipAnchor: TileCoordinate?
 
     public init(
         id: EntityID,
         kind: BuildingKind,
         anchor: TileCoordinate,
         state: BuildingState = .constructing,
-        ticksSincePlacement: UInt64 = 0
+        ticksSincePlacement: UInt64 = 0,
+        landFaceTiles: [TileCoordinate] = [],
+        seaFaceTiles: [TileCoordinate] = [],
+        shipAnchor: TileCoordinate? = nil
     ) {
         self.id = id
         self.kind = kind
         self.anchor = anchor
         self.state = state
         self.ticksSincePlacement = ticksSincePlacement
+        self.landFaceTiles = landFaceTiles
+        self.seaFaceTiles = seaFaceTiles
+        self.shipAnchor = shipAnchor
+    }
+}
+
+public extension Building {
+    /// Default Codable decoder that defaults the new face/anchor fields
+    /// to empty/nil when missing, so v1 saves (pre-M2-archipelago)
+    /// continue to load before the M7 migration framework lands.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(EntityID.self, forKey: .id)
+        self.kind = try container.decode(BuildingKind.self, forKey: .kind)
+        self.anchor = try container.decode(TileCoordinate.self, forKey: .anchor)
+        self.state = try container.decode(BuildingState.self, forKey: .state)
+        self.ticksSincePlacement = try container.decode(UInt64.self, forKey: .ticksSincePlacement)
+        self.landFaceTiles = try container.decodeIfPresent(
+            [TileCoordinate].self, forKey: .landFaceTiles
+        ) ?? []
+        self.seaFaceTiles = try container.decodeIfPresent(
+            [TileCoordinate].self, forKey: .seaFaceTiles
+        ) ?? []
+        self.shipAnchor = try container.decodeIfPresent(
+            TileCoordinate.self, forKey: .shipAnchor
+        )
     }
 }
