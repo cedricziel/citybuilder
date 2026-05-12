@@ -169,6 +169,37 @@ World-gen seeds each island's town center with **4 wood + 2 planks** — enough 
 
 When a build tool is armed, the HUD's `CostBreakdownView` renders one chip per required good showing `have/need`. Goods where `have < need` paint red so the player sees the shortfall before clicking.
 
+## Construction stalls
+
+When the player places a building whose recipe is partially met, the
+placement still goes through: `canPlace` allows it as long as the
+island either holds the missing goods or has an operational producer
+that makes them. The building enters `.constructing` +
+`.waitingForMaterials`. `ticksSincePlacement` does NOT advance until
+the recipe is satisfied — construction time only accrues while the
+substate is `.actively`.
+
+Carriers pick up the slack. Each producer's tick prioritizes a waiting
+construction site on its island over a warehouse. A delivery to a
+waiting site bumps the site's `materialsDelivered[good]`; once every
+good in the recipe is covered, the site flips to `.actively` and emits
+`constructionStarted`.
+
+The ghost preview reflects the supply situation per good:
+
+- **`.ok`** (default color) — the island already has enough in goods
+  buffers.
+- **`.queueable`** (orange) — the island is short, but a producer on
+  the island makes the good. Placement is allowed; the building will
+  queue.
+- **`.blocked`** (red) — the island is short and no producer supplies
+  the good. Placement is rejected.
+
+A waiting construction site renders a small clock-face badge
+(`overlay-waiting-materials.png` in `Resources/Buildings.atlas/`)
+floating above the building tile. The badge disappears the moment the
+site flips to `.actively`.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
