@@ -309,14 +309,58 @@ public final class GameSession {
             } else {
                 valid = false
             }
-            return GhostPreview(kind: kind, tile: tile, valid: valid)
+            return GhostPreview(
+                kind: kind, tile: tile, valid: valid,
+                costBreakdown: costBreakdown(for: kind, anchor: tile)
+            )
         }
+    }
+
+    private func costBreakdown(
+        for kind: BuildingKind,
+        anchor: TileCoordinate
+    ) -> [Good: GhostCost]? {
+        let spec = BuildingCatalog.spec(for: kind)
+        guard !spec.materialCost.isEmpty else { return nil }
+        let available = world.islandStockpile(
+            at: anchor,
+            tileToIsland: world.tileToIslandMap()
+        )
+        var breakdown: [Good: GhostCost] = [:]
+        for (good, need) in spec.materialCost {
+            breakdown[good] = GhostCost(need: need, have: available[good] ?? 0)
+        }
+        return breakdown
     }
 
     public struct GhostPreview: Equatable, Sendable {
         public let kind: BuildingKind
         public let tile: TileCoordinate
         public let valid: Bool
+        /// Per-good `(need, have)` pair for the armed building on the
+        /// hovered island. Nil when the building is free of materials
+        /// (road, town center) — the cost row hides entirely. The view
+        /// renders a chip per entry; goods where `have < need` paint
+        /// red.
+        public let costBreakdown: [Good: GhostCost]?
+
+        public init(
+            kind: BuildingKind,
+            tile: TileCoordinate,
+            valid: Bool,
+            costBreakdown: [Good: GhostCost]? = nil
+        ) {
+            self.kind = kind
+            self.tile = tile
+            self.valid = valid
+            self.costBreakdown = costBreakdown
+        }
+
+        /// View-helper: `isShort(.wood, in: breakdown)` returns true
+        /// when the chip should render in the destructive style.
+        public static func isShort(_ good: Good, in breakdown: [Good: GhostCost]) -> Bool {
+            (breakdown[good]?.isShort) ?? false
+        }
     }
 
     /// Cost of the currently-armed building (0 if no place tool armed).
