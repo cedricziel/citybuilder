@@ -65,16 +65,37 @@ public final class SaveStore: @unchecked Sendable {
         if peek.version <= 0 || peek.version > SaveFile.currentVersion {
             throw SaveError.unknownVersion(peek.version)
         }
+        // Run the migration pipeline if the file is older than current.
+        // Equal versions skip migration entirely (spec: v2 save bypasses
+        // migration).
+        let payload: Data
+        if peek.version < SaveFile.currentVersion {
+            do {
+                payload = try migrationRegistry.migrate(
+                    payload: data, toVersion: SaveFile.currentVersion
+                )
+            } catch let error as SaveError {
+                throw error
+            } catch {
+                throw SaveError.integrityFailed(reason: "migration failed: \(error)")
+            }
+        } else {
+            payload = data
+        }
         let file: SaveFile
         do {
-            file = try JSONDecoder().decode(SaveFile.self, from: data)
+            file = try JSONDecoder().decode(SaveFile.self, from: payload)
         } catch {
             throw SaveError.integrityFailed(reason: "\(error)")
         }
-        // v1 needs no migration. Future migrations slot in here.
         try validate(file.world)
         return file.world
     }
+
+    /// Migration pipeline applied to pre-current-version payloads.
+    /// Public-but-internal-by-default so tests can inject a counting
+    /// wrapper around `Migration_v1_to_v2` without touching disk.
+    public var migrationRegistry: MigrationRegistry = .init()
 
     private func validate(_ world: World) throws {
         guard world.mapWidth >= 0, world.mapHeight >= 0 else {
