@@ -51,24 +51,52 @@ public extension World {
 
 extension World {
     /// Returns per-good shortfall (need − have) for the given recipe
-    /// against the island that contains `anchor`. Empty result means
-    /// the island can supply the full cost from its goods-buffer
-    /// buildings. Per spec `buildings-and-construction` /
-    /// "Placement rejected when island materials are short".
+    /// against the island that contains `anchor`. A good is considered
+    /// satisfiable when either (a) the island's goods buffers hold
+    /// enough or (b) at least one operational producer on the island
+    /// outputs it (`add-construction-stalls`: queueable). Empty result
+    /// means the placement can proceed — possibly entering the
+    /// waiting-for-materials substate. Per spec
+    /// `buildings-and-construction` / "canPlace allowed when production
+    /// exists".
     func materialShortfall(
         cost: [Good: Int],
         anchor: TileCoordinate
     ) -> [Good: Int] {
         let map = tileToIslandMap()
         let availability = islandStockpile(at: anchor, tileToIsland: map)
+        let islandID = map[anchor]
         var shortfall: [Good: Int] = [:]
         for (good, need) in cost {
             let have = availability[good] ?? 0
-            if have < need {
-                shortfall[good] = need - have
+            guard have < need else { continue }
+            if let islandID, producesGood(onIsland: islandID, good: good, tileToIsland: map) {
+                // A producer covers this good — placement is allowed,
+                // the building will queue on the missing units.
+                continue
             }
+            shortfall[good] = need - have
         }
         return shortfall
+    }
+
+    /// True when at least one operational producer anchored on the
+    /// given island has a recipe that outputs `good`. The producer's
+    /// stockpile is irrelevant — current emptiness is what makes the
+    /// placement queueable rather than satisfied.
+    public func producesGood(
+        onIsland islandID: IslandID,
+        good: Good,
+        tileToIsland: [TileCoordinate: IslandID]
+    ) -> Bool {
+        for (_, building) in buildings where building.state == .operational {
+            guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
+            guard recipe.outputs[good] ?? 0 > 0 else { continue }
+            if buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland) {
+                return true
+            }
+        }
+        return false
     }
 
     /// Withdraws `cost` from goods-buffer buildings on the island
