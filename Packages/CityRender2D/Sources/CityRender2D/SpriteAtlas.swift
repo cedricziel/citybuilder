@@ -92,7 +92,12 @@ public enum SpriteAtlas {
         guard let atlasName = SpriteAtlasRouting.atlasName(for: name) else { return nil }
         let atlas = atlas(forName: atlasName)
         let names = atlasNames(for: atlasName, atlas: atlas)
-        guard names.contains(name) else { return nil }
+        // `SKTextureAtlas.textureNames` stores entries with their `.png`
+        // extension (the format the compiled `.atlasc` plist uses). The
+        // public-facing sprite names in this codebase are extension-less.
+        // Accept either form so a future SpriteKit version that strips
+        // the extension also resolves cleanly.
+        guard names.contains(name) || names.contains(name + ".png") else { return nil }
         let texture = atlas.textureNamed(name)
         texture.filteringMode = .nearest
         cacheQueue.sync { textureCache[name] = texture }
