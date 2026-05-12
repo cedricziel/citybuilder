@@ -139,10 +139,13 @@ public extension World {
     }
 
     /// Building kinds whose stockpiles count toward island aggregates.
-    /// Producer-internal output buffers (sawmill, lumberjack hut) and
-    /// dwelling stockpiles (house, town center) are excluded — the
-    /// HUD's stocks row reflects "what's available to spend" only.
-    private static let goodsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .shipyard]
+    /// Producer-internal output buffers (sawmill, lumberjack hut) are
+    /// excluded — those are in-transit. The town center is included
+    /// because it's the bootstrap goods-buffer that holds the starter
+    /// inventory players spend on their first placements.
+    private static let goodsBufferKinds: Set<BuildingKind> = [
+        .warehouse, .port, .shipyard, .townCenter
+    ]
 
     private func buildIslandSummaries(
         tileToIsland: [TileCoordinate: IslandID]

@@ -46,7 +46,74 @@ public extension World {
             mapHeightForClimate: height,
             seed: seed
         )
+        world.seedTownCenters()
         return world
+    }
+
+    /// Seed an operational town center on every island that can host
+    /// the 3×3 footprint, with the design-D6 starter inventory of
+    /// 4 wood + 2 planks. Run once at world-gen; the town center
+    /// becomes the bootstrap goods-buffer for the first placements.
+    internal mutating func seedTownCenters() {
+        let footprint = BuildingCatalog.spec(for: .townCenter).footprint
+        let starter: [(Good, Int)] = [(.wood, 4), (.planks, 2)]
+        for island in islands {
+            guard let anchor = findFootprint(footprint, on: island) else { continue }
+            let id = EntityID(raw: nextEntityRaw)
+            nextEntityRaw &+= 1
+            let building = Building(
+                id: id,
+                kind: .townCenter,
+                anchor: anchor,
+                state: .operational,
+                ticksSincePlacement: 0
+            )
+            buildings[id] = building
+            for tile in footprint.tiles(anchor: anchor) {
+                occupiedTiles[tile] = id
+            }
+            var stockpile = Stockpile(capacity: 8)
+            for (good, amount) in starter {
+                _ = stockpile.deposit(good, amount: amount)
+            }
+            stockpiles[id] = stockpile
+        }
+    }
+
+    /// Deterministic scan for a buildable footprint of the given size
+    /// inside an island's bounding box. Starts from the bounding-box
+    /// center and spirals outward in a row-major sweep so the first
+    /// hit is reproducible across runs.
+    private func findFootprint(_ footprint: Footprint, on island: Island) -> TileCoordinate? {
+        let centerX = (island.bounds.minX + island.bounds.maxX) / 2 - footprint.width / 2
+        let centerY = (island.bounds.minY + island.bounds.maxY) / 2 - footprint.height / 2
+        let maxRadius = max(
+            island.bounds.maxX - island.bounds.minX,
+            island.bounds.maxY - island.bounds.minY
+        )
+        for radius in 0 ... maxRadius {
+            for deltaY in -radius ... radius {
+                for deltaX in -radius ... radius {
+                    if radius > 0, abs(deltaX) != radius, abs(deltaY) != radius {
+                        continue
+                    }
+                    let anchor = TileCoordinate(x: centerX + deltaX, y: centerY + deltaY)
+                    if footprintIsBuildable(footprint, at: anchor) {
+                        return anchor
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    private func footprintIsBuildable(_ footprint: Footprint, at anchor: TileCoordinate) -> Bool {
+        for tile in footprint.tiles(anchor: anchor) {
+            guard contains(tile) else { return false }
+            guard let terrainHere = terrain(at: tile), terrainHere != .water else { return false }
+            if occupiedTiles[tile] != nil { return false }
+        }
+        return true
     }
 
     /// First in-bounds tile (row-major scan) whose terrain matches `kind`.

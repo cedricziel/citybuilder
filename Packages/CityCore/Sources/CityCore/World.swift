@@ -130,6 +130,23 @@ public struct World: Codable, Sendable, Equatable {
         return terrainGrid[coord.y * mapWidth + coord.x]
     }
 
+    /// Returns the `IslandID` of the island whose buildable tiles
+    /// contain `coord`, or `nil` for water tiles outside any island.
+    /// Re-runs the connected-component detector — placement validation
+    /// is rare enough to absorb the cost; the snapshot path caches its
+    /// own copy of the map for the renderer.
+    public func islandID(at coord: TileCoordinate) -> IslandID? {
+        guard contains(coord) else { return nil }
+        let map = IslandDetector.detect(
+            width: mapWidth,
+            height: mapHeight,
+            terrain: terrainGrid,
+            mapHeightForClimate: mapHeight,
+            seed: seed
+        ).tileToIsland
+        return map[coord]
+    }
+
     public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate) -> PlacementResult {
         let spec = BuildingCatalog.spec(for: kind)
         let tiles = spec.footprint.tiles(anchor: anchor)
