@@ -124,16 +124,26 @@ public final class EngineCuePlayer {
 
     private func loadFile(at path: String) -> AVAudioFile? {
         if let cached = fileCache[path] { return cached }
-        guard let url = bundle.url(
-            forResource: (path as NSString).deletingPathExtension,
-            withExtension: (path as NSString).pathExtension,
-            subdirectory: "Audio/\((path as NSString).deletingLastPathComponent)"
-        )
-            ?? bundle.url(
-                forResource: (path as NSString).deletingPathExtension,
-                withExtension: (path as NSString).pathExtension
-            )
-        else { return nil }
+        // `path` is a relative manifest path like "music/bards-tale.m4a".
+        // `Bundle.url(forResource:...)` expects the *basename* without the
+        // extension, plus an optional subdirectory — passing the full
+        // "music/bards-tale" silently fails to find anything.
+        //
+        // Xcode's resource-bundling flattens the subdirectory structure by
+        // default (every file lands at the .app root), so we try multiple
+        // candidate locations in order of specificity: the original Audio/
+        // subdirectory layout (in case future bundle layouts preserve it),
+        // then the bus-named subdir alone, then the bundle root.
+        let nsPath = path as NSString
+        let basename = (nsPath.lastPathComponent as NSString).deletingPathExtension
+        let ext = nsPath.pathExtension
+        let subdir = nsPath.deletingLastPathComponent
+        let candidates: [URL?] = [
+            bundle.url(forResource: basename, withExtension: ext, subdirectory: "Audio/\(subdir)"),
+            bundle.url(forResource: basename, withExtension: ext, subdirectory: subdir),
+            bundle.url(forResource: basename, withExtension: ext)
+        ]
+        guard let url = candidates.compactMap(\.self).first else { return nil }
         do {
             let file = try AVAudioFile(forReading: url)
             fileCache[path] = file

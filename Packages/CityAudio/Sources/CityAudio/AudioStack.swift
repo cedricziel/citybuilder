@@ -39,6 +39,12 @@ public final class AudioStack {
     ) {
         let manifest = AudioBundleLoader.loadManifest(in: bundle)
         let bindings = AudioBundleLoader.loadBindings(manifest: manifest, in: bundle)
+        // iOS pre-configures the AVAudioSession before AVAudioEngine() so the
+        // engine's session association at construction finds a valid session
+        // rather than logging -10879 and entering a degraded state. macOS
+        // no-op. The PlatformAudioSession instance below still does its own
+        // activate() to install the interruption observer.
+        PlatformAudioSession.configureSessionEarly()
         let engine = AudioEngine()
         let settings = AudioSettings(userDefaults: userDefaults)
         let session = PlatformAudioSession(engine: engine)
@@ -75,6 +81,16 @@ public final class AudioStack {
         if let sync = settingsSync {
             Task { await sync.pullCloudToLocal() }
         }
+        // Attach the interruption observer (and re-confirm session category
+        // on iOS — idempotent). configureSessionEarly() above already did
+        // the heavy lifting; this just brings PlatformAudioSession's
+        // bookkeeping in sync.
+        try? session.activate()
+        // Start music immediately if a track is bound. The previous "wait
+        // for first event" gate didn't survive contact with iOS — without
+        // engine warmup, no audio plays until the player triggers an event,
+        // which on a fresh empty island can take ~5 seconds (tax interval).
+        startMusicIfAvailable()
     }
 
     /// Push the current local audio settings to the cloud store, if any.
@@ -84,13 +100,9 @@ public final class AudioStack {
     }
 
     /// Forward per-tick events from `GameSession` into the coordinator.
-    /// Also lazy-activates the platform audio session and starts the music
-    /// loop on the first call.
+    /// Session activation and music start happen at init now (iOS audio
+    /// engine semantics require it); this just routes events.
     public func consume(events: [WorldEvent]) {
-        if !session.isActivated, !events.isEmpty {
-            try? session.activate()
-            startMusicIfAvailable()
-        }
         coordinator.consume(events: events)
     }
 

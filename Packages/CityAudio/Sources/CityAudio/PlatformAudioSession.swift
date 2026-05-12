@@ -19,6 +19,22 @@ public final class PlatformAudioSession {
         self.engine = engine
     }
 
+    /// Configure the platform audio session category + active state without
+    /// touching any per-engine state (no interruption observer, no bookkeeping).
+    /// Call BEFORE constructing `AVAudioEngine` so the engine's mandatory
+    /// session association at attach/connect time finds a valid session — on
+    /// iOS, deferring this until after `AVAudioEngine()` triggers a -10879
+    /// (`kAudioUnitErr_InvalidParameter`) "associating with audio session
+    /// (0x0)" log at engine construction.
+    ///
+    /// On macOS this is a no-op (no session to configure).
+    public static func configureSessionEarly() {
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+    }
+
     /// True once `activate()` has been called and (on iOS) the audio
     /// session has been configured.
     public var isActivated: Bool {
