@@ -17,6 +17,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .buildingPlaced(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
         .buildingDemolished(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
         .constructionCompleted(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
+        .materialsDeducted(building: EntityID(raw: 1), cost: [.wood: 2]),
         .forestHarvested(at: TileCoordinate(x: 0, y: 0)),
         .carrierDeparted(carrier: EntityID(raw: 1), from: TileCoordinate(x: 0, y: 0), good: .wood),
         .carrierArrived(carrier: EntityID(raw: 1), at: TileCoordinate(x: 0, y: 0), good: .wood, amount: 1),
@@ -30,12 +31,13 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .bankruptcyResolved,
         .gameOver
     ]
-    #expect(samples.count == 15)
+    #expect(samples.count == 16)
     for event in samples {
         switch event {
         case .buildingPlaced,
              .buildingDemolished,
              .constructionCompleted,
+             .materialsDeducted,
              .forestHarvested,
              .carrierDeparted,
              .carrierArrived,
@@ -155,9 +157,14 @@ func scenarioStableOrderingInsideASingleTick() {
     let entityIds = sorted.compactMap(\.primaryEntityID).map(\.raw)
     #expect(entityIds == [2, 3, 5, 7])
     // Non-entity events come after, in caseOrdinal order:
-    // taxesCollected (10), bankruptcyWarning (12), gameOver (14).
+    // taxesCollected, bankruptcyWarning, gameOver.
     let trailing = sorted.suffix(3).map(\.caseOrdinal)
-    #expect(trailing == [10, 12, 14])
+    let expected: [Int] = [
+        WorldEvent.taxesCollected(amount: 0).caseOrdinal,
+        WorldEvent.bankruptcyWarning(deficitTicks: 0).caseOrdinal,
+        WorldEvent.gameOver.caseOrdinal
+    ]
+    #expect(trailing == expected)
 }
 
 @Test("scenario: replay produces identical event sequences")

@@ -16,6 +16,11 @@ public enum WorldEvent: Sendable {
     case buildingDemolished(building: EntityID, kind: BuildingKind, anchor: TileCoordinate)
     /// A building's state flipped from `.constructing` to `.operational` on this tick.
     case constructionCompleted(building: EntityID, kind: BuildingKind, anchor: TileCoordinate)
+    /// Materials were deducted from the island's goods buffers at
+    /// placement time, satisfying the building's `materialCost`. The
+    /// audio layer (eventually) plays a short tally cue on this event.
+    /// Spec: `world-events` / Requirement: materialsDeducted event.
+    case materialsDeducted(building: EntityID, cost: [Good: Int])
     /// A forest tile was cleared (harvested by the player or consumed by a lumberjack).
     case forestHarvested(at: TileCoordinate)
     /// A placement command was rejected. Emitted only if the command is dispatched
@@ -62,6 +67,8 @@ extension WorldEvent: Equatable {
             return lEntity == rEntity && lKind == rKind && lAnchor == rAnchor
         case let (.constructionCompleted(lEntity, lKind, lAnchor), .constructionCompleted(rEntity, rKind, rAnchor)):
             return lEntity == rEntity && lKind == rKind && lAnchor == rAnchor
+        case let (.materialsDeducted(lBuilding, lCost), .materialsDeducted(rBuilding, rCost)):
+            return lBuilding == rBuilding && lCost == rCost
         case let (.forestHarvested(lAt), .forestHarvested(rAt)):
             return lAt == rAt
         case let (.placementRejected(lKind, lAnchor), .placementRejected(rKind, rAnchor)):
@@ -103,6 +110,8 @@ public extension WorldEvent {
              let .buildingDemolished(building, _, _),
              let .constructionCompleted(building, _, _):
             return building
+        case let .materialsDeducted(building, _):
+            return building
         case let .carrierDeparted(carrier, _, _),
              let .carrierArrived(carrier, _, _, _):
             return carrier
@@ -130,18 +139,19 @@ public extension WorldEvent {
         case .buildingPlaced: return 0
         case .buildingDemolished: return 1
         case .constructionCompleted: return 2
-        case .forestHarvested: return 3
-        case .placementRejected: return 4
-        case .carrierDeparted: return 5
-        case .carrierArrived: return 6
-        case .productionCycleCompleted: return 7
-        case .productionStalled: return 8
-        case .productionResumed: return 9
-        case .taxesCollected: return 10
-        case .upkeepPaid: return 11
-        case .bankruptcyWarning: return 12
-        case .bankruptcyResolved: return 13
-        case .gameOver: return 14
+        case .materialsDeducted: return 3
+        case .forestHarvested: return 4
+        case .placementRejected: return 5
+        case .carrierDeparted: return 6
+        case .carrierArrived: return 7
+        case .productionCycleCompleted: return 8
+        case .productionStalled: return 9
+        case .productionResumed: return 10
+        case .taxesCollected: return 11
+        case .upkeepPaid: return 12
+        case .bankruptcyWarning: return 13
+        case .bankruptcyResolved: return 14
+        case .gameOver: return 15
         }
     }
 }

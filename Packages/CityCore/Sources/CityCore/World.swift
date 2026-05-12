@@ -348,6 +348,7 @@ public struct World: Codable, Sendable, Equatable {
         }
         if !spec.materialCost.isEmpty {
             deductMaterials(cost: spec.materialCost, anchor: anchor)
+            events.append(.materialsDeducted(building: id, cost: spec.materialCost))
         }
         events.append(.buildingPlaced(building: id, kind: kind, anchor: anchor))
     }
