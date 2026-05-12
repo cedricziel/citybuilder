@@ -28,11 +28,16 @@ struct PlaceholderSuite {
     @Test("scenario: missing sprite logged once")
     func scenarioMissingSpriteLoggedOnce() {
         SpriteAtlas.resetMissLogForTesting()
+        let name = "walker-truly-not-real"
+        // Filter to this test's name so concurrent tests in other suites
+        // that happen to also call `textureOrPlaceholder` for unrelated
+        // missing sprites can't pollute the observed list.
         var observed: [String] = []
-        SpriteAtlas.missLogHook = { name in observed.append(name) }
+        SpriteAtlas.missLogHook = { hooked in
+            if hooked == name { observed.append(hooked) }
+        }
         defer { SpriteAtlas.missLogHook = nil }
 
-        let name = "walker-truly-not-real"
         _ = SpriteAtlas.textureOrPlaceholder(named: name)
         _ = SpriteAtlas.textureOrPlaceholder(named: name)
         _ = SpriteAtlas.textureOrPlaceholder(named: name)
@@ -43,8 +48,14 @@ struct PlaceholderSuite {
     @Test("scenario: missing sprite distinct names log independently")
     func scenarioMissingSpriteDistinctNamesLogIndependently() {
         SpriteAtlas.resetMissLogForTesting()
+        let watched: Set = [
+            "terrain-truly-not-real-a",
+            "terrain-truly-not-real-b"
+        ]
         var observed: [String] = []
-        SpriteAtlas.missLogHook = { name in observed.append(name) }
+        SpriteAtlas.missLogHook = { hooked in
+            if watched.contains(hooked) { observed.append(hooked) }
+        }
         defer { SpriteAtlas.missLogHook = nil }
 
         _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-a")

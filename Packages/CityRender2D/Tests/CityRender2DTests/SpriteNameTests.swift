@@ -102,6 +102,42 @@ func scenarioValidatorRejectsGoodWithUnderscore() {
 
 // MARK: - Catalog conformance
 
+// MARK: - Per-tile art variant slot (add-sprite-art-variants)
+
+@Test("scenario: variant slot accepted for terrain")
+func scenarioVariantSlotAcceptedForTerrain() {
+    let result = SpriteName.validate("terrain-mountain-v2")
+    if case let .failure(reason) = result {
+        Issue.record("expected terrain-mountain-v2 to pass; got \(reason.rawValue)")
+    }
+}
+
+@Test("scenario: variant slot accepted for land-only building")
+func scenarioVariantSlotAcceptedForLandOnlyBuilding() {
+    let result = SpriteName.validate("building-road-v3")
+    if case let .failure(reason) = result {
+        Issue.record("expected building-road-v3 to pass; got \(reason.rawValue)")
+    }
+}
+
+@Test("scenario: variant slot rejected on shore building")
+func scenarioVariantSlotRejectedOnShoreBuilding() {
+    // Shore-grammar kinds (port, shipyard) do not opt into the variant
+    // slot — the orientation slot already provides per-tile differentia-
+    // tion. `building-port-v1-n` puts `v1` where the orientation must
+    // be, so validation MUST reject it.
+    let result = SpriteName.validate("building-port-v1-n")
+    switch result {
+    case .failure:
+        // The exact reason code is implementation-specific (today's
+        // validator surfaces `shore_building_missing_orientation`); the
+        // contract is rejection, not which error wins.
+        break
+    case .success:
+        Issue.record("expected building-port-v1-n to fail; shore kinds do not accept the variant slot")
+    }
+}
+
 @Test("scenario: every catalog sprite name conforms to the grammar")
 func scenarioEveryCatalogSpriteNameConformsToTheGrammar() {
     // The catalog enumerator is the single source of truth for what
