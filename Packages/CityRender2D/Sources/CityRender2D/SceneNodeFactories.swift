@@ -42,7 +42,8 @@ extension IsoWorldScene {
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
         guard case let .building(
             kind, state, footprint, constructionFrameIndex, orientation, isWaitingForMaterials
-        ) = spec.kind else {
+        ) = spec.kind
+        else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
         }
         let coord = spec.coord
