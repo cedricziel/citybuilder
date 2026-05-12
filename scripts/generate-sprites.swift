@@ -221,6 +221,8 @@ enum P {
     static let outline = Color(28, 22, 18)
     static let roadStone = Color(132, 128, 116)
     static let roadStoneDark = Color(96, 92, 80)
+    static let roadDirt = Color(118, 96, 68)
+    static let roadMoss = Color(84, 124, 64)
 
     // Good icons (24×24 HUD chips)
     static let goodWood = Color(168, 124, 70)
@@ -523,7 +525,12 @@ func waterFrame(frame: Int) -> Pixmap {
     return p
 }
 
-func mountainSprite() -> Pixmap {
+/// Number of mountain art variants the generator emits. The renderer
+/// hashes the tile coord modulo this count to pick a variant per tile,
+/// so a chain of mountain tiles isn't a row of identical clones.
+let mountainVariantCount = 4
+
+func mountainSprite(variant: Int = 0) -> Pixmap {
     let p = terrainCanvas()
     drawIsoDiamond(
         p,
@@ -535,56 +542,191 @@ func mountainSprite() -> Pixmap {
         edge: P.mountainDark,
         highlight: P.mountainLight
     )
-    // Two-faced rocky peak: left (sun-lit) is `mountainLight`, right
-    // (shaded) is `mountain`, with a single-pixel `mountainDark` outline
-    // along the silhouette. The snow cap sits on top with a wavy lower
-    // edge (so it doesn't read as a hat brim). Scattered crag pixels on
-    // the shaded face give the surface some texture without resorting
-    // to the column-parity stripes the previous version had.
-    let peakCenter = 32
-    let peakRows = 14
-    let topY = 4
-    // Wavy snow edge — for each column offset (dx), the snow extends
-    // down this many rows from `topY`. Hand-tuned for a "rocky cap".
-    let snowDepthByDx: [Int: Int] = [
-        -6: 2, -5: 3, -4: 4, -3: 5, -2: 6, -1: 5,
-        0: 6, 1: 5, 2: 5, 3: 4, 4: 4, 5: 3, 6: 2
-    ]
-    for row in 0 ..< peakRows {
-        let halfW = max(2, 7 - row / 3)
-        let yy = topY + row
-        for dx in -halfW ... halfW {
-            let isLeftFace = dx < 0
-            let isRim = (dx == -halfW || dx == halfW)
-            let snowHere = row < (snowDepthByDx[dx] ?? 0)
-            let color: Color
-            if snowHere {
-                color = (isRim && row > 1) ? P.mountainDark : P.snow
-            } else if isRim {
-                color = P.mountainDark
-            } else if isLeftFace {
-                color = P.mountainLight
-            } else {
-                color = P.mountain
-            }
-            p.set(peakCenter + dx, yy, color)
-        }
-    }
-    // A handful of crag-detail pixels on the shaded face for texture.
-    let crags: [(Int, Int)] = [
-        (peakCenter + 2, topY + 8),
-        (peakCenter + 4, topY + 10),
-        (peakCenter + 1, topY + 11),
-        (peakCenter + 3, topY + 12)
-    ]
-    for (cx, cy) in crags { p.set(cx, cy, P.mountainDark) }
-    // Anchor the peak into the diamond with a darker scree skirt at the
-    // base so the mountain doesn't appear to float.
-    for dx in -8 ... 8 {
-        let yy = topY + peakRows
-        p.set(peakCenter + dx, yy, P.mountainDark)
+    switch variant % mountainVariantCount {
+    case 1: drawMountainTwinSpires(p)
+    case 2: drawMountainLongRidge(p)
+    case 3: drawMountainConeVolcano(p)
+    default: drawMountainGrandPeak(p)
     }
     return p
+}
+
+/// Stroke one rock ridge into the canvas. For each row between `topY`
+/// and `baseY`, computes a linear half-width from `peakHalfW` (top) to
+/// `baseHalfW` (base), optionally jittered by `ridgeJitter[row]` for a
+/// bumpy silhouette. Snow occupies the first `snowRows` rows, with a
+/// per-column extension drawn from `snowJitterByAbsDx` so the snow line
+/// reads as a wavy cap rather than a hat brim.
+func drawMountainRidge(
+    _ p: Pixmap,
+    peakX: Int, topY: Int, baseY: Int,
+    peakHalfW: Int, baseHalfW: Int,
+    snowRows: Int,
+    ridgeJitter: [Int] = [],
+    snowJitterByAbsDx: [Int] = [],
+    light: Color = P.mountainLight,
+    mid: Color = P.mountain,
+    dark: Color = P.mountainDark,
+    snow: Color = P.snow
+) {
+    let rows = max(1, baseY - topY + 1)
+    for i in 0 ..< rows {
+        let yy = topY + i
+        let t = rows > 1 ? Double(i) / Double(rows - 1) : 0
+        var hw = Int(round(Double(peakHalfW) + Double(baseHalfW - peakHalfW) * t))
+        if i < ridgeJitter.count { hw = max(0, hw + ridgeJitter[i]) }
+        for dx in -hw ... hw {
+            let isRim = (dx == -hw || dx == hw)
+            let isLeftFace = dx < 0
+            let dxAbs = abs(dx)
+            let snowExtra = dxAbs < snowJitterByAbsDx.count ? snowJitterByAbsDx[dxAbs] : 0
+            let snowHere = i < snowRows + snowExtra
+            let color: Color
+            if snowHere, !isRim || i == 0 {
+                color = snow
+            } else if isRim {
+                color = dark
+            } else if isLeftFace {
+                color = light
+            } else {
+                color = mid
+            }
+            p.set(peakX + dx, yy, color)
+        }
+    }
+}
+
+/// Variant 0 — a single dominant peak filling most of the upper diamond.
+func drawMountainGrandPeak(_ p: Pixmap) {
+    drawMountainRidge(
+        p,
+        peakX: 32,
+        topY: 2,
+        baseY: 24,
+        peakHalfW: 2,
+        baseHalfW: 22,
+        snowRows: 6,
+        ridgeJitter: [0, 0, 1, 0, -1, 0, 1, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        snowJitterByAbsDx: [3, 2, 3, 2, 1, 0, 0]
+    )
+    // Crag dots on the shaded face for surface detail.
+    let crags: [(Int, Int)] = [
+        (36, 14), (40, 16), (34, 18), (44, 19),
+        (38, 21), (42, 22)
+    ]
+    for (cx, cy) in crags { p.set(cx, cy, P.mountainDark) }
+    // Scree skirt anchoring the peak into the diamond ground.
+    for dx in -22 ... 22 {
+        let xx = 32 + dx
+        let yy = 25
+        if p.get(xx, yy) != .clear { p.set(xx, yy, P.mountainDark) }
+    }
+}
+
+/// Variant 1 — two peaks meeting in a saddle, like a small pass.
+func drawMountainTwinSpires(_ p: Pixmap) {
+    drawMountainRidge(
+        p,
+        peakX: 22,
+        topY: 3,
+        baseY: 24,
+        peakHalfW: 2,
+        baseHalfW: 14,
+        snowRows: 5,
+        ridgeJitter: [0, 1, 0, -1, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        snowJitterByAbsDx: [2, 2, 1, 0, 0]
+    )
+    drawMountainRidge(
+        p,
+        peakX: 44,
+        topY: 5,
+        baseY: 24,
+        peakHalfW: 2,
+        baseHalfW: 13,
+        snowRows: 4,
+        ridgeJitter: [0, 0, -1, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        snowJitterByAbsDx: [2, 1, 1, 0]
+    )
+    // Saddle shading between the two peaks reads as a notch.
+    for x in 30 ... 36 {
+        p.set(x, 12, P.mountainDark)
+        p.set(x, 13, P.mountain)
+    }
+    for dx in -22 ... 22 {
+        let xx = 32 + dx
+        if p.get(xx, 25) != .clear { p.set(xx, 25, P.mountainDark) }
+    }
+}
+
+/// Variant 2 — wide, jagged ridge running across the diamond. Lower
+/// silhouette than the others, more rock than snow.
+func drawMountainLongRidge(_ p: Pixmap) {
+    // The crest is a hand-tuned column-height profile: for each absolute
+    // dx from center, the topmost rock row. Sub-peaks at dx = -10 and +6.
+    let crestByDx: [(dx: Int, top: Int)] = [
+        (-22, 22), (-20, 20), (-18, 18), (-16, 15), (-14, 12), (-12, 10),
+        (-10, 8), (-8, 9), (-6, 11), (-4, 9), (-2, 7), (0, 8),
+        (2, 7), (4, 6), (6, 5), (8, 7), (10, 9), (12, 11),
+        (14, 13), (16, 15), (18, 17), (20, 19), (22, 21)
+    ]
+    let baseY = 24
+    for (dx, top) in crestByDx {
+        let x = 32 + dx
+        for y in top ... baseY {
+            let isRim = (y == top)
+            let isLeftFace = dx < 0
+            let color: Color = isRim
+                ? P.mountainDark
+                : (isLeftFace ? P.mountainLight : P.mountain)
+            p.set(x, y, color)
+        }
+    }
+    // Snow caps on the two sub-peaks only.
+    let snowCaps: [(Int, Int)] = [
+        (22, 6), (24, 6), (26, 7), (28, 7), // left sub-peak around x=22..28
+        (36, 6), (38, 5), (40, 6), (42, 7) // right sub-peak around x=36..42
+    ]
+    for (sx, sy) in snowCaps { p.set(sx, sy, P.snow) }
+    // Scree at the base.
+    for dx in -22 ... 22 {
+        let xx = 32 + dx
+        if p.get(xx, 25) != .clear { p.set(xx, 25, P.mountainDark) }
+    }
+}
+
+/// Variant 3 — a steep, near-symmetric cone with a small crater pit.
+/// No snow; the dark crater reads as a dormant volcanic plug.
+func drawMountainConeVolcano(_ p: Pixmap) {
+    drawMountainRidge(
+        p,
+        peakX: 32,
+        topY: 3,
+        baseY: 24,
+        peakHalfW: 3,
+        baseHalfW: 20,
+        snowRows: 0,
+        ridgeJitter: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    )
+    // Crater rim: a darker oval inset into the top of the cone.
+    let craterRim: [(Int, Int)] = [
+        (30, 3), (31, 3), (32, 3), (33, 3), (34, 3),
+        (29, 4), (35, 4),
+        (29, 5), (35, 5),
+        (30, 6), (31, 6), (32, 6), (33, 6), (34, 6)
+    ]
+    for (cx, cy) in craterRim { p.set(cx, cy, P.mountainDark) }
+    // Crater interior — even darker than the rim so it reads as depth.
+    for y in 4 ... 5 {
+        for x in 30 ... 34 { p.set(x, y, P.mountainDark.darker(20)) }
+    }
+    // A thin lava-glow streak down the shaded face.
+    let glow = Color(196, 84, 36)
+    for (gx, gy) in [(33, 7), (34, 9), (35, 11), (36, 13)] { p.set(gx, gy, glow) }
+    // Scree skirt.
+    for dx in -20 ... 20 {
+        let xx = 32 + dx
+        if p.get(xx, 25) != .clear { p.set(xx, 25, P.mountainDark) }
+    }
 }
 
 // MARK: - Building sprites
@@ -1220,7 +1362,11 @@ func townCenterSprite(frame: Int) -> Pixmap {
     return p
 }
 
-func roadSprite() -> Pixmap {
+/// Number of road art variants the generator emits. Picked deterministi-
+/// cally per tile coord so a long road doesn't repeat one tile pattern.
+let roadVariantCount = 4
+
+func roadSprite(variant: Int = 0) -> Pixmap {
     let p = terrainCanvas()
     drawIsoDiamond(
         p,
@@ -1232,7 +1378,21 @@ func roadSprite() -> Pixmap {
         edge: P.roadStoneDark,
         highlight: P.roadStone.lighter(20)
     )
-    // Cobble pattern: dots in a 4-pixel grid.
+    // Base cobble grid is shared across variants — keeps every road tile
+    // reading as the same surface even when subtle decorations differ.
+    drawCobbleGrid(p)
+    switch variant % roadVariantCount {
+    case 1: decorateRoadWorn(p)
+    case 2: decorateRoadRuts(p)
+    case 3: decorateRoadMossy(p)
+    default: break
+    }
+    return p
+}
+
+/// Stipple of dark cobble pixels in a 3-row × 4-column grid clipped to
+/// the diamond. Shared base for every road variant.
+func drawCobbleGrid(_ p: Pixmap) {
     let centerX = 32
     for row in 2 ..< 30 where row % 3 == 0 {
         let hw = halfWidth(row: row, height: 32)
@@ -1244,7 +1404,73 @@ func roadSprite() -> Pixmap {
             x += 4
         }
     }
-    return p
+}
+
+/// Variant 1 — patchy dirt where cobbles have eroded. A handful of
+/// dirt-colored blotches replace cobbles in a hand-picked layout so
+/// every "worn" tile looks the same (no per-call RNG).
+func decorateRoadWorn(_ p: Pixmap) {
+    let dirtPatches: [(Int, Int, Int, Int)] = [
+        // (x, y, w, h)
+        (20, 10, 4, 2),
+        (38, 14, 5, 2),
+        (28, 19, 6, 2),
+        (44, 22, 3, 2)
+    ]
+    for (x, y, w, h) in dirtPatches {
+        for dy in 0 ..< h {
+            for dx in 0 ..< w {
+                let px = x + dx
+                let py = y + dy
+                if p.get(px, py) != .clear { p.set(px, py, P.roadDirt) }
+            }
+        }
+    }
+    // A few lighter cobble stones to add wear contrast.
+    let highlights: [(Int, Int)] = [(16, 12), (26, 15), (36, 19), (46, 16)]
+    for (hx, hy) in highlights {
+        if p.get(hx, hy) != .clear { p.set(hx, hy, P.roadStone.lighter(20)) }
+    }
+}
+
+/// Variant 2 — two parallel wagon ruts running along the iso axis. The
+/// ruts are darker than the cobble and follow the diamond's long edge so
+/// they read as a worn travel path.
+func decorateRoadRuts(_ p: Pixmap) {
+    // Two ruts offset above/below the center line. The iso "lane" axis
+    // runs at slope 1:2 — for each x we drop a pixel every 2 columns.
+    let centerY = 16
+    for x in 8 ..< 56 {
+        let dy = (x - 8) / 4 - 4 // sweeps roughly -4..+8 across the tile
+        for offset in [-2, 2] {
+            let py = centerY + offset + dy / 2
+            if p.get(x, py) != .clear { p.set(x, py, P.roadStoneDark.darker(20)) }
+            // A lighter shoulder pixel just above each rut for depth.
+            if p.get(x, py - 1) == P.roadStone {
+                p.set(x, py - 1, P.roadStone.lighter(20))
+            }
+        }
+    }
+}
+
+/// Variant 3 — sparse moss creeping between cobbles. A handful of green
+/// pixels in the gaps gives the road a "long-established" feel without
+/// fighting the cobble pattern.
+func decorateRoadMossy(_ p: Pixmap) {
+    let mossSpots: [(Int, Int)] = [
+        (18, 11), (22, 13), (30, 14), (38, 16), (46, 17),
+        (24, 19), (34, 21), (28, 22), (42, 23), (20, 24)
+    ]
+    for (mx, my) in mossSpots {
+        if p.get(mx, my) != .clear, p.get(mx, my) != P.roadStoneDark {
+            p.set(mx, my, P.roadMoss)
+        }
+    }
+    // Darker moss shadow under each spot to suggest depth.
+    for (mx, my) in mossSpots {
+        let sy = my + 1
+        if p.get(mx, sy) == P.roadStone { p.set(mx, sy, P.roadMoss.darker(20)) }
+    }
 }
 
 // MARK: - Constructing frames (scaffold overlay)
@@ -1730,7 +1956,10 @@ write(grassSprite(), name: "terrain-grass")
 write(forestSprite(), name: "terrain-forest")
 write(beachSprite(), name: "terrain-beach")
 write(waterSprite(), name: "terrain-water")
-write(mountainSprite(), name: "terrain-mountain")
+write(mountainSprite(variant: 0), name: "terrain-mountain")
+for variant in 1 ..< mountainVariantCount {
+    write(mountainSprite(variant: variant), name: "terrain-mountain-v\(variant)")
+}
 
 print("Generating building sprites...")
 write(houseSprite(), name: "building-house")
@@ -1738,7 +1967,10 @@ write(warehouseSprite(), name: "building-warehouse")
 write(lumberjackHutSprite(), name: "building-lumberjack-hut")
 write(sawmillSprite(), name: "building-sawmill")
 write(townCenterSprite(), name: "building-town-center")
-write(roadSprite(), name: "building-road")
+write(roadSprite(variant: 0), name: "building-road")
+for variant in 1 ..< roadVariantCount {
+    write(roadSprite(variant: variant), name: "building-road-v\(variant)")
+}
 
 print("Generating walker sprites...")
 for facing in Facing.allCases {

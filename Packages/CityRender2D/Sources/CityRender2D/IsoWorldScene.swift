@@ -151,11 +151,12 @@ public final class IsoWorldScene: SKScene {
             ghostNode = nil
             return
         }
-        guard let texture = SpriteAtlas.buildingTexture(for: ghost.kind) else {
-            ghostNode?.removeFromParent()
-            ghostNode = nil
-            return
-        }
+        // Variant-aware lookup so the ghost preview of a road tile shows
+        // the same variant the placed tile will use.
+        let texture = SpriteAtlas.buildingTextureOrPlaceholder(
+            for: ghost.kind,
+            coord: ghost.tile
+        )
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
         node.anchorPoint = CGPoint(x: 0.5, y: 0)

@@ -11,24 +11,18 @@ extension IsoWorldScene {
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
         case let .terrain(kind):
-            makeTerrainNode(kind: kind)
-        case let .building(kind, state, footprint, frameIndex, orientation):
-            makeBuildingNode(
-                kind: kind,
-                state: state,
-                footprint: footprint,
-                constructionFrameIndex: frameIndex,
-                orientation: orientation
-            )
+            makeTerrainNode(kind: kind, coord: spec.coord)
+        case .building:
+            makeBuildingNode(for: spec)
         }
     }
 
-    func makeTerrainNode(kind: TerrainType) -> SKNode {
-        // The placeholder path satisfies the rendering-2_5d
-        // `Missing-sprite fallback in release` requirement: if the
-        // catalogued PNG is missing, a magenta 32×32 sprite renders
-        // in its place and the miss is logged once per process.
-        let texture = SpriteAtlas.textureOrPlaceholder(named: "terrain-\(kind.rawValue)")
+    func makeTerrainNode(kind: TerrainType, coord: TileCoordinate) -> SKNode {
+        // Variant-aware lookup picks a deterministic per-tile sprite for
+        // kinds with multiple variants (mountain); falls through to the
+        // canonical sprite for all others. Placeholder path satisfies the
+        // rendering-2_5d `Missing-sprite fallback in release` requirement.
+        let texture = SpriteAtlas.terrainTextureOrPlaceholder(for: kind, coord: coord)
         let node = SKSpriteNode(texture: texture)
         node.zPosition = 0
         if let action = SpriteAnimation.loopingAction(for: .terrain(kind)) {
@@ -41,13 +35,11 @@ extension IsoWorldScene {
     /// Geometry — sprite anchor (0.5, 0) sits at the anchor tile; the
     /// sprite's bottom diamond aligns with the actual iso footprint.
     /// See the design doc for the offset derivation.
-    func makeBuildingNode(
-        kind: BuildingKind,
-        state: BuildingState,
-        footprint: Footprint,
-        constructionFrameIndex: Int?,
-        orientation: ShoreOrientation?
-    ) -> SKNode {
+    func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
+        guard case let .building(kind, state, footprint, constructionFrameIndex, orientation) = spec.kind else {
+            preconditionFailure("makeBuildingNode called with non-building spec kind")
+        }
+        let coord = spec.coord
         let texture: SKTexture
         if let orientation {
             // Shore buildings live under the `building-<kind>-<orientation>-*`
@@ -64,8 +56,9 @@ extension IsoWorldScene {
             texture = textureForBuilding(
                 kind: kind,
                 state: state,
-                constructionFrameIndex: constructionFrameIndex
-            ) ?? SpriteAtlas.textureOrPlaceholder(named: "building-\(kind.rawValue)")
+                constructionFrameIndex: constructionFrameIndex,
+                coord: coord
+            ) ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         }
         let node = buildingSpriteNode(
             texture: texture,
@@ -91,17 +84,21 @@ extension IsoWorldScene {
     private func textureForBuilding(
         kind: BuildingKind,
         state: BuildingState,
-        constructionFrameIndex: Int?
+        constructionFrameIndex: Int?,
+        coord: TileCoordinate
     ) -> SKTexture? {
+        // Variant lookup applies only to states that show the canonical
+        // idle/operational sprite. Constructing/operational frames keep
+        // the existing single-PNG paths so animation timing stays put.
         switch state {
         case .constructing:
             return constructingTexture(kind: kind, frameIndex: constructionFrameIndex)
-                ?? SpriteAtlas.buildingTexture(for: kind)
+                ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         case .operational:
             return SpriteAtlas.frames(for: .buildingOperational(kind))?.first
-                ?? SpriteAtlas.buildingTexture(for: kind)
+                ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         case .planned:
-            return SpriteAtlas.buildingTexture(for: kind)
+            return SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         }
     }
 

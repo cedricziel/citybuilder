@@ -63,6 +63,74 @@ public enum SpriteAtlas {
         texture(named: "building-\(kind.rawValue)")
     }
 
+    // MARK: - Per-tile art variants
+
+    //
+    // Some sprite kinds (mountain, road) ship multiple visually distinct
+    // PNGs so a row of mountain tiles isn't a row of clones. Variant 0
+    // uses the canonical name (`terrain-mountain.png`); variants 1..N-1
+    // use `<stem>-vN.png`. Selection is a deterministic function of the
+    // tile coordinate, so replays and snapshots render the same.
+
+    /// Number of art variants per terrain kind. Kinds not listed render
+    /// the single canonical sprite.
+    public static let terrainVariantCounts: [TerrainType: Int] = [
+        .mountain: 4
+    ]
+
+    /// Number of art variants per building kind. Only applies to the
+    /// idle/operational sprite (not shore-orientation variants, which
+    /// already follow their own naming grammar).
+    public static let buildingVariantCounts: [BuildingKind: Int] = [
+        .road: 4
+    ]
+
+    /// Deterministic variant index for a tile coord. Same `(coord, count)`
+    /// always returns the same index — required so the snapshot-driven
+    /// reconciler doesn't see flicker between frames.
+    public static func variantIndex(coord: TileCoordinate, count: Int) -> Int {
+        guard count > 1 else { return 0 }
+        let xu = UInt32(bitPattern: Int32(truncatingIfNeeded: coord.x))
+        let yu = UInt32(bitPattern: Int32(truncatingIfNeeded: coord.y))
+        var hash: UInt32 = xu &* 0x9E37_79B1 &+ yu &* 0x6D2B_79F5
+        hash ^= hash >> 16
+        hash &*= 0x7FEB_352D
+        hash ^= hash >> 15
+        return Int(hash % UInt32(count))
+    }
+
+    /// Resolves the asset name for a variant. Variant 0 uses the stem
+    /// alone so existing single-sprite kinds keep their canonical name.
+    public static func variantAssetName(stem: String, variant: Int) -> String {
+        variant == 0 ? stem : "\(stem)-v\(variant)"
+    }
+
+    /// Variant-aware terrain texture lookup. Falls back to the magenta
+    /// placeholder + log-once when the asset is missing, same contract as
+    /// `textureOrPlaceholder(named:)`.
+    public static func terrainTextureOrPlaceholder(
+        for kind: TerrainType,
+        coord: TileCoordinate
+    ) -> SKTexture {
+        let count = terrainVariantCounts[kind] ?? 1
+        let variant = variantIndex(coord: coord, count: count)
+        let name = variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
+        return textureOrPlaceholder(named: name)
+    }
+
+    /// Variant-aware building texture lookup. Used for non-shore
+    /// buildings whose idle sprite has variants (currently: road). Shore
+    /// orientations are resolved separately via `ShoreOrientationMath`.
+    public static func buildingTextureOrPlaceholder(
+        for kind: BuildingKind,
+        coord: TileCoordinate
+    ) -> SKTexture {
+        let count = buildingVariantCounts[kind] ?? 1
+        let variant = variantIndex(coord: coord, count: count)
+        let name = variantAssetName(stem: "building-\(kind.rawValue)", variant: variant)
+        return textureOrPlaceholder(named: name)
+    }
+
     /// Two-frame walk cycle for a given facing. Backed by `frames(for:)`
     /// so all multi-frame lookups share one code path.
     public static func walkerAnimation(facing: WalkerFacing) -> [SKTexture]? {
@@ -207,6 +275,15 @@ public enum SpriteAtlas {
                     names.append(SpriteAnimation.assetName(for: .terrain(kind), frame: frame))
                 }
             }
+            // Art variants (mountain): variant 0 already added above as
+            // the canonical stem; variants 1..N-1 use the `-vN` suffix.
+            if let variantCount = terrainVariantCounts[kind], variantCount > 1 {
+                for variant in 1 ..< variantCount {
+                    names.append(
+                        variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
+                    )
+                }
+            }
         }
 
         for kind in BuildingKind.allCases {
@@ -228,6 +305,16 @@ public enum SpriteAtlas {
                 continue
             }
             names.append("building-\(kind.rawValue)")
+            // Art variants (road): variant 0 = the canonical stem just
+            // appended; variants 1..N-1 use `-vN`. Only applies to
+            // non-shore kinds (shore kinds have their own grammar).
+            if let variantCount = buildingVariantCounts[kind], variantCount > 1 {
+                for variant in 1 ..< variantCount {
+                    names.append(
+                        variantAssetName(stem: "building-\(kind.rawValue)", variant: variant)
+                    )
+                }
+            }
             if let opEntry = SpriteAnimation.entry(for: .buildingOperational(kind)) {
                 for frame in 0 ..< opEntry.frameCount {
                     names.append(
