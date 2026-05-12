@@ -63,7 +63,7 @@ func scenarioSaveWritesUseCurrentVersion() throws {
     let world = World.newGame()
     let data = try JSONEncoder().encode(SaveFile(world: world))
     let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-    #expect(parsed["version"] as? Int == 2)
+    #expect(parsed["version"] as? Int == SaveFile.currentVersion)
 }
 
 // MARK: - Versioned migration pipeline
@@ -197,6 +197,12 @@ private func fixtureURL() -> URL {
         .appendingPathComponent("Fixtures/saves/v1_single_island.json")
 }
 
+private func v2FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v2_single_island.json")
+}
+
 @Test("fixture: regenerate v1 single-island save")
 func regenerateV1SingleIslandFixture() throws {
     // Writes a representative v1 save to the fixture path. The
@@ -223,6 +229,55 @@ func regenerateV1SingleIslandFixture() throws {
         at: url.deletingLastPathComponent(), withIntermediateDirectories: true
     )
     try data.write(to: url)
+}
+
+@Test("fixture: regenerate v2 single-island save")
+func regenerateV2SingleIslandFixture() throws {
+    // Writes a representative v2 save (pre-`add-construction-stalls`)
+    // to the fixture path so the migration-coverage gate has something
+    // to point at for the v2 → v3 step. v2 is shaped exactly like the
+    // current Codable, minus the new `constructionState` and
+    // `materialsDelivered` fields on `Building`.
+    var world = World.newGame()
+    let warehouseID = EntityID(raw: 1001)
+    world.buildings[warehouseID] = Building(
+        id: warehouseID, kind: .warehouse,
+        anchor: TileCoordinate(x: 1, y: 1), state: .constructing,
+        ticksSincePlacement: 3
+    )
+    world.occupiedTiles[TileCoordinate(x: 1, y: 1)] = warehouseID
+    world.stockpiles[warehouseID] = Stockpile(capacity: 200)
+    var data = try makeV2Payload(world: world)
+    data.append(0x0A)
+    let url = v2FixtureURL()
+    try FileManager.default.createDirectory(
+        at: url.deletingLastPathComponent(), withIntermediateDirectories: true
+    )
+    try data.write(to: url)
+}
+
+/// Encode a World and stamp the version to 2 while stripping the
+/// fields that v2 didn't carry (`constructionState`,
+/// `materialsDelivered` on Building). Mirrors `makeV1Payload`'s
+/// strip-then-re-encode approach.
+private func makeV2Payload(world: World) throws -> Data {
+    var data = try JSONEncoder().encode(SaveFile(world: world))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 2
+    var inner = json["world"] as? [String: Any] ?? [:]
+    if var buildings = inner["buildings"] as? [Any] {
+        for idx in stride(from: 1, to: buildings.count, by: 2) {
+            if var building = buildings[idx] as? [String: Any] {
+                building.removeValue(forKey: "constructionState")
+                building.removeValue(forKey: "materialsDelivered")
+                buildings[idx] = building
+            }
+        }
+        inner["buildings"] = buildings
+    }
+    json["world"] = inner
+    data = try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+    return data
 }
 
 @Test("scenario: v1 fixture exists and migrates cleanly")

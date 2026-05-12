@@ -21,7 +21,8 @@ public struct MigrationRegistry: Sendable {
     /// Default chain — extend by appending the next-version migration
     /// at the end of this array.
     public static let defaultMigrations: [Migration] = [
-        MigrationV1ToV2()
+        MigrationV1ToV2(),
+        MigrationV2ToV3()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -107,5 +108,76 @@ public struct MigrationV1ToV2: Migration {
 
         root["world"] = world
         return root
+    }
+}
+
+/// Migration #2: v2 → v3. v2 saves predate `add-construction-stalls`:
+/// `Building` had no `constructionState` or `materialsDelivered`. The
+/// migration treats every constructing building as already fully paid
+/// — seeds `materialsDelivered = materialCost` and
+/// `constructionState = .actively` so existing in-progress builds
+/// don't suddenly stall on load. Operational buildings keep the
+/// defaults; the fields are unused once construction is done.
+public struct MigrationV2ToV3: Migration {
+    public let fromVersion = 2
+    public let toVersion = 3
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 3
+        guard var world = root["world"] as? [String: Any] else { return root }
+        // `[EntityID: Building]` encodes as a flat array of alternating
+        // key/value pairs. Buildings live at the odd indices.
+        guard var buildings = world["buildings"] as? [Any] else {
+            root["world"] = world
+            return root
+        }
+        for index in stride(from: 1, to: buildings.count, by: 2) {
+            guard var building = buildings[index] as? [String: Any] else { continue }
+            let state = building["state"] as? String ?? "operational"
+            if state == "constructing" {
+                building["constructionState"] = "actively"
+                let kindRaw = building["kind"] as? String ?? ""
+                let cost = materialCost(forBuildingKindRaw: kindRaw)
+                building["materialsDelivered"] = encodedGoodIntMap(cost)
+            } else {
+                building["constructionState"] = "actively"
+                building["materialsDelivered"] = [Any]()
+            }
+            buildings[index] = building
+        }
+        world["buildings"] = buildings
+        root["world"] = world
+        return root
+    }
+
+    /// Mirror of `BuildingCatalog.spec(for:).materialCost` keyed by
+    /// the raw enum string so this migration doesn't depend on the
+    /// `BuildingKind` enum (which can drift across releases). Spec
+    /// `add-build-materials-cost` design D2 recipe table.
+    private func materialCost(forBuildingKindRaw raw: String) -> [String: Int] {
+        switch raw {
+        case "house": return ["planks": 4]
+        case "warehouse": return ["wood": 2, "planks": 6]
+        case "lumberjack-hut", "lumberjack_hut": return ["wood": 2]
+        case "sawmill": return ["wood": 4, "planks": 1]
+        case "port": return ["wood": 8, "planks": 6]
+        case "shipyard": return ["wood": 12, "planks": 8]
+        case "road", "town-center", "town_center": return [:]
+        default: return [:]
+        }
+    }
+
+    /// `[Good: Int]` encodes as `[Any]` with alternating key/value
+    /// pairs in Codable. Build the same shape from a String-keyed map.
+    private func encodedGoodIntMap(_ map: [String: Int]) -> [Any] {
+        var result: [Any] = []
+        for (good, amount) in map.sorted(by: { $0.key < $1.key }) {
+            result.append(good)
+            result.append(amount)
+        }
+        return result
     }
 }
