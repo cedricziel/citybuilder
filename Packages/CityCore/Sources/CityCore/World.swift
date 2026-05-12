@@ -41,6 +41,13 @@ public struct World: Codable, Sendable, Equatable {
     public internal(set) var carriers: [EntityID: Carrier] = [:]
     /// Counter for carrier in-flight count per producer.
     public internal(set) var carrierCountByProducer: [EntityID: Int] = [:]
+    /// Sea entities. Continuous-position, integrated each tick by the
+    /// `tickShips` system (spec `sea-transport`).
+    public internal(set) var ships: [EntityID: Ship] = [:]
+    /// Persistent route entities. Outlive ships — a route remains in
+    /// the world after every assigned ship is destroyed and can be
+    /// re-assigned later.
+    public internal(set) var routes: [EntityID: Route] = [:]
     /// Connectivity graph over road tiles. Updated incrementally by
     /// place(.road) and demolish on road tiles.
     public internal(set) var roadGraph: RoadGraph = .init()

@@ -10,10 +10,10 @@
 
 ## 2. M2 — Continuous-position entity scaffolding (CityCore)
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: Ship has a single canonical position type`, `#### Scenario: Ship cargo is bounded by capacity`, `#### Scenario: Snapshot inclusion / Ship resumes mid-segment after load`, and `#### Scenario: Docked ship resumes manifest progress after load` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
-- [ ] 2.2 Implement to green: add `Ship` and `Route` component arrays to the `World` ECS-light storage. Add `ShipState` and `RouteState` enums. Make every new type `Codable`.
-- [ ] 2.3 Implement to green: extend `World` Codable to include `ships` and `routes`. Verify round-trip preserves all fields.
-- [ ] 2.4 Verify `make test-scenarios` is clean for the M2 scenarios.
+- [x] 2.1 Tests-first: translate `#### Scenario: Ship has a single canonical position type`, `#### Scenario: Ship cargo is bounded by capacity`, `#### Scenario: Snapshot inclusion / Ship resumes mid-segment after load`, and `#### Scenario: Docked ship resumes manifest progress after load` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
+- [x] 2.2 Implement to green: add `Ship` and `Route` component arrays to the `World` ECS-light storage. Add `ShipState` and `RouteState` enums. Make every new type `Codable`. Also added `Waypoint`, `ManifestAction`, `ShipClass` (with a `.default` 100-capacity / 410-raw-speed entry) so M3 can land waypoint kinds + manifest verbs without revisiting type scaffolding.
+- [x] 2.3 Implement to green: extend `World` Codable to include `ships` and `routes`. Verify round-trip preserves all fields. (Default-initialized to `[:]`. Backward-compat with pre-M2 saves is handled by the M7 v1→v2 migration framework.)
+- [x] 2.4 Verify `make test-scenarios` is clean for the M2 scenarios. (Five M2-scoped sea-transport scenarios mapped; remaining `sea-transport` scenarios belong to M3–M5.)
 
 ## 3. M3 — Route entity, validation, manifest verbs (CityCore, headless)
 
