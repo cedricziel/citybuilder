@@ -47,6 +47,11 @@ targets:
         buildPhase: resources
       - path: Resources/Units.atlas
         buildPhase: resources
+      - path: Resources/Audio
+        buildPhase: resources
+        excludes:
+          - "_candidates"
+          - "_candidates/**"
     info:
       path: Apps/CitybuilderiOS/Info.plist
       properties:
@@ -100,6 +105,11 @@ targets:
         buildPhase: resources
       - path: Resources/Units.atlas
         buildPhase: resources
+      - path: Resources/Audio
+        buildPhase: resources
+        excludes:
+          - "_candidates"
+          - "_candidates/**"
     info:
       path: Apps/CitybuilderMac/Info.plist
       properties:

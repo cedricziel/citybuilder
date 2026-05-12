@@ -1,3 +1,4 @@
+import CityAudio
 import CityCore
 import CityRender2D
 import CityUI
@@ -5,6 +6,9 @@ import SwiftUI
 
 @main
 struct CitybuilderMacApp: App {
+    @State private var session: GameSession
+    private let audio: AudioStack
+
     init() {
         SnapshotRendererRegistry.shared.factory = { provider, tapSink, dragSink, hoverSink, ghostProvider in
             AnyView(
@@ -25,12 +29,26 @@ struct CitybuilderMacApp: App {
                 )
             )
         }
+        let audio = AudioStack()
+        self.audio = audio
+        _session = State(initialValue: GameSession(audioEventConsumer: { events in
+            audio.consume(events: events)
+        }))
     }
 
     var body: some Scene {
         WindowGroup {
-            CityRootView()
+            CityRootView(session: session)
                 .frame(minWidth: 900, minHeight: 600)
+        }
+        Settings {
+            TabView {
+                AudioSettingsView(settings: audio.settings)
+                    .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                CreditsView(manifest: audio.manifest)
+                    .tabItem { Label("Credits", systemImage: "info.circle") }
+            }
+            .frame(width: 480, height: 360)
         }
     }
 }
