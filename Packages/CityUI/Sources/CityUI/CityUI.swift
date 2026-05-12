@@ -322,15 +322,35 @@ public final class GameSession {
     ) -> [Good: GhostCost]? {
         let spec = BuildingCatalog.spec(for: kind)
         guard !spec.materialCost.isEmpty else { return nil }
-        let available = world.islandStockpile(
-            at: anchor,
-            tileToIsland: world.tileToIslandMap()
-        )
+        let tileToIsland = world.tileToIslandMap()
+        let available = world.islandStockpile(at: anchor, tileToIsland: tileToIsland)
+        let islandID = tileToIsland[anchor]
         var breakdown: [Good: GhostCost] = [:]
         for (good, need) in spec.materialCost {
-            breakdown[good] = GhostCost(need: need, have: available[good] ?? 0)
+            let have = available[good] ?? 0
+            let status = statusFor(
+                need: need, have: have,
+                good: good, islandID: islandID,
+                tileToIsland: tileToIsland
+            )
+            breakdown[good] = GhostCost(need: need, have: have, status: status)
         }
         return breakdown
+    }
+
+    private func statusFor(
+        need: Int,
+        have: Int,
+        good: Good,
+        islandID: IslandID?,
+        tileToIsland: [TileCoordinate: IslandID]
+    ) -> CostStatus {
+        if have >= need { return .ok }
+        guard let islandID else { return .blocked }
+        let supplied = world.producesGood(
+            onIsland: islandID, good: good, tileToIsland: tileToIsland
+        )
+        return supplied ? .queueable : .blocked
     }
 
     public struct GhostPreview: Equatable, Sendable {

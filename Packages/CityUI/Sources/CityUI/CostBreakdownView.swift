@@ -41,9 +41,26 @@ public struct CostBreakdownView: View {
             Text("\(cost.have)/\(cost.need)")
                 .font(.system(.caption2, design: .monospaced))
                 .fontWeight(.semibold)
-                .foregroundStyle(cost.isShort ? Color.red : Color.primary)
+                .foregroundStyle(color(for: cost.status))
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(good.rawValue) \(cost.have) of \(cost.need)")
+        .accessibilityLabel(label(for: good, cost: cost))
+    }
+
+    private func color(for status: CostStatus) -> Color {
+        switch status {
+        case .ok: return .primary
+        case .queueable: return .orange
+        case .blocked: return .red
+        }
+    }
+
+    private func label(for good: Good, cost: GhostCost) -> String {
+        let base = "\(good.rawValue) \(cost.have) of \(cost.need)"
+        switch cost.status {
+        case .ok: return base
+        case .queueable: return "\(base), queue OK"
+        case .blocked: return "\(base), blocked"
+        }
     }
 }
