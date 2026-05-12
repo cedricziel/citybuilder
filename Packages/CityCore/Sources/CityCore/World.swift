@@ -213,6 +213,16 @@ public struct World: Codable, Sendable, Equatable {
             applyPlace(kind: kind, anchor: anchor, events: &events)
         case let .demolish(anchor):
             applyDemolish(anchor: anchor, events: &events)
+        case let .createRoute(waypoints, manifest, speed):
+            applyCreateRoute(waypoints: waypoints, manifest: manifest, speed: speed)
+        case let .editRoute(id, waypoints, manifest):
+            applyEditRoute(id: id, waypoints: waypoints, manifest: manifest)
+        case let .deleteRoute(id):
+            applyDeleteRoute(id: id)
+        case let .assignShipToRoute(shipID, routeID):
+            applyAssignShipToRoute(shipID: shipID, routeID: routeID)
+        case let .unassignShip(shipID):
+            applyUnassignShip(shipID: shipID)
         }
     }
 

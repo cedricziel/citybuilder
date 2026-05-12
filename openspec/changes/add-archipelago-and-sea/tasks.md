@@ -17,11 +17,11 @@
 
 ## 3. M3 — Route entity, validation, manifest verbs (CityCore, headless)
 
-- [ ] 3.1 Tests-first: translate every `#### Scenario:` under `Requirement: Route entity`, `Requirement: Waypoint kinds`, and `Requirement: Route validation` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
-- [ ] 3.2 Implement to green: add `Waypoint` enum, `Route` struct with `waypoints`, `manifest`, `speed`, `state`. Implement `validate(route:) -> ValidationResult` with sub-tile segment sampling (step ≤ 0.25 tile).
-- [ ] 3.3 Tests-first: translate every `#### Scenario:` under `Requirement: Manifest actions` and `Requirement: Route lifecycle commands` into failing tests. Confirm red.
-- [ ] 3.4 Implement to green: add `ManifestAction` enum, command types `CreateRoute`, `EditRoute`, `DeleteRoute`, `AssignShipToRoute`, `UnassignShip`. Implement command validation and application at tick boundary.
-- [ ] 3.5 Verify `make test-scenarios` is clean for the M3 scenarios.
+- [x] 3.1 Tests-first: translate every `#### Scenario:` under `Requirement: Route entity`, `Requirement: Waypoint kinds`, and `Requirement: Route validation` from `specs/sea-transport/spec.md` into failing tests. Confirm red.
+- [x] 3.2 Implement to green: add `Waypoint` enum, `Route` struct with `waypoints`, `manifest`, `speed`, `state`. Implement `validate(route:) -> ValidationResult` with sub-tile segment sampling (step ≤ 0.25 tile). (Waypoint, Route landed in M2; validator added in `RouteValidation.swift`. Sampling step is exactly 0.25 tile = 1024 raw units; the spec scenario "Segment sampling resolution is sub-tile" passes against a diagonal that grazes the corner of a single grass tile.)
+- [x] 3.3 Tests-first: translate every `#### Scenario:` under `Requirement: Manifest actions` and `Requirement: Route lifecycle commands` into failing tests. Confirm red. (Lifecycle-command scenarios — `createroute rejected when validation fails`, `editroute recomputes ship waypoint index`, `deleteroute idles all assigned ships` — are covered here. The four `Manifest actions` scenarios describe ship-at-port execution behavior and are M5 work — they remain unmapped until the M5 `tickShips` system lands.)
+- [x] 3.4 Implement to green: add `ManifestAction` enum, command types `CreateRoute`, `EditRoute`, `DeleteRoute`, `AssignShipToRoute`, `UnassignShip`. Implement command validation and application at tick boundary. (`ManifestAction` landed in M2. Five new `Command` cases + their `apply*` handlers in `RouteValidation.swift`. `editRoute` recomputes assigned-ship `waypointIdx` via a heading-dot-product check, falling back to 0. `deleteRoute` flips all assigned ships to `.returning`. Port-existence check is the M3 stand-in — any extant building counts; M4 narrows it to `kind == .port`.)
+- [x] 3.5 Verify `make test-scenarios` is clean for the M3 scenarios.
 
 ## 4. M4 — Port and Shipyard buildings + goods-buffer generalization (CityCore)
 

@@ -23,4 +23,36 @@ public enum Command: Codable, Equatable, Sendable {
 
     /// Demolish the building anchored at the given tile (if any).
     case demolish(at: TileCoordinate)
+
+    // MARK: - sea-transport / Route lifecycle commands (M3)
+
+    /// Create a new route. The command applies at the next tick
+    /// boundary; if `validate(route:)` returns `.invalid` the command
+    /// is dropped and no route is added.
+    case createRoute(
+        waypoints: [Waypoint],
+        manifest: [PortID: [ManifestAction]],
+        speed: Fixed
+    )
+
+    /// Replace an extant route's waypoints/manifest. Recomputes the
+    /// `waypointIdx` of each assigned ship to the smallest-index
+    /// waypoint in the new list that lies ahead along the new route,
+    /// falling back to 0 when none qualifies.
+    case editRoute(
+        id: RouteID,
+        waypoints: [Waypoint],
+        manifest: [PortID: [ManifestAction]]
+    )
+
+    /// Remove a route. Every ship currently assigned to it transitions
+    /// to `.returning`; the route is removed from world storage.
+    case deleteRoute(id: RouteID)
+
+    /// Assign an existing ship to an existing route.
+    case assignShipToRoute(shipID: EntityID, routeID: RouteID)
+
+    /// Clear the ship's route assignment. The ship transitions to
+    /// `.idle` next tick.
+    case unassignShip(shipID: EntityID)
 }
