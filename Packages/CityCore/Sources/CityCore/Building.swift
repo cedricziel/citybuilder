@@ -96,6 +96,9 @@ public struct BuildingSpec: Hashable, Sendable {
     /// Opt-in to shore-placement. Nil means the building rejects any
     /// water-tile coverage (the default for land-only buildings).
     public let shorePlacement: ShorePlacement?
+    /// Goods consumed at placement. Default empty = free of materials
+    /// (money cost still applies). Roads and town center stay empty.
+    public let materialCost: [Good: Int]
 
     public init(
         kind: BuildingKind,
@@ -103,7 +106,8 @@ public struct BuildingSpec: Hashable, Sendable {
         cost: Int64,
         upkeep: Int64 = 0,
         buildDurationTicks: UInt64 = 30,
-        shorePlacement: ShorePlacement? = nil
+        shorePlacement: ShorePlacement? = nil,
+        materialCost: [Good: Int] = [:]
     ) {
         self.kind = kind
         self.footprint = footprint
@@ -111,6 +115,7 @@ public struct BuildingSpec: Hashable, Sendable {
         self.upkeep = upkeep
         self.buildDurationTicks = buildDurationTicks
         self.shorePlacement = shorePlacement
+        self.materialCost = materialCost
     }
 }
 
@@ -118,11 +123,13 @@ public enum BuildingCatalog {
     private static let specs: [BuildingKind: BuildingSpec] = [
         .house: BuildingSpec(
             kind: .house, footprint: Footprint(width: 2, height: 2),
-            cost: 50, upkeep: 0, buildDurationTicks: 20
+            cost: 50, upkeep: 0, buildDurationTicks: 20,
+            materialCost: [.planks: 4]
         ),
         .warehouse: BuildingSpec(
             kind: .warehouse, footprint: Footprint(width: 3, height: 3),
-            cost: 200, upkeep: 1, buildDurationTicks: 40
+            cost: 200, upkeep: 1, buildDurationTicks: 40,
+            materialCost: [.wood: 2, .planks: 6]
         ),
         .road: BuildingSpec(
             kind: .road, footprint: .single,
@@ -130,11 +137,13 @@ public enum BuildingCatalog {
         ),
         .lumberjackHut: BuildingSpec(
             kind: .lumberjackHut, footprint: Footprint(width: 2, height: 2),
-            cost: 80, upkeep: 0, buildDurationTicks: 25
+            cost: 80, upkeep: 0, buildDurationTicks: 25,
+            materialCost: [.wood: 2]
         ),
         .sawmill: BuildingSpec(
             kind: .sawmill, footprint: Footprint(width: 2, height: 2),
-            cost: 120, upkeep: 2, buildDurationTicks: 30
+            cost: 120, upkeep: 2, buildDurationTicks: 30,
+            materialCost: [.wood: 4, .planks: 1]
         ),
         .townCenter: BuildingSpec(
             kind: .townCenter, footprint: Footprint(width: 3, height: 3),
@@ -143,12 +152,14 @@ public enum BuildingCatalog {
         .port: BuildingSpec(
             kind: .port, footprint: Footprint(width: 2, height: 3),
             cost: 250, upkeep: 1, buildDurationTicks: 35,
-            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1)
+            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1),
+            materialCost: [.wood: 8, .planks: 6]
         ),
         .shipyard: BuildingSpec(
             kind: .shipyard, footprint: Footprint(width: 2, height: 3),
             cost: 350, upkeep: 2, buildDurationTicks: 45,
-            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1)
+            shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1),
+            materialCost: [.wood: 12, .planks: 8]
         )
     ]
 
