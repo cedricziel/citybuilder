@@ -13,12 +13,18 @@ let package = Package(
         .macOS(.v15)
     ],
     products: [
-        .library(name: "CityCore", targets: ["CityCore"])
+        .library(name: "CityCore", targets: ["CityCore"]),
+        .executable(name: "DeterminismFixture", targets: ["DeterminismFixture"])
     ],
     targets: [
         .target(
             name: "CityCore",
             path: "Sources/CityCore"
+        ),
+        .executableTarget(
+            name: "DeterminismFixture",
+            dependencies: ["CityCore"],
+            path: "Sources/DeterminismFixture"
         ),
         .testTarget(
             name: "CityCoreTests",

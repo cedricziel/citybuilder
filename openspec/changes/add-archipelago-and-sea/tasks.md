@@ -1,12 +1,12 @@
 ## 1. M1 — Fixed-point math + determinism CI gate (CityCore, no game changes)
 
-- [ ] 1.1 Tests-first: translate every `#### Scenario:` under `Requirement: Fixed-point numeric type` and `Requirement: 2D vector type` in `specs/fixed-point-math/spec.md` into failing tests in `CityCoreTests/FixedTests.swift`. Confirm red.
-- [ ] 1.2 Implement to green: introduce `Fixed` (`Int32` raw, scale 4096) with `+`, `-`, `*`, `/`, comparison, `Codable`, `Hashable`, `Sendable`. Introduce `Fixed2D` with vector ops and `distance(to:)`.
-- [ ] 1.3 Tests-first: translate every `#### Scenario:` under `Requirement: Trigonometric lookup tables` into failing tests. Confirm red.
-- [ ] 1.4 Implement to green: generate the 1024-entry sin/cos LUT as `let` static data, implement `Fixed.sin`, `.cos`, `.atan2` via lookup + interpolation.
-- [ ] 1.5 Add SwiftLint custom rule `tick_float_ban` and tests: translate every `#### Scenario:` under `Requirement: Float ban in tick-time code` into rule unit tests. Confirm rule fires on positive cases and stays silent on negatives.
-- [ ] 1.6 Add Linux CI matrix entry that builds `CityCore` via the Swift Linux toolchain. Wire the cross-platform determinism gate: a fixture archipelago `World`, 6000 ticks, JSON-encode, compare bytes between macOS and Linux job artifacts.
-- [ ] 1.7 Verify `make test-scenarios` is clean for all `fixed-point-math` scenarios.
+- [x] 1.1 Tests-first: translate every `#### Scenario:` under `Requirement: Fixed-point numeric type` and `Requirement: 2D vector type` in `specs/fixed-point-math/spec.md` into failing tests in `CityCoreTests/FixedTests.swift`. Confirm red.
+- [x] 1.2 Implement to green: introduce `Fixed` (`Int32` raw, scale 4096) with `+`, `-`, `*`, `/`, comparison, `Codable`, `Hashable`, `Sendable`. Introduce `Fixed2D` with vector ops and `distance(to:)`.
+- [x] 1.3 Tests-first: translate every `#### Scenario:` under `Requirement: Trigonometric lookup tables` into failing tests. Confirm red.
+- [x] 1.4 Implement to green: generate the 1024-entry sin/cos LUT as `let` static data, implement `Fixed.sin`, `.cos`, `.atan2` via lookup + interpolation. (Table is a full-period 1024-entry quarter-wave-mirrored table built from a deterministic Int64 Taylor expansion — no platform-dependent libm calls.)
+- [x] 1.5 Add SwiftLint custom rule `tick_float_ban` and tests: translate every `#### Scenario:` under `Requirement: Float ban in tick-time code` into rule unit tests. Confirm rule fires on positive cases and stays silent on negatives. (Rule scoped to `Sources/CityCore/Systems/*.swift` since that directory is the tick-time fence; renderer paths are out of scope by construction.)
+- [x] 1.6 Add Linux CI matrix entry that builds `CityCore` via the Swift Linux toolchain. Wire the cross-platform determinism gate: a fixture archipelago `World`, 6000 ticks, JSON-encode, compare bytes between macOS and Linux job artifacts. (Implementation: new `DeterminismFixture` executable target in CityCore; three CI jobs — macOS producer in the existing `ci` job, new `determinism-linux` job using `swift:6.0-jammy`, and `determinism-compare` job diffing both artifacts. **Fixture deviation**: uses `World.fixtureWithTerrain` (uniform terrain) until M6 lands `World.archipelagoFixture` — the IslandGenerator's `Double` math has not been ported to Fixed and would re-introduce platform drift. TODO comment in `main.swift` flags the M6 swap.)
+- [x] 1.7 Verify `make test-scenarios` is clean for all `fixed-point-math` scenarios.
 
 ## 2. M2 — Continuous-position entity scaffolding (CityCore)
 

@@ -66,4 +66,16 @@ function_body_length:
   warning: 60
   error: 100
 
+custom_rules:
+  tick_float_ban:
+    name: "tick_float_ban"
+    regex: '\b(Float|Double|CGFloat)\b'
+    match_kinds:
+      - typeidentifier
+    message: >-
+      tick-time CityCore code must use Fixed, not Float/Double/CGFloat
+      (spec fixed-point-math, Requirement: Float ban in tick-time code).
+    included: 'Packages/CityCore/Sources/CityCore/Systems/.*\.swift'
+    severity: error
+
 reporter: "xcode"
