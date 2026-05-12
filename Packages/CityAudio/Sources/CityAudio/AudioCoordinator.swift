@@ -81,6 +81,8 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .buildingDemolished: return "buildingDemolished"
         case .constructionCompleted: return "constructionCompleted"
         case .materialsDeducted: return "materialsDeducted"
+        case .constructionWaitingForMaterials: return "constructionWaitingForMaterials"
+        case .constructionStarted: return "constructionStarted"
         case .forestHarvested: return "forestHarvested"
         case .placementRejected: return "placementRejected"
         case .carrierDeparted: return "carrierDeparted"

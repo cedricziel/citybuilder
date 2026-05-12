@@ -99,34 +99,51 @@ extension World {
         return false
     }
 
-    /// Withdraws `cost` from goods-buffer buildings on the island
-    /// containing `anchor`, in road-distance-ascending order
-    /// (Manhattan distance as the v0 approximation; spec design D3
-    /// leaves room for true road-graph distance later). Ties break by
-    /// ascending `EntityID.raw`. canPlace must have already cleared
-    /// the request, so `cost` is guaranteed to be satisfiable.
-    mutating func deductMaterials(
+    /// Withdraws as much of `cost` as the island can supply from its
+    /// goods-buffer buildings, sorted by Manhattan distance (v0
+    /// stand-in for true road-graph distance), tiebreak ascending
+    /// `EntityID`. Returns the per-good actually-taken map so
+    /// `applyPlace` can seed `Building.materialsDelivered` and decide
+    /// whether the placement enters the waiting substate. Spec design
+    /// D3 (`add-construction-stalls`) — when the island falls short,
+    /// the caller proceeds with a partial deduction.
+    @discardableResult
+    mutating func deductMaterialsPartial(
         cost: [Good: Int],
         anchor: TileCoordinate
-    ) {
+    ) -> [Good: Int] {
         let tileToIsland = tileToIslandMap()
-        guard let islandID = tileToIsland[anchor] else { return }
+        guard let islandID = tileToIsland[anchor] else { return [:] }
         let sortedBuffers = sortedGoodsBuffers(
             islandID: islandID,
             anchor: anchor,
             tileToIsland: tileToIsland
         )
+        var delivered: [Good: Int] = [:]
         for good in Good.allCases {
             guard let needed = cost[good], needed > 0 else { continue }
-            withdraw(good: good, amount: needed, from: sortedBuffers)
+            delivered[good] = withdraw(good: good, amount: needed, from: sortedBuffers)
         }
+        return delivered
+    }
+
+    /// Back-compat wrapper for callers that want the eager full-cost
+    /// deduction behavior (pre-`add-construction-stalls`). Returns
+    /// whether the deduction was complete.
+    @discardableResult
+    mutating func deductMaterials(
+        cost: [Good: Int],
+        anchor: TileCoordinate
+    ) -> Bool {
+        let delivered = deductMaterialsPartial(cost: cost, anchor: anchor)
+        return cost.allSatisfy { (delivered[$0.key] ?? 0) >= $0.value }
     }
 
     private mutating func withdraw(
         good: Good,
         amount: Int,
         from sortedBuffers: [EntityID]
-    ) {
+    ) -> Int {
         var remaining = amount
         for bufferID in sortedBuffers where remaining > 0 {
             guard var stockpile = stockpiles[bufferID] else { continue }
@@ -141,7 +158,9 @@ extension World {
         if remaining > 0, let credit = testMaterialCredits[good], credit > 0 {
             let take = min(remaining, credit)
             testMaterialCredits[good] = credit - take
+            remaining -= take
         }
+        return amount - remaining
     }
 
     private func sortedGoodsBuffers(

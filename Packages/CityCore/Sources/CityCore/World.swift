@@ -249,6 +249,10 @@ public struct World: Codable, Sendable, Equatable {
 
     private mutating func advanceBuildings(events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .constructing {
+            // Spec `add-construction-stalls` / "Waiting building does
+            // not advance ticksSincePlacement". Construction time only
+            // accrues while the substate is `.actively`.
+            guard building.constructionState == .actively else { continue }
             var updated = building
             updated.ticksSincePlacement &+= 1
             let spec = BuildingCatalog.spec(for: building.kind)
@@ -347,10 +351,37 @@ public struct World: Codable, Sendable, Equatable {
             stockpiles[id] = Stockpile(capacity: capacity)
         }
         if !spec.materialCost.isEmpty {
-            deductMaterials(cost: spec.materialCost, anchor: anchor)
-            events.append(.materialsDeducted(building: id, cost: spec.materialCost))
+            let delivered = deductMaterialsPartial(cost: spec.materialCost, anchor: anchor)
+            buildings[id]?.materialsDelivered = delivered
+            let missing = shortfall(for: spec.materialCost, delivered: delivered)
+            if missing.isEmpty {
+                events.append(.materialsDeducted(building: id, cost: spec.materialCost))
+            } else {
+                buildings[id]?.constructionState = .waitingForMaterials
+                events.append(.constructionWaitingForMaterials(building: id, missing: missing))
+                // Partial deduction still surfaces as `materialsDeducted`
+                // for what actually moved out of warehouses, so audio +
+                // observability stay consistent. Spec leaves this
+                // implicit (the scenarios don't forbid co-emission).
+                let taken = delivered.filter { $0.value > 0 }
+                if !taken.isEmpty {
+                    events.append(.materialsDeducted(building: id, cost: taken))
+                }
+            }
         }
         events.append(.buildingPlaced(building: id, kind: kind, anchor: anchor))
+    }
+
+    private func shortfall(
+        for cost: [Good: Int],
+        delivered: [Good: Int]
+    ) -> [Good: Int] {
+        var result: [Good: Int] = [:]
+        for (good, need) in cost {
+            let have = delivered[good] ?? 0
+            if have < need { result[good] = need - have }
+        }
+        return result
     }
 
     /// Default stockpile capacity per building kind. nil means "this kind

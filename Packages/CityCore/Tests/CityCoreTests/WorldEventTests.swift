@@ -18,6 +18,8 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .buildingDemolished(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
         .constructionCompleted(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
         .materialsDeducted(building: EntityID(raw: 1), cost: [.wood: 2]),
+        .constructionWaitingForMaterials(building: EntityID(raw: 1), missing: [.wood: 1]),
+        .constructionStarted(building: EntityID(raw: 1)),
         .forestHarvested(at: TileCoordinate(x: 0, y: 0)),
         .carrierDeparted(carrier: EntityID(raw: 1), from: TileCoordinate(x: 0, y: 0), good: .wood),
         .carrierArrived(carrier: EntityID(raw: 1), at: TileCoordinate(x: 0, y: 0), good: .wood, amount: 1),
@@ -31,13 +33,15 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .bankruptcyResolved,
         .gameOver
     ]
-    #expect(samples.count == 16)
+    #expect(samples.count == 18)
     for event in samples {
         switch event {
         case .buildingPlaced,
              .buildingDemolished,
              .constructionCompleted,
              .materialsDeducted,
+             .constructionWaitingForMaterials,
+             .constructionStarted,
              .forestHarvested,
              .carrierDeparted,
              .carrierArrived,
