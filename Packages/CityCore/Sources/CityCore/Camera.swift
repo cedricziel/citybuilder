@@ -36,4 +36,14 @@ public struct Camera: Hashable, Codable, Sendable {
     public static func clampZoom(_ value: Double) -> Double {
         min(max(value, minZoom), maxZoom)
     }
+
+    /// Returns the integer tile the camera's center is currently over.
+    /// Uses floor semantics — tile (x, y) covers the half-open square
+    /// `[x, x+1) × [y, y+1)` in tile-space.
+    public func centerTile() -> TileCoordinate {
+        TileCoordinate(
+            x: Int(centerX.rounded(.down)),
+            y: Int(centerY.rounded(.down))
+        )
+    }
 }
