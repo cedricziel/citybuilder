@@ -103,9 +103,9 @@ func scenarioAdjacentRoadConnectsPort() throws {
 
 @Test("scenario: demolishing port breaks dependent routes")
 func scenarioDemolishingPortBreaksDependentRoutes() throws {
-    var world = shoreWorld()
+    var world = shoreWorld(width: 12, height: 12)
     let portA = placePort(&world, at: TileCoordinate(x: 5, y: 1))
-    let portB = placePort(&world, at: TileCoordinate(x: 5, y: 3))
+    let portB = placePort(&world, at: TileCoordinate(x: 5, y: 5))
     let routeID = EntityID(raw: 7000)
     world.routes[routeID] = Route(
         id: routeID,

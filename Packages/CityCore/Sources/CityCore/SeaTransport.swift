@@ -22,7 +22,7 @@ public struct ShipClass: Hashable, Codable, Sendable {
 
     public static let `default` = ShipClass(
         capacity: 100,
-        baseSpeed: Fixed(raw: 410) // ≈ 0.1 tile per tick
+        baseSpeed: Fixed(raw: 2048) // 0.5 tiles per tick (spec default)
     )
 }
 

@@ -58,6 +58,17 @@ extension World {
                 if building.kind == .lumberjackHut {
                     clearAdjacentForest(anchor: building.anchor, footprint: footprint)
                 }
+                // Shipyard emits a Ship entity on cycle completion.
+                // Spec: `port-and-shipyard` / Shipyard emits ship on
+                // recipe completion. Persist the stockpile mutation
+                // here so the emit factory does not see stale data
+                // through `self.stockpiles[id]`.
+                if building.kind == .shipyard {
+                    stockpiles[id] = stockpile
+                    _ = emitShip(fromShipyard: id)
+                    // Re-fetch stockpile in case emitShip mutated it.
+                    stockpile = stockpiles[id] ?? stockpile
+                }
                 progress.ticksThisCycle = 0
                 events.append(.productionCycleCompleted(producer: id, kind: building.kind))
             }

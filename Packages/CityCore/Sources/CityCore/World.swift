@@ -196,6 +196,7 @@ public struct World: Codable, Sendable, Equatable {
         advanceBuildings(events: &events)
         runProductionSystem(events: &events)
         runCarrierSystem(events: &events)
+        runShipSystem()
         runPopulationSystem()
         runEconomySystem(events: &events)
 
