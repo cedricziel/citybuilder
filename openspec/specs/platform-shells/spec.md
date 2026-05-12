@@ -69,17 +69,26 @@ On iPhone, the default UX SHALL bias toward short sessions: larger default zoom,
 
 ### Requirement: iOS audio session category
 
-On iOS and iPadOS, the app SHALL configure the `AVAudioSession` shared instance to category `.ambient` on first audio activation. This category MUST allow the user's own music to continue playing alongside the game. The category MUST NOT be set at app launch — it MUST be deferred until the audio engine starts (first cue).
+On iOS and iPadOS, the app SHALL configure the `AVAudioSession` shared instance to category `.playback` with the `.mixWithOthers` option. This category MUST play game audio regardless of the device's Silent Mode switch (a game the user explicitly launched should not be silenced by a system-level mute) while still allowing the user's own music (Apple Music, Spotify) to continue playing alongside.
+
+The category MUST be configured before `AVAudioEngine()` is constructed — the engine's mandatory session association at attach/connect time fails (`-10879`) when no session is configured yet, leaving the engine in a degraded state.
+
+(Earlier drafts used `.ambient`, which respects Silent Mode and therefore left muted iPads silent — the wrong default for a game.)
 
 #### Scenario: Player's music keeps playing
 
 - **WHEN** the user is playing Apple Music or Spotify and launches the game on iPhone or iPad
 - **THEN** their music continues uninterrupted; if the in-game music plays, both mix
 
-#### Scenario: Audio session not activated at launch
+#### Scenario: Audio plays even with Silent Mode enabled
 
-- **WHEN** the iOS app launches and the player has not yet caused any audio event
-- **THEN** `AVAudioSession.sharedInstance().category` retains its pre-launch value (not yet set to `.ambient`)
+- **WHEN** the iPad's Silent Mode is on and the player launches the game
+- **THEN** the game's music and SFX play normally — `.playback` overrides the silent-switch behavior
+
+#### Scenario: Session category configured before AVAudioEngine construction
+
+- **WHEN** the iOS app constructs `AudioStack` at launch
+- **THEN** `AVAudioSession.sharedInstance().category` is `.playback` before `AVAudioEngine()` is called, and the engine's first start succeeds without `-10879`
 
 ### Requirement: iOS interruption handling
 

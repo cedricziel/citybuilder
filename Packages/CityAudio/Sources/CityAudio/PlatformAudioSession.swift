@@ -2,11 +2,18 @@ import AVFoundation
 import Foundation
 
 /// Cross-platform audio session configuration. The iOS implementation sets
-/// the shared `AVAudioSession` category to `.ambient` so the user's own
-/// music (Apple Music, Spotify) keeps playing alongside the game, and
-/// observes interruption notifications (phone calls, Siri) to pause and
-/// resume the engine. The macOS implementation is a no-op — AVAudioEngine
-/// alone is sufficient on Mac.
+/// the shared `AVAudioSession` category to `.playback` with the
+/// `.mixWithOthers` option so the game plays audio regardless of the
+/// device's Silent Mode switch while still letting the user's own music
+/// (Apple Music, Spotify) continue alongside. Also observes interruption
+/// notifications (phone calls, Siri) to pause and resume the engine.
+/// The macOS implementation is a no-op — AVAudioEngine alone is sufficient
+/// on Mac.
+///
+/// The original design used `.ambient` (the standard "respects Silent Mode"
+/// category) but Silent-Mode-muted iPads heard nothing, which is the wrong
+/// default for a game the user explicitly launched. `.playback` with
+/// `.mixWithOthers` is the conventional games-audio category.
 ///
 /// Per spec `platform-shells` "iOS audio session category" + "iOS
 /// interruption handling" + "macOS audio session no-op".
@@ -30,7 +37,11 @@ public final class PlatformAudioSession {
     /// On macOS this is a no-op (no session to configure).
     public static func configureSessionEarly() {
         #if os(iOS) || os(tvOS) || os(visionOS)
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+        try? AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .default,
+            options: [.mixWithOthers]
+        )
         try? AVAudioSession.sharedInstance().setActive(true)
         #endif
     }
@@ -47,7 +58,11 @@ public final class PlatformAudioSession {
     public func activate() throws {
         guard !activated else { return }
         #if os(iOS) || os(tvOS) || os(visionOS)
-        try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+        try AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .default,
+            options: [.mixWithOthers]
+        )
         try AVAudioSession.sharedInstance().setActive(true)
         NotificationCenter.default.addObserver(
             self,

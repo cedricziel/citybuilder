@@ -19,10 +19,11 @@ func scenarioAudioSessionNotActivatedAtLaunch() {
 @MainActor
 @Test("scenario: player's music keeps playing")
 func scenarioPlayersMusicKeepsPlaying() {
-    // The contract is "category .ambient on iOS, no-op on macOS". On the
-    // macOS test host we can only verify that `activate()` does not throw
-    // (because the Mac path is a no-op) and that the session reports
-    // itself as activated. The full "user's Music app keeps playing"
+    // The contract is "category .playback + .mixWithOthers on iOS, no-op
+    // on macOS". On the macOS test host we can only verify that
+    // `activate()` does not throw (because the Mac path is a no-op) and
+    // that the session reports itself as activated. The full "user's
+    // Music app keeps playing AND the game plays through Silent Mode"
     // behavior requires iOS hardware to verify.
     let engine = AudioEngine()
     let session = PlatformAudioSession(engine: engine)
