@@ -21,6 +21,9 @@ private func makeV1Payload(world: World) throws -> Data {
     inner.removeValue(forKey: "islands")
     inner.removeValue(forKey: "ships")
     inner.removeValue(forKey: "routes")
+    // Test-only field added by `add-build-materials-cost`; v1 saves
+    // predate it. The migration re-introduces it as an empty dict.
+    inner.removeValue(forKey: "testMaterialCredits")
     json["world"] = inner
     v2 = try JSONSerialization.data(
         withJSONObject: json, options: [.sortedKeys]

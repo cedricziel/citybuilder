@@ -77,6 +77,11 @@ public struct MigrationV1ToV2: Migration {
         // collections therefore serialize as empty arrays.
         world["ships"] = [Any]()
         world["routes"] = [Any]()
+        // `testMaterialCredits: [Good: Int]` is a test-only field
+        // added by `add-build-materials-cost`. Real saves never carry
+        // it; old v1 payloads lack the key entirely. Seed it as an
+        // empty dictionary so World's Codable decoder finds the key.
+        world["testMaterialCredits"] = [Any]()
 
         // Synthesize the single-island metadata from the terrain grid.
         let mapWidth = world["mapWidth"] as? Int ?? 0
