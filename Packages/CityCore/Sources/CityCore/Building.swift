@@ -182,6 +182,16 @@ public enum BuildingState: String, Codable, Sendable {
     case operational
 }
 
+/// Substate of `.constructing`: distinguishes "waiting for materials
+/// to arrive" from "actively accruing construction time". A waiting
+/// building does NOT advance `ticksSincePlacement`; only an actively-
+/// constructing one does. Spec: `add-construction-stalls` /
+/// `buildings-and-construction` Requirement: Construction substate.
+public enum ConstructionState: String, Codable, Sendable {
+    case actively
+    case waitingForMaterials = "waiting_for_materials"
+}
+
 /// Runtime instance of a placed building.
 public struct Building: Hashable, Codable, Sendable {
     public let id: EntityID
@@ -200,6 +210,15 @@ public struct Building: Hashable, Codable, Sendable {
     /// `BuildingKind.port` (and any future shore building that needs
     /// it). Drawn from `seaFaceTiles` deterministically at place time.
     public let shipAnchor: TileCoordinate?
+    /// Substate of `.constructing`. Meaningless once the building is
+    /// `.operational`; the value persists for forensics. Default
+    /// `.actively` matches the pre-`add-construction-stalls` behavior.
+    public var constructionState: ConstructionState
+    /// Per-good materials already delivered to the construction site.
+    /// While `state == .constructing` and `constructionState ==
+    /// .waitingForMaterials`, the building tracks accumulation here;
+    /// once the map satisfies `materialCost` it flips to `.actively`.
+    public var materialsDelivered: [Good: Int]
 
     public init(
         id: EntityID,
@@ -209,7 +228,9 @@ public struct Building: Hashable, Codable, Sendable {
         ticksSincePlacement: UInt64 = 0,
         landFaceTiles: [TileCoordinate] = [],
         seaFaceTiles: [TileCoordinate] = [],
-        shipAnchor: TileCoordinate? = nil
+        shipAnchor: TileCoordinate? = nil,
+        constructionState: ConstructionState = .actively,
+        materialsDelivered: [Good: Int] = [:]
     ) {
         self.id = id
         self.kind = kind
@@ -219,13 +240,17 @@ public struct Building: Hashable, Codable, Sendable {
         self.landFaceTiles = landFaceTiles
         self.seaFaceTiles = seaFaceTiles
         self.shipAnchor = shipAnchor
+        self.constructionState = constructionState
+        self.materialsDelivered = materialsDelivered
     }
 }
 
 public extension Building {
     /// Default Codable decoder that defaults the new face/anchor fields
     /// to empty/nil when missing, so v1 saves (pre-M2-archipelago)
-    /// continue to load before the M7 migration framework lands.
+    /// continue to load before the M7 migration framework lands. v2
+    /// saves missing the construction-stalls fields default to the
+    /// post-migration values (`.actively`, empty delivered).
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(EntityID.self, forKey: .id)
@@ -242,5 +267,11 @@ public extension Building {
         self.shipAnchor = try container.decodeIfPresent(
             TileCoordinate.self, forKey: .shipAnchor
         )
+        self.constructionState = try container.decodeIfPresent(
+            ConstructionState.self, forKey: .constructionState
+        ) ?? .actively
+        self.materialsDelivered = try container.decodeIfPresent(
+            [Good: Int].self, forKey: .materialsDelivered
+        ) ?? [:]
     }
 }
