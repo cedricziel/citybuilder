@@ -148,6 +148,27 @@ save/load via the `Island.name` Codable field.
    `Bundle.main.url(forResource: "good-<rawValue>", withExtension:
    "png")`.
 
+## Material costs
+
+Every building (except road and town center) declares a `materialCost: [Good: Int]` in `BuildingCatalog`. Placement is gated on per-island availability — `World.canPlace(_:at:)` consults the island's goods-buffer stockpiles (warehouse + port + shipyard + town center) and rejects with `.insufficientMaterials([Good: Int])` when any good is short. `applyPlace` then deducts materials deterministically from the nearest goods buffers (Manhattan distance ascending, tiebreak by `EntityID`).
+
+The starter loop:
+
+| Building       | Material cost           |
+| -------------- | ----------------------- |
+| Town Center    | free (player starts with one) |
+| Road           | free                    |
+| Lumberjack Hut | 2 wood                  |
+| Sawmill        | 4 wood + 1 plank        |
+| Warehouse      | 2 wood + 6 planks       |
+| House          | 4 planks                |
+| Port           | 8 wood + 6 planks       |
+| Shipyard       | 12 wood + 8 planks      |
+
+World-gen seeds each island's town center with **4 wood + 2 planks** — enough to place exactly one lumberjack hut (2 wood) and start the chain. Tune the recipe numbers in `BuildingCatalog.specs` for a one-commit balance pass.
+
+When a build tool is armed, the HUD's `CostBreakdownView` renders one chip per required good showing `have/need`. Goods where `have < need` paint red so the player sees the shortfall before clicking.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
