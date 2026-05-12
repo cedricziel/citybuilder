@@ -50,4 +50,37 @@ public final class HUDViewModel {
     public var formattedPopulation: String {
         "Pop. \(population)"
     }
+
+    /// Name of the currently displayed island, or nil when the HUD's
+    /// island row is hidden (camera never landed on any island).
+    public var currentIslandName: String? {
+        currentIsland?.name
+    }
+
+    /// Goods chips to render under the badge row. A chip exists for
+    /// every good with non-zero stock OR non-zero capacity on the
+    /// current island. Iteration follows `Good.allCases`, which is the
+    /// stable catalog order — chips never reshuffle frame-to-frame.
+    public var stocksRow: [HUDGoodChip] {
+        guard let island = currentIsland else { return [] }
+        return Good.allCases.compactMap { good in
+            let stock = island.stockpile[good] ?? 0
+            let capacity = island.capacity[good] ?? 0
+            guard stock > 0 || capacity > 0 else { return nil }
+            return HUDGoodChip(good: good, count: stock)
+        }
+    }
+}
+
+/// View-model entry for one chip in the HUD stocks row. The view
+/// composes this with `GoodIconLoader.image(for:)` to render an
+/// `Image + Text` chip.
+public struct HUDGoodChip: Hashable, Sendable {
+    public let good: Good
+    public let count: Int
+
+    public init(good: Good, count: Int) {
+        self.good = good
+        self.count = count
+    }
 }
