@@ -363,6 +363,40 @@ func drawGoodIcon(_ good: String) -> Pixmap {
     }
 }
 
+/// 16×16 clock-face overlay rendered on construction sites that are
+/// `.waitingForMaterials`. Spec: `add-construction-stalls` /
+/// `rendering-2_5d` Requirement: Waiting-for-materials badge.
+func drawWaitingBadge() -> Pixmap {
+    let canvas = Pixmap(width: 16, height: 16)
+    let centerX = 8, centerY = 8, radius = 7
+    // Outer dark rim + inner light face, drawn via discrete halfwidth
+    // table (matches the loaf drawing style for visual consistency).
+    let halfWidths: [Int] = [0, 3, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 6, 5, 3, 0]
+    for dy in -radius ... radius {
+        let yIndex = centerY + dy
+        guard yIndex >= 0, yIndex < canvas.height else { continue }
+        let hwIdx = max(0, min(halfWidths.count - 1, yIndex))
+        let halfWidth = halfWidths[hwIdx]
+        guard halfWidth > 0 else { continue }
+        let startX = centerX - halfWidth
+        let endX = centerX + halfWidth
+        for px in startX ... endX {
+            canvas.set(px, yIndex, P.windowYellow)
+        }
+        canvas.set(startX, yIndex, P.outline)
+        canvas.set(endX, yIndex, P.outline)
+    }
+    // Clock hands: vertical line (12 o'clock) and horizontal-ish hand
+    // (3 o'clock) drawn in the dark outline color.
+    for dy in -4 ... 0 {
+        canvas.set(centerX, centerY + dy, P.outline)
+    }
+    for dx in 0 ... 4 {
+        canvas.set(centerX + dx, centerY, P.outline)
+    }
+    return canvas
+}
+
 // MARK: - Terrain sprites (64x32)
 
 func terrainCanvas() -> Pixmap {
@@ -1928,6 +1962,7 @@ let outputRoot: String = if argv.count >= 2 {
 func atlasFolder(for spriteName: String) -> String {
     if spriteName.hasPrefix("terrain-") { return "Terrain.atlas" }
     if spriteName.hasPrefix("building-") { return "Buildings.atlas" }
+    if spriteName.hasPrefix("overlay-") { return "Buildings.atlas" }
     if spriteName.hasPrefix("walker-") { return "Units.atlas" }
     if spriteName.hasPrefix("ship-") { return "Units.atlas" }
     if spriteName.hasPrefix("good-") { return "Icons.atlas" }
@@ -2063,5 +2098,8 @@ print("Generating HUD good icons (3 × 24×24)...")
 for good in ["wood", "planks", "food"] {
     write(drawGoodIcon(good), name: "good-\(good)")
 }
+
+print("Generating overlay sprites (1 × 16×16)...")
+write(drawWaitingBadge(), name: "overlay-waiting-materials")
 
 print("Done. Atlases written under \(outputRoot)/")

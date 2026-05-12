@@ -8,6 +8,10 @@ import SpriteKit
 // only touch SpriteKit / CoreGraphics; they read no scene state.
 
 extension IsoWorldScene {
+    /// Name applied to the waiting-for-materials overlay child node.
+    /// Tests use it to assert the badge attaches at the right moment.
+    public static let waitingBadgeNodeName = "overlay-waiting-materials"
+
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
         case let .terrain(kind):
@@ -35,8 +39,10 @@ extension IsoWorldScene {
     /// Geometry — sprite anchor (0.5, 0) sits at the anchor tile; the
     /// sprite's bottom diamond aligns with the actual iso footprint.
     /// See the design doc for the offset derivation.
-    func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
-        guard case let .building(kind, state, footprint, constructionFrameIndex, orientation) = spec.kind else {
+    public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
+        guard case let .building(
+            kind, state, footprint, constructionFrameIndex, orientation, isWaitingForMaterials
+        ) = spec.kind else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
         }
         let coord = spec.coord
@@ -66,7 +72,27 @@ extension IsoWorldScene {
             footprint: footprint
         )
         armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
+        if isWaitingForMaterials, state == .constructing {
+            node.addChild(makeWaitingBadgeNode())
+        }
         return node
+    }
+
+    /// Top-right clock-face overlay rendered while a constructing
+    /// building waits for materials. Spec:
+    /// `add-construction-stalls` / `rendering-2_5d` Requirement:
+    /// Waiting-for-materials badge.
+    private func makeWaitingBadgeNode() -> SKSpriteNode {
+        let texture = SpriteAtlas.textureOrPlaceholder(named: "overlay-waiting-materials")
+        let badge = SKSpriteNode(texture: texture)
+        badge.name = Self.waitingBadgeNodeName
+        badge.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        // Float the badge above the building base. The exact placement
+        // depends on building footprint; centering above the anchor
+        // gives a reasonable default while keeping the badge readable.
+        badge.position = CGPoint(x: IsoMath.tileWidth / 2, y: IsoMath.tileHeight * 2)
+        badge.zPosition = 100
+        return badge
     }
 
     private func armOperationalAnimationIfNeeded(

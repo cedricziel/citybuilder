@@ -285,14 +285,16 @@ func scenarioSawmillFinishesAndStartsRunning() {
         coord: TileCoordinate(x: 0, y: 0),
         kind: .building(
             kind: .sawmill, state: .constructing,
-            footprint: footprint, constructionFrameIndex: 2, orientation: nil
+            footprint: footprint, constructionFrameIndex: 2, orientation: nil,
+            isWaitingForMaterials: false
         )
     )
     let operational = SpriteSpec(
         coord: TileCoordinate(x: 0, y: 0),
         kind: .building(
             kind: .sawmill, state: .operational,
-            footprint: footprint, constructionFrameIndex: nil, orientation: nil
+            footprint: footprint, constructionFrameIndex: nil, orientation: nil,
+            isWaitingForMaterials: false
         )
     )
     #expect(constructing != operational)

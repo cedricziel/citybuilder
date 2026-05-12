@@ -25,7 +25,13 @@ public struct SpriteSpec: Hashable, Sendable {
             // Cardinal orientation for shore buildings (port, shipyard);
             // nil for non-shore buildings. The renderer uses it to pick
             // the `building-<kind>-<orientation>-*` sprite variant.
-            orientation: ShoreOrientation?
+            orientation: ShoreOrientation?,
+            // True when the building is `.constructing` +
+            // `.waitingForMaterials`. Encoded in the spec key so the
+            // diff-based reconciler swaps the node — and its
+            // `overlay-waiting-materials` child — the moment the
+            // substate flips.
+            isWaitingForMaterials: Bool
         )
     }
 
@@ -75,6 +81,8 @@ public enum SnapshotReconciler {
                     landFaceTiles: building.landFaceTiles,
                     seaFaceTiles: building.seaFaceTiles
                 )
+            let isWaiting = building.state == .constructing
+                && building.constructionState == .waitingForMaterials
             result.insert(SpriteSpec(
                 coord: building.anchor,
                 kind: .building(
@@ -82,7 +90,8 @@ public enum SnapshotReconciler {
                     state: building.state,
                     footprint: spec.footprint,
                     constructionFrameIndex: frameIndex,
-                    orientation: orientation
+                    orientation: orientation,
+                    isWaitingForMaterials: isWaiting
                 )
             ))
         }
