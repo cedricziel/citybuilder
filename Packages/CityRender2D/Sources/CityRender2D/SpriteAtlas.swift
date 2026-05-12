@@ -23,6 +23,7 @@ public enum SpriteAtlasRouting {
         if spriteName.hasPrefix("terrain-") { return terrainAtlasName }
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         if spriteName.hasPrefix("walker-") { return unitsAtlasName }
+        if spriteName.hasPrefix("ship-") { return unitsAtlasName }
         return nil
     }
 
@@ -207,6 +208,23 @@ public enum SpriteAtlas {
         }
 
         for kind in BuildingKind.allCases {
+            let isShore = SpriteName.shorePlacementKindRawValues.contains(kind.rawValue)
+            if isShore {
+                // Shore-placement kinds use the orientation-bearing
+                // grammar: 4 orientations × {idle, 3 constructing
+                // frames, 2 operational frames} = 24 entries per kind.
+                for orientation in SpriteName.shoreOrientations {
+                    let stem = "building-\(kind.rawValue)-\(orientation)"
+                    names.append(stem)
+                    for frame in 0 ..< 3 {
+                        names.append("\(stem)-constructing-\(frame)")
+                    }
+                    for frame in 0 ..< 2 {
+                        names.append("\(stem)-operational-\(frame)")
+                    }
+                }
+                continue
+            }
             names.append("building-\(kind.rawValue)")
             if let opEntry = SpriteAnimation.entry(for: .buildingOperational(kind)) {
                 for frame in 0 ..< opEntry.frameCount {
@@ -229,6 +247,13 @@ public enum SpriteAtlas {
                 for frame in 0 ..< entry.frameCount {
                     names.append(SpriteAnimation.assetName(for: .walker(facing), frame: frame))
                 }
+            }
+        }
+
+        // Ship sprites: 8 facings × 2 frames = 16 entries.
+        for facing in SpriteName.shipFacings {
+            for frame in 0 ..< 2 {
+                names.append("ship-\(facing)-\(frame)")
             }
         }
 

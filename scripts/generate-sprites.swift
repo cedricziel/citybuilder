@@ -1290,6 +1290,263 @@ func walkerSprite(facing: Facing, frame: Int) -> Pixmap {
     return p
 }
 
+// MARK: - Ship sprites (32x16, 8 facings × 2 frames)
+
+/// Draw a minimal procedural ship — hull, mast, sail, wake — small
+/// enough to fit in a 32×16 sprite. Facing rotates the sail diagonal
+/// and shifts the wake position; frame toggles a slight bob in the
+/// hull's vertical position.
+func shipSprite(facing: String, frame: Int) -> Pixmap {
+    let canvas = Pixmap(width: 32, height: 16)
+    let bobOffset = frame == 0 ? 0 : 1
+    drawShipHull(canvas, facing: facing, yOffset: bobOffset)
+    drawMastAndSail(canvas, facing: facing, frame: frame, yOffset: bobOffset)
+    drawWake(canvas, facing: facing, frame: frame)
+    return canvas
+}
+
+func drawShipHull(_ canvas: Pixmap, facing: String, yOffset: Int) {
+    let baseY = 9 + yOffset
+    let hullColor = P.woodWall
+    let hullDark = P.woodWallDark
+    // Hull is a small ellipse stretched along the facing axis.
+    let stretch = isLongAxis(facing: facing) ? 2 : 0
+    for dy in 0 ..< 4 {
+        let rowWidth = 12 - dy + stretch
+        let centerX = 16
+        let leftX = centerX - rowWidth / 2
+        let rightX = centerX + rowWidth / 2
+        for tileX in leftX ... rightX {
+            canvas.set(tileX, baseY + dy, dy == 0 ? hullDark : hullColor)
+        }
+        canvas.set(leftX, baseY + dy, P.outline)
+        canvas.set(rightX, baseY + dy, P.outline)
+    }
+}
+
+func drawMastAndSail(_ canvas: Pixmap, facing: String, frame: Int, yOffset: Int) {
+    let mastX = 16 + sailXShift(facing: facing)
+    let mastTop = 1 + yOffset
+    let mastBottom = 9 + yOffset
+    for tileY in mastTop ... mastBottom {
+        canvas.set(mastX, tileY, P.outline)
+    }
+    // Sail: triangle whose lean tracks the facing.
+    let lean = sailLean(facing: facing)
+    let sailHeight = 6 + (frame == 0 ? 0 : 1)
+    for dy in 0 ..< sailHeight {
+        let width = (sailHeight - dy) / 2 + 1
+        let centerX = mastX + lean * dy / 2
+        for tileX in (centerX - width) ... (centerX + width) {
+            canvas.set(tileX, mastTop + dy, P.roofRed)
+        }
+    }
+}
+
+func drawWake(_ canvas: Pixmap, facing: String, frame: Int) {
+    let direction = wakeDirection(facing: facing)
+    let wakeX = 16 - direction * 8
+    let wakeY = 13
+    for dx in 0 ..< 3 {
+        let tileX = wakeX + direction * dx + (frame == 0 ? 0 : -direction)
+        canvas.set(tileX, wakeY, P.waterFoam)
+    }
+}
+
+private func isLongAxis(facing: String) -> Bool {
+    facing == "e" || facing == "w" || facing == "ne" || facing == "se"
+        || facing == "nw" || facing == "sw"
+}
+
+private func sailXShift(facing: String) -> Int {
+    switch facing {
+    case "e", "ne", "se": return 2
+    case "w", "nw", "sw": return -2
+    default: return 0
+    }
+}
+
+private func sailLean(facing: String) -> Int {
+    switch facing {
+    case "e", "ne", "se": return 1
+    case "w", "nw", "sw": return -1
+    default: return 0
+    }
+}
+
+private func wakeDirection(facing: String) -> Int {
+    switch facing {
+    case "e", "ne", "se": return -1
+    case "w", "nw", "sw": return 1
+    case "n": return 1
+    case "s": return -1
+    default: return 0
+    }
+}
+
+// MARK: - Shore building sprites (port + shipyard)
+
+/// Footprint metadata for shore buildings — 2x3 grid per the
+/// `add-archipelago-and-sea` BuildingCatalog spec.
+let shoreFootprintWidth = 2
+let shoreFootprintHeight = 3
+
+func shoreBuildingCanvasSetup() -> (canvas: Pixmap, baseY: Int) {
+    let tileH = shoreFootprintHeight * 32
+    let totalH = 18 + 22 + 30 + tileH / 2 + 6
+    return setupBuildingCanvas(
+        footprintW: shoreFootprintWidth,
+        footprintH: shoreFootprintHeight,
+        totalHeight: totalH
+    )
+}
+
+/// Draw the dock face on the side indicated by `orientation`. The
+/// face is a wooden plank strip with a vertical pier post.
+func drawDock(_ canvas: Pixmap, orientation: String, baseY: Int) {
+    let tileH = shoreFootprintHeight * 32
+    let dockY = baseY + tileH - 6
+    let centerX = canvas.width / 2
+    let dockSpan = 18
+    let leftX: Int
+    let rightX: Int
+    switch orientation {
+    case "n":
+        // Dock points north (top): a strip above the building base.
+        let topY = baseY + 4
+        leftX = centerX - dockSpan / 2
+        rightX = centerX + dockSpan / 2
+        for tileX in leftX ... rightX {
+            canvas.set(tileX, topY, P.woodWall)
+            canvas.set(tileX, topY + 1, P.woodWallDark)
+        }
+        canvas.set(centerX, topY - 1, P.outline)
+    case "s":
+        // Dock points south (bottom).
+        leftX = centerX - dockSpan / 2
+        rightX = centerX + dockSpan / 2
+        for tileX in leftX ... rightX {
+            canvas.set(tileX, dockY, P.woodWall)
+            canvas.set(tileX, dockY + 1, P.woodWallDark)
+        }
+    case "e":
+        // Dock points east (right side).
+        let rightEdgeX = centerX + 16
+        let topY = baseY + tileH / 2 - 4
+        for tileY in topY ... topY + 8 {
+            canvas.set(rightEdgeX, tileY, P.woodWall)
+            canvas.set(rightEdgeX + 1, tileY, P.woodWallDark)
+        }
+    case "w":
+        // Dock points west.
+        let leftEdgeX = centerX - 16
+        let topY = baseY + tileH / 2 - 4
+        for tileY in topY ... topY + 8 {
+            canvas.set(leftEdgeX, tileY, P.woodWall)
+            canvas.set(leftEdgeX - 1, tileY, P.woodWallDark)
+        }
+    default: break
+    }
+}
+
+func portBodyRect(canvasW: Int, canvasH: Int) -> BodyRect {
+    let tileH = shoreFootprintHeight * 32
+    let baseY = canvasH - tileH
+    let bodyH = 36
+    let bodyW = 48
+    let bodyX = (canvasW - bodyW) / 2
+    let bodyBottom = baseY + tileH / 2
+    return BodyRect(x: bodyX, y: bodyBottom - bodyH, w: bodyW, h: bodyH)
+}
+
+func portSprite(orientation: String, frame: Int) -> Pixmap {
+    let (canvas, baseY) = shoreBuildingCanvasSetup()
+    let rect = portBodyRect(canvasW: canvas.width, canvasH: canvas.height)
+    drawBody(
+        canvas, rect: rect,
+        wallLeft: P.stoneWallLight, wallRight: P.stoneWall,
+        wallTopShadow: P.stoneWallDark
+    )
+    drawWindow(canvas, x: rect.x + 6, y: rect.y + 8, w: 4, h: 4)
+    drawWindow(canvas, x: rect.x + rect.w - 10, y: rect.y + 8, w: 4, h: 4)
+    drawPitchedRoof(
+        canvas, bodyX: rect.x, bodyY: rect.y, bodyW: rect.w,
+        height: 14, overhang: 3,
+        fill: P.roofRed, dark: P.roofRedDark, highlight: Color(220, 100, 80)
+    )
+    drawDock(canvas, orientation: orientation, baseY: baseY)
+    // Frame variation: a small lantern flicker over the door.
+    if frame == 1 {
+        canvas.set(rect.x + rect.w / 2, rect.y + rect.h - 3, P.windowYellow)
+    }
+    return canvas
+}
+
+func portOperationalFrame(orientation: String, frame: Int) -> Pixmap {
+    portSprite(orientation: orientation, frame: frame)
+}
+
+func portConstructingFrame(orientation: String, stage: Int) -> Pixmap {
+    let base = portSprite(orientation: orientation, frame: 0)
+    let rect = portBodyRect(canvasW: base.width, canvasH: base.height)
+    drawScaffold(
+        base,
+        bodyX: rect.x, bodyY: rect.y, bodyW: rect.w, bodyH: rect.h,
+        stage: stage, totalStages: 3
+    )
+    return base
+}
+
+func shipyardBodyRect(canvasW: Int, canvasH: Int) -> BodyRect {
+    portBodyRect(canvasW: canvasW, canvasH: canvasH)
+}
+
+func shipyardSprite(orientation: String, frame: Int) -> Pixmap {
+    let (canvas, baseY) = shoreBuildingCanvasSetup()
+    let rect = shipyardBodyRect(canvasW: canvas.width, canvasH: canvas.height)
+    drawBody(
+        canvas, rect: rect,
+        wallLeft: P.woodWallLight, wallRight: P.woodWall,
+        wallTopShadow: P.woodWallDark
+    )
+    // Crane silhouette: vertical post + horizontal arm + cable.
+    let craneX = rect.x + rect.w - 8
+    let craneTop = rect.y - 16
+    for tileY in craneTop ... (rect.y + rect.h - 1) {
+        canvas.set(craneX, tileY, P.outline)
+    }
+    for tileX in (craneX - 12) ... craneX {
+        canvas.set(tileX, craneTop, P.outline)
+    }
+    let cableX = craneX - 12 + (frame == 1 ? 2 : 0)
+    for tileY in craneTop + 1 ... craneTop + 6 {
+        canvas.set(cableX, tileY, P.outline)
+    }
+    drawPitchedRoof(
+        canvas, bodyX: rect.x, bodyY: rect.y, bodyW: rect.w,
+        height: 12, overhang: 2,
+        fill: P.woodWallDark, dark: Color(60, 40, 22),
+        highlight: P.woodWall
+    )
+    drawDock(canvas, orientation: orientation, baseY: baseY)
+    return canvas
+}
+
+func shipyardOperationalFrame(orientation: String, frame: Int) -> Pixmap {
+    shipyardSprite(orientation: orientation, frame: frame)
+}
+
+func shipyardConstructingFrame(orientation: String, stage: Int) -> Pixmap {
+    let base = shipyardSprite(orientation: orientation, frame: 0)
+    let rect = shipyardBodyRect(canvasW: base.width, canvasH: base.height)
+    drawScaffold(
+        base,
+        bodyX: rect.x, bodyY: rect.y, bodyW: rect.w, bodyH: rect.h,
+        stage: stage, totalStages: 3
+    )
+    return base
+}
+
 // MARK: - Main
 
 /// Resolve the output root. If a single positional CLI argument is
@@ -1308,6 +1565,7 @@ func atlasFolder(for spriteName: String) -> String {
     if spriteName.hasPrefix("terrain-") { return "Terrain.atlas" }
     if spriteName.hasPrefix("building-") { return "Buildings.atlas" }
     if spriteName.hasPrefix("walker-") { return "Units.atlas" }
+    if spriteName.hasPrefix("ship-") { return "Units.atlas" }
     fatalError("Unknown sprite-name prefix for routing: \(spriteName)")
 }
 
@@ -1383,6 +1641,48 @@ for kind in BuildingKindRaw.allCases {
         write(
             constructingFrame(for: kind, stage: stage),
             name: "building-\(kind.rawValue)-constructing-\(stage)"
+        )
+    }
+}
+
+print("Generating ship sprites (8 facings × 2 frames)...")
+let shipFacings = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
+for facing in shipFacings {
+    for frame in 0 ... 1 {
+        write(shipSprite(facing: facing, frame: frame), name: "ship-\(facing)-\(frame)")
+    }
+}
+
+print("Generating shore-building sprites (port + shipyard × 4 orientations × 6 frames)...")
+let shoreOrientations = ["n", "s", "e", "w"]
+for orientation in shoreOrientations {
+    write(portSprite(orientation: orientation, frame: 0), name: "building-port-\(orientation)")
+    for stage in 0 ... 2 {
+        write(
+            portConstructingFrame(orientation: orientation, stage: stage),
+            name: "building-port-\(orientation)-constructing-\(stage)"
+        )
+    }
+    for frame in 0 ... 1 {
+        write(
+            portOperationalFrame(orientation: orientation, frame: frame),
+            name: "building-port-\(orientation)-operational-\(frame)"
+        )
+    }
+    write(
+        shipyardSprite(orientation: orientation, frame: 0),
+        name: "building-shipyard-\(orientation)"
+    )
+    for stage in 0 ... 2 {
+        write(
+            shipyardConstructingFrame(orientation: orientation, stage: stage),
+            name: "building-shipyard-\(orientation)-constructing-\(stage)"
+        )
+    }
+    for frame in 0 ... 1 {
+        write(
+            shipyardOperationalFrame(orientation: orientation, frame: frame),
+            name: "building-shipyard-\(orientation)-operational-\(frame)"
         )
     }
 }

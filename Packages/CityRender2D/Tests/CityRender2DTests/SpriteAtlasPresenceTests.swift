@@ -64,7 +64,16 @@ func scenarioCatalogEnumeratesEveryDeclaredSpriteName() {
         #expect(names.contains("terrain-\(kind.rawValue)"))
     }
     for kind in BuildingKind.allCases {
-        #expect(names.contains("building-\(kind.rawValue)"))
+        let isShore = SpriteName.shorePlacementKindRawValues.contains(kind.rawValue)
+        if isShore {
+            // Shore-placement kinds use the orientation grammar; the
+            // bare `building-<kind>` form was retired in M7.5.
+            for orientation in SpriteName.shoreOrientations {
+                #expect(names.contains("building-\(kind.rawValue)-\(orientation)"))
+            }
+        } else {
+            #expect(names.contains("building-\(kind.rawValue)"))
+        }
     }
     for facing in SpriteAtlas.WalkerFacing.allCases {
         // Each walker has 2 frames in the catalog.
