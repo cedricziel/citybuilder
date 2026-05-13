@@ -16,7 +16,9 @@ struct CitybuilderiOSApp: App {
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
-        SnapshotRendererRegistry.shared.factory = { provider, tapSink, dragSink, hoverSink, ghostProvider in
+        let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
+        self.audio = audio
+        SnapshotRendererRegistry.shared.factory = { [audio] provider, tapSink, dragSink, hoverSink, ghostProvider in
             AnyView(
                 IsoWorldView(
                     snapshotProvider: provider,
@@ -31,12 +33,11 @@ struct CitybuilderiOSApp: App {
                     ghostProvider: {
                         guard let state = ghostProvider() else { return nil }
                         return IsoWorldScene.GhostState(kind: state.kind, tile: state.tile, valid: state.valid)
-                    }
+                    },
+                    cameraListener: { tile in audio.setListenerPosition(tile) }
                 )
             )
         }
-        let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
-        self.audio = audio
     }
 
     var body: some Scene {
@@ -47,9 +48,15 @@ struct CitybuilderiOSApp: App {
                     defaultGameID: Self.defaultGameID
                 ),
                 sessionFactory: { [audio] world in
-                    GameSession(world: world, audioEventConsumer: { events in
-                        audio.consume(events: events)
-                    })
+                    GameSession(
+                        world: world,
+                        audioEventConsumer: { events in
+                            audio.consume(events: events)
+                        },
+                        audioSnapshotConsumer: { snapshot in
+                            audio.consumeSnapshot(snapshot)
+                        }
+                    )
                 },
                 pauseMenuFactory: { [saveStore] session in
                     // onQuitToTitle is injected by TitleScreenHost — spec
@@ -99,8 +106,16 @@ private struct AudioSettingsSheet: View {
     var body: some View {
         NavigationStack {
             TabView {
-                AudioSettingsView(settings: audio.settings)
-                    .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                AudioSettingsView(
+                    settings: audio.settings,
+                    onSpatialEnabledChange: { [audio] enabled in
+                        audio.engine.setSpatialEnabled(enabled)
+                    },
+                    onSpatialDistancesChange: { [audio] reference, maxDistance in
+                        audio.engine.setSpatialDistances(reference: reference, max: maxDistance)
+                    }
+                )
+                .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
                 CreditsView(manifest: audio.manifest)
                     .tabItem { Label("Credits", systemImage: "info.circle") }
             }

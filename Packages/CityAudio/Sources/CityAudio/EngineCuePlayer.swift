@@ -43,7 +43,8 @@ public final class EngineCuePlayer {
     /// Dispatches a cue: loads the file, schedules it on the cue's bus,
     /// and starts playback. No-op (with a logged warning) if the file is
     /// missing or the load fails.
-    public func play(_ cue: Bindings.Cue) {
+    public func play(_ dispatched: DispatchedCue) {
+        let cue = dispatched.cue
         guard let file = loadFile(at: cue.file) else { return }
 
         do {
@@ -53,7 +54,7 @@ public final class EngineCuePlayer {
         }
 
         if cue.loop == true {
-            playLoop(cue: cue, file: file)
+            playLoop(dispatched: dispatched, file: file)
         } else {
             playOneShot(cue: cue, file: file)
         }
@@ -82,21 +83,82 @@ public final class EngineCuePlayer {
         player.play()
     }
 
-    private func playLoop(cue: Bindings.Cue, file: AVAudioFile) {
+    private func playLoop(dispatched: DispatchedCue, file: AVAudioFile) {
+        let cue = dispatched.cue
         // Idempotent at this level too — if a loop is already playing for
         // this path, leave it alone. The coordinator also guards against
         // duplicate-start via its EntityID map.
         if loopPlayers[cue.file] != nil { return }
         let player = AVAudioPlayerNode()
-        let mixer = engine.bus(cue.bus)
-        mixer.engine?.attach(player)
-        mixer.engine?.connect(player, to: mixer, format: file.processingFormat)
+        let routing = Self.loopRouting(for: dispatched, environmentAvailable: engine.environmentNode != nil)
+        let target = node(for: routing.target, dispatched: dispatched)
+        engine.underlyingEngine.attach(player)
+        engine.underlyingEngine.connect(player, to: target, format: file.processingFormat)
+        if let position = routing.position {
+            player.position = position
+        }
         if let volume = cue.volume {
             player.volume = volume
         }
         loopPlayers[cue.file] = player
         scheduleLooped(player: player, file: file, path: cue.file)
         player.play()
+    }
+
+    /// Where a loop cue should attach. `loopMixer` is the historical path
+    /// (no 3D); `environmentNode` is the spatial path used when the cue
+    /// opts in AND the engine has the environment node active.
+    enum LoopRoutingTarget: Equatable {
+        case loopMixer
+        case environmentNode
+    }
+
+    struct LoopRouting: Equatable {
+        let target: LoopRoutingTarget
+        let position: AVAudio3DPoint?
+
+        static func == (lhs: LoopRouting, rhs: LoopRouting) -> Bool {
+            guard lhs.target == rhs.target else { return false }
+            switch (lhs.position, rhs.position) {
+            case (nil, nil): return true
+            case let (lhsPos?, rhsPos?):
+                return lhsPos.x == rhsPos.x && lhsPos.y == rhsPos.y && lhsPos.z == rhsPos.z
+            default: return false
+            }
+        }
+    }
+
+    /// Pure routing decision for a loop cue. Exposed for testing.
+    nonisolated static func loopRouting(
+        for dispatched: DispatchedCue,
+        environmentAvailable: Bool
+    ) -> LoopRouting {
+        // Spatial routing requires the cue to opt in (default: loop bus)
+        // and the engine to have the environment node wired. Both must
+        // hold; otherwise fall back to the loop mixer.
+        let spatial = dispatched.isSpatialized && environmentAvailable
+        guard spatial else {
+            return LoopRouting(target: .loopMixer, position: nil)
+        }
+        if let tile = dispatched.position {
+            return LoopRouting(
+                target: .environmentNode,
+                position: AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
+            )
+        }
+        // Spatial routing was requested but no position was resolved —
+        // fall back to the loop mixer; the env node would just see the
+        // source at origin which is misleading.
+        return LoopRouting(target: .loopMixer, position: nil)
+    }
+
+    private func node(for target: LoopRoutingTarget, dispatched: DispatchedCue) -> AVAudioNode {
+        switch target {
+        case .loopMixer:
+            return engine.bus(dispatched.cue.bus)
+        case .environmentNode:
+            return engine.environmentNode ?? engine.bus(dispatched.cue.bus)
+        }
     }
 
     private func scheduleLooped(player: AVAudioPlayerNode, file: AVAudioFile, path: String) {

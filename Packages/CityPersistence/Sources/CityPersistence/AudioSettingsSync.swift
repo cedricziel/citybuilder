@@ -70,7 +70,17 @@ public final class AudioSettingsSync: @unchecked Sendable {
         public static let musicVolume = "audio.musicVolume"
         public static let sfxVolume = "audio.sfxVolume"
         public static let muted = "audio.muted"
-        public static let all = [musicVolume, sfxVolume, muted]
+        public static let spatialEnabled = "audio.spatialEnabled"
+        public static let spatialReferenceDistance = "audio.spatialReferenceDistance"
+        public static let spatialMaxDistance = "audio.spatialMaxDistance"
+        public static let all = [
+            musicVolume,
+            sfxVolume,
+            muted,
+            spatialEnabled,
+            spatialReferenceDistance,
+            spatialMaxDistance
+        ]
     }
 
     private let store: CloudKeyValueStore

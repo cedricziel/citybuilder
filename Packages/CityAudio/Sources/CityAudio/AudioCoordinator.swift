@@ -10,8 +10,9 @@ import Foundation
 /// (an `AudioEngine`-backed player) can evolve without touching the
 /// coordinator itself.
 public final class AudioCoordinator: @unchecked Sendable {
-    /// Invoked once per cue the coordinator chooses to play.
-    public typealias CueDispatcher = (Bindings.Cue) -> Void
+    /// Invoked once per cue the coordinator chooses to play. Carries the
+    /// cue plus the per-event position resolved from the cached snapshot.
+    public typealias CueDispatcher = (DispatchedCue) -> Void
 
     private let bindings: Bindings
     private let dispatch: CueDispatcher
@@ -19,6 +20,11 @@ public final class AudioCoordinator: @unchecked Sendable {
     /// Active per-entity loops. Used to make loop-start idempotent and to
     /// route `stopLoop(for:)` to the right player.
     private var activeLoops: [EntityID: Bindings.Cue] = [:]
+    /// Last `WorldSnapshot` accepted via `consumeSnapshot`. Used by
+    /// `consume(events:)` to resolve each event's `primaryEntityID` to a
+    /// `TileCoordinate`. Nil until the first snapshot arrives — events
+    /// fired before that point dispatch with `position: nil`.
+    private var cachedSnapshot: WorldSnapshot?
 
     public init(
         bindings: Bindings,
@@ -28,6 +34,14 @@ public final class AudioCoordinator: @unchecked Sendable {
         self.bindings = bindings
         self.rng = rng
         self.dispatch = dispatch
+    }
+
+    /// Caches the latest `WorldSnapshot` so `consume(events:)` can look up
+    /// the position of each event's primary entity. The game loop calls
+    /// this before forwarding the same tick's events.
+    @MainActor
+    public func consumeSnapshot(_ snapshot: WorldSnapshot) {
+        cachedSnapshot = snapshot
     }
 
     /// Routes every event in `events` through the bindings table in input
@@ -44,16 +58,24 @@ public final class AudioCoordinator: @unchecked Sendable {
                 candidates.randomElement(using: &rng) ?? candidates[0]
             }
 
+            let position = resolvePosition(for: event)
+            let dispatched = DispatchedCue(cue: cue, position: position)
+
             if cue.loop == true, let entityId = event.primaryEntityID {
                 // Idempotent loop start — second dispatch for the same
                 // entity is a no-op until the matching stopLoop arrives.
                 guard activeLoops[entityId] == nil else { continue }
                 activeLoops[entityId] = cue
-                dispatch(cue)
+                dispatch(dispatched)
             } else {
-                dispatch(cue)
+                dispatch(dispatched)
             }
         }
+    }
+
+    private func resolvePosition(for event: WorldEvent) -> TileCoordinate? {
+        guard let entityId = event.primaryEntityID else { return nil }
+        return cachedSnapshot?.buildings[entityId]?.anchor
     }
 
     /// Halts any active loop associated with `entity`. No-op if no loop

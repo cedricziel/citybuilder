@@ -111,12 +111,6 @@ public struct CityRootView: View {
     }
 }
 
-/// Consumer of the per-tick `[WorldEvent]` stream produced by
-/// `World.tick()`. The app shells pass an `AudioCoordinator.consume(events:)`
-/// closure (from `CityAudio`); headless tests pass nil or a recorder.
-/// Decouples `CityUI` from `CityAudio` so the package boundary stays clean.
-public typealias AudioEventConsumer = ([WorldEvent]) -> Void
-
 /// Owns the live World and exposes snapshots + HUD bindings to the views.
 /// Marked @Observable so SwiftUI rebinds when the HUD numbers move.
 /// MainActor-isolated because the timer-driven `advance()` mutates state
@@ -130,16 +124,27 @@ public final class GameSession {
     /// every tick's events are forwarded after the snapshot is applied.
     /// Per spec `audio-playback` "AudioCoordinator consumes per-tick events".
     public var audioEventConsumer: AudioEventConsumer?
+    /// Optional sink for the per-tick `WorldSnapshot`. When non-nil, the
+    /// session pushes each tick's snapshot to the audio layer before the
+    /// matching events, so the coordinator can resolve entity positions
+    /// for spatial playback. Per spec `audio-playback` "Cue dispatched
+    /// with optional position".
+    public var audioSnapshotConsumer: AudioSnapshotConsumer?
     /// Hard pause. While `true`, `step()` short-circuits: no tick, no
     /// snapshot, no event forwarding. The audio engine is untouched so
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
 
-    public init(world: World = World.newGame(), audioEventConsumer: AudioEventConsumer? = nil) {
+    public init(
+        world: World = World.newGame(),
+        audioEventConsumer: AudioEventConsumer? = nil,
+        audioSnapshotConsumer: AudioSnapshotConsumer? = nil
+    ) {
         self.world = world
         self.hud = HUDViewModel(money: 0, population: 0)
         self.audioEventConsumer = audioEventConsumer
+        self.audioSnapshotConsumer = audioSnapshotConsumer
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.step()
@@ -157,7 +162,12 @@ public final class GameSession {
     public func step() {
         guard !isPaused else { return }
         let result = world.tick()
-        hud.apply(world.snapshot())
+        let snapshot = world.snapshot()
+        hud.apply(snapshot)
+        // Push the snapshot to audio before the matching events so the
+        // coordinator's primaryEntityID → tile resolution sees this tick's
+        // building positions, not the prior tick's.
+        audioSnapshotConsumer?(snapshot)
         audioEventConsumer?(result.events)
     }
 

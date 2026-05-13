@@ -64,7 +64,7 @@ When the environment node is in the graph and a loop cue has a non-nil position,
 #### Scenario: Camera-center tile is exposed
 
 - **WHEN** the camera's `centerTile()` is invoked with a camera at world center `(8.4, 6.2)`
-- **THEN** it returns the rounded `TileCoordinate(x: 8, y: 6)`
+- **THEN** it returns `TileCoordinate(x: 8, y: 6)` (floor semantics, defined in the `rendering-2_5d` spec)
 
 #### Scenario: Listener push throttled to 1 Hz
 

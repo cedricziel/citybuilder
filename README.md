@@ -112,6 +112,39 @@ Audio audition workflow:
   bus subfolder, add the manifest + binding entries, and the engine
   picks them up on next launch.
 
+### Spatial audio
+
+The `loop` bus is routed through an `AVAudioEnvironmentNode` so per-building
+loop cues attenuate and pan based on the camera's position. Music, SFX, and
+ambient stay 2D — those buses connect to the main mixer directly.
+
+- **Cue dispatch carries an optional `TileCoordinate`.** The coordinator
+  resolves it from the event's primary entity against the last snapshot
+  pushed via `AudioStack.consumeSnapshot(_:)`. Non-entity events
+  (`taxesCollected`, `gameOver`) dispatch with `position: nil`.
+- **`spatialize: Bool?` on `Bindings.Cue`** overrides routing per cue.
+  Default behaviour: spatialized iff `bus == .loop`. Set
+  `"spatialize": false` in the JSON to keep a loop cue 2D (e.g. an
+  ambient bed that's intrinsically non-positional).
+- **Listener position updates at 1 Hz** from the renderer's
+  `IsoWorldScene.cameraListener`. Per-frame writes audibly jitter on
+  ProMotion devices; the 1 Hz throttle smooths panning without losing
+  responsiveness for typical camera moves. App shells wire this to
+  `AudioStack.setListenerPosition(_:)`, which writes through to the
+  environment node's listener slot.
+- **Tile-to-meter mapping.** `AVAudioEnvironmentNode` thinks in metres;
+  the engine treats one tile as one metre, so `TileCoordinate(x, y)`
+  becomes `AVAudio3DPoint(x, 0, y)`.
+- **Default distances:** reference 4 tiles (full volume), max 32 tiles
+  (silent beyond). Tunable via `AudioSettings.spatialReferenceDistance`
+  and `.spatialMaxDistance`, exposed under the **Advanced** disclosure
+  of the audio settings panel.
+- **Accessibility / mono output.** The "Spatial audio" toggle in audio
+  settings bypasses the environment node entirely (loop → main directly);
+  intended for hearing-impaired players or mono-output setups. The
+  toggle is a session-level switch: changing it triggers a graph rebuild
+  with a brief audible glitch. iCloud-synced across devices.
+
 ## Island HUD
 
 The HUD has three layers that read off the `WorldSnapshot`:
