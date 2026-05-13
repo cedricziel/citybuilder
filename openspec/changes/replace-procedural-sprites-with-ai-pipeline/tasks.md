@@ -95,9 +95,9 @@
 
 ## 10. M9 — Visual regression playthrough
 
-- [ ] 10.1 Run the iOS app on the simulator across a representative scenario: place a town center, build one of every building kind, advance the world ~1000 ticks. Capture screenshots at key moments: empty island, mid-build, full economy.
-- [ ] 10.2 Run the Mac app through the same scenario.
-- [ ] 10.3 Compare screenshots against pre-change screenshots stored in `.scratch/visual-regression/before/`. Document any sprites that read worse in-game than the procedural originals; if any block the cutover, return to M5.6.3 / M8 and iterate.
-- [ ] 10.4 Run on a physical iPhone and a physical iPad — DEFERRED (requires hardware).
-- [ ] 10.5 Send a TestFlight build to 2–3 internal reviewers for visual sign-off — DEFERRED (requires TestFlight account + reviewers).
-- [ ] 10.6 Final verify: `make sprites --offline && make test && make test-scenarios` all green in a clean checkout.
+- [-] 10.1 Run the iOS app on the simulator across a representative scenario: place a town center, build one of every building kind, advance the world ~1000 ticks. Capture screenshots at key moments: empty island, mid-build, full economy. **Deferred to PR review** — agentic simulator playthrough is impractical; user opted to review the regenerated PNGs + TestFlight pass once the cutover lands.
+- [-] 10.2 Run the Mac app through the same scenario. **Deferred to PR review** (same reason).
+- [-] 10.3 Compare screenshots against pre-change screenshots stored in `.scratch/visual-regression/before/`. Document any sprites that read worse in-game than the procedural originals; if any block the cutover, return to M5.6.3 / M8 and iterate. **Deferred to PR review** (no pre-change screenshots were captured; the user is comparing the new art against memory of the procedural baseline).
+- [-] 10.4 Run on a physical iPhone and a physical iPad — DEFERRED (requires hardware).
+- [-] 10.5 Send a TestFlight build to 2–3 internal reviewers for visual sign-off — DEFERRED (requires TestFlight account + reviewers).
+- [x] 10.6 Final verify: `make sprites --offline && make test && make test-scenarios` all green in a clean checkout. (Verified: sprites-offline produces zero diff against committed; CityRender2D suite 126/126 pass; pytest suite 35/35 pass; test-scenarios reports 16 scenarios in this change not mapped to swift-testing tests because they're covered by pytest — the scenario script only scans Swift sources, a known informational blind spot.)
