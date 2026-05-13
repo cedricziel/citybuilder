@@ -1,4 +1,4 @@
-.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean
+.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -8,6 +8,12 @@ SCHEME_CLI := citybuilder-cli
 DESTINATION_IOS := platform=iOS Simulator,name=iPhone 16
 DESTINATION_MAC := platform=macOS
 CITYCORE := Packages/CityCore
+
+# AI sprite pipeline targets (see Resources/Sprites.style/world.md and
+# openspec/specs/sprite-style-catalog).
+SPRITES_VENV := .venv/sprites
+SPRITES_PY := $(SPRITES_VENV)/bin/python
+SPRITES_PIPELINE_DIR := scripts
 
 help:
 	@echo "Targets:"
@@ -70,6 +76,26 @@ hooks:
 	pre-commit install
 	pre-commit install --hook-type commit-msg
 	pre-commit install --hook-type pre-push
+
+sprites-venv:
+	python3 -m venv $(SPRITES_VENV)
+	$(SPRITES_VENV)/bin/pip install --upgrade pip
+	$(SPRITES_VENV)/bin/pip install -r scripts/requirements.txt
+
+sprites-test:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m pytest tests
+
+sprites:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai
+
+sprites-offline:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --offline
+
+sprites-reference:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
+
+sprites-verify:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)

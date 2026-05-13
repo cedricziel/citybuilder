@@ -41,3 +41,12 @@ Resources/Audio/_candidates/
 
 # Claude Code ephemeral worktrees (skills + commands stay tracked)
 .claude/worktrees/
+
+# Python venv + cache for the AI sprite pipeline
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Sprite pipeline local cache (committed sheets live in _sheets/)
+Resources/Sprites.style/_cache/
