@@ -69,6 +69,9 @@ targets:
         # iPhone ignores this key (always fullscreen).
         UIRequiresFullScreen: true
         UILaunchScreen: {}
+        # Asset-catalog-based app icon; iOS requires this key when the
+        # icon ships via Assets.xcassets/AppIcon.appiconset.
+        CFBundleIconName: AppIcon
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
@@ -97,6 +100,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: "NO"
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - package: CityCore
       - package: CityPersistence
@@ -154,6 +158,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder
         PRODUCT_NAME: Citybuilder
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - package: CityCore
       - package: CityPersistence
