@@ -74,6 +74,19 @@ repos:
         files: ^Resources/Audio/.*$
         pass_filenames: false
 
+      - id: check-sprite-catalog-consistency
+        name: sprite catalog edits must include matching _sheets/ edits
+        description: |
+          Spec: sprite-asset-pipeline § "Hermetic regeneration via make
+          sprites". Editing a catalog/<id>.md without re-running
+          `make sprites` to update _sheets/<id>.png makes the next CI
+          `make sprites-verify` step fail — this hook turns that into
+          a pre-commit error instead.
+        entry: ./scripts/check-sprite-catalog-consistency.sh
+        language: system
+        files: ^Resources/Sprites\.style/(catalog/.*\.md|_sheets/.*\.png)$
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |

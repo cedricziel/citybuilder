@@ -127,15 +127,24 @@ def _save_indexed_png(image: Image.Image, dest: Path) -> None:
     indexed.save(dest, format="PNG", optimize=True)
 
 
-def _process_and_write_cell(sprite_name: str, tile: Image.Image) -> Path:
+def _process_and_write_cell(
+    sprite_name: str,
+    tile: Image.Image,
+    output_dir_resolver: Callable[[str], Path] | None = None,
+) -> Path:
     """Full post-process and write for one tile. Returns the output
-    path. Idempotent given identical inputs."""
+    path. Idempotent given identical inputs.
+
+    `output_dir_resolver` lets verify mode route writes into a temp
+    directory without redirecting `paths.atlas_dir_for` globally — so
+    `_target_size` keeps reading the committed PNG dimensions from
+    the real atlas dirs."""
     target = _target_size(sprite_name)
     keyed = chroma_key(tile, hex_color="#FF00FF")
     resized = downsample(keyed, target, mode="nearest")
     quantized = quantize(resized, PALETTE)
-    atlas_dir = paths.atlas_dir_for(sprite_name)
-    out_path = atlas_dir / f"{sprite_name}.png"
+    resolver = output_dir_resolver or paths.atlas_dir_for
+    out_path = resolver(sprite_name) / f"{sprite_name}.png"
     _save_indexed_png(quantized, out_path)
     return out_path
 
@@ -248,6 +257,7 @@ def _sheet_for_entry(
 def _process_entry(
     entry: CatalogEntry,
     sheet: Image.Image,
+    output_dir_resolver: Callable[[str], Path] | None = None,
 ) -> list[Path]:
     """Slice + post-process + write every cell for one entry. Returns
     the list of written atlas paths."""
@@ -255,17 +265,45 @@ def _process_entry(
     cells = slice_sheet(sheet, plan, grid=entry.grid, sheet_size=sheet.size)
     written: list[Path] = []
     for sprite_name, tile in cells:
-        out = _process_and_write_cell(sprite_name, tile)
+        out = _process_and_write_cell(sprite_name, tile, output_dir_resolver)
         written.append(out)
     return written
+
+
+def _diff_against_committed(written: list[Path]) -> list[Path]:
+    """Return the subset of `written` whose bytes diverge from the
+    on-disk PNG already at that path (read before this run started).
+    Used by `--verify`; assumes the caller invoked the pipeline against
+    a temp output directory whose subpaths mirror the real atlas dirs.
+    """
+    diffs: list[Path] = []
+    for path in written:
+        # Reconstruct the committed path: ATLAS_DIRS[<prefix>] / <stem>.png
+        name = path.stem
+        try:
+            committed = paths.atlas_dir_for(name) / path.name
+        except ValueError:
+            continue
+        if not committed.exists():
+            diffs.append(path)
+            continue
+        if path.read_bytes() != committed.read_bytes():
+            diffs.append(path)
+    return diffs
 
 
 def run_pipeline(offline: bool = False, verify: bool = False) -> int:
     """Walk the catalog and regenerate every atlas PNG.
 
-    Returns 0 on success; 1 on the first hard failure (raised
-    exception). `verify` runs `offline=True` and then prints what
-    would have been written but does not write.
+    Returns 0 on success; 1 on the first hard failure or, in
+    `--verify` mode, on any byte mismatch against the committed
+    atlas PNGs.
+
+    `verify` redirects atlas writes into a temp directory (so the
+    working tree is never mutated), runs the pipeline offline against
+    the committed `_sheets/`, and compares the produced bytes to the
+    committed atlas PNGs. Non-zero exit on any divergence. Mirrors
+    `make sprites-verify` for CI.
     """
     cfg = _load_pipeline_toml()
     model_id = cfg["model"]
@@ -282,6 +320,18 @@ def run_pipeline(offline: bool = False, verify: bool = False) -> int:
         return 0
 
     effective_offline = offline or verify
+    output_resolver: Callable[[str], Path] | None = None
+    temp_root: Path | None = None
+    if verify:
+        import tempfile
+        temp_root = Path(tempfile.mkdtemp(prefix="sprites-verify-"))
+        # Route writes through a temp output dir whose subpaths mirror
+        # the real atlas dir layout. `_target_size` keeps reading from
+        # the real atlas dirs (via the unmodified `paths.atlas_dir_for`).
+        def _resolver(name: str) -> Path:
+            real = paths.atlas_dir_for(name)
+            return temp_root / real.name
+        output_resolver = _resolver
 
     def work(entry_pair: tuple[CatalogEntry, str]) -> list[Path]:
         entry, entry_md = entry_pair
@@ -289,25 +339,49 @@ def run_pipeline(offline: bool = False, verify: bool = False) -> int:
             entry, entry_md, world_md, model_id, effective_offline,
             on_cache_hit=lambda eid: print(f"[cache hit] {eid}", flush=True),
         )
-        return _process_entry(entry, sheet)
+        return _process_entry(entry, sheet, output_dir_resolver=output_resolver)
 
-    written: list[Path] = []
-    if effective_offline:
-        # Offline path is deterministic and CPU-bound; run sequentially
-        # so the ordered log output stays stable.
-        for pair in entries:
-            written.extend(work(pair))
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_inflight) as ex:
-            futures = {ex.submit(work, p): p[0].id for p in entries}
-            for fut in concurrent.futures.as_completed(futures):
-                eid = futures[fut]
-                try:
-                    written.extend(fut.result())
-                    print(f"[done] {eid}", flush=True)
-                except Exception as exc:
-                    print(f"[fail] {eid}: {exc}", flush=True)
-                    return 1
+    try:
+        written: list[Path] = []
+        if effective_offline:
+            # Offline path is deterministic and CPU-bound; run
+            # sequentially so the ordered log output stays stable.
+            for pair in entries:
+                written.extend(work(pair))
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_inflight) as ex:
+                futures = {ex.submit(work, p): p[0].id for p in entries}
+                for fut in concurrent.futures.as_completed(futures):
+                    eid = futures[fut]
+                    try:
+                        written.extend(fut.result())
+                        print(f"[done] {eid}", flush=True)
+                    except Exception as exc:
+                        print(f"[fail] {eid}: {exc}", flush=True)
+                        return 1
 
-    print(f"[batcher] wrote {len(written)} atlas PNGs", flush=True)
-    return 0
+        if verify:
+            diffs = _diff_against_committed(written)
+            if diffs:
+                print(
+                    f"[verify] {len(diffs)} atlas PNG(s) differ from "
+                    "the committed bytes — offline regen is not "
+                    "reproducing the catalog. The committed catalog "
+                    "and committed sheets must produce byte-identical "
+                    "atlas PNGs.",
+                    flush=True,
+                )
+                for d in diffs[:20]:
+                    print(f"  - {d.name}", flush=True)
+                if len(diffs) > 20:
+                    print(f"  … and {len(diffs) - 20} more", flush=True)
+                return 1
+            print(f"[verify] {len(written)} atlas PNGs match committed", flush=True)
+            return 0
+
+        print(f"[batcher] wrote {len(written)} atlas PNGs", flush=True)
+        return 0
+    finally:
+        if temp_root is not None and temp_root.exists():
+            import shutil
+            shutil.rmtree(temp_root, ignore_errors=True)

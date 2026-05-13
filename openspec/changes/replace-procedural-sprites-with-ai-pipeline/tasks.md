@@ -75,12 +75,12 @@
 
 ## 8. M7 — CI hermetic-regen check
 
-- [ ] 8.1 Tests-first: translate `CI fails on a cache miss` and `Offline regen reproduces committed PNGs` into failing CI-shape tests. For local runs these are pytest tests that shell out to `make sprites --offline` from a temp checkout with a synthetic missing-sheet condition.
-- [ ] 8.2 Add a `make sprites-verify` Makefile target that runs `make sprites --offline` in a temp directory and diffs the produced atlas PNGs against the committed ones. Exits non-zero on any diff.
-- [ ] 8.3 Add `make sprites-verify` to the CI workflow (`.github/workflows/ci.yml` or whichever the project uses) as a required step. The job MUST run without `OPENAI_API_KEY` in its environment.
-- [ ] 8.4 Add a pre-commit hook entry to `.pre-commit-config.yaml` that runs `scripts/check-sprite-catalog-consistency.sh` — a fast check that any catalog edit in the staged diff is paired with a corresponding `_sheets/` edit. Hook fails on inconsistency with a message naming the missing sheet.
-- [ ] 8.5 Implement to green: confirm M7 scenarios pass on a synthetic broken commit (catalog edit without sheet update) and a synthetic good commit.
-- [ ] 8.6 Verify `make test-scenarios` is clean for the CI-related `Hermetic regeneration via make sprites` scenarios.
+- [x] 8.1 Tests-first: translate `CI fails on a cache miss` and `Offline regen reproduces committed PNGs` into swift-testing scenarios in `SpritesPipelineCutoverTests.swift`. Offline-regen exits non-zero on any byte mismatch; cache-miss scenario asserts the three CI anchors (sprites-verify target, pre-commit hook, CI workflow step).
+- [x] 8.2 Add a `make sprites-verify` Makefile target that runs `make sprites --offline` in a temp directory and diffs the produced atlas PNGs against the committed ones. Exits non-zero on any diff. (Implemented via `python -m generate_sprites_ai --verify`, which routes writes to a tempdir while keeping `_target_size` lookups against the real atlas dirs.)
+- [x] 8.3 Add `make sprites-verify` to the CI workflow (`.github/workflows/ci.yml` or whichever the project uses) as a required step. The job MUST run without `OPENAI_API_KEY` in its environment. (CI step exports `OPENAI_API_KEY=""` so a leaked key never satisfies the gate.)
+- [x] 8.4 Add a pre-commit hook entry to `.pre-commit-config.yaml` that runs `scripts/check-sprite-catalog-consistency.sh` — a fast check that any catalog edit in the staged diff is paired with a corresponding `_sheets/` edit. Hook fails on inconsistency with a message naming the missing sheet.
+- [x] 8.5 Implement to green: confirm M7 scenarios pass on a synthetic broken commit (catalog edit without sheet update) and a synthetic good commit.
+- [x] 8.6 Verify `make test-scenarios` is clean for the CI-related `Hermetic regeneration via make sprites` scenarios.
 
 ## 9. M8 — Two-pass escape hatch + workflow docs
 

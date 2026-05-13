@@ -38,6 +38,14 @@ jobs:
           pipx install diff-cover
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      - name: Set up Python for sprite pipeline
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bootstrap sprite venv
+        run: make sprites-venv
+
       - name: Cache pre-commit
         uses: actions/cache@v4
         with:
@@ -73,6 +81,19 @@ jobs:
         env:
           SCENARIO_COVERAGE_STRICT: "0"
         run: make test-scenarios
+
+      - name: Sprite pipeline hermetic-regen check
+        # CI MUST run without OPENAI_API_KEY in its environment — the
+        # whole point of the gate is that committed atlas PNGs are
+        # reproducible from committed catalog + sheets offline.
+        env:
+          OPENAI_API_KEY: ""
+        run: make sprites-verify
+
+      - name: Sprite pipeline pytest
+        env:
+          OPENAI_API_KEY: ""
+        run: make sprites-test
 
       - name: Build CitybuilderiOS
         run: |
