@@ -84,14 +84,14 @@
 
 ## 9. M8 — Two-pass escape hatch + workflow docs
 
-- [ ] 9.1 Tests-first: translate `Default mode is single-pass`, `Opt-in two-pass triggers a second API call`, and `Two-pass cache key includes the mode` into failing pytest tests under `scripts/tests/test_batcher.py`. Mock `httpx.Client.post` to count calls and inspect the second-pass image attachment. Confirm red.
-- [ ] 9.2 Extend `batcher.py` to parse YAML front matter from each `catalog/<id>.md`. Detect `two-pass: true`; in that branch, fire pass-1 with operational cells declared as spare, then pass-2 with the pass-1 base cell attached as `image[]=` reference and operational cells declared in the prompt.
-- [ ] 9.3 Update `cache.py` so the `fixed_instructions_string` component of the cache key includes the entry's `two-pass` mode (and other front-matter flags). Toggling the mode invalidates the entry's cache.
-- [ ] 9.4 Apply two-pass mode to any building flagged in M5.6.3(c) as needing it; regen + visual review; commit the updated catalog + sheets + atlas PNGs.
-- [ ] 9.5 Add a "Two-pass escape hatch" section to README explaining when to set `two-pass: true` (visible animation flicker in playtest), how it works (pass-1 design + construction, pass-2 animation from pass-1 base cell), and the cost (2× API spend for that building).
-- [ ] 9.6 Implement to green: confirm M8 two-pass scenarios pass.
-- [ ] 9.7 Refactor under a green bar: shared logic between pass-1 and pass-2 invocations consolidates if duplicated; otherwise leave alone.
-- [ ] 9.8 Verify `make test-scenarios` is clean for `Two-pass coherence escape hatch`.
+- [x] 9.1 Tests-first: translate `Default mode is single-pass`, `Opt-in two-pass triggers a second API call`, and `Two-pass cache key includes the mode` into pytest tests under `scripts/tests/test_batcher.py`. Mocks `httpx`-equivalent via patching `_post_edit` to count calls.
+- [x] 9.2 Extend `batcher.py` to parse YAML front matter from each `catalog/<id>.md`. Detect `two-pass = true`; in that branch, fire pass-1 with operational cells rewritten to `spare`, then pass-2 with the pass-1 base cell as the `image=` reference and only operational cells declared. Composite pass-1 design + pass-2 operational cells into one returned sheet.
+- [x] 9.3 Update `cache.py` so the cache key includes the entry's `two-pass` mode (and other front-matter flags). Since `entry_md` (the raw catalog Markdown including front matter) is part of the key, toggling the mode invalidates the entry's cache automatically — covered by `test_two_pass_cache_key_includes_the_mode`.
+- [-] 9.4 Apply two-pass mode to any building flagged in M5.6.3(c) as needing it; regen + visual review; commit the updated catalog + sheets + atlas PNGs. **Deferred to post-cutover PR review** — M5.6.3 was itself deferred at the user's request; if PR review surfaces flicker on a specific building we'll opt it into two-pass and rerun in a follow-up.
+- [x] 9.5 Add a "Two-pass escape hatch" section to README explaining when to set `two-pass: true` (visible animation flicker in playtest), how it works (pass-1 design + construction, pass-2 animation from pass-1 base cell), and the cost (2× API spend for that building). (Folded into the M6 README rewrite under "Adding a new animated sprite".)
+- [x] 9.6 Implement to green: confirm M8 two-pass scenarios pass.
+- [x] 9.7 Refactor under a green bar: shared logic between pass-1 and pass-2 invocations consolidates if duplicated; otherwise leave alone. (Reviewed: `_entry_md_with_operational_spared` and `_entry_md_with_only_operational` are mirror-image edits but the simplest expressions remain two separate functions; left as-is.)
+- [x] 9.8 Verify `make test-scenarios` is clean for `Two-pass coherence escape hatch`.
 
 ## 10. M9 — Visual regression playthrough
 

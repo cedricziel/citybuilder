@@ -164,6 +164,89 @@ def test_editing_world_md_invalidates_every_cache_entry(
     assert set(keys_old).isdisjoint(set(keys_new))
 
 
+def test_default_mode_is_single_pass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A catalog entry without `two-pass: true` in its front matter
+    MUST trigger exactly one /v1/images/edits call."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    entry_md = (
+        "## Function\nx\n\n"
+        "## Visual identity\nx\n\n"
+        "## Sheet\n\nGrid: 2 cols × 1 rows.\n"
+        "- (0, 0): `building-house`\n"
+        "- (0, 1): `building-house-constructing-0`\n\n"
+        "## Animation\n- Construction: `(0, 0)` → `(0, 1)`.\n"
+    )
+    monkeypatch.setattr("os.environ", {"OPENAI_API_KEY": "test"})
+    fake_sheet = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+
+    with patch("generate_sprites_ai.batcher._post_edit", return_value=fake_sheet) as mocked:
+        from generate_sprites_ai.slicer import parse_catalog_entry
+        entry = parse_catalog_entry("building-house", entry_md)
+        sheet = batcher._sheet_for_entry(
+            entry, entry_md, "world", "model-id", offline=False,
+        )
+        assert mocked.call_count == 1
+        assert sheet.size == fake_sheet.size
+
+
+def test_opt_in_two_pass_triggers_a_second_api_call(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A catalog entry with `two-pass: true` front matter MUST trigger
+    two /v1/images/edits calls."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    entry_md = (
+        "---\n"
+        "two-pass = true\n"
+        "---\n\n"
+        "## Function\nx\n\n"
+        "## Visual identity\nx\n\n"
+        "## Sheet\n\nGrid: 2 cols × 1 rows.\n"
+        "- (0, 0): `building-house`\n"
+        "- (0, 1): `building-house-operational-0`\n\n"
+        "## Animation\n- Op: `(0, 0)` → `(0, 1)`.\n"
+    )
+    monkeypatch.setattr("os.environ", {"OPENAI_API_KEY": "test"})
+    pass1 = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+    pass2 = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+
+    with patch(
+        "generate_sprites_ai.batcher._post_edit",
+        side_effect=[pass1, pass2],
+    ) as mocked:
+        from generate_sprites_ai.slicer import parse_catalog_entry
+        entry = parse_catalog_entry("building-house", entry_md)
+        sheet = batcher._sheet_for_entry(
+            entry, entry_md, "world", "model-id", offline=False,
+        )
+        assert mocked.call_count == 2
+        assert sheet.size == (1024, 1024)
+
+
+def test_two_pass_cache_key_includes_the_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Toggling `two-pass: true` ↔ omitted MUST change the cache key
+    so flipping the mode invalidates the cached entry."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    base = (
+        "## Function\nx\n## Visual identity\nx\n"
+        "## Sheet\n\nGrid: 1 cols × 1 rows.\n- (0, 0): `building-house`\n"
+        "## Animation\nStatic.\n"
+    )
+    two_pass = (
+        "---\ntwo-pass = true\n---\n\n"
+        "## Function\nx\n## Visual identity\nx\n"
+        "## Sheet\n\nGrid: 1 cols × 1 rows.\n- (0, 0): `building-house`\n"
+        "## Animation\nStatic.\n"
+    )
+    k1 = cache.cache_key("world", base, FIXED_INSTRUCTIONS, "m")
+    k2 = cache.cache_key("world", two_pass, FIXED_INSTRUCTIONS, "m")
+    assert k1 != k2
+
+
 def test_make_sprites_is_idempotent_on_unchanged_inputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

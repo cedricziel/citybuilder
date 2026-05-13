@@ -19,6 +19,7 @@ import base64
 import concurrent.futures
 import io
 import os
+import re
 import tomllib
 from collections.abc import Callable
 from pathlib import Path
@@ -151,6 +152,141 @@ def _process_and_write_cell(
 
 # ---------------- API call ----------------
 
+def _is_two_pass(entry: CatalogEntry) -> bool:
+    """Check the entry's front-matter for the two-pass opt-in. The
+    parser stores all front-matter values as strings; we accept any
+    truthy variant a contributor might write."""
+    raw = entry.front_matter.get("two-pass", "").strip().lower()
+    return raw in {"true", "yes", "1"}
+
+
+def _operational_cells(entry: CatalogEntry) -> set[tuple[int, int]]:
+    """The set of (row, col) cells that map to operational animation
+    frames — those are the cells pass-2 regenerates against the
+    pass-1 base."""
+    return {
+        coord
+        for coord, name in entry.cells.items()
+        if "-operational-" in name
+    }
+
+
+def _generate_sheet(
+    *,
+    entry: CatalogEntry,
+    entry_md: str,
+    world_md: str,
+    api_key: str,
+    model_id: str,
+) -> Image.Image:
+    """Run the catalog entry's generation flow (single-pass by default,
+    two-pass when opted in via front matter). Returns a single
+    composed Pillow image at 1024×1024."""
+    if not _is_two_pass(entry):
+        prompt = compose_prompt(world_md, entry_md, FIXED_INSTRUCTIONS)
+        return _post_edit(
+            api_key=api_key,
+            model_id=model_id,
+            prompt=prompt,
+            master_reference_path=paths.MASTER_REFERENCE,
+            size="1024x1024",
+        )
+
+    # Two-pass: pass-1 generates design + construction with operational
+    # cells declared as spare; pass-2 regenerates operational cells
+    # against the pass-1 base cell as reference. Per design.md §D7.
+    op_cells = _operational_cells(entry)
+    pass1_md = _entry_md_with_operational_spared(entry_md)
+    pass1_prompt = compose_prompt(world_md, pass1_md, FIXED_INSTRUCTIONS)
+    pass1_sheet = _post_edit(
+        api_key=api_key,
+        model_id=model_id,
+        prompt=pass1_prompt,
+        master_reference_path=paths.MASTER_REFERENCE,
+        size="1024x1024",
+    )
+
+    # Extract the pass-1 base cell (canonical position is (0, 0)).
+    cols, rows = entry.grid
+    if cols <= 0 or rows <= 0 or not op_cells:
+        # Defensive: no operational cells to second-pass; treat as
+        # single-pass output.
+        return pass1_sheet
+    pass1_w, pass1_h = pass1_sheet.size
+    cell_w = pass1_w // cols
+    cell_h = pass1_h // rows
+    base_tile = pass1_sheet.crop((0, 0, cell_w, cell_h))
+
+    # Pass-2: regenerate operational frames using the pass-1 base as
+    # the style anchor. Saved to a tempfile so the existing
+    # `_post_edit` multipart helper can attach it without reshaping.
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fh:
+        base_tile_path = Path(fh.name)
+    try:
+        base_tile.save(base_tile_path, format="PNG")
+        pass2_md = _entry_md_with_only_operational(entry_md)
+        pass2_prompt = compose_prompt(world_md, pass2_md, FIXED_INSTRUCTIONS)
+        pass2_sheet = _post_edit(
+            api_key=api_key,
+            model_id=model_id,
+            prompt=pass2_prompt,
+            master_reference_path=base_tile_path,
+            size="1024x1024",
+        )
+    finally:
+        try:
+            base_tile_path.unlink()
+        except FileNotFoundError:
+            pass
+
+    # Composite: copy operational cells from pass-2 sheet into pass-1
+    # sheet at their declared positions. Pass-1 keeps the design +
+    # construction stages; pass-2 contributes the operational frames.
+    composed = pass1_sheet.copy()
+    for (row, col) in op_cells:
+        left = col * cell_w
+        upper = row * cell_h
+        op_tile = pass2_sheet.crop((left, upper, left + cell_w, upper + cell_h))
+        composed.paste(op_tile, (left, upper))
+    return composed
+
+
+def _entry_md_with_operational_spared(entry_md: str) -> str:
+    """Rewrite Sheet section assignments that look like
+    `building-x-operational-N` to `spare` so pass-1 doesn't waste
+    pixels on cells pass-2 will overwrite anyway. Keeps the front
+    matter intact (so the cache key picked up the mode)."""
+    out_lines: list[str] = []
+    for line in entry_md.splitlines():
+        if "operational-" in line and "spare" not in line:
+            # Replace ``:`<sprite-operational-X>`` with ``: spare``.
+            replaced = re.sub(
+                r":\s*`[^`]*-operational-\d+`",
+                ": spare",
+                line,
+            )
+            out_lines.append(replaced)
+        else:
+            out_lines.append(line)
+    return "\n".join(out_lines)
+
+
+def _entry_md_with_only_operational(entry_md: str) -> str:
+    """Mirror image of the above: every non-operational, non-spare
+    cell becomes spare so pass-2 focuses on operational frames."""
+    out_lines: list[str] = []
+    for line in entry_md.splitlines():
+        # Match cell-assignment lines: `- (r, c): `name``.
+        m = re.search(r":\s*`([^`]+)`", line)
+        if m and "-operational-" not in m.group(1):
+            replaced = re.sub(r":\s*`[^`]+`", ": spare", line)
+            out_lines.append(replaced)
+        else:
+            out_lines.append(line)
+    return "\n".join(out_lines)
+
+
 def _post_edit(
     *,
     api_key: str,
@@ -229,15 +365,12 @@ def _sheet_for_entry(
             "OPENAI_API_KEY is not set in the environment — required "
             "for online sprite generation. Use `--offline` to skip."
         )
-    prompt = compose_prompt(world_md, entry_md, FIXED_INSTRUCTIONS)
-    # Stick to a square API size — the slicer divides by grid, so the
-    # cell aspect ratio comes from the catalog, not the sheet shape.
-    fresh = _post_edit(
+    fresh = _generate_sheet(
+        entry=entry,
+        entry_md=entry_md,
+        world_md=world_md,
         api_key=api_key,
         model_id=model_id,
-        prompt=prompt,
-        master_reference_path=paths.MASTER_REFERENCE,
-        size="1024x1024",
     )
     write_cache(key, fresh, api_response_json=None)
     write_sheet(entry.id, fresh)
