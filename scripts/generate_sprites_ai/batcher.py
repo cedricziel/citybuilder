@@ -223,15 +223,25 @@ def _sheet_for_entry(
     prompt = compose_prompt(world_md, entry_md, FIXED_INSTRUCTIONS)
     # Stick to a square API size — the slicer divides by grid, so the
     # cell aspect ratio comes from the catalog, not the sheet shape.
-    sheet = _post_edit(
+    fresh = _post_edit(
         api_key=api_key,
         model_id=model_id,
         prompt=prompt,
         master_reference_path=paths.MASTER_REFERENCE,
         size="1024x1024",
     )
-    write_cache(key, sheet, api_response_json=None)
-    write_sheet(entry.id, sheet)
+    write_cache(key, fresh, api_response_json=None)
+    write_sheet(entry.id, fresh)
+    # Re-read the just-written indexed-PNG sheet so the in-memory
+    # bytes used for slicing match exactly what `read_sheet` will
+    # return on a future offline run. Without this round-trip, online
+    # and offline runs would produce different atlas PNGs because the
+    # indexed encoding is lossy w.r.t. the original 24-bit API output.
+    sheet = read_sheet(entry.id)
+    if sheet is None:
+        raise RuntimeError(
+            f"failed to read back just-written sheet for {entry.id}"
+        )
     return sheet
 
 

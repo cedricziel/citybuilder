@@ -59,6 +59,24 @@ def read_cache(key: str) -> Image.Image | None:
         return Image.open(BytesIO(f.read())).convert("RGBA")
 
 
+def _save_indexed(image: Image.Image, dest: Path) -> None:
+    """Save a Pillow image as an optimized 256-colour indexed PNG.
+    Per `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
+    optimized": every committed binary stays well under 1 MB and the
+    repo clone footprint stays bounded. Used by both `write_cache`
+    (local convenience) and `write_sheet` (committed source-of-truth)
+    so both round-trip the same pixel set."""
+    rgba = image.convert("RGBA")
+    rgb = rgba.convert("RGB")
+    indexed = rgb.quantize(
+        colors=256,
+        method=Image.Quantize.LIBIMAGEQUANT,
+        dither=Image.Dither.NONE,
+    )
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    indexed.save(dest, format="PNG", optimize=True)
+
+
 def write_cache(
     key: str,
     image: Image.Image,
@@ -68,7 +86,7 @@ def write_cache(
     cache directory. Creates the directory if needed."""
     cache_dir = _cache_dir()
     cache_dir.mkdir(parents=True, exist_ok=True)
-    image.save(cache_dir / f"{key}.png", format="PNG", optimize=True)
+    _save_indexed(image, cache_dir / f"{key}.png")
     if api_response_json is not None:
         (cache_dir / f"{key}.json").write_text(
             json.dumps(api_response_json, sort_keys=True),
@@ -97,7 +115,9 @@ def read_sheet(entry_id: str) -> Image.Image | None:
 def write_sheet(entry_id: str, image: Image.Image) -> None:
     """Write the committed sheet for this entry id. Pipeline writes
     here on every online cache miss so that offline regen reproduces
-    the same atlas PNGs."""
+    the same atlas PNGs. Encoded as indexed PNG per the
+    `sprite-asset-pipeline` "Committed PNGs are indexed-mode and
+    optimized" requirement."""
     sheets_dir = _sheets_dir()
     sheets_dir.mkdir(parents=True, exist_ok=True)
-    image.save(sheets_dir / f"{entry_id}.png", format="PNG", optimize=True)
+    _save_indexed(image, sheets_dir / f"{entry_id}.png")
