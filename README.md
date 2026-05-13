@@ -218,6 +218,33 @@ windowed. Re-entering fullscreen flips the flag back to `true`. The
 preference is per-machine — Mac and iPad have different fullscreen
 semantics so it's intentionally not iCloud-synced.
 
+## Title screen and New Game
+
+The app launches into a typographic title screen (`TitleScreenView`)
+rather than a live world. From there the player picks:
+
+- **Continue** — visible only when a save exists. Loads the newest
+  save (looked up via `SaveStore.mostRecentSave()`, a pure file-system
+  scan — no `World` decode).
+- **New Game…** — opens a modal dialog with a `WorldLayout` segmented
+  picker (Single Island / Archipelago) and a seed mode (Default = 0,
+  Random with captured value, or Custom decimal). `Start` is disabled
+  until the seed parses; tapping `Start` does NOT re-roll a random
+  seed.
+- **Settings** — opens the audio + credits surface in a sheet
+  (Cmd-, also opens the standard Mac `Settings` scene).
+- **Quit** — macOS only. iOS has no Quit affordance per platform
+  conventions.
+
+`GameSession` construction is deferred until the player commits a
+world. The `TitleScreenHost` injects a `GameSessionFactory` closure
+that captures audio; the host watches `committedSession` and swaps in
+`CityRootView` once it appears.
+
+Defaults preserve the MVP play experience: hitting `Start` without
+changing anything in the new-game dialog produces the same world the
+zero-arg `World.newGame()` does (`.singleIsland`, seed `0`).
+
 ## Pause and pause menu
 
 Pressing **ESC** (or **Cmd-.** on Mac) toggles a hard pause: while
