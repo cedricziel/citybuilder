@@ -200,6 +200,24 @@ A waiting construction site renders a small clock-face badge
 floating above the building tile. The badge disappears the moment the
 site flips to `.actively`.
 
+## Display
+
+iPad locks fullscreen: `UIRequiresFullScreen = true` in the bundled
+`Info.plist` opts the app out of Split View, Slide Over, and Stage
+Manager. The iso-projected world doesn't read well at multitasking
+widths; if a future change wants Stage Manager support it lifts that
+key explicitly.
+
+Mac launches fullscreen by default. The first `.onAppear` calls
+`NSWindow.toggleFullScreen(nil)` via `MacFullscreenTracker`. If the
+user exits fullscreen (Cmd-Ctrl-F, green-button click, View → Exit
+Full Screen) the tracker's `willExitFullScreenNotification` observer
+writes `false` to `Citybuilder.macLaunchFullscreen` in
+`UserDefaults.standard`; the next launch reads that and comes up
+windowed. Re-entering fullscreen flips the flag back to `true`. The
+preference is per-machine — Mac and iPad have different fullscreen
+semantics so it's intentionally not iCloud-synced.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
