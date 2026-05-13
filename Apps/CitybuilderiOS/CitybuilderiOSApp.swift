@@ -1,5 +1,6 @@
 import CityAudio
 import CityCore
+import CityPersistence
 import CityRender2D
 import CityUI
 import SwiftUI
@@ -8,6 +9,11 @@ import SwiftUI
 struct CitybuilderiOSApp: App {
     @State private var session: GameSession
     private let audio: AudioStack
+    private let saveStore = SaveStore()
+    /// Stable across launches until the title-screen change lands a
+    /// real per-game UUID. Pause-menu Save / Quit-to-Title both write
+    /// to this slot. Spec `add-game-pause-menu` design D6 + D7.
+    private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
         SnapshotRendererRegistry.shared.factory = { provider, tapSink, dragSink, hoverSink, ghostProvider in
@@ -38,7 +44,17 @@ struct CitybuilderiOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CityRootView(session: session) {
+            CityRootView(
+                session: session,
+                pauseMenu: PauseMenuConfig(
+                    platform: .iOS,
+                    onSaveGame: { [saveStore, session] in
+                        try saveStore.save(session.world, gameID: Self.defaultGameID)
+                    },
+                    onQuitToTitle: nil,
+                    onQuit: nil
+                )
+            ) {
                 AudioSettingsSheet(audio: audio)
             }
         }

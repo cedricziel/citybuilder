@@ -1,6 +1,7 @@
 import AppKit
 import CityAudio
 import CityCore
+import CityPersistence
 import CityRender2D
 import CityUI
 import SwiftUI
@@ -14,6 +15,10 @@ struct CitybuilderMacApp: App {
     /// `add-fullscreen-launch` / `platform-shells` — Mac launches
     /// fullscreen by default + remembers user-driven transitions.
     private let fullscreenTracker: MacFullscreenTracker
+    private let saveStore = SaveStore()
+    /// Stable across launches until the title-screen change lands a
+    /// real per-game UUID. Spec `add-game-pause-menu` design D6 + D7.
+    private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
         SnapshotRendererRegistry.shared.factory = { provider, tapSink, dragSink, hoverSink, ghostProvider in
@@ -45,11 +50,21 @@ struct CitybuilderMacApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CityRootView(session: session)
-                .frame(minWidth: 900, minHeight: 600)
-                .onAppear {
-                    fullscreenTracker.applyLaunchFullscreenIfNeeded()
-                }
+            CityRootView(
+                session: session,
+                pauseMenu: PauseMenuConfig(
+                    platform: .mac,
+                    onSaveGame: { [saveStore, session] in
+                        try saveStore.save(session.world, gameID: Self.defaultGameID)
+                    },
+                    onQuitToTitle: nil,
+                    onQuit: { NSApplication.shared.terminate(nil) }
+                )
+            )
+            .frame(minWidth: 900, minHeight: 600)
+            .onAppear {
+                fullscreenTracker.applyLaunchFullscreenIfNeeded()
+            }
         }
         Settings {
             TabView {
