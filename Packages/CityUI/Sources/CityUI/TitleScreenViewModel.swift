@@ -79,4 +79,16 @@ public final class TitleScreenViewModel {
         presentingNewGameDialog = false
         committedSession = session
     }
+
+    /// Tear down the active session reference and rebuild the title
+    /// view. The pause-menu auto-save runs *before* this is invoked
+    /// (per `add-game-pause-menu` Requirement: Quit to Title
+    /// auto-saves), so refreshing `mostRecentSave` here surfaces that
+    /// save in the `Continue` row immediately. Spec:
+    /// `wire-quit-to-title` / `title-screen` Requirement: Return-to-
+    /// title transition.
+    public func returnToTitle() {
+        committedSession = nil
+        refreshMostRecentSave()
+    }
 }
