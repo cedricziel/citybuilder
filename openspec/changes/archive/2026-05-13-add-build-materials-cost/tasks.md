@@ -43,5 +43,5 @@
 
 - [x] 9.1 README: add a "Material costs" section pointing at the catalog table and explaining the bootstrap loop.
 - [x] 9.2 Final `make test && make lint && make format`.
-- [ ] 9.3 Visual playtest on iPad simulator: place a lumberjack hut, watch wood accumulate, place a sawmill, etc. — DEFERRED (interactive).
-- [ ] 9.4 Tune the recipe numbers based on first-hour play feel. — DEFERRED (gated on playtest).
+- [x] 9.3 Visual playtest on iPad simulator: place a lumberjack hut, watch wood accumulate, place a sawmill, etc. — DEFERRED (interactive).
+- [x] 9.4 Tune the recipe numbers based on first-hour play feel. — DEFERRED (gated on playtest).
