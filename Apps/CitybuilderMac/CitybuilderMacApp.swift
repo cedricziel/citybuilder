@@ -8,7 +8,6 @@ import SwiftUI
 
 @main
 struct CitybuilderMacApp: App {
-    @State private var session: GameSession
     private let audio: AudioStack
     /// Pinned to the app shell so its NotificationCenter observers
     /// stay alive for the app's lifetime. Spec:
@@ -16,8 +15,8 @@ struct CitybuilderMacApp: App {
     /// fullscreen by default + remembers user-driven transitions.
     private let fullscreenTracker: MacFullscreenTracker
     private let saveStore = SaveStore()
-    /// Stable across launches until the title-screen change lands a
-    /// real per-game UUID. Spec `add-game-pause-menu` design D6 + D7.
+    /// Stable slot used by Continue + pause-menu Save. Spec
+    /// `add-title-screen-and-new-game` design D6.
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
@@ -42,24 +41,32 @@ struct CitybuilderMacApp: App {
         }
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
-        _session = State(initialValue: GameSession(audioEventConsumer: { events in
-            audio.consume(events: events)
-        }))
         self.fullscreenTracker = MacFullscreenTracker()
     }
 
     var body: some Scene {
         WindowGroup {
-            CityRootView(
-                session: session,
-                pauseMenu: PauseMenuConfig(
-                    platform: .mac,
-                    onSaveGame: { [saveStore, session] in
-                        try saveStore.save(session.world, gameID: Self.defaultGameID)
-                    },
-                    onQuitToTitle: nil,
-                    onQuit: { NSApplication.shared.terminate(nil) }
-                )
+            TitleScreenHost(
+                saveStore: SaveStoreFacadeAdapter(
+                    store: saveStore,
+                    defaultGameID: Self.defaultGameID
+                ),
+                sessionFactory: { [audio] world in
+                    GameSession(world: world, audioEventConsumer: { events in
+                        audio.consume(events: events)
+                    })
+                },
+                pauseMenuFactory: { [saveStore] session in
+                    PauseMenuConfig(
+                        platform: .mac,
+                        onSaveGame: { [saveStore, session] in
+                            try saveStore.save(session.world, gameID: Self.defaultGameID)
+                        },
+                        onQuitToTitle: nil,
+                        onQuit: { NSApplication.shared.terminate(nil) }
+                    )
+                },
+                titleSettings: { TitleSettingsSheet(audio: audio) }
             )
             .frame(minWidth: 900, minHeight: 600)
             .onAppear {
@@ -78,5 +85,55 @@ struct CitybuilderMacApp: App {
             }
             .frame(width: 480, height: 360)
         }
+    }
+}
+
+/// Title-screen Settings sheet on macOS. Renders the same audio +
+/// credits surface the `Settings` scene shows, so the player can reach
+/// settings before committing to a world without an additional menu
+/// step. Cmd-, still opens the standard Settings scene.
+private struct TitleSettingsSheet: View {
+    let audio: AudioStack
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            TabView {
+                AudioSettingsView(settings: audio.settings)
+                    .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                CreditsView(manifest: audio.manifest)
+                    .tabItem { Label("Credits", systemImage: "info.circle") }
+            }
+            HStack {
+                Spacer()
+                Button("Done") {
+                    Task { await audio.syncSettingsToCloud() }
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding()
+        }
+        .frame(width: 480, height: 360)
+    }
+}
+
+/// Bridges `CityPersistence.SaveStore` into CityUI's `SaveStoreFacade`
+/// without leaking the persistence type into CityUI.
+private struct SaveStoreFacadeAdapter: SaveStoreFacade {
+    let store: SaveStore
+    let defaultGameID: UUID
+
+    func mostRecentSave() throws -> SaveSummary? {
+        guard let meta = try store.mostRecentSave() else { return nil }
+        return SaveSummary(
+            gameID: meta.gameID,
+            writeDate: meta.writeDate,
+            displayName: meta.displayName
+        )
+    }
+
+    func load(gameID: UUID) throws -> World {
+        try store.load(gameID: gameID)
     }
 }
