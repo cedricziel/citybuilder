@@ -2,7 +2,7 @@
 
 ### Requirement: Camera center tile exposure
 
-`Camera` SHALL expose a `centerTile() -> TileCoordinate` method that returns the rounded tile-space center of the current view. This is read by `IsoWorldScene` once per camera-driven listener update to inform the audio layer's listener position.
+`Camera` SHALL expose a `centerTile() -> TileCoordinate` method that returns the integer tile the camera's center is currently over, using floor semantics — tile (x, y) covers the half-open square `[x, x+1) × [y, y+1)` in tile-space. This is read by `IsoWorldScene` once per camera-driven listener update to inform the audio layer's listener position. (The existing implementation pre-dates this change, originally added in `add-island-hud-overlay`; the floor invariant matches how the HUD's tile-to-island lookup is defined.)
 
 #### Scenario: Camera-center tile is exposed
 
@@ -11,8 +11,8 @@
 
 #### Scenario: Camera-center tile updates as camera pans
 
-- **WHEN** the camera pans from `centerX = 8.4` to `centerX = 9.8`
-- **THEN** `centerTile()` returns `TileCoordinate(x: 10, y: 6)` after the pan (rounded)
+- **WHEN** the camera pans from `centerX = 8.4` to `centerX = 9.6`
+- **THEN** `centerTile()` returns `TileCoordinate(x: 9, y: 6)` after the pan (floor of the fractional center)
 
 ### Requirement: Camera listener callback
 
