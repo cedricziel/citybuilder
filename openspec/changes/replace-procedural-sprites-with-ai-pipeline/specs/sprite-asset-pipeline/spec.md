@@ -1,5 +1,18 @@
 ## ADDED Requirements
 
+### Requirement: Committed PNGs are indexed-mode and optimized
+Every committed PNG under `Resources/{Terrain,Buildings,Units,Icons}.atlas/` and `Resources/Sprites.style/` (including `master-reference.png` and every `_sheets/<id>.png`) SHALL be encoded as an **indexed-mode PNG with a palette of at most 256 colours** and written with `optimize=True` (Pillow) or the equivalent compression-maximizing flag in any future tooling. RGB or RGBA truecolor PNGs MUST NOT be committed. The committed footprint per binary stays an order of magnitude smaller than truecolor — repo size is a load-bearing concern for clone times.
+
+Rationale: pixel-art sprites have at most ~32 distinct colours in their actual palette (the world.md palette), so indexed encoding loses zero visual fidelity while cutting file size 2–3×. The pre-commit check that rejects files >1 MB exists for the same reason; indexed encoding keeps every sprite well under that bar.
+
+#### Scenario: Every committed sprite PNG is indexed-mode
+- **WHEN** every `*.png` under `Resources/{Terrain,Buildings,Units,Icons}.atlas/` and `Resources/Sprites.style/` is inspected
+- **THEN** Pillow `Image.open(path).mode` reports `P` (indexed) for each — never `RGB`, never `RGBA` truecolor
+
+#### Scenario: Pipeline writes indexed-mode PNGs by default
+- **WHEN** the pipeline writes any output PNG (atlas, `_sheets/`, `master-reference.png`)
+- **THEN** the file is saved with at most a 256-colour palette and `optimize=True`
+
 ### Requirement: PNG contents are produced by the style-catalog pipeline
 Every sprite PNG under `Resources/{Terrain,Buildings,Units,Icons}.atlas/` SHALL be produced by the pipeline defined in capability `sprite-style-catalog`. The procedural Swift sprite generator MUST NOT be invoked as the source of truth for any committed atlas PNG after this change archives. The existing requirements in this capability (atlas layout, naming grammar, atlas routing, asset-presence validation, variant slots, sprite inventories) continue to govern the OUTPUT shape; this requirement governs the INPUT shape.
 

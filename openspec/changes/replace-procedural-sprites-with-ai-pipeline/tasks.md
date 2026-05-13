@@ -42,15 +42,15 @@
 
 ## 5. M4 — Cache layer + batcher + make sprites
 
-- [ ] 5.1 Tests-first: translate `Cache hit skips the API call`, `Editing world.md invalidates every cache entry`, `Editing one catalog entry invalidates only that entry's cache`, `make sprites is idempotent on unchanged inputs`, and `Bumping the model invalidates every cache entry` into failing pytest tests under `scripts/tests/test_cache.py`. Mock `httpx.Client.post` to detect zero/non-zero calls. Confirm red.
-- [ ] 5.2 Implement `scripts/generate_sprites_ai/cache.py` exposing `cache_key(world_md, entry_md, fixed_instructions, model_id) -> str` and `read_cache(key) -> Optional[Image]`, `write_cache(key, image, api_response_json) -> None`. Storage under `Resources/Sprites.style/_cache/<hash>.{png,json}`.
-- [ ] 5.3 Implement the parallel committed-sheets store `Resources/Sprites.style/_sheets/<id>.png` per design.md §D5. Pipeline writes to both `_cache/` and `_sheets/` on a hit; `make sprites --offline` reads only from `_sheets/`.
-- [ ] 5.4 Implement `scripts/generate_sprites_ai/batcher.py` orchestrating: walk catalog, compose prompts, fan out concurrent (4-way) `/v1/images/edits` calls with master-reference attached, write cache + sheets, invoke slicer + post-process, write atlas PNGs. Only impure boundary; all other modules pure.
-- [ ] 5.5 Add `scripts/generate_sprites_ai/__main__.py` so `python -m generate_sprites_ai [--offline] [--regenerate-reference]` is the canonical entry point. Add `make sprites` target invoking it, plus `make sprites-offline` (synonym for `--offline`).
-- [ ] 5.6 Add `Resources/Sprites.style/_cache/` to `.gitignore`. Keep `_sheets/` tracked.
-- [ ] 5.7 Implement to green: confirm M4 cache + idempotency tests pass.
-- [ ] 5.8 Refactor under a green bar: any duplicated path-handling logic between `cache.py` and `batcher.py` consolidates to `_paths.py`.
-- [ ] 5.9 Verify `make test-scenarios` is clean for `Prompt-hash cache controls regeneration`.
+- [x] 5.1 Tests-first: translate `Cache hit skips the API call`, `Editing world.md invalidates every cache entry`, `Editing one catalog entry invalidates only that entry's cache`, `make sprites is idempotent on unchanged inputs`, and `Bumping the model invalidates every cache entry` into failing pytest tests under `scripts/tests/test_cache.py`. Mock `httpx.Client.post` to detect zero/non-zero calls. Confirm red.
+- [x] 5.2 Implement `scripts/generate_sprites_ai/cache.py` exposing `cache_key(world_md, entry_md, fixed_instructions, model_id) -> str` and `read_cache(key) -> Optional[Image]`, `write_cache(key, image, api_response_json) -> None`. Storage under `Resources/Sprites.style/_cache/<hash>.{png,json}`.
+- [x] 5.3 Implement the parallel committed-sheets store `Resources/Sprites.style/_sheets/<id>.png` per design.md §D5. Pipeline writes to both `_cache/` and `_sheets/` on a hit; `make sprites --offline` reads only from `_sheets/`.
+- [x] 5.4 Implement `scripts/generate_sprites_ai/batcher.py` orchestrating: walk catalog, compose prompts, fan out concurrent (4-way) `/v1/images/edits` calls with master-reference attached, write cache + sheets, invoke slicer + post-process, write atlas PNGs. Only impure boundary; all other modules pure.
+- [x] 5.5 Add `scripts/generate_sprites_ai/__main__.py` so `python -m generate_sprites_ai [--offline] [--regenerate-reference]` is the canonical entry point. Add `make sprites` target invoking it, plus `make sprites-offline` (synonym for `--offline`).
+- [x] 5.6 Add `Resources/Sprites.style/_cache/` to `.gitignore`. Keep `_sheets/` tracked.
+- [x] 5.7 Implement to green: confirm M4 cache + idempotency tests pass.
+- [x] 5.8 Refactor under a green bar: any duplicated path-handling logic between `cache.py` and `batcher.py` consolidates to `_paths.py`. (Resolved: shared paths live in `paths.py`; cache.py + batcher.py both import from it.)
+- [x] 5.9 Verify `make test-scenarios` is clean for `Prompt-hash cache controls regeneration`.
 
 ## 6. M5 — Full regen + cutover commit
 
