@@ -218,6 +218,29 @@ windowed. Re-entering fullscreen flips the flag back to `true`. The
 preference is per-machine — Mac and iPad have different fullscreen
 semantics so it's intentionally not iCloud-synced.
 
+## Pause and pause menu
+
+Pressing **ESC** (or **Cmd-.** on Mac) toggles a hard pause: while
+paused, `GameSession.step()` short-circuits — no `World.tick()`, no
+new snapshot, no audio events forwarded. Carriers freeze mid-path,
+SFX stop firing. The audio engine is untouched so the music loop
+keeps playing; you can sit in the menu without dead air.
+
+The pause menu appears as a modal sheet over the frozen world:
+
+- **Resume** — un-pauses (same as ESC).
+- **Save Game** — writes the current world to the save slot via
+  `SaveStore.save(_:gameID:)`. Status row shows "Saved" or
+  "Couldn't save: …" for ~2 seconds.
+- **Settings** — opens the existing settings sheet.
+- **Quit to Title** — auto-saves silently and returns to the title
+  screen. Hidden until `add-title-screen-and-new-game` lands.
+- **Quit** — Mac only. `NSApplication.shared.terminate(nil)`.
+
+The HUD's top-right cluster shows a pause/play button next to the
+gear; its glyph swaps with `session.isPaused`. Tap or ESC — same
+result.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
