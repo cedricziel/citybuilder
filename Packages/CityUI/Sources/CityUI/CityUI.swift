@@ -8,24 +8,34 @@ import SwiftUI
 /// State plumbing follows design D1: this view holds the only mutable World
 /// reference. Renderer and HUD receive snapshots, never the model itself.
 public struct CityRootView: View {
-    @State private var session: GameSession
-    @State private var settingsPresented: Bool = false
-    private let settingsContent: (() -> AnyView)?
+    @State var session: GameSession
+    @State var settingsPresented: Bool = false
+    @State var pauseMenuViewModel: PauseMenuViewModel?
+    let settingsContent: (() -> AnyView)?
+    let pauseMenuConfig: PauseMenuConfig?
 
     public init(
         session: GameSession = GameSession(),
+        pauseMenu: PauseMenuConfig? = nil,
         @ViewBuilder settings: @escaping () -> some View
     ) {
         _session = State(initialValue: session)
         self.settingsContent = { AnyView(settings()) }
+        self.pauseMenuConfig = pauseMenu
     }
 
-    public init(session: GameSession = GameSession()) {
+    public init(session: GameSession = GameSession(), pauseMenu: PauseMenuConfig? = nil) {
         _session = State(initialValue: session)
         self.settingsContent = nil
+        self.pauseMenuConfig = pauseMenu
     }
 
     public var body: some View {
+        @Bindable var sessionBinding = session
+        return rootContent(isPaused: $sessionBinding.isPaused)
+    }
+
+    private func rootContent(isPaused isPausedBinding: Binding<Bool>) -> some View {
         ZStack(alignment: .top) {
             session.worldView
                 .ignoresSafeArea()
@@ -39,6 +49,7 @@ public struct CityRootView: View {
             VStack {
                 HStack {
                     HUDFrameView(viewModel: session.hud)
+                    pauseButton
                     if settingsContent != nil {
                         Button {
                             settingsPresented = true
@@ -78,34 +89,15 @@ public struct CityRootView: View {
                 content()
             }
         }
+        .sheet(
+            isPresented: isPausedBinding,
+            onDismiss: dismissPause,
+            content: pauseMenuContent
+        )
     }
 
-    /// One-finger drag (iOS) / left-mouse drag (Mac) pans the camera.
-    /// Deltas are kept in screen pixels; the GameSession translates to
-    /// tile-space via CityRender2D.InputTranslator.
-    private var panGesture: some Gesture {
-        DragGesture(minimumDistance: 1)
-            .onChanged { value in
-                // When a build tool is armed, drag is "paint" — handled
-                // by the SKScene's mouseDragged / touchesMoved. The pan
-                // gesture stays out of the way.
-                guard session.selectedTool == .inspect else { return }
-                session.handlePanDelta(
-                    deltaX: value.translation.width - session.lastPanX,
-                    deltaY: value.translation.height - session.lastPanY
-                )
-                session.lastPanX = value.translation.width
-                session.lastPanY = value.translation.height
-            }
-            .onEnded { _ in
-                session.lastPanX = 0
-                session.lastPanY = 0
-            }
-    }
-
-    /// Pinch on iOS / two-finger trackpad on Mac. SwiftUI's
-    /// MagnificationGesture reports a cumulative scale factor; we apply
-    /// the delta since the last reading.
+    /// Build-palette caption shown under the build palette when a
+    /// tool is armed.
     private var armedCaption: String {
         let name = session.selectedTool.displayName
         let cost = session.armedToolCost
@@ -116,18 +108,6 @@ public struct CityRootView: View {
             return "Tap or drag to demolish"
         }
         return "Tap a tile to \(name.lowercased())"
-    }
-
-    private var zoomGesture: some Gesture {
-        MagnificationGesture()
-            .onChanged { magnitude in
-                let factor = magnitude / session.lastMagnification
-                session.handlePinch(factor: factor)
-                session.lastMagnification = magnitude
-            }
-            .onEnded { _ in
-                session.lastMagnification = 1.0
-            }
     }
 }
 
@@ -150,9 +130,10 @@ public final class GameSession {
     /// every tick's events are forwarded after the snapshot is applied.
     /// Per spec `audio-playback` "AudioCoordinator consumes per-tick events".
     public var audioEventConsumer: AudioEventConsumer?
-    /// Hard pause. While `true`, `step()` short-circuits — no tick,
-    /// no snapshot, no event forwarding. The audio engine is left
-    /// running so music continues. Spec: `add-game-pause-menu`.
+    /// Hard pause. While `true`, `step()` short-circuits: no tick, no
+    /// snapshot, no event forwarding. The audio engine is untouched so
+    /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
+    /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
 
     public init(world: World = World.newGame(), audioEventConsumer: AudioEventConsumer? = nil) {
@@ -170,7 +151,9 @@ public final class GameSession {
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes
-    /// the HUD. No-op while `isPaused == true`.
+    /// the HUD. Called by the 10 Hz timer and reachable from tests.
+    /// While `isPaused == true` the call is a no-op so the world,
+    /// snapshot, and audio events stay frozen.
     public func step() {
         guard !isPaused else { return }
         let result = world.tick()
