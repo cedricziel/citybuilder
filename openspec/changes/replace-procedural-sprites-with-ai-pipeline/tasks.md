@@ -65,13 +65,13 @@
 
 ## 7. M6 — Procedural generator retirement
 
-- [ ] 7.1 Tests-first: translate `Legacy path is empty`, `Makefile references no procedural targets`, and `README references no procedural workflow` into failing tests in `SpritesStyleCatalogTests.swift`. The tests grep file contents from the package test harness. Confirm red.
-- [ ] 7.2 Move `scripts/generate-sprites.swift` → `scripts/legacy/generate-sprites.swift`. No content changes.
-- [ ] 7.3 Remove every `Makefile` recipe that references `generate-sprites.swift` or its output paths under the old workflow. Add a deprecation banner in `scripts/legacy/README.md` naming the replacement (`scripts/generate_sprites_ai/`) and pointing to this OpenSpec change.
-- [ ] 7.4 Update `README.md`: replace the "Adding a new animated sprite" section with a new section walking through editing `world.md` and `catalog/<id>.md`. Replace "Adding a new good icon" similarly. Remove every prose reference to `scripts/generate-sprites.swift`.
-- [ ] 7.5 Update README's onboarding `make` ladder to include `make sprites-venv` between `make hooks` and `make generate`.
-- [ ] 7.6 Implement to green: confirm M6 grep-based tests pass.
-- [ ] 7.7 Verify `make test-scenarios` is clean for `Procedural sprite generator is retired`.
+- [x] 7.1 Tests-first: translate `Legacy path is empty`, `Makefile references no procedural targets`, and `README references no procedural workflow` into failing tests in `SpritesStyleCatalogTests.swift`. The tests grep file contents from the package test harness. Confirm red.
+- [x] 7.2 Move `scripts/generate-sprites.swift` → `scripts/legacy/generate-sprites.swift`. No content changes.
+- [x] 7.3 Remove every `Makefile` recipe that references `generate-sprites.swift` or its output paths under the old workflow. Add a deprecation banner in `scripts/legacy/README.md` naming the replacement (`scripts/generate_sprites_ai/`) and pointing to this OpenSpec change. (Also removed the corresponding `SpriteGenerationScriptTests.swift` swift-testing suite — it ran the legacy script as a subprocess.)
+- [x] 7.4 Update `README.md`: replace the "Adding a new animated sprite" section with a new section walking through editing `world.md` and `catalog/<id>.md`. Replace "Adding a new good icon" similarly. Remove every prose reference to `scripts/generate-sprites.swift`.
+- [x] 7.5 Update README's onboarding `make` ladder to include `make sprites-venv` between `make hooks` and `make generate`.
+- [x] 7.6 Implement to green: confirm M6 grep-based tests pass.
+- [x] 7.7 Verify `make test-scenarios` is clean for `Procedural sprite generator is retired`.
 
 ## 8. M7 — CI hermetic-regen check
 

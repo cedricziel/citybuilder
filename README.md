@@ -18,9 +18,10 @@ Xcode 26 or newer (Swift 6.3+) is required.
 ## Quick start
 
 ```sh
-make hooks       # install pre-commit, commit-msg, and pre-push hooks
-make generate    # regenerate Citybuilder.xcodeproj from project.yml
-make test        # run all swift-testing suites
+make hooks          # install pre-commit, commit-msg, and pre-push hooks
+make sprites-venv   # one-time: create .venv/sprites/ for the AI sprite pipeline
+make generate       # regenerate Citybuilder.xcodeproj from project.yml
+make test           # run all swift-testing suites
 ```
 
 Open `Citybuilder.xcodeproj` in Xcode and pick `CitybuilderiOS` or `CitybuilderMac`.
@@ -65,22 +66,51 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 
 ## Adding a new animated sprite
 
-The renderer animates sprites through one catalog. To add a new animated
-terrain or building:
+Sprite art is produced by the AI pipeline driven by the natural-language
+catalog under `Resources/Sprites.style/`. To add a new animated terrain
+or building:
 
-1. Add the per-frame artwork helpers to `scripts/generate-sprites.swift`,
-   then emit the frames as `terrain-<kind>-<index>.png`,
-   `building-<kind>-operational-<index>.png`, or
-   `building-<kind>-constructing-<index>.png`.
-2. Run `swift scripts/generate-sprites.swift` and commit the new PNGs
-   under `Resources/Sprites/`.
-3. Add an entry to `SpriteAnimation.entry(for:)` in
+1. **Edit the style bible if needed.** Most additions stay within the
+   register already declared in `Resources/Sprites.style/world.md`
+   (palette, projection, outline). If your new sprite needs a new
+   palette role, add it there first. Edits to `world.md` invalidate
+   every cache entry (intentional — bumping a global property
+   regenerates everything).
+2. **Author the catalog entry.** Create
+   `Resources/Sprites.style/catalog/<id>.md` declaring sections:
+   - `## Function` — what the sprite does in-world
+   - `## Visual identity` — silhouette, palette anchors, distinctive
+     details
+   - `## Sheet` — `Grid: N cols × M rows.` then one `- (r, c):
+     <atlas-filename>` line per cell (use `spare` for unused cells)
+   - `## Animation` — sequences of `(r, c)` arrows for each loop;
+     frames MUST be placed in adjacent cells per the sprite-style
+     catalog spec.
+3. **Add the catalog entry to `SpriteAnimation.entry(for:)`** in
    `Packages/CityRender2D/Sources/CityRender2D/SpriteAnimation.swift`
-   declaring `frameCount`, `timePerFrame`, and `loop` (`.forever` for
-   idle, `.progress` for construction).
+   if the sprite animates (`frameCount`, `timePerFrame`, `loop`).
+4. **Regenerate**: `make sprites` (needs `OPENAI_API_KEY`; ~$0.04 per
+   sprite kind, ~2 min wall-clock at 4-way concurrency). Cache hits
+   on unchanged inputs are free; only the new/edited entry will
+   actually call the API.
+5. **Visually review** the regenerated PNG under
+   `Resources/<Category>.atlas/`. If the result needs tightening,
+   iterate on the catalog entry's prose and re-run `make sprites`.
+6. **Commit** the new `Resources/Sprites.style/catalog/<id>.md`, the
+   new `Resources/Sprites.style/_sheets/<id>.png`, and the produced
+   atlas PNG(s). CI runs `make sprites --offline` (no API key) and
+   verifies committed atlas PNGs reproduce byte-for-byte from the
+   committed catalog + sheets.
 
-The scene's reconciler picks the new entry up automatically — no
+The scene's reconciler picks the new sprite up automatically — no
 `IsoWorldScene` changes are needed.
+
+If playtest reveals visible animation flicker on a particular sprite,
+opt that catalog entry into the two-pass escape hatch by setting
+`two-pass: true` in its YAML front matter; the pipeline then runs a
+second `/v1/images/edits` call against the pass-1 base cell as
+reference to lock pixel coherence for the operational frames at 2×
+the API cost.
 
 ## Adding a new audio cue
 
@@ -167,19 +197,23 @@ save/load via the `Island.name` Codable field.
 
 ### Adding a new good icon
 
-1. Add a `goodNew…Sprite()` helper in `scripts/generate-sprites.swift`,
-   following the existing `goodWoodSprite` / `goodPlanksSprite` /
-   `goodFoodSprite` pattern (24×24 Pixmap, dark 1-pixel outline so the
-   icon reads against the HUD's translucent chrome).
-2. Add a `case "newgood": return goodNewSprite()` arm to
-   `drawGoodIcon(_:)` and add `"newgood"` to the main-script loop.
-3. Run `swift scripts/generate-sprites.swift` and commit the new PNG
-   under `Resources/Icons.atlas/`.
-4. Extend `Good` in `Packages/CityCore/Sources/CityCore/Goods.swift`
-   with the matching raw value. The HUD reads icons via
-   `GoodIconLoader.image(for:)`, which maps `good.rawValue` →
-   `Bundle.main.url(forResource: "good-<rawValue>", withExtension:
-   "png")`.
+1. **Author the catalog entry.** Create
+   `Resources/Sprites.style/catalog/good-<rawValue>.md` with the four
+   required sections (`Function`, `Visual identity`, `Sheet`,
+   `Animation`). Use a `Grid: 1 cols × 1 rows.` sheet — goods are
+   single-cell static icons. Follow the existing
+   `good-wood.md` / `good-planks.md` / `good-food.md` shape; their
+   front-matter overrides `sheet_size = "256x256"` and `cell_grid =
+   "1x1"` so the cell downsamples cleanly to the canonical 24×24 HUD
+   size with nearest-neighbour resampling.
+2. **Regenerate**: `make sprites`. Commit the produced
+   `Resources/Icons.atlas/good-<rawValue>.png` plus the new
+   `Resources/Sprites.style/_sheets/good-<rawValue>.png`.
+3. **Extend `Good`** in
+   `Packages/CityCore/Sources/CityCore/Goods.swift` with the matching
+   raw value. The HUD reads icons via `GoodIconLoader.image(for:)`,
+   which maps `good.rawValue` → `Bundle.main.url(forResource:
+   "good-<rawValue>", withExtension: "png")`.
 
 ## Material costs
 

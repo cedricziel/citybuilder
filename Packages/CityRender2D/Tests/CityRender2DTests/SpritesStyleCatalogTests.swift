@@ -4,11 +4,17 @@ import CityRender2D
 import Foundation
 import Testing
 
-// Filesystem + Markdown-shape scenarios for the sprite-style-catalog
+// Markdown + TOML shape scenarios for the sprite-style-catalog
 // capability introduced by replace-procedural-sprites-with-ai-pipeline.
-// Each `#### Scenario:` in the change's specs/sprite-style-catalog/spec.md
-// maps to one `@Test("scenario: ...")` here. The tests parse the
-// committed Markdown / TOML on disk; they do not invoke the pipeline.
+// Each `#### Scenario:` in the change's
+// specs/sprite-style-catalog/spec.md maps to one `@Test("scenario:
+// ...")` here. The tests parse the committed Markdown / TOML on disk;
+// they do not invoke the pipeline.
+//
+// Scenarios spanning the cutover commit (every PNG has a catalog,
+// legacy generator retired) live next door in
+// `SpritesPipelineCutoverTests.swift` so this file stays under the
+// 500-line SwiftLint cap.
 
 private func worktreeRoot() -> URL {
     URL(fileURLWithPath: #filePath)
@@ -304,58 +310,6 @@ func scenarioSheetSectionEnumeratesEveryCell() throws {
         }
     }
     #expect(failures.isEmpty, "Sheet enumeration failures:\n\(failures.joined(separator: "\n"))")
-}
-
-// MARK: - Requirement: PNG contents are produced by the style-catalog pipeline
-
-/// Map a committed sprite-name back to its catalog id (the catalog
-/// file basename, without the per-frame / per-state / per-variant
-/// suffix). Mirrors the inverse of `slice_plan` in the Python pipeline.
-private func catalogId(forSpriteName name: String) -> String {
-    if name.hasPrefix("walker-") { return "walker" }
-    if name.hasPrefix("ship-") { return "ship" }
-    if name.hasPrefix("good-") { return name } // good-wood etc.
-    // Strip animation/variant/state suffixes from terrain & building names.
-    // Strategy: strip a trailing -<digit>+ (frame), then -v<digit>+ (variant),
-    // then -(constructing|operational)$ (state without explicit frame).
-    let frameStripped = name.replacingOccurrences(
-        of: "-[0-9]+$", with: "", options: .regularExpression
-    )
-    let variantStripped = frameStripped.replacingOccurrences(
-        of: "-v[0-9]+$", with: "", options: .regularExpression
-    )
-    return variantStripped.replacingOccurrences(
-        of: "-(constructing|operational)$", with: "", options: .regularExpression
-    )
-}
-
-@Test("scenario: every committed atlas png has a catalog entry")
-func scenarioEveryCommittedAtlasPngHasACatalogEntry() {
-    let atlases = [
-        "Resources/Terrain.atlas",
-        "Resources/Buildings.atlas",
-        "Resources/Units.atlas",
-        "Resources/Icons.atlas"
-    ]
-    let catalogDir = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
-    var missing: [String] = []
-    for atlas in atlases {
-        let dir = worktreeRoot().appendingPathComponent(atlas)
-        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path)
-        else { continue }
-        for entry in entries where entry.hasSuffix(".png") {
-            let stem = (entry as NSString).deletingPathExtension
-            // The overlay-* family is renderer-internal, not a catalog
-            // entry — skip the routing check for it.
-            if stem.hasPrefix("overlay-") { continue }
-            let id = catalogId(forSpriteName: stem)
-            let catalog = catalogDir.appendingPathComponent("\(id).md")
-            if !FileManager.default.fileExists(atPath: catalog.path) {
-                missing.append("\(entry) -> \(id).md")
-            }
-        }
-    }
-    #expect(missing.isEmpty, "atlas PNGs without a catalog entry: \(missing)")
 }
 
 // MARK: - Requirement: Master reference image anchors inter-sprite cohesion
