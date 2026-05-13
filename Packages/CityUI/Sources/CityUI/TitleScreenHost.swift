@@ -80,18 +80,44 @@ public struct TitleScreenHost: View {
 
     @ViewBuilder
     private func gameView(session: GameSession) -> some View {
+        let wrappedConfig = pauseMenuFactory(session).map { config in
+            Self.injectQuitToTitle(into: config, viewModel: viewModel)
+        }
         if let inGameSettings = inGameSettingsContent {
             CityRootView(
                 session: session,
-                pauseMenu: pauseMenuFactory(session)
+                pauseMenu: wrappedConfig
             ) {
                 inGameSettings()
             }
         } else {
             CityRootView(
                 session: session,
-                pauseMenu: pauseMenuFactory(session)
+                pauseMenu: wrappedConfig
             )
         }
+    }
+
+    /// Rebuild a `PauseMenuConfig` with `onQuitToTitle` bound to the
+    /// view-model's `returnToTitle()`. Every other field is preserved.
+    /// The pause-menu view-model runs `try? onSaveGame()` before this
+    /// closure fires (spec `pause-menu` D7), so the title screen's
+    /// `Continue` row picks up the just-written save when
+    /// `returnToTitle()` refreshes `mostRecentSave`. Spec:
+    /// `wire-quit-to-title` / `title-screen` Requirement: Host bridges
+    /// pause-menu Quit to Title back to the title.
+    @MainActor
+    static func injectQuitToTitle(
+        into config: PauseMenuConfig,
+        viewModel: TitleScreenViewModel
+    ) -> PauseMenuConfig {
+        PauseMenuConfig(
+            platform: config.platform,
+            onSaveGame: config.onSaveGame,
+            onQuitToTitle: { [weak viewModel] in
+                viewModel?.returnToTitle()
+            },
+            onQuit: config.onQuit
+        )
     }
 }
