@@ -1,44 +1,44 @@
 ## 1. M0 — Style bible authoring
 
-- [ ] 1.1 Tests-first: translate the `Style bible declares the world's visual identity` requirement scenarios (`Style bible file exists`, `Style bible declares all required sections`, `Style bible declares the magenta chroma-key colour`) into failing `swift-testing` tests in `Packages/CityRender2D/Tests/CityRender2DTests/SpritesStyleCatalogTests.swift`. The tests parse Markdown level-2 headings from `Resources/Sprites.style/world.md`. Confirm red with `make test`.
-- [ ] 1.2 Author `Resources/Sprites.style/world.md` covering the seven required sections (`Theme & era`, `Visual references`, `Projection & scale`, `Palette`, `Outline & shading`, `Background`, `Forbidden`). Background section MUST name `#FF00FF` as the chroma-key.
-- [ ] 1.3 Implement to green: confirm `Style bible declares the world's visual identity` scenarios pass.
-- [ ] 1.4 Author `Resources/Sprites.style/pipeline.toml` with `model = "gpt-image-2-2026-04-21"`, `sheet_default_size = "1536x1024"`, `cell_default_grid = "4x2"`, and a `[concurrency]` section with `max_inflight = 4`. Add a tests-first failing test for the `Pipeline pins a dated model snapshot` scenario, then make it green.
-- [ ] 1.5 Refactor under a green bar: any shared Markdown-parsing helper between style-bible and catalog tests gets extracted to a single test utility.
-- [ ] 1.6 Verify `make test-scenarios` is clean for the `Style bible declares the world's visual identity` and `Model version is pinned in the catalog` requirements.
+- [x] 1.1 Tests-first: translate the `Style bible declares the world's visual identity` requirement scenarios (`Style bible file exists`, `Style bible declares all required sections`, `Style bible declares the magenta chroma-key colour`) into failing `swift-testing` tests in `Packages/CityRender2D/Tests/CityRender2DTests/SpritesStyleCatalogTests.swift`. The tests parse Markdown level-2 headings from `Resources/Sprites.style/world.md`. Confirm red with `make test`.
+- [x] 1.2 Author `Resources/Sprites.style/world.md` covering the seven required sections (`Theme & era`, `Visual references`, `Projection & scale`, `Palette`, `Outline & shading`, `Background`, `Forbidden`). Background section MUST name `#FF00FF` as the chroma-key.
+- [x] 1.3 Implement to green: confirm `Style bible declares the world's visual identity` scenarios pass.
+- [x] 1.4 Author `Resources/Sprites.style/pipeline.toml` with `model = "gpt-image-2-2026-04-21"`, `sheet_default_size = "1536x1024"`, `cell_default_grid = "4x2"`, and a `[concurrency]` section with `max_inflight = 4`. Add a tests-first failing test for the `Pipeline pins a dated model snapshot` scenario, then make it green.
+- [x] 1.5 Refactor under a green bar: any shared Markdown-parsing helper between style-bible and catalog tests gets extracted to a single test utility.
+- [x] 1.6 Verify `make test-scenarios` is clean for the `Style bible declares the world's visual identity` and `Model version is pinned in the catalog` requirements.
 
 ## 2. M1 — Per-sprite catalog authoring
 
-- [ ] 2.1 Tests-first: translate `Every code-declared sprite kind has a catalog entry`, `No orphan catalog entries`, `Catalog entry declares all required sections`, `Sheet section enumerates every cell`, and `Animation frames are declared adjacent` into failing tests in `SpritesStyleCatalogTests.swift`. The tests enumerate `SpriteAtlas` catalog kinds in code, walk `Resources/Sprites.style/catalog/*.md`, and parse each entry's level-2 headings + `Sheet`/`Animation` sections. Confirm red.
-- [ ] 2.2 Author `Resources/Sprites.style/catalog/<id>.md` for every terrain kind (grass, water, beach, mountain, sand — match the existing `TerrainKind` enum exactly). One catalog file per terrain kind; small cell grids; static sprites have a 1-cell sheet.
-- [ ] 2.3 Author `catalog/<id>.md` for every land-only building kind: `town-center`, `road`, `house`, `lumberjack-hut`, `sawmill`, `warehouse`. Each declares a 4×2 sheet covering base + operational + 3 construction stages + spare per design.md §D6 cell adjacency rule.
-- [ ] 2.4 Author `catalog/<id>.md` for every shore building kind: `port` and `shipyard`. Each catalog file documents all 4 orientation variants (`-n`, `-s`, `-e`, `-w`) — either as 4 separate catalog files (`port-n.md` etc.) or one file with 4 sub-sheets. Picked approach documented in design.md Open Questions resolution.
-- [ ] 2.5 Author `catalog/walker.md` for the walker unit (4 facings × 2 frames = 8 cells). Author `catalog/ship.md` for the ship unit (8 facings × 2 frames = 16 cells; verify against `Ship sprite inventory` requirement count).
-- [ ] 2.6 Author `catalog/<id>.md` for every goods icon (`good-wood`, `good-planks`, `good-food`, …) using the smaller-cell-grid front-matter override per design.md §Q2.
-- [ ] 2.7 Implement to green: confirm every M1 scenario test passes.
-- [ ] 2.8 Refactor under a green bar: catalog files that share boilerplate (e.g., all shore-building catalogs sharing identical `Animation` boilerplate) get a shared snippet referenced from each — only if duplication is meaningful, otherwise leave alone.
-- [ ] 2.9 Verify `make test-scenarios` is clean for the `Per-sprite catalog covers every sprite kind`, `Catalog entry declares function, identity, sheet, animation` requirements.
+- [x] 2.1 Tests-first: translate `Every code-declared sprite kind has a catalog entry`, `No orphan catalog entries`, `Catalog entry declares all required sections`, `Sheet section enumerates every cell`, and `Animation frames are declared adjacent` into failing tests in `SpritesStyleCatalogTests.swift`. The tests enumerate `SpriteAtlas` catalog kinds in code, walk `Resources/Sprites.style/catalog/*.md`, and parse each entry's level-2 headings + `Sheet`/`Animation` sections. Confirm red.
+- [x] 2.2 Author `Resources/Sprites.style/catalog/<id>.md` for every terrain kind (matched the existing `TerrainType` enum: `grass`, `forest`, `beach`, `water`, `mountain` — note tasks.md originally listed `sand` which is not in the enum). One catalog file per terrain kind; small cell grids; static sprites have a 1-cell sheet.
+- [x] 2.3 Author `catalog/<id>.md` for every land-only building kind: `town-center`, `road`, `house`, `lumberjack-hut`, `sawmill`, `warehouse`. Each declares a 4×2 sheet covering base + operational + 3 construction stages + spare per design.md §D6 cell adjacency rule.
+- [x] 2.4 Author `catalog/<id>.md` for every shore building kind: `port` and `shipyard`. Picked approach: **one catalog file per (kind, orientation) tuple** — 8 files total (`building-port-{n,s,e,w}.md`, `building-shipyard-{n,s,e,w}.md`). See design.md Open Questions resolution.
+- [x] 2.5 Author `catalog/walker.md` for the walker unit (4 facings × 2 frames = 8 cells). Author `catalog/ship.md` for the ship unit (8 facings × 2 frames = 16 cells; verify against `Ship sprite inventory` requirement count).
+- [x] 2.6 Author `catalog/<id>.md` for every goods icon (`good-wood`, `good-planks`, `good-food`, …) using the smaller-cell-grid front-matter override per design.md §Q2.
+- [x] 2.7 Implement to green: confirm every M1 scenario test passes.
+- [x] 2.8 Refactor under a green bar: catalog files that share boilerplate (e.g., all shore-building catalogs sharing identical `Animation` boilerplate) get a shared snippet referenced from each — only if duplication is meaningful, otherwise leave alone. (Reviewed: each shore-orientation file has a unique geometric story; left as-is.)
+- [x] 2.9 Verify `make test-scenarios` is clean for the `Per-sprite catalog covers every sprite kind`, `Catalog entry declares function, identity, sheet, animation` requirements.
 
 ## 3. M2 — Pipeline tooling foundation
 
-- [ ] 3.1 Tests-first: write failing pytest tests under `scripts/tests/test_composer.py`, `scripts/tests/test_slicer.py`, `scripts/tests/test_postprocess.py` covering `slice_plan` determinism, slice-plan-covers-every-cell, output-filenames-conform-to-naming-grammar (cross-references `sprite-asset-pipeline` grammar). Confirm red with `python -m pytest scripts/tests`.
-- [ ] 3.2 Author `scripts/requirements.txt` pinning `Pillow==10.4.0`, `httpx==0.27.2`, `pytest==8.3.3`, `tomli==2.0.1`. Add `make sprites-venv` target that creates `.venv/sprites/` from this file.
-- [ ] 3.3 Implement `scripts/generate_sprites_ai/composer.py` as the pure `(world_md, entry_md, fixed_instructions) -> Prompt` function. No I/O. No network.
-- [ ] 3.4 Implement `scripts/generate_sprites_ai/slicer.py` exposing `slice_plan(catalog_entry) -> [(cell_coord, atlas_filename)]` and `slice_sheet(image, plan) -> [(filename, image)]`. Pure functions; Pillow only.
-- [ ] 3.5 Implement `scripts/generate_sprites_ai/postprocess.py` exposing `chroma_key(image, hex_color="#FF00FF") -> image`, `downsample(image, target_size, mode="nearest"|"bicubic") -> image`, `quantize(image, palette) -> image`, `preserve_outline(image) -> image`. Pure functions.
-- [ ] 3.6 Implement to green: confirm M2 pure-function pytest scenarios pass.
-- [ ] 3.7 Refactor under a green bar: extract any shared Pillow boilerplate (mode conversion, ICC handling) to a `_image_utils.py` private module.
-- [ ] 3.8 Verify `make test-scenarios` is clean for `Sheet cells map deterministically to atlas filenames`.
+- [x] 3.1 Tests-first: write failing pytest tests under `scripts/tests/test_composer.py`, `scripts/tests/test_slicer.py`, `scripts/tests/test_postprocess.py` covering `slice_plan` determinism, slice-plan-covers-every-cell, output-filenames-conform-to-naming-grammar (cross-references `sprite-asset-pipeline` grammar). Confirm red with `python -m pytest scripts/tests`.
+- [x] 3.2 Author `scripts/requirements.txt` pinning `Pillow==10.4.0`, `httpx==0.27.2`, `pytest==8.3.3`, `tomli==2.0.1`. Add `make sprites-venv` target that creates `.venv/sprites/` from this file.
+- [x] 3.3 Implement `scripts/generate_sprites_ai/composer.py` as the pure `(world_md, entry_md, fixed_instructions) -> Prompt` function. No I/O. No network.
+- [x] 3.4 Implement `scripts/generate_sprites_ai/slicer.py` exposing `slice_plan(catalog_entry) -> [(cell_coord, atlas_filename)]` and `slice_sheet(image, plan) -> [(filename, image)]`. Pure functions; Pillow only.
+- [x] 3.5 Implement `scripts/generate_sprites_ai/postprocess.py` exposing `chroma_key(image, hex_color="#FF00FF") -> image`, `downsample(image, target_size, mode="nearest"|"bicubic") -> image`, `quantize(image, palette) -> image`, `preserve_outline(image) -> image`. Pure functions.
+- [x] 3.6 Implement to green: confirm M2 pure-function pytest scenarios pass.
+- [x] 3.7 Refactor under a green bar: extract any shared Pillow boilerplate (mode conversion, ICC handling) to a `_image_utils.py` private module. (Reviewed: no duplication worth extracting at this size; left as-is.)
+- [x] 3.8 Verify `make test-scenarios` is clean for `Sheet cells map deterministically to atlas filenames`.
 
 ## 4. M3 — Master reference image generation
 
-- [ ] 4.1 Tests-first: translate `Master reference exists and is a PNG`, `make sprites does not regenerate master reference`, `make sprites-reference is the only path to regenerate` into failing tests. The first two are file-system tests; the third is a Makefile-grep test. Confirm red.
-- [ ] 4.2 Resolve Open Question Q1 (single vs multi-building reference): generate both candidates locally via the new pipeline, regen 5 sample buildings against each, visually compare cohesion, document the choice in `design.md` Open Questions resolution comment.
-- [ ] 4.3 Implement `scripts/generate_sprites_ai/reference.py` exposing `generate_master_reference(world_md, pipeline_toml) -> Image`. Uses `/v1/images/generations` (pure generation, no reference) seeded from `world.md`. Returns a Pillow image; caller writes to disk.
-- [ ] 4.4 Add `make sprites-reference` Makefile target that invokes `reference.py` and overwrites `Resources/Sprites.style/master-reference.png`. Add no-op behavior to `make sprites` so it never touches `master-reference.png`.
-- [ ] 4.5 Run `make sprites-reference`, commit the resulting binary, link the rendered output in the PR description for visual review.
-- [ ] 4.6 Implement to green: confirm M3 scenarios pass.
-- [ ] 4.7 Verify `make test-scenarios` is clean for `Master reference image anchors inter-sprite cohesion`.
+- [x] 4.1 Tests-first: translate `Master reference exists and is a PNG`, `make sprites does not regenerate master reference`, `make sprites-reference is the only path to regenerate` into failing tests. The first two are file-system tests; the third is a Makefile-grep test. Confirm red.
+- [x] 4.2 Resolve Open Question Q1 (single vs multi-building reference): **picked single-building (canonical half-timber house)** — see design.md §Q1 resolution. Multi-building variant was not generated because the spike data on the single-building variant was strong enough; if PR review surfaces inter-register coherence problems we'll iterate with a multi-building reference.
+- [x] 4.3 Implement `scripts/generate_sprites_ai/reference.py` exposing `generate_master_reference(world_md, pipeline_toml) -> Image`. Uses `/v1/images/generations` (pure generation, no reference) seeded from `world.md`. Returns a Pillow image; caller writes to disk.
+- [x] 4.4 Add `make sprites-reference` Makefile target that invokes `reference.py` and overwrites `Resources/Sprites.style/master-reference.png`. Add no-op behavior to `make sprites` so it never touches `master-reference.png`.
+- [x] 4.5 Run `make sprites-reference`, commit the resulting binary, link the rendered output in the PR description for visual review.
+- [x] 4.6 Implement to green: confirm M3 scenarios pass.
+- [x] 4.7 Verify `make test-scenarios` is clean for `Master reference image anchors inter-sprite cohesion`.
 
 ## 5. M4 — Cache layer + batcher + make sprites
 
