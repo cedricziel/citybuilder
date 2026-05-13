@@ -1,3 +1,4 @@
+import AppKit
 import CityAudio
 import CityCore
 import CityRender2D
@@ -8,6 +9,11 @@ import SwiftUI
 struct CitybuilderMacApp: App {
     @State private var session: GameSession
     private let audio: AudioStack
+    /// Pinned to the app shell so its NotificationCenter observers
+    /// stay alive for the app's lifetime. Spec:
+    /// `add-fullscreen-launch` / `platform-shells` — Mac launches
+    /// fullscreen by default + remembers user-driven transitions.
+    private let fullscreenTracker: MacFullscreenTracker
 
     init() {
         SnapshotRendererRegistry.shared.factory = { provider, tapSink, dragSink, hoverSink, ghostProvider in
@@ -34,12 +40,16 @@ struct CitybuilderMacApp: App {
         _session = State(initialValue: GameSession(audioEventConsumer: { events in
             audio.consume(events: events)
         }))
+        self.fullscreenTracker = MacFullscreenTracker()
     }
 
     var body: some Scene {
         WindowGroup {
             CityRootView(session: session)
                 .frame(minWidth: 900, minHeight: 600)
+                .onAppear {
+                    fullscreenTracker.applyLaunchFullscreenIfNeeded()
+                }
         }
         Settings {
             TabView {
