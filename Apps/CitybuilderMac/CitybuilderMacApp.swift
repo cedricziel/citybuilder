@@ -57,12 +57,13 @@ struct CitybuilderMacApp: App {
                     })
                 },
                 pauseMenuFactory: { [saveStore] session in
+                    // onQuitToTitle is injected by TitleScreenHost — spec
+                    // `wire-quit-to-title` D2 (centralized in the host).
                     PauseMenuConfig(
                         platform: .mac,
                         onSaveGame: { [saveStore, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
                         },
-                        onQuitToTitle: nil,
                         onQuit: { NSApplication.shared.terminate(nil) }
                     )
                 },

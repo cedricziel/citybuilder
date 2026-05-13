@@ -52,13 +52,13 @@ struct CitybuilderiOSApp: App {
                     })
                 },
                 pauseMenuFactory: { [saveStore] session in
+                    // onQuitToTitle is injected by TitleScreenHost — spec
+                    // `wire-quit-to-title` D2 (centralized in the host).
                     PauseMenuConfig(
                         platform: .iOS,
                         onSaveGame: { [saveStore, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
-                        },
-                        onQuitToTitle: nil,
-                        onQuit: nil
+                        }
                     )
                 },
                 inGameSettings: { AudioSettingsSheet(audio: audio) },
