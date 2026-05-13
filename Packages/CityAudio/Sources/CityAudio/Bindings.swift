@@ -18,12 +18,22 @@ public struct Bindings: Codable, Sendable, Equatable {
         public let bus: AudioBus
         public let volume: Float?
         public let loop: Bool?
+        /// Opt in / out of spatial routing for this cue. nil → defaults to
+        /// spatialized iff `bus == .loop` (see `DispatchedCue.isSpatialized`).
+        public let spatialize: Bool?
 
-        public init(file: String, bus: AudioBus, volume: Float? = nil, loop: Bool? = nil) {
+        public init(
+            file: String,
+            bus: AudioBus,
+            volume: Float? = nil,
+            loop: Bool? = nil,
+            spatialize: Bool? = nil
+        ) {
             self.file = file
             self.bus = bus
             self.volume = volume
             self.loop = loop
+            self.spatialize = spatialize
         }
     }
 

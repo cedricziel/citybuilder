@@ -48,6 +48,22 @@ public final class IsoWorldScene: SKScene {
     /// intents for the same tile while the finger / pointer moves within it.
     private var lastDragTile: TileCoordinate?
 
+    /// Camera-driven listener push for the audio layer's spatial graph.
+    /// Per spec `rendering-2_5d` "Camera listener callback" — called at
+    /// most once per wall-clock second with the camera's current
+    /// `centerTile()`. App shells set this to `audio.setListenerPosition`.
+    public var cameraListener: ((TileCoordinate) -> Void)?
+
+    /// Last wall-clock time (in SpriteKit's `update` clock) the listener
+    /// callback fired. `-Double.infinity` means it has never fired, so the
+    /// first tick after `cameraListener` is set produces an immediate push.
+    private var lastListenerPushAt: TimeInterval = -.infinity
+
+    /// Throttle interval for the listener push, in seconds. Matches
+    /// spec `audio-playback` design D3 — 1 Hz keeps the AVAudioEngine
+    /// listener from jittering on sub-tile camera oscillations.
+    public static let listenerPushInterval: TimeInterval = 1.0
+
     override public func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.05, green: 0.08, blue: 0.12, alpha: 1)
         scaleMode = .resizeFill
@@ -137,12 +153,22 @@ public final class IsoWorldScene: SKScene {
         intentSink?(.hoverTile(coord))
     }
 
-    override public func update(_: TimeInterval) {
+    override public func update(_ currentTime: TimeInterval) {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
         reconcileSprites(with: snapshot)
         reconcileCarriers(with: snapshot)
         reconcileGhost()
+        pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
+    }
+
+    private func pushListenerIfDue(currentTime: TimeInterval, camera: Camera) {
+        // Skip all per-second bookkeeping when no consumer is attached —
+        // headless renderers and tests pay nothing for this path.
+        guard let listener = cameraListener else { return }
+        guard currentTime - lastListenerPushAt >= Self.listenerPushInterval else { return }
+        lastListenerPushAt = currentTime
+        listener(camera.centerTile())
     }
 
     private func reconcileGhost() {
@@ -303,7 +329,8 @@ public struct IsoWorldView: View {
     public init(
         snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
-        ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil
+        ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
+        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
     ) {
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
@@ -317,6 +344,9 @@ public struct IsoWorldView: View {
         }
         if let ghostProvider {
             prepared.ghostProvider = { ghostProvider() }
+        }
+        if let cameraListener {
+            prepared.cameraListener = { tile in cameraListener(tile) }
         }
         // Retain the bridge by parking it on the scene.
         prepared.userData = ["__snapshotBridge": bridge]

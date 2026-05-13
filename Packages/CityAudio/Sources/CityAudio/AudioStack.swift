@@ -1,3 +1,4 @@
+import AVFoundation
 import CityCore
 import CityPersistence
 import Foundation
@@ -45,8 +46,13 @@ public final class AudioStack {
         // no-op. The PlatformAudioSession instance below still does its own
         // activate() to install the interruption observer.
         PlatformAudioSession.configureSessionEarly()
-        let engine = AudioEngine()
         let settings = AudioSettings(userDefaults: userDefaults)
+        let engine = AudioEngine(spatialEnabled: settings.spatialAudioEnabled)
+        // Apply persisted distance attenuation (no-op when spatial is off).
+        engine.setSpatialDistances(
+            reference: settings.spatialReferenceDistance,
+            max: settings.spatialMaxDistance
+        )
         let session = PlatformAudioSession(engine: engine)
         let player = EngineCuePlayer(engine: engine, bundle: bundle)
 
@@ -57,8 +63,8 @@ public final class AudioStack {
         engine.setVolume(settings.musicVolume, on: .loop)
         engine.isMuted = settings.isMuted
 
-        let coordinator = AudioCoordinator(bindings: bindings) { [weak player] cue in
-            player?.play(cue)
+        let coordinator = AudioCoordinator(bindings: bindings) { [weak player] dispatched in
+            player?.play(dispatched)
         }
 
         let playlist = MusicPlaylist(
@@ -106,6 +112,24 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Forward the per-tick `WorldSnapshot` into the coordinator so it can
+    /// resolve each event's primary entity to a `TileCoordinate` for the
+    /// spatial layer. Call this immediately before `consume(events:)` for
+    /// the same tick. Snapshots before any events are valid — the cached
+    /// snapshot is just used for entity lookups.
+    public func consumeSnapshot(_ snapshot: WorldSnapshot) {
+        coordinator.consumeSnapshot(snapshot)
+    }
+
+    /// Write the listener's tile-space position to the environment node.
+    /// Called by the renderer at most once per second. No-op if spatial
+    /// audio is disabled (no environment node) or if `tile` is nil.
+    /// Per spec `audio-playback` "Listener position from camera".
+    public func setListenerPosition(_ tile: TileCoordinate?) {
+        guard let env = engine.environmentNode, let tile else { return }
+        env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
+    }
+
     /// Picks the next track from the playlist (if any) and starts looping
     /// it on the music bus. Idempotent — calling more than once during a
     /// single track's lifetime is a no-op.
@@ -113,6 +137,6 @@ public final class AudioStack {
         guard !musicStarted, let track = playlist.nextTrack() else { return }
         musicStarted = true
         let cue = Bindings.Cue(file: track.file, bus: .music, volume: nil, loop: true)
-        player.play(cue)
+        player.play(DispatchedCue(cue: cue, position: nil))
     }
 }

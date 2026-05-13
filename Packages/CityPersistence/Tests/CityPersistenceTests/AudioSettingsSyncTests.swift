@@ -42,6 +42,27 @@ func scenarioOtherDevicePullsLatestVolume() async {
     #expect(restored == 0.2)
 }
 
+@Test("scenario: spatial toggle synced to other device")
+func scenarioSpatialToggleSyncedToOtherDevice() async {
+    let defaultsA = ephemeralDefaults()
+    let defaultsB = ephemeralDefaults()
+    let sharedStore = InMemoryCloudKeyValueStore(available: true)
+    let syncA = AudioSettingsSync(store: sharedStore, defaults: defaultsA)
+    let syncB = AudioSettingsSync(store: sharedStore, defaults: defaultsB)
+
+    // Device A turns spatial off and pushes.
+    defaultsA.set(false, forKey: AudioSettingsSync.Key.spatialEnabled)
+    defaultsA.set(Float(6.0), forKey: AudioSettingsSync.Key.spatialReferenceDistance)
+    defaultsA.set(Float(40.0), forKey: AudioSettingsSync.Key.spatialMaxDistance)
+    await syncA.pushLocalToCloud()
+
+    // Device B pulls and sees the same values.
+    await syncB.pullCloudToLocal()
+    #expect(defaultsB.bool(forKey: AudioSettingsSync.Key.spatialEnabled) == false)
+    #expect(defaultsB.float(forKey: AudioSettingsSync.Key.spatialReferenceDistance) == 6.0)
+    #expect(defaultsB.float(forKey: AudioSettingsSync.Key.spatialMaxDistance) == 40.0)
+}
+
 @Test("scenario: offline volume change queued")
 func scenarioOfflineVolumeChangeQueued() async {
     let defaults = ephemeralDefaults()

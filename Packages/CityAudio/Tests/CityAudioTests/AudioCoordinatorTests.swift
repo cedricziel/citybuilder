@@ -5,7 +5,8 @@ import Testing
 
 // Tests for spec `audio-playback` — `AudioCoordinator consumes per-tick
 // events`, `Bindings file maps events to cues`, and `Loop lifecycle keyed
-// by EntityID` requirements.
+// by EntityID` requirements. Plus `add-spatial-audio` M1 — coordinator
+// produces a `DispatchedCue` carrying the event's resolved position.
 
 private func uiClickBindings() -> Bindings {
     Bindings(
@@ -19,10 +20,8 @@ private func uiClickBindings() -> Bindings {
 @MainActor
 @Test("scenario: bound event plays its cue")
 func scenarioBoundEventPlaysItsCue() {
-    var dispatched: [Bindings.Cue] = []
-    let coordinator = AudioCoordinator(bindings: uiClickBindings()) { cue in
-        dispatched.append(cue)
-    }
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: uiClickBindings()) { dispatched.append($0) }
     let placement = WorldEvent.buildingPlaced(
         building: EntityID(raw: 1),
         kind: .road,
@@ -30,17 +29,15 @@ func scenarioBoundEventPlaysItsCue() {
     )
     coordinator.consume(events: [placement])
     #expect(dispatched.count == 1)
-    #expect(dispatched.first?.file == "ui/click.caf")
-    #expect(dispatched.first?.bus == .sfx)
+    #expect(dispatched.first?.cue.file == "ui/click.caf")
+    #expect(dispatched.first?.cue.bus == .sfx)
 }
 
 @MainActor
 @Test("scenario: unbound event is silent")
 func scenarioUnboundEventIsSilent() {
-    var dispatched: [Bindings.Cue] = []
-    let coordinator = AudioCoordinator(bindings: uiClickBindings()) { cue in
-        dispatched.append(cue)
-    }
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: uiClickBindings()) { dispatched.append($0) }
     // bankruptcyWarning has no entry in the test bindings.
     coordinator.consume(events: [.bankruptcyWarning(deficitTicks: 1)])
     #expect(dispatched.isEmpty, "no binding → no dispatch and no error")
@@ -60,9 +57,7 @@ func scenarioMultipleCuesPickOneAtRandom() {
         ]
     )
     var picks: [String] = []
-    let coordinator = AudioCoordinator(bindings: bindings) { cue in
-        picks.append(cue.file)
-    }
+    let coordinator = AudioCoordinator(bindings: bindings) { picks.append($0.cue.file) }
     for _ in 0 ..< 100 {
         coordinator.consume(events: [
             .buildingPlaced(building: EntityID(raw: 1), kind: .road, anchor: TileCoordinate(x: 0, y: 0))
@@ -84,9 +79,7 @@ func scenarioCoordinatorDispatchesEveryEvent() {
         ]
     )
     var dispatched: [String] = []
-    let coordinator = AudioCoordinator(bindings: bindings) { cue in
-        dispatched.append(cue.file)
-    }
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0.cue.file) }
     let events: [WorldEvent] = [
         .buildingPlaced(building: EntityID(raw: 1), kind: .road, anchor: TileCoordinate(x: 0, y: 0)),
         .constructionCompleted(building: EntityID(raw: 1), kind: .road, anchor: TileCoordinate(x: 0, y: 0)),
@@ -125,8 +118,8 @@ func scenarioDeletedFilePlaysSilently() {
         ]
     )
     var attemptedFiles: [String] = []
-    let coordinator = AudioCoordinator(bindings: bindings) { cue in
-        attemptedFiles.append(cue.file)
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched in
+        attemptedFiles.append(dispatched.cue.file)
         // No error propagated to the coordinator — production code logs
         // and returns when file load fails.
     }
@@ -182,4 +175,113 @@ func scenarioStopSignalHaltsTheLoop() {
     #expect(coordinator.hasActiveLoop(for: entity))
     coordinator.stopLoop(for: entity)
     #expect(!coordinator.hasActiveLoop(for: entity))
+}
+
+// MARK: - Spatial position resolution (add-spatial-audio M1)
+
+private func snapshotWithBuilding(at anchor: TileCoordinate, entity: EntityID) -> WorldSnapshot {
+    // Synthesize a snapshot with one building at the given anchor so the
+    // coordinator can resolve the position for matching primaryEntityID
+    // events. The rest of the snapshot is empty — the coordinator only
+    // reads `buildings[id]?.anchor`.
+    let building = Building(
+        id: entity,
+        kind: .sawmill,
+        anchor: anchor,
+        state: .operational
+    )
+    return WorldSnapshot(
+        tickCount: 0,
+        simulatedTime: .zero,
+        mapWidth: 0,
+        mapHeight: 0,
+        terrainGrid: [],
+        occupiedTiles: [:],
+        buildings: [entity: building],
+        carriers: [],
+        economy: Economy(),
+        totalPopulation: 0,
+        camera: Camera()
+    )
+}
+
+@MainActor
+@Test("scenario: loop cue carries the entity's position")
+func scenarioLoopCueCarriesTheEntitysPosition() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [Bindings.Cue(file: "saw.caf", bus: .loop, loop: true)]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    let entity = EntityID(raw: 42)
+    let snapshot = snapshotWithBuilding(at: TileCoordinate(x: 5, y: 7), entity: entity)
+    coordinator.consumeSnapshot(snapshot)
+    coordinator.consume(events: [.productionResumed(producer: entity)])
+    #expect(dispatched.count == 1)
+    #expect(dispatched.first?.position == TileCoordinate(x: 5, y: 7))
+}
+
+@MainActor
+@Test("scenario: non-entity events have nil position")
+func scenarioNonEntityEventsHaveNilPosition() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "taxesCollected": [Bindings.Cue(file: "coin.caf", bus: .sfx)]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    // No snapshot pushed — but the event also has no primary entity, so
+    // the result is independent of the cache.
+    coordinator.consume(events: [.taxesCollected(amount: 100)])
+    #expect(dispatched.count == 1)
+    #expect(dispatched.first?.position == nil)
+}
+
+@MainActor
+@Test("scenario: coordinator falls back to nil before any snapshot has been consumed")
+func scenarioCoordinatorFallsBackToNilBeforeAnySnapshotHasBeenConsumed() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "buildingPlaced": [Bindings.Cue(file: "place.caf", bus: .sfx)]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    // Event with an EntityID fires before consumeSnapshot has ever been called.
+    let entity = EntityID(raw: 1)
+    coordinator.consume(events: [
+        .buildingPlaced(building: entity, kind: .road, anchor: TileCoordinate(x: 3, y: 4))
+    ])
+    #expect(dispatched.count == 1)
+    #expect(dispatched.first?.position == nil, "no snapshot cached → no position resolution")
+}
+
+@MainActor
+@Test("scenario: cue defaults to spatialized on the loop bus")
+func scenarioCueDefaultsToSpatializedOnTheLoopBus() {
+    // Cue with no `spatialize` field on the loop bus → isSpatialized == true.
+    let loopCue = Bindings.Cue(file: "saw.caf", bus: .loop, loop: true)
+    let dispatched = DispatchedCue(cue: loopCue, position: TileCoordinate(x: 0, y: 0))
+    #expect(dispatched.isSpatialized)
+
+    // Same default on a non-loop bus → isSpatialized == false.
+    let sfxCue = Bindings.Cue(file: "click.caf", bus: .sfx)
+    let dispatchedSfx = DispatchedCue(cue: sfxCue, position: TileCoordinate(x: 0, y: 0))
+    #expect(!dispatchedSfx.isSpatialized)
+
+    // Explicit `spatialize: true` on a non-loop bus wins.
+    let explicitSfx = Bindings.Cue(file: "delivery.caf", bus: .sfx, spatialize: true)
+    let dispatchedExplicitSfx = DispatchedCue(cue: explicitSfx, position: TileCoordinate(x: 0, y: 0))
+    #expect(dispatchedExplicitSfx.isSpatialized)
+
+    // Explicit `spatialize: false` on the loop bus wins.
+    let loopOptOut = Bindings.Cue(file: "ambient-loop.caf", bus: .loop, loop: true, spatialize: false)
+    let dispatchedLoopOptOut = DispatchedCue(cue: loopOptOut, position: TileCoordinate(x: 0, y: 0))
+    #expect(!dispatchedLoopOptOut.isSpatialized)
 }
