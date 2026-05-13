@@ -35,3 +35,9 @@ coverage/*.json
 
 # Audio audition candidates — never ship, never commit
 Resources/Audio/_candidates/
+
+# Local scratch / experiment workspace
+.scratch/
+
+# Claude Code ephemeral worktrees (skills + commands stay tracked)
+.claude/worktrees/
