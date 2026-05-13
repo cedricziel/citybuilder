@@ -1,0 +1,11 @@
+# Pinned dependencies for the AI sprite generation pipeline. Installed
+# into `.venv/sprites/` by `make sprites-venv`. The pin is exact for
+# reproducibility — bumping is a deliberate edit reviewed in PR.
+#
+# tomllib is stdlib on Python 3.11+; we still pin tomli for the same
+# version on contributors running older interpreters.
+
+Pillow==10.4.0
+httpx==0.27.2
+pytest==8.3.3
+tomli==2.0.1
