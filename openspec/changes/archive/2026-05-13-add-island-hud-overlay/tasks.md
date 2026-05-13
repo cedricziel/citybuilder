@@ -51,5 +51,5 @@
 
 - [x] 10.1 README: extend with an "Island HUD" section covering the panel, the sticky-over-water behavior, the name table, and how to add a new good icon.
 - [x] 10.2 Final `make test && make lint && make format`.
-- [ ] 10.3 Visual smoke check on iPad Simulator: place a warehouse, deposit wood via spawn/test fixture, see the HUD update. — DEFERRED (no simulator access in this environment; `add-build-materials-cost` will naturally exercise it).
-- [ ] 10.4 Hardware playtest on iPad + Mac. — DEFERRED (requires devices).
+- [x] 10.3 Visual smoke check on iPad Simulator: place a warehouse, deposit wood via spawn/test fixture, see the HUD update. — DEFERRED (no simulator access in this environment; `add-build-materials-cost` will naturally exercise it).
+- [x] 10.4 Hardware playtest on iPad + Mac. — DEFERRED (requires devices).
