@@ -1,0 +1,34 @@
+# Sprite generation pipeline configuration.
+#
+# This file pins every machine-readable parameter of the AI sprite
+# pipeline that lives outside `world.md` and per-sprite catalog entries.
+# Every value here is part of the prompt-hash cache key by way of the
+# fixed-instructions string, so changes invalidate every cache entry
+# (intentional — bumping the model SHOULD regenerate everything).
+
+# OpenAI image model snapshot. MUST be a dated snapshot of the form
+# `gpt-image-<major>-<YYYY>-<MM>-<DD>`, never a floating alias like
+# `gpt-image-2` or `gpt-image-latest`. Reproducibility outranks
+# auto-tracking model improvements; bumping is a deliberate edit.
+model = "gpt-image-2-2026-04-21"
+
+# Default generated sheet size. Catalog entries MAY override via their
+# YAML front matter (`sheet_size = "1536x512"`, etc.). At this size a
+# 4×2 cell grid produces 384×512-pixel building cells that downsample
+# cleanly to 128×170 canonical pixels.
+sheet_default_size = "1536x1024"
+
+# Default cell grid for a building-class sprite (cols x rows). Goods
+# icons and ships override this via per-entry front matter.
+cell_default_grid = "4x2"
+
+# Chroma-key colour. The pipeline's post-processor converts this to
+# alpha=0. MUST match the colour declared in `world.md` § Background.
+chroma_key_hex = "#FF00FF"
+
+# Concurrent /v1/images/edits calls in a single `make sprites` run.
+# Tuned by the spike at 4 — within tier rate limits, completes a
+# full regen in ~2 minutes wall-clock. Tighten to 1 if a contributor
+# hits 429s.
+[concurrency]
+max_inflight = 4
