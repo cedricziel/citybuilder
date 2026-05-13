@@ -16,11 +16,22 @@ def _parse_hex(hex_color: str) -> tuple[int, int, int]:
     return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
-def chroma_key(image: Image.Image, hex_color: str = "#FF00FF") -> Image.Image:
-    """Return a copy with every pixel matching `hex_color` set to
-    alpha=0. The chroma colour itself is preserved in the RGB
+def chroma_key(
+    image: Image.Image,
+    hex_color: str = "#FF00FF",
+    tolerance: int = 10,
+) -> Image.Image:
+    """Return a copy with every pixel within `tolerance` of `hex_color`
+    set to alpha=0. The chroma colour itself is preserved in the RGB
     channels of the transparent pixels so adjacent pixels never bleed
     a different colour through bilinear scaling later.
+
+    A tolerance > 0 is mandatory in practice because the AI image
+    generator emits "magenta" as pixels in the neighbourhood of
+    `#FF00FF` (observed: `(247, 3, 237)` after the model's internal
+    quantization). An exact-match chroma-key misses every one of those
+    pixels and the chroma-key colour leaks into the committed PNG as
+    an opaque background — exactly the bug that motivated this knob.
 
     Pure: input image is not mutated.
     """
@@ -32,7 +43,11 @@ def chroma_key(image: Image.Image, hex_color: str = "#FF00FF") -> Image.Image:
     for y in range(height):
         for x in range(width):
             r, g, b, _ = px[x, y]
-            if (r, g, b) == target:
+            if (
+                abs(r - target[0]) <= tolerance
+                and abs(g - target[1]) <= tolerance
+                and abs(b - target[2]) <= tolerance
+            ):
                 px[x, y] = (r, g, b, 0)
     return out
 
