@@ -150,6 +150,10 @@ public final class GameSession {
     /// every tick's events are forwarded after the snapshot is applied.
     /// Per spec `audio-playback` "AudioCoordinator consumes per-tick events".
     public var audioEventConsumer: AudioEventConsumer?
+    /// Hard pause. While `true`, `step()` short-circuits — no tick,
+    /// no snapshot, no event forwarding. The audio engine is left
+    /// running so music continues. Spec: `add-game-pause-menu`.
+    public var isPaused: Bool = false
 
     public init(world: World = World.newGame(), audioEventConsumer: AudioEventConsumer? = nil) {
         self.world = world
@@ -166,8 +170,9 @@ public final class GameSession {
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes
-    /// the HUD. Called by the 10 Hz timer and reachable from tests.
+    /// the HUD. No-op while `isPaused == true`.
     public func step() {
+        guard !isPaused else { return }
         let result = world.tick()
         hud.apply(world.snapshot())
         audioEventConsumer?(result.events)
