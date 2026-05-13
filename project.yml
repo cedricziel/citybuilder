@@ -64,6 +64,10 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        # Spec: `add-fullscreen-launch` — iPad locks fullscreen so the
+        # system never offers Split View, Slide Over, or Stage Manager.
+        # iPhone ignores this key (always fullscreen).
+        UIRequiresFullScreen: true
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationLandscapeLeft
