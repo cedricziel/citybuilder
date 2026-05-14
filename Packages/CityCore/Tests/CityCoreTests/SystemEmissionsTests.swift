@@ -133,7 +133,7 @@ func scenarioStallEmitsAnEventTheTickTheStallBegins() {
         allEvents.append(contentsOf: world.tick().events)
     }
     let stalls = allEvents.filter {
-        if case let .productionStalled(producer) = $0 { return producer == buildingId }
+        if case let .productionStalled(producer, _) = $0 { return producer == buildingId }
         return false
     }
     #expect(stalls.count == 1, "exactly one productionStalled across the construction + idle window")
@@ -159,10 +159,85 @@ func scenarioStallResolutionEmitsAResumedEventOnce() {
     world.stockpiles[buildingId]?.deposit(.wood, amount: 5)
     let resumeTick = world.tick()
     let resumes = resumeTick.events.filter {
-        if case let .productionResumed(producer) = $0 { return producer == buildingId }
+        if case let .productionResumed(producer, _) = $0 { return producer == buildingId }
         return false
     }
     #expect(resumes.count == 1)
+}
+
+@Test("scenario: stall event carries building kind")
+func scenarioStallEventCarriesBuildingKind() {
+    // A sawmill stalls on its first operational tick (no wood inputs).
+    // The emitted `productionStalled` payload MUST expose the building's
+    // BuildingKind so audio bindings can route per-kind loop cues.
+    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    let anchor = TileCoordinate(x: 1, y: 1)
+    world.enqueue(.place(.sawmill, at: anchor))
+    world.tick()
+    let id = world.snapshot().occupiedTiles[anchor]
+    guard let buildingId = id else {
+        Issue.record("sawmill placement failed")
+        return
+    }
+    var stallKinds: [BuildingKind] = []
+    for _ in 0 ..< 40 {
+        for event in world.tick().events {
+            if case let .productionStalled(producer, kind) = event, producer == buildingId {
+                stallKinds.append(kind)
+            }
+        }
+    }
+    #expect(stallKinds == [.sawmill])
+}
+
+@Test("scenario: replay determinism preserved with kind payload")
+func scenarioReplayDeterminismPreservedWithKindPayload() {
+    // Adding `kind` to productionStalled/productionResumed must not change
+    // replay equality: two simulations with the same inputs still produce
+    // element-wise-equal event logs, including the new payload field.
+    var worldA = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 7)
+    var worldB = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 7)
+    let anchor = TileCoordinate(x: 1, y: 1)
+    worldA.enqueue(.place(.sawmill, at: anchor))
+    worldB.enqueue(.place(.sawmill, at: anchor))
+    var logA: [WorldEvent] = []
+    var logB: [WorldEvent] = []
+    for _ in 0 ..< 40 {
+        logA.append(contentsOf: worldA.tick().events)
+        logB.append(contentsOf: worldB.tick().events)
+    }
+    #expect(logA == logB)
+    let stallsA = logA.filter {
+        if case .productionStalled = $0 { return true }
+        return false
+    }
+    #expect(!stallsA.isEmpty, "stall events must appear in the replay log")
+}
+
+@Test("scenario: resume event carries building kind")
+func scenarioResumeEventCarriesBuildingKind() {
+    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    let anchor = TileCoordinate(x: 1, y: 1)
+    world.enqueue(.place(.sawmill, at: anchor))
+    world.tick()
+    let id = world.snapshot().occupiedTiles[anchor]
+    guard let buildingId = id else {
+        Issue.record("sawmill placement failed")
+        return
+    }
+    for _ in 0 ..< 30 {
+        world.tick()
+    }
+    _ = world.tick() // stall lands here
+    world.stockpiles[buildingId]?.deposit(.wood, amount: 5)
+    let resumeTick = world.tick()
+    let kinds = resumeTick.events.compactMap { event -> BuildingKind? in
+        if case let .productionResumed(producer, kind) = event, producer == buildingId {
+            return kind
+        }
+        return nil
+    }
+    #expect(kinds == [.sawmill])
 }
 
 // MARK: - Carriers

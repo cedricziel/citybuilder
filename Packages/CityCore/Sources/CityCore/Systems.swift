@@ -33,7 +33,7 @@ extension World {
             guard hasInputs, canStoreOutputs, lumberjackHasForest else {
                 progress.isStalled = true
                 if !wasStalled {
-                    events.append(.productionStalled(producer: id))
+                    events.append(.productionStalled(producer: id, kind: building.kind))
                 }
                 productions[id] = progress
                 stockpiles[id] = stockpile
@@ -42,7 +42,7 @@ extension World {
 
             progress.isStalled = false
             if wasStalled {
-                events.append(.productionResumed(producer: id))
+                events.append(.productionResumed(producer: id, kind: building.kind))
             }
             progress.ticksThisCycle &+= 1
             if progress.ticksThisCycle >= recipe.cycleTicks {

@@ -26,6 +26,7 @@ public final class AudioStack {
     public let player: EngineCuePlayer
     public let coordinator: AudioCoordinator
     public let playlist: MusicPlaylist
+    public let ambientBed: AmbientBed
     /// Optional iCloud sync layer. Non-nil when the app shell passes a
     /// `CloudKeyValueStore` (typically `UbiquitousAudioSettingsStore` in
     /// production). The settings model writes through to UserDefaults
@@ -63,15 +64,39 @@ public final class AudioStack {
         engine.setVolume(settings.musicVolume, on: .loop)
         engine.isMuted = settings.isMuted
 
-        let coordinator = AudioCoordinator(bindings: bindings) { [weak player] dispatched in
+        // Production dispatcher: route every dispatched cue to the cue
+        // player. When music ducking is enabled, wrap the player in a
+        // `MusicDucker` so SFX cues briefly dip the music bus. The flag
+        // is read once at construction; toggling at runtime requires a
+        // stack rebuild (intentional — same shape as spatial audio).
+        let playDispatcher: AudioCoordinator.CueDispatcher = { [weak player] dispatched in
             player?.play(dispatched)
         }
+        let dispatcher: AudioCoordinator.CueDispatcher
+        if settings.musicDucksUnderSFX {
+            let ducker = MusicDucker(
+                inner: playDispatcher,
+                readMusicVolume: { [weak engine] in
+                    engine?.bus(.music).outputVolume ?? 0
+                },
+                writeMusicVolume: { [weak engine] value in
+                    engine?.setVolume(value, on: .music)
+                }
+            )
+            dispatcher = { dispatched in ducker.dispatch(dispatched) }
+        } else {
+            dispatcher = playDispatcher
+        }
+        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher)
 
         let playlist = MusicPlaylist(
             tracks: bindings.music?.tracks ?? [],
             gapSecondsBetweenTracks: bindings.music?.gapSecondsBetweenTracks
                 ?? MusicPlaylist.defaultGapSeconds
         )
+        let ambientBed = AmbientBed(section: bindings.ambient) { [weak player] dispatched in
+            player?.play(dispatched)
+        }
 
         self.manifest = manifest
         self.bindings = bindings
@@ -81,6 +106,7 @@ public final class AudioStack {
         self.player = player
         self.coordinator = coordinator
         self.playlist = playlist
+        self.ambientBed = ambientBed
         self.settingsSync = cloudStore.map { AudioSettingsSync(store: $0, defaults: userDefaults) }
         // Pull any cloud-stored values into UserDefaults at launch so the
         // engine starts with the latest cross-device volumes.
@@ -109,6 +135,7 @@ public final class AudioStack {
     /// Session activation and music start happen at init now (iOS audio
     /// engine semantics require it); this just routes events.
     public func consume(events: [WorldEvent]) {
+        ambientBed.consume(events: events)
         coordinator.consume(events: events)
     }
 

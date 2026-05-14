@@ -1,3 +1,4 @@
+import CityCore
 import Foundation
 
 /// Hand-authored routing table that maps `WorldEvent` case names to one
@@ -11,9 +12,22 @@ public struct Bindings: Codable, Sendable, Equatable {
     /// when more than one is bound.
     public let bindings: [String: [Cue]]
     public let music: MusicSection?
+    /// Optional ambient bed: a track that plays as a loop on the
+    /// `ambient` bus while any building exists. See spec
+    /// `audio-playback` — Ambient bed section.
+    public let ambient: AmbientSection?
+
+    /// Whether a cue starts playback or stops the active loop for the
+    /// event's primary entity. Default `.start` matches Phase 1 semantics.
+    public enum CueAction: String, Codable, Sendable, Equatable {
+        case start
+        case stop
+    }
 
     public struct Cue: Codable, Sendable, Equatable {
-        /// Path relative to `Resources/Audio/`.
+        /// Path relative to `Resources/Audio/`. Required for `.start` cues;
+        /// ignored for `.stop` cues (the empty string is the conventional
+        /// placeholder so authors can omit it in JSON).
         public let file: String
         public let bus: AudioBus
         public let volume: Float?
@@ -21,20 +35,48 @@ public struct Bindings: Codable, Sendable, Equatable {
         /// Opt in / out of spatial routing for this cue. nil → defaults to
         /// spatialized iff `bus == .loop` (see `DispatchedCue.isSpatialized`).
         public let spatialize: Bool?
+        /// `.start` (default) → dispatch playback; `.stop` → look up the
+        /// event's primary entity and halt its active loop.
+        public let action: CueAction
+        /// Restricts this cue to events whose payload `kind` matches.
+        /// Events without a `kind` payload never match a non-nil filter.
+        public let kindFilter: BuildingKind?
 
         public init(
-            file: String,
-            bus: AudioBus,
+            file: String = "",
+            bus: AudioBus = .sfx,
             volume: Float? = nil,
             loop: Bool? = nil,
-            spatialize: Bool? = nil
+            spatialize: Bool? = nil,
+            action: CueAction = .start,
+            kindFilter: BuildingKind? = nil
         ) {
             self.file = file
             self.bus = bus
             self.volume = volume
             self.loop = loop
             self.spatialize = spatialize
+            self.action = action
+            self.kindFilter = kindFilter
         }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CueCodingKey.self)
+            file = try container.decodeIfPresent(String.self, forKey: .file) ?? ""
+            bus = try container.decode(AudioBus.self, forKey: .bus)
+            volume = try container.decodeIfPresent(Float.self, forKey: .volume)
+            loop = try container.decodeIfPresent(Bool.self, forKey: .loop)
+            spatialize = try container.decodeIfPresent(Bool.self, forKey: .spatialize)
+            action = try container.decodeIfPresent(CueAction.self, forKey: .action) ?? .start
+            kindFilter = try container.decodeIfPresent(BuildingKind.self, forKey: .kindFilter)
+        }
+    }
+
+    /// Coding keys for `Cue`. Defined at the `Bindings` level rather than
+    /// nested inside `Cue` to keep the type tree under SwiftLint's
+    /// `nesting` rule (max 1 level deep).
+    enum CueCodingKey: String, CodingKey {
+        case file, bus, volume, loop, spatialize, action, kindFilter
     }
 
     public struct MusicSection: Codable, Sendable, Equatable {
@@ -63,22 +105,48 @@ public struct Bindings: Codable, Sendable, Equatable {
         }
     }
 
-    public init(version: Int = 1, bindings: [String: [Cue]] = [:], music: MusicSection? = nil) {
+    /// Ambient bed paralleling `MusicSection`. When present and non-empty,
+    /// `AudioStack` starts the first track as a loop cue on the `ambient`
+    /// bus on the first non-empty `consume(events:)` call. Multi-track
+    /// support is forwards-compatible with future shuffle policy.
+    public struct AmbientSection: Codable, Sendable, Equatable {
+        public let tracks: [MusicTrack]
+        public let crossfadeSeconds: Double?
+
+        public init(tracks: [MusicTrack] = [], crossfadeSeconds: Double? = nil) {
+            self.tracks = tracks
+            self.crossfadeSeconds = crossfadeSeconds
+        }
+    }
+
+    public init(
+        version: Int = 1,
+        bindings: [String: [Cue]] = [:],
+        music: MusicSection? = nil,
+        ambient: AmbientSection? = nil
+    ) {
         self.version = version
         self.bindings = bindings
         self.music = music
+        self.ambient = ambient
     }
 
-    /// All cue + music file references in the bindings, flattened.
-    /// Used by validators to check that every referenced file exists in
-    /// the manifest and on disk.
+    /// All cue + music + ambient file references in the bindings,
+    /// flattened. Used by validators to check that every referenced file
+    /// exists in the manifest and on disk. Cues with `action == .stop`
+    /// contribute no file (their `file` is conventionally empty).
     public var allFilePaths: [String] {
         var paths: [String] = []
         for cues in bindings.values {
-            paths.append(contentsOf: cues.map(\.file))
+            for cue in cues where cue.action == .start && !cue.file.isEmpty {
+                paths.append(cue.file)
+            }
         }
         if let music {
             paths.append(contentsOf: music.tracks.map(\.file))
+        }
+        if let ambient {
+            paths.append(contentsOf: ambient.tracks.map(\.file))
         }
         return paths
     }

@@ -32,6 +32,27 @@ func sessionForwardsPerTickEventsToAudioConsumer() {
 }
 
 @MainActor
+@Test("session: forwards snapshot to audio after tick")
+func sessionForwardsSnapshotToAudioAfterTick() {
+    // The audio coordinator needs the post-tick WorldSnapshot to diff
+    // against its activeLoops and tear down loops for entities that
+    // have left the world. The session must call the snapshotConsumer
+    // closure on every tick. Spec: `audio-playback` — Snapshot-driven
+    // loop teardown.
+    var snapshots: [WorldSnapshot] = []
+    let session = GameSession(
+        world: World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1),
+        audioSnapshotConsumer: { snapshots.append($0) }
+    )
+    session.world.enqueue(.place(.road, at: TileCoordinate(x: 1, y: 1)))
+    session.step()
+    session.step()
+    #expect(snapshots.count == 2, "one snapshot dispatched per step()")
+    let lastTickCount = snapshots.last?.tickCount ?? 0
+    #expect(lastTickCount >= 2, "snapshot must reflect the latest tick")
+}
+
+@MainActor
 @Test("session: no audio consumer is a valid configuration")
 func sessionNoAudioConsumerIsValid() {
     // Headless tests / CLI-like contexts construct sessions without an

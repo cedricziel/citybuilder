@@ -1,3 +1,4 @@
+import CityCore
 import Foundation
 import Testing
 @testable import CityAudio
@@ -196,6 +197,23 @@ func scenarioPhase1HasNoLoopBindings() {
             #expect(cue.loop != true, "Phase 1 bindings must not enable loop on any cue")
         }
     }
+}
+
+@Test("scenario: ambient section round-trips through JSON")
+func scenarioAmbientSectionRoundTripsThroughJSON() throws {
+    let original = Bindings(
+        version: 1,
+        bindings: [:],
+        ambient: Bindings.AmbientSection(
+            tracks: [Bindings.MusicTrack(file: "ambient/forest-birds.caf")],
+            crossfadeSeconds: 4.0
+        )
+    )
+    let encoded = try JSONEncoder().encode(original)
+    let decoded = try JSONDecoder().decode(Bindings.self, from: encoded)
+    #expect(decoded == original)
+    #expect(decoded.ambient?.tracks.first?.file == "ambient/forest-birds.caf")
+    #expect(decoded.allFilePaths.contains("ambient/forest-birds.caf"))
 }
 
 @Test("bindings: round-trip preserves structure")

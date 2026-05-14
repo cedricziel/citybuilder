@@ -125,9 +125,54 @@ The audio layer plays cues in response to `WorldEvent` cases emitted by
    title, author, source URL, and license. For non-CC0 licenses, also
    include the `attribution` string the credits screen will display.
 3. Add a binding in `Resources/Audio/bindings.json`: map the `WorldEvent`
-   case name to a `Cue` (file, bus, optional `volume`, optional `loop`).
+   case name to a `Cue` (file, bus, optional `volume`, optional `loop`,
+   optional `kindFilter`, optional `action`).
 4. Run `make test-audio-manifest` to verify the file is tracked and any
    CC-BY attribution is present. Pre-commit and CI run the same check.
+
+#### Per-building loops
+
+For a sound that should play while a building is operating (e.g. a
+sawmill loop), bind one `start` cue on `productionResumed` and one
+`stop` cue on `productionStalled`, both filtered to the building kind:
+
+```json
+"productionResumed": [
+  { "file": "loop/sawmill.caf", "bus": "loop", "loop": true, "kindFilter": "sawmill" }
+],
+"productionStalled": [
+  { "action": "stop", "kindFilter": "sawmill" }
+]
+```
+
+`AudioCoordinator` keys loops by `EntityID`, so multiple sawmills each
+get their own player. When a building leaves the world (demolished,
+save reloaded without it), the per-tick `WorldSnapshot` push tears down
+the loop — no extra teardown binding needed.
+
+#### Ambient bed
+
+The `ambient` bus runs continuously while the simulation is alive. Add
+a top-level `ambient` section paralleling `music`:
+
+```json
+"ambient": {
+  "tracks": [ { "file": "ambient/forest-birds.caf" } ]
+}
+```
+
+`AudioStack` starts the first track as a loop cue on the `ambient` bus
+on the first non-empty `[WorldEvent]` it receives.
+
+#### Music ducking
+
+Every SFX cue briefly pulls the `music` bus down ~6 dB then ramps it
+back over ~300 ms. The behaviour is on by default; users can toggle it
+via `AudioSettings.musicDucksUnderSFX`. Loop and ambient cues do NOT
+trigger ducking — they're continuous and would hold the music down.
+
+The cap on audio files is 3 MB (enforced by pre-commit) — large enough
+for a ~1.5 MB sawmill loop without forcing low-bitrate transcodes.
 
 The CLI runner (`citybuilder-cli`) does **not** link the audio package —
 the headless path stays Foundation-only. Use `--events-out events.json`

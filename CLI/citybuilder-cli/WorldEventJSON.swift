@@ -38,10 +38,10 @@ enum WorldEventJSON {
             return ["case": "carrierArrived", "carrier": carrier.raw, "x": at.x, "y": at.y, "good": good.rawValue, "amount": amount]
         case let .productionCycleCompleted(producer, kind):
             return ["case": "productionCycleCompleted", "producer": producer.raw, "kind": kind.rawValue]
-        case let .productionStalled(producer):
-            return ["case": "productionStalled", "producer": producer.raw]
-        case let .productionResumed(producer):
-            return ["case": "productionResumed", "producer": producer.raw]
+        case let .productionStalled(producer, kind):
+            return ["case": "productionStalled", "producer": producer.raw, "kind": kind.rawValue]
+        case let .productionResumed(producer, kind):
+            return ["case": "productionResumed", "producer": producer.raw, "kind": kind.rawValue]
         case let .taxesCollected(amount):
             return ["case": "taxesCollected", "amount": amount]
         case let .upkeepPaid(amount):

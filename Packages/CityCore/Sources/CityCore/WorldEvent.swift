@@ -50,9 +50,9 @@ public enum WorldEvent: Sendable {
     /// A producer completed one full production cycle this tick.
     case productionCycleCompleted(producer: EntityID, kind: BuildingKind)
     /// A producer transitioned from running to stalled this tick.
-    case productionStalled(producer: EntityID)
+    case productionStalled(producer: EntityID, kind: BuildingKind)
     /// A producer transitioned from stalled to running this tick.
-    case productionResumed(producer: EntityID)
+    case productionResumed(producer: EntityID, kind: BuildingKind)
 
     // MARK: Economy
 
@@ -97,10 +97,10 @@ extension WorldEvent: Equatable {
             return lEntity == rEntity && lAt == rAt && lGood == rGood && lAmount == rAmount
         case let (.productionCycleCompleted(lEntity, lKind), .productionCycleCompleted(rEntity, rKind)):
             return lEntity == rEntity && lKind == rKind
-        case let (.productionStalled(lEntity), .productionStalled(rEntity)):
-            return lEntity == rEntity
-        case let (.productionResumed(lEntity), .productionResumed(rEntity)):
-            return lEntity == rEntity
+        case let (.productionStalled(lEntity, lKind), .productionStalled(rEntity, rKind)):
+            return lEntity == rEntity && lKind == rKind
+        case let (.productionResumed(lEntity, lKind), .productionResumed(rEntity, rKind)):
+            return lEntity == rEntity && lKind == rKind
         case let (.taxesCollected(lAmount), .taxesCollected(rAmount)):
             return lAmount == rAmount
         case let (.upkeepPaid(lAmount), .upkeepPaid(rAmount)):
@@ -137,11 +137,41 @@ public extension WorldEvent {
              let .carrierArrived(carrier, _, _, _):
             return carrier
         case let .productionCycleCompleted(producer, _),
-             let .productionStalled(producer),
-             let .productionResumed(producer):
+             let .productionStalled(producer, _),
+             let .productionResumed(producer, _):
             return producer
         case .forestHarvested,
              .placementRejected,
+             .taxesCollected,
+             .upkeepPaid,
+             .bankruptcyWarning,
+             .bankruptcyResolved,
+             .gameOver:
+            return nil
+        }
+    }
+
+    /// The `BuildingKind` payload exposed by an event's case, if any. Used
+    /// by audio bindings to filter cues per building kind (e.g. only
+    /// dispatch the sawmill loop when the event is for a sawmill). Events
+    /// without a kind payload return nil.
+    var buildingKind: BuildingKind? {
+        switch self {
+        case let .buildingPlaced(_, kind, _),
+             let .buildingDemolished(_, kind, _),
+             let .constructionCompleted(_, kind, _),
+             let .productionCycleCompleted(_, kind),
+             let .productionStalled(_, kind),
+             let .productionResumed(_, kind):
+            return kind
+        case let .placementRejected(kind, _):
+            return kind
+        case .materialsDeducted,
+             .constructionWaitingForMaterials,
+             .constructionStarted,
+             .forestHarvested,
+             .carrierDeparted,
+             .carrierArrived,
              .taxesCollected,
              .upkeepPaid,
              .bankruptcyWarning,

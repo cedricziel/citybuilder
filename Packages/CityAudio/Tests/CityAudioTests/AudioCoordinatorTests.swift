@@ -205,6 +205,178 @@ private func snapshotWithBuilding(at anchor: TileCoordinate, entity: EntityID) -
     )
 }
 
+private func emptySnapshot() -> WorldSnapshot {
+    WorldSnapshot(
+        tickCount: 0,
+        simulatedTime: .zero,
+        mapWidth: 0,
+        mapHeight: 0,
+        terrainGrid: [],
+        occupiedTiles: [:],
+        buildings: [:],
+        carriers: [],
+        economy: Economy(),
+        totalPopulation: 0,
+        camera: Camera()
+    )
+}
+
+@MainActor
+@Test("scenario: snapshot diff stops loops for missing entities")
+func scenarioSnapshotDiffStopsLoopsForMissingEntities() {
+    // A sawmill with an active loop is demolished. The next snapshot no
+    // longer carries that entity — consumeSnapshot must call stopLoop.
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [
+                Bindings.Cue(file: "loop/saw.caf", bus: .loop, loop: true, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    let entity = EntityID(raw: 42)
+    coordinator.consumeSnapshot(snapshotWithBuilding(at: TileCoordinate(x: 1, y: 1), entity: entity))
+    coordinator.consume(events: [.productionResumed(producer: entity, kind: .sawmill)])
+    #expect(coordinator.hasActiveLoop(for: entity))
+    coordinator.consumeSnapshot(emptySnapshot())
+    #expect(!coordinator.hasActiveLoop(for: entity), "snapshot missing the entity must teardown the loop")
+}
+
+@MainActor
+@Test("scenario: snapshot consume is a no-op for unchanged worlds")
+func scenarioSnapshotConsumeIsANoOpForUnchangedWorlds() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [
+                Bindings.Cue(file: "loop/saw.caf", bus: .loop, loop: true, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    let entity = EntityID(raw: 50)
+    let anchor = TileCoordinate(x: 3, y: 3)
+    coordinator.consumeSnapshot(snapshotWithBuilding(at: anchor, entity: entity))
+    coordinator.consume(events: [.productionResumed(producer: entity, kind: .sawmill)])
+    let dispatchedBefore = dispatched.count
+    // Re-pushing the same snapshot keeps the loop active and dispatches
+    // nothing new.
+    coordinator.consumeSnapshot(snapshotWithBuilding(at: anchor, entity: entity))
+    #expect(coordinator.hasActiveLoop(for: entity))
+    #expect(dispatched.count == dispatchedBefore)
+}
+
+@MainActor
+@Test("scenario: stop cue halts the active loop")
+func scenarioStopCueHaltsTheActiveLoop() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [
+                Bindings.Cue(file: "loop/saw.caf", bus: .loop, loop: true, kindFilter: .sawmill)
+            ],
+            "productionStalled": [
+                Bindings.Cue(action: .stop, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    let entity = EntityID(raw: 7)
+    coordinator.consume(events: [
+        .productionResumed(producer: entity, kind: .sawmill),
+        .productionStalled(producer: entity, kind: .sawmill)
+    ])
+    // Exactly one dispatch (the start).
+    #expect(dispatched.count == 1)
+    #expect(!coordinator.hasActiveLoop(for: entity), "stop cue must release the active loop registration")
+}
+
+@MainActor
+@Test("scenario: kind filter restricts a cue to matching events")
+func scenarioKindFilterRestrictsACueToMatchingEvents() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [
+                Bindings.Cue(file: "loop/saw.caf", bus: .loop, loop: true, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    coordinator.consume(events: [
+        .productionResumed(producer: EntityID(raw: 11), kind: .lumberjackHut)
+    ])
+    #expect(dispatched.isEmpty, "kind mismatch must skip the cue")
+}
+
+@MainActor
+@Test("scenario: carrier arrival plays a one-shot")
+func scenarioCarrierArrivalPlaysAOneShot() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "carrierArrived": [Bindings.Cue(file: "sfx/carrier-clink.caf", bus: .sfx)]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    coordinator.consume(events: [
+        .carrierArrived(
+            carrier: EntityID(raw: 99),
+            at: TileCoordinate(x: 2, y: 3),
+            good: .wood,
+            amount: 1
+        )
+    ])
+    #expect(dispatched.count == 1)
+    #expect(dispatched.first?.cue.bus == .sfx)
+    #expect(dispatched.first?.cue.file == "sfx/carrier-clink.caf")
+}
+
+@MainActor
+@Test("scenario: stop cue is a no-op without an active loop")
+func scenarioStopCueIsANoOpWithoutAnActiveLoop() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionStalled": [
+                Bindings.Cue(action: .stop, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    coordinator.consume(events: [
+        .productionStalled(producer: EntityID(raw: 99), kind: .sawmill)
+    ])
+    #expect(dispatched.isEmpty)
+    #expect(!coordinator.hasActiveLoop(for: EntityID(raw: 99)))
+}
+
+@MainActor
+@Test("scenario: kind filter matches when payload matches")
+func scenarioKindFilterMatchesWhenPayloadMatches() {
+    let bindings = Bindings(
+        version: 1,
+        bindings: [
+            "productionResumed": [
+                Bindings.Cue(file: "loop/saw.caf", bus: .loop, loop: true, kindFilter: .sawmill)
+            ]
+        ]
+    )
+    var dispatched: [DispatchedCue] = []
+    let coordinator = AudioCoordinator(bindings: bindings) { dispatched.append($0) }
+    coordinator.consume(events: [
+        .productionResumed(producer: EntityID(raw: 12), kind: .sawmill)
+    ])
+    #expect(dispatched.count == 1)
+}
+
 @MainActor
 @Test("scenario: loop cue carries the entity's position")
 func scenarioLoopCueCarriesTheEntitysPosition() {
@@ -219,7 +391,7 @@ func scenarioLoopCueCarriesTheEntitysPosition() {
     let entity = EntityID(raw: 42)
     let snapshot = snapshotWithBuilding(at: TileCoordinate(x: 5, y: 7), entity: entity)
     coordinator.consumeSnapshot(snapshot)
-    coordinator.consume(events: [.productionResumed(producer: entity)])
+    coordinator.consume(events: [.productionResumed(producer: entity, kind: .sawmill)])
     #expect(dispatched.count == 1)
     #expect(dispatched.first?.position == TileCoordinate(x: 5, y: 7))
 }

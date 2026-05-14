@@ -37,11 +37,19 @@ public final class AudioCoordinator: @unchecked Sendable {
     }
 
     /// Caches the latest `WorldSnapshot` so `consume(events:)` can look up
-    /// the position of each event's primary entity. The game loop calls
-    /// this before forwarding the same tick's events.
+    /// the position of each event's primary entity, and tears down loops
+    /// for entities that have left the world (demolished, deserialized,
+    /// etc.). The game loop calls this once per tick before forwarding
+    /// the same tick's events. Idempotent for unchanged worlds.
+    /// Spec: `audio-playback` — Snapshot-driven loop teardown.
     @MainActor
     public func consumeSnapshot(_ snapshot: WorldSnapshot) {
         cachedSnapshot = snapshot
+        let presentIDs = snapshot.buildings.keys
+        let presentSet = Set(presentIDs)
+        for id in activeLoops.keys where !presentSet.contains(id) {
+            stopLoop(for: id)
+        }
     }
 
     /// Routes every event in `events` through the bindings table in input
@@ -52,10 +60,25 @@ public final class AudioCoordinator: @unchecked Sendable {
         for event in events {
             let key = Self.caseKey(for: event)
             guard let candidates = bindings.bindings[key], !candidates.isEmpty else { continue }
-            let cue: Bindings.Cue = if candidates.count == 1 {
-                candidates[0]
+            // Filter candidates whose kindFilter doesn't match the event's
+            // payload. A nil filter accepts any event; a non-nil filter
+            // rejects events without a `kind` payload as a non-match.
+            let matching = candidates.filter { cue in
+                guard let filter = cue.kindFilter else { return true }
+                return event.buildingKind == filter
+            }
+            guard !matching.isEmpty else { continue }
+            let cue: Bindings.Cue = if matching.count == 1 {
+                matching[0]
             } else {
-                candidates.randomElement(using: &rng) ?? candidates[0]
+                matching.randomElement(using: &rng) ?? matching[0]
+            }
+
+            if cue.action == .stop {
+                if let entityId = event.primaryEntityID {
+                    stopLoop(for: entityId)
+                }
+                continue
             }
 
             let position = resolvePosition(for: event)

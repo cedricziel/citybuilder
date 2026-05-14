@@ -9,7 +9,10 @@ repos:
       - id: check-yaml
       - id: check-merge-conflict
       - id: check-added-large-files
-        args: ["--maxkb=1024"]
+        # 3 MB cap accommodates Phase 2 ambient/loop audio (e.g. a ~1.5 MB
+        # sawmill loop). Source assets are CC0/CC-BY .caf or .m4a; anything
+        # larger should be reviewed before committing.
+        args: ["--maxkb=3072"]
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.6.0

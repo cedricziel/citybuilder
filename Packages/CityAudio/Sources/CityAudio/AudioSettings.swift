@@ -19,6 +19,7 @@ public final class AudioSettings: @unchecked Sendable {
         public static let spatialEnabled = "audio.spatialEnabled"
         public static let spatialReferenceDistance = "audio.spatialReferenceDistance"
         public static let spatialMaxDistance = "audio.spatialMaxDistance"
+        public static let musicDucksUnderSFX = "audio.musicDucksUnderSFX"
     }
 
     /// Default volumes if no prior value is stored. Music sits slightly
@@ -33,6 +34,9 @@ public final class AudioSettings: @unchecked Sendable {
     public static let defaultSpatialReferenceDistance: Float = 4.0
     /// Default maximum audible distance in tiles. Spec D5.
     public static let defaultSpatialMaxDistance: Float = 32.0
+    /// Default for the music-ducks-under-SFX toggle. Spec
+    /// `enrich-audio-world` D3 — on by default.
+    public static let defaultMusicDucksUnderSFX: Bool = true
 
     public init(userDefaults: UserDefaults = .standard) {
         self.defaults = userDefaults
@@ -97,5 +101,17 @@ public final class AudioSettings: @unchecked Sendable {
             return defaults.float(forKey: Key.spatialMaxDistance)
         }
         set { defaults.set(newValue, forKey: Key.spatialMaxDistance) }
+    }
+
+    /// When true, the engine wraps the cue dispatcher in `MusicDucker` so
+    /// SFX cues briefly dip the music bus. Defaults to true.
+    public var musicDucksUnderSFX: Bool {
+        get {
+            guard defaults.object(forKey: Key.musicDucksUnderSFX) != nil else {
+                return Self.defaultMusicDucksUnderSFX
+            }
+            return defaults.bool(forKey: Key.musicDucksUnderSFX)
+        }
+        set { defaults.set(newValue, forKey: Key.musicDucksUnderSFX) }
     }
 }
