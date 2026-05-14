@@ -9,32 +9,24 @@ from __future__ import annotations
 from PIL import Image
 
 
-def _parse_hex(hex_color: str) -> tuple[int, int, int]:
-    s = hex_color.lstrip("#")
-    if len(s) != 6:
-        raise ValueError(f"hex colour must be #RRGGBB, got {hex_color!r}")
-    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+def threshold_alpha(image: Image.Image, threshold: int = 128) -> Image.Image:
+    """Force binary alpha on an RGBA image: pixels with alpha
+    `>= threshold` snap to alpha=255 (fully opaque), pixels below
+    snap to alpha=0 (fully transparent).
 
-
-def chroma_key(image: Image.Image, hex_color: str = "#FF00FF") -> Image.Image:
-    """Return a copy with every pixel matching `hex_color` set to
-    alpha=0. The chroma colour itself is preserved in the RGB
-    channels of the transparent pixels so adjacent pixels never bleed
-    a different colour through bilinear scaling later.
+    Runs before downsampling. The image model emits soft-alpha
+    silhouette edges when called with `background: "transparent"`;
+    a half-pixel alpha gradient looks fine at native resolution but
+    smears under nearest-neighbour downsampling at the pixel-art
+    scale, producing ragged single-pixel halos. Hard-thresholding
+    here keeps every edge crisp.
 
     Pure: input image is not mutated.
     """
-    target = _parse_hex(hex_color)
     src = image.convert("RGBA")
-    out = src.copy()
-    px = out.load()
-    width, height = out.size
-    for y in range(height):
-        for x in range(width):
-            r, g, b, _ = px[x, y]
-            if (r, g, b) == target:
-                px[x, y] = (r, g, b, 0)
-    return out
+    r, g, b, a = src.split()
+    binary = a.point(lambda v: 255 if v >= threshold else 0)
+    return Image.merge("RGBA", (r, g, b, binary))
 
 
 def downsample(

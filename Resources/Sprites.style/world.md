@@ -124,12 +124,23 @@ hex.
 
 ## Background
 
-Every generated sprite cell SHALL fill any empty/transparent area with the
-solid colour `#FF00FF` (magenta). The pipeline's post-processor converts
-this chroma-key colour to alpha=0 after generation. Magenta MUST NOT
-appear inside the sprite's visible silhouette — it is reserved exclusively
-for the chroma-key background. Soft-edged transparency is not permitted;
-hard pixel boundaries are mandatory for the chunky pixel-art look.
+Generated sprites SHALL ship with **real PNG transparency**, not a
+chroma-key colour. The pipeline calls the image API with
+`background: "transparent"` (or whatever the current model's
+equivalent is); the model is expected to return a PNG with per-pixel
+alpha so that pixels outside the sprite silhouette are alpha=0 in
+the output bytes. The post-processor thresholds soft alpha to binary
+(0 or 255) before downsampling so edges stay crisp at the pixel-art
+scale — no anti-aliased halos.
+
+Spare cells in a sheet are FULLY TRANSPARENT — the model does not
+paint anything in them; the alpha there is 0 throughout.
+
+The pipeline performs no chroma-key step. Any non-magenta colour the
+model emits inside the silhouette is treated as the artist's intent
+and quantized to the closest palette entry. Soft-edged transparency
+from the model is thresholded; hard pixel boundaries are mandatory
+for the chunky pixel-art look.
 
 ## Forbidden
 
@@ -144,7 +155,8 @@ pipeline will reject sheets that contain them after visual review.
   no glass curtain walls, no Art Deco friezes.
 - **Off-palette colours.** Pure saturated primaries outside the declared
   palette (especially `#FF0000`, `#00FF00`, `#0000FF`, `#FFFF00`,
-  `#00FFFF`) — only `#FF00FF` is permitted, and only as chroma-key.
+  `#00FFFF`, `#FF00FF`). The pipeline produces transparency via PNG
+  alpha — no colour is reserved for chroma-key.
 - **People/characters as detailed renders.** Walker units are stylised
   silhouettes (4–6 visible pixels tall in canonical space), never
   portraits or finely-detailed faces.

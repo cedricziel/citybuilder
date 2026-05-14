@@ -60,15 +60,16 @@ def read_cache(key: str) -> Image.Image | None:
 
 
 def _save_indexed(image: Image.Image, dest: Path) -> None:
-    """Save a Pillow image as an optimized 256-colour indexed PNG.
+    """Save a Pillow image as an optimized 256-colour indexed PNG
+    with alpha preserved via libimagequant's RGBA-aware quantizer.
+
     Per `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
     optimized": every committed binary stays well under 1 MB and the
     repo clone footprint stays bounded. Used by both `write_cache`
     (local convenience) and `write_sheet` (committed source-of-truth)
-    so both round-trip the same pixel set."""
+    so both round-trip the same pixel set, transparency included."""
     rgba = image.convert("RGBA")
-    rgb = rgba.convert("RGB")
-    indexed = rgb.quantize(
+    indexed = rgba.quantize(
         colors=256,
         method=Image.Quantize.LIBIMAGEQUANT,
         dither=Image.Dither.NONE,

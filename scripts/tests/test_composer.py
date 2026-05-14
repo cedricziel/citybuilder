@@ -18,7 +18,8 @@ A coastal medieval town.
 - `#7A1F1A` terracotta.
 
 ## Background
-Fill empty space with magenta `#FF00FF`.
+Generated PNGs ship with real transparency. The API is called with
+`background: "transparent"`; pixels outside the silhouette are alpha=0.
 """
 
 ENTRY_FIXTURE = """\
@@ -55,12 +56,15 @@ def test_compose_prompt_includes_world_and_entry_content() -> None:
     assert "Lumberjack hut" in out
 
 
-def test_compose_prompt_pins_chroma_key_in_fixed_instructions() -> None:
-    # Fixed instructions MUST tell the model to use magenta as the
-    # chroma-key background, otherwise the post-process step has
-    # nothing to chroma-key against.
+def test_compose_prompt_pins_transparent_background_in_fixed_instructions() -> None:
+    # Fixed instructions MUST tell the model to emit a transparent
+    # background. The image API also gets `background: "transparent"`
+    # as a parameter, but the prompt-side directive is what stops the
+    # model from painting opaque scenery around the sprite.
     out = compose_prompt(WORLD_FIXTURE, ENTRY_FIXTURE, FIXED_INSTRUCTIONS)
-    assert "#FF00FF" in out or "magenta" in out.lower()
+    lower = out.lower()
+    assert "transparent" in lower
+    assert "alpha=0" in lower or "alpha = 0" in lower
 
 
 def test_compose_prompt_differs_when_world_changes() -> None:

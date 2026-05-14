@@ -11,9 +11,9 @@ A natural-language style bible SHALL exist at `Resources/Sprites.style/world.md`
 - **WHEN** a test parses `Resources/Sprites.style/world.md` for level-2 headings
 - **THEN** the parsed heading set includes `Theme & era`, `Visual references`, `Projection & scale`, `Palette`, `Outline & shading`, `Background`, and `Forbidden`
 
-#### Scenario: Style bible declares the magenta chroma-key colour
+#### Scenario: Style bible declares the transparent-background convention
 - **WHEN** the `Background` section of `world.md` is read
-- **THEN** it names the colour `#FF00FF` (case-insensitive) as the chroma-key fill
+- **THEN** it requires the pipeline to ask the image API for `background: "transparent"` (or equivalent) so generated PNGs ship with real per-pixel alpha — not a chroma-key colour that has to be matched and post-processed
 
 ### Requirement: Master reference image anchors inter-sprite cohesion
 A committed binary `Resources/Sprites.style/master-reference.png` SHALL exist. It is the visual style anchor attached to every per-sprite generation call. Regeneration of `master-reference.png` SHALL be an explicit, separate workflow (`make sprites-reference`) — `make sprites` MUST NOT regenerate it implicitly. The committed file is treated as authoritative; pipeline runs reference it on disk.
@@ -42,7 +42,7 @@ A natural-language catalog entry SHALL exist at `Resources/Sprites.style/catalog
 - **THEN** each file's basename matches a sprite kind referenced by the `SpriteAtlas` catalog
 
 ### Requirement: Catalog entry declares function, identity, sheet, animation
-Each `catalog/<id>.md` entry SHALL declare, at minimum, the following sections as level-2 Markdown headings: `Function`, `Visual identity`, `Sheet`, `Animation`. The `Sheet` section MUST enumerate every cell of the sprite sheet by `(row, col)` coordinate and assign each cell to either a specific atlas filename (e.g., `building-sawmill-operational-0`), a `spare` placeholder (solid magenta), or a construction stage. The `Animation` section MUST identify which cells form an animation loop and MUST state explicitly that frames are placed in adjacent cells.
+Each `catalog/<id>.md` entry SHALL declare, at minimum, the following sections as level-2 Markdown headings: `Function`, `Visual identity`, `Sheet`, `Animation`. The `Sheet` section MUST enumerate every cell of the sprite sheet by `(row, col)` coordinate and assign each cell to either a specific atlas filename (e.g., `building-sawmill-operational-0`), a `spare` placeholder (fully transparent, no content), or a construction stage. The `Animation` section MUST identify which cells form an animation loop and MUST state explicitly that frames are placed in adjacent cells.
 
 #### Scenario: Catalog entry declares all required sections
 - **WHEN** a test parses any `Resources/Sprites.style/catalog/<id>.md` for level-2 headings

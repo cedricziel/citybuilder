@@ -31,14 +31,19 @@ SINGLE_BUILDING_PROMPT_SUFFIX = (
     "half-timber-and-plaster medieval coastal-town house: two storeys, "
     "steep terracotta roof, one south-facing window with mullions, one "
     "south-facing wooden door, vertical-stud half-timber framing on a "
-    "light-plaster wall, on grass. Fill all empty space with solid "
-    "magenta #FF00FF as the chroma-key background. Crisp pixel edges, "
-    "no anti-aliasing, no gradients, no text. Outline weight: one "
-    "canonical pixel of dark `#1A1410` on south and east edges. This "
-    "image is the STYLE ANCHOR — every subsequent sprite in this game "
-    "is generated with this image attached as a reference, so its "
-    "palette, outline, pixel grain, and silhouette register MUST "
-    "embody the visual identity declared above."
+    "light-plaster wall. The building stands on a SMALL DIAMOND "
+    "footprint of grass — just enough grass to anchor the silhouette, "
+    "not a full landscape. EVERYTHING ELSE IS TRANSPARENT (alpha=0). "
+    "Do NOT paint a background; do NOT extend the grass beyond the "
+    "diamond footprint. The API is called with "
+    "`background: \"transparent\"` and the result MUST be a PNG with "
+    "per-pixel alpha. Crisp pixel edges, no anti-aliasing, no "
+    "gradients, no text. Outline weight: one canonical pixel of dark "
+    "`#1A1410` on south and east edges. This image is the STYLE "
+    "ANCHOR — every subsequent sprite in this game is generated with "
+    "this image attached as a reference, so its palette, outline, "
+    "pixel grain, and silhouette register MUST embody the visual "
+    "identity declared above."
 )
 
 
@@ -81,6 +86,11 @@ def generate_master_reference(
         "prompt": prompt,
         "size": size,
         "n": 1,
+        # Real per-pixel alpha out of the model. The post-process step
+        # in batcher.py thresholds the soft alpha to binary 0/255 so
+        # pixel-art edges stay crisp after the downsample pass.
+        "background": "transparent",
+        "output_format": "png",
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     with httpx.Client(timeout=timeout) as client:

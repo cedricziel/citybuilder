@@ -90,8 +90,8 @@ func scenarioStyleBibleDeclaresAllRequiredSections() throws {
     #expect(missing.isEmpty, "world.md is missing required sections: \(missing.sorted())")
 }
 
-@Test("scenario: style bible declares the magenta chroma-key colour")
-func scenarioStyleBibleDeclaresTheMagentaChromaKeyColour() throws {
+@Test("scenario: style bible declares the transparent-background convention")
+func scenarioStyleBibleDeclaresTheTransparentBackgroundConvention() throws {
     let body = try readFile("Resources/Sprites.style/world.md")
     guard let section = sectionBody("Background", in: body) else {
         Issue.record("world.md has no Background section")
@@ -99,8 +99,12 @@ func scenarioStyleBibleDeclaresTheMagentaChromaKeyColour() throws {
     }
     let normalised = section.lowercased()
     #expect(
-        normalised.contains("#ff00ff"),
-        "Background section must name the chroma-key colour #FF00FF"
+        normalised.contains("transparent"),
+        "Background section must declare PNG transparency as the alpha convention"
+    )
+    #expect(
+        normalised.contains("background"),
+        "Background section must reference the API's transparent-background mode"
     )
 }
 

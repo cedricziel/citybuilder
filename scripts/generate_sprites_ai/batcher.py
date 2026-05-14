@@ -4,10 +4,13 @@ This is the only impure module in the pipeline. It:
 - walks every `Resources/Sprites.style/catalog/*.md` entry,
 - composes a prompt,
 - checks the prompt-hash cache,
-- on miss, calls `/v1/images/edits` with the master-reference attached,
+- on miss, calls `/v1/images/edits` with the master-reference attached
+  and `background: "transparent"` so the model returns a PNG with real
+  per-pixel alpha,
 - writes the resulting sheet to `_cache/<hash>.png` and `_sheets/<id>.png`,
 - slices the sheet via `slice_plan` + `slice_sheet`,
-- post-processes each cell (chroma-key + downsample + quantize),
+- post-processes each cell (threshold alpha to binary, then downsample,
+  then quantize),
 - writes per-cell PNGs into the category atlas directories.
 
 `run_pipeline(offline=False, verify=False)` returns 0 on success.
@@ -36,7 +39,7 @@ from .cache import (
     write_sheet,
 )
 from .composer import FIXED_INSTRUCTIONS, compose_prompt
-from .postprocess import chroma_key, downsample, quantize
+from .postprocess import downsample, quantize, threshold_alpha
 from .slicer import CatalogEntry, parse_catalog_entry, slice_plan, slice_sheet
 
 
@@ -54,9 +57,10 @@ PREFIX_TARGETS: dict[str, tuple[int, int]] = {
 
 
 # 32-colour palette from `Resources/Sprites.style/world.md` § Palette.
-# Pipeline quantizes every generated cell to this set after the
-# chroma-key pass. The chroma-key colour is preserved separately on
-# transparent pixels.
+# Pipeline quantizes every generated cell to this set. Transparent
+# pixels (alpha=0) are preserved through the quantize step — the
+# RGB-snap to nearest palette entry only affects opaque pixels'
+# colours, never their alpha.
 PALETTE: list[tuple[int, int, int]] = [
     (0x3D, 0x2A, 0x1D), (0x5C, 0x3F, 0x28), (0x8C, 0x6A, 0x45),
     (0xC9, 0xA6, 0x71), (0x5C, 0x80, 0x38), (0x3F, 0x5C, 0x26),
@@ -104,26 +108,24 @@ def _target_size(sprite_name: str) -> tuple[int, int]:
 
 
 def _save_indexed_png(image: Image.Image, dest: Path) -> None:
-    """Save a Pillow image as an optimized indexed-mode PNG. Per
-    `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
-    optimized": output footprint stays bounded; aesthetic fidelity is
-    unaffected because pixel art has ≤32 distinct colours.
+    """Save a Pillow image as an optimized indexed-mode PNG with
+    alpha preserved. Per `sprite-asset-pipeline` § "Committed PNGs
+    are indexed-mode and optimized": output footprint stays bounded;
+    aesthetic fidelity is unaffected because pixel art has ≤32
+    distinct colours.
+
+    Uses libimagequant's RGBA-aware quantizer, which produces a
+    P-mode image with a tRNS chunk encoding per-palette-index alpha.
+    Pillow's other quantize chains (e.g., split alpha → RGB →
+    quantize → re-paste) silently drop the per-pixel alpha at the
+    final RGBA-to-P conversion.
     """
-    # Convert RGBA -> P with palette quantization while preserving
-    # transparency: Pillow's quantize() handles the palette; the alpha
-    # mask survives into the 'P' image's transparency entry when we
-    # remap.
     rgba = image.convert("RGBA")
-    alpha = rgba.split()[-1]
-    rgb = rgba.convert("RGB")
-    indexed = rgb.quantize(colors=256, method=Image.Quantize.LIBIMAGEQUANT, dither=Image.Dither.NONE)
-    # Restore alpha by adding a transparency palette index. The simple
-    # approach: paste the image and use the alpha as transparency mask
-    # via a synthesized palette slot.
-    indexed.info["transparency"] = 0  # reserve index 0 for fully transparent
-    indexed = indexed.convert("RGBA")
-    indexed.putalpha(alpha)
-    indexed = indexed.convert("P", palette=Image.Palette.ADAPTIVE, colors=256)
+    indexed = rgba.quantize(
+        colors=256,
+        method=Image.Quantize.LIBIMAGEQUANT,
+        dither=Image.Dither.NONE,
+    )
     dest.parent.mkdir(parents=True, exist_ok=True)
     indexed.save(dest, format="PNG", optimize=True)
 
@@ -141,8 +143,10 @@ def _process_and_write_cell(
     `_target_size` keeps reading the committed PNG dimensions from
     the real atlas dirs."""
     target = _target_size(sprite_name)
-    keyed = chroma_key(tile, hex_color="#FF00FF")
-    resized = downsample(keyed, target, mode="nearest")
+    # Threshold soft model alpha to binary BEFORE downsampling so the
+    # silhouette edges stay crisp at the canonical pixel-art scale.
+    binarized = threshold_alpha(tile, threshold=128)
+    resized = downsample(binarized, target, mode="nearest")
     quantized = quantize(resized, PALETTE)
     resolver = output_dir_resolver or paths.atlas_dir_for
     out_path = resolver(sprite_name) / f"{sprite_name}.png"
@@ -306,6 +310,11 @@ def _post_edit(
         "prompt": prompt,
         "size": size,
         "n": str(n),
+        # Real per-pixel alpha out of the model. Replaces the
+        # legacy magenta chroma-key path (which lived through one
+        # short-lived attempt at this pipeline).
+        "background": "transparent",
+        "output_format": "png",
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     with httpx.Client(timeout=timeout) as client:

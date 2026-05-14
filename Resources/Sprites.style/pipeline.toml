@@ -22,9 +22,17 @@ sheet_default_size = "1536x1024"
 # icons and ships override this via per-entry front matter.
 cell_default_grid = "4x2"
 
-# Chroma-key colour. The pipeline's post-processor converts this to
-# alpha=0. MUST match the colour declared in `world.md` § Background.
-chroma_key_hex = "#FF00FF"
+# Background convention. The pipeline asks the image API for real PNG
+# transparency via `background: "transparent"` on every call; the model
+# is expected to return alpha = 0 outside the sprite silhouette. No
+# chroma-key colour is reserved.
+background = "transparent"
+
+# Soft-alpha threshold applied after generation. Pixels with alpha
+# below this value become fully transparent (0); pixels at or above
+# become fully opaque (255). Hard binary alpha keeps pixel-art edges
+# crisp after nearest-neighbour downsampling.
+alpha_threshold = 128
 
 # Concurrent /v1/images/edits calls in a single `make sprites` run.
 # Tuned by the spike at 4 — within tier rate limits, completes a

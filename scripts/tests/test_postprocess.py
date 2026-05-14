@@ -9,10 +9,10 @@ from __future__ import annotations
 from PIL import Image
 
 from generate_sprites_ai.postprocess import (
-    chroma_key,
     downsample,
-    quantize,
     preserve_outline,
+    quantize,
+    threshold_alpha,
 )
 
 
@@ -20,23 +20,27 @@ def _solid(size: tuple[int, int], color: tuple[int, int, int]) -> Image.Image:
     return Image.new("RGB", size, color)
 
 
-def test_chroma_key_converts_magenta_to_alpha_zero() -> None:
-    img = _solid((4, 4), (255, 0, 255))
-    out = chroma_key(img, hex_color="#FF00FF")
-    assert out.mode == "RGBA"
-    for x in range(4):
-        for y in range(4):
-            r, g, b, a = out.getpixel((x, y))
-            assert a == 0, f"({x},{y}) expected alpha 0, got {a}"
+def test_threshold_alpha_snaps_soft_alpha_to_binary() -> None:
+    """Pixels with alpha below the threshold become 0, at-or-above
+    become 255 — no in-between values survive."""
+    img = Image.new("RGBA", (4, 1), (200, 100, 50, 255))
+    img.putpixel((0, 0), (200, 100, 50, 0))     # fully transparent
+    img.putpixel((1, 0), (200, 100, 50, 64))    # below threshold
+    img.putpixel((2, 0), (200, 100, 50, 200))   # above threshold
+    img.putpixel((3, 0), (200, 100, 50, 255))   # fully opaque
+    out = threshold_alpha(img, threshold=128)
+    alphas = [out.getpixel((x, 0))[3] for x in range(4)]
+    assert alphas == [0, 0, 255, 255]
 
 
-def test_chroma_key_leaves_other_colours_opaque() -> None:
-    img = Image.new("RGB", (2, 1), (255, 0, 255))
-    img.putpixel((1, 0), (0, 128, 64))
-    out = chroma_key(img, hex_color="#FF00FF")
-    assert out.getpixel((0, 0))[3] == 0
-    r, g, b, a = out.getpixel((1, 0))
-    assert (r, g, b, a) == (0, 128, 64, 255)
+def test_threshold_alpha_preserves_rgb_channels() -> None:
+    """RGB values pass through unchanged; only the alpha plane is
+    rewritten."""
+    img = Image.new("RGBA", (1, 1), (200, 100, 50, 200))
+    out = threshold_alpha(img, threshold=128)
+    r, g, b, a = out.getpixel((0, 0))
+    assert (r, g, b) == (200, 100, 50)
+    assert a == 255
 
 
 def test_downsample_nearest_does_not_blur() -> None:
