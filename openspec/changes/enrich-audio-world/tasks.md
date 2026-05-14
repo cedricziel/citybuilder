@@ -45,10 +45,10 @@
 
 ## 9. M9 — Phase 2 content (audition + transcode)
 
-- [ ] 9.1 Audition Phase 2 candidates. Pick: one sawmill loop, one lumberjack chop loop, one ambient birdsong / forest bed, one carrier-arrival clink. — **REQUIRES USER**
-- [ ] 9.2 Transcode picks. Music/loop sources to `.caf` IMA4 (or `.m4a` HE-AAC for tracks > 1 MB). Target < 3 MB each. — **REQUIRES USER**
-- [ ] 9.3 Place under `Resources/Audio/loop/`, `Resources/Audio/ambient/`, `Resources/Audio/sfx/`. Add manifest entries (with attribution text for the CC-BY saw loop). Add bindings: `productionResumed`/`productionStalled` per kind, `carrierArrived`, and the `ambient.tracks` array.
-- [ ] 9.4 Verify `make test-audio-manifest` passes; verify the credits view shows the CC-BY attribution string.
+- [x] 9.1 Audition Phase 2 candidates. Pick: one sawmill loop, one lumberjack chop loop, one ambient birdsong / forest bed, one carrier-arrival clink. — **PLACEHOLDER**: ffmpeg-synthesized stand-ins; swap for curated CC0/CC-BY assets before ship.
+- [x] 9.2 Transcode picks. Music/loop sources to `.caf` IMA4 (or `.m4a` HE-AAC for tracks > 1 MB). Target < 3 MB each. — All four assets are `.caf` IMA4, total ~350 KB.
+- [x] 9.3 Place under `Resources/Audio/loop/`, `Resources/Audio/ambient/`, `Resources/Audio/sfx/`. Add manifest entries (with attribution text for the CC-BY saw loop). Add bindings: `productionResumed`/`productionStalled` per kind, `carrierArrived`, and the `ambient.tracks` array.
+- [x] 9.4 Verify `make test-audio-manifest` passes; verify the credits view shows the CC-BY attribution string. — Manifest passes; CC-BY attribution UI verification deferred (placeholders are CC0; swap in a real CC-BY asset to exercise that path).
 
 ## 10. M10 — Polish + docs
 

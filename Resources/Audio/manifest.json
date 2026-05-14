@@ -42,6 +42,34 @@
       "author": "Kenney",
       "source": "https://kenney.nl/assets/interface-sounds",
       "license": "CC0"
+    },
+    {
+      "path": "loop/sawmill.caf",
+      "title": "Sawmill Loop (placeholder)",
+      "author": "Citybuilder placeholder synth",
+      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/lumberjack.caf",
+      "title": "Lumberjack Chop Loop (placeholder)",
+      "author": "Citybuilder placeholder synth",
+      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/forest-birds.caf",
+      "title": "Forest Birdsong Bed (placeholder)",
+      "author": "Citybuilder placeholder synth",
+      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/carrier-clink.caf",
+      "title": "Carrier Arrival Clink (placeholder)",
+      "author": "Citybuilder placeholder synth",
+      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "license": "CC0"
     }
   ]
 }

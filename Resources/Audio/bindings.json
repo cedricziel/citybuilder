@@ -12,6 +12,17 @@
     ],
     "gameOver": [
       { "file": "economy/game-over.caf", "bus": "sfx", "volume": 1.0 }
+    ],
+    "carrierArrived": [
+      { "file": "sfx/carrier-clink.caf", "bus": "sfx", "volume": 0.5 }
+    ],
+    "productionResumed": [
+      { "file": "loop/sawmill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "sawmill" },
+      { "file": "loop/lumberjack.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "lumberjackHut" }
+    ],
+    "productionStalled": [
+      { "action": "stop", "kindFilter": "sawmill" },
+      { "action": "stop", "kindFilter": "lumberjackHut" }
     ]
   },
   "music": {
@@ -20,5 +31,10 @@
     ],
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
+  },
+  "ambient": {
+    "tracks": [
+      { "file": "ambient/forest-birds.caf" }
+    ]
   }
 }

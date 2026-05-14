@@ -100,21 +100,31 @@ for entry in manifest?.entries ?? [] where attributionLicenses.contains(entry.li
 
 // 3. Bindings file references must be in the manifest.
 if FileManager.default.fileExists(atPath: bindingsURL.path) {
-    struct Cue: Codable { let file: String }
+    // `file` is optional: Phase 2 introduced stop-action cues that have
+    // no associated file. They contribute no manifest reference and are
+    // skipped below.
+    struct Cue: Codable { let file: String? }
     struct MusicTrack: Codable { let file: String }
     struct MusicSection: Codable { let tracks: [MusicTrack]? }
+    struct AmbientSection: Codable { let tracks: [MusicTrack]? }
     struct Bindings: Codable {
         let bindings: [String: [Cue]]?
         let music: MusicSection?
+        let ambient: AmbientSection?
     }
     do {
         let data = try Data(contentsOf: bindingsURL)
         let bindings = try JSONDecoder().decode(Bindings.self, from: data)
         var referenced: [String] = []
         for cues in (bindings.bindings ?? [:]).values {
-            referenced.append(contentsOf: cues.map(\.file))
+            for cue in cues {
+                if let file = cue.file, !file.isEmpty {
+                    referenced.append(file)
+                }
+            }
         }
         referenced.append(contentsOf: bindings.music?.tracks?.map(\.file) ?? [])
+        referenced.append(contentsOf: bindings.ambient?.tracks?.map(\.file) ?? [])
         for path in referenced where !manifestPaths.contains(path) {
             problems.append("bindings.json references file '\(path)' which has no manifest entry")
         }
