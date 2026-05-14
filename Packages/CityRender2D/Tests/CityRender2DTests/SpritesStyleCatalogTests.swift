@@ -110,8 +110,8 @@ func scenarioStyleBibleDeclaresTheTransparentBackgroundConvention() throws {
 
 // MARK: - Requirement: Model version is pinned in the catalog
 
-@Test("scenario: pipeline pins a dated model snapshot")
-func scenarioPipelinePinsADatedModelSnapshot() throws {
+@Test("scenario: pipeline pins a recognised openai image model")
+func scenarioPipelinePinsARecognisedOpenaiImageModel() throws {
     let body = try readFile("Resources/Sprites.style/pipeline.toml")
     // Look for a top-level `model = "..."` line. We don't need a full
     // TOML parser for one key; a regex is enough.
@@ -130,11 +130,17 @@ func scenarioPipelinePinsADatedModelSnapshot() throws {
         Issue.record("pipeline.toml has no `model = \"...\"` line")
         return
     }
-    // Form: gpt-image-<major>-<YYYY>-<MM>-<DD>
-    let snapshot = #"^gpt-image-\d+-\d{4}-\d{2}-\d{2}$"#
+    // Accept either a dated snapshot OR a known floating alias for a
+    // model family that doesn't expose dated snapshots (currently
+    // `gpt-image-1`, `gpt-image-1.5`, `gpt-image-1-mini`).
+    let datedSnapshot = #"^gpt-image-\d+(?:\.\d+)?-\d{4}-\d{2}-\d{2}$"#
+    let recognisedAlias = #"^gpt-image-(1|1\.5|1-mini)$"#
+    let isDated = model.range(of: datedSnapshot, options: .regularExpression) != nil
+    let isAlias = model.range(of: recognisedAlias, options: .regularExpression) != nil
     #expect(
-        model.range(of: snapshot, options: .regularExpression) != nil,
-        "model id must be a dated snapshot, got \(model)"
+        isDated || isAlias,
+        "model id must be a dated snapshot or a recognised floating "
+            + "alias for a family without dated snapshots, got \(model)"
     )
 }
 

@@ -1,131 +1,110 @@
 """Integration tests for `generate_sprites_ai.batcher`.
 
-These tests mock `httpx.Client.post` so they exercise the orchestrator
-path without burning real OpenAI credits.
+These tests mock `_post_edit` (the per-sprite API call) so they
+exercise the orchestrator path without burning real OpenAI credits.
 """
 
 from __future__ import annotations
 
-import base64
-import io
+import tomllib
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from PIL import Image
 
 from generate_sprites_ai import batcher, cache, paths
-from generate_sprites_ai.composer import FIXED_INSTRUCTIONS
-
-
-def _fake_sheet_png_b64() -> str:
-    img = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
-    # Paint a single non-magenta pixel in cell (0, 0) so we can verify
-    # the slicer + chroma-key + downsample chain wrote something.
-    img.putpixel((10, 10), (122, 31, 26, 255))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return base64.b64encode(buf.getvalue()).decode("ascii")
+from generate_sprites_ai.slicer import parse_catalog_entry
 
 
 def _patch_dirs_to(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Redirect every directory the batcher writes to into tmp_path."""
     monkeypatch.setattr(cache, "CACHE_DIR_OVERRIDE", tmp_path / "_cache")
     monkeypatch.setattr(cache, "SHEETS_DIR_OVERRIDE", tmp_path / "_sheets")
-    # Atlas writes target the real Resources/*.atlas/ directories;
-    # redirect those too via the paths module.
-    fake_terrain = tmp_path / "Terrain.atlas"
-    fake_buildings = tmp_path / "Buildings.atlas"
-    fake_units = tmp_path / "Units.atlas"
-    fake_icons = tmp_path / "Icons.atlas"
     monkeypatch.setattr(paths, "ATLAS_DIRS", {
-        "terrain-": fake_terrain,
-        "building-": fake_buildings,
-        "walker-": fake_units,
-        "ship-": fake_units,
-        "good-": fake_icons,
+        "terrain-": tmp_path / "Terrain.atlas",
+        "building-": tmp_path / "Buildings.atlas",
+        "walker-": tmp_path / "Units.atlas",
+        "ship-": tmp_path / "Units.atlas",
+        "good-": tmp_path / "Icons.atlas",
     })
+
+
+def _read_pipeline_model() -> str:
+    return tomllib.loads(paths.PIPELINE_TOML.read_text(encoding="utf-8"))["model"]
 
 
 def test_cache_hit_skips_the_api_call(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """If a cache entry for an exists for the cache key, the batcher
-    MUST NOT call /v1/images/edits for that entry."""
+    """If a cache entry exists for the sprite-name's key, the batcher
+    MUST NOT call `_post_edit` for that sprite."""
     _patch_dirs_to(tmp_path, monkeypatch)
-
-    # Prime the cache with the exact key for one catalog entry.
     catalog_md = paths.CATALOG_DIR / "building-house.md"
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
     entry_md = catalog_md.read_text(encoding="utf-8")
-    import tomllib
-    cfg = tomllib.loads(paths.PIPELINE_TOML.read_text(encoding="utf-8"))
-    model_id = cfg["model"]
+    model_id = _read_pipeline_model()
 
-    key = cache.cache_key(world_md, entry_md, FIXED_INSTRUCTIONS, model_id)
-    fake_sheet = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
-    cache.write_cache(key, fake_sheet)
+    sprite_name = "building-house"
+    key = cache.cache_key(
+        world_md, entry_md, batcher._LEGACY_FIXED_INSTRUCTIONS, model_id,
+        sprite_name=sprite_name,
+    )
+    fake = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+    cache.write_cache(key, fake)
 
-    # Use the batcher's internal helper to confirm no API call happens.
     with patch("generate_sprites_ai.batcher._post_edit") as mocked:
-        # Build a CatalogEntry without parsing all catalogs.
-        from generate_sprites_ai.slicer import parse_catalog_entry
         entry = parse_catalog_entry("building-house", entry_md)
-        sheet = batcher._sheet_for_entry(
-            entry, entry_md, world_md, model_id, offline=False,
+        out = batcher._sprite_for_atlas_name(
+            sprite_name, "test role", entry, entry_md, world_md, model_id,
+            offline=False,
         )
         mocked.assert_not_called()
-    assert sheet.size == (1024, 1024)
+    assert out.size == (1024, 1024)
 
 
 def test_offline_mode_reads_from_sheets_store(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Offline mode MUST read from `_sheets/<id>.png` and never
-    contact the API or the cache."""
+    """Offline mode MUST read from `_sheets/<sprite-name>.png` and
+    never contact the API or the cache."""
     _patch_dirs_to(tmp_path, monkeypatch)
-
-    # Commit a fake sheet for one entry in the sheets store.
+    sprite_name = "building-house"
     fake = Image.new("RGBA", (1024, 1024), (10, 20, 30, 255))
-    cache.write_sheet("building-house", fake)
+    cache.write_sheet(sprite_name, fake)
 
     catalog_md = paths.CATALOG_DIR / "building-house.md"
     entry_md = catalog_md.read_text(encoding="utf-8")
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
-    import tomllib
-    cfg = tomllib.loads(paths.PIPELINE_TOML.read_text(encoding="utf-8"))
-    model_id = cfg["model"]
+    model_id = _read_pipeline_model()
 
     with patch("generate_sprites_ai.batcher._post_edit") as mocked:
-        from generate_sprites_ai.slicer import parse_catalog_entry
         entry = parse_catalog_entry("building-house", entry_md)
-        sheet = batcher._sheet_for_entry(
-            entry, entry_md, world_md, model_id, offline=True,
+        out = batcher._sprite_for_atlas_name(
+            sprite_name, "test role", entry, entry_md, world_md, model_id,
+            offline=True,
         )
         mocked.assert_not_called()
-    assert sheet.size == (1024, 1024)
-    assert sheet.getpixel((0, 0))[:3] == (10, 20, 30)
+    assert out.size == (1024, 1024)
+    assert out.getpixel((0, 0))[:3] == (10, 20, 30)
 
 
 def test_offline_mode_fails_loudly_when_sheet_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Offline mode with no committed sheet MUST raise — the contract
-    is that committed sheets are the offline source of truth."""
+    """Offline mode with no committed sheet for the requested sprite
+    MUST raise — committed sheets are the offline source of truth."""
     _patch_dirs_to(tmp_path, monkeypatch)
-
     catalog_md = paths.CATALOG_DIR / "building-house.md"
     entry_md = catalog_md.read_text(encoding="utf-8")
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
-    import tomllib
-    cfg = tomllib.loads(paths.PIPELINE_TOML.read_text(encoding="utf-8"))
-    model_id = cfg["model"]
+    model_id = _read_pipeline_model()
 
-    from generate_sprites_ai.slicer import parse_catalog_entry
     entry = parse_catalog_entry("building-house", entry_md)
     with pytest.raises(RuntimeError, match="_sheets/building-house.png"):
-        batcher._sheet_for_entry(
-            entry, entry_md, world_md, model_id, offline=True,
+        batcher._sprite_for_atlas_name(
+            "building-house", "test role", entry, entry_md, world_md,
+            model_id, offline=True,
         )
 
 
@@ -133,19 +112,15 @@ def test_bumping_the_model_invalidates_every_cache_entry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Toggling the `model` key MUST change the cache key for every
-    entry — proves the model id is part of the hash."""
+    sprite — proves the model id is part of the hash."""
     _patch_dirs_to(tmp_path, monkeypatch)
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
     keys_old: list[str] = []
     keys_new: list[str] = []
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         text = md.read_text(encoding="utf-8")
-        keys_old.append(
-            cache.cache_key(world_md, text, FIXED_INSTRUCTIONS, "gpt-image-2-2026-04-21")
-        )
-        keys_new.append(
-            cache.cache_key(world_md, text, FIXED_INSTRUCTIONS, "gpt-image-3-2030-01-01")
-        )
+        keys_old.append(cache.cache_key(world_md, text, "", "gpt-image-1", sprite_name=md.stem))
+        keys_new.append(cache.cache_key(world_md, text, "", "gpt-image-9", sprite_name=md.stem))
     assert set(keys_old).isdisjoint(set(keys_new))
 
 
@@ -159,70 +134,88 @@ def test_editing_world_md_invalidates_every_cache_entry(
     keys_new: list[str] = []
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         text = md.read_text(encoding="utf-8")
-        keys_old.append(cache.cache_key(world_md, text, FIXED_INSTRUCTIONS, "m"))
-        keys_new.append(cache.cache_key(world_edited, text, FIXED_INSTRUCTIONS, "m"))
+        keys_old.append(cache.cache_key(world_md, text, "", "m", sprite_name=md.stem))
+        keys_new.append(cache.cache_key(world_edited, text, "", "m", sprite_name=md.stem))
     assert set(keys_old).isdisjoint(set(keys_new))
+
+
+def test_cache_key_is_per_sprite_name_within_a_kind(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Each sprite-name within a multi-cell catalog kind MUST get its
+    own cache slot. Editing one sprite's role-driven prompt would
+    otherwise invalidate every other sprite of the kind too."""
+    keys = {
+        name: cache.cache_key("world", "entry", "", "m", sprite_name=name)
+        for name in (
+            "building-house",
+            "building-house-constructing-0",
+            "building-house-constructing-1",
+        )
+    }
+    assert len(set(keys.values())) == 3
 
 
 def test_default_mode_is_single_pass(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A catalog entry without `two-pass: true` in its front matter
-    MUST trigger exactly one /v1/images/edits call."""
+    MUST trigger exactly one API call per atlas sprite."""
     _patch_dirs_to(tmp_path, monkeypatch)
     entry_md = (
         "## Function\nx\n\n"
         "## Visual identity\nx\n\n"
-        "## Sheet\n\nGrid: 2 cols × 1 rows.\n"
-        "- (0, 0): `building-house`\n"
-        "- (0, 1): `building-house-constructing-0`\n\n"
-        "## Animation\n- Construction: `(0, 0)` → `(0, 1)`.\n"
+        "## Sheet\n\nGrid: 1 cols × 1 rows.\n"
+        "- (0, 0): `building-house`\n\n"
+        "## Animation\nStatic.\n"
     )
     monkeypatch.setattr("os.environ", {"OPENAI_API_KEY": "test"})
-    fake_sheet = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+    fake = Image.new("RGBA", (1024, 1024), (10, 20, 30, 255))
 
-    with patch("generate_sprites_ai.batcher._post_edit", return_value=fake_sheet) as mocked:
-        from generate_sprites_ai.slicer import parse_catalog_entry
+    with patch("generate_sprites_ai.batcher._post_edit", return_value=fake) as mocked:
         entry = parse_catalog_entry("building-house", entry_md)
-        sheet = batcher._sheet_for_entry(
-            entry, entry_md, "world", "model-id", offline=False,
+        batcher._sprite_for_atlas_name(
+            "building-house", "test role", entry, entry_md, "world", "m",
+            offline=False,
         )
         assert mocked.call_count == 1
-        assert sheet.size == fake_sheet.size
 
 
-def test_opt_in_two_pass_triggers_a_second_api_call(
+def test_two_pass_operational_anchors_on_base_sprite(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A catalog entry with `two-pass: true` front matter MUST trigger
-    two /v1/images/edits calls."""
+    """In two-pass mode, an operational-frame sprite call MUST pass
+    `_sheets/<base>.png` as the anchor image, not the global
+    master-reference. Confirms operational frames inherit pixel
+    coherence from the just-generated base sprite."""
     _patch_dirs_to(tmp_path, monkeypatch)
     entry_md = (
-        "---\n"
-        "two-pass = true\n"
-        "---\n\n"
-        "## Function\nx\n\n"
-        "## Visual identity\nx\n\n"
-        "## Sheet\n\nGrid: 2 cols × 1 rows.\n"
-        "- (0, 0): `building-house`\n"
-        "- (0, 1): `building-house-operational-0`\n\n"
-        "## Animation\n- Op: `(0, 0)` → `(0, 1)`.\n"
+        "---\ntwo-pass = true\n---\n"
+        "## Function\nx\n## Visual identity\nx\n"
+        "## Sheet\n\nGrid: 1 cols × 1 rows.\n"
+        "- (0, 0): `building-house-operational-0`\n"
+        "## Animation\nStatic.\n"
     )
     monkeypatch.setattr("os.environ", {"OPENAI_API_KEY": "test"})
-    pass1 = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
-    pass2 = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+    fake_base = Image.new("RGBA", (1024, 1024), (50, 60, 70, 255))
+    cache.write_sheet("building-house", fake_base)
 
-    with patch(
-        "generate_sprites_ai.batcher._post_edit",
-        side_effect=[pass1, pass2],
-    ) as mocked:
-        from generate_sprites_ai.slicer import parse_catalog_entry
+    fake_op = Image.new("RGBA", (1024, 1024), (10, 20, 30, 255))
+    seen_anchor: dict[str, Path] = {}
+
+    def fake_post_edit(*, master_reference_path: Path, **_kw: object) -> Image.Image:
+        seen_anchor["path"] = master_reference_path
+        return fake_op
+
+    with patch("generate_sprites_ai.batcher._post_edit", side_effect=fake_post_edit):
         entry = parse_catalog_entry("building-house", entry_md)
-        sheet = batcher._sheet_for_entry(
-            entry, entry_md, "world", "model-id", offline=False,
+        batcher._sprite_for_atlas_name(
+            "building-house-operational-0", "op frame 0", entry, entry_md,
+            "world", "m", offline=False,
         )
-        assert mocked.call_count == 2
-        assert sheet.size == (1024, 1024)
+
+    assert seen_anchor["path"].name == "building-house.png"
+    assert seen_anchor["path"].parent == tmp_path / "_sheets"
 
 
 def test_two_pass_cache_key_includes_the_mode(
@@ -242,32 +235,61 @@ def test_two_pass_cache_key_includes_the_mode(
         "## Sheet\n\nGrid: 1 cols × 1 rows.\n- (0, 0): `building-house`\n"
         "## Animation\nStatic.\n"
     )
-    k1 = cache.cache_key("world", base, FIXED_INSTRUCTIONS, "m")
-    k2 = cache.cache_key("world", two_pass, FIXED_INSTRUCTIONS, "m")
+    k1 = cache.cache_key("world", base, "", "m", sprite_name="building-house")
+    k2 = cache.cache_key("world", two_pass, "", "m", sprite_name="building-house")
     assert k1 != k2
 
 
 def test_make_sprites_is_idempotent_on_unchanged_inputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """With every cache key already populated, two consecutive
-    `run_pipeline(offline=False)` invocations MUST perform zero API
-    calls and produce identical atlas PNG bytes."""
+    """With every per-sprite cache key already populated, two
+    consecutive `run_pipeline(offline=False)` invocations MUST perform
+    zero API calls."""
     _patch_dirs_to(tmp_path, monkeypatch)
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
-    import tomllib
-    cfg = tomllib.loads(paths.PIPELINE_TOML.read_text(encoding="utf-8"))
-    model_id = cfg["model"]
+    model_id = _read_pipeline_model()
 
-    # Prime cache for every catalog entry with a single magenta sheet.
+    # Prime per-sprite cache for every sprite the catalog declares.
     fake = Image.new("RGBA", (1024, 1024), (255, 0, 255, 255))
+    from generate_sprites_ai.slicer import slice_plan
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         text = md.read_text(encoding="utf-8")
-        key = cache.cache_key(world_md, text, FIXED_INSTRUCTIONS, model_id)
-        cache.write_cache(key, fake)
+        entry = parse_catalog_entry(md.stem, text)
+        for _, sprite_name in slice_plan(entry):
+            key = cache.cache_key(
+                world_md, text, batcher._LEGACY_FIXED_INSTRUCTIONS, model_id,
+                sprite_name=sprite_name,
+            )
+            cache.write_cache(key, fake)
 
     with patch("generate_sprites_ai.batcher._post_edit") as mocked:
         rc1 = batcher.run_pipeline(offline=False, verify=False)
         rc2 = batcher.run_pipeline(offline=False, verify=False)
         assert rc1 == 0 and rc2 == 0
         mocked.assert_not_called()
+
+
+def test_build_role_map_extracts_per_sprite_descriptions() -> None:
+    """The role-map parser pulls trailing role text from cell lines
+    like `- (0, 1): \`building-house-constructing-0\` — foundation stage`."""
+    text = (
+        "## Sheet\n\n"
+        "Grid: 2 cols × 1 rows.\n\n"
+        "- (0, 0): `building-house` — canonical operational base\n"
+        "- (0, 1): `building-house-constructing-0` — foundation stage\n"
+        "- (1, 0): spare\n"
+    )
+    role_map = batcher.build_role_map(text)
+    assert role_map["building-house"] == "canonical operational base"
+    assert role_map["building-house-constructing-0"] == "foundation stage"
+    assert "spare" not in role_map
+
+
+def test_role_for_falls_back_for_walker_and_ship() -> None:
+    """Walker / ship sprites with no explicit cell-line description
+    fall back to a derived role from their filename."""
+    assert "facing ne" in batcher.role_for("walker-ne-0", {})
+    assert "facing sw" in batcher.role_for("walker-sw-1", {})
+    assert "facing nw" in batcher.role_for("ship-nw-1", {})
+    assert "goods icon" in batcher.role_for("good-wood", {})

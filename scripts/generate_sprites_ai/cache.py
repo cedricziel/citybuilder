@@ -34,8 +34,17 @@ def cache_key(
     entry_md: str,
     fixed_instructions: str,
     model_id: str,
+    sprite_name: str = "",
 ) -> str:
-    """Compute the cache key for one catalog entry.
+    """Compute the cache key for one sprite.
+
+    `sprite_name` is the atlas filename being generated; including it
+    in the hash means each sprite of a multi-cell catalog kind gets
+    its own cache slot. (The pipeline switched from one-API-call-per-
+    kind to one-API-call-per-atlas-PNG when it turned out the image
+    model doesn't honour cell-grid layouts in a multi-frame
+    composition.) The empty default keeps older call sites that
+    cache at the kind level — pytest fixtures, primarily — working.
 
     Pure function. SHA-256 over the deterministic byte concatenation
     of every input that should invalidate the cache. A null byte
@@ -44,7 +53,7 @@ def cache_key(
     collision.
     """
     h = hashlib.sha256()
-    for component in (world_md, entry_md, fixed_instructions, model_id):
+    for component in (world_md, entry_md, fixed_instructions, model_id, sprite_name):
         h.update(component.encode("utf-8"))
         h.update(b"\x00")
     return h.hexdigest()

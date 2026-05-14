@@ -6,11 +6,19 @@
 # fixed-instructions string, so changes invalidate every cache entry
 # (intentional — bumping the model SHOULD regenerate everything).
 
-# OpenAI image model snapshot. MUST be a dated snapshot of the form
-# `gpt-image-<major>-<YYYY>-<MM>-<DD>`, never a floating alias like
-# `gpt-image-2` or `gpt-image-latest`. Reproducibility outranks
-# auto-tracking model improvements; bumping is a deliberate edit.
-model = "gpt-image-2-2026-04-21"
+# OpenAI image model identifier. Prefer a dated snapshot of the form
+# `gpt-image-<major>-<YYYY>-<MM>-<DD>` for reproducibility when one
+# exists. Some model families (currently `gpt-image-1`) expose only a
+# floating alias; in that case the alias is the identifier and the
+# committed `_sheets/` carry the deterministic source-of-truth for
+# offline regen instead.
+#
+# Currently pinned to `gpt-image-1`: it is the only OpenAI image model
+# that supports `background: "transparent"` on /v1/images/{generations,
+# edits}, which the pipeline requires. `gpt-image-2-2026-04-21` looked
+# like the obvious successor but rejects `background: transparent`
+# with `image_generation_user_error / invalid_value`.
+model = "gpt-image-1"
 
 # Default generated sheet size. Catalog entries MAY override via their
 # YAML front matter (`sheet_size = "1536x512"`, etc.). At this size a

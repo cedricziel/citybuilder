@@ -2,16 +2,21 @@
 
 This is the only impure module in the pipeline. It:
 - walks every `Resources/Sprites.style/catalog/*.md` entry,
-- composes a prompt,
-- checks the prompt-hash cache,
-- on miss, calls `/v1/images/edits` with the master-reference attached
-  and `background: "transparent"` so the model returns a PNG with real
-  per-pixel alpha,
-- writes the resulting sheet to `_cache/<hash>.png` and `_sheets/<id>.png`,
-- slices the sheet via `slice_plan` + `slice_sheet`,
-- post-processes each cell (threshold alpha to binary, then downsample,
-  then quantize),
-- writes per-cell PNGs into the category atlas directories.
+- builds a slice plan (the list of atlas filenames the entry produces),
+- for each atlas filename, makes ONE `/v1/images/edits` API call
+  asking for that specific sprite on a transparent background,
+- writes each raw API result to `_cache/<hash>.png` and
+  `_sheets/<sprite-name>.png`,
+- post-processes each (threshold alpha to binary, downsample, quantize),
+- writes per-sprite PNGs into the category atlas directories.
+
+The original design called one API per catalog entry and sliced the
+resulting "sheet" into per-cell tiles. That turned out to be wrong:
+the image model doesn't honour cell-grid layouts and composes one
+centred image regardless of the prompt's "N×M grid" language, so the
+slicer ended up carving a single building's silhouette into per-cell
+junk. One API call per atlas filename is more expensive (24 → 126
+calls per regen) but produces predictable, reviewable output.
 
 `run_pipeline(offline=False, verify=False)` returns 0 on success.
 """
@@ -30,6 +35,7 @@ from pathlib import Path
 import httpx
 from PIL import Image
 
+from . import cache as _cache_mod
 from . import paths
 from .cache import (
     cache_key,
@@ -38,9 +44,9 @@ from .cache import (
     write_cache,
     write_sheet,
 )
-from .composer import FIXED_INSTRUCTIONS, compose_prompt
+from .composer import compose_single_sprite_prompt
 from .postprocess import downsample, quantize, threshold_alpha
-from .slicer import CatalogEntry, parse_catalog_entry, slice_plan, slice_sheet
+from .slicer import CatalogEntry, parse_catalog_entry, slice_plan
 
 
 # Per-prefix downsample target. New sprite kinds inherit the prefix
@@ -154,7 +160,55 @@ def _process_and_write_cell(
     return out_path
 
 
-# ---------------- API call ----------------
+# ---------------- Role descriptions ----------------
+
+# Matches a catalog Sheet-section line like:
+#   - (0, 1): `building-house-constructing-0` — foundation stage ...
+# Captures the sprite name and the trailing role description after `—`
+# / `--`. The description gets fed into the per-sprite prompt so the
+# model knows whether it's painting a base, a construction stage, an
+# operational frame, an art variant, etc.
+_ROLE_LINE_RE = re.compile(
+    r":\s*`([^`]+)`\s*(?:—|--)\s*(.+?)\s*$",
+    re.MULTILINE,
+)
+
+
+def build_role_map(entry_md: str) -> dict[str, str]:
+    """Extract per-sprite role descriptions from an entry's Sheet
+    section. Falls back to "the canonical sprite for this kind" when a
+    cell line has no trailing description."""
+    roles: dict[str, str] = {}
+    for match in _ROLE_LINE_RE.finditer(entry_md):
+        name = match.group(1).strip()
+        desc = match.group(2).strip()
+        if name and name != "spare":
+            roles[name] = desc
+    return roles
+
+
+def role_for(sprite_name: str, role_map: dict[str, str]) -> str:
+    """Return the role description for a sprite name. Prefers the
+    catalog's own per-cell description when present; otherwise falls
+    back to a derived description from the sprite's filename pattern."""
+    if sprite_name in role_map:
+        return role_map[sprite_name]
+    # Pattern-based fallback for sprite names that don't carry an
+    # explicit per-cell line (rare; usually means the catalog file
+    # is using a compact format).
+    if sprite_name.startswith("walker-"):
+        parts = sprite_name.split("-")
+        return f"walker unit, facing {parts[1]}, walk-cycle frame {parts[2]}"
+    if sprite_name.startswith("ship-"):
+        parts = sprite_name.split("-")
+        return f"sailing ship, facing {parts[1]}, sail-luff frame {parts[2]}"
+    if sprite_name.startswith("good-"):
+        return f"goods icon for `{sprite_name[len('good-'):]}` (UI element)"
+    return "the canonical sprite for this kind"
+
+
+# ---------------- Generation ----------------
+
 
 def _is_two_pass(entry: CatalogEntry) -> bool:
     """Check the entry's front-matter for the two-pass opt-in. The
@@ -164,131 +218,62 @@ def _is_two_pass(entry: CatalogEntry) -> bool:
     return raw in {"true", "yes", "1"}
 
 
-def _operational_cells(entry: CatalogEntry) -> set[tuple[int, int]]:
-    """The set of (row, col) cells that map to operational animation
-    frames — those are the cells pass-2 regenerates against the
-    pass-1 base."""
-    return {
-        coord
-        for coord, name in entry.cells.items()
-        if "-operational-" in name
-    }
+def _is_operational_frame(sprite_name: str) -> bool:
+    return "-operational-" in sprite_name
 
 
-def _generate_sheet(
+def _base_name_for_kind(sprite_name: str) -> str:
+    """Strip the `-operational-N` suffix from a sprite name to get its
+    base sprite's filename. Used by two-pass mode to identify which
+    already-generated base sprite anchors the operational-frame call.
+
+        building-sawmill-operational-2  ->  building-sawmill
+        building-port-n-operational-0   ->  building-port-n
+    """
+    return re.sub(r"-operational-\d+$", "", sprite_name)
+
+
+def _generate_single_sprite(
     *,
+    sprite_name: str,
+    role: str,
     entry: CatalogEntry,
     entry_md: str,
     world_md: str,
     api_key: str,
     model_id: str,
 ) -> Image.Image:
-    """Run the catalog entry's generation flow (single-pass by default,
-    two-pass when opted in via front matter). Returns a single
-    composed Pillow image at 1024×1024."""
-    if not _is_two_pass(entry):
-        prompt = compose_prompt(world_md, entry_md, FIXED_INSTRUCTIONS)
-        return _post_edit(
-            api_key=api_key,
-            model_id=model_id,
-            prompt=prompt,
-            master_reference_path=paths.MASTER_REFERENCE,
-            size="1024x1024",
-        )
+    """Produce one sprite PNG via the API. Returns a Pillow image.
 
-    # Two-pass: pass-1 generates design + construction with operational
-    # cells declared as spare; pass-2 regenerates operational cells
-    # against the pass-1 base cell as reference. Per design.md §D7.
-    op_cells = _operational_cells(entry)
-    pass1_md = _entry_md_with_operational_spared(entry_md)
-    pass1_prompt = compose_prompt(world_md, pass1_md, FIXED_INSTRUCTIONS)
-    pass1_sheet = _post_edit(
-        api_key=api_key,
-        model_id=model_id,
-        prompt=pass1_prompt,
-        master_reference_path=paths.MASTER_REFERENCE,
-        size="1024x1024",
+    Honours the entry's `two-pass: true` front-matter: when set, base
+    and construction sprites still anchor on `master-reference.png`,
+    but operational-frame sprites anchor on the already-committed base
+    sprite (`_sheets/<base>.png`). Coherence between base and animation
+    cells comes from sharing the same anchor image rather than from
+    inferring it across a multi-cell sheet."""
+    prompt = compose_single_sprite_prompt(
+        world_md=world_md,
+        entry_md=entry_md,
+        sprite_name=sprite_name,
+        role_description=role,
     )
 
-    # Extract the pass-1 base cell (canonical position is (0, 0)).
-    cols, rows = entry.grid
-    if cols <= 0 or rows <= 0 or not op_cells:
-        # Defensive: no operational cells to second-pass; treat as
-        # single-pass output.
-        return pass1_sheet
-    pass1_w, pass1_h = pass1_sheet.size
-    cell_w = pass1_w // cols
-    cell_h = pass1_h // rows
-    base_tile = pass1_sheet.crop((0, 0, cell_w, cell_h))
+    anchor_path = paths.MASTER_REFERENCE
+    if _is_two_pass(entry) and _is_operational_frame(sprite_name):
+        base = _base_name_for_kind(sprite_name)
+        # Use cache._sheets_dir() (not paths.SHEETS_DIR) so tests can
+        # redirect both sheet I/O paths through one override hook.
+        base_sheet = _cache_mod._sheets_dir() / f"{base}.png"
+        if base_sheet.exists():
+            anchor_path = base_sheet
 
-    # Pass-2: regenerate operational frames using the pass-1 base as
-    # the style anchor. Saved to a tempfile so the existing
-    # `_post_edit` multipart helper can attach it without reshaping.
-    import tempfile
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fh:
-        base_tile_path = Path(fh.name)
-    try:
-        base_tile.save(base_tile_path, format="PNG")
-        pass2_md = _entry_md_with_only_operational(entry_md)
-        pass2_prompt = compose_prompt(world_md, pass2_md, FIXED_INSTRUCTIONS)
-        pass2_sheet = _post_edit(
-            api_key=api_key,
-            model_id=model_id,
-            prompt=pass2_prompt,
-            master_reference_path=base_tile_path,
-            size="1024x1024",
-        )
-    finally:
-        try:
-            base_tile_path.unlink()
-        except FileNotFoundError:
-            pass
-
-    # Composite: copy operational cells from pass-2 sheet into pass-1
-    # sheet at their declared positions. Pass-1 keeps the design +
-    # construction stages; pass-2 contributes the operational frames.
-    composed = pass1_sheet.copy()
-    for (row, col) in op_cells:
-        left = col * cell_w
-        upper = row * cell_h
-        op_tile = pass2_sheet.crop((left, upper, left + cell_w, upper + cell_h))
-        composed.paste(op_tile, (left, upper))
-    return composed
-
-
-def _entry_md_with_operational_spared(entry_md: str) -> str:
-    """Rewrite Sheet section assignments that look like
-    `building-x-operational-N` to `spare` so pass-1 doesn't waste
-    pixels on cells pass-2 will overwrite anyway. Keeps the front
-    matter intact (so the cache key picked up the mode)."""
-    out_lines: list[str] = []
-    for line in entry_md.splitlines():
-        if "operational-" in line and "spare" not in line:
-            # Replace ``:`<sprite-operational-X>`` with ``: spare``.
-            replaced = re.sub(
-                r":\s*`[^`]*-operational-\d+`",
-                ": spare",
-                line,
-            )
-            out_lines.append(replaced)
-        else:
-            out_lines.append(line)
-    return "\n".join(out_lines)
-
-
-def _entry_md_with_only_operational(entry_md: str) -> str:
-    """Mirror image of the above: every non-operational, non-spare
-    cell becomes spare so pass-2 focuses on operational frames."""
-    out_lines: list[str] = []
-    for line in entry_md.splitlines():
-        # Match cell-assignment lines: `- (r, c): `name``.
-        m = re.search(r":\s*`([^`]+)`", line)
-        if m and "-operational-" not in m.group(1):
-            replaced = re.sub(r":\s*`[^`]+`", ": spare", line)
-            out_lines.append(replaced)
-        else:
-            out_lines.append(line)
-    return "\n".join(out_lines)
+    return _post_edit(
+        api_key=api_key,
+        model_id=model_id,
+        prompt=prompt,
+        master_reference_path=anchor_path,
+        size="1024x1024",
+    )
 
 
 def _post_edit(
@@ -337,7 +322,19 @@ def _post_edit(
 
 # ---------------- Orchestration ----------------
 
-def _sheet_for_entry(
+# Magic constant: empty fixed-instructions string passed into the
+# cache_key call. Pre-rewrite, the FIXED_INSTRUCTIONS block from
+# composer.py was hashed into every cache key. Now the per-sprite
+# prompt embeds its own SINGLE_SPRITE_INSTRUCTIONS plus a sprite-name
+# discriminator, both of which live in entry_md (via the prompt-build
+# call) anyway. Keeping the parameter for back-compat with test
+# fixtures.
+_LEGACY_FIXED_INSTRUCTIONS = ""
+
+
+def _sprite_for_atlas_name(
+    sprite_name: str,
+    role: str,
     entry: CatalogEntry,
     entry_md: str,
     world_md: str,
@@ -345,27 +342,36 @@ def _sheet_for_entry(
     offline: bool,
     on_cache_hit: Callable[[str], None] | None = None,
 ) -> Image.Image:
-    """Resolve the sprite sheet for one catalog entry. Returns a
-    Pillow image. Honours offline mode: reads from `_sheets/<id>.png`
-    only and raises if absent."""
+    """Resolve one sprite's raw 1024×1024 RGBA-with-alpha image.
+
+    Offline mode reads from `_sheets/<sprite-name>.png` and raises if
+    absent. Online mode hits the cache first, then the API, writing
+    the result to both `_cache/<hash>.png` and `_sheets/<sprite>.png`.
+    The just-written PNG is re-read so the in-memory bytes used for
+    post-processing match exactly what `read_sheet` will return on a
+    future offline run (indexed encoding is lossy w.r.t. the model's
+    24-bit RGBA output; the round-trip collapses online and offline
+    onto a single deterministic input).
+    """
     if offline:
-        sheet = read_sheet(entry.id)
+        sheet = read_sheet(sprite_name)
         if sheet is None:
             raise RuntimeError(
-                f"offline regen requires _sheets/{entry.id}.png to be "
-                "committed; run `make sprites` with OPENAI_API_KEY set"
+                f"offline regen requires _sheets/{sprite_name}.png to "
+                "be committed; run `make sprites` with OPENAI_API_KEY set"
             )
         return sheet
 
-    key = cache_key(world_md, entry_md, FIXED_INSTRUCTIONS, model_id)
+    key = cache_key(
+        world_md, entry_md, _LEGACY_FIXED_INSTRUCTIONS, model_id,
+        sprite_name=sprite_name,
+    )
     cached = read_cache(key)
     if cached is not None:
         if on_cache_hit is not None:
-            on_cache_hit(entry.id)
-        # Mirror to _sheets/ so the offline path stays consistent
-        # (cheap; the file may already exist with identical bytes).
-        if read_sheet(entry.id) is None:
-            write_sheet(entry.id, cached)
+            on_cache_hit(sprite_name)
+        if read_sheet(sprite_name) is None:
+            write_sheet(sprite_name, cached)
         return cached
 
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -374,7 +380,9 @@ def _sheet_for_entry(
             "OPENAI_API_KEY is not set in the environment — required "
             "for online sprite generation. Use `--offline` to skip."
         )
-    fresh = _generate_sheet(
+    fresh = _generate_single_sprite(
+        sprite_name=sprite_name,
+        role=role,
         entry=entry,
         entry_md=entry_md,
         world_md=world_md,
@@ -382,34 +390,13 @@ def _sheet_for_entry(
         model_id=model_id,
     )
     write_cache(key, fresh, api_response_json=None)
-    write_sheet(entry.id, fresh)
-    # Re-read the just-written indexed-PNG sheet so the in-memory
-    # bytes used for slicing match exactly what `read_sheet` will
-    # return on a future offline run. Without this round-trip, online
-    # and offline runs would produce different atlas PNGs because the
-    # indexed encoding is lossy w.r.t. the original 24-bit API output.
-    sheet = read_sheet(entry.id)
+    write_sheet(sprite_name, fresh)
+    sheet = read_sheet(sprite_name)
     if sheet is None:
         raise RuntimeError(
-            f"failed to read back just-written sheet for {entry.id}"
+            f"failed to read back just-written sheet for {sprite_name}"
         )
     return sheet
-
-
-def _process_entry(
-    entry: CatalogEntry,
-    sheet: Image.Image,
-    output_dir_resolver: Callable[[str], Path] | None = None,
-) -> list[Path]:
-    """Slice + post-process + write every cell for one entry. Returns
-    the list of written atlas paths."""
-    plan = slice_plan(entry)
-    cells = slice_sheet(sheet, plan, grid=entry.grid, sheet_size=sheet.size)
-    written: list[Path] = []
-    for sprite_name, tile in cells:
-        out = _process_and_write_cell(sprite_name, tile, output_dir_resolver)
-        written.append(out)
-    return written
 
 
 def _diff_against_committed(written: list[Path]) -> list[Path]:
@@ -435,7 +422,9 @@ def _diff_against_committed(written: list[Path]) -> list[Path]:
 
 
 def run_pipeline(offline: bool = False, verify: bool = False) -> int:
-    """Walk the catalog and regenerate every atlas PNG.
+    """Walk the catalog and regenerate every atlas PNG, one API call
+    per sprite (post-rewrite — pre-rewrite this was one call per kind
+    + slicing; see this module's docstring).
 
     Returns 0 on success; 1 on the first hard failure or, in
     `--verify` mode, on any byte mismatch against the committed
@@ -452,12 +441,25 @@ def run_pipeline(offline: bool = False, verify: bool = False) -> int:
     max_inflight = int(cfg.get("concurrency", {}).get("max_inflight", 4))
 
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
-    entries: list[tuple[CatalogEntry, str]] = []
+
+    # Build the work list: one (entry, sprite-name, role) tuple per
+    # atlas PNG the catalog declares. Sort within-entry first
+    # (base/construction before operational) so two-pass mode's
+    # operational anchor (the just-written base sheet) is available
+    # when its operational frames run.
+    work_items: list[tuple[CatalogEntry, str, str, str]] = []
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         text = md.read_text(encoding="utf-8")
-        entries.append((parse_catalog_entry(md.stem, text), text))
+        entry = parse_catalog_entry(md.stem, text)
+        role_map = build_role_map(text)
+        plan = slice_plan(entry)
+        # Stable in-entry ordering: non-operational sprites first.
+        plan = sorted(plan, key=lambda kv: (_is_operational_frame(kv[1]), kv[0]))
+        for _, sprite_name in plan:
+            role = role_for(sprite_name, role_map)
+            work_items.append((entry, text, sprite_name, role))
 
-    if not entries:
+    if not work_items:
         print("[batcher] no catalog entries found; nothing to do", flush=True)
         return 0
 
@@ -475,32 +477,49 @@ def run_pipeline(offline: bool = False, verify: bool = False) -> int:
             return temp_root / real.name
         output_resolver = _resolver
 
-    def work(entry_pair: tuple[CatalogEntry, str]) -> list[Path]:
-        entry, entry_md = entry_pair
-        sheet = _sheet_for_entry(
-            entry, entry_md, world_md, model_id, effective_offline,
-            on_cache_hit=lambda eid: print(f"[cache hit] {eid}", flush=True),
+    def work(item: tuple[CatalogEntry, str, str, str]) -> Path:
+        entry, entry_md, sprite_name, role = item
+        raw = _sprite_for_atlas_name(
+            sprite_name, role, entry, entry_md, world_md, model_id,
+            effective_offline,
+            on_cache_hit=lambda n: print(f"[cache hit] {n}", flush=True),
         )
-        return _process_entry(entry, sheet, output_dir_resolver=output_resolver)
+        return _process_and_write_cell(sprite_name, raw, output_resolver)
 
     try:
         written: list[Path] = []
         if effective_offline:
             # Offline path is deterministic and CPU-bound; run
             # sequentially so the ordered log output stays stable.
-            for pair in entries:
-                written.extend(work(pair))
+            for item in work_items:
+                written.append(work(item))
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max_inflight) as ex:
-                futures = {ex.submit(work, p): p[0].id for p in entries}
-                for fut in concurrent.futures.as_completed(futures):
-                    eid = futures[fut]
-                    try:
-                        written.extend(fut.result())
-                        print(f"[done] {eid}", flush=True)
-                    except Exception as exc:
-                        print(f"[fail] {eid}: {exc}", flush=True)
-                        return 1
+            # Two-pass operational frames depend on their kind's base
+            # sprite being on disk before they run. Split the work
+            # into a base-and-construction phase (everything that
+            # isn't an operational frame for a two-pass entry) and an
+            # operational phase, and run them sequentially.
+            base_phase: list[tuple[CatalogEntry, str, str, str]] = []
+            op_phase: list[tuple[CatalogEntry, str, str, str]] = []
+            for item in work_items:
+                entry, _, sprite_name, _ = item
+                if _is_two_pass(entry) and _is_operational_frame(sprite_name):
+                    op_phase.append(item)
+                else:
+                    base_phase.append(item)
+            for phase in (base_phase, op_phase):
+                if not phase:
+                    continue
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max_inflight) as ex:
+                    futures = {ex.submit(work, it): it[2] for it in phase}
+                    for fut in concurrent.futures.as_completed(futures):
+                        name = futures[fut]
+                        try:
+                            written.append(fut.result())
+                            print(f"[done] {name}", flush=True)
+                        except Exception as exc:
+                            print(f"[fail] {name}: {exc}", flush=True)
+                            return 1
 
         if verify:
             diffs = _diff_against_committed(written)

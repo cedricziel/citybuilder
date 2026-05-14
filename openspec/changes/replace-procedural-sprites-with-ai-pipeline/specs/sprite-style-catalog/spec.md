@@ -91,11 +91,11 @@ The pipeline SHALL maintain a content-addressed cache under `Resources/Sprites.s
 - **THEN** the second run performs zero API calls and produces identical PNG bytes for every output path as the first run
 
 ### Requirement: Model version is pinned in the catalog
-The pipeline SHALL pin the OpenAI image model identifier in a single committed location — `Resources/Sprites.style/pipeline.toml` — using a dated snapshot identifier (e.g., `gpt-image-2-2026-04-21`), never a floating alias. Changing the model identifier MUST invalidate every cache entry (because the model id is part of every cache key).
+The pipeline SHALL pin the OpenAI image model identifier in a single committed location — `Resources/Sprites.style/pipeline.toml`. When the chosen model family exposes a dated snapshot identifier of the form `gpt-image-<major>-<YYYY>-<MM>-<DD>`, that snapshot MUST be used in preference to a floating alias. When the model family exposes only a floating alias (currently `gpt-image-1`), the alias is the identifier and the deterministic source-of-truth for offline regen is the committed `_sheets/` store instead. The identifier MUST be a recognised OpenAI image model. Changing the identifier MUST invalidate every cache entry (because the model id is part of every cache key).
 
-#### Scenario: Pipeline pins a dated model snapshot
+#### Scenario: Pipeline pins a recognised OpenAI image model
 - **WHEN** `Resources/Sprites.style/pipeline.toml` is parsed
-- **THEN** the `model` key has the form `gpt-image-<major>-<YYYY>-<MM>-<DD>`, not a floating alias like `gpt-image-latest`
+- **THEN** the `model` key matches one of the two forms: a dated snapshot `gpt-image-<major>-<YYYY>-<MM>-<DD>` (preferred) OR a known floating alias like `gpt-image-1` / `gpt-image-1.5` (acceptable when the family has no dated snapshot)
 
 #### Scenario: Bumping the model invalidates every cache entry
 - **WHEN** the `model` key in `pipeline.toml` changes from version A to version B
