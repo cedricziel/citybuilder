@@ -137,11 +137,9 @@ func scenarioPipelinePinsARecognisedOpenaiImageModel() throws {
     let recognisedAlias = #"^gpt-image-(1|1\.5|1-mini)$"#
     let isDated = model.range(of: datedSnapshot, options: .regularExpression) != nil
     let isAlias = model.range(of: recognisedAlias, options: .regularExpression) != nil
-    #expect(
-        isDated || isAlias,
-        "model id must be a dated snapshot or a recognised floating "
-            + "alias for a family without dated snapshots, got \(model)"
-    )
+    let comment = "model id must be a dated snapshot or recognised "
+        + "floating alias, got \(model)"
+    #expect(isDated || isAlias, "\(comment)")
 }
 
 // MARK: - Per-sprite catalog enumeration & parsing helpers
