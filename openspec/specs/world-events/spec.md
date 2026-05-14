@@ -68,80 +68,24 @@ For any two simulations starting from the same `World` and applying the same inp
 
 ### Requirement: Events emitted by each existing system
 
-The following systems SHALL emit events for the listed state changes:
+The production system's `productionStalled` and `productionResumed` events SHALL each additionally carry the building's `kind: BuildingKind` payload. Existing producer + ordering semantics are unchanged.
 
-- **Production system**: `productionCycleCompleted(producer:building:outputs:)` on completion of one cycle; `productionStalled(producer:reason:)` on the tick a stall starts; `productionResumed(producer:)` on the tick a stall ends.
-- **Carrier system**: `carrierDeparted(carrier:from:good:)` on spawn; `carrierArrived(carrier:at:good:amount:)` on delivery / retrieval arrival.
-- **Building advance**: `constructionCompleted(building:kind:anchor:)` on the tick a constructing building flips to operational.
-- **Command application**: `buildingPlaced(building:kind:anchor:)` on a successful place; `buildingDemolished(building:kind:anchor:)` on demolish; `forestHarvested(at:)` on `.harvestForest`; `placementRejected(kind:anchor:reason:)` on a placement command whose `canPlace` is rejecting (commands are pre-validated by UI today, but the core MUST emit the event if the validation is skipped or fails at apply time).
-- **Economy system**: `taxesCollected(amount:newBalance:)` on tax-interval ticks; `upkeepPaid(amount:newBalance:)` on upkeep-interval ticks; `bankruptcyWarning(deficitTicks:graceTicks:)` on the first tick of negative balance; `bankruptcyResolved(newBalance:)` when balance returns to non-negative before grace expires; `gameOver` on the tick `economy.gameOver` transitions to `true`.
+The other emit points are unchanged from the archived `add-audio-foundation` spec.
 
-Each event MUST be emitted at most once per occurrence per tick.
+#### Scenario: Stall event carries building kind
 
-#### Scenario: Construction completion emits exactly one event
+- **WHEN** a producer becomes stalled on tick T and the event is captured
+- **THEN** the `productionStalled` event's payload exposes the producer's `BuildingKind` (e.g. `.sawmill`)
 
-- **WHEN** a single building's `ticksSincePlacement` reaches `buildDurationTicks` on tick T
-- **THEN** the `TickResult.events` for tick T contains exactly one `constructionCompleted` event for that building, and tick T+1's events do not contain a duplicate
+#### Scenario: Resume event carries building kind
 
-#### Scenario: Production cycle emits once per cycle
+- **WHEN** a stalled producer becomes unstalled on tick T and the event is captured
+- **THEN** the `productionResumed` event's payload exposes the producer's `BuildingKind`
 
-- **WHEN** a sawmill completes one full cycle on tick T (ticksThisCycle resets to 0)
-- **THEN** the events for tick T contain exactly one `productionCycleCompleted` for that sawmill
+#### Scenario: Replay determinism preserved with kind payload
 
-#### Scenario: Stall emits an event the tick the stall begins
-
-- **WHEN** a producer becomes stalled (out of inputs, output full, or no adjacent forest) on tick T after running on tick T-1
-- **THEN** the events for tick T contain exactly one `productionStalled` for that producer, and subsequent ticks of the same stall emit no further `productionStalled` events
-
-#### Scenario: Stall resolution emits a resumed event once
-
-- **WHEN** a producer that was stalled becomes unstalled on tick T
-- **THEN** the events for tick T contain exactly one `productionResumed` for that producer
-
-#### Scenario: Carrier arrival emits once at the destination tick
-
-- **WHEN** a carrier advances to `hasArrived` on tick T
-- **THEN** the events for tick T contain exactly one `carrierArrived` for that carrier, with the same good and amount that were deposited
-
-#### Scenario: Tax interval emits a single event
-
-- **WHEN** the tick count reaches a multiple of `Economy.taxIntervalTicks` and the credited amount is positive
-- **THEN** the events for that tick contain exactly one `taxesCollected` whose `amount` equals the credited amount
-
-#### Scenario: Tax interval is silent when no income
-
-- **WHEN** the tick count reaches a multiple of `Economy.taxIntervalTicks` and the credited amount is zero (no population)
-- **THEN** no `taxesCollected` event is emitted for that tick — the audio layer's coin cue stays silent rather than firing as a 5-second heartbeat on an empty city
-
-#### Scenario: Upkeep interval is silent when no upkeep
-
-- **WHEN** the tick count reaches a multiple of `Economy.upkeepIntervalTicks` and the deducted amount is zero (no operational buildings with non-zero upkeep)
-- **THEN** no `upkeepPaid` event is emitted for that tick
-
-#### Scenario: Bankruptcy warning emits once at deficit start
-
-- **WHEN** the economy balance becomes negative on tick T after being non-negative on tick T-1
-- **THEN** the events for tick T contain exactly one `bankruptcyWarning`, and subsequent negative-balance ticks emit no further warnings until the balance recovers and dips again
-
-#### Scenario: Game over emits exactly once
-
-- **WHEN** the bankruptcy grace expires on tick T and `economy.gameOver` flips to true
-- **THEN** the events for tick T contain exactly one `gameOver`, and no further `gameOver` events are emitted on subsequent ticks while the world is in the game-over state
-
-#### Scenario: Building placement emits an event
-
-- **WHEN** a `.place(kind, at:)` command is applied successfully on tick T
-- **THEN** the events for tick T contain exactly one `buildingPlaced` whose `kind` and `anchor` match the command, and whose `building` is the newly-allocated `EntityID`
-
-#### Scenario: Demolish emits an event
-
-- **WHEN** a `.demolish(at:)` command is applied successfully on tick T
-- **THEN** the events for tick T contain exactly one `buildingDemolished` whose `kind` and `anchor` match the building that was removed
-
-#### Scenario: Forest harvest emits an event
-
-- **WHEN** a `.harvestForest(at:)` command is applied on a forest tile on tick T
-- **THEN** the events for tick T contain exactly one `forestHarvested(at:)` with the cleared tile
+- **WHEN** two simulations replay the same input sequence
+- **THEN** the concatenated event log is still element-wise equal across both runs, including the new `kind` field
 
 ### Requirement: Events do not influence simulation state
 
