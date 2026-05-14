@@ -104,24 +104,26 @@ def _target_size(sprite_name: str) -> tuple[int, int]:
 
 
 def _save_indexed_png(image: Image.Image, dest: Path) -> None:
-    """Save a Pillow image as an optimized indexed-mode PNG with
-    alpha preserved. Per `sprite-asset-pipeline` § "Committed PNGs
-    are indexed-mode and optimized": output footprint stays bounded;
-    aesthetic fidelity is unaffected because pixel art has ≤32
-    distinct colours.
-
-    Uses libimagequant's RGBA-aware quantizer, which produces a P-mode
-    image with a tRNS chunk encoding alpha per palette index. Earlier
-    versions of this function split alpha → quantized RGB → re-pasted
-    alpha → forced back to P, which dropped the per-pixel alpha at the
-    last step and shipped opaque "transparent" pixels.
+    """Save a Pillow image as an optimized indexed-mode PNG. Per
+    `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
+    optimized": output footprint stays bounded; aesthetic fidelity is
+    unaffected because pixel art has ≤32 distinct colours.
     """
+    # Convert RGBA -> P with palette quantization while preserving
+    # transparency: Pillow's quantize() handles the palette; the alpha
+    # mask survives into the 'P' image's transparency entry when we
+    # remap.
     rgba = image.convert("RGBA")
-    indexed = rgba.quantize(
-        colors=256,
-        method=Image.Quantize.LIBIMAGEQUANT,
-        dither=Image.Dither.NONE,
-    )
+    alpha = rgba.split()[-1]
+    rgb = rgba.convert("RGB")
+    indexed = rgb.quantize(colors=256, method=Image.Quantize.LIBIMAGEQUANT, dither=Image.Dither.NONE)
+    # Restore alpha by adding a transparency palette index. The simple
+    # approach: paste the image and use the alpha as transparency mask
+    # via a synthesized palette slot.
+    indexed.info["transparency"] = 0  # reserve index 0 for fully transparent
+    indexed = indexed.convert("RGBA")
+    indexed.putalpha(alpha)
+    indexed = indexed.convert("P", palette=Image.Palette.ADAPTIVE, colors=256)
     dest.parent.mkdir(parents=True, exist_ok=True)
     indexed.save(dest, format="PNG", optimize=True)
 

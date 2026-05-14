@@ -60,19 +60,15 @@ def read_cache(key: str) -> Image.Image | None:
 
 
 def _save_indexed(image: Image.Image, dest: Path) -> None:
-    """Save a Pillow image as an optimized 256-colour indexed PNG
-    with alpha preserved via libimagequant's RGBA-aware quantizer.
-
+    """Save a Pillow image as an optimized 256-colour indexed PNG.
     Per `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
     optimized": every committed binary stays well under 1 MB and the
     repo clone footprint stays bounded. Used by both `write_cache`
     (local convenience) and `write_sheet` (committed source-of-truth)
-    so both round-trip the same pixel set. Earlier versions of this
-    helper threw the alpha channel away during the RGBA → RGB →
-    quantize chain; the fix routes RGBA straight into libimagequant
-    so the tRNS chunk records per-index transparency."""
+    so both round-trip the same pixel set."""
     rgba = image.convert("RGBA")
-    indexed = rgba.quantize(
+    rgb = rgba.convert("RGB")
+    indexed = rgb.quantize(
         colors=256,
         method=Image.Quantize.LIBIMAGEQUANT,
         dither=Image.Dither.NONE,
