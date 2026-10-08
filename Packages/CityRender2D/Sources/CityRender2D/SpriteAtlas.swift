@@ -23,6 +23,8 @@ public enum SpriteAtlasRouting {
     public static func atlasName(for spriteName: String) -> String? {
         if spriteName.hasPrefix("terrain-") { return terrainAtlasName }
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
+        // Status badges drawn over buildings live in the Buildings atlas.
+        if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
         if spriteName.hasPrefix("walker-") { return unitsAtlasName }
         if spriteName.hasPrefix("ship-") { return unitsAtlasName }
         if spriteName.hasPrefix("good-") { return iconsAtlasName }

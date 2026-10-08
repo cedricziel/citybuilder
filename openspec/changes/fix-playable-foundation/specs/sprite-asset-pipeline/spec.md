@@ -51,6 +51,15 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 - **WHEN** an operational frame matches its base sprite except for smoke pixels drawn above the roof line
 - **THEN** the gate reports no `frame_misaligned` failure for that frame
 
+### Requirement: Overlay sprites route to the Buildings atlas
+
+Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Buildings` atlas, where they are committed.
+
+#### Scenario: Waiting badge routes to the Buildings atlas
+
+- **WHEN** `SpriteAtlasRouting.atlasName(for: "overlay-waiting-materials")` is called
+- **THEN** it returns `"Buildings"`
+
 ### Requirement: Content gate runs in sprite verification
 
 `make sprites-verify` and the CI sprite job SHALL run the content gate after the byte-identical regen check. The job MUST exit non-zero if any content-gate rule fails, and it MUST print every failing sprite with its reason code, one per line.

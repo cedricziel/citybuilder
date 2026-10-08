@@ -119,3 +119,8 @@ struct LazyConstructionSuite {
         #expect(SpriteAtlas.isAtlasConstructed(named: "Units"))
     }
 }
+
+@Test("scenario: waiting badge routes to the buildings atlas")
+func scenarioWaitingBadgeRoutesToTheBuildingsAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "overlay-waiting-materials") == SpriteAtlasRouting.buildingsAtlasName)
+}
