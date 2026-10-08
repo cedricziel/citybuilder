@@ -35,11 +35,15 @@ public struct HUDFrameView: View {
     private var stocksRow: some View {
         let chips = viewModel.stocksRow
         if !chips.isEmpty {
-            HStack(spacing: 12) {
-                ForEach(chips, id: \.good) { chip in
-                    chipView(chip)
+            // Scrolls so a long goods list never squeezes the counts or
+            // widens the HUD past the screen.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(chips, id: \.good) { chip in
+                        chipView(chip)
+                            .fixedSize()
+                    }
                 }
-                Spacer()
             }
             .accessibilityLabel("Island stocks")
         }
