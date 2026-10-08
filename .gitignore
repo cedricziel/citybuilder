@@ -50,3 +50,6 @@ __pycache__/
 
 # Sprite pipeline local cache (committed sheets live in _sheets/)
 Resources/Sprites.style/_cache/
+
+# Serena MCP local state
+.serena/
