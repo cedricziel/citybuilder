@@ -13,5 +13,5 @@
 
 ## 3. M3 — Verification
 
-- [ ] 3.1 Runtime check on a dedicated simulator: a mine on the mountainside is accepted and one on grass is rejected with "Needs mountain ground"; the new buildings render in the register.
-- [ ] 3.2 Run lint, format, `make test-scenarios` and `openspec validate deepen-production-chains --strict`.
+- [x] 3.1 Runtime check on a dedicated simulator: a mine on the mountainside is accepted and one on grass is rejected with "Needs mountain ground"; the new buildings render in the register.
+- [x] 3.2 Run lint, format, `make test-scenarios` and `openspec validate deepen-production-chains --strict`.
