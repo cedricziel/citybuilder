@@ -19,7 +19,14 @@ public final class IsoWorldScene: SKScene {
     private var presentSprites: [SpriteSpec: SKNode] = [:]
     /// Season whose terrain tint is on screen. Spec: `rendering-2_5d` /
     /// Terrain shows the season.
-    private var appliedSeason: Season = .spring
+    var appliedSeason: Season = .spring
+    /// Culture whose building looks are on screen. Spec: `rendering-2_5d`
+    /// / Buildings render in the world's culture.
+    public var culture: Culture = .northernEuropean
+    /// Whether the atlas holds a sprite. Optional looks (culture and
+    /// seasonal variants) check it before falling back; tests replace it
+    /// because SwiftPM test bundles carry no atlases.
+    var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {
@@ -188,6 +195,7 @@ public final class IsoWorldScene: SKScene {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
         applySeason(snapshot.date.season)
+        applyCulture(snapshot.culture)
         reconcileSprites(with: snapshot)
         reconcileCarriers(with: snapshot)
         reconcileGhost()
@@ -316,21 +324,25 @@ public final class IsoWorldScene: SKScene {
         cameraNode.setScale(scale)
     }
 
+    private func applyCulture(_ newCulture: Culture) {
+        guard newCulture != culture else { return }
+        culture = newCulture
+        for node in presentSprites.values {
+            node.removeFromParent()
+        }
+        presentSprites.removeAll()
+    }
+
+    /// Drops present vegetation nodes on a season change so the next
+    /// reconcile rebuilds them with the season's sprites.
     private func applySeason(_ season: Season) {
         guard season != appliedSeason else { return }
         appliedSeason = season
         for (spec, node) in presentSprites {
-            applySeasonTint(to: node, spec: spec)
+            guard case let .terrain(kind) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
+            node.removeFromParent()
+            presentSprites.removeValue(forKey: spec)
         }
-    }
-
-    private func applySeasonTint(to node: SKNode, spec: SpriteSpec) {
-        guard case let .terrain(kind) = spec.kind, SeasonTint.tintedTerrain.contains(kind),
-              let sprite = node as? SKSpriteNode
-        else { return }
-        let tint = SeasonTint.tint(for: appliedSeason)
-        sprite.color = tint.color
-        sprite.colorBlendFactor = tint.blendFactor
     }
 
     private func reconcileSprites(with snapshot: WorldSnapshot) {
@@ -356,7 +368,6 @@ public final class IsoWorldScene: SKScene {
         }
         for spec in diff.added {
             let node = placedNode(for: spec)
-            applySeasonTint(to: node, spec: spec)
             addChild(node)
             presentSprites[spec] = node
         }

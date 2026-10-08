@@ -29,27 +29,29 @@ private func grassSnapshot(season: Season) -> WorldSnapshot {
 }
 
 @MainActor
-private func renderedGrassBlendFactors(season: Season) -> [CGFloat] {
+private func renderedGrassTextureNames(season: Season) -> [String?] {
     let scene = IsoWorldScene()
     scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { _ in true }
     let source = FixedSnapshot(grassSnapshot(season: season))
     scene.dataSource = source
     scene.update(0)
-    return scene.children.compactMap { $0 as? SKSpriteNode }.filter { $0.zPosition == 0 }.map(\.colorBlendFactor)
+    return scene.children.compactMap { $0 as? SKSpriteNode }.filter { $0.zPosition == 0 }
+        .map { $0.userData?[IsoWorldScene.textureNameKey] as? String }
 }
 
 @MainActor
 @Test("scenario: winter tints grass")
 func scenarioWinterTintsGrass() {
-    let factors = renderedGrassBlendFactors(season: .winter)
-    #expect(!factors.isEmpty)
-    #expect(factors.allSatisfy { $0 > 0 })
+    let names = renderedGrassTextureNames(season: .winter)
+    #expect(!names.isEmpty)
+    #expect(names.allSatisfy { $0 == "terrain-grass-winter" })
 }
 
 @MainActor
 @Test("scenario: summer has no tint")
 func scenarioSummerHasNoTint() {
-    let factors = renderedGrassBlendFactors(season: .summer)
-    #expect(!factors.isEmpty)
-    #expect(factors.allSatisfy { $0 == 0 })
+    let names = renderedGrassTextureNames(season: .summer)
+    #expect(!names.isEmpty)
+    #expect(names.allSatisfy { $0 == nil })
 }

@@ -1,8 +1,8 @@
 #if canImport(AppKit)
 import CityCore
-import CityRender2D
 import Foundation
 import Testing
+@testable import CityRender2D
 
 // Markdown + TOML shape scenarios for the sprite-style-catalog
 // capability introduced by replace-procedural-sprites-with-ai-pipeline.
@@ -160,6 +160,18 @@ private func expectedCatalogIds() -> Set<String> {
             }
         } else {
             ids.insert("building-\(raw)")
+        }
+    }
+    // Culture looks (`add-cultures`) and seasonal vegetation
+    // (`add-calendar-and-events`) have their own entries.
+    for culture in Culture.allCases where culture != .northernEuropean {
+        for kind in IsoWorldScene.cultureVariantKinds {
+            ids.insert("building-\(kind.rawValue)-\(culture.rawValue)")
+        }
+    }
+    for terrain in IsoWorldScene.seasonalTerrain {
+        for season in [Season.autumn, .winter] {
+            if let name = IsoWorldScene.seasonalTerrainName(kind: terrain, season: season) { ids.insert(name) }
         }
     }
     ids.insert("walker")

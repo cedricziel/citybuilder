@@ -41,6 +41,10 @@ extension IsoWorldScene {
     }
 
     func makeTerrainNode(kind: TerrainType, coord: TileCoordinate) -> SKNode {
+        if let seasonal = seasonalTerrainNode(kind: kind) {
+            seasonal.zPosition = 0
+            return seasonal
+        }
         // Variant-aware lookup picks a deterministic per-tile sprite for
         // kinds with multiple variants (mountain); falls through to the
         // canonical sprite for all others. Placeholder path satisfies the
@@ -69,7 +73,12 @@ extension IsoWorldScene {
         let coord = spec.coord
         let texture: SKTexture
         var textureName: String?
-        if kind == .house, houseTier != .peasants, state != .constructing {
+        var cultureName: String?
+        if let (name, cultureTexture) = cultureTexture(kind: kind, state: state, houseTier: houseTier) {
+            textureName = name
+            cultureName = name
+            texture = cultureTexture
+        } else if kind == .house, houseTier != .peasants, state != .constructing {
             // Spec: `rendering-2_5d` / Houses render their tier.
             let name = "building-house-tier\(houseTier.rawValue)"
             textureName = name
@@ -101,7 +110,13 @@ extension IsoWorldScene {
         if let textureName {
             node.userData = [Self.textureNameKey: textureName]
         }
-        armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
+        if let cultureName {
+            if state == .operational, let action = Self.cultureOperationalAction(baseName: cultureName, kind: kind) {
+                node.run(action, withKey: "anim")
+            }
+        } else {
+            armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
+        }
         if isWaitingForMaterials, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
         }
