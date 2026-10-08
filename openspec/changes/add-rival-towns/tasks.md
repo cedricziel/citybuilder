@@ -16,8 +16,8 @@
 
 ## 4. M4 — Persistence
 
-- [ ] 4.1 Tests-first: translate "v8 save loads without rivals" with a v8 archipelago fixture. Confirm red.
-- [ ] 4.2 Implement to green: `MigrationV8ToV9`, `SaveFile.currentVersion = 9` (D12).
+- [x] 4.1 Tests-first: translate "v8 save loads without rivals" with a v8 archipelago fixture. Confirm red.
+- [x] 4.2 Implement to green: `MigrationV8ToV9`, `SaveFile.currentVersion = 9` (D12).
 
 ## 5. M5 — Rendering and UI
 
