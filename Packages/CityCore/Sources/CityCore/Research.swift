@@ -180,7 +180,7 @@ extension World {
     /// Culture rule, tech lock and terrain requirement, checked by
     /// `canPlace`.
     func researchOrTerrainRejection(_ kind: BuildingKind, tiles: [TileCoordinate]) -> PlacementRejection? {
-        if let owner = kind.culture, owner != culture {
+        if !kind.isBuildable(in: culture), let owner = kind.culture {
             return .wrongCulture(owner)
         }
         if let tech = Tech.unlocking(kind), !research.isResearched(tech) {

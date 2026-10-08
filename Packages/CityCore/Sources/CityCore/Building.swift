@@ -393,4 +393,9 @@ public extension BuildingKind {
         default: nil
         }
     }
+
+    /// False for buildings tied to another culture.
+    func isBuildable(in culture: Culture) -> Bool {
+        self.culture.map { $0 == culture } ?? true
+    }
 }
