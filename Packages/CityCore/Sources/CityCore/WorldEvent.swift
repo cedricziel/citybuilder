@@ -83,6 +83,12 @@ public enum WorldEvent: Sendable {
     /// A fuelled building's burn found too little fuel after a burn that
     /// succeeded. Spec: `age-signatures`.
     case fuelRanOut(building: EntityID, kind: BuildingKind)
+    /// The monument completed its last project stage.
+    case monumentCompleted(building: EntityID)
+    /// A gallery commission was paid for and started.
+    case commissionStarted(building: EntityID)
+    /// A gallery commission ran out.
+    case commissionEnded(building: EntityID)
 }
 
 extension WorldEvent: Equatable {
@@ -138,6 +144,10 @@ extension WorldEvent: Equatable {
             return true
         case let (.fuelRanOut(lBuilding, lKind), .fuelRanOut(rBuilding, rKind)):
             return lBuilding == rBuilding && lKind == rKind
+        case let (.monumentCompleted(lBuilding), .monumentCompleted(rBuilding)),
+             let (.commissionStarted(lBuilding), .commissionStarted(rBuilding)),
+             let (.commissionEnded(lBuilding), .commissionEnded(rBuilding)):
+            return lBuilding == rBuilding
         default:
             return false
         }
@@ -168,6 +178,10 @@ public extension WorldEvent {
              let .productionResumed(producer, _):
             return producer
         case let .fuelRanOut(building, _):
+            return building
+        case let .monumentCompleted(building),
+             let .commissionStarted(building),
+             let .commissionEnded(building):
             return building
         case .forestHarvested,
              .placementRejected,
@@ -214,7 +228,10 @@ public extension WorldEvent {
              .seasonChanged,
              .historyEvent,
              .ageAdvanced,
-             .scenarioWon:
+             .scenarioWon,
+             .monumentCompleted,
+             .commissionStarted,
+             .commissionEnded:
             return nil
         }
     }
@@ -248,6 +265,9 @@ public extension WorldEvent {
         case .ageAdvanced: return 20
         case .scenarioWon: return 21
         case .fuelRanOut: return 22
+        case .monumentCompleted: return 23
+        case .commissionStarted: return 24
+        case .commissionEnded: return 25
         }
     }
 }

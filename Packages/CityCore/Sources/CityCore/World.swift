@@ -256,10 +256,13 @@ public struct World: Codable, Sendable, Equatable {
         simulatedTime += .tick
         advanceBuildings(events: &events)
         runSignatureSystem(events: &events)
-        runProductionSystem(events: &events)
+        // Signature state only changes in commands and the signature
+        // system, so production and population share one source list.
+        let signatureSources = activeSignatureSources()
+        runProductionSystem(signatureSources: signatureSources, events: &events)
         runCarrierSystem(events: &events)
         runShipSystem()
-        runPopulationSystem()
+        runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
@@ -329,6 +332,8 @@ public struct World: Codable, Sendable, Equatable {
             applyAssignShipToRoute(shipID: shipID, routeID: routeID)
         case let .unassignShip(shipID):
             applyUnassignShip(shipID: shipID)
+        case let .commission(gallery):
+            applyCommission(gallery, events: &events)
         }
     }
 

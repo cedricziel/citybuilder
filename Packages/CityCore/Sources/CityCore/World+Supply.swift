@@ -51,7 +51,7 @@ extension World {
     /// Goods supply carriers bring to `building`, with the amount used at
     /// a time: its recipe inputs plus its fuel (design D5).
     static func suppliedGoods(of building: Building) -> [Good: Int] {
-        var needs = ProductionCatalog.recipe(for: building.kind)?.inputs ?? [:]
+        var needs = activeRecipe(of: building)?.inputs ?? [:]
         if let fuel = building.kind.fuel {
             needs[fuel.good, default: 0] += fuel.amount
         }

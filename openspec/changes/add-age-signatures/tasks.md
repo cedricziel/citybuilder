@@ -11,8 +11,8 @@
 
 ## 3. M3 — Houses, monument and commissions
 
-- [ ] 3.1 Tests-first: translate "Houses above capacity shrink", the monument, tax and gallery scenarios, and the population-and-needs scenarios. Confirm red.
-- [ ] 3.2 Implement to green: `World.houseCapacity(of:)` with smoke and power, over-capacity shrinking, monument recipe and stage counting, `monumentCompleted`, supply and production skipping a finished monument, the tax bonus, `Command.commission`, commission countdown, `commissionStarted` / `commissionEnded`, inspired growth and tier timers (D6–D8).
+- [x] 3.1 Tests-first: translate "Houses above capacity shrink", the monument, tax and gallery scenarios, and the population-and-needs scenarios. Confirm red.
+- [x] 3.2 Implement to green: `World.houseCapacity(of:)` with smoke and power, over-capacity shrinking, monument recipe and stage counting, `monumentCompleted`, supply and production skipping a finished monument, the tax bonus, `Command.commission`, commission countdown, `commissionStarted` / `commissionEnded`, inspired growth and tier timers (D6–D8).
 
 ## 4. M4 — Art
 

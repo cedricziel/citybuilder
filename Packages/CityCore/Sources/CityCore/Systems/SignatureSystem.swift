@@ -6,6 +6,25 @@ extension World {
     /// sees this tick's fuel state (design D5).
     mutating func runSignatureSystem(events: inout [WorldEvent]) {
         burnFuel(events: &events)
+        countDownCommissions(events: &events)
+    }
+
+    /// Commissions started by this tick's commands keep their full time.
+    private mutating func countDownCommissions(events: inout [WorldEvent]) {
+        let started = Set(events.compactMap { event -> EntityID? in
+            if case let .commissionStarted(gallery) = event { return gallery }
+            return nil
+        })
+        let running = buildings.values
+            .filter { $0.commissionTicksLeft > 0 && !started.contains($0.id) }
+            .sorted { $0.id.raw < $1.id.raw }
+        for gallery in running {
+            let left = gallery.commissionTicksLeft - 1
+            buildings[gallery.id]?.commissionTicksLeft = left
+            if left == 0 {
+                events.append(.commissionEnded(building: gallery.id))
+            }
+        }
     }
 
     private mutating func burnFuel(events: inout [WorldEvent]) {

@@ -145,6 +145,9 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .ageAdvanced: return "ageAdvanced"
         case .scenarioWon: return "scenarioWon"
         case .fuelRanOut: return "fuelRanOut"
+        case .monumentCompleted: return "monumentCompleted"
+        case .commissionStarted: return "commissionStarted"
+        case .commissionEnded: return "commissionEnded"
         }
     }
 }
