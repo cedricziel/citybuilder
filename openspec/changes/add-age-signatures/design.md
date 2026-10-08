@@ -135,5 +135,5 @@ No migration. `Building` gains `projectStages: UInt8`, `fuelled: Bool` and `comm
 
 - **[Risk] Speed bonuses starve workshops of inputs.** A doubled sawmill needs twice the wood. → Accepted: that is the steam age's decision; the inspector shows stalls.
 - **[Risk] Charcoal demand from engines and plants starves smelters.** → Accepted as the intended trade-off; coal is listed as deferred.
-- **[Risk] Range checks cost time every tick.** → Mitigation: `runSignatureSystem` builds the list of active sources once per tick (at most a few dozen), and each workshop or house checks only that list. The performance budget test gets a world with 10 guild halls, 10 steam engines and 3 power plants.
+- **[Risk] Range checks cost time every tick.** → Mitigation: production and population each build the list of active sources (`World.activeSignatureSources()`, at most a few dozen) once per tick, and each workshop or house checks only that list. A tick budget test runs a world with 10 guild halls, 10 steam engines and 3 power plants and keeps the mean tick under 100 ms.
 - **[Trade-off] Modern cities stack all five signatures.** Accepted: the numbers are small and each source needs upkeep, fuel or money.

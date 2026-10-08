@@ -7,6 +7,7 @@ extension World {
     static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
 
     mutating func runProductionSystem(events: inout [WorldEvent]) {
+        let signatureSources = activeSignatureSources()
         for (id, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             var progress = productions[id] ?? ProductionProgress()
@@ -48,7 +49,7 @@ extension World {
             }
             // Spec: `calendar-and-events` / Winter slows crops.
             if !(isCropWinter && Self.seasonalCrops.contains(building.kind) && tickCount.isMultiple(of: 2)) {
-                progress.ticksThisCycle &+= 1
+                progress.ticksThisCycle &+= 1 + workshopBonus(for: building, sources: signatureSources)
             }
             if progress.ticksThisCycle >= recipe.cycleTicks {
                 // Consume inputs from stockpile.

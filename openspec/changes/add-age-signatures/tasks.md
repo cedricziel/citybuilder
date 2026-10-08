@@ -5,9 +5,9 @@
 
 ## 2. M2 — Workshops and fuel
 
-- [ ] 2.1 Tests-first: translate "Guild hall after Printing Press", "Farms are not workshops", the guild hall, fuel, steam engine, power plant and "Speed bonuses of different sources add up" scenarios, and the goods-and-production and economy scenarios. Confirm red.
-- [ ] 2.2 Implement to green: `FuelSpec` and `BuildingKind.fuel`, fuel supply through the supply carriers, `runSignatureSystem` (burns, `fuelRanOut`), per-tick active source list, workshop speed bonus in production (D4, D5).
-- [ ] 2.3 Extend the performance budget test with 10 guild halls, 10 fuelled steam engines and 3 fuelled power plants; keep it inside the existing budget.
+- [x] 2.1 Tests-first: translate "Guild hall after Printing Press", "Farms are not workshops", the guild hall, fuel, steam engine, power plant and "Speed bonuses of different sources add up" scenarios, and the goods-and-production and economy scenarios. Confirm red.
+- [x] 2.2 Implement to green: `FuelSpec` and `BuildingKind.fuel`, fuel supply through the supply carriers, `runSignatureSystem` (burns, `fuelRanOut`), per-tick active source list, workshop speed bonus in production (D4, D5).
+- [x] 2.3 Add a tick budget test with 10 guild halls, 10 fuelled steam engines, 3 fuelled power plants, 40 sawmills and 40 houses; the mean tick stays inside the 100 ms budget of the 10 Hz simulation (CityCore had no tick performance test to extend).
 
 ## 3. M3 — Houses, monument and commissions
 

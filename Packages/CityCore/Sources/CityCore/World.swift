@@ -255,6 +255,7 @@ public struct World: Codable, Sendable, Equatable {
         tickCount &+= 1
         simulatedTime += .tick
         advanceBuildings(events: &events)
+        runSignatureSystem(events: &events)
         runProductionSystem(events: &events)
         runCarrierSystem(events: &events)
         runShipSystem()
