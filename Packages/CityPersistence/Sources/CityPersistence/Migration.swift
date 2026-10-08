@@ -25,7 +25,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV2ToV3(),
         MigrationV3ToV4(),
         MigrationV4ToV5(),
-        MigrationV5ToV6()
+        MigrationV5ToV6(),
+        MigrationV6ToV7()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -243,6 +244,32 @@ public struct MigrationV5ToV6: Migration {
         root["version"] = 6
         guard var world = root["world"] as? [String: Any] else { return root }
         world["culture"] = "northern-european"
+        root["world"] = world
+        return root
+    }
+}
+
+/// Migration #6: v6 → v7. v6 saves predate `add-historical-ages`:
+/// `World` had no `age`. Their towns were Medieval, which means they
+/// had passed Feudal Order, so it joins the researched list (kept
+/// sorted like `ResearchState` encodes it). Spec:
+/// `persistence-save-load` / Saves before ages are Medieval.
+public struct MigrationV6ToV7: Migration {
+    public let fromVersion = 6
+    public let toVersion = 7
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 7
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["age"] = "medieval"
+        if var research = world["research"] as? [String: Any] {
+            let researched = research["researched"] as? [String] ?? []
+            research["researched"] = Array(Set(researched + ["feudal-order"])).sorted()
+            world["research"] = research
+        }
         root["world"] = world
         return root
     }

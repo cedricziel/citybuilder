@@ -5,8 +5,8 @@
 
 ## 2. M2 — Persistence
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: v6 save loads in the Medieval age` into a failing test with a v6 fixture. Confirm red.
-- [ ] 2.2 Implement to green: version 7 and the v6 → v7 migration (D9).
+- [x] 2.1 Tests-first: translate `#### Scenario: v6 save loads in the Medieval age` into a failing test with a v6 fixture. Confirm red.
+- [x] 2.2 Implement to green: version 7 and the v6 → v7 migration (D9).
 
 ## 3. M3 — Art
 
