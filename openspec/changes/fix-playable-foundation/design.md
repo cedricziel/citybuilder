@@ -23,7 +23,7 @@ See proposal.md (Why) for the playtest findings. These facts about the current c
 
 ### D1 — The content gate is Swift, in a new `SpriteContentGate` target inside the CityRender2D package
 
-The gate is a small library (ImageIO/CoreGraphics decode plus three metric functions) with a thin `sprite-content-gate` executable. `make sprites-verify` runs it after the Python byte check with `xcrun swift run --package-path Packages/CityRender2D sprite-content-gate Resources`.
+The gate is a small library (ImageIO/CoreGraphics decode plus three metric functions) with a thin `sprite-content-gate` executable. `make sprites-verify` runs it after the Python byte check with `xcrun swift run --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources`. The separate scratch path matters: `SpritesPipelineCutoverTests` runs `make sprites-verify` from inside `swift test` on the same package, and sharing the default `.build` makes the nested build wait forever on the outer build lock.
 
 - **Alternative — Python, next to `postprocess.py`.** Rejected. Spec scenarios must map to Swift `@Test`s, so we'd need the metric in Python *and* Swift, and the two copies could disagree.
 - **Alternative — a standalone `scripts/check-sprite-content.swift`.** Rejected. A script can't be unit-tested from `Packages/*/Tests`.
@@ -31,7 +31,9 @@ The gate is a small library (ImageIO/CoreGraphics decode plus three metric funct
 
 ### D2 — Coherence metric: a 16-bin palette histogram, chi-squared distance
 
-Opaque pixels are quantised into 4 luminance × 4 hue-sector bins and normalised. Frames are compared to the base sprite using chi-squared distance, with the threshold `coherence_max_distance` in `pipeline.toml`. The default is calibrated on the existing good frames (grass-0/1, beach) and must flag water-1 (a house) against the water base.
+Opaque pixels are quantised into 4 luminance × 4 hue-sector bins and normalised. Frames are compared to the base sprite using chi-squared distance, with the threshold `coherence_max_distance` in `pipeline.toml`. It is pinned at 0.3: on the `e57823e` atlas, the known-good frames (grass, road variants, lumberjack, mountain-v3) score below 0.3, and the broken water and beach frames score above it. Construction stages (`-constructing-N`) are skipped, and operational frames (`-operational-N`) are compared against the kind's base sprite.
+
+The metric cannot catch an off-subject frame drawn in a similar palette. A brown house inside the brown mountain variants passed calibration. The design accepts this (see Risks); D8 removes those particular sprites from the AI path.
 
 - **Alternative — SSIM or a perceptual hash.** Rejected. Animation frames legitimately move pixels around (glints, saw blades). A positional metric gives false failures, while the palette distribution stays stable within one object.
 - **Alternative — a CLIP or vision-model classifier.** Rejected. It's a network dependency in CI and non-deterministic.
@@ -48,6 +50,21 @@ The output is still indexed and byte-identical on regen, because the step is det
 
 - **Alternative — draw a solid base diamond under every terrain sprite in the renderer.** Rejected. That only hides the gap, and the tile edges still don't line up with the art.
 - **Alternative — hand-edit the PNGs.** Rejected. The next regen would overwrite the edits.
+
+### D8 — Terrain art is drawn locally by a procedural renderer, not by the image API
+
+Catalog entries with front matter `source = "procedural"` are drawn by `scripts/generate_sprites_ai/procedural.py`:
+
+- The renderer paints each sprite at its canonical 64×32 size using only `world.md` palette colours, with a fixed integer hash for noise.
+- `render_sheet` upscales the sprite with nearest-neighbour to the 1024×1024 `_sheets/` image.
+- The existing offline path (sheet → nearest downsample → quantize → indexed PNG) therefore reproduces the canonical pixels exactly, and `make sprites-verify` stays hermetic.
+- `make sprites-procedural` (`--procedural`) redraws every procedural sheet and then regenerates all atlases offline. It needs no API key.
+- The online pipeline never calls the API for procedural entries.
+
+All five terrain entries (16 sprites) move to this source. The art is lit from the north-west with a dithered south rim, so the grid reads without hard lines. Water bands run along `x + 2y` with a 16-pixel period: neighbouring iso tiles shift `x + 2y` by 0 or 64, so the bands continue across seams.
+
+- **Alternative — regenerate terrain with the image API and `two-pass: true`.** Rejected for this change. It needs a paid key that isn't available, and the API output is the source of the defects in the first place. Flat ground tiles are also exactly the kind of sprite a procedural renderer draws well. Buildings stay on the AI path.
+- **Alternative — hand-draw the PNGs.** Rejected. Not reproducible, and a later `make sprites` run would overwrite them.
 
 ### D4 — Icons resolve through `SKTextureAtlas(named: "Icons")`
 

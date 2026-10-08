@@ -20,7 +20,7 @@ This change has to land before `add-historical-ages`. That change multiplies the
 
   These three rules catch every defect found in the playtest.
 - **Diamond-fit normalisation.** Terrain sprites get a new post-processing step: scale the opaque region to the full 64×32 diamond, then clip with the diamond mask. Tiles then fill their diamond with no gaps.
-- **Regenerate the defective terrain sprites:** water (all frames, using `two-pass: true`), `mountain-v1`, `mountain-v2`, and both beach frames. Regenerating needs `OPENAI_API_KEY`; the offline regen check covers the result.
+- **Redraw all terrain sprites locally.** A deterministic procedural renderer replaces the image API for terrain (water, grass, forest, beach, mountain: 16 sprites). It needs no API key, and the offline regen check covers the result.
 - **HUD good icons** load from the compiled `Icons` texture atlas. Players can tell wood, planks, and food apart.
 - **Food chain.** A new `farm` building (2×2, $60, materials: 2 wood) produces `food`. **BREAKING** (starter-balance requirement): the town center's starter inventory goes from 4 wood + 2 planks to **6 wood + 4 planks + 2 food**. The first session can then place a lumberjack, a farm, and a house without stalling.
 - **Placement rejection feedback.** A rejected placement shows a transient HUD message that names the reason, such as "Needs 2 more planks" or "Tile occupied". Today a rejection does nothing visible.
@@ -46,6 +46,6 @@ None.
 - **CityRender2D:** the farm sprite name and animation entry.
 - **CityUI:** `GoodIconLoader` resolves through the texture atlas, plus a rejection message in `HUDViewModel` and single-line compact layout.
 - **CityPersistence:** no save-format change. Old saves don't contain farms, and the new enum case only adds a decode target. The save version stays 3.
-- **Sprite pipeline (Python):** a new `content_gate.py` and a diamond-fit step for terrain. No new third-party packages; it uses the existing Pillow pin in `scripts/requirements.txt`.
-- **Art:** new or regenerated PNGs for terrain water, mountain, and beach, plus the farm and its construction and operational frames. Regenerating needs `OPENAI_API_KEY` (about $0.04 per sprite). The offline CI check stays hermetic.
+- **Sprite pipeline (Python):** a diamond-fit step for terrain and a procedural renderer (`procedural.py`). The content gate is Swift (a `SpriteContentGate` target in CityRender2D). No new third-party packages; it uses the existing Pillow pin in `scripts/requirements.txt`.
+- **Art:** the terrain PNGs and the new farm sprites are drawn by the local procedural renderer (`make sprites-procedural`). No API key is needed, and the offline CI check stays hermetic.
 - **Build tools:** no new Homebrew dependency.
