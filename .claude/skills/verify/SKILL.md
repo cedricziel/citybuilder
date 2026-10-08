@@ -28,9 +28,9 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 
 - **Title:** New Game… → Single Island / Default seed → Start.
 - **Build:** Arm a palette button, then tap a grass tile.
-  - Starting stock is wood 4 / planks 2.
-  - Lumberjack (2 wood, $80) succeeds.
-  - House needs 4 planks and is rejected with no UI feedback.
+  - Starting stock is wood 6 / planks 5 / food 2.
+  - Lumberjack (2 wood, $80) succeeds; a house (4 planks) fits too.
+  - Locked buildings show a lock and are rejected with "Needs <Tech> research".
 - **Camera:** Pinch with two fingers (`touch2_path`) to zoom out and read the whole island.
 - **Pause:** The pause button opens the menu. Tap Save Game ("Saved" appears), then Quit to Title. The title screen should now offer Continue, which restores money, buildings, and camera.
 
@@ -44,3 +44,6 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 
 - Sheet transitions are slow. Take a second screenshot before deciding a tap failed.
 - To check art, render the files in `Resources/*.atlas/*.png` onto a magenta contact sheet with PIL. Wrong-image bugs are obvious there and hard to see in-game.
+- **Tap coordinates on the iPhone 17 Pro Max.** Screenshots come back 921×2000 (from 1320×2868); device points are screenshot pixels × 0.478. The Continue button is near (220, 475), New Game near (220, 553), the dialog's Start near (384, 615–670) depending on how many sections the dialog has.
+- **Build only what's committed.** When the working tree holds unfinished work, build HEAD from a throwaway worktree: `git worktree add --detach <scratch>/verify-head HEAD`, then `xcodegen generate` and `xcodebuild` there with its own `-derivedDataPath`.
+- **Seasons take time.** A season lasts one minute of game time, so winter starts three minutes into a new game. Use the wait for other work instead of polling.
