@@ -16,23 +16,8 @@ private func game(_ age: Age) -> World {
     return world
 }
 
-/// First anchor whose footprint lies on free grass.
-private func freeAnchor(for kind: BuildingKind, in world: World) -> TileCoordinate? {
-    let footprint = BuildingCatalog.spec(for: kind).footprint
-    for y in 0 ..< world.mapHeight {
-        for x in 0 ..< world.mapWidth {
-            let anchor = TileCoordinate(x: x, y: y)
-            let fits = footprint.tiles(anchor: anchor).allSatisfy {
-                world.terrain(at: $0) == .grass && world.occupiedTiles[$0] == nil
-            }
-            if fits { return anchor }
-        }
-    }
-    return nil
-}
-
 private func placement(_ kind: BuildingKind, in world: World) throws -> PlacementResult {
-    try world.canPlace(kind, at: #require(freeAnchor(for: kind, in: world)))
+    try world.canPlace(kind, at: #require(Fixture.freeAnchor(for: kind, in: world)))
 }
 
 @Test("scenario: era tech unlock lists")
@@ -165,16 +150,20 @@ func scenarioOlderBuildingLoads() throws {
     building.projectStages = 3
     building.fuelled = true
     building.commissionTicksLeft = 40
+    building.exportGood = .bread
     let encoded = try JSONEncoder().encode(building)
     var json = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
     #expect(json["projectStages"] != nil)
-    for key in ["projectStages", "fuelled", "commissionTicksLeft"] {
+    #expect(json["exportGood"] != nil)
+    for key in ["projectStages", "fuelled", "commissionTicksLeft", "exportGood"] {
         json.removeValue(forKey: key)
     }
     let old = try JSONDecoder().decode(Building.self, from: JSONSerialization.data(withJSONObject: json))
     #expect(old.projectStages == 0)
     #expect(!old.fuelled)
     #expect(old.commissionTicksLeft == 0)
+    // add-culture-signatures / Export choice survives saves.
+    #expect(old.exportGood == nil)
     let roundTrip = try JSONDecoder().decode(Building.self, from: encoded)
     #expect(roundTrip == building)
 }

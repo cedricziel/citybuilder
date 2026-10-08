@@ -13,7 +13,8 @@ from generate_sprites_ai.postprocess import downsample
 OUTLINE = (0x1A, 0x14, 0x10)
 
 CULTURE_CHAIN = ["hop-garden", "brewery", "vineyard", "winery", "tea-garden", "tea-house", "coffee-grove", "roastery"]
-SIGNATURES = ["monument", "guild-hall", "gallery", "steam-engine", "power-plant"]
+SIGNATURES = ["monument", "guild-hall", "gallery", "steam-engine", "power-plant",
+              "mead-hall", "forum", "temple-garden", "caravanserai"]
 KINDS = ["house", "warehouse", "lumberjack-hut", "sawmill", "town-center", "bakery",
          "grain-farm", "windmill", "mine", "charcoal-burner", "smelter", "toolsmith", "library",
          *CULTURE_CHAIN, *SIGNATURES, *[f"port-{o}" for o in "nesw"], *[f"shipyard-{o}" for o in "nesw"]]

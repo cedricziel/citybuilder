@@ -70,7 +70,7 @@ public struct CityRootView: View {
                 let inspector = session.inspector
                 if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
                     HStack {
-                        InspectorView(viewModel: inspector, onCommission: session.commissionArt)
+                        InspectorView(viewModel: inspector, onCommission: session.commissionArt, onPickExport: session.pickExport)
                         inspectorActionsButton
                         Spacer()
                     }

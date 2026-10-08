@@ -64,7 +64,7 @@ extension World {
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
     }
 
-    private mutating func dispatchSupply(
+    mutating func dispatchSupply(
         _ good: Good,
         from buffer: EntityID,
         to consumer: EntityID,
@@ -82,7 +82,7 @@ extension World {
         events.append(.carrierDeparted(carrier: carrierID, from: path[0], good: good))
     }
 
-    private func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
+    func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
         carriers.values.count { carrier in
             guard case let .retrieve(carried, _, _, toConsumer) = carrier.mission else { return false }
             return toConsumer == consumer && (good == nil || carried == good)
@@ -91,7 +91,7 @@ extension World {
 
     /// Operational goods buffer holding `good` with the shortest road
     /// path to `road`; ties go to the lower entity ID.
-    private func nearestBuffer(holding good: Good, toRoad road: TileCoordinate) -> (EntityID, [TileCoordinate])? {
+    func nearestBuffer(holding good: Good, toRoad road: TileCoordinate) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for buffer in goodsBuffers() where buffer.state == .operational {
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,

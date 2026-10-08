@@ -112,3 +112,12 @@ No migration. `Building` gains `exportGood: Good?`, read as nil when missing. `C
 - **[Risk] Luxuries are short for both merchants and signatures.** → Accepted: that is the decision the change adds; each signature still works unserved.
 - **[Risk] Forum and monument tax stack.** → Accepted: the monument takes an age of deliveries, and the forum only covers houses in range.
 - **[Trade-off] The caravanserai has no range.** It doesn't need one; its decision is what to sell, not where to stand.
+
+## Implementation notes
+
+- **Last caravan (D7, D9, D11):** `Building.lastCaravan: CaravanSale?` (goods and revenue) records the last sale so the inspector's "Last caravan" line survives saves; it decodes as nil when missing, like `exportGood`.
+- **Mead hall reach (D4):** the relief and the inspector count only buildings with catalog upkeep above 0 (houses, roads and other free buildings are not highlighted). Upkeep sums are unchanged by this.
+- **Effects:** the three ranged signatures add `SignatureEffect.upkeepRelief`, `.marketTax` and `.contemplation` and the activation `.served` (always on, doubled while fuelled). Rates come from `World.cultureRate(of:on:from:)` through the `haveSameOwner` seam; tax, upkeep and knowledge are computed per house or building (`houseTax`, `upkeep(of:)`, `residentKnowledge`) so per-owner totals can sum them.
+- **Owner seams still to wire when `add-rival-towns` lands:** `applySetExport` (player-only command) and `credit(_:toOwnerOf:)` (caravan revenue) in `World+Caravans.swift`.
+- **Banner (D9):** a culture signature's `fuelRanOut` banner reads "Its effect halves until carriers bring more." instead of the age signatures' "Its effects stop".
+- **Order of work:** the art (M4) landed before the catalog (M1) so that catalog entries and atlas sprites ship in the same commit as the new kinds.

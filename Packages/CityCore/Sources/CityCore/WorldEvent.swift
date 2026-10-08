@@ -89,6 +89,12 @@ public enum WorldEvent: Sendable {
     case commissionStarted(building: EntityID)
     /// A gallery commission ran out.
     case commissionEnded(building: EntityID)
+
+    // MARK: Culture signatures
+
+    /// A caravanserai's caravan sold `goods` for `revenue`. Spec:
+    /// `culture-signatures` / Caravans sell at base price.
+    case caravanSold(building: EntityID, goods: [Good: Int], revenue: Int64)
 }
 
 extension WorldEvent: Equatable {
@@ -148,6 +154,8 @@ extension WorldEvent: Equatable {
              let (.commissionStarted(lBuilding), .commissionStarted(rBuilding)),
              let (.commissionEnded(lBuilding), .commissionEnded(rBuilding)):
             return lBuilding == rBuilding
+        case let (.caravanSold(lBuilding, lGoods, lRevenue), .caravanSold(rBuilding, rGoods, rRevenue)):
+            return lBuilding == rBuilding && lGoods == rGoods && lRevenue == rRevenue
         default:
             return false
         }
@@ -181,7 +189,8 @@ public extension WorldEvent {
             return building
         case let .monumentCompleted(building),
              let .commissionStarted(building),
-             let .commissionEnded(building):
+             let .commissionEnded(building),
+             let .caravanSold(building, _, _):
             return building
         case .forestHarvested,
              .placementRejected,
@@ -231,7 +240,8 @@ public extension WorldEvent {
              .scenarioWon,
              .monumentCompleted,
              .commissionStarted,
-             .commissionEnded:
+             .commissionEnded,
+             .caravanSold:
             return nil
         }
     }
@@ -268,6 +278,7 @@ public extension WorldEvent {
         case .monumentCompleted: return 23
         case .commissionStarted: return 24
         case .commissionEnded: return 25
+        case .caravanSold: return 26
         }
     }
 }

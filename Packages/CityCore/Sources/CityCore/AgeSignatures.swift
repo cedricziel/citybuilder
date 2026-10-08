@@ -55,6 +55,14 @@ public enum SignatureEffect: Hashable, Sendable {
     case energy
     /// Houses grow and advance a tier twice as fast.
     case inspiration
+    /// Buildings pay half upkeep, none when the source is served.
+    /// Spec: `culture-signatures` / Mead halls share upkeep.
+    case upkeepRelief
+    /// Houses pay 1 extra tax per resident, 2 when served.
+    case marketTax
+    /// Citizens and above add 1 extra knowledge per resident, 2 when
+    /// served.
+    case contemplation
 }
 
 /// When a signature source's effects are on.
@@ -64,6 +72,8 @@ public enum SignatureActivation: Hashable, Sendable {
     case fuelled
     /// While a gallery commission runs.
     case commissioned
+    /// Always, at double strength while its last luxury burn succeeded.
+    case served
 }
 
 /// One effect of a signature source and how far it reaches, in tiles
@@ -97,6 +107,7 @@ public extension BuildingKind {
         switch self {
         case .steamEngine: FuelSpec(good: .charcoal, amount: 1, intervalTicks: 50)
         case .powerPlant: FuelSpec(good: .charcoal, amount: 2, intervalTicks: 50)
+        case .meadHall, .forum, .templeGarden, .caravanserai: servedLuxury
         default: nil
         }
     }
@@ -108,11 +119,15 @@ public extension BuildingKind {
         case .gallery: [SignatureReach(.inspiration, tiles: 8)]
         case .steamEngine: [SignatureReach(.workshopSpeed(everyTicks: 1), tiles: 6), SignatureReach(.smoke, tiles: 4)]
         case .powerPlant: [SignatureReach(.workshopSpeed(everyTicks: 2), tiles: 10), SignatureReach(.energy, tiles: 10)]
+        case .meadHall: [SignatureReach(.upkeepRelief, tiles: 8)]
+        case .forum: [SignatureReach(.marketTax, tiles: 8)]
+        case .templeGarden: [SignatureReach(.contemplation, tiles: 6)]
         default: []
         }
     }
 
     var signatureActivation: SignatureActivation {
+        if isCultureSignature { return .served }
         if fuel != nil { return .fuelled }
         return self == .gallery ? .commissioned : .always
     }
@@ -161,7 +176,7 @@ public extension Building {
     var isSignatureActive: Bool {
         guard !kind.signatureReaches.isEmpty else { return false }
         switch kind.signatureActivation {
-        case .always: return true
+        case .always, .served: return true
         case .fuelled: return fuelled
         case .commissioned: return commissionTicksLeft > 0
         }

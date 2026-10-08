@@ -68,4 +68,8 @@ public enum Command: Codable, Equatable, Sendable {
     /// Pay for a commission at a gallery. Spec: `age-signatures` /
     /// Gallery commissions inspire houses.
     case commission(EntityID)
+
+    /// Set or clear a caravanserai's export good. Spec:
+    /// `culture-signatures` / The caravanserai exports a chosen good.
+    case setExport(EntityID, Good?)
 }
