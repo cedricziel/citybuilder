@@ -19,13 +19,21 @@
 
 ## 3. M3 — Farm and starter stock
 
-- [ ] 3.1 Tests-first: translate `#### Scenario: Farm spec exposes its footprint and costs`, `#### Scenario: Farm produces food without inputs`, `#### Scenario: Farm food satisfies a connected house`, `#### Scenario: Fresh-world town center holds starter goods`, `#### Scenario: Starter goods are part of the island stockpile aggregate`, `#### Scenario: First lumberjack placement consumes starter wood`, and `#### Scenario: Starter goods afford a lumberjack, a farm, and a house` into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 3.2 Implement to green: add `BuildingKind.farm`, its `BuildingSpec`, its `ProductionCatalog` recipe, its stockpile capacity, and the new starter inventory in `seedTownCenters` (design D5). Update the tests that assert the old 4 wood + 2 planks stock in the same commit.
-- [ ] 3.3 Regenerate the DeterminismFixture and the v1/v2 save fixtures if they encode starter stock. Explain why in the commit body.
-- [ ] 3.4 Add the farm to the build palette, the sprite catalog (`catalog/building-farm.md` with `source = "procedural"`, constructing and operational frames), `procedural.py`, and `SpriteAnimation.entry(for:)`. Run `make sprites-procedural`.
+- [x] 3.1 Tests-first: translate `#### Scenario: Farm spec exposes its footprint and costs`, `#### Scenario: Farm produces food without inputs`, `#### Scenario: Farm food satisfies a connected house`, `#### Scenario: Fresh-world town center holds starter goods`, `#### Scenario: Starter goods are part of the island stockpile aggregate`, `#### Scenario: First lumberjack placement consumes starter wood`, and `#### Scenario: Starter goods afford a lumberjack, a farm, and a house`, `#### Scenario: Town center accepts carrier deposits`, `#### Scenario: Equidistant buffers tie-break on entity ID`, `#### Scenario: Town center food satisfies a connected house`, and `#### Scenario: Unconnected town center does not satisfy needs` into failing tests in `CityCoreTests`. Confirm red.
+- [x] 3.2 Implement to green: add `BuildingKind.farm`, its `BuildingSpec`, its `ProductionCatalog` recipe, its stockpile capacity, and the new starter inventory in `seedTownCenters` (design D5). Update the tests that assert the old 4 wood + 2 planks stock in the same commit.
+- [x] 3.2b Implement to green: make the town center a goods buffer with capacity 40 behind one shared `logisticsBufferKinds` set used by carrier destinations, buffer selection, and house needs. Iterate buffers in `EntityID` order and replace only on a strictly shorter path (design D9).
+- [x] 3.3 Check the DeterminismFixture and the v1/v2 save fixtures for starter-stock dependencies. Result: no committed determinism output exists (CI compares fresh macOS and Linux runs), and the save fixtures don't encode starter stock. Also fixed two `Set`-ordered footprint scans that made replays diverge (design D9 determinism).
+- [x] 3.4 Add the farm to the build palette, the sprite catalog (`catalog/building-farm.md` with `source = "procedural"`, constructing and operational frames), `procedural.py`, and `SpriteAnimation.entry(for:)`. Run `make sprites-procedural`.
 - [ ] 3.5 Runtime check in the simulator: on a fresh Single Island seed 0 game, place a lumberjack, a farm, a house, and a road connecting them to the town center. Within 3 in-game minutes the HUD population should read above 0.
 - [ ] 3.6 Refactor under a green bar.
 - [ ] 3.7 Verify that `make test-scenarios` is clean for the M3 scenarios.
+
+## 3b. M3b — Stable building animations
+
+- [x] 3b.1 Tests-first: translate `#### Scenario: Content gate rejects a shifted operational frame` and `#### Scenario: Content gate accepts smoke above the roof` into failing tests in `SpriteContentGateTests`. Add pytest coverage for derived frames. Confirm red.
+- [x] 3b.2 Implement to green: add the `frame_misaligned` gate rule, `procedural.derive_operational`, and `operational = "derived"` support in the batcher (design D10).
+- [x] 3b.3 Mark all eleven building entries with operational frames as derived and run `make sprites-procedural`; `make sprites-verify` passes.
+- [ ] 3b.4 Runtime check in the simulator: operational buildings hold still and only the smoke moves.
 
 ## 4. M4 — HUD feedback, icons, compact layout
 

@@ -85,6 +85,40 @@ Old saves keep their old starter stock. The stock is only seeded at world-gen, s
 
 **CityCore invariant:** the farm and starter changes are Foundation-only edits to `Building.swift`, `Production.swift`, and `World+Fixture.swift`. `check-no-apple-ui-imports.sh` keeps guarding this.
 
+### D9 — The town center is a full goods buffer
+
+There are three warehouse-only lists today:
+
+- `goodsBuffers()`: carrier destinations, warehouses and ports;
+- `findRoadConnectedWarehouse`: warehouses only;
+- `hasGoodInReach`: house needs, warehouses only.
+
+Placement costs already count the town center (`placementBufferKinds`). All three lookups now use one shared set, `logisticsBufferKinds = [.warehouse, .port, .townCenter]`. The shipyard stays out: it consumes its stock to build ships. The town center's capacity goes from 8 to 40, so the starter stock (12 units) fits with room for early production.
+
+Carrier destination selection walks buildings sorted by `EntityID.raw` and only replaces the best candidate on a strictly shorter path. That gives the deterministic tie-break the spec has always required. The current code iterates a `Dictionary` in hash order, which Swift randomises per process.
+
+- **Alternative — keep warehouse-only logistics and raise the starter stock to afford a warehouse (2 wood + 6 planks) up front.** Rejected. The player's first action would be a building they don't understand yet, and the town center would stay a dead box that holds goods nobody can use.
+- **Alternative — add the town center only to `hasGoodInReach`.** Rejected. Production still wouldn't reach the city without a warehouse, and the opening loop stays broken.
+
+**CityCore invariant:** pure data-structure edits in `World.swift`, `Systems.swift`, and `PortAndShipyard.swift`. No new imports.
+
+### D10 — Building operational frames are derived from the base sprite
+
+The AI pipeline draws each operational frame with its own API call, so each frame is a different drawing of the building. On the `e57823e` atlas the town center's two frames have different architecture, and the sawmill's four frames are four different houses. Because the renderer cycles only the operational frames, every swap makes the building jump and resize. Registering the frames onto one bounding box doesn't help: it removes the jump, but the building still turns into a different building.
+
+Catalog entries with front matter `operational = "derived"` now build their `-operational-N` frames locally:
+
+1. Process the base sheet (threshold, downsample, quantize) to the base's target size.
+2. Keep that building pixel-identical.
+3. Draw a chimney smoke plume above the roof that rises and drifts by one step per frame.
+
+All eleven building entries with operational frames opt in. The sprite-animation spec keeps animating the same kinds; only the frames' content changes.
+
+The content gate gains a `frame_misaligned` rule: an operational frame's left, right and bottom bounds must lie within 2 px of the base sprite's. The top is exempt so smoke can rise. The palette-coherence metric could not catch this defect, because the frames share a palette.
+
+- **Alternative — stop animating AI-drawn buildings.** Rejected. It breaks the sprite-animation spec's "Operational sawmill animates" scenario, and the city looks dead.
+- **Alternative — redraw the buildings procedurally.** Deferred. That's a bigger art pass, and a natural fit for the ages work, where every building needs per-age variants anyway.
+
 ### D6 — Rejection feedback lives in `HUDViewModel`, driven by `GameSession`'s placement result
 
 `GameSession` already calls `canPlace` before it enqueues a placement. When the result is `.rejected(reason)`, it forwards the reason to `HUDViewModel.showRejection(_:now:)`. The view model maps the reason to a message (`PlacementRejectionText`) and stores an expiry time. The view reads the message through `TimelineView`, so it expires without a timer.
@@ -99,7 +133,7 @@ Old saves keep their old starter stock. The stock is only seeded at world-gen, s
 
 ## Determinism
 
-The farm recipe is a constant-table entry processed by the existing production system in its existing per-tick order (sorted by `EntityID`), so replay stays byte-identical. The starter stock is constant. Rejection feedback, icon loading, and layout are outside `World` entirely. The DeterminismFixture is regenerated once, because new worlds now start with different stock. That's an expected change, recorded in the fixture commit.
+The farm recipe is a constant-table entry processed by the existing production system in its existing per-tick order (sorted by `EntityID`), so replay stays byte-identical. The starter stock is constant. Rejection feedback, icon loading, and layout are outside `World` entirely. Carrier routing now iterates buildings in `EntityID` order, and the footprint neighbour scans (`anyAdjacentRoad`, `clearAdjacentForest`) walk footprint tiles in row-major order instead of a `Set`. Both changes remove dependencies on per-process hash seeding: which road a building used and which forest tile a lumberjack cleared could differ between two runs of identical input, and `terrainGrid` is part of `World` equality. Previously carrier routing which removes a dependency on per-process `Dictionary` hash order that could already make equal-length routes diverge between runs. The DeterminismFixture is regenerated once, because new worlds now start with different stock and the town center now takes deliveries. That's an expected change, recorded in the fixture commit.
 
 ## Risks / Trade-offs
 

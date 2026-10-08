@@ -37,6 +37,20 @@ For every sprite that declares animation frames (`<name>-0` … `<name>-N`) or a
 - **WHEN** the content gate compares four water frames that differ only in glint placement against their water base
 - **THEN** the gate passes for all four frames
 
+### Requirement: Operational frames share one silhouette
+
+Every building operational frame (`<name>-operational-N`) SHALL keep the base sprite's silhouette: the left, right and bottom edges of its opaque bounding box MUST lie within 2 pixels of the base sprite's. The top edge is exempt, so effects such as chimney smoke may rise above the roof. The content gate MUST fail on a frame outside this tolerance with reason `frame_misaligned`. Catalog entries MAY declare `operational = "derived"` to have the pipeline build their operational frames from the base sprite, which satisfies this rule by construction.
+
+#### Scenario: Content gate rejects a shifted operational frame
+
+- **WHEN** the content gate compares `building-sawmill-operational-0.png`, whose building sits 6 pixels left of the base sprite's, against `building-sawmill.png`
+- **THEN** the gate fails and names `building-sawmill-operational-0.png` with reason `frame_misaligned`
+
+#### Scenario: Content gate accepts smoke above the roof
+
+- **WHEN** an operational frame matches its base sprite except for smoke pixels drawn above the roof line
+- **THEN** the gate reports no `frame_misaligned` failure for that frame
+
 ### Requirement: Content gate runs in sprite verification
 
 `make sprites-verify` and the CI sprite job SHALL run the content gate after the byte-identical regen check. The job MUST exit non-zero if any content-gate rule fails, and it MUST print every failing sprite with its reason code, one per line.
