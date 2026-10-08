@@ -139,6 +139,12 @@ House needs used to count any buffer that touched any road, even a separate netw
 
 - **Alternative — forest regrowth instead of a larger catchment.** Deferred to the ages work, where forestry can be an era mechanic. A catchment alone already fixes the stall.
 
+### D13 — Houses consume what they need
+
+Houses only checked whether food and planks were in reach, so 2 starter food fed a city forever and the farm had no purpose. Every 100 ticks a populated house now eats 1 food per 2 residents (rounded up) and uses 1 plank, drawn from buffers on its road network in entity-ID order. A shortfall sets a per-need flag that keeps the need unmet until the next full consumption, so presence alone no longer satisfies a need. The rate is tuned so one farm (1 food / 40 ticks = 2.5 per interval) feeds about one full house of 4.
+
+- **Alternative — consume every tick in fractions.** Rejected. It needs fixed-point stock or float accumulation, and one integer withdrawal per interval keeps replay exact.
+
 ### D6 — Rejection feedback lives in `HUDViewModel`, triggered by a `canPlace` check on tap
 
 Until now, `GameSession.handleTap` enqueued `.place` without checking, and the simulation dropped rejected commands silently at the tick boundary. Now:

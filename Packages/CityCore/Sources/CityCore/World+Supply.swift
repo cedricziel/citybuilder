@@ -97,6 +97,22 @@ extension World {
         return best
     }
 
+    /// Withdraw up to `amount` of `good` from operational goods buffers
+    /// on `building`'s road network, lowest entity ID first. Returns the
+    /// amount actually withdrawn.
+    mutating func consume(_ good: Good, amount: Int, by building: Building) -> Int {
+        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        var remaining = amount
+        for buffer in goodsBuffers() where remaining > 0 && buffer.state == .operational {
+            let bufferFootprint = BuildingCatalog.spec(for: buffer.kind).footprint
+            guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
+                  sharesRoadNetwork(building.anchor, footprint, with: buffer.anchor, bufferFootprint)
+            else { continue }
+            remaining -= stockpiles[buffer.id]?.withdraw(good, amount: remaining) ?? 0
+        }
+        return amount - remaining
+    }
+
     /// True when a road path joins a road next to `anchor`'s footprint
     /// and a road next to `other`'s footprint.
     func sharesRoadNetwork(

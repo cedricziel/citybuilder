@@ -406,11 +406,17 @@ extension World {
         for (id, building) in buildings where building.kind == .house && building.state == .operational {
             var pop = populations[id] ?? HousePopulation()
             let footprint = BuildingCatalog.spec(for: building.kind).footprint
-            // Food need: nearest road-connected warehouse with food.
-            pop.foodSatisfied = hasGoodInReach(.food, fromAnchor: building.anchor, footprint: footprint)
-            // Plank upkeep: same idea — visible planks somewhere in reach.
+            if pop.population > 0, tickCount.isMultiple(of: HousePopulation.consumptionIntervalTicks) {
+                pop.foodShortfall = consume(.food, amount: pop.foodPerInterval, by: building) < pop.foodPerInterval
+                pop.planksShortfall = consume(.planks, amount: 1, by: building) < 1
+            }
+            // Needs are met while a buffer on the house's road network
+            // holds the good and the last consumption was not short.
+            pop.foodSatisfied = !pop.foodShortfall
+                && hasGoodInReach(.food, fromAnchor: building.anchor, footprint: footprint)
             pop.planksSatisfied = pop.population == 0
-                || hasGoodInReach(.planks, fromAnchor: building.anchor, footprint: footprint)
+                || (!pop.planksShortfall
+                    && hasGoodInReach(.planks, fromAnchor: building.anchor, footprint: footprint))
             // Track satisfaction streak for growth/decline.
             pop.ticksAtCurrentSatisfaction &+= 1
             let canGrow = pop.allNeedsSatisfied
