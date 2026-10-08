@@ -29,6 +29,8 @@ public struct NewGameDialogView: View {
             layoutSection
             seedSection
 
+            cultureSection
+
             HStack {
                 Button("Cancel") {
                     viewModel.cancel()
@@ -49,6 +51,22 @@ public struct NewGameDialogView: View {
         }
         .padding(24)
         .frame(minWidth: 360, idealWidth: 440)
+    }
+
+    private var cultureSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Culture").font(.headline)
+            Picker("Culture", selection: $viewModel.culture) {
+                ForEach(Culture.allCases, id: \.self) { culture in
+                    Text(culture.displayName).tag(culture)
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("newGame.culture")
+            Text(viewModel.culture.blurb)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private var layoutSection: some View {

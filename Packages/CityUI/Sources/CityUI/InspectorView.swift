@@ -28,7 +28,7 @@ public struct InspectorViewModel: Sendable {
         if let pop = snapshot.housePopulations[entityID] {
             let needs = pop.tier.needs.map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             houseLines = [
-                "Tier: \(pop.tier.displayName)",
+                "Tier: \(pop.tier.displayName(in: snapshot.culture))",
                 "Residents: \(pop.population)/\(pop.capacity)",
                 "Needs: \(needs.joined(separator: " · "))"
             ]
