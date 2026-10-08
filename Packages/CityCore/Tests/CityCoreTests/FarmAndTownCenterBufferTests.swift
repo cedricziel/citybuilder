@@ -176,3 +176,26 @@ func scenarioStarterGoodsAffordALumberjackAFarmAndAHouse() throws {
     #expect(world.stockpiles[center]?.quantity(of: .wood) == 2)
     #expect(world.stockpiles[center]?.quantity(of: .planks) == 0)
 }
+
+@Test("scenario: port accepts carrier deposits")
+func scenarioPortAcceptsCarrierDeposits() {
+    var world = World.fixtureWithTerrain(width: 12, height: 8, fill: .grass, seed: 1)
+    let port = injectBuffer(.port, in: &world, at: TileCoordinate(x: 7, y: 0), capacity: 200)
+    world.enqueue(.place(.farm, at: TileCoordinate(x: 1, y: 1)))
+    placeRoad(in: &world, y: 3, xs: 0 ... 10)
+    tick(&world, 400)
+    #expect((world.stockpiles[port]?.quantity(of: .food) ?? 0) > 0)
+}
+
+@Test("scenario: full buffer rejects deposits")
+func scenarioFullBufferRejectsDeposits() throws {
+    var world = World.fixtureWithTerrain(width: 17, height: 8, fill: .grass, seed: 1)
+    let near = injectBuffer(.townCenter, in: &world, at: TileCoordinate(x: 6, y: 0), capacity: 1, contents: [.wood: 1])
+    let far = injectBuffer(.warehouse, in: &world, at: TileCoordinate(x: 13, y: 0), capacity: 200)
+    placeRoad(in: &world, y: 3, xs: 0 ... 16)
+    tick(&world, 2)
+
+    let pick = try #require(world.findRoadConnectedBuffer(fromRoad: TileCoordinate(x: 5, y: 3), good: .food))
+    #expect(pick.0 == far)
+    #expect(pick.0 != near)
+}
