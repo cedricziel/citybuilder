@@ -25,6 +25,23 @@ public struct HousePopulation: Hashable, Codable, Sendable {
 
     public init() {}
 
+    private enum CodingKeys: String, CodingKey {
+        case population, foodSatisfied, planksSatisfied, ticksAtCurrentSatisfaction
+        case foodShortfall, planksShortfall
+    }
+
+    /// Saves written before consumption have no shortfall keys; they
+    /// decode as "not short".
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        population = try container.decode(UInt32.self, forKey: .population)
+        foodSatisfied = try container.decode(Bool.self, forKey: .foodSatisfied)
+        planksSatisfied = try container.decode(Bool.self, forKey: .planksSatisfied)
+        ticksAtCurrentSatisfaction = try container.decode(UInt64.self, forKey: .ticksAtCurrentSatisfaction)
+        foodShortfall = try container.decodeIfPresent(Bool.self, forKey: .foodShortfall) ?? false
+        planksShortfall = try container.decodeIfPresent(Bool.self, forKey: .planksShortfall) ?? false
+    }
+
     public var allNeedsSatisfied: Bool {
         foodSatisfied && planksSatisfied
     }

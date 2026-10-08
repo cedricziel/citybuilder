@@ -76,3 +76,12 @@ func scenarioEmptyHouseConsumesNothing() throws {
     #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 10)
     #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 10)
 }
+
+@Test("house population saved before consumption still decodes")
+func housePopulationFromOlderSaveDecodes() throws {
+    let older = Data(#"{"population":3,"foodSatisfied":true,"planksSatisfied":true,"ticksAtCurrentSatisfaction":12}"#.utf8)
+    let pop = try JSONDecoder().decode(HousePopulation.self, from: older)
+    #expect(pop.population == 3)
+    #expect(pop.foodShortfall == false)
+    #expect(pop.planksShortfall == false)
+}
