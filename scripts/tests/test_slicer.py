@@ -31,8 +31,8 @@ CATALOG_DIR = REPO_ROOT / "Resources" / "Sprites.style" / "catalog"
 # Requirement: Sprite naming grammar). All atlas filenames produced by
 # slice_plan MUST match one of these patterns.
 NAME_PATTERNS = [
-    # Terrain: terrain-<kind>[-v<n>][-<frame>]
-    re.compile(r"^terrain-[a-z]+(?:-v\d+)?(?:-\d+)?$"),
+    # Terrain: terrain-<kind>[-v<n>][-<season>][-<frame>]
+    re.compile(r"^terrain-[a-z]+(?:-v\d+)?(?:-(?:autumn|winter))?(?:-\d+)?$"),
     # Land building: building-<kind>[-v<n>][-(constructing|operational)-<n>]
     re.compile(
         r"^building-(?!port|shipyard)[a-z0-9-]+?(?:-v\d+)?"
@@ -48,7 +48,7 @@ NAME_PATTERNS = [
     # Ship
     re.compile(r"^ship-(?:n|ne|e|se|s|sw|w|nw)-\d+$"),
     # Goods icon
-    re.compile(r"^good-[a-z]+$"),
+    re.compile(r"^good-[a-z]+(?:-[a-z]+)*$"),
 ]
 
 
