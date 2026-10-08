@@ -283,6 +283,9 @@ public final class GameSession {
     /// Transient: never saved. Spec: `rendering-2_5d` / Placement HUD.
     public var pendingPlacement: PendingPlacement?
 
+    /// Set by a long-press; the iOS shell shows the tile menu while non-nil.
+    public var tileMenuRequest: TileMenuRequest?
+
     /// Whether a building other than a road waits for a confirmation
     /// instead of committing on tap. On by default on iOS only; macOS
     /// keeps commit-on-click. A flag rather than `#if` so the touch flow

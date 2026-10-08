@@ -18,9 +18,9 @@
 
 ## 4. M4 — Tile context menu view-model (CityUI)
 
-- [ ] 4.1 Tests-first: translate `#### Scenario: Menu lists all building kinds except road as separate entries`, `#### Scenario: Road menu entry arms the place tool without entering pending state`, `#### Scenario: Unaffordable buildings appear disabled in the menu`, `#### Scenario: Demolish entry appears only when tile holds a player-owned building`, and `#### Scenario: Menu emits dismiss for inspect entry` into failing tests in `CityUITests`. Confirm red.
-- [ ] 4.2 Implement to green: add `TileMenuViewModel` that takes `(tile: TileCoordinate, world: World, money: Int64)` and produces an array of `TileMenuItem` values (`.build(BuildingKind, enabled: Bool)`, `.demolish`, `.dismiss`); add `TileMenuChoice` for the selection callback (`.build(BuildingKind)`, `.demolish`, `.dismiss`); wire menu choices through `GameSession.applyMenuChoice(_:at:)` which calls either `beginPendingPlacement`, sets `selectedTool = .place(.road)`, enqueues `.demolish`, or no-ops for dismiss.
-- [ ] 4.3 Refactor under a green bar.
+- [x] 4.1 Tests-first: translate `#### Scenario: Menu lists all building kinds except road as separate entries`, `#### Scenario: Road menu entry arms the place tool without entering pending state`, `#### Scenario: Unaffordable buildings appear disabled in the menu`, `#### Scenario: Demolish entry appears only when tile holds a player-owned building`, and `#### Scenario: Menu emits dismiss for inspect entry` into failing tests in `CityUITests`. Confirm red.
+- [x] 4.2 Implement to green: add `TileMenuViewModel` that takes `(tile: TileCoordinate, world: World, money: Int64)` and produces an array of `TileMenuItem` values (`.build(BuildingKind, enabled: Bool)`, `.demolish`, `.dismiss`); add `TileMenuChoice` for the selection callback (`.build(BuildingKind)`, `.demolish`, `.dismiss`); wire menu choices through `GameSession.applyMenuChoice(_:at:)` which calls either `beginPendingPlacement`, sets `selectedTool = .place(.road)`, enqueues `.demolish`, or no-ops for dismiss.
+- [x] 4.3 Refactor under a green bar.
 
 ## 5. M5 — Long-press intent → menu presentation (CityUI)
 
