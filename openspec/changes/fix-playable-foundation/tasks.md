@@ -24,7 +24,7 @@
 - [x] 3.2b Implement to green: make the town center a goods buffer with capacity 40 behind one shared `logisticsBufferKinds` set used by carrier destinations, buffer selection, and house needs. Iterate buffers in `EntityID` order and replace only on a strictly shorter path (design D9).
 - [x] 3.3 Check the DeterminismFixture and the v1/v2 save fixtures for starter-stock dependencies. Result: no committed determinism output exists (CI compares fresh macOS and Linux runs), and the save fixtures don't encode starter stock. Also fixed two `Set`-ordered footprint scans that made replays diverge (design D9 determinism).
 - [x] 3.4 Add the farm to the build palette, the sprite catalog (`catalog/building-farm.md` with `source = "procedural"`, constructing and operational frames), `procedural.py`, and `SpriteAnimation.entry(for:)`. Run `make sprites-procedural`.
-- [ ] 3.5 Runtime check in the simulator: on a fresh Single Island seed 0 game, place a lumberjack, a farm, a house, and a road connecting them to the town center. Within 3 in-game minutes the HUD population should read above 0.
+- [x] 3.5 Runtime check in the simulator: on a fresh Single Island seed 0 game, place a lumberjack, a farm, a house, and a road connecting them to the town center. Within 3 in-game minutes the HUD population should read above 0.
 - [x] 3.6 Refactor under a green bar.
 - [x] 3.7 Verify that `make test-scenarios` is clean for the M3 scenarios.
 
@@ -55,6 +55,6 @@
 - [x] 5.1b Redraw roads procedurally. The playtest showed AI road tiles covering about half the diamond, with mismatched variants (one had a puddle, one had grass), so painted roads read as scattered patches.
 - [x] 5.1c Show road access: a placed building without an adjacent road gets a "no road" badge, and the house ghost highlights its four edge tiles. In the 5.2 playthrough a house next to the town center showed population 0 for 2 minutes. The nearest road was diagonal to it and hidden behind the house sprite, and two tap attempts to place the connecting tile hit the house instead ("Tile occupied").
 - [x] 5.1d Fix gaps found in the 5.2 playthrough: producers draw inputs via buffer→producer carriers (design D11); lumberjacks harvest a 2-tile catchment, and needs require a shared road network (D12); a drag release no longer sends a tap; 5 starter planks keep the sawmill affordable; the town center is gone from the palette.
-- [ ] 5.2 Final runtime pass: build both schemes, then play the iOS build for 5 in-game minutes from a new game (lumberjack → farm → house → sawmill → second house). Attach screenshots to the PR.
+- [x] 5.2 Final runtime pass: build both schemes, then play the iOS build for 5 in-game minutes from a new game (lumberjack → farm → house → sawmill → second house). Attach screenshots to the PR.
 - [ ] 5.3 Mac runtime pass: launch the Mac build, place a farm with the mouse, and confirm the icons and rejection message match iOS — DEFERRED (requires interactive Mac session)
 - [x] 5.4 Run `make lint && make format`, then `openspec validate fix-playable-foundation --strict`.
