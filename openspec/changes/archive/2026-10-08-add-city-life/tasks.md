@@ -10,5 +10,5 @@
 
 ## 3. M3 — Verification
 
-- [ ] 3.1 Runtime check: watch a day pass with a few inhabited houses on a road — strollers by day, lit windows at night.
-- [ ] 3.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-city-life --strict`.
+- [x] 3.1 Runtime check: watch a day pass with a few inhabited houses on a road — strollers by day, lit windows at night.
+- [x] 3.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-city-life --strict`.

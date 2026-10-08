@@ -129,3 +129,12 @@ A producer with several inputs MUST wait until all of them are in its stockpile 
 
 - **WHEN** an operational toolsmith holds 1 iron and 1 planks and 60 ticks pass
 - **THEN** it holds 1 tools and neither iron nor planks
+
+### Requirement: Culture goods
+
+The goods catalog SHALL include hops, beer, grapes, wine, tea leaves, tea, coffee cherries and coffee.
+
+#### Scenario: Culture goods are catalogued
+
+- **WHEN** the goods catalog is read
+- **THEN** it has display names for all eight culture goods

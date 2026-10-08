@@ -305,3 +305,21 @@ In a scenario game the HUD SHALL offer a goals panel listing each goal with its 
 
 - **WHEN** a tick emits `scenarioWon`
 - **THEN** the session presents the win sheet
+
+### Requirement: Inspector introduces residents
+
+The inspector SHALL list up to three residents of a house with their tier and the house's wish.
+
+#### Scenario: Resident line
+
+- **WHEN** the inspector shows a peasants house whose wish is food
+- **THEN** a line reads "<name> · Peasants · wants food"
+
+### Requirement: Palette hides other cultures' buildings
+
+The build palette SHALL leave out buildings tied to another culture.
+
+#### Scenario: Mediterranean palette
+
+- **WHEN** the palette is built for a Mediterranean world
+- **THEN** it has a vineyard and a winery and no brewery, tea house or roastery
