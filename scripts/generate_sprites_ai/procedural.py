@@ -394,6 +394,19 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
 }
 
 
+def _bread_icon() -> Image.Image:
+    """24×24 loaf: golden crust lit from the north-west, darker base,
+    cream score marks, outlined."""
+    img = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([2, 6, 21, 19], fill=(*THATCH, 255), outline=(*OUTLINE, 255))
+    draw.ellipse([3, 6, 20, 16], fill=(*WHEAT, 255))
+    draw.ellipse([5, 7, 13, 11], fill=(*CREAM, 255))
+    for x in (8, 12, 16):
+        draw.line([(x - 1, 13), (x + 1, 9)], fill=(*PINE, 255))
+    return img
+
+
 def _register_buildings_and_units() -> None:
     from . import buildings, units
 
@@ -408,6 +421,9 @@ def _register_buildings_and_units() -> None:
             _RENDERERS[f"{name}-operational-{i}"] = (
                 lambda kind=kind, i=i, frames=frames: derive_operational(buildings.draw(kind), i, frames)
             )
+    for tier in buildings.TIER_HOUSES:
+        _RENDERERS[f"building-house-tier{tier}"] = lambda tier=tier: buildings.draw_house_tier(tier)
+    _RENDERERS["good-bread"] = _bread_icon
     for facing in ("ne", "se", "sw", "nw"):
         for frame in (0, 1):
             _RENDERERS[f"walker-{facing}-{frame}"] = lambda facing=facing, frame=frame: units.walker(facing, frame)

@@ -359,6 +359,68 @@ def _house(stage: str) -> Image.Image:
     return c.img
 
 
+def _house_tier2() -> Image.Image:
+    """Citizens: stone ground floor, half-timbered upper storey."""
+    c = Canvas(2, 2, 72)
+    yard(c)
+    shadow(c, 0.25, 0.25, 1.65, 1.65)
+    box(c, 0.25, 0.25, 1.65, 1.65, 12, STONE_WALL)
+    box(c, 0.2, 0.2, 1.7, 1.7, 26, PLASTER, z0=12)
+    timber_frame(c, 0.2, 1.7, 1.7, 12, 26, step=0.35)
+    gable_roof(c, 0.2, 0.2, 1.7, 1.7, 26, 16, TILE_ROOF, PLASTER, axis="u")
+    door(c, 0.7, 1.65, height=7)
+    for u in (0.45, 1.0, 1.45):
+        window(c, "left", u, 1.7, 21)
+    window(c, "left", 1.25, 1.65, 7)
+    window(c, "right", 1.7, 0.8, 20, lit=False)
+    chimney(c, 1.2, 0.5, 26, 46)
+    crate(c, 1.75, 1.75)
+    return c.img
+
+
+def _house_tier3() -> Image.Image:
+    """Merchants: three storeys of stone and timber under a slate hip
+    roof, with two chimneys."""
+    c = Canvas(2, 2, 92)
+    yard(c)
+    shadow(c, 0.15, 0.15, 1.75, 1.75, 0.4)
+    box(c, 0.15, 0.15, 1.75, 1.75, 14, STONE_WALL)
+    box(c, 0.15, 0.15, 1.75, 1.75, 38, PLASTER, z0=14)
+    timber_frame(c, 0.15, 1.75, 1.75, 14, 26, step=0.32)
+    timber_frame(c, 0.15, 1.75, 1.75, 26, 38, step=0.32)
+    hip_roof(c, 0.15, 0.15, 1.75, 1.75, 38, 18, SLATE_ROOF)
+    door(c, 0.6, 1.75, height=8)
+    door(c, 0.95, 1.75, height=8)
+    for z in (20, 32):
+        for u in (0.4, 0.9, 1.4):
+            window(c, "left", u, 1.75, z)
+        window(c, "right", 1.75, 0.6, z - 1, lit=False)
+        window(c, "right", 1.75, 1.2, z - 1, lit=False)
+    chimney(c, 0.5, 0.4, 38, 60)
+    chimney(c, 1.3, 0.4, 38, 58)
+    return c.img
+
+
+def _bakery(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 56)
+    yard(c)
+    b = Block(0.2, 0.3, 1.35, 1.45, 16, PLASTER, TILE_ROOF, "gable_u", 13, framed=True)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.55, 1.45, height=8)
+        window(c, "left", 1.05, 1.45, 11)
+    if stage == "done":
+        # Domed brick oven against the east wall with its own flue.
+        box(c, 1.4, 0.55, 1.85, 1.15, 8, Material(SUN_TERRACOTTA, TERRACOTTA))
+        flat_top(c, 1.4, 0.55, 1.85, 1.15, 8, TERRACOTTA)
+        x, y = c.p(1.85, 0.85, 4)
+        c.draw.rectangle([round(x) - 1, round(y) - 2, round(x) + 1, round(y)], fill=(*OUTLINE, 255))
+        chimney(c, 1.55, 0.65, 8, 34)
+        for i in range(2):
+            crate(c, 0.35 + i * 0.25, 1.6)
+    return c.img
+
+
 def _warehouse(stage: str) -> Image.Image:
     c = Canvas(3, 3, 60)
     yard(c)
@@ -496,7 +558,7 @@ def _shipyard(orientation: str, stage: str) -> Image.Image:
 
 FOOTPRINTS: dict[str, tuple[int, int]] = {
     "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "sawmill": (2, 2),
-    "town-center": (3, 3), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
+    "town-center": (3, 3), "bakery": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
 }
 
 _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
@@ -505,14 +567,24 @@ _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
     "lumberjack-hut": _lumberjack,
     "sawmill": _sawmill,
     "town-center": _town_center,
+    "bakery": _bakery,
     **{f"port-{o}": (lambda stage, o=o: _port(o, stage)) for o in "nesw"},
     **{f"shipyard-{o}": (lambda stage, o=o: _shipyard(o, stage)) for o in "nesw"},
 }
 
 OPERATIONAL_FRAMES: dict[str, int] = {
-    "lumberjack-hut": 2, "sawmill": 4, "town-center": 2,
+    "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2,
     **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
 }
+
+
+# Upgraded house looks, keyed by tier; tier 1 is the plain house.
+TIER_HOUSES: dict[int, Callable[[], Image.Image]] = {2: _house_tier2, 3: _house_tier3}
+
+
+def draw_house_tier(tier: int) -> Image.Image:
+    img = TIER_HOUSES[tier]()
+    return img.crop((0, max(0, img.getbbox()[1] - HEADROOM), img.width, img.height))
 
 
 # Room kept above the tallest pixel for the derived smoke plume.

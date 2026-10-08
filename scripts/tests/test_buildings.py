@@ -12,9 +12,9 @@ from generate_sprites_ai.postprocess import downsample
 
 OUTLINE = (0x1A, 0x14, 0x10)
 
-KINDS = ["house", "warehouse", "lumberjack-hut", "sawmill", "town-center",
+KINDS = ["house", "warehouse", "lumberjack-hut", "sawmill", "town-center", "bakery",
          *[f"port-{o}" for o in "nesw"], *[f"shipyard-{o}" for o in "nesw"]]
-OPERATIONAL = {"lumberjack-hut": 2, "sawmill": 4, "town-center": 2,
+OPERATIONAL = {"lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2,
                **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"}}
 UNITS = [f"walker-{d}-{f}" for d in ("ne", "se", "sw", "nw") for f in (0, 1)] + \
         [f"ship-{d}-{f}" for d in ("n", "ne", "e", "se", "s", "sw", "w", "nw") for f in (0, 1)]
@@ -97,3 +97,24 @@ def test_canvas_headroom_is_trimmed_to_the_smoke_plume(kind: str) -> None:
     keeps only room for the smoke plume above the roof."""
     top = render(f"building-{kind}").getbbox()[1]
     assert top <= 14, (kind, top)
+
+
+@pytest.mark.parametrize("tier", [2, 3])
+def test_house_tiers_grow_taller_on_the_same_footprint(tier: int) -> None:
+    base = render("building-house")
+    img = render(f"building-house-tier{tier}")
+    assert img.width == base.width
+    pixels = [p for p in img.getdata() if p[3]]
+    assert sum(1 for p in pixels if p[:3] == OUTLINE) / len(pixels) >= 0.03
+    assert img.getbbox()[3] == img.size[1]
+    lower = render(f"building-house-tier{tier - 1}" if tier > 2 else "building-house")
+    assert img.height > lower.height
+
+
+def test_bread_icon() -> None:
+    img = render("good-bread")
+    assert img.size == (24, 24)
+    palette = set(PALETTE)
+    opaque = [p for p in img.getdata() if p[3]]
+    assert len(opaque) > 100
+    assert all(p[:3] in palette and p[3] == 255 for p in opaque)
