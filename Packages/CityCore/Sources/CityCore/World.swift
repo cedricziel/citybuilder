@@ -263,10 +263,10 @@ public struct World: Codable, Sendable, Equatable {
         runCarrierSystem(events: &events)
         runShipSystem()
         runPopulationSystem(signatureSources: signatureSources)
-        runResearchSystem(events: &events)
+        runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
-        runEconomySystem(events: &events)
+        runEconomySystem(signatureSources: signatureSources, events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0

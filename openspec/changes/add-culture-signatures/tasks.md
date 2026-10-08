@@ -5,8 +5,8 @@
 
 ## 2. M2 — Mead hall, forum and temple garden
 
-- [ ] 2.1 Tests-first: translate "Two forums count once", the mead hall, forum and temple garden scenarios, and the economy scenario "Forum and monument" and the research scenario. Confirm red.
-- [ ] 2.2 Implement to green: owner-scoped coverage at the best rate, mead hall upkeep sharing before difficulty scaling, forum tax inside the house tax (before the monument bonus), temple knowledge on the resident knowledge interval (D3–D6).
+- [x] 2.1 Tests-first: translate "Two forums count once", the mead hall, forum and temple garden scenarios, and the economy scenario "Forum and monument" and the research scenario. Confirm red.
+- [x] 2.2 Implement to green: owner-scoped coverage at the best rate, mead hall upkeep sharing before difficulty scaling, forum tax inside the house tax (before the monument bonus), temple knowledge on the resident knowledge interval (D3–D6).
 
 ## 3. M3 — Caravanserai
 

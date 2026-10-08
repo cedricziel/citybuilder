@@ -363,12 +363,12 @@ extension World {
         return best
     }
 
-    mutating func runEconomySystem(events: inout [WorldEvent]) {
+    mutating func runEconomySystem(signatureSources sources: [Building], events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
             // Spec: `population-and-needs` / Taxes scale with tier.
-            let amount = taxWithMonumentBonus(populations.values.reduce(Int64(0)) {
-                $0 + Int64($1.population) * $1.tier.taxPerResident * Economy.taxPerPopUnit
+            let amount = taxWithMonumentBonus(populations.reduce(Int64(0)) {
+                $0 + houseTax(house: $1.key, population: $1.value, sources: sources)
             })
             economy.credit(amount)
             // Only emit when actual money flowed — `taxesCollected` is a
@@ -381,7 +381,7 @@ extension World {
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
             var totalUpkeep: Int64 = 0
             for building in buildings.values where building.state == .operational {
-                totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
+                totalUpkeep += upkeep(of: building, sources: sources)
             }
             totalUpkeep = difficulty.scaledUpkeep(totalUpkeep)
             economy.deduct(totalUpkeep)

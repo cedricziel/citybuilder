@@ -157,14 +157,14 @@ extension World {
     static let residentKnowledgeIntervalTicks: UInt64 = 100
 
     /// Spec: `research` / Knowledge accumulates, Choosing research.
-    mutating func runResearchSystem(events: inout [WorldEvent]) {
+    mutating func runResearchSystem(signatureSources sources: [Building], events: inout [WorldEvent]) {
         if tickCount.isMultiple(of: Self.libraryKnowledgeIntervalTicks) {
             research.knowledge += buildings.values.count { $0.kind == .library && $0.state == .operational }
         }
         if tickCount.isMultiple(of: Self.residentKnowledgeIntervalTicks) {
-            research.knowledge += populations.values
-                .filter { $0.tier >= .citizens }
-                .reduce(0) { $0 + Int($1.population) }
+            research.knowledge += populations.reduce(0) {
+                $0 + residentKnowledge(house: $1.key, population: $1.value, sources: sources)
+            }
         }
         guard let tech = research.current else { return }
         research.progress += research.knowledge

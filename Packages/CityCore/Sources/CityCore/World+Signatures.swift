@@ -39,12 +39,29 @@ public struct SignatureCoverage: Hashable, Sendable {
     public var smokyHouses: Int
     public var energisedHouses: Int
     public var inspiredHouses: Int
+    /// Buildings a mead hall relieves of upkeep.
+    public var relievedBuildings: Int
+    /// Houses a forum taxes.
+    public var taxedHouses: Int
+    /// Houses a temple garden reaches, whatever their tier.
+    public var contemplatingHouses: Int
 
-    public init(workshops: Int = 0, smokyHouses: Int = 0, energisedHouses: Int = 0, inspiredHouses: Int = 0) {
+    public init(
+        workshops: Int = 0,
+        smokyHouses: Int = 0,
+        energisedHouses: Int = 0,
+        inspiredHouses: Int = 0,
+        relievedBuildings: Int = 0,
+        taxedHouses: Int = 0,
+        contemplatingHouses: Int = 0
+    ) {
         self.workshops = workshops
         self.smokyHouses = smokyHouses
         self.energisedHouses = energisedHouses
         self.inspiredHouses = inspiredHouses
+        self.relievedBuildings = relievedBuildings
+        self.taxedHouses = taxedHouses
+        self.contemplatingHouses = contemplatingHouses
     }
 }
 
@@ -105,6 +122,9 @@ public extension World {
             case .smoke: coverage.smokyHouses += 1
             case .energy: coverage.energisedHouses += 1
             case .inspiration: coverage.inspiredHouses += 1
+            case .upkeepRelief: coverage.relievedBuildings += 1
+            case .marketTax: coverage.taxedHouses += 1
+            case .contemplation: coverage.contemplatingHouses += 1
             }
         }
         return coverage
@@ -112,8 +132,11 @@ public extension World {
 
     /// True when a signature `effect` applies to buildings of `kind`.
     static func isAffected(_ kind: BuildingKind, by effect: SignatureEffect) -> Bool {
-        if case .workshopSpeed = effect { return kind.isWorkshop }
-        return kind == .house
+        switch effect {
+        case .workshopSpeed: kind.isWorkshop
+        case .upkeepRelief: kind != .meadHall && BuildingCatalog.spec(for: kind).upkeep > 0
+        case .smoke, .energy, .inspiration, .marketTax, .contemplation: kind == .house
+        }
     }
 }
 
@@ -127,7 +150,7 @@ extension World {
                 case .smoke: modifiers.smoky = true
                 case .energy: modifiers.energised = true
                 case .inspiration: modifiers.inspired = true
-                case .workshopSpeed: continue
+                case .workshopSpeed, .upkeepRelief, .marketTax, .contemplation: continue
                 }
             }
         }

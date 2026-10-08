@@ -52,11 +52,15 @@ enum SignatureFixture {
         return id
     }
 
-    /// A fuelled steam engine or power plant with charcoal for many burns.
+    /// A fuelled building with fuel for many burns: charcoal for a steam
+    /// engine or power plant, the luxury for a culture signature.
+    @discardableResult
     static func fuelled(_ kind: BuildingKind, at anchor: TileCoordinate, in world: inout World) -> EntityID {
         let id = inject(kind, at: anchor, in: &world)
         world.buildings[id]?.fuelled = true
-        world.stockpiles[id]?.deposit(.charcoal, amount: 12)
+        if let fuel = kind.fuel {
+            world.stockpiles[id]?.deposit(fuel.good, amount: 12)
+        }
         return id
     }
 
