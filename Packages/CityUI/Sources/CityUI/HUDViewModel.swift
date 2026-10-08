@@ -13,6 +13,11 @@ public final class HUDViewModel {
     /// one); nil only when the camera has never been on any island.
     public var currentIsland: IslandSummary?
 
+    /// How long a placement rejection stays on screen.
+    public static let rejectionDisplaySeconds: TimeInterval = 2.5
+
+    private var rejection: (message: String, shownAt: Date)?
+
     public init(
         money: Int64 = 0,
         population: UInt64 = 0,
@@ -42,9 +47,27 @@ public final class HUDViewModel {
     }
 
     public var formattedMoney: String {
+        formattedMoney(locale: .current)
+    }
+
+    /// Money with locale-grouped digits, e.g. "$1,000" in `en_US`.
+    public func formattedMoney(locale: Locale) -> String {
         let prefix = money < 0 ? "-" : ""
-        let magnitude = abs(money)
-        return "\(prefix)$\(magnitude)"
+        return "\(prefix)$\(abs(money).formatted(.number.grouping(.automatic).locale(locale)))"
+    }
+
+    /// Show `rejection` as the HUD's transient message, replacing any
+    /// message already showing.
+    public func showRejection(_ rejection: PlacementRejection, now: Date) {
+        self.rejection = (PlacementRejectionText.message(for: rejection), now)
+    }
+
+    /// The rejection message to show at `date`, or nil once it expired.
+    public func rejectionMessage(at date: Date) -> String? {
+        guard let rejection, date.timeIntervalSince(rejection.shownAt) < Self.rejectionDisplaySeconds else {
+            return nil
+        }
+        return rejection.message
     }
 
     public var formattedPopulation: String {

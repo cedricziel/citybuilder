@@ -66,6 +66,7 @@ public struct CityRootView: View {
                 BuildPaletteView(armed: session.selectedTool) { tool in
                     session.selectTool(tool)
                 }
+                PlacementRejectionBanner(hud: session.hud)
                 if session.selectedTool != .inspect {
                     Text(armedCaption)
                         .font(.caption2)
@@ -258,6 +259,10 @@ public final class GameSession {
         case .inspect:
             selectedTile = tile
         case let .place(kind):
+            if case let .rejected(reason) = world.canPlace(kind, at: tile) {
+                hud.showRejection(reason, now: Date())
+                return
+            }
             world.enqueue(.place(kind, at: tile))
         case .demolish:
             world.enqueue(.demolish(at: tile))

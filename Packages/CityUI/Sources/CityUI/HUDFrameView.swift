@@ -5,6 +5,7 @@ import SwiftUI
 /// regular) per spec platform-shells.
 public struct HUDFrameView: View {
     public let viewModel: HUDViewModel
+    private let labels = LayoutDecisions.decisions(for: .compact).labels
 
     public init(viewModel: HUDViewModel) {
         self.viewModel = viewModel
@@ -12,7 +13,7 @@ public struct HUDFrameView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 24) {
+            HStack(spacing: 16) {
                 badge(label: "Money", value: viewModel.formattedMoney)
                 badge(label: "Population", value: viewModel.formattedPopulation)
                 if let name = viewModel.currentIslandName {
@@ -63,9 +64,13 @@ public struct HUDFrameView: View {
             Text(label.uppercased())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(labels.statCaptionLineLimit)
+                .minimumScaleFactor(labels.minimumScaleFactor)
             Text(value)
                 .font(.system(.title3, design: .monospaced))
                 .fontWeight(.semibold)
+                .lineLimit(labels.statValueLineLimit)
+                .minimumScaleFactor(labels.minimumScaleFactor)
         }
     }
 }

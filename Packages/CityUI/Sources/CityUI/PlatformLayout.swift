@@ -15,6 +15,7 @@ public struct LayoutDecisions: Equatable, Sendable {
     public let defaultCameraZoom: Double
     public let showsAdvancedControls: Bool
     public let showsMenuBar: Bool
+    public var labels: HUDLabelConfig = .singleLine
 
     public enum PalettePlacement: String, Sendable {
         case sidebar
@@ -47,6 +48,23 @@ public struct LayoutDecisions: Equatable, Sendable {
             )
         }
     }
+}
+
+/// Line-wrapping rules for HUD stat and palette labels. Spec:
+/// `platform-shells` / Compact HUD labels stay on one line.
+public struct HUDLabelConfig: Equatable, Sendable {
+    public let statValueLineLimit: Int
+    public let statCaptionLineLimit: Int
+    public let paletteLabelLineLimit: Int
+    /// Smallest scale a label may shrink to before it truncates.
+    public let minimumScaleFactor: Double
+
+    public static let singleLine = HUDLabelConfig(
+        statValueLineLimit: 1,
+        statCaptionLineLimit: 1,
+        paletteLabelLineLimit: 1,
+        minimumScaleFactor: 0.7
+    )
 }
 
 /// Hover tooltip controller — pure timing logic. Determines whether a

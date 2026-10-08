@@ -14,15 +14,19 @@ public struct BuildPaletteView: View {
         self.selectTool = selectTool
     }
 
+    private let labels = LayoutDecisions.decisions(for: .compact).labels
+
     public var body: some View {
-        HStack(spacing: 6) {
-            ForEach(BuildingKind.allCases, id: \.self) { kind in
-                paletteButton(tool: .place(kind))
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(BuildingKind.allCases, id: \.self) { kind in
+                    paletteButton(tool: .place(kind))
+                }
+                Divider().frame(height: 20)
+                paletteButton(tool: .demolish)
             }
-            Divider().frame(height: 20)
-            paletteButton(tool: .demolish)
+            .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
@@ -34,6 +38,8 @@ public struct BuildPaletteView: View {
         } label: {
             Text(tool.displayName)
                 .font(.caption.monospaced())
+                .lineLimit(labels.paletteLabelLineLimit)
+                .fixedSize()
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(isArmed ? Color.accentColor.opacity(0.85) : Color.clear)

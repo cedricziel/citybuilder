@@ -1,17 +1,18 @@
 import CityCore
+import Foundation
 import Testing
 @testable import CityUI
 
 @Test("HUDViewModel formats money with currency prefix")
 func hudViewModelFormatsMoney() {
     let hud = HUDViewModel(money: 1234, population: 7)
-    #expect(hud.formattedMoney == "$1234")
+    #expect(hud.formattedMoney(locale: Locale(identifier: "en_US")) == "$1,234")
 }
 
 @Test("HUDViewModel formats negative money with sign")
 func hudViewModelFormatsNegativeMoney() {
     let hud = HUDViewModel(money: -50, population: 0)
-    #expect(hud.formattedMoney == "-$50")
+    #expect(hud.formattedMoney(locale: Locale(identifier: "en_US")) == "-$50")
 }
 
 @Test("HUDViewModel formats population")
