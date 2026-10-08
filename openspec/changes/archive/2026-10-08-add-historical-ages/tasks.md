@@ -19,5 +19,5 @@
 
 ## 5. M5 — Verification
 
-- [ ] 5.1 Runtime check on a dedicated simulator: start in Antiquity (BC date, stone houses, quern house in the palette, no windmill) and in Industrial (brick houses, 1780).
-- [ ] 5.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-historical-ages --strict`.
+- [x] 5.1 Runtime check on a dedicated simulator: start in Antiquity (BC date, stone houses, quern house in the palette, no windmill) and in Industrial (brick houses, 1780).
+- [x] 5.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-historical-ages --strict`.

@@ -15,5 +15,5 @@
 
 ## 4. M4 — Verification
 
-- [ ] 4.1 Runtime check: start First Harvest, see the goals panel and Antiquity; start a Hard sandbox and see $700.
-- [ ] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-difficulty-and-goals --strict`.
+- [x] 4.1 Runtime check: start First Harvest, see the goals panel and Antiquity; start a Hard sandbox and see $700.
+- [x] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-difficulty-and-goals --strict`.

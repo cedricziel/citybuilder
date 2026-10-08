@@ -149,3 +149,21 @@ Loading a version-5 save SHALL migrate it to version 6 with the Northern Europea
 
 - **WHEN** a version-5 save is loaded
 - **THEN** the world's culture is Northern European
+
+### Requirement: Saves before ages are Medieval
+
+Loading a version-6 save SHALL migrate it to version 7 in the Medieval age with Feudal Order researched.
+
+#### Scenario: v6 save loads in the Medieval age
+
+- **WHEN** a version-6 save is loaded
+- **THEN** the world's age is Medieval and Feudal Order is researched
+
+### Requirement: Saves before difficulty are Normal sandboxes
+
+Loading a version-7 save SHALL migrate it to version 8 as a Normal sandbox game with no goals.
+
+#### Scenario: v7 save loads as a Normal sandbox
+
+- **WHEN** a version-7 save is loaded
+- **THEN** its difficulty is Normal, it has no goals and it is not won
