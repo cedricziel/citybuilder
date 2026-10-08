@@ -9,8 +9,8 @@
 
 ## 3. M3 — UI
 
-- [ ] 3.1 Tests-first: translate the platform-shells and sprite-style-catalog scenarios. Confirm red.
-- [ ] 3.2 Implement to green: palette filter, inspector needs, research panel listing (D4, D5).
+- [x] 3.1 Tests-first: translate the platform-shells and sprite-style-catalog scenarios. Confirm red.
+- [x] 3.2 Implement to green: palette filter, inspector needs, research panel listing (D4, D5).
 
 ## 4. M4 — Verification
 

@@ -40,13 +40,3 @@ func inspectorShowsHouseTierAndNeeds() throws {
     #expect(lines.contains("Residents: 3/6"))
     #expect(lines.contains("Needs: food ✓ · planks ✗"))
 }
-
-private func withHousePopulations(_ base: WorldSnapshot, _ pops: [EntityID: HousePopulation]) -> WorldSnapshot {
-    WorldSnapshot(
-        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: base.mapWidth, mapHeight: base.mapHeight,
-        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: base.carriers,
-        ships: base.ships, routes: base.routes, economy: base.economy, totalPopulation: base.totalPopulation, camera: base.camera,
-        islandSummaries: base.islandSummaries, roadDisconnectedBuildings: base.roadDisconnectedBuildings,
-        housePopulations: pops
-    )
-}

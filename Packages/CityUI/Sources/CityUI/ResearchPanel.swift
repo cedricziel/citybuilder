@@ -48,7 +48,8 @@ public struct ResearchPanelModel: Equatable {
                 progress: research.current == tech ? research.progress : 0,
                 prerequisites: Self.requirements(of: tech, in: world),
                 unlocks: tech.era.map { "The \($0.displayName) age" }
-                    ?? tech.unlocks.map { BuildTool.place($0).displayName }.joined(separator: ", ")
+                    ?? tech.unlocks.filter { $0.isBuildable(in: world.culture) }
+                    .map { BuildTool.place($0).displayName }.joined(separator: ", ")
             )
         }
     }
@@ -124,6 +125,12 @@ public extension GameSession {
     /// Palette hides obsolete buildings.
     func isObsolete(_ kind: BuildingKind) -> Bool {
         kind.obsoletedBy.map(world.research.isResearched) ?? false
+    }
+
+    /// Palette entries to leave out. Spec: `platform-shells` / Palette
+    /// hides obsolete buildings, Palette hides other cultures' buildings.
+    func isHidden(_ kind: BuildingKind) -> Bool {
+        isObsolete(kind) || !kind.isBuildable(in: world.culture)
     }
 
     func chooseResearch(_ tech: Tech) {
