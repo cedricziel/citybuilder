@@ -36,5 +36,7 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 
 ## Gotchas
 
+- **Stale art after sprite changes.** Incremental `xcodebuild` doesn't recompile an `*.atlas` folder when PNGs inside it change, because the folder's own timestamp stays the same. Run `touch Resources/*.atlas` before building, then check that the timestamp of `Citybuilder.app/Terrain.atlasc/Terrain.1.png` is new.
+
 - Sheet transitions are slow. Take a second screenshot before deciding a tap failed.
 - To check art, render the files in `Resources/*.atlas/*.png` onto a magenta contact sheet with PIL. Wrong-image bugs are obvious there and hard to see in-game.
