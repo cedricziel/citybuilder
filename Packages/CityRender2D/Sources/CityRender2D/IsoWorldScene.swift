@@ -17,6 +17,9 @@ public final class IsoWorldScene: SKScene {
     /// Tracks which sprite specs are currently present in the scene tree so
     /// each frame can compute add/remove diffs via SnapshotReconciler.
     private var presentSprites: [SpriteSpec: SKNode] = [:]
+    /// Season whose terrain tint is on screen. Spec: `rendering-2_5d` /
+    /// Terrain shows the season.
+    private var appliedSeason: Season = .spring
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {
@@ -184,6 +187,7 @@ public final class IsoWorldScene: SKScene {
     override public func update(_ currentTime: TimeInterval) {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
+        applySeason(snapshot.date.season)
         reconcileSprites(with: snapshot)
         reconcileCarriers(with: snapshot)
         reconcileGhost()
@@ -312,6 +316,23 @@ public final class IsoWorldScene: SKScene {
         cameraNode.setScale(scale)
     }
 
+    private func applySeason(_ season: Season) {
+        guard season != appliedSeason else { return }
+        appliedSeason = season
+        for (spec, node) in presentSprites {
+            applySeasonTint(to: node, spec: spec)
+        }
+    }
+
+    private func applySeasonTint(to node: SKNode, spec: SpriteSpec) {
+        guard case let .terrain(kind) = spec.kind, SeasonTint.tintedTerrain.contains(kind),
+              let sprite = node as? SKSpriteNode
+        else { return }
+        let tint = SeasonTint.tint(for: appliedSeason)
+        sprite.color = tint.color
+        sprite.colorBlendFactor = tint.blendFactor
+    }
+
     private func reconcileSprites(with snapshot: WorldSnapshot) {
         guard let (xRange, yRange) = Culling.visibleTileRange(
             camera: snapshot.camera,
@@ -335,6 +356,7 @@ public final class IsoWorldScene: SKScene {
         }
         for spec in diff.added {
             let node = placedNode(for: spec)
+            applySeasonTint(to: node, spec: spec)
             addChild(node)
             presentSprites[spec] = node
         }
