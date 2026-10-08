@@ -95,6 +95,11 @@ public enum WorldEvent: Sendable {
     /// A caravanserai's caravan sold `goods` for `revenue`. Spec:
     /// `culture-signatures` / Caravans sell at base price.
     case caravanSold(building: EntityID, goods: [Good: Int], revenue: Int64)
+
+    // MARK: Rival towns
+
+    /// A rival town entered a new age. Spec: `rival-towns` / Rival ages.
+    case rivalAgeAdvanced(RivalID, Age)
 }
 
 extension WorldEvent: Equatable {
@@ -136,9 +141,7 @@ extension WorldEvent: Equatable {
             return lAmount == rAmount
         case let (.bankruptcyWarning(lTicks), .bankruptcyWarning(rTicks)):
             return lTicks == rTicks
-        case (.bankruptcyResolved, .bankruptcyResolved):
-            return true
-        case (.gameOver, .gameOver):
+        case (.bankruptcyResolved, .bankruptcyResolved), (.gameOver, .gameOver), (.scenarioWon, .scenarioWon):
             return true
         case let (.seasonChanged(lSeason), .seasonChanged(rSeason)):
             return lSeason == rSeason
@@ -146,8 +149,6 @@ extension WorldEvent: Equatable {
             return lEvent == rEvent
         case let (.ageAdvanced(lAge), .ageAdvanced(rAge)):
             return lAge == rAge
-        case (.scenarioWon, .scenarioWon):
-            return true
         case let (.fuelRanOut(lBuilding, lKind), .fuelRanOut(rBuilding, rKind)):
             return lBuilding == rBuilding && lKind == rKind
         case let (.monumentCompleted(lBuilding), .monumentCompleted(rBuilding)),
@@ -156,6 +157,8 @@ extension WorldEvent: Equatable {
             return lBuilding == rBuilding
         case let (.caravanSold(lBuilding, lGoods, lRevenue), .caravanSold(rBuilding, rGoods, rRevenue)):
             return lBuilding == rBuilding && lGoods == rGoods && lRevenue == rRevenue
+        case let (.rivalAgeAdvanced(lRival, lAge), .rivalAgeAdvanced(rRival, rAge)):
+            return lRival == rRival && lAge == rAge
         default:
             return false
         }
@@ -202,7 +205,8 @@ public extension WorldEvent {
              .seasonChanged,
              .historyEvent,
              .ageAdvanced,
-             .scenarioWon:
+             .scenarioWon,
+             .rivalAgeAdvanced:
             return nil
         }
     }
@@ -241,7 +245,8 @@ public extension WorldEvent {
              .monumentCompleted,
              .commissionStarted,
              .commissionEnded,
-             .caravanSold:
+             .caravanSold,
+             .rivalAgeAdvanced:
             return nil
         }
     }
@@ -279,6 +284,7 @@ public extension WorldEvent {
         case .commissionStarted: return 24
         case .commissionEnded: return 25
         case .caravanSold: return 26
+        case .rivalAgeAdvanced: return 27
         }
     }
 }

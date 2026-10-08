@@ -168,40 +168,10 @@ public struct World: Codable, Sendable, Equatable {
     }
 
     public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate, for owner: Owner = .player) -> PlacementResult {
-        let spec = BuildingCatalog.spec(for: kind)
-        let tiles = spec.footprint.tiles(anchor: anchor)
-        var landCount = 0
-        var waterCount = 0
-        let rejection = foreignIslandRejection(tiles: tiles, for: owner, tileToIsland: tileToIslandMap())
-            ?? researchOrTerrainRejection(kind, tiles: tiles, for: owner)
-            ?? uniquenessRejection(kind, for: owner)
-        if let rejection {
-            return .rejected(rejection)
-        }
-        for tile in tiles {
-            guard contains(tile) else { return .rejected(.outOfBounds) }
-            if occupiedTiles[tile] != nil { return .rejected(.tileOccupied) }
-            let terrainHere = terrain(at: tile) ?? .water
-            if terrainHere == .water {
-                if spec.shorePlacement == nil {
-                    return .rejected(.terrainNotBuildable)
-                }
-                waterCount += 1
-            } else {
-                landCount += 1
-            }
-        }
-        if let shore = spec.shorePlacement {
-            if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
-            if waterCount < shore.minWaterTiles { return .rejected(.shoreRequiresWaterTile) }
-        }
-        if !spec.materialCost.isEmpty {
-            let shortfall = materialShortfall(cost: spec.materialCost, anchor: anchor)
-            if !shortfall.isEmpty {
-                return .rejected(.insufficientMaterials(shortfall))
-            }
-        }
-        return .allowed
+        let tileToIsland = tileToIslandMap()
+        let rejection = siteRejection(kind, at: anchor, for: owner, tileToIsland: tileToIsland)
+            ?? materialRejection(kind, at: anchor, for: owner, tileToIsland: tileToIsland)
+        return rejection.map { .rejected($0) } ?? .allowed
     }
 
     /// Classifies a candidate building's footprint into land-face and
@@ -262,6 +232,7 @@ public struct World: Codable, Sendable, Equatable {
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
+        runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
@@ -398,12 +369,13 @@ public struct World: Codable, Sendable, Equatable {
         if let capacity = Self.stockpileCapacity(for: kind) {
             stockpiles[id] = Stockpile(capacity: capacity)
         }
-        if !spec.materialCost.isEmpty {
-            let delivered = deductMaterialsPartial(cost: spec.materialCost, anchor: anchor)
+        let materialCost = materialCost(of: kind, for: owner)
+        if !materialCost.isEmpty {
+            let delivered = deductMaterialsPartial(cost: materialCost, anchor: anchor)
             buildings[id]?.materialsDelivered = delivered
-            let missing = shortfall(for: spec.materialCost, delivered: delivered)
+            let missing = shortfall(for: materialCost, delivered: delivered)
             if missing.isEmpty {
-                events.append(.materialsDeducted(building: id, cost: spec.materialCost))
+                events.append(.materialsDeducted(building: id, cost: materialCost))
             } else {
                 buildings[id]?.constructionState = .waitingForMaterials
                 events.append(.constructionWaitingForMaterials(building: id, missing: missing))

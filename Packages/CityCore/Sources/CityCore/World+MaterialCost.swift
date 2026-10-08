@@ -55,9 +55,9 @@ extension World {
     /// exists".
     func materialShortfall(
         cost: [Good: Int],
-        anchor: TileCoordinate
+        anchor: TileCoordinate,
+        tileToIsland map: [TileCoordinate: IslandID]
     ) -> [Good: Int] {
-        let map = tileToIslandMap()
         let availability = islandStockpile(at: anchor, tileToIsland: map)
         let islandID = map[anchor]
         var shortfall: [Good: Int] = [:]

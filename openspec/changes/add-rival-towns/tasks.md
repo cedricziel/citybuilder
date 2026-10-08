@@ -5,9 +5,9 @@
 
 ## 2. M2 — Rival AI
 
-- [ ] 2.1 Tests-first: translate "Rival turns go through the command queue", "Rival build order", "Rival town plan", "Rival ages" and the simulation-core scenarios into failing `CityCoreTests`. Confirm red.
-- [ ] 2.2 Implement to green: `Command.rivalPlace`, `applyPlace(... owner:)` with silent rival rejections, `RivalAIState`, threshold rules and script, affordability, wait-and-skip, caps, the block grid and slot search, `runRivalSystem` with staggered turns, rival ages and `WorldEvent.rivalAgeAdvanced` (D4–D6, D8).
-- [ ] 2.3 Extend the performance budget test to a Hard archipelago world with three rivals after 3,000 ticks; keep it inside the existing budget.
+- [x] 2.1 Tests-first: translate "Rival turns go through the command queue", "Rival build order", "Rival town plan", "Rival ages" and the simulation-core scenarios into failing `CityCoreTests`. Confirm red.
+- [x] 2.2 Implement to green: `Command.rivalPlace`, `applyPlace(... owner:)` with silent rival rejections, `RivalAIState`, threshold rules and script, affordability, wait-and-skip, caps, the block grid and slot search, `runRivalSystem` with staggered turns, rival ages and `WorldEvent.rivalAgeAdvanced` (D4–D6, D8).
+- [x] 2.3 Extend the performance budget test to a Hard archipelago world with three rivals after 3,000 ticks; keep it inside the existing budget.
 
 ## 3. M3 — Standings, goal and scenario
 
