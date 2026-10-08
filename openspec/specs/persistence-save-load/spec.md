@@ -122,3 +122,12 @@ When the player picks Continue and the save fails to load (unreadable file, unkn
 
 - **WHEN** a Continue load has failed and the player dismisses the alert and picks New Game
 - **THEN** the load-failure state is cleared and the New Game dialog opens
+
+### Requirement: Saves before research unlock every tech
+
+Loading a version-3 save SHALL migrate it to version 4 with every tech researched, no current research and zero knowledge, so buildings placed before research existed stay buildable.
+
+#### Scenario: v3 save loads with all techs researched
+
+- **WHEN** a version-3 save is loaded
+- **THEN** the world has every tech researched
