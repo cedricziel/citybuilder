@@ -10,11 +10,19 @@ public struct InspectorViewModel: Sendable {
     public let commission: CommissionButton?
     /// The caravanserai's export picker, nil for other buildings.
     public let exportPicker: ExportPicker?
+    /// The rival owning the building, nil for the player's.
+    public let rival: RivalSummary?
 
-    public init(bullets: [String], commission: CommissionButton? = nil, exportPicker: ExportPicker? = nil) {
+    public init(
+        bullets: [String],
+        commission: CommissionButton? = nil,
+        exportPicker: ExportPicker? = nil,
+        rival: RivalSummary? = nil
+    ) {
         self.bullets = bullets
         self.commission = commission
         self.exportPicker = exportPicker
+        self.rival = rival
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -30,15 +38,17 @@ public struct InspectorViewModel: Sendable {
         } else {
             "\(building.ticksSincePlacement)/\(spec.buildDurationTicks) ticks"
         }
+        let rival = building.owner.rivalID.flatMap(snapshot.rival)
+        let culture = snapshot.culture(for: building.owner)
         var houseLines: [String] = []
         if let pop = snapshot.housePopulations[entityID] {
-            let needs = pop.tier.needs(in: snapshot.culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
+            let needs = pop.tier.needs(in: culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
-                "Tier: \(pop.tier.displayName(in: snapshot.culture))",
+                "Tier: \(pop.tier.displayName(in: culture))",
                 "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
-            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: snapshot.culture)
+            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: culture)
         }
         return InspectorViewModel(
             bullets: [
@@ -49,8 +59,10 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + signatureLines(for: building, in: snapshot) + houseLines,
-            commission: commissionButton(for: building, balance: snapshot.economy.balance),
-            exportPicker: exportPicker(for: building)
+            // A rival's building is read-only.
+            commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
+            exportPicker: rival == nil ? exportPicker(for: building) : nil,
+            rival: rival
         )
     }
 }
@@ -76,6 +88,13 @@ public struct InspectorView: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 4) {
+                if let rival = viewModel.rival {
+                    Label {
+                        Text(rival.name).font(.caption.bold())
+                    } icon: {
+                        Circle().fill(Color(hex: rival.colour.hex)).frame(width: 10, height: 10)
+                    }
+                }
                 ForEach(viewModel.bullets, id: \.self) { line in
                     Text(line).font(.caption.monospaced())
                 }

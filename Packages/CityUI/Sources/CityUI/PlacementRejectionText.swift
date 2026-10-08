@@ -23,4 +23,12 @@ public enum PlacementRejectionText {
             }.joined(separator: ", ")
         }
     }
+
+    /// Like `message(for:)`, naming the rival whose island it is.
+    public static func message(for rejection: PlacementRejection, in world: World) -> String {
+        if case let .foreignIsland(.rival(id)) = rejection, let name = world.rival(id)?.name {
+            return "\(name)'s island — you can't build here."
+        }
+        return message(for: rejection)
+    }
 }

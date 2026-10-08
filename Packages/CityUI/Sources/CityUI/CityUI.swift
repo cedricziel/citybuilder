@@ -12,6 +12,7 @@ public struct CityRootView: View {
     @State var settingsPresented: Bool = false
     @State var researchPresented: Bool = false
     @State var goalsPresented: Bool = false
+    @State var standingsPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
@@ -81,6 +82,7 @@ public struct CityRootView: View {
         .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
+        .standingsSheet(session: session, isPresented: $standingsPresented)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
                 content()
@@ -266,7 +268,7 @@ public final class GameSession {
             beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
-                hud.showRejection(reason, now: Date())
+                hud.showRejection(reason, in: world, now: Date())
                 return
             }
             world.enqueue(.place(kind, at: tile))

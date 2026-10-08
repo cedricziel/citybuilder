@@ -23,7 +23,7 @@
 
 - [x] 5.1 Tests-first: translate the rendering-2_5d scenarios into failing `CityRender2DTests` and the platform-shells scenarios into failing `CityUITests`. Confirm red.
 - [x] 5.2 Implement to green: snapshot `rivals`, `culture(for:)` and `age(for:)`, owner-based `CultureSprites` lookup, resident names by owner culture, pennant texture and node (D10).
-- [ ] 5.3 Implement to green: New Game toggle and Island Rivalry layout lock, standings panel, foreign-island text, rival inspector, rival island overlay, rival age banner (D11).
+- [x] 5.3 Implement to green: New Game toggle and Island Rivalry layout lock, standings panel, foreign-island text, rival inspector, rival island overlay, rival age banner (D11).
 
 ## 6. M6 — Verification
 
