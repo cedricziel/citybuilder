@@ -97,6 +97,7 @@ public extension BuildingKind {
         switch self {
         case .steamEngine: FuelSpec(good: .charcoal, amount: 1, intervalTicks: 50)
         case .powerPlant: FuelSpec(good: .charcoal, amount: 2, intervalTicks: 50)
+        case .meadHall, .forum, .templeGarden, .caravanserai: servedLuxury
         default: nil
         }
     }

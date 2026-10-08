@@ -57,7 +57,8 @@ public enum ProductionCatalog {
             // One project stage; see `World.monumentStages`.
             ProductionRecipe(inputs: [.wood: 2, .planks: 2, .bread: 1], outputs: [:], cycleTicks: 60)
         case .house, .warehouse, .road, .townCenter, .port, .library,
-             .guildHall, .gallery, .steamEngine, .powerPlant:
+             .guildHall, .gallery, .steamEngine, .powerPlant,
+             .meadHall, .forum, .templeGarden, .caravanserai:
             nil
         case .shipyard:
             // Shipyard recipe: 20 wood + 10 planks per ship hull. The

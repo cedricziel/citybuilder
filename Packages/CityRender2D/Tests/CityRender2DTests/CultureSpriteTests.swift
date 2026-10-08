@@ -127,7 +127,7 @@ func scenarioEveryAgeHouseIsCatalogued() {
 
 @Test("scenario: culture content is catalogued")
 func scenarioCultureContentIsCatalogued() {
-    let kinds = BuildingKind.allCases.filter { $0.culture != nil }
+    let kinds = BuildingKind.allCases.filter { $0.culture != nil && !$0.isCultureSignature }
     let goods: [Good] = [.hops, .beer, .grapes, .wine, .teaLeaves, .tea, .coffeeCherries, .coffee]
     #expect(kinds.count == 8)
     let ids = kinds.map { "building-\($0.rawValue)" } + goods.map { "good-\($0.rawValue)" }

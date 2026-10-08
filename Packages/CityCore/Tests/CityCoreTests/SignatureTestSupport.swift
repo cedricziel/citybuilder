@@ -30,6 +30,21 @@ enum SignatureFixture {
         return id
     }
 
+    /// First anchor whose footprint lies on free grass.
+    static func freeAnchor(for kind: BuildingKind, in world: World) -> TileCoordinate? {
+        let footprint = BuildingCatalog.spec(for: kind).footprint
+        for y in 0 ..< world.mapHeight {
+            for x in 0 ..< world.mapWidth {
+                let anchor = TileCoordinate(x: x, y: y)
+                let fits = footprint.tiles(anchor: anchor).allSatisfy {
+                    world.terrain(at: $0) == .grass && world.occupiedTiles[$0] == nil
+                }
+                if fits { return anchor }
+            }
+        }
+        return nil
+    }
+
     /// A sawmill with wood for many cycles.
     static func suppliedSawmill(at anchor: TileCoordinate, in world: inout World) -> EntityID {
         let id = inject(.sawmill, at: anchor, in: &world)

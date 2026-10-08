@@ -1,7 +1,7 @@
 ## 1. M1 — Catalog, culture rule and served luxury
 
-- [ ] 1.1 Tests-first: translate the buildings-and-construction and goods-and-production scenarios, and the culture-signatures scenarios "Forum in an Antiquity start", "No caravanserai in the north", "Forum served wine" and "Older building loads", into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: four `BuildingKind`s with catalog specs, `culture` and `fuel`, stockpile capacities, `Good.basePrice` for the culture goods (the whole table if `add-rival-trade` hasn't landed), `Building.exportGood` with tolerant decoding (design D1–D3, D8, D11).
+- [x] 1.1 Tests-first: translate the buildings-and-construction and goods-and-production scenarios, and the culture-signatures scenarios "Forum in an Antiquity start", "No caravanserai in the north", "Forum served wine" and "Older building loads", into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: four `BuildingKind`s with catalog specs, `culture` and `fuel`, stockpile capacities, `Good.basePrice` for the culture goods (the whole table if `add-rival-trade` hasn't landed), `Building.exportGood` with tolerant decoding (design D1–D3, D8, D11).
 
 ## 2. M2 — Mead hall, forum and temple garden
 

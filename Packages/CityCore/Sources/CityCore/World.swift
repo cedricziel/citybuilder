@@ -426,7 +426,7 @@ public struct World: Codable, Sendable, Equatable {
         case .warehouse: 200
         case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .quernHouse, .mine, .charcoalBurner, .smelter,
              .toolsmith, .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery,
-             .monument, .steamEngine, .powerPlant: 16
+             .monument, .steamEngine, .powerPlant, .meadHall, .forum, .templeGarden, .caravanserai: 16
         case .house: 8
         case .townCenter: 40
         case .road, .library, .guildHall, .gallery: nil
