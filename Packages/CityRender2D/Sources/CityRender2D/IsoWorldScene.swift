@@ -50,6 +50,15 @@ public final class IsoWorldScene: SKScene {
     /// controller (GameSession) returns the current ghost state.
     private var ghostNode: SKSpriteNode?
     public var ghostProvider: (() -> GhostState?)?
+    /// Tile the inspector has selected; a selected signature building
+    /// shows its range rings.
+    public var selectionProvider: (() -> TileCoordinate?)?
+    /// Range rings and highlights, keyed by the source they show.
+    let signatureRingLayer = SKNode()
+    var signatureRingSource: SignatureRingSource?
+    var highlightedSignatureTargets: [EntityID] {
+        signatureRingSource?.affected ?? []
+    }
 
     public struct GhostState {
         public let kind: BuildingKind
@@ -216,6 +225,7 @@ public final class IsoWorldScene: SKScene {
         reconcileCarriers(with: snapshot)
         reconcileStrollers(with: snapshot)
         reconcileGhost()
+        reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
     }
 
@@ -410,6 +420,7 @@ public struct IsoWorldView: View {
         snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
+        selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
         cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
     ) {
         let prepared = IsoWorldScene()
@@ -424,6 +435,9 @@ public struct IsoWorldView: View {
         }
         if let ghostProvider {
             prepared.ghostProvider = { ghostProvider() }
+        }
+        if let selectionProvider {
+            prepared.selectionProvider = { selectionProvider() }
         }
         if let cameraListener {
             prepared.cameraListener = { tile in cameraListener(tile) }

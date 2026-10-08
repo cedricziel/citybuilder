@@ -27,7 +27,7 @@ extension IsoWorldScene {
     func updateWindowGlow(with snapshot: WorldSnapshot) {
         let glow = CGFloat(TimeOfDay(tick: snapshot.tickCount).darkness / TimeOfDay.nightDarkness)
         for (spec, node) in presentSprites {
-            guard case let .building(kind, state, _, _, _, _, _, _) = spec.kind,
+            guard case let .building(kind, state, _, _, _, _, _, _, _) = spec.kind,
                   kind == .house, state == .operational
             else { continue }
             let inhabited = snapshot.occupiedTiles[spec.coord]

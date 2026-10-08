@@ -37,7 +37,9 @@ public struct SpriteSpec: Hashable, Sendable {
             isRoadDisconnected: Bool = false,
             // Houses draw a different sprite per tier; part of the key
             // so a tier change swaps the node.
-            houseTier: HouseTier = .peasants
+            houseTier: HouseTier = .peasants,
+            // Signature state: idle, monument progress, smoke tint.
+            look: BuildingLook = .standard
         )
     }
 
@@ -99,7 +101,8 @@ public enum SnapshotReconciler {
                     orientation: orientation,
                     isWaitingForMaterials: isWaiting,
                     isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id),
-                    houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants
+                    houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants,
+                    look: SignatureLooks.look(for: building, in: snapshot)
                 )
             ))
         }
