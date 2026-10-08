@@ -5,8 +5,8 @@
 
 ## 2. M2 — Rendering and UI
 
-- [ ] 2.1 Tests-first: translate the rendering-2_5d and platform-shells scenarios. Confirm red.
-- [ ] 2.2 Implement to green: night overlay, window glow, stroller planner and pool, inspector lines, HUD glyph (D2–D4).
+- [x] 2.1 Tests-first: translate the rendering-2_5d and platform-shells scenarios. Confirm red.
+- [x] 2.2 Implement to green: night overlay, window glow, stroller planner and pool, inspector lines, HUD glyph (D2–D4).
 
 ## 3. M3 — Verification
 

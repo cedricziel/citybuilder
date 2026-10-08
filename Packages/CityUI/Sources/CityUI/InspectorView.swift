@@ -31,7 +31,7 @@ public struct InspectorViewModel: Sendable {
                 "Tier: \(pop.tier.displayName(in: snapshot.culture))",
                 "Residents: \(pop.population)/\(pop.capacity)",
                 "Needs: \(needs.joined(separator: " · "))"
-            ]
+            ] + residentLines(house: entityID, population: pop, culture: snapshot.culture)
         }
         return InspectorViewModel(bullets: [
             "Kind: \(building.kind.rawValue)",
@@ -64,5 +64,17 @@ public struct InspectorView: View {
             .padding(12)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
+    }
+}
+
+extension InspectorViewModel {
+    /// Up to three named residents with the house's wish. Spec:
+    /// `platform-shells` / Inspector introduces residents.
+    static func residentLines(house: EntityID, population: HousePopulation, culture: Culture) -> [String] {
+        let wish = population.wish(in: culture).map { "wants \(GoodsCatalog.spec(for: $0).displayName.lowercased())" }
+            ?? "content"
+        let tier = population.tier.displayName(in: culture)
+        let count = min(3, Int(population.population))
+        return ResidentNames.names(for: house, culture: culture, count: count).map { "\($0) · \(tier) · \(wish)" }
     }
 }

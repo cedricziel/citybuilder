@@ -34,3 +34,14 @@ func scenarioNamesAreStable() throws {
     #expect(reloaded.residentNames(for: house, count: 3) == names)
     #expect(names.allSatisfy { ResidentNames.list(for: .eastAsian).contains($0) })
 }
+
+@Test("scenario: citizen wants planks")
+func scenarioCitizenWantsPlanks() {
+    var pop = HousePopulation()
+    pop.tier = .citizens
+    pop.setSatisfied(.food, true)
+    pop.setSatisfied(.planks, false)
+    #expect(pop.wish(in: .northernEuropean) == .planks)
+    pop.setSatisfied(.planks, true)
+    #expect(pop.wish(in: .northernEuropean) == nil)
+}

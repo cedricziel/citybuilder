@@ -37,3 +37,13 @@ func scenarioMediterraneanInspector() throws {
     let lines = InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings).bullets
     #expect(lines.contains("Tier: Plebeians"))
 }
+
+@Test("scenario: resident line")
+func scenarioResidentLine() {
+    var pop = HousePopulation()
+    pop.population = 2
+    pop.setSatisfied(.food, false)
+    let lines = InspectorViewModel.residentLines(house: EntityID(raw: 7), population: pop, culture: .northernEuropean)
+    #expect(lines.count == 2)
+    #expect(lines.allSatisfy { $0.hasSuffix(" · Peasants · wants food") })
+}
