@@ -16,7 +16,7 @@ Seasonal farming and history events run only while `calendar.isActive`. The defa
 
 ### D3 — Winter halves crop speed
 
-In `runProductionSystem`, a farm or grain farm in winter advances its cycle only on even ticks. It is not stalled, so no stall events fire and the stall badge stays off.
+In `runProductionSystem`, a farm or grain farm in winter advances its cycle only on odd ticks, so a cycle that starts in winter takes exactly twice its length. It is not stalled, so no stall events fire and the stall badge stays off.
 
 ### D4 — History events use a per-year RNG
 

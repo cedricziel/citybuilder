@@ -66,6 +66,13 @@ public enum WorldEvent: Sendable {
     case bankruptcyResolved
     /// The bankruptcy grace expired this tick; the game is over.
     case gameOver
+
+    // MARK: Calendar
+
+    /// A new season began this tick. Spec: `calendar-and-events`.
+    case seasonChanged(Season)
+    /// A history event fired and applied this tick.
+    case historyEvent(HistoryEvent)
 }
 
 extension WorldEvent: Equatable {
@@ -111,6 +118,10 @@ extension WorldEvent: Equatable {
             return true
         case (.gameOver, .gameOver):
             return true
+        case let (.seasonChanged(lSeason), .seasonChanged(rSeason)):
+            return lSeason == rSeason
+        case let (.historyEvent(lEvent), .historyEvent(rEvent)):
+            return lEvent == rEvent
         default:
             return false
         }
@@ -146,7 +157,9 @@ public extension WorldEvent {
              .upkeepPaid,
              .bankruptcyWarning,
              .bankruptcyResolved,
-             .gameOver:
+             .gameOver,
+             .seasonChanged,
+             .historyEvent:
             return nil
         }
     }
@@ -176,7 +189,9 @@ public extension WorldEvent {
              .upkeepPaid,
              .bankruptcyWarning,
              .bankruptcyResolved,
-             .gameOver:
+             .gameOver,
+             .seasonChanged,
+             .historyEvent:
             return nil
         }
     }
@@ -205,6 +220,8 @@ public extension WorldEvent {
         case .bankruptcyWarning: return 15
         case .bankruptcyResolved: return 16
         case .gameOver: return 17
+        case .seasonChanged: return 18
+        case .historyEvent: return 19
         }
     }
 }

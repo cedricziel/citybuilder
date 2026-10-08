@@ -1,8 +1,8 @@
 ## 1. M1 — Calendar in CityCore
 
-- [ ] 1.1 Tests-first: translate every scenario in this change's calendar-and-events spec into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Season`, `GameDate`, `CalendarState`, calendar system, winter rule, `HistoryEvent`, world events, snapshot date (design D1–D6).
-- [ ] 1.3 Refactor under a green bar.
+- [x] 1.1 Tests-first: translate every scenario in this change's calendar-and-events spec into failing tests in `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Season`, `GameDate`, `CalendarState`, calendar system, winter rule, `HistoryEvent`, world events, snapshot date (design D1–D6).
+- [x] 1.3 Refactor under a green bar.
 
 ## 2. M2 — Persistence
 

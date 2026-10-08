@@ -70,6 +70,11 @@ public struct World: Codable, Sendable, Equatable {
     /// Fixtures and migrated saves have everything; `newGame` resets it.
     public internal(set) var research: ResearchState = .everything
 
+    /// ---- calendar --------------------------------------------------
+    /// Spec: `calendar-and-events`. Inactive by default so fixtures keep
+    /// their meaning; `newGame` and the v5 migration turn it on.
+    public internal(set) var calendar: CalendarState = .inactive
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
@@ -243,6 +248,7 @@ public struct World: Codable, Sendable, Equatable {
         runShipSystem()
         runPopulationSystem()
         runResearchSystem()
+        runCalendarSystem(events: &events)
         runEconomySystem(events: &events)
 
         let endNanos = currentMonotonicNanoseconds()

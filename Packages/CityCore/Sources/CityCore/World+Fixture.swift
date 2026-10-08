@@ -55,6 +55,7 @@ public extension World {
         )
         world.seedTownCenters()
         world.research = .initial
+        world.calendar = CalendarState(startYear: 1200, isActive: true)
         return world
     }
 

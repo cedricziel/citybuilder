@@ -4,6 +4,8 @@ import Foundation
 /// economy. Each is a pure function of `(inout World) -> Void` so future
 /// changes (parallelization, ordering tweaks) are easy.
 extension World {
+    static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
+
     mutating func runProductionSystem(events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
@@ -44,7 +46,10 @@ extension World {
             if wasStalled {
                 events.append(.productionResumed(producer: id, kind: building.kind))
             }
-            progress.ticksThisCycle &+= 1
+            // Spec: `calendar-and-events` / Winter slows crops.
+            if !(isCropWinter && Self.seasonalCrops.contains(building.kind) && tickCount.isMultiple(of: 2)) {
+                progress.ticksThisCycle &+= 1
+            }
             if progress.ticksThisCycle >= recipe.cycleTicks {
                 // Consume inputs from stockpile.
                 for (good, amount) in recipe.inputs {

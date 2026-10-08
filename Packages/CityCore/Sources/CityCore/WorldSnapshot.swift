@@ -62,6 +62,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Population state of every house, keyed by building. Spec:
     /// `rendering-2_5d` / Houses render their tier.
     public let housePopulations: [EntityID: HousePopulation]
+    /// Spec: `calendar-and-events` / The world has a date.
+    public let date: GameDate
 
     public init(
         tickCount: UInt64,
@@ -80,7 +82,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         islandSummaries: [IslandID: IslandSummary] = [:],
         tileToIsland: [TileCoordinate: IslandID] = [:],
         roadDisconnectedBuildings: Set<EntityID> = [],
-        housePopulations: [EntityID: HousePopulation] = [:]
+        housePopulations: [EntityID: HousePopulation] = [:],
+        date: GameDate = GameDate(year: 1200, season: .spring)
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -99,6 +102,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.tileToIsland = tileToIsland
         self.roadDisconnectedBuildings = roadDisconnectedBuildings
         self.housePopulations = housePopulations
+        self.date = date
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -146,7 +150,8 @@ public extension World {
             islandSummaries: summaries,
             tileToIsland: tileToIsland,
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
-            housePopulations: populations
+            housePopulations: populations,
+            date: date
         )
     }
 
