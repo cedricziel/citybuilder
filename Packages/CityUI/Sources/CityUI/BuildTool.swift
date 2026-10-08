@@ -20,6 +20,7 @@ public enum BuildTool: Hashable, Sendable {
             case .road: return "Road"
             case .lumberjackHut: return "Lumberjack"
             case .farm: return "Farm"
+            case .bakery: return "Bakery"
             case .sawmill: return "Sawmill"
             case .townCenter: return "Town Ctr."
             case .port: return "Port"

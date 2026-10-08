@@ -279,8 +279,8 @@ func scenarioUIReadsSatisfactionPerHouse() {
 func scenarioPopulatedHouseProducesTax() {
     var economy = Economy()
     let before = economy.balance
-    economy.credit(Economy.taxPerPopUnit * 3)
-    #expect(economy.balance == before + Economy.taxPerPopUnit * 3)
+    economy.credit(Economy.taxPerPopUnit * HouseTier.peasants.taxPerResident * 3)
+    #expect(economy.balance == before + 3 * HouseTier.peasants.taxPerResident)
 }
 
 @Test("scenario: empty house produces no tax")

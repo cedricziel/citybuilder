@@ -355,11 +355,10 @@ extension World {
     mutating func runEconomySystem(events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
-            var totalPop: Int64 = 0
-            for pop in populations.values {
-                totalPop += Int64(pop.population)
+            // Spec: `population-and-needs` / Taxes scale with tier.
+            let amount = populations.values.reduce(Int64(0)) {
+                $0 + Int64($1.population) * $1.tier.taxPerResident * Economy.taxPerPopUnit
             }
-            let amount = totalPop * Economy.taxPerPopUnit
             economy.credit(amount)
             // Only emit when actual money flowed — `taxesCollected` is a
             // meaningful event the audio layer binds to a coin sound, not
@@ -399,40 +398,6 @@ extension World {
             if priorDeficitTicks > 0 {
                 events.append(.bankruptcyResolved)
             }
-        }
-    }
-
-    mutating func runPopulationSystem() {
-        for (id, building) in buildings where building.kind == .house && building.state == .operational {
-            var pop = populations[id] ?? HousePopulation()
-            let footprint = BuildingCatalog.spec(for: building.kind).footprint
-            if pop.population > 0, tickCount.isMultiple(of: HousePopulation.consumptionIntervalTicks) {
-                pop.foodShortfall = consume(.food, amount: pop.foodPerInterval, by: building) < pop.foodPerInterval
-                pop.planksShortfall = consume(.planks, amount: 1, by: building) < 1
-            }
-            // Needs are met while a buffer on the house's road network
-            // holds the good and the last consumption was not short.
-            pop.foodSatisfied = !pop.foodShortfall
-                && hasGoodInReach(.food, fromAnchor: building.anchor, footprint: footprint)
-            pop.planksSatisfied = pop.population == 0
-                || (!pop.planksShortfall
-                    && hasGoodInReach(.planks, fromAnchor: building.anchor, footprint: footprint))
-            // Track satisfaction streak for growth/decline.
-            pop.ticksAtCurrentSatisfaction &+= 1
-            let canGrow = pop.allNeedsSatisfied
-                && pop.ticksAtCurrentSatisfaction >= HousePopulation.growthIntervalTicks
-                && pop.population < HousePopulation.capacity
-            let mustShrink = !pop.allNeedsSatisfied
-                && pop.ticksAtCurrentSatisfaction >= HousePopulation.declineIntervalTicks
-                && pop.population > 0
-            if canGrow {
-                pop.population &+= 1
-                pop.ticksAtCurrentSatisfaction = 0
-            } else if mustShrink {
-                pop.population &-= 1
-                pop.ticksAtCurrentSatisfaction = 0
-            }
-            populations[id] = pop
         }
     }
 

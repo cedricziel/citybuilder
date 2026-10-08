@@ -45,8 +45,9 @@ private func catalogId(forSpriteName name: String) -> String {
     let frameStripped = name.replacingOccurrences(
         of: "-[0-9]+$", with: "", options: .regularExpression
     )
+    // Variants (-v1) and house tier looks (-tier2) live in the base entry.
     let variantStripped = frameStripped.replacingOccurrences(
-        of: "-v[0-9]+$", with: "", options: .regularExpression
+        of: "-(v|tier)[0-9]+$", with: "", options: .regularExpression
     )
     return variantStripped.replacingOccurrences(
         of: "-(constructing|operational)$", with: "", options: .regularExpression

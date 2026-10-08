@@ -6,6 +6,7 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case wood
     case planks
     case food
+    case bread
 }
 
 /// Goods catalog metadata. Unit / display name. Lightweight today; expands
@@ -26,7 +27,8 @@ public enum GoodsCatalog {
     private static let specs: [Good: GoodSpec] = [
         .wood: GoodSpec(good: .wood, displayName: "Wood", stackUnit: "logs"),
         .planks: GoodSpec(good: .planks, displayName: "Planks", stackUnit: "bundles"),
-        .food: GoodSpec(good: .food, displayName: "Food", stackUnit: "rations")
+        .food: GoodSpec(good: .food, displayName: "Food", stackUnit: "rations"),
+        .bread: GoodSpec(good: .bread, displayName: "Bread", stackUnit: "loaves")
     ]
 
     public static var all: [GoodSpec] {

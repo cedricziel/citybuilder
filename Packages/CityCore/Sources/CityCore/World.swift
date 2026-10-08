@@ -389,7 +389,7 @@ public struct World: Codable, Sendable, Equatable {
     static func stockpileCapacity(for kind: BuildingKind) -> Int? {
         switch kind {
         case .warehouse: 200
-        case .lumberjackHut, .sawmill, .farm: 16
+        case .lumberjackHut, .sawmill, .farm, .bakery: 16
         case .house: 8
         case .townCenter: 40
         case .road: nil

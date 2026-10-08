@@ -16,6 +16,8 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case sawmill
     /// Food producer with no inputs. Spec: `goods-and-production`.
     case farm
+    /// Bakes bread from food. Spec: `goods-and-production`.
+    case bakery
     case townCenter = "town-center"
     /// Shore building, accepts deposits/withdrawals from both carriers
     /// (land side) and ships (sea side). Spec: `port-and-shipyard`.
@@ -151,6 +153,11 @@ public enum BuildingCatalog {
             kind: .farm, footprint: Footprint(width: 2, height: 2),
             cost: 60, upkeep: 0, buildDurationTicks: 25,
             materialCost: [.wood: 2]
+        ),
+        .bakery: BuildingSpec(
+            kind: .bakery, footprint: Footprint(width: 2, height: 2),
+            cost: 90, upkeep: 1, buildDurationTicks: 30,
+            materialCost: [.wood: 2, .planks: 2]
         ),
         .townCenter: BuildingSpec(
             kind: .townCenter, footprint: Footprint(width: 3, height: 3),

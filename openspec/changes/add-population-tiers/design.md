@@ -16,9 +16,11 @@ Each tick the house computes `nextTierMet` (full house, all needs of tier + 1 in
 
 ### D3 — Needs are generic over goods
 
-`hasGoodInReach` and the consumption step already take a `Good`, so needs become data: the population system loops over the tier's needs. A `needsSatisfied: [Good: Bool]` map replaces the two hard-coded flags in the data model, while `foodSatisfied`/`planksSatisfied` stay as computed properties for existing callers and saves.
+`hasGoodInReach` and the consumption step already take a `Good`, so the population system loops over the tier's needs. `HousePopulation` keeps one stored satisfied flag and one shortfall flag per needed good (food, planks, bread), behind `isSatisfied(_:)`, `isShort(_:)` and their setters. That keeps the existing `foodSatisfied`/`planksSatisfied` keys stable in saves.
 
-- **Save compatibility:** the decoder reads the old keys when the new map is absent, and `tier` defaults to peasants.
+- **Alternative — a `[Good: Bool]` map.** Rejected for now: it changes the save layout for no gain while only three goods are needs.
+- **Save compatibility:** the new keys decode as optional; `tier` defaults to peasants.
+- **Ordering:** houses are visited in entity-ID order, because they drain shared buffers.
 
 ### D4 — Bakery as the minimal tier-3 good
 

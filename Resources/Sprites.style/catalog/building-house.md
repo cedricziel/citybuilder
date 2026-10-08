@@ -28,8 +28,8 @@ stages on row 0 (right of base); spare cells on row 1.
   half-timber skeleton; no plaster, no roof)
 - (0, 3): `building-house-constructing-2` — roofing stage (plaster
   filled, roof partly tiled, scaffolding on south face)
-- (1, 0): spare (solid magenta `#FF00FF`)
-- (1, 1): spare
+- (1, 0): `building-house-tier2` — citizens: stone ground floor, half-timbered upper storey
+- (1, 1): `building-house-tier3` — merchants: three storeys under a slate hip roof
 - (1, 2): spare
 - (1, 3): spare
 
