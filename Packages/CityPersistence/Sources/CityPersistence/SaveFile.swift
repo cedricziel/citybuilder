@@ -4,7 +4,7 @@ import Foundation
 /// Top-level save file structure. `version` gates forward-migration; the
 /// `World` is encoded as the payload. Saves are JSON in v0 per design D6.
 public struct SaveFile: Codable, Sendable, Equatable {
-    public static let currentVersion: Int = 7
+    public static let currentVersion: Int = 8
 
     public let version: Int
     public let world: World

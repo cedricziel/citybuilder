@@ -5,8 +5,8 @@
 
 ## 2. M2 — Persistence
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: v7 save loads as a Normal sandbox` with a v7 fixture. Confirm red.
-- [ ] 2.2 Implement to green: version 8 and the v7 → v8 migration (D6).
+- [x] 2.1 Tests-first: translate `#### Scenario: v7 save loads as a Normal sandbox` with a v7 fixture. Confirm red.
+- [x] 2.2 Implement to green: version 8 and the v7 → v8 migration (D6).
 
 ## 3. M3 — UI
 

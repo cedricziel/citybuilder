@@ -26,7 +26,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV3ToV4(),
         MigrationV4ToV5(),
         MigrationV5ToV6(),
-        MigrationV6ToV7()
+        MigrationV6ToV7(),
+        MigrationV7ToV8()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -270,6 +271,27 @@ public struct MigrationV6ToV7: Migration {
             research["researched"] = Array(Set(researched + ["feudal-order"])).sorted()
             world["research"] = research
         }
+        root["world"] = world
+        return root
+    }
+}
+
+/// Migration #7: v7 → v8. v7 saves predate `add-difficulty-and-goals`:
+/// they were Normal sandbox games. Spec: `persistence-save-load` /
+/// Saves before difficulty are Normal sandboxes.
+public struct MigrationV7ToV8: Migration {
+    public let fromVersion = 7
+    public let toVersion = 8
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 8
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["difficulty"] = "normal"
+        world["goals"] = [Any]()
+        world["scenarioWon"] = false
         root["world"] = world
         return root
     }

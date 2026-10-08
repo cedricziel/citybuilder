@@ -25,6 +25,9 @@ private func makeV4Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     inner.removeValue(forKey: "calendar")
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
+    for key in ["difficulty", "goals", "scenarioWon"] {
+        inner.removeValue(forKey: key)
+    }
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
@@ -61,6 +64,9 @@ private func makeV5Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var inner = json["world"] as? [String: Any] ?? [:]
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
+    for key in ["difficulty", "goals", "scenarioWon"] {
+        inner.removeValue(forKey: key)
+    }
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
@@ -97,6 +103,9 @@ private func makeV6Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     json["version"] = 6
     var inner = json["world"] as? [String: Any] ?? [:]
     inner.removeValue(forKey: "age")
+    for key in ["difficulty", "goals", "scenarioWon"] {
+        inner.removeValue(forKey: key)
+    }
     if var research = inner["research"] as? [String: Any] {
         let eraTechs: Set = ["feudal-order", "printing-press", "steam-power", "electricity"]
         research["researched"] = (research["researched"] as? [String] ?? []).filter { !eraTechs.contains($0) }
@@ -123,4 +132,43 @@ func scenarioV6SaveLoadsInTheMedievalAge() throws {
     let loaded = try decodeWorld(data)
     #expect(loaded.age == .medieval)
     #expect(loaded.research.isResearched(.feudalOrder))
+}
+
+private func v7FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v7_single_island.json")
+}
+
+/// Encode a World as a v7 save: the current shape minus difficulty and goals.
+private func makeV7Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 7
+    var inner = json["world"] as? [String: Any] ?? [:]
+    for key in ["difficulty", "goals", "scenarioWon"] {
+        inner.removeValue(forKey: key)
+    }
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v7 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV7SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    // A v7 save predates `add-difficulty-and-goals`.
+    var data = try makeV7Payload(world: World.newGame(), writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v7FixtureURL())
+}
+
+@Test("scenario: v7 save loads as a normal sandbox")
+func scenarioV7SaveLoadsAsANormalSandbox() throws {
+    let data = try Data(contentsOf: v7FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 7, "fixture must be a v7 save")
+    let loaded = try decodeWorld(data)
+    #expect(loaded.difficulty == .normal)
+    #expect(loaded.goals.isEmpty)
+    #expect(!loaded.scenarioWon)
 }

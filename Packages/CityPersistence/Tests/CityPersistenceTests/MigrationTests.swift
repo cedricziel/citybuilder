@@ -312,6 +312,9 @@ private func makeV3Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     inner.removeValue(forKey: "calendar")
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
+    for key in ["difficulty", "goals", "scenarioWon"] {
+        inner.removeValue(forKey: key)
+    }
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
