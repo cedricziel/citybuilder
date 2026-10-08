@@ -515,5 +515,13 @@ OPERATIONAL_FRAMES: dict[str, int] = {
 }
 
 
+# Room kept above the tallest pixel for the derived smoke plume.
+HEADROOM = 14
+
+
 def draw(kind: str, stage: str = "done") -> Image.Image:
-    return _DRAWERS[kind](stage)
+    """The building at `stage`, with empty canvas above the finished
+    building's top trimmed off (the bottom anchor is unchanged)."""
+    img = _DRAWERS[kind](stage)
+    top = _DRAWERS[kind]("done").getbbox()[1]
+    return img.crop((0, max(0, top - HEADROOM), img.width, img.height))

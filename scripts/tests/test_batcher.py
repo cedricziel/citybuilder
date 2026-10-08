@@ -40,12 +40,12 @@ def test_cache_hit_skips_the_api_call(
     """If a cache entry exists for the sprite-name's key, the batcher
     MUST NOT call `_post_edit` for that sprite."""
     _patch_dirs_to(tmp_path, monkeypatch)
-    catalog_md = paths.CATALOG_DIR / "building-house.md"
+    catalog_md = paths.CATALOG_DIR / "good-wood.md"
     world_md = paths.WORLD_MD.read_text(encoding="utf-8")
     entry_md = catalog_md.read_text(encoding="utf-8")
     model_id = _read_pipeline_model()
 
-    sprite_name = "building-house"
+    sprite_name = "good-wood"
     key = cache.cache_key(
         world_md, entry_md, batcher._LEGACY_FIXED_INSTRUCTIONS, model_id,
         sprite_name=sprite_name,
@@ -54,7 +54,7 @@ def test_cache_hit_skips_the_api_call(
     cache.write_cache(key, fake)
 
     with patch("generate_sprites_ai.batcher._post_edit") as mocked:
-        entry = parse_catalog_entry("building-house", entry_md)
+        entry = parse_catalog_entry("good-wood", entry_md)
         out = batcher._sprite_for_atlas_name(
             sprite_name, "test role", entry, entry_md, world_md, model_id,
             offline=False,
@@ -342,8 +342,8 @@ def test_procedural_regen_writes_sheets_only_for_procedural_entries(
     catalog = tmp_path / "catalog"
     catalog.mkdir()
     (catalog / "terrain-water.md").write_text(_PROCEDURAL_ENTRY, encoding="utf-8")
-    (catalog / "building-house.md").write_text(
-        (paths.CATALOG_DIR / "building-house.md").read_text(encoding="utf-8"),
+    (catalog / "good-wood.md").write_text(
+        (paths.CATALOG_DIR / "good-wood.md").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     monkeypatch.setattr(paths, "CATALOG_DIR", catalog)
@@ -351,7 +351,7 @@ def test_procedural_regen_writes_sheets_only_for_procedural_entries(
     written = batcher.write_procedural_sheets()
 
     assert sorted(written) == ["terrain-water", "terrain-water-0"]
-    assert cache.read_sheet("building-house") is None
+    assert cache.read_sheet("good-wood") is None
 
 
 def test_terrain_cells_are_diamond_fitted(

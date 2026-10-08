@@ -89,3 +89,11 @@ def test_size_reports_render_size_and_sheets_round_trip() -> None:
         assert size(name) == render(name).size
         sheet = render_sheet(name)
         assert downsample(sheet, size(name)).tobytes() == render(name).tobytes()
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_canvas_headroom_is_trimmed_to_the_smoke_plume(kind: str) -> None:
+    """Badges float just above the sprite's top edge, so the canvas
+    keeps only room for the smoke plume above the roof."""
+    top = render(f"building-{kind}").getbbox()[1]
+    assert top <= 14, (kind, top)
