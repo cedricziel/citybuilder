@@ -42,3 +42,10 @@ func scenarioBannerAppearsAndExpires() throws {
     session.step()
     #expect(session.banner == nil)
 }
+
+@MainActor
+@Test("hud shows a moon at night and a sun at noon")
+func hudShowsTimeOfDaySymbol() {
+    #expect(HUDViewModel.symbol(for: TimeOfDay(tick: 1200).phase) == "moon.stars.fill")
+    #expect(HUDViewModel.symbol(for: TimeOfDay(tick: 600).phase) == "sun.max.fill")
+}

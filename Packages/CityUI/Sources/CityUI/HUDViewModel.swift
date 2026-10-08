@@ -15,6 +15,8 @@ public final class HUDViewModel {
     /// Season and year, such as "Spring 1200". Spec: `platform-shells` /
     /// HUD shows the date.
     public var dateText: String = ""
+    /// SF Symbol for the time of day. Spec: `platform-shells` (city life).
+    public var timeOfDaySymbol: String = "sun.max.fill"
 
     /// How long a placement rejection stays on screen.
     public static let rejectionDisplaySeconds: TimeInterval = 2.5
@@ -36,6 +38,7 @@ public final class HUDViewModel {
         money = snapshot.economy.balance
         population = snapshot.totalPopulation
         dateText = snapshot.date.displayText
+        timeOfDaySymbol = Self.symbol(for: TimeOfDay(tick: snapshot.tickCount).phase)
         currentIsland = resolveIsland(in: snapshot) ?? currentIsland.flatMap {
             // Sticky over water: keep showing the previous island, but
             // refresh its aggregates so any new deposits land in the
@@ -109,5 +112,16 @@ public struct HUDGoodChip: Hashable, Sendable {
     public init(good: Good, count: Int) {
         self.good = good
         self.count = count
+    }
+}
+
+extension HUDViewModel {
+    static func symbol(for phase: TimeOfDay.Phase) -> String {
+        switch phase {
+        case .night: "moon.stars.fill"
+        case .dawn: "sunrise.fill"
+        case .day: "sun.max.fill"
+        case .dusk: "sunset.fill"
+        }
     }
 }
