@@ -5,7 +5,7 @@
 
 ## 2. M2 — Art
 
-- [ ] 2.1 Draw the eight buildings and eight icons; register; `make sprites-procedural`, `make sprites-verify` (D6).
+- [x] 2.1 Draw the eight buildings and eight icons; register; `make sprites-procedural`, `make sprites-verify` (D6).
 
 ## 3. M3 — UI
 

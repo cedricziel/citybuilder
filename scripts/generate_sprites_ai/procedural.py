@@ -22,9 +22,9 @@ SHEET_SCALE = 8
 TILE = (64, 32)
 
 from .palette import (  # noqa: E402
-    CREAM, CREVICE, DARK_LOAM, DARK_TIMBER, DEEP_WATER, GLINT, HIGHLIGHT_WATER, LEAF,
+    CREAM, CREVICE, DARK_LOAM, DARK_TIMBER, DEEP_WATER, FLAG_RED, GLINT, HIGHLIGHT_WATER, LEAF,
     LIGHT_LOAM, LIGHT_STONE, MEDIUM_LOAM, MID_WATER, OUTLINE, PALE_SAND, PINE, SAND,
-    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, SUN_TERRACOTTA, TERRACOTTA, THATCH, TIMBER, Rgb,
+    SHADOW_GREEN, SHADOW_STONE, SLATE, STONE, SUN_GRASS, SUN_TERRACOTTA, TERRACOTTA, THATCH, TIMBER, Rgb,
 )
 
 WHEAT = (0xD4, 0xA8, 0x6A)
@@ -508,9 +508,102 @@ def _tools_icon() -> Image.Image:
     return img
 
 
+# Culture luxuries (`add-culture-content` D6).
+
+def _hops_icon() -> Image.Image:
+    img, d = _icon()
+    for x0, y0 in ((3, 7), (11, 9)):
+        d.polygon([(x0 + 5, y0), (x0 + 10, y0 + 6), (x0 + 5, y0 + 13), (x0, y0 + 6)],
+                  fill=(*SUN_GRASS, 255), outline=(*OUTLINE, 255))
+        for k in (4, 7, 10):
+            d.line([(x0 + 2, y0 + k), (x0 + 5, y0 + k - 2), (x0 + 8, y0 + k)], fill=(*LEAF, 255))
+    d.line([(8, 7), (12, 2), (16, 9)], fill=(*TIMBER, 255))
+    d.polygon([(12, 2), (19, 1), (16, 5)], fill=(*LEAF, 255), outline=(*OUTLINE, 255))
+    return img
+
+
+def _beer_icon() -> Image.Image:
+    img, d = _icon()
+    d.rectangle([4, 7, 15, 21], fill=(*PINE, 255), outline=(*OUTLINE, 255))
+    d.rectangle([5, 8, 8, 20], fill=(*WHEAT, 255))
+    for y in (11, 17):
+        d.line([(5, y), (14, y)], fill=(*DARK_TIMBER, 255))
+    d.arc([12, 9, 20, 18], start=270, end=90, fill=(*OUTLINE, 255), width=2)
+    d.ellipse([3, 3, 16, 9], fill=(*CREAM, 255), outline=(*OUTLINE, 255))
+    d.ellipse([7, 4, 11, 6], fill=(*PALE_SAND, 255))
+    return img
+
+
+def _grapes_icon() -> Image.Image:
+    img, d = _icon()
+    d.line([(12, 6), (13, 1)], fill=(*TIMBER, 255), width=2)
+    d.polygon([(13, 3), (21, 1), (19, 7)], fill=(*LEAF, 255), outline=(*OUTLINE, 255))
+    for x, y in ((6, 6), (11, 6), (16, 6), (8, 10), (13, 10), (10, 14), (15, 13), (12, 18)):
+        d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=(*TERRACOTTA, 255), outline=(*OUTLINE, 255))
+        d.point((x - 1, y - 1), fill=(*SUN_TERRACOTTA, 255))
+    return img
+
+
+def _wine_icon() -> Image.Image:
+    img, d = _icon()
+    d.rectangle([9, 1, 13, 4], fill=(*PINE, 255), outline=(*OUTLINE, 255))
+    d.polygon([(9, 5), (13, 5), (17, 10), (17, 22), (5, 22), (5, 10)],
+              fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    d.line([(7, 10), (7, 20)], fill=(*LEAF, 255))
+    d.rectangle([7, 13, 15, 18], fill=(*CREAM, 255), outline=(*OUTLINE, 255))
+    d.rectangle([9, 15, 13, 16], fill=(*FLAG_RED, 255))
+    return img
+
+
+def _tea_leaves_icon() -> Image.Image:
+    img, d = _icon()
+    for (x0, y0, x1, y1) in ((2, 10, 14, 22), (10, 2, 22, 14), (5, 3, 15, 13)):
+        d.polygon([(x0, y1), ((x0 + x1) // 2 - 3, (y0 + y1) // 2 - 2), (x1, y0),
+                   ((x0 + x1) // 2 + 2, (y0 + y1) // 2 + 3)], fill=(*LEAF, 255), outline=(*OUTLINE, 255))
+        d.line([(x0 + 1, y1 - 1), (x1 - 1, y0 + 1)], fill=(*SHADOW_GREEN, 255))
+        d.point(((x0 + x1) // 2 - 2, (y0 + y1) // 2 - 1), fill=(*SUN_GRASS, 255))
+    return img
+
+
+def _tea_icon() -> Image.Image:
+    img, d = _icon()
+    d.ellipse([4, 9, 18, 21], fill=(*CREAM, 255), outline=(*OUTLINE, 255))
+    d.line([(6, 15), (16, 15)], fill=(*MID_WATER, 255), width=2)
+    d.ellipse([8, 11, 11, 13], fill=(*PALE_SAND, 255))
+    d.line([(17, 15), (21, 10)], fill=(*OUTLINE, 255), width=2)
+    d.arc([1, 11, 7, 18], start=90, end=270, fill=(*OUTLINE, 255), width=2)
+    d.rectangle([9, 7, 13, 9], fill=(*MID_WATER, 255), outline=(*OUTLINE, 255))
+    for x, y in ((20, 7), (21, 5), (20, 3)):
+        d.point((x, y), fill=(*LIGHT_STONE, 255))
+    return img
+
+
+def _coffee_cherries_icon() -> Image.Image:
+    img, d = _icon()
+    d.polygon([(3, 9), (10, 3), (12, 8)], fill=(*LEAF, 255), outline=(*OUTLINE, 255))
+    d.polygon([(21, 7), (14, 3), (13, 8)], fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    for x, y in ((7, 13), (13, 12), (10, 18), (16, 17)):
+        d.ellipse([x - 4, y - 4, x + 4, y + 4], fill=(*SUN_TERRACOTTA, 255), outline=(*OUTLINE, 255))
+        d.point((x + 2, y + 2), fill=(*FLAG_RED, 255))
+        d.point((x - 2, y - 2), fill=(*CREAM, 255))
+    return img
+
+
+def _coffee_icon() -> Image.Image:
+    img, d = _icon()
+    for x, y in ((8, 8), (16, 11), (9, 17)):
+        d.ellipse([x - 5, y - 4, x + 5, y + 4], fill=(*MEDIUM_LOAM, 255), outline=(*OUTLINE, 255))
+        d.ellipse([x - 4, y - 3, x, y], fill=(*LIGHT_LOAM, 255))
+        d.line([(x - 3, y + 2), (x, y), (x + 3, y - 2)], fill=(*SLATE, 255))
+    return img
+
+
 _CHAIN_ICONS = {
     "grain": _grain_icon, "flour": _flour_icon, "ore": _ore_icon,
     "charcoal": _charcoal_icon, "iron": _iron_icon, "tools": _tools_icon,
+    "hops": _hops_icon, "beer": _beer_icon, "grapes": _grapes_icon, "wine": _wine_icon,
+    "tea-leaves": _tea_leaves_icon, "tea": _tea_icon, "coffee-cherries": _coffee_cherries_icon,
+    "coffee": _coffee_icon,
 }
 
 

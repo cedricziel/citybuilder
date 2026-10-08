@@ -89,12 +89,14 @@ func houseLookNamesFallBack() {
     ])
 }
 
+private let resources = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    .deletingLastPathComponent().deletingLastPathComponent()
+    .appendingPathComponent("Resources")
+private let catalog = resources.appendingPathComponent("Sprites.style/catalog")
+
 @Test("scenario: every culture variant is catalogued")
 func scenarioEveryCultureVariantIsCatalogued() {
-    let catalog = URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        .deletingLastPathComponent().deletingLastPathComponent()
-        .appendingPathComponent("Resources/Sprites.style/catalog")
     var missing: [String] = []
     for culture in Culture.allCases where culture != .northernEuropean {
         for kind in IsoWorldScene.cultureVariantKinds {
@@ -106,4 +108,31 @@ func scenarioEveryCultureVariantIsCatalogued() {
     }
     #expect(IsoWorldScene.cultureVariantKinds.count * 3 == 12)
     #expect(missing.isEmpty, "missing: \(missing)")
+}
+
+// Scenarios from openspec/changes/add-culture-content.
+
+@Test("scenario: culture content is catalogued")
+func scenarioCultureContentIsCatalogued() {
+    let kinds = BuildingKind.allCases.filter { $0.culture != nil }
+    let goods: [Good] = [.hops, .beer, .grapes, .wine, .teaLeaves, .tea, .coffeeCherries, .coffee]
+    #expect(kinds.count == 8)
+    let ids = kinds.map { "building-\($0.rawValue)" } + goods.map { "good-\($0.rawValue)" }
+    let missingEntries = ids.filter {
+        !FileManager.default.fileExists(atPath: catalog.appendingPathComponent("\($0).md").path)
+    }
+    #expect(missingEntries.isEmpty, "missing catalog entries: \(missingEntries)")
+    var sprites = goods.map { "Icons.atlas/good-\($0.rawValue)" }
+    for kind in kinds {
+        let base = "Buildings.atlas/building-\(kind.rawValue)"
+        let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+        #expect(frames == 2, "\(kind) has no operational animation")
+        sprites.append(base)
+        sprites += (0 ..< 3).map { "\(base)-constructing-\($0)" }
+        sprites += (0 ..< frames).map { "\(base)-operational-\($0)" }
+    }
+    let missingSprites = sprites.filter {
+        !FileManager.default.fileExists(atPath: resources.appendingPathComponent("\($0).png").path)
+    }
+    #expect(missingSprites.isEmpty, "missing sprites: \(missingSprites)")
 }
