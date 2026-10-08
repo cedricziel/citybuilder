@@ -7,6 +7,19 @@ import SwiftUI
 extension CityRootView {
     /// Pause button shown in the HUD top-right cluster. Glyph swaps
     /// with `session.isPaused`; ESC and Cmd-. mirror the tap.
+    var researchButton: some View {
+        Button {
+            researchPresented = true
+        } label: {
+            Image(systemName: "book.fill")
+                .imageScale(.large)
+                .padding(8)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Research")
+    }
+
     var pauseButton: some View {
         Button {
             session.isPaused.toggle()

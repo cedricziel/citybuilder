@@ -10,6 +10,7 @@ import SwiftUI
 public struct CityRootView: View {
     @State var session: GameSession
     @State var settingsPresented: Bool = false
+    @State var researchPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
@@ -49,6 +50,7 @@ public struct CityRootView: View {
             VStack {
                 HStack {
                     HUDFrameView(viewModel: session.hud)
+                    researchButton
                     pauseButton
                     if settingsContent != nil {
                         Button {
@@ -63,7 +65,7 @@ public struct CityRootView: View {
                         .accessibilityLabel("Settings")
                     }
                 }
-                BuildPaletteView(armed: session.selectedTool) { tool in
+                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked) { tool in
                     session.selectTool(tool)
                 }
                 PlacementRejectionBanner(hud: session.hud)
@@ -85,6 +87,7 @@ public struct CityRootView: View {
             }
             .padding()
         }
+        .researchSheet(isPresented: $researchPresented, session: session)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
                 content()
@@ -97,8 +100,7 @@ public struct CityRootView: View {
         )
     }
 
-    /// Build-palette caption shown under the build palette when a
-    /// tool is armed.
+    /// Caption under the build palette while a tool is armed.
     private var armedCaption: String {
         let name = session.selectedTool.displayName
         let cost = session.armedToolCost

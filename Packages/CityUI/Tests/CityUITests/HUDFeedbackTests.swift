@@ -126,3 +126,38 @@ func scenarioPaletteOmitsTheTownCenter() {
 func scenarioMountainRequirementMessage() {
     #expect(PlacementRejectionText.message(for: .needsTerrain(.mountain)) == "Needs mountain ground")
 }
+
+@Test("scenario: locked placement message")
+func scenarioLockedPlacementMessage() {
+    #expect(PlacementRejectionText.message(for: .locked(.mining)) == "Needs Mining research")
+}
+
+@Test("scenario: research panel lists tech states")
+func scenarioResearchPanelListsTechStates() {
+    let rows = ResearchPanelModel(research: World.newGame().research).rows
+    func state(_ tech: Tech) -> ResearchPanelModel.State? {
+        rows.first { $0.tech == tech }?.state
+    }
+    #expect(state(.scholarship) == .researched)
+    #expect(state(.metallurgy) == .locked)
+    #expect(state(.milling) == .available)
+    #expect(state(.mining) == .available)
+    #expect(state(.seafaring) == .available)
+}
+
+@Test("research panel marks the current tech with its progress")
+func researchPanelMarksCurrentTech() {
+    let research = ResearchState(researched: [.scholarship], current: .mining, knowledge: 0, progress: 10)
+    let row = ResearchPanelModel(research: research).rows.first { $0.tech == .mining }
+    #expect(row?.state == .inProgress)
+    #expect(row?.progress == 10)
+    #expect(row?.unlocks == "Mine, Charcoal")
+}
+
+@MainActor
+@Test("palette marks locked buildings")
+func paletteMarksLockedBuildings() {
+    let session = GameSession(world: World.newGame())
+    #expect(session.isLocked(.mine))
+    #expect(!session.isLocked(.house))
+}

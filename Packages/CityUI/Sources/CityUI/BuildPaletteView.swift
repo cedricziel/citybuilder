@@ -8,9 +8,15 @@ import SwiftUI
 public struct BuildPaletteView: View {
     public let armed: BuildTool
     public let selectTool: (BuildTool) -> Void
+    public let isLocked: (BuildingKind) -> Bool
 
-    public init(armed: BuildTool, selectTool: @escaping (BuildTool) -> Void) {
+    public init(
+        armed: BuildTool,
+        isLocked: @escaping (BuildingKind) -> Bool = { _ in false },
+        selectTool: @escaping (BuildTool) -> Void
+    ) {
         self.armed = armed
+        self.isLocked = isLocked
         self.selectTool = selectTool
     }
 
@@ -37,18 +43,25 @@ public struct BuildPaletteView: View {
 
     private func paletteButton(tool: BuildTool) -> some View {
         let isArmed = armed == tool
+        let locked = if case let .place(kind) = tool { isLocked(kind) } else { false }
         return Button {
             selectTool(tool)
         } label: {
-            Text(tool.displayName)
-                .font(.caption.monospaced())
-                .lineLimit(labels.paletteLabelLineLimit)
-                .fixedSize()
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(isArmed ? Color.accentColor.opacity(0.85) : Color.clear)
-                .foregroundStyle(isArmed ? Color.white : Color.primary)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            HStack(spacing: 3) {
+                if locked {
+                    Image(systemName: "lock.fill").imageScale(.small)
+                }
+                Text(tool.displayName)
+                    .font(.caption.monospaced())
+                    .lineLimit(labels.paletteLabelLineLimit)
+                    .fixedSize()
+            }
+            .opacity(locked && !isArmed ? 0.55 : 1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(isArmed ? Color.accentColor.opacity(0.85) : Color.clear)
+            .foregroundStyle(isArmed ? Color.white : Color.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .buttonStyle(.borderless)
         .overlay(

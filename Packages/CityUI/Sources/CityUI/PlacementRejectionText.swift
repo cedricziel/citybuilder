@@ -12,6 +12,7 @@ public enum PlacementRejectionText {
         case .shoreRequiresLandTile: "Needs a land tile"
         case .shoreRequiresWaterTile: "Must touch water"
         case let .needsTerrain(terrain): "Needs \(terrain.rawValue) ground"
+        case let .locked(tech): "Needs \(tech.displayName) research"
         case let .insufficientMaterials(shortfall):
             "Needs " + Good.allCases.compactMap { good in
                 shortfall[good].map { "\($0) more \(GoodsCatalog.spec(for: good).displayName.lowercased())" }
