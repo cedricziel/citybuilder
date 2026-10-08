@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Walkable ground overlay that speeds carrier movement and connects
@@ -38,3 +41,7 @@ row 0 to the right of base; art variants laid out on row 1.
 Construction-stage progression — not a loop.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
+
+Drawn locally by `scripts/generate_sprites_ai/procedural.py` as packed earth that fills the
+whole diamond, so neighbouring road tiles join into one path. The per-cell roles above
+describe the original AI sprites.
