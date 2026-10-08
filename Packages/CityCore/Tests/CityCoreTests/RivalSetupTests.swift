@@ -125,3 +125,14 @@ func newGameWithRivalsLeavesTheRngAlone() {
     let rivals = World.newGame(layout: .archipelago, seed: 9, difficulty: .hard)
     #expect(solo.rng == rivals.rng)
 }
+
+@Test("the snapshot carries every rival and owner cultures")
+func snapshotCarriesRivalsAndOwnerCultures() throws {
+    let world = World.newGame(layout: .archipelago, seed: 0, culture: .northernEuropean, difficulty: .hard)
+    let snapshot = world.snapshot()
+    #expect(snapshot.rivals.map(\.id) == [1, 2, 3])
+    #expect(snapshot.culture(for: .player) == .northernEuropean)
+    #expect(snapshot.culture(for: .rival(2)) == .eastAsian)
+    let rival = try #require(world.rival(1))
+    #expect(snapshot.rival(onIsland: rival.islandID)?.name == rival.name)
+}
