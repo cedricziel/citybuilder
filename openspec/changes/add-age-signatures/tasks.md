@@ -20,9 +20,9 @@
 
 ## 5. M5 — Rendering and UI
 
-- [ ] 5.1 Tests-first: translate the rendering-2_5d and sprite-style-catalog scenarios into failing `CityRender2DTests` and the platform-shells scenarios into failing `CityUITests`. Confirm red.
-- [ ] 5.2 Implement to green: snapshot fields for stages, fuel, commission and house modifiers; monument stage frames; idle versus animated by state; smoky tint; range ring and highlight for placement and selection (D9).
-- [ ] 5.3 Implement to green: inspector sections, commission button, house notes and banners (D10).
+- [x] 5.1 Tests-first: translate the rendering-2_5d and sprite-style-catalog scenarios into failing `CityRender2DTests` and the platform-shells scenarios into failing `CityUITests`. Confirm red.
+- [x] 5.2 Implement to green: snapshot fields for stages, fuel, commission and house modifiers; monument stage frames; idle versus animated by state; smoky tint; range ring and highlight for placement and selection (D9).
+- [x] 5.3 Implement to green: inspector sections, commission button, house notes and banners (D10).
 
 ## 6. M6 — Verification
 

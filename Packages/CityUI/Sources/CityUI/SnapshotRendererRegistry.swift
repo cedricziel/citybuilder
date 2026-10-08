@@ -12,9 +12,10 @@ struct SnapshotHostView: View {
     let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void
     let longPressSink: @MainActor @Sendable (TileCoordinate) -> Void
     let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview?
+    let selectionProvider: @MainActor @Sendable () -> TileCoordinate?
     var body: some View {
         SnapshotRendererRegistry.shared.factory(
-            snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider
+            snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider
         )
     }
 }
@@ -38,6 +39,9 @@ public final class SnapshotRendererRegistry {
     public typealias HoverSink = @MainActor @Sendable (TileCoordinate?) -> Void
     public typealias LongPressSink = @MainActor @Sendable (TileCoordinate) -> Void
     public typealias GhostProvider = @MainActor @Sendable () -> GameSession.GhostPreview?
+    /// The inspected tile, so the scene can ring a selected signature
+    /// building.
+    public typealias SelectionProvider = @MainActor @Sendable () -> TileCoordinate?
 
     public var factory: (
         @escaping SnapshotProvider,
@@ -45,8 +49,9 @@ public final class SnapshotRendererRegistry {
         @escaping DragSink,
         @escaping HoverSink,
         @escaping LongPressSink,
-        @escaping GhostProvider
-    ) -> AnyView = { _, _, _, _, _, _ in
+        @escaping GhostProvider,
+        @escaping SelectionProvider
+    ) -> AnyView = { _, _, _, _, _, _, _ in
         AnyView(
             Color.black.overlay(
                 Text("World renderer not registered")
