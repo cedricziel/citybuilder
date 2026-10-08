@@ -13,5 +13,5 @@
 
 ## 3. M3 — Verification
 
-- [ ] 3.1 Runtime check on a dedicated simulator: a house with food and planks becomes citizens and changes sprite; a bakery fed by the town center produces bread.
-- [ ] 3.2 Run lint, format, `make test-scenarios` and `openspec validate add-population-tiers --strict`.
+- [x] 3.1 Runtime check on a dedicated simulator: a house with food and planks becomes citizens and changes sprite; a bakery fed by the town center produces bread.
+- [x] 3.2 Run lint, format, `make test-scenarios` and `openspec validate add-population-tiers --strict`.
