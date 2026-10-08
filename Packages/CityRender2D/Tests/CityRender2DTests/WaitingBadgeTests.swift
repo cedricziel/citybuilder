@@ -66,3 +66,24 @@ func scenarioDisconnectedBuildingSpriteCarriesTheNoRoadMarker() {
     #expect(scene.makeBuildingNode(for: sawmillSpec(state: .operational, isWaiting: false))
         .childNode(withName: IsoWorldScene.noRoadBadgeNodeName) == nil)
 }
+
+@Test("scenario: a 2×3 building's sprite sits on its footprint")
+@MainActor
+func scenarioA2x3BuildingsSpriteSitsOnItsFootprint() {
+    let spec = SpriteSpec(
+        coord: TileCoordinate(x: 0, y: 0),
+        kind: .building(
+            kind: .port, state: .operational, footprint: Footprint(width: 2, height: 3),
+            constructionFrameIndex: nil, orientation: .e, isWaitingForMaterials: false
+        )
+    )
+    let node = IsoWorldScene().makeBuildingNode(for: spec)
+    #expect(node.position == CGPoint(x: -16, y: -64))
+}
+
+@Test("scenario: square footprints keep their existing anchor")
+@MainActor
+func scenarioSquareFootprintsKeepTheirExistingAnchor() {
+    let node = IsoWorldScene().makeBuildingNode(for: sawmillSpec(state: .operational, isWaiting: false))
+    #expect(node.position == CGPoint(x: 0, y: -48))
+}

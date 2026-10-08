@@ -163,7 +163,8 @@ extension IsoWorldScene {
         let halfH = IsoMath.tileHeight / 2
         let footprintH = CGFloat(footprint.height)
         let footprintW = CGFloat(footprint.width)
-        let offsetY = -halfH * (2 * footprintH - 1)
+        // Bottom-centre of the sprite sits on the footprint's bottom vertex.
+        let offsetY = -halfH * (footprintW + footprintH - 1)
         let offsetX = (footprintW - footprintH) * IsoMath.tileWidth / 4
         node.position = CGPoint(x: offsetX, y: offsetY)
         if state == .constructing { node.alpha = 0.85 }

@@ -221,7 +221,7 @@ public final class IsoWorldScene: SKScene {
         let tileScreen = IsoMath.screenPoint(forTile: ghost.tile)
         node.position = CGPoint(
             x: tileScreen.x + (footprintW - footprintH) * IsoMath.tileWidth / 4,
-            y: tileScreen.y - halfH * (2 * footprintH - 1)
+            y: tileScreen.y - halfH * (footprintW + footprintH - 1)
         )
         node.zPosition = 1000 // always on top
         node.alpha = 0.5

@@ -1,8 +1,8 @@
 ## 1. M1 — Anchor fix
 
-- [ ] 1.1 Tests-first: translate `#### Scenario: A 2×3 building's sprite sits on its footprint` and `#### Scenario: Square footprints keep their existing anchor` into failing tests in `CityRender2DTests`. Confirm red.
-- [ ] 1.2 Implement to green: use `w + h − 1` half-tiles for the building and ghost sprite offsets (design D5).
-- [ ] 1.3 Refactor under a green bar.
+- [x] 1.1 Tests-first: translate `#### Scenario: A 2×3 building's sprite sits on its footprint` and `#### Scenario: Square footprints keep their existing anchor` into failing tests in `CityRender2DTests`. Confirm red.
+- [x] 1.2 Implement to green: use `w + h − 1` half-tiles for the building and ghost sprite offsets (design D5).
+- [x] 1.3 Refactor under a green bar.
 
 ## 2. M2 — Gate rules
 
