@@ -62,8 +62,8 @@ Each item is one OpenSpec change, in dependency order. Bigger items may split wh
 | 10 | add-city-life | archived (ambient sound deferred until audio assets exist) |
 | 11 | add-rival-towns + add-rival-trade | towns in progress; trade proposed |
 | — | add-touch-first-placement | archived (iPad and landscape playtests deferred) |
-| — | add-age-signatures | in progress |
-| — | add-culture-signatures | proposed (after age signatures and culture content) |
+| — | add-age-signatures | archived |
+| — | add-culture-signatures | archived |
 
 **In parallel, any time:** finish `add-touch-first-placement` (open, 0/28), the Mac runtime pass (deferred from the foundation), and archive `replace-procedural-sprites-with-ai-pipeline` (complete but not archived).
 
