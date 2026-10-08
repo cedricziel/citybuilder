@@ -161,3 +161,31 @@ Merchant houses SHALL consume 1 tools per 8 residents (rounded up) each consumpt
 
 - **WHEN** the consumption interval elapses for a merchant house with 8 residents next to a buffer holding food, planks, bread and 5 tools
 - **THEN** the buffer holds 4 tools
+
+### Requirement: Merchants want their culture's luxury
+
+Merchants SHALL need food, planks, bread, tools and their culture's luxury, eating 1 luxury per 8 residents per consumption interval. Peasants' and citizens' needs SHALL not depend on culture.
+
+#### Scenario: East Asian merchants need tea
+
+- **WHEN** the merchants' needs are read for the East Asian culture
+- **THEN** they are food, planks, bread, tools and tea
+
+#### Scenario: Old saves keep their satisfaction
+
+- **WHEN** a house saved with the old per-good satisfaction keys is loaded
+- **THEN** its satisfied goods match the old flags
+
+### Requirement: House capacity can be modified
+
+A house's capacity SHALL be its tier's capacity, minus 2 when smoky, plus 2 when energised, and never below 1. Growth, the full-capacity condition for advancing a tier and the clamp after declining SHALL use this capacity.
+
+#### Scenario: Smoky peasants
+
+- **WHEN** a peasant house stands 2 tiles from a fuelled steam engine
+- **THEN** its capacity is 2
+
+#### Scenario: Energised house is not full at 4
+
+- **WHEN** an energised peasant house has 4 residents and food and planks in reach for 120 ticks
+- **THEN** it stays peasants, because its capacity is 6

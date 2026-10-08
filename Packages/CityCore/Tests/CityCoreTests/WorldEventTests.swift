@@ -35,9 +35,13 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .seasonChanged(.summer),
         .historyEvent(.tradeCaravan),
         .ageAdvanced(.renaissance),
-        .scenarioWon
+        .scenarioWon,
+        .fuelRanOut(building: EntityID(raw: 1), kind: .steamEngine),
+        .monumentCompleted(building: EntityID(raw: 1)),
+        .commissionStarted(building: EntityID(raw: 1)),
+        .commissionEnded(building: EntityID(raw: 1))
     ]
-    #expect(samples.count == 22)
+    #expect(samples.count == 26)
     for event in samples {
         switch event {
         case .buildingPlaced,
@@ -61,7 +65,11 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .seasonChanged,
              .historyEvent,
              .ageAdvanced,
-             .scenarioWon:
+             .scenarioWon,
+             .fuelRanOut,
+             .monumentCompleted,
+             .commissionStarted,
+             .commissionEnded:
             break
         }
     }

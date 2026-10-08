@@ -22,7 +22,7 @@ private func makeV4Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 4
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "calendar")
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
@@ -63,7 +63,7 @@ private func makeV5Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 5
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
     for key in ["difficulty", "goals", "scenarioWon"] {
@@ -104,7 +104,7 @@ private func makeV6Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 6
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "age")
     for key in ["difficulty", "goals", "scenarioWon"] {
         inner.removeValue(forKey: key)
@@ -149,7 +149,7 @@ private func makeV7Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 7
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     for key in ["difficulty", "goals", "scenarioWon"] {
         inner.removeValue(forKey: key)
     }
@@ -189,7 +189,7 @@ private func makeV8Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 8
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }

@@ -37,6 +37,21 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case port
     /// Shore producer that emits Ship entities. Spec: `port-and-shipyard`.
     case shipyard
+    /// Culture-only luxury chains. Spec: `culture-content`.
+    case hopGarden = "hop-garden"
+    case brewery
+    case vineyard
+    case winery
+    case teaGarden = "tea-garden"
+    case teaHouse = "tea-house"
+    case coffeeGrove = "coffee-grove"
+    case roastery
+    /// Age signature buildings. Spec: `age-signatures`.
+    case monument
+    case guildHall = "guild-hall"
+    case gallery
+    case steamEngine = "steam-engine"
+    case powerPlant = "power-plant"
 }
 
 extension BuildingKind: Codable {
@@ -236,6 +251,25 @@ public enum BuildingCatalog {
             materialCost: [.wood: 12, .planks: 8]
         )
     ]
+    .merging(cultureSpecs) { _, _ in preconditionFailure("Culture kind with a hand-written spec") }
+    .merging(signatureSpecs) { _, _ in preconditionFailure("Signature kind with a hand-written spec") }
+
+    /// Gardens and producers of the culture luxury chains (design D3).
+    private static var cultureSpecs: [BuildingKind: BuildingSpec] {
+        var result: [BuildingKind: BuildingSpec] = [:]
+        for culture in Culture.allCases {
+            let chain = culture.luxuryChain
+            result[chain.garden] = BuildingSpec(
+                kind: chain.garden, footprint: Footprint(width: 2, height: 2),
+                cost: 60, upkeep: 0, buildDurationTicks: 25, materialCost: [.wood: 2]
+            )
+            result[chain.producer] = BuildingSpec(
+                kind: chain.producer, footprint: Footprint(width: 2, height: 2),
+                cost: 120, upkeep: 1, buildDurationTicks: 30, materialCost: [.wood: 3, .planks: 3]
+            )
+        }
+        return result
+    }
 
     public static var all: [BuildingSpec] {
         Array(specs.values)
@@ -293,6 +327,14 @@ public struct Building: Hashable, Codable, Sendable {
     /// .waitingForMaterials`, the building tracks accumulation here;
     /// once the map satisfies `materialCost` it flips to `.actively`.
     public var materialsDelivered: [Good: Int]
+    /// Completed monument project stages. Spec: `age-signatures` / The
+    /// monument is a project.
+    public var projectStages: UInt8
+    /// True while the last fuel burn succeeded. Spec: `age-signatures`
+    /// / Fuelled buildings burn fuel on an interval.
+    public var fuelled: Bool
+    /// Ticks left of a running gallery commission, 0 when none runs.
+    public var commissionTicksLeft: UInt32
     /// The player or a rival. Spec: `buildings-and-construction` /
     /// Buildings have an owner.
     public internal(set) var owner: Owner
@@ -308,6 +350,9 @@ public struct Building: Hashable, Codable, Sendable {
         shipAnchor: TileCoordinate? = nil,
         constructionState: ConstructionState = .actively,
         materialsDelivered: [Good: Int] = [:],
+        projectStages: UInt8 = 0,
+        fuelled: Bool = false,
+        commissionTicksLeft: UInt32 = 0,
         owner: Owner = .player
     ) {
         self.id = id
@@ -320,6 +365,9 @@ public struct Building: Hashable, Codable, Sendable {
         self.shipAnchor = shipAnchor
         self.constructionState = constructionState
         self.materialsDelivered = materialsDelivered
+        self.projectStages = projectStages
+        self.fuelled = fuelled
+        self.commissionTicksLeft = commissionTicksLeft
         self.owner = owner
     }
 }
@@ -329,7 +377,9 @@ public extension Building {
     /// to empty/nil when missing, so v1 saves (pre-M2-archipelago)
     /// continue to load before the M7 migration framework lands. v2
     /// saves missing the construction-stalls fields default to the
-    /// post-migration values (`.actively`, empty delivered).
+    /// post-migration values (`.actively`, empty delivered); saves
+    /// without the age-signature fields load as stage 0, unfuelled and
+    /// without a commission.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(EntityID.self, forKey: .id)
@@ -352,6 +402,9 @@ public extension Building {
         self.materialsDelivered = try container.decodeIfPresent(
             [Good: Int].self, forKey: .materialsDelivered
         ) ?? [:]
+        self.projectStages = try container.decodeIfPresent(UInt8.self, forKey: .projectStages) ?? 0
+        self.fuelled = try container.decodeIfPresent(Bool.self, forKey: .fuelled) ?? false
+        self.commissionTicksLeft = try container.decodeIfPresent(UInt32.self, forKey: .commissionTicksLeft) ?? 0
         self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
     }
 }
@@ -360,5 +413,22 @@ public extension BuildingKind {
     /// The tech that makes this building obsolete, if any.
     var obsoletedBy: Tech? {
         self == .quernHouse ? .milling : nil
+    }
+
+    /// The culture that may build this kind, nil for buildings every
+    /// culture shares. Spec: `culture-content` / Culture-only buildings.
+    var culture: Culture? {
+        switch self {
+        case .hopGarden, .brewery: .northernEuropean
+        case .vineyard, .winery: .mediterranean
+        case .teaGarden, .teaHouse: .eastAsian
+        case .coffeeGrove, .roastery: .middleEastern
+        default: nil
+        }
+    }
+
+    /// False for buildings tied to another culture.
+    func isBuildable(in culture: Culture) -> Bool {
+        self.culture.map { $0 == culture } ?? true
     }
 }

@@ -28,23 +28,34 @@ extension World {
     /// identical.
     mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
         let consumers = buildings.values
-            .filter { $0.state == .operational && !(ProductionCatalog.recipe(for: $0.kind)?.inputs.isEmpty ?? true) }
-            .sorted { $0.id.raw < $1.id.raw }
-        for consumer in consumers {
-            guard let recipe = ProductionCatalog.recipe(for: consumer.kind),
-                  let consumerRoad = anyAdjacentRoad(
-                      anchor: consumer.anchor,
-                      footprint: BuildingCatalog.spec(for: consumer.kind).footprint
-                  )
+            .filter { $0.state == .operational }
+            .map { ($0, Self.suppliedGoods(of: $0)) }
+            .filter { !$0.1.isEmpty }
+            .sorted { $0.0.id.raw < $1.0.id.raw }
+        for (consumer, needs) in consumers {
+            guard let consumerRoad = anyAdjacentRoad(
+                anchor: consumer.anchor,
+                footprint: BuildingCatalog.spec(for: consumer.kind).footprint
+            )
             else { continue }
             for good in Good.allCases {
-                guard let amount = recipe.inputs[good] else { continue }
+                guard let amount = needs[good] else { continue }
                 while needsSupply(consumer.id, good: good, amount: amount) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
                 }
             }
         }
+    }
+
+    /// Goods supply carriers bring to `building`, with the amount used at
+    /// a time: its recipe inputs plus its fuel (design D5).
+    static func suppliedGoods(of building: Building) -> [Good: Int] {
+        var needs = activeRecipe(of: building)?.inputs ?? [:]
+        if let fuel = building.kind.fuel {
+            needs[fuel.good, default: 0] += fuel.amount
+        }
+        return needs
     }
 
     private func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {

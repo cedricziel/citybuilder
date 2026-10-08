@@ -523,6 +523,30 @@ def palm(c: Canvas, u: float, v: float, height: int = 22) -> None:
     c.dot(top, DARK_TIMBER)
 
 
+def stone_lantern(c: Canvas, u: float, v: float, z0: float = 0, height: float = 8, cap: float = 0.03) -> None:
+    """A stone lantern: a square post under a wider cap, its light lit."""
+    top = z0 + height
+    box(c, u, v, u + 0.1, v + 0.1, top, STONE_WALL, z0=z0)
+    flat_top(c, u - cap, v - cap, u + 0.1 + cap, v + 0.1 + cap, top, LIGHT_STONE)
+    c.dot(_px(c, u + 0.05, v + 0.1, top - 3), CREAM)
+
+
+def barrel(c: Canvas, u: float, v: float, z: float = 0) -> None:
+    """A cask on its side, end towards the viewer, with an iron hoop."""
+    x, y = _px(c, u, v, z)
+    c.draw.ellipse([x - 4, y - 7, x + 4, y], fill=(*TIMBER, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - 2, y - 5, x + 2, y - 2], fill=(*PINE, 255), outline=(*DARK_TIMBER, 255))
+    c.dot((x, y - 4), DARK_TIMBER)
+
+
+def cypress(c: Canvas, u: float, v: float, height: int = 28) -> None:
+    """A tall, narrow Mediterranean cypress."""
+    x, y = _px(c, u, v, 0)
+    c.draw.ellipse([x - 4, y - height, x + 4, y], fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - 3, y - height + 2, x, y - 3], fill=(*LEAF, 255))
+    c.line([(x, y), (x, y - 2)], DARK_TIMBER)
+
+
 def awning(c: Canvas, u0: float, u1: float, v: float, z: float, depth: float = 0.25) -> None:
     """A striped cloth awning sloping out from the lit wall."""
     n = 6
@@ -676,6 +700,11 @@ def style_door(c: Canvas, style: Style, u: float, v: float, height: int = 6, z0:
     else:
         arch(c, x, y - 1, 5, height, style.accent)
         arch(c, x, y - 1, 3, height - 1, DARK_TIMBER)
+
+
+def _style_block(s: Style, u0: float, v0: float, u1: float, v1: float, z: float, rise: float) -> Block:
+    return Block(u0, v0, u1, v1, z, s.wall, s.roof, s.roof_kind, rise * s.rise, framed=s.framed,
+                 overhang=s.overhang, lift=s.lift, posts=s.posts)
 
 
 def _cornice(c: Canvas, u0: float, v0: float, u1: float, v1: float, z: float, fill: Rgb) -> None:
@@ -938,10 +967,7 @@ def _town_center_east_asian(c: Canvas, s: Style) -> None:
     c.draw.line([(x, y - 10), (x, y - 1)], fill=(*SUN_TERRACOTTA, 255))
     # Stone lanterns at the platform's front corners.
     for u, v in ((0.55, 2.35), (2.35, 2.5)):
-        box(c, u, v, u + 0.1, v + 0.1, 12, STONE_WALL, z0=4)
-        flat_top(c, u - 0.03, v - 0.03, u + 0.13, v + 0.13, 12, LIGHT_STONE)
-        x, y = _px(c, u + 0.05, v + 0.1, 9)
-        c.dot((x, y), CREAM)
+        stone_lantern(c, u, v, z0=4)
 
 
 def _library_east_asian(c: Canvas, s: Style) -> None:
@@ -2687,9 +2713,684 @@ def _quern_house(stage: str, handle: float = QUERN_HANDLE[0]) -> Image.Image:
 
 def draw_quern_frame(frame: int) -> Image.Image:
     """Operational quern house: the millstone handle goes round."""
-    img = _quern_house("done", QUERN_HANDLE[frame % len(QUERN_HANDLE)])
-    top = _quern_house("done").getbbox()[1]
-    return img.crop((0, max(0, top - HEADROOM), img.width, img.height))
+    return _crop_to_idle(_quern_house("done", QUERN_HANDLE[frame % len(QUERN_HANDLE)]), _quern_house("done"))
+
+
+# Culture luxury chains (`add-culture-content` D6) ----------------------
+#
+# Each culture's garden and producer, drawn in that culture's style.
+# Gardens are fields of tall plants behind a small shed; producers carry
+# a prop that names the luxury (casks, wine press, kettle, roasting drum).
+
+def _garden_plot(c: Canvas, stage: str) -> None:
+    """Tilled ground for the plants and a low fence along its near edges."""
+    _field_rows(c, 0.05, 0.75, 1.95, 1.95, LIGHT_LOAM, MEDIUM_LOAM if stage == "pad" else DARK_LOAM)
+    if stage == "pad":
+        return
+    c.line([c.p(0.05, 1.95, 3), c.p(1.95, 1.95, 3), c.p(1.95, 0.75, 3)], TIMBER)
+    c.line([c.p(0.05, 1.95, 0), c.p(1.95, 1.95, 0), c.p(1.95, 0.75, 0)], OUTLINE)
+    for u in (0.05, 0.5, 1.0, 1.5, 1.95):
+        c.line([c.p(u, 1.95, 0), c.p(u, 1.95, 4)], DARK_TIMBER)
+
+
+# How far the plants have grown after the pad: bare stakes, young, harvest.
+GROWTH = {"frame": 0.0, "walls": 0.5, "done": 1.0}
+Plant = Callable[[Canvas, float, float, float], None]
+
+
+def _hop_bine(c: Canvas, u: float, v: float, grown: float) -> None:
+    """A tall pole with a hop bine climbing it, cones hanging along it."""
+    x, y = _px(c, u, v, 0)
+    c.line([(x, y), (x, y - 26)], DARK_TIMBER)
+    top = round(22 * grown)
+    if top <= 0:
+        return
+    c.draw.rectangle([x - 2, y - top, x + 1, y - 1], fill=(*LEAF, 255))
+    c.line([(x + 2, y - top + 1), (x + 2, y - 1)], SHADOW_GREEN)
+    c.line([(x - 3, y - top + 2), (x - 3, y - 2)], OUTLINE)
+    for k in range(4, top, 4):
+        c.dot((x - 1 + (k // 4) % 2, y - k), SUN_GRASS if grown >= 1 else LEAF)
+        c.dot((x + 1 - (k // 4) % 2, y - k - 1), PALE_SAND if grown >= 1 else SUN_GRASS)
+
+
+def _vine(c: Canvas, u: float, v: float, grown: float) -> None:
+    """A low trained vine on a stake, grape clusters under its leaves."""
+    x, y = _px(c, u, v, 0)
+    c.line([(x, y), (x, y - 9)], TIMBER)
+    if grown <= 0:
+        return
+    r = 3 + round(2 * grown)
+    c.draw.ellipse([x - r, y - 6 - r, x + r, y - 6 + r // 2], fill=(*LEAF, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - r + 1, y - 6 - r + 1, x, y - 7], fill=(*SUN_GRASS, 255))
+    if grown >= 1:
+        for dx in (-3, 2):
+            c.draw.rectangle([x + dx - 1, y - 6, x + dx + 1, y - 4], fill=(*TERRACOTTA, 255))
+            c.dot((x + dx, y - 3), SLATE)
+            c.dot((x + dx - 1, y - 6), SUN_TERRACOTTA)
+
+
+def _tea_bush(c: Canvas, u: float, v: float, grown: float) -> None:
+    """A clipped, rounded tea bush; touching bushes read as hedge rows."""
+    x, y = _px(c, u, v, 0)
+    if grown <= 0:
+        c.dot((x, y - 1), LEAF)
+        return
+    r = 3 + round(3 * grown)
+    h = 2 + round(4 * grown)
+    c.draw.ellipse([x - r, y - h - 3, x + r, y + 1], fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - r + 1, y - h - 3, x + r - 2, y - 2], fill=(*LEAF, 255))
+    c.line([(x - r + 2, y - h - 2), (x + r - 3, y - h - 2)], SUN_GRASS)
+
+
+def _coffee_shrub(c: Canvas, u: float, v: float, grown: float) -> None:
+    """A dark, glossy coffee shrub studded with red cherries."""
+    x, y = _px(c, u, v, 0)
+    c.line([(x, y), (x, y - 4)], DARK_TIMBER)
+    if grown <= 0:
+        return
+    r = 2 + round(3 * grown)
+    h = 6 + round(8 * grown)
+    c.draw.ellipse([x - r, y - h, x + r, y - 2], fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - r + 1, y - h + 1, x, y - 4], fill=(*LEAF, 255))
+    if grown >= 1:
+        for dx, dy in ((-2, 5), (2, 7), (0, 9), (3, 4), (-3, 9)):
+            c.dot((x + dx, y - dy), SUN_TERRACOTTA)
+
+
+def _plant_grid(c: Canvas, plant: Plant, stage: str, us: list[float], vs: list[float]) -> None:
+    """Plants at every (u, v) of the grid, drawn back to front."""
+    if stage == "pad":
+        return
+    for u, v in sorted(((u, v) for u in us for v in vs), key=lambda p: (p[0] + p[1], p[0])):
+        plant(c, u, v, GROWTH[stage])
+
+
+def _garden(stage: str, s: Style, extra: int = 44) -> Canvas:
+    """Yard, plot and the small shed on the plot's back edge."""
+    c = Canvas(2, 2, extra)
+    yard(c)
+    _garden_plot(c, stage)
+    draw_block(c, _style_block(s, 0.25, 0.1, 1.2, 0.6, 11, 9), stage)
+    if stage in ("walls", "done"):
+        style_door(c, s, 0.6, 0.6, height=7)
+    return c
+
+
+_GARDEN_ROWS = [0.95, 1.4, 1.85]
+
+
+def _hop_garden(stage: str) -> Image.Image:
+    c = _garden(stage, NORTHERN_EUROPEAN, 48)
+    if stage == "done":
+        for i in range(3):
+            bale(c, 1.45 + i * 0.15, 0.4)
+    us = [0.25, 0.65, 1.05, 1.45, 1.85]
+    if stage != "pad":
+        for v in _GARDEN_ROWS:
+            # Overhead wires the bines climb to.
+            c.line([c.p(us[0], v, 26), c.p(us[-1], v, 26)], DARK_TIMBER)
+    _plant_grid(c, _hop_bine, stage, us, _GARDEN_ROWS)
+    return c.img
+
+
+def _vineyard(stage: str) -> Image.Image:
+    c = _garden(stage, MEDITERRANEAN)
+    _plant_grid(c, _vine, stage, [0.2 + 0.18 * i for i in range(10)], _GARDEN_ROWS)
+    if stage == "done":
+        cypress(c, 1.55, 0.35)
+        amphora(c, 1.3, 0.75)
+        amphora(c, 1.45, 0.68)
+    return c.img
+
+
+def _tea_garden(stage: str) -> Image.Image:
+    c = _garden(stage, EAST_ASIAN)
+    _plant_grid(c, _tea_bush, stage, [0.2 + 0.16 * i for i in range(11)], _GARDEN_ROWS)
+    if stage == "done":
+        # A stone lantern by the shed and a basket of picked leaves.
+        stone_lantern(c, 1.5, 0.35, height=10, cap=0.04)
+        bale(c, 1.8, 0.55)
+    return c.img
+
+
+def _coffee_grove(stage: str) -> Image.Image:
+    c = _garden(stage, MIDDLE_EASTERN, 48)
+    if stage == "done":
+        palm(c, 1.6, 0.3, 26)
+    _plant_grid(c, _coffee_shrub, stage, [0.3, 0.7, 1.1, 1.5, 1.85], _GARDEN_ROWS)
+    if stage == "done":
+        sack(c, 1.4, 0.7)
+    return c.img
+
+
+def _brewery(stage: str) -> Image.Image:
+    s = NORTHERN_EUROPEAN
+    c = Canvas(2, 2, 60)
+    yard(c)
+    b = _style_block(s, 0.2, 0.25, 1.45, 1.4, 18, 14)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        style_door(c, s, 0.55, 1.4, height=9)
+        style_window(c, s, 1.0, 1.4, 13)
+        style_window(c, s, 1.3, 1.4, 13)
+        style_window(c, s, 1.45, 0.8, 12, lit=False)
+    if stage == "done":
+        chimney(c, 1.05, 0.4, 18, 42)
+        # Casks stacked by the door: three on the ground, one on top.
+        for u, v in ((1.55, 1.85), (1.75, 1.7), (1.95, 1.55)):
+            barrel(c, u, v)
+        barrel(c, 1.75, 1.7, 6)
+        # Hanging sign with a golden tankard.
+        x, y = _px(c, 0.3, 1.4, 14)
+        c.line([(x, y), (x - 5, y + 2)], DARK_TIMBER)
+        c.draw.rectangle([x - 8, y + 2, x - 3, y + 7], fill=(*WHEAT, 255), outline=(*OUTLINE, 255))
+        c.dot((x - 5, y + 4), DARK_TIMBER)
+    return c.img
+
+
+def _wine_press(c: Canvas, u: float, v: float) -> None:
+    """A basket press: slatted tub, screw post and a turning bar."""
+    box(c, u - 0.15, v - 0.15, u + 0.15, v + 0.15, 7, TIMBER_WALL)
+    flat_top(c, u - 0.15, v - 0.15, u + 0.15, v + 0.15, 7, TERRACOTTA)
+    for k in (-0.08, 0.02, 0.12):
+        c.line([c.p(u + k, v + 0.15, 0), c.p(u + k, v + 0.15, 7)], DARK_TIMBER)
+    x, y = _px(c, u, v, 7)
+    c.line([(x, y), (x, y - 12)], DARK_TIMBER, width=2)
+    c.line([(x - 6, y - 9), (x + 6, y - 7)], TIMBER, width=2)
+    c.line([(x - 6, y - 9), (x + 6, y - 7)], OUTLINE)
+
+
+def _winery(stage: str) -> Image.Image:
+    s = MEDITERRANEAN
+    c = Canvas(2, 2, 52)
+    yard(c)
+    if stage == "done":
+        cypress(c, 1.7, 0.15, 30)
+    b = _style_block(s, 0.2, 0.3, 1.45, 1.4, 20, 16)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        _cornice(c, b.u0, b.v0, b.u1, b.v1, 3, LIGHT_STONE)
+        x, y = _px(c, 0.7, 1.4, 0)
+        arch(c, x, y - 1, 7, 11, DARK_TIMBER)
+        style_window(c, s, 1.15, 1.4, 15)
+        style_window(c, s, 0.35, 1.4, 15)
+        style_window(c, s, 1.45, 0.85, 14, lit=False)
+    if stage == "done":
+        _wine_press(c, 1.7, 1.55)
+        barrel(c, 0.35, 1.75)
+        barrel(c, 0.6, 1.85)
+        amphora(c, 1.25, 1.8)
+        amphora(c, 1.4, 1.9)
+    return c.img
+
+
+def _kettle(c: Canvas, u: float, v: float, z: float) -> None:
+    """An iron kettle on a small brazier, steam curling off its spout."""
+    x, y = _px(c, u, v, z)
+    c.draw.rectangle([x - 3, y - 3, x + 3, y], fill=(*SHADOW_STONE, 255), outline=(*OUTLINE, 255))
+    c.dot((x, y - 1), SUN_TERRACOTTA)
+    c.draw.ellipse([x - 3, y - 8, x + 3, y - 3], fill=(*SLATE, 255), outline=(*OUTLINE, 255))
+    c.line([(x + 3, y - 6), (x + 5, y - 8)], OUTLINE)
+    for dx, dy in ((5, 10), (6, 12), (5, 14)):
+        c.dot((x + dx, y - dy), CREAM)
+
+
+def _tea_house(stage: str) -> Image.Image:
+    s = EAST_ASIAN
+    c = Canvas(2, 2, 56)
+    yard(c)
+    plinth = (0.15, 0.25, 1.75, 1.75)
+    if stage == "pad":
+        pad(c, *plinth)
+        return c.img
+    box(c, *plinth, 4, STONE_WALL)
+    flat_top(c, *plinth, 4, PINE)
+    u0, v0, u1, v1 = 0.3, 0.4, 1.35, 1.25
+    if stage == "frame":
+        frame_posts(c, u0, v0, u1, v1, 22)
+        return c.img
+    shadow(c, u0, v0, u1, v1)
+    _storey(c, s, u0, v0, u1, v1, 4, 20)
+    style_door(c, s, 0.75, v1, height=10, z0=4)
+    style_window(c, s, 1.1, v1, 14)
+    style_window(c, s, u1, 0.8, 13, lit=False)
+    if stage == "walls":
+        flat_top(c, u0, v0, u1, v1, 20, DARK_TIMBER)
+        scaffold(c, u0, v0, u1, v1, 20)
+        return c.img
+    # Red lacquered veranda posts carry the wide roof out over the deck.
+    for u, v in ((0.2, 1.65), (1.0, 1.65), (1.65, 1.65), (1.65, 1.1), (1.65, 0.55)):
+        c.line([c.p(u, v, 4), c.p(u, v, 20)], s.accent, width=2)
+    _kettle(c, 1.35, 1.5, 4)
+    bale(c, 0.45, 1.55)
+    flared_roof(c, 0.2, 0.55, 1.65, 1.65, 20, 10, s.roof, overhang=0.12, lift=5, finial=True)
+    # Red paper lanterns under the eaves.
+    for u, v in ((0.55, 1.75), (1.4, 1.75)):
+        x, y = _px(c, u, v, 17)
+        c.draw.rectangle([x - 1, y, x + 1, y + 3], fill=(*SUN_TERRACOTTA, 255), outline=(*OUTLINE, 255))
+        c.dot((x, y + 1), WHEAT)
+    return c.img
+
+
+def _roasting_drum(c: Canvas, u: float, v: float) -> None:
+    """A brick firebox carrying an iron drum, with a hand crank."""
+    box(c, u - 0.2, v - 0.15, u + 0.2, v + 0.15, 6, BRICK)
+    flat_top(c, u - 0.2, v - 0.15, u + 0.2, v + 0.15, 6, TERRACOTTA)
+    x, y = _px(c, u, v + 0.15, 0)
+    c.draw.rectangle([x - 2, y - 4, x + 2, y - 1], fill=(*OUTLINE, 255))
+    c.dot((x, y - 2), WHEAT)
+    c.dot((x - 1, y - 2), SUN_TERRACOTTA)
+    x, y = _px(c, u, v, 6)
+    c.draw.ellipse([x - 7, y - 9, x + 7, y], fill=(*SHADOW_STONE, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - 6, y - 8, x + 1, y - 4], fill=(*STONE, 255))
+    c.line([(x - 7, y - 4), (x + 7, y - 4)], SLATE)
+    c.line([(x + 7, y - 5), (x + 10, y - 7), (x + 10, y - 10)], DARK_TIMBER)
+
+
+def _roastery(stage: str) -> Image.Image:
+    s = MIDDLE_EASTERN
+    c = Canvas(2, 2, 52)
+    yard(c)
+    b = _style_block(s, 0.2, 0.25, 1.45, 1.35, 20, 0)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        style_door(c, s, 0.55, b.v1, height=10)
+        style_window(c, s, 1.15, b.v1, 15)
+        style_window(c, s, b.u1, 0.8, 15, lit=False)
+    if stage == "done":
+        awning(c, 0.85, 1.4, b.v1, 12, depth=0.3)
+        dome(c, 0.8, 0.8, 23, 12, 4, s.dome, s.wall, band=s.accent)
+        palm(c, 1.85, 0.3, 24)
+        _roasting_drum(c, 1.1, 1.7)
+        for u, v in ((0.35, 1.6), (0.5, 1.8), (1.75, 1.45), (1.85, 1.65)):
+            sack(c, u, v)
+    return c.img
+
+
+_LUXURY_DRAWERS: dict[str, Callable[[str], Image.Image]] = {
+    "hop-garden": _hop_garden, "brewery": _brewery, "vineyard": _vineyard, "winery": _winery,
+    "tea-garden": _tea_garden, "tea-house": _tea_house, "coffee-grove": _coffee_grove, "roastery": _roastery,
+}
+
+
+# Age signatures (`add-age-signatures` D11) ----------------------------
+#
+# One signature building per age, in the base style with the age's
+# materials. Each drawer takes the construction stage and an operational
+# frame: None is the idle sprite, 0 and 1 the two operational frames.
+# Frames only move a small detail (flame, sign, banner, beam, glow) on
+# the idle canvas.
+
+def _cylinder(c: Canvas, u: float, v: float, z0: float, z1: float, half: int, mat: Material,
+              band: Rgb | None = None) -> None:
+    """A round stack: lit left half, shaded right half, outlined right
+    edge and a darker cap ring."""
+    x, y0 = _px(c, u, v, z0)
+    _, y1 = _px(c, u, v, z1)
+    c.draw.rectangle([x - half, y1, x - 1, y0], fill=(*mat.lit, 255))
+    c.draw.rectangle([x, y1, x + half - 1, y0], fill=(*mat.shade, 255))
+    c.draw.line([(x + half, y1), (x + half, y0)], fill=(*OUTLINE, 255))
+    if band is not None:
+        c.draw.rectangle([x - half, y1 + 3, x + half - 1, y1 + 5], fill=(*band, 255))
+    c.draw.rectangle([x - half - 1, y1 - 1, x + half, y1 + 1], fill=(*SHADOW_STONE, 255))
+    c.draw.line([(x - half, y1 - 1), (x + half - 1, y1 - 1)], fill=(*OUTLINE, 255))
+
+
+def _walls_stage(c: Canvas, u0: float, v0: float, u1: float, v1: float, z: float) -> Image.Image:
+    """Finish the walls construction stage: open top and scaffolding."""
+    flat_top(c, u0, v0, u1, v1, z, DARK_TIMBER)
+    scaffold(c, u0, v0, u1, v1, z)
+    return c.img
+
+
+def _puff(c: Canvas, x: int, y: int, radius: int) -> None:
+    """A round smoke puff, lit from the upper left."""
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            if dx * dx + dy * dy > radius * radius:
+                continue
+            fill = CREAM if dx + dy < 0 else (STONE if dx + dy > radius // 2 else LIGHT_STONE)
+            c.dot((x + dx, y + dy), fill)
+
+
+# Monument (Antiquity) ---------------------------------------------------
+
+def _podium(c: Canvas, steps: int = 3) -> None:
+    for i in range(steps):
+        d = 0.15 + i * 0.15
+        box(c, d, d, 3 - d, 3 - d, (i + 1) * 3, STONE_WALL, z0=i * 3)
+        flat_top(c, d, d, 3 - d, 3 - d, (i + 1) * 3, LIGHT_STONE)
+
+
+def _brazier(c: Canvas, u: float, v: float, z: float, frame: int | None) -> None:
+    """A bronze bowl on a tripod; lit, its flame flickers between frames."""
+    x, y = _px(c, u, v, z)
+    for dx in (-3, 0, 3):
+        c.line([(x + dx, y), (x, y - 6)], DARK_TIMBER)
+    c.draw.ellipse([x - 4, y - 9, x + 4, y - 5], fill=(*THATCH, 255), outline=(*OUTLINE, 255))
+    c.line([(x - 3, y - 8), (x + 2, y - 8)], WHEAT)
+    if frame is None:
+        c.dot((x - 1, y - 9), SHADOW_STONE)
+        c.dot((x + 1, y - 9), SHADOW_STONE)
+        return
+    lean = 1 if frame == 0 else -1
+    flame = [((0, -10), SUN_TERRACOTTA), ((-2, -10), SUN_TERRACOTTA), ((2, -10), SUN_TERRACOTTA),
+             ((-1, -11), WHEAT), ((1, -11), SUN_TERRACOTTA), ((0, -12), WHEAT), ((lean, -13), CREAM),
+             ((lean, -14), WHEAT), ((-lean, -12), WHEAT), ((lean * 2, -15), SUN_TERRACOTTA)]
+    if frame == 1:
+        flame += [((0, -15), WHEAT), ((-1, -16), SUN_TERRACOTTA)]
+    for (dx, dy), fill in flame:
+        c.dot((x + dx, y + dy), fill)
+
+
+def _monument(stage: str, frame: int | None = None) -> Image.Image:
+    """A stepped stone podium carrying a temple front of six columns
+    under a pediment, a bronze brazier on the steps. Construction shows
+    the project: podium, columns in scaffolding, roofless colonnade."""
+    c = Canvas(3, 3, 76)
+    yard(c)
+    _podium(c, 1 if stage == "pad" else 3)
+    if stage == "pad":
+        return c.img
+    base = 9
+    u0, v0, u1, v1, front = 0.85, 0.75, 2.25, 1.55, 2.15
+    top = base + 20 if stage != "frame" else base + 12
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, top, TRAVERTINE, z0=base)
+    _face(c, "lit", u0, u1, v1, base, top, SHADOW_STONE)
+    x, y = _px(c, (u0 + u1) / 2, v1, base)
+    arch(c, x, y - 1, 5, 11 if stage != "frame" else 8, OUTLINE)
+    if stage == "frame":
+        flat_top(c, u0, v0, u1, v1, top, SHADOW_STONE)
+        _columns(c, u0 + 0.06, u1 - 0.06, front, base, base + 20, 6)
+        scaffold(c, u0, v0, u1, front, base + 18)
+        return c.img
+    _columns(c, u1 - 0.05, u1 - 0.05, 1.85, base, top, 1)
+    _columns(c, u0 + 0.06, u1 - 0.06, front, base, top, 6)
+    box(c, u0, v1, u1, front + 0.05, top + 3, TRAVERTINE, z0=top)
+    _face_line(c, "lit", u0, u1, front + 0.05, top + 1, LIGHT_STONE)
+    if stage == "walls":
+        flat_top(c, u0, v0, u1, v1, top, SHADOW_STONE)
+        flat_top(c, u0, v1, u1, front + 0.05, top + 3, LIGHT_STONE)
+        return c.img
+    gable_roof(c, u0, v0 - 0.05, u1, front + 0.05, top + 3, 11, TILE_ROOF, TRAVERTINE, axis="v", overhang=0.06)
+    x, y = _px(c, (u0 + u1) / 2, front + 0.05, top + 7)
+    c.draw.ellipse([x - 2, y - 2, x + 2, y + 1], fill=(*LIGHT_STONE, 255), outline=(*STONE, 255))
+    _brazier(c, 0.62, 2.35, base, frame)
+    return c.img
+
+
+# Guild hall (Medieval) -----------------------------------------------------
+
+def _guild_sign(c: Canvas, u: float, v: float, z: float, frame: int | None) -> None:
+    """An iron arm out of the wall with a hanging board; the board swings
+    between the operational frames."""
+    ax, ay = _px(c, u, v, z)
+    bx, by = _px(c, u, v + 0.45, z)
+    c.line([(ax, ay), (bx, by)], OUTLINE)
+    c.line([(ax, ay + 3), (bx - 4, by - 1)], OUTLINE)
+    swing = {None: 0, 0: -2, 1: 2}[frame]
+    hx = bx - 3 + swing
+    c.line([(bx - 3, by), (hx, by + 3)], OUTLINE)
+    c.draw.rectangle([hx - 4, by + 3, hx + 4, by + 11], fill=(*WHEAT, 255), outline=(*OUTLINE, 255))
+    # A red key, the guild's mark.
+    c.draw.ellipse([hx - 3, by + 5, hx - 1, by + 7], outline=(*FLAG_RED, 255))
+    c.draw.line([(hx - 1, by + 6), (hx + 3, by + 6)], fill=(*FLAG_RED, 255))
+    c.dot((hx + 2, by + 7), FLAG_RED)
+
+
+def _guild_hall(stage: str, frame: int | None = None) -> Image.Image:
+    """Stone ground floor, two timber-framed storeys, a steep tiled roof
+    with a bell turret and a hanging guild sign."""
+    c = Canvas(3, 3, 96)
+    yard(c)
+    u0, v0, u1, v1 = 0.3, 0.45, 2.45, 2.3
+    hall = Block(u0, v0, u1, v1, 34, PLASTER, TILE_ROOF, "gable_u", 24, framed=True)
+    if stage in ("pad", "frame"):
+        draw_block(c, hall, stage)
+        return c.img
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 12, STONE_WALL)
+    box(c, u0, v0, u1, v1, 34, PLASTER, z0=12)
+    timber_frame(c, u0, u1, v1, 12, 23, step=0.3)
+    timber_frame(c, u0, u1, v1, 23, 34, step=0.3)
+    c.line([c.p(u1, v0, 23), c.p(u1, v1, 23)], TIMBER)
+    c.line([c.p(u0, v1, 12), c.p(u1, v1, 12), c.p(u1, v0, 12)], DARK_TIMBER)
+    x, y = _px(c, 1.0, v1, 0)
+    arch(c, x, y - 1, 5, 10, DARK_TIMBER)
+    for u in (0.55, 1.5, 1.9):
+        window(c, "left", u, v1, 6)
+    for z in (19, 30):
+        for u in (0.55, 0.95, 1.35, 1.75, 2.15):
+            window(c, "left", u, v1, z)
+        for v in (0.8, 1.35, 1.9):
+            window(c, "right", u1, v, z, lit=False)
+    if stage == "walls":
+        return _walls_stage(c, u0, v0, u1, v1, 34)
+    gable_roof(c, u0, v0, u1, v1, 34, 24, TILE_ROOF, PLASTER, axis="u", overhang=0.12)
+    # Bell turret astride the ridge.
+    vm = (v0 + v1) / 2
+    box(c, 1.25, vm - 0.14, 1.53, vm + 0.14, 66, TIMBER_WALL, z0=54)
+    x, y = _px(c, 1.39, vm + 0.14, 58)
+    c.draw.rectangle([x - 1, y - 4, x + 1, y], fill=(*OUTLINE, 255))
+    c.dot((x, y - 1), WHEAT)
+    hip_roof(c, 1.25, vm - 0.14, 1.53, vm + 0.14, 66, 9, SLATE_ROOF, overhang=0.05)
+    _guild_sign(c, 2.25, v1, 16, frame)
+    return c.img
+
+
+# Gallery (Renaissance) ---------------------------------------------------
+
+def _banner(c: Canvas, u: float, v: float, z: float, frame: int | None) -> None:
+    """A pole with a long banner: limp when idle, blowing out to the east
+    in two shapes while a commission runs."""
+    x, y = _px(c, u, v, z)
+    c.line([(x, y), (x, y - 22)], DARK_TIMBER)
+    c.dot((x, y - 23), WHEAT)
+    if frame is None:
+        c.draw.rectangle([x + 1, y - 21, x + 3, y - 12], fill=(*FLAG_RED, 255))
+        c.draw.line([(x + 2, y - 19), (x + 2, y - 15)], fill=(*WHEAT, 255))
+        return
+    for i in range(9):
+        wave = (i // 3) % 2 if frame == 0 else ((i + 1) // 3) % 2
+        top = y - 21 + wave + (i // 4)
+        c.draw.line([(x + 1 + i, top), (x + 1 + i, top + 3)], fill=(*FLAG_RED, 255))
+        if i % 3 == 1:
+            c.dot((x + 1 + i, top + 1), WHEAT)
+
+
+def _gallery(stage: str, frame: int | None = None) -> Image.Image:
+    """A stuccoed palazzo front with an arched loggia, a cornice, a statue
+    niche between the upper windows and a banner on the roof."""
+    c = Canvas(2, 2, 64)
+    yard(c)
+    u0, v0, u1, v1 = 0.2, 0.3, 1.75, 1.6
+    body = Block(u0, v0, u1, v1, 28, OCHRE_STUCCO, TILE_ROOF, "hip", 7)
+    if stage in ("pad", "frame"):
+        draw_block(c, body, stage)
+        return c.img
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 12, STONE_WALL)
+    box(c, u0, v0, u1, v1, 28, OCHRE_STUCCO, z0=12)
+    for u in (0.47, 0.97, 1.47):
+        x, y = _px(c, u, v1, 0)
+        arch(c, x, y - 1, 9, 10, SHADOW_STONE)
+        arch(c, x, y - 1, 7, 9, OUTLINE)
+    _face_line(c, "lit", u0, u1, v1, 12, LIGHT_STONE)
+    _face_line(c, "shaded", v0, v1, u1, 12, LIGHT_STONE)
+    for u in (0.45, 1.5):
+        x, y = _px(c, u, v1, 18)
+        c.draw.rectangle([x - 1, y - 3, x + 1, y + 2], fill=(*DARK_TIMBER, 255))
+        c.draw.line([(x - 2, y - 4), (x + 2, y - 4)], fill=(*CREAM, 255))
+    x, y = _px(c, 0.97, v1, 15)
+    arch(c, x, y, 5, 10, SHADOW_STONE)
+    c.draw.rectangle([x - 1, y - 7, x, y], fill=(*CREAM, 255))
+    c.dot((x, y - 8), CREAM)
+    c.dot((x + 1, y - 5), PALE_SAND)
+    for v in (0.65, 1.25):
+        x, y = _px(c, u1, v, 18)
+        c.draw.rectangle([x - 1, y - 3, x + 1, y + 2], fill=(*OUTLINE, 255))
+    if stage == "walls":
+        return _walls_stage(c, u0, v0, u1, v1, 28)
+    box(c, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, 31, TRAVERTINE, z0=28)
+    hip_roof(c, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, 31, 7, TILE_ROOF, overhang=0.04)
+    _banner(c, 1.6, 0.45, 33, frame)
+    return c.img
+
+
+# Steam engine (Industrial) ---------------------------------------------------
+
+def _beam(c: Canvas, tilt: int) -> None:
+    """The rocking beam on a stone bob wall beside the engine house, and
+    the pump rod hanging from its outer end."""
+    box(c, 1.22, 1.15, 1.4, 1.35, 30, STONE_WALL)
+    flat_top(c, 1.22, 1.15, 1.4, 1.35, 30, LIGHT_STONE)
+    inner = _px(c, 0.85, 1.25, 32 - tilt)
+    outer = _px(c, 1.85, 1.25, 32 + tilt)
+    c.line([inner, outer], PINE, width=3)
+    c.line([(inner[0], inner[1] + 2), (outer[0], outer[1] + 2)], OUTLINE)
+    pivot = _px(c, 1.31, 1.25, 32)
+    c.draw.rectangle([pivot[0] - 1, pivot[1] - 1, pivot[0] + 1, pivot[1] + 1], fill=(*OUTLINE, 255))
+    c.line([(outer[0], outer[1] + 1), _px(c, 1.85, 1.25, 6)], OUTLINE)
+
+
+def _coal_heap(c: Canvas, u: float, v: float) -> None:
+    """A conical heap of coal."""
+    x, y = _px(c, u, v, 0)
+    pts = [(x - 9, y), (x - 5, y - 5), (x - 1, y - 8), (x + 3, y - 7), (x + 7, y - 4), (x + 10, y)]
+    c.poly(pts, SHADOW_STONE)
+    c.poly([(x - 9, y), (x - 5, y - 5), (x - 1, y - 8), (x, y)], SLATE)
+    c.line(pts[2:], OUTLINE)
+    c.line([(x - 9, y), (x + 10, y)], OUTLINE)
+    for dx, dy in ((-4, -3), (1, -5), (4, -3), (-1, -2), (6, -2)):
+        c.dot((x + dx, y + dy), STONE)
+
+
+def _steam_engine(stage: str, frame: int | None = None) -> Image.Image:
+    """A brick engine house with a tall round chimney, a rocking beam over
+    its end wall and a coal heap."""
+    c = Canvas(2, 2, 84)
+    yard(c)
+    u0, v0, u1, v1 = 0.2, 0.55, 1.15, 1.65
+    house = Block(u0, v0, u1, v1, 24, BRICK, SLATE_ROOF, "gable_v", 11)
+    if stage == "pad":
+        draw_block(c, house, stage)
+        return c.img
+    box(c, 1.3, 0.25, 1.62, 0.57, 6, STONE_WALL)
+    flat_top(c, 1.3, 0.25, 1.62, 0.57, 6, LIGHT_STONE)
+    chimney_top = {"frame": 22, "walls": 44, "done": 64}[stage]
+    _cylinder(c, 1.46, 0.41, 6, chimney_top, 3, BRICK, band=LIGHT_STONE if stage == "done" else None)
+    if stage == "frame":
+        draw_block(c, house, stage)
+        return c.img
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 24, BRICK)
+    _brickwork(c, u0, v0, u1, v1, 0, 24)
+    x, y = _px(c, 0.68, v1, 0)
+    arch(c, x, y - 1, 5, 16, OUTLINE)
+    c.draw.line([(x - 2, y - 9), (x + 2, y - 9)], fill=(*LIGHT_STONE, 255))
+    door(c, 0.38, v1, height=8)
+    window(c, "right", u1, 0.85, 14, lit=False)
+    if stage == "walls":
+        return _walls_stage(c, u0, v0, u1, v1, 24)
+    gable_roof(c, u0, v0, u1, v1, 24, 11, SLATE_ROOF, BRICK, axis="v")
+    # Pump head under the beam's outer end.
+    box(c, 1.74, 1.13, 1.96, 1.37, 6, STONE_WALL)
+    flat_top(c, 1.74, 1.13, 1.96, 1.37, 6, SHADOW_STONE)
+    _beam(c, {None: 0, 0: 6, 1: -6}[frame])
+    _coal_heap(c, 1.5, 1.8)
+    if frame is not None:
+        sx, sy = _px(c, 1.46, 0.41, chimney_top)
+        puffs = ((1, 4, 2), (3, 9, 3)) if frame == 0 else ((1, 3, 1), (5, 11, 2))
+        for dx, dy, radius in puffs:
+            _puff(c, sx + dx, sy - dy, radius)
+    return c.img
+
+
+# Power plant (Modern) ---------------------------------------------------
+
+def _plant_windows(c: Canvas, glow: int | None) -> None:
+    """Tall windows on both walls: dark glass when cold, lit in two
+    alternating patterns while the plant runs."""
+    panes = [("lit", u, 2.6) for u in (0.5, 0.8, 1.1, 1.4, 1.7)] + \
+            [("shaded", v, 2.0) for v in (1.05, 1.4, 1.75, 2.1)]
+    for i, (face, a, at) in enumerate(panes):
+        if glow is None:
+            fill = GLASS.lit if face == "lit" else GLASS.shade
+        else:
+            fill = CREAM if (i + glow) % 2 == 0 else WHEAT
+        _face(c, face, a - 0.07, a + 0.07, at, 7, 28, fill)
+        _face_line(c, face, a - 0.07, a + 0.07, at, 17, OUTLINE)
+
+
+def _pylon(c: Canvas, u: float, v: float) -> None:
+    """A lattice pylon carrying two insulator arms."""
+    x, y = _px(c, u, v, 0)
+    top = y - 34
+    c.line([(x - 4, y), (x - 1, top)], SHADOW_STONE)
+    c.line([(x + 4, y), (x + 1, top)], OUTLINE)
+    for k in range(4):
+        y0 = y - k * 8
+        w0, w1 = 4 - k * 0.75, 4 - (k + 1) * 0.75
+        c.line([(round(x - w0), y0), (round(x + w1), y0 - 8)], SHADOW_STONE)
+        c.line([(round(x + w0), y0), (round(x - w1), y0 - 8)], SHADOW_STONE)
+    for dy, half in ((6, 7), (12, 5)):
+        c.line([(x - half, top + dy), (x + half, top + dy)], OUTLINE)
+        c.dot((x - half, top + dy + 1), CREAM)
+        c.dot((x + half, top + dy + 1), CREAM)
+
+
+_PLANT_STACKS = ((1.75, 0.3), (2.45, 0.45))
+
+
+def _power_plant(stage: str, frame: int | None = None) -> Image.Image:
+    """A brick and concrete hall with tall windows, two chimneys and a
+    transformer yard with a pylon."""
+    c = Canvas(3, 3, 100)
+    yard(c)
+    u0, v0, u1, v1 = 0.3, 0.75, 2.0, 2.6
+    hall = Block(u0, v0, u1, v1, 34, BRICK, SLATE_ROOF, "gable_u", 8)
+    stack_top = {"pad": 0, "frame": 30, "walls": 60, "done": 84}[stage]
+    if stage != "pad":
+        for u, v in _PLANT_STACKS:
+            _cylinder(c, u, v, 0, stack_top, 4, CONCRETE, band=FLAG_RED if stage == "done" else None)
+    if stage in ("pad", "frame"):
+        draw_block(c, hall, stage)
+        return c.img
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 34, BRICK)
+    _brickwork(c, u0, v0, u1, v1, 4, 30)
+    box(c, u0, v0, u1, v1, 4, CONCRETE)
+    _plant_windows(c, None if stage == "walls" else frame)
+    if stage == "walls":
+        return _walls_stage(c, u0, v0, u1, v1, 34)
+    box(c, u0, v0, u1, v1, 37, CONCRETE, z0=33)
+    gable_roof(c, u0, v0, u1, v1, 37, 8, SLATE_ROOF, CONCRETE, axis="u", overhang=0.06)
+    # Transformer yard: two transformers behind a fence, and the pylon.
+    for u, v in ((2.2, 1.35), (2.2, 1.95)):
+        box(c, u, v, u + 0.3, v + 0.35, 9, Material(STONE, SHADOW_STONE))
+        flat_top(c, u, v, u + 0.3, v + 0.35, 9, LIGHT_STONE)
+        for k in (0.08, 0.22):
+            x, y = _px(c, u + k, v + 0.17, 9)
+            c.line([(x, y), (x, y - 3)], CREAM)
+    c.line([c.p(2.1, 2.45, 4), c.p(2.85, 2.45, 4), c.p(2.85, 1.2, 4)], SHADOW_STONE)
+    _pylon(c, 2.65, 2.7)
+    if frame is not None:
+        for i, (u, v) in enumerate(_PLANT_STACKS):
+            x, y = _px(c, u, v, stack_top)
+            _puff(c, x + 1, y - (3 if (i + frame) % 2 else 7), 2)
+    return c.img
+
+
+SIGNATURE_DRAWERS: dict[str, Callable[..., Image.Image]] = {
+    "monument": _monument, "guild-hall": _guild_hall, "gallery": _gallery,
+    "steam-engine": _steam_engine, "power-plant": _power_plant,
+}
+
+
+def draw_signature_frame(kind: str, frame: int) -> Image.Image:
+    """Operational frame of an age signature, on the idle sprite's canvas."""
+    return _crop_to_idle(SIGNATURE_DRAWERS[kind]("done", frame), SIGNATURE_DRAWERS[kind]("done"))
 
 
 FOOTPRINTS: dict[str, tuple[int, int]] = {
@@ -2697,6 +3398,8 @@ FOOTPRINTS: dict[str, tuple[int, int]] = {
     "town-center": (3, 3), "bakery": (2, 2), "grain-farm": (2, 2), "windmill": (2, 2), "mine": (2, 2),
     "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), "library": (2, 2), "quern-house": (2, 2),
     **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
+    **{kind: (2, 2) for kind in _LUXURY_DRAWERS},
+    "monument": (3, 3), "guild-hall": (3, 3), "gallery": (2, 2), "steam-engine": (2, 2), "power-plant": (3, 3),
 }
 
 _DRAWERS: dict[str, Callable[..., Image.Image]] = {
@@ -2716,12 +3419,16 @@ _DRAWERS: dict[str, Callable[..., Image.Image]] = {
     "quern-house": _quern_house,
     **{f"port-{o}": (lambda stage, o=o: _port(o, stage)) for o in "nesw"},
     **{f"shipyard-{o}": (lambda stage, o=o: _shipyard(o, stage)) for o in "nesw"},
+    **_LUXURY_DRAWERS,
+    **SIGNATURE_DRAWERS,
 }
 
 OPERATIONAL_FRAMES: dict[str, int] = {
     "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
     "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2, "library": 2,
     "quern-house": 2, **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
+    **{kind: 2 for kind in _LUXURY_DRAWERS},
+    **{kind: 2 for kind in SIGNATURE_DRAWERS},
 }
 
 
@@ -2731,9 +3438,7 @@ TIER_HOUSES: dict[int, Callable[..., Image.Image]] = {2: _house_tier2, 3: _house
 
 def draw_windmill_frame(frame: int, frames: int) -> Image.Image:
     """Operational windmill frame: the sails turn a quarter turn per cycle."""
-    img = _windmill("done", math.pi / 4 + frame * (math.pi / 2) / frames)
-    top = _windmill("done").getbbox()[1]
-    return img.crop((0, max(0, top - HEADROOM), img.width, img.height))
+    return _crop_to_idle(_windmill("done", math.pi / 4 + frame * (math.pi / 2) / frames), _windmill("done"))
 
 
 def _trim(img: Image.Image) -> Image.Image:
@@ -2759,6 +3464,11 @@ def draw(kind: str, stage: str = "done", culture: str | None = None) -> Image.Im
         if stage != "done":
             raise ValueError("culture variants have no construction stages")
         return _trim(_DRAWERS[kind]("done", STYLES[culture]))
-    img = _DRAWERS[kind](stage)
-    top = _DRAWERS[kind]("done").getbbox()[1]
+    return _crop_to_idle(_DRAWERS[kind](stage), _DRAWERS[kind]("done"))
+
+
+def _crop_to_idle(img: Image.Image, idle: Image.Image) -> Image.Image:
+    """Crop `img` to the finished building's top plus the smoke-plume
+    headroom, so every frame and stage shares one canvas and anchor."""
+    top = idle.getbbox()[1]
     return img.crop((0, max(0, top - HEADROOM), img.width, img.height))

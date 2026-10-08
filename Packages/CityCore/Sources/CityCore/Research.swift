@@ -8,6 +8,9 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
     case mining
     case metallurgy
     case seafaring
+    /// Unlocks every culture's luxury chain. Spec: `culture-content` /
+    /// Cultivation unlocks the luxury chain.
+    case cultivation
     /// Era techs: each opens the next age. Spec: `research` / Era techs
     /// need a thriving city.
     case feudalOrder = "feudal-order"
@@ -22,6 +25,7 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .mining: 40
         case .metallurgy: 80
         case .seafaring: 60
+        case .cultivation: 50
         case .feudalOrder: 150
         case .printingPress: 250
         case .steamPower: 400
@@ -46,7 +50,11 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .mining: [.mine, .charcoalBurner]
         case .metallurgy: [.smelter, .toolsmith]
         case .seafaring: [.port, .shipyard]
-        case .feudalOrder, .printingPress, .steamPower, .electricity: []
+        case .cultivation: Culture.luxuryBuildings
+        case .feudalOrder: [.guildHall]
+        case .printingPress: [.gallery]
+        case .steamPower: [.steamEngine]
+        case .electricity: [.powerPlant]
         }
     }
 
@@ -54,7 +62,7 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
     public var age: Age {
         switch self {
         case .scholarship: .antiquity
-        case .milling, .mining, .metallurgy, .seafaring: .medieval
+        case .milling, .mining, .metallurgy, .seafaring, .cultivation: .medieval
         case .feudalOrder: .antiquity
         case .printingPress: .medieval
         case .steamPower: .renaissance
@@ -172,11 +180,15 @@ extension World {
         }
     }
 
-    /// Tech lock and terrain requirement, checked by `canPlace`. Rivals
+    /// Culture rule, tech lock and terrain requirement, checked by
+    /// `canPlace`. The culture rule uses the owner's culture; rivals
     /// don't research, so they skip the lock and the obsolete check.
     func researchOrTerrainRejection(
         _ kind: BuildingKind, tiles: [TileCoordinate], for owner: Owner = .player
     ) -> PlacementRejection? {
+        if !kind.isBuildable(in: culture(of: owner)), let kindCulture = kind.culture {
+            return .wrongCulture(kindCulture)
+        }
         if owner == .player {
             if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
                 return .locked(tech)

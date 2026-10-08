@@ -14,6 +14,8 @@ public enum PlacementRejectionText {
         case let .needsTerrain(terrain): "Needs \(terrain.rawValue) ground"
         case let .locked(tech): "Needs \(tech.displayName) research"
         case let .obsolete(tech): "Replaced by \(tech.displayName)"
+        case let .wrongCulture(culture): "Only \(culture.displayName) towns build this"
+        case let .alreadyBuilt(kind): "Only one \(BuildTool.place(kind).displayName.lowercased()) per city"
         case .foreignIsland: "Another town's island"
         case let .insufficientMaterials(shortfall):
             "Needs " + Good.allCases.compactMap { good in

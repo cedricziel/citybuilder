@@ -12,7 +12,7 @@ private struct Fixture {
 }
 
 private func houseNextToTownCenter(
-    food: Int, planks: Int, bread: Int = 0, tools: Int = 0, residents: UInt32, tier: HouseTier = .citizens
+    food: Int, planks: Int, bread: Int = 0, tools: Int = 0, beer: Int = 0, residents: UInt32, tier: HouseTier = .citizens
 ) throws -> Fixture {
     var world = World.fixtureWithTerrain(width: 12, height: 8, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
@@ -46,6 +46,7 @@ private func houseNextToTownCenter(
     _ = stock.deposit(.planks, amount: planks)
     _ = stock.deposit(.bread, amount: bread)
     _ = stock.deposit(.tools, amount: tools)
+    _ = stock.deposit(.beer, amount: beer)
     world.stockpiles[center] = stock
     var pop = HousePopulation()
     pop.tier = tier
@@ -71,7 +72,7 @@ func scenarioPopulatedHouseEatsFoodOnTheConsumptionInterval() throws {
 func scenarioUnmetConsumptionReportsTheNeedAsUnmet() throws {
     var fixture = try houseNextToTownCenter(food: 0, planks: 10, residents: 2)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.populations[fixture.house]?.foodSatisfied == false)
+    #expect(fixture.world.populations[fixture.house]?.isSatisfied(.food) == false)
 }
 
 @Test("scenario: empty house consumes nothing")
@@ -87,8 +88,8 @@ func housePopulationFromOlderSaveDecodes() throws {
     let older = Data(#"{"population":3,"foodSatisfied":true,"planksSatisfied":true,"ticksAtCurrentSatisfaction":12}"#.utf8)
     let pop = try JSONDecoder().decode(HousePopulation.self, from: older)
     #expect(pop.population == 3)
-    #expect(pop.foodShortfall == false)
-    #expect(pop.planksShortfall == false)
+    #expect(pop.isShort(.food) == false)
+    #expect(pop.isShort(.planks) == false)
 }
 
 @Test("scenario: peasants consume no planks")
@@ -145,7 +146,7 @@ func scenarioFullPeasantHouseBecomesCitizens() throws {
 
 @Test("scenario: citizens with bread become merchants")
 func scenarioCitizensWithBreadBecomeMerchants() throws {
-    var fixture = try houseNextToTownCenter(food: 20, planks: 6, bread: 6, tools: 5, residents: 6, tier: .citizens)
+    var fixture = try houseNextToTownCenter(food: 20, planks: 6, bread: 6, tools: 5, beer: 5, residents: 6, tier: .citizens)
     run(&fixture.world, ticks: 121)
     let pop = try #require(fixture.world.populations[fixture.house])
     #expect(pop.tier == .merchants)
@@ -177,8 +178,8 @@ func housePopulationWithoutTierDecodesAsPeasants() throws {
     let older = Data(#"{"population":2,"foodSatisfied":true,"planksSatisfied":false,"ticksAtCurrentSatisfaction":3}"#.utf8)
     let pop = try JSONDecoder().decode(HousePopulation.self, from: older)
     #expect(pop.tier == .peasants)
-    #expect(pop.foodSatisfied)
-    #expect(!pop.planksSatisfied)
+    #expect(pop.isSatisfied(.food))
+    #expect(!pop.isSatisfied(.planks))
 }
 
 // MARK: - Bakery

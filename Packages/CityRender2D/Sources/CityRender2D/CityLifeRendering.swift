@@ -27,7 +27,7 @@ extension IsoWorldScene {
     func updateWindowGlow(with snapshot: WorldSnapshot) {
         let glow = CGFloat(TimeOfDay(tick: snapshot.tickCount).darkness / TimeOfDay.nightDarkness)
         for (spec, node) in presentSprites {
-            guard case let .building(kind, state, _, _, _, _, _, _) = spec.kind,
+            guard case let .building(kind, state, _, _, _, _, _, _, _) = spec.kind,
                   kind == .house, state == .operational
             else { continue }
             let inhabited = snapshot.occupiedTiles[spec.coord]
@@ -37,17 +37,20 @@ extension IsoWorldScene {
             if let existing = node.childNode(withName: Self.windowGlowNodeName) {
                 existing.alpha = target
             } else if target > 0 {
-                node.addChild(makeWindowGlow(alpha: target))
+                let size = (node as? SKSpriteNode)?.size ?? CGSize(width: 64, height: 64)
+                node.addChild(makeWindowGlow(alpha: target, spriteSize: size))
             }
         }
     }
 
-    private func makeWindowGlow(alpha: CGFloat) -> SKNode {
+    /// Two warm panes on the front walls, a third of the way up the
+    /// sprite (whose anchor is its bottom centre).
+    private func makeWindowGlow(alpha: CGFloat, spriteSize: CGSize) -> SKNode {
         let glow = SKNode()
         glow.name = Self.windowGlowNodeName
-        for x in [-10.0, 8.0] {
-            let pane = SKSpriteNode(color: SKColor(red: 1, green: 0.78, blue: 0.35, alpha: 1), size: CGSize(width: 3, height: 3))
-            pane.position = CGPoint(x: x, y: 14)
+        for side in [-1.0, 1.0] {
+            let pane = SKSpriteNode(color: SKColor(red: 1, green: 0.78, blue: 0.35, alpha: 1), size: CGSize(width: 3, height: 4))
+            pane.position = CGPoint(x: side * spriteSize.width * 0.18, y: spriteSize.height * 0.3)
             pane.blendMode = .add
             glow.addChild(pane)
         }

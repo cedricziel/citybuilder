@@ -6,9 +6,12 @@ import SwiftUI
 /// SwiftUI inspector renders.
 public struct InspectorViewModel: Sendable {
     public let bullets: [String]
+    /// The gallery's commission button, nil for other buildings.
+    public let commission: CommissionButton?
 
-    public init(bullets: [String]) {
+    public init(bullets: [String], commission: CommissionButton? = nil) {
         self.bullets = bullets
+        self.commission = commission
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -26,30 +29,36 @@ public struct InspectorViewModel: Sendable {
         }
         var houseLines: [String] = []
         if let pop = snapshot.housePopulations[entityID] {
-            let needs = pop.tier.needs.map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
+            let needs = pop.tier.needs(in: snapshot.culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
+            let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
                 "Tier: \(pop.tier.displayName(in: snapshot.culture))",
-                "Residents: \(pop.population)/\(pop.capacity)",
+                "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
-            ]
+            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: snapshot.culture)
         }
-        return InspectorViewModel(bullets: [
-            "Kind: \(building.kind.rawValue)",
-            "Anchor: (\(building.anchor.x), \(building.anchor.y))",
-            "Footprint: \(spec.footprint.width)×\(spec.footprint.height)",
-            "State: \(building.state.rawValue)",
-            "Build: \(buildProgress)",
-            "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-        ] + houseLines)
+        return InspectorViewModel(
+            bullets: [
+                "Kind: \(building.kind.rawValue)",
+                "Anchor: (\(building.anchor.x), \(building.anchor.y))",
+                "Footprint: \(spec.footprint.width)×\(spec.footprint.height)",
+                "State: \(building.state.rawValue)",
+                "Build: \(buildProgress)",
+                "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
+            ] + signatureLines(for: building, in: snapshot) + houseLines,
+            commission: commissionButton(for: building, balance: snapshot.economy.balance)
+        )
     }
 }
 
 /// SwiftUI inspector panel. Hidden when there is no selection.
 public struct InspectorView: View {
     public let viewModel: InspectorViewModel
+    let onCommission: () -> Void
 
-    public init(viewModel: InspectorViewModel) {
+    public init(viewModel: InspectorViewModel, onCommission: @escaping () -> Void = {}) {
         self.viewModel = viewModel
+        self.onCommission = onCommission
     }
 
     public var body: some View {
@@ -60,9 +69,26 @@ public struct InspectorView: View {
                 ForEach(viewModel.bullets, id: \.self) { line in
                     Text(line).font(.caption.monospaced())
                 }
+                if let commission = viewModel.commission {
+                    Button(commission.title, action: onCommission)
+                        .font(.caption)
+                        .disabled(!commission.isEnabled)
+                }
             }
             .padding(12)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
+    }
+}
+
+extension InspectorViewModel {
+    /// Up to three named residents with the house's wish. Spec:
+    /// `platform-shells` / Inspector introduces residents.
+    static func residentLines(house: EntityID, population: HousePopulation, culture: Culture) -> [String] {
+        let wish = population.wish(in: culture).map { "wants \(GoodsCatalog.spec(for: $0).displayName.lowercased())" }
+            ?? "content"
+        let tier = population.tier.displayName(in: culture)
+        let count = min(3, Int(population.population))
+        return ResidentNames.names(for: house, culture: culture, count: count).map { "\($0) · \(tier) · \(wish)" }
     }
 }

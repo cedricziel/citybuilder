@@ -127,5 +127,5 @@ func scenarioSeparateRoadNetworksDoNotShareGoods() throws {
         world.tick()
     }
     let houseID = try #require(world.occupiedTiles[house])
-    #expect(world.populations[houseID]?.foodSatisfied == false)
+    #expect(world.populations[houseID]?.isSatisfied(.food) == false)
 }

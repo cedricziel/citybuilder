@@ -129,3 +129,26 @@ A producer with several inputs MUST wait until all of them are in its stockpile 
 
 - **WHEN** an operational toolsmith holds 1 iron and 1 planks and 60 ticks pass
 - **THEN** it holds 1 tools and neither iron nor planks
+
+### Requirement: Culture goods
+
+The goods catalog SHALL include hops, beer, grapes, wine, tea leaves, tea, coffee cherries and coffee.
+
+#### Scenario: Culture goods are catalogued
+
+- **WHEN** the goods catalog is read
+- **THEN** it has display names for all eight culture goods
+
+### Requirement: Workshop speed bonuses shorten cycles
+
+A workshop's extra progress from signature sources SHALL be added only on ticks where it advances, and a cycle SHALL complete when its progress reaches the recipe's cycle length, dropping any surplus. Inputs and outputs per cycle SHALL be unchanged.
+
+#### Scenario: Faster sawmill keeps its recipe
+
+- **WHEN** a sawmill next to a fuelled steam engine completes a cycle
+- **THEN** it has used 1 wood and made 1 plank
+
+#### Scenario: Stalled workshop gains nothing
+
+- **WHEN** a sawmill without wood stands next to a fuelled steam engine for 30 ticks
+- **THEN** its cycle progress is 0

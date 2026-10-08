@@ -43,6 +43,13 @@ public enum PlacementRejection: Hashable, Sendable {
     /// A later tech replaced this building. Spec: `historical-ages` /
     /// Obsolete buildings.
     case obsolete(Tech)
+    /// The building belongs to another culture. Spec: `culture-content`
+    /// / Culture-only buildings.
+    case wrongCulture(Culture)
+    /// The owner already has this one-per-city building, under
+    /// construction or operational. Spec: `buildings-and-construction`
+    /// / One monument per city.
+    case alreadyBuilt(BuildingKind)
     /// A land tile lies on an island owned by someone else, named here.
     /// Spec: `buildings-and-construction` / Placement on another owner's
     /// island is rejected.
@@ -60,6 +67,8 @@ public enum PlacementRejection: Hashable, Sendable {
         case .needsTerrain: "needs_terrain"
         case .locked: "locked"
         case .obsolete: "obsolete"
+        case .wrongCulture: "wrong_culture"
+        case .alreadyBuilt: "already_built"
         case .foreignIsland: "foreign_island"
         }
     }

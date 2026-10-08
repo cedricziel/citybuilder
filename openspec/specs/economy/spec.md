@@ -2,7 +2,6 @@
 
 ## Purpose
 TBD - created by archiving change add-mvp-foundation. Update Purpose after archive.
-
 ## Requirements
 ### Requirement: Single-currency money balance
 The player SHALL have one money balance represented as a 64-bit signed integer. All in-game currency operations MUST update this single balance.
@@ -56,3 +55,12 @@ The HUD SHALL display the current money balance at all times during gameplay. Th
 #### Scenario: HUD reflects balance change
 - **WHEN** the balance changes by any amount
 - **THEN** the HUD value updates within one render frame
+
+### Requirement: Signature buildings pay upkeep like other buildings
+
+The five age signature buildings SHALL pay their catalog upkeep each upkeep interval while operational, scaled by difficulty, whether or not they are fuelled or commissioned. A gallery commission SHALL be paid once, when it starts.
+
+#### Scenario: Cold power plant still costs upkeep
+
+- **WHEN** one upkeep interval passes on Normal with only an unfuelled power plant operational
+- **THEN** the money balance decreases by 6

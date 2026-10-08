@@ -33,6 +33,19 @@ public enum BuildTool: Hashable, Sendable {
             case .townCenter: return "Town Ctr."
             case .port: return "Port"
             case .shipyard: return "Shipyard"
+            case .hopGarden: return "Hop Garden"
+            case .brewery: return "Brewery"
+            case .vineyard: return "Vineyard"
+            case .winery: return "Winery"
+            case .teaGarden: return "Tea Garden"
+            case .teaHouse: return "Tea House"
+            case .coffeeGrove: return "Coffee Grove"
+            case .roastery: return "Roastery"
+            case .monument: return "Monument"
+            case .guildHall: return "Guild Hall"
+            case .gallery: return "Gallery"
+            case .steamEngine: return "Steam Engine"
+            case .powerPlant: return "Power Plant"
             }
         }
     }

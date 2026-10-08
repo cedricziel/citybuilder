@@ -10,6 +10,11 @@ import AppKit
 @testable import CityUI
 
 // Scenarios from openspec/changes/fix-playable-foundation/specs/platform-shells.
+//
+// add-touch-first-placement: these cover commit-on-click, the macOS rule.
+// On iOS a palette-armed building tap enters pending placement instead
+// (PendingPlacementTests), so tests that tap with a building armed switch
+// `confirmsBuildingPlacement` off to stay platform-neutral.
 
 private let enUS = Locale(identifier: "en_US")
 
@@ -53,6 +58,7 @@ func tappingOccupiedTileShowsFeedback() throws {
     let world = World.newGame()
     let townCenter = try #require(world.buildings.values.first { $0.kind == .townCenter })
     let session = GameSession(world: world)
+    session.confirmsBuildingPlacement = false
     session.selectTool(.place(.house))
 
     session.handleTap(at: townCenter.anchor)

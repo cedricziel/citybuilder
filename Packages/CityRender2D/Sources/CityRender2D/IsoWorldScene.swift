@@ -50,6 +50,15 @@ public final class IsoWorldScene: SKScene {
     /// controller (GameSession) returns the current ghost state.
     private var ghostNode: SKSpriteNode?
     public var ghostProvider: (() -> GhostState?)?
+    /// Tile the inspector has selected; a selected signature building
+    /// shows its range rings.
+    public var selectionProvider: (() -> TileCoordinate?)?
+    /// Range rings and highlights, keyed by the source they show.
+    let signatureRingLayer = SKNode()
+    var signatureRingSource: SignatureRingSource?
+    var highlightedSignatureTargets: [EntityID] {
+        signatureRingSource?.affected ?? []
+    }
 
     public struct GhostState {
         public let kind: BuildingKind
@@ -86,7 +95,9 @@ public final class IsoWorldScene: SKScene {
         addChild(cameraNode)
         camera = cameraNode
         installNightOverlay()
-        #if canImport(AppKit)
+        #if canImport(UIKit)
+        installLongPressRecognizer(on: view)
+        #elseif canImport(AppKit)
         // mouseMoved only fires when the host window allows it; opt in here
         // so hover-driven ghost preview works on macOS.
         view.window?.acceptsMouseMovedEvents = true
@@ -150,11 +161,7 @@ public final class IsoWorldScene: SKScene {
     }
 
     private func tile(forScene location: CGPoint, mapWidth: Int, mapHeight: Int) -> TileCoordinate? {
-        let coord = IsoMath.nearestTile(toScreenPoint: location)
-        guard coord.x >= 0, coord.x < mapWidth, coord.y >= 0, coord.y < mapHeight else {
-            return nil
-        }
-        return coord
+        InputTranslator.tile(atScreenPoint: location, mapWidth: mapWidth, mapHeight: mapHeight)
     }
 
     private func dispatchTap(at sceneLocation: CGPoint) {
@@ -162,6 +169,15 @@ public final class IsoWorldScene: SKScene {
               let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
         else { return }
         intentSink?(.tapTile(coord))
+    }
+
+    /// Long-press recognizer callback (`.began`): open the tile menu for
+    /// the tile under the finger.
+    func dispatchLongPress(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot(),
+              let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
+        else { return }
+        intentSink?(.longPressTile(coord))
     }
 
     private func dispatchDrag(at sceneLocation: CGPoint) {
@@ -209,6 +225,7 @@ public final class IsoWorldScene: SKScene {
         reconcileCarriers(with: snapshot)
         reconcileStrollers(with: snapshot)
         reconcileGhost()
+        reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
     }
 
@@ -403,6 +420,7 @@ public struct IsoWorldView: View {
         snapshotProvider: @escaping @MainActor @Sendable () -> WorldSnapshot?,
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
+        selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
         cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
     ) {
         let prepared = IsoWorldScene()
@@ -417,6 +435,9 @@ public struct IsoWorldView: View {
         }
         if let ghostProvider {
             prepared.ghostProvider = { ghostProvider() }
+        }
+        if let selectionProvider {
+            prepared.selectionProvider = { selectionProvider() }
         }
         if let cameraListener {
             prepared.cameraListener = { tile in cameraListener(tile) }

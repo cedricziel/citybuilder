@@ -32,21 +32,11 @@ func inspectorShowsHouseTierAndNeeds() throws {
     var pop = HousePopulation()
     pop.tier = .citizens
     pop.population = 3
-    pop.foodSatisfied = true
-    pop.planksSatisfied = false
+    pop.setSatisfied(.food, true)
+    pop.setSatisfied(.planks, false)
     let snapshot = withHousePopulations(world.snapshot(), [house: pop])
     let lines = InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings).bullets
     #expect(lines.contains("Tier: Citizens"))
     #expect(lines.contains("Residents: 3/6"))
     #expect(lines.contains("Needs: food ✓ · planks ✗"))
-}
-
-private func withHousePopulations(_ base: WorldSnapshot, _ pops: [EntityID: HousePopulation]) -> WorldSnapshot {
-    WorldSnapshot(
-        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: base.mapWidth, mapHeight: base.mapHeight,
-        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: base.carriers,
-        ships: base.ships, routes: base.routes, economy: base.economy, totalPopulation: base.totalPopulation, camera: base.camera,
-        islandSummaries: base.islandSummaries, roadDisconnectedBuildings: base.roadDisconnectedBuildings,
-        housePopulations: pops
-    )
 }

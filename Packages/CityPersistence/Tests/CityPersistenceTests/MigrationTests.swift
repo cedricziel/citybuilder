@@ -17,7 +17,7 @@ private func makeV1Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: v2) as? [String: Any] ?? [:]
     json["version"] = 1
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "layout")
     inner.removeValue(forKey: "islands")
     inner.removeValue(forKey: "ships")
@@ -217,16 +217,21 @@ func requireDeterministicHashing() throws {
     )
 }
 
-/// Removes what v9 (`add-rival-towns`) added, for payloads of older
-/// versions: the world's `rivals` and every building and ship `owner`.
-/// Buildings and ships encode as alternating key/value arrays.
-func stripRivalKeys(_ world: inout [String: Any]) {
+/// Removes what came after v8, for payloads of older versions: the
+/// world's `rivals` and every building and ship `owner` (v9,
+/// `add-rival-towns`), and the building fields `add-age-signatures`
+/// added behind tolerant decoders. Buildings and ships encode as
+/// alternating key/value arrays.
+func stripKeysNewerThanV8(_ world: inout [String: Any]) {
     world.removeValue(forKey: "rivals")
+    let newerKeys = ["owner", "projectStages", "fuelled", "commissionTicksLeft"]
     for key in ["buildings", "ships"] {
         guard var entries = world[key] as? [Any] else { continue }
         for index in stride(from: 1, to: entries.count, by: 2) {
             guard var entry = entries[index] as? [String: Any] else { continue }
-            entry.removeValue(forKey: "owner")
+            for newer in newerKeys {
+                entry.removeValue(forKey: newer)
+            }
             entries[index] = entry
         }
         world[key] = entries
@@ -298,7 +303,7 @@ private func makeV2Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 2
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     if var buildings = inner["buildings"] as? [Any] {
         for idx in stride(from: 1, to: buildings.count, by: 2) {
             if var building = buildings[idx] as? [String: Any] {
@@ -326,7 +331,7 @@ private func makeV3Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 3
     var inner = json["world"] as? [String: Any] ?? [:]
-    stripRivalKeys(&inner)
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "research")
     inner.removeValue(forKey: "calendar")
     inner.removeValue(forKey: "culture")

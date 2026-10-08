@@ -18,26 +18,31 @@ struct CitybuilderiOSApp: App {
     init() {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
-        SnapshotRendererRegistry.shared.factory = { [audio] provider, tapSink, dragSink, hoverSink, ghostProvider in
-            AnyView(
-                IsoWorldView(
-                    snapshotProvider: provider,
-                    intentSink: { intent in
-                        switch intent {
-                        case let .tapTile(coord): tapSink(coord)
-                        case let .dragTile(coord): dragSink(coord)
-                        case let .hoverTile(coord): hoverSink(coord)
-                        case .panCamera, .pinchZoom: break
-                        }
-                    },
-                    ghostProvider: {
-                        guard let state = ghostProvider() else { return nil }
-                        return IsoWorldScene.GhostState(kind: state.kind, tile: state.tile, valid: state.valid)
-                    },
-                    cameraListener: { tile in audio.setListenerPosition(tile) }
+        SnapshotRendererRegistry.shared
+            .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider in
+                AnyView(
+                    IsoWorldView(
+                        snapshotProvider: provider,
+                        intentSink: { intent in
+                            switch intent {
+                            case let .tapTile(coord): tapSink(coord)
+                            case let .dragTile(coord): dragSink(coord)
+                            case let .hoverTile(coord): hoverSink(coord)
+                            case let .longPressTile(coord): longPressSink(coord)
+                            // The scene never emits these; the placement HUD drives
+                            // the session directly.
+                            case .panCamera, .pinchZoom, .confirmPlacement, .cancelPlacement, .nudgePlacement: break
+                            }
+                        },
+                        ghostProvider: {
+                            guard let state = ghostProvider() else { return nil }
+                            return IsoWorldScene.GhostState(kind: state.kind, tile: state.tile, valid: state.valid)
+                        },
+                        selectionProvider: selectionProvider,
+                        cameraListener: { tile in audio.setListenerPosition(tile) }
+                    )
                 )
-            )
-        }
+            }
     }
 
     var body: some Scene {

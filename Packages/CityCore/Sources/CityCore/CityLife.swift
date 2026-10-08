@@ -65,17 +65,31 @@ public enum ResidentNames {
         + "Omar Rania Samir Tariq Yasmin Zayd Hala Idris Leena Nabil Salma Yusuf").split(separator: " ").map(String.init)
 }
 
-public extension World {
+public extension ResidentNames {
     /// `count` distinct names for a house, chosen from its entity ID so
     /// they survive saves and launches.
-    func residentNames(for house: EntityID, count: Int) -> [String] {
-        let names = ResidentNames.list(for: culture)
-        var rng = DeterministicRNG(seed: UInt64(house.raw) &* 0x9E37_79B9_7F4A_7C15 &+ seed)
+    static func names(for house: EntityID, culture: Culture, count: Int) -> [String] {
+        let names = list(for: culture)
+        var rng = DeterministicRNG(seed: UInt64(house.raw) &* 0x9E37_79B9_7F4A_7C15)
         var picked: [String] = []
         while picked.count < min(count, names.count) {
             let name = names[Int(rng.next() % UInt64(names.count))]
             if !picked.contains(name) { picked.append(name) }
         }
         return picked
+    }
+}
+
+public extension World {
+    func residentNames(for house: EntityID, count: Int) -> [String] {
+        ResidentNames.names(for: house, culture: culture, count: count)
+    }
+}
+
+public extension HousePopulation {
+    /// The first unmet need of the tier in `culture`, or nil when content.
+    /// Spec: `city-life` / Residents have wishes.
+    func wish(in culture: Culture) -> Good? {
+        tier.needs(in: culture).first { !isSatisfied($0) }
     }
 }

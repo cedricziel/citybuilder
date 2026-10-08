@@ -6,9 +6,9 @@ import Foundation
 extension World {
     static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
 
-    mutating func runProductionSystem(events: inout [WorldEvent]) {
+    mutating func runProductionSystem(signatureSources: [Building], events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .operational {
-            guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
+            guard let recipe = Self.activeRecipe(of: building) else { continue }
             var progress = productions[id] ?? ProductionProgress()
             var stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
 
@@ -48,7 +48,7 @@ extension World {
             }
             // Spec: `calendar-and-events` / Winter slows crops.
             if !(isCropWinter && Self.seasonalCrops.contains(building.kind) && tickCount.isMultiple(of: 2)) {
-                progress.ticksThisCycle &+= 1
+                progress.ticksThisCycle &+= 1 + workshopBonus(for: building, sources: signatureSources)
             }
             if progress.ticksThisCycle >= recipe.cycleTicks {
                 // Consume inputs from stockpile.
@@ -59,12 +59,7 @@ extension World {
                 for (good, amount) in recipe.outputs {
                     stockpile.deposit(good, amount: amount)
                 }
-                // Lumberjack also clears a forest tile.
-                if building.kind == .lumberjackHut {
-                    if let tile = firstForestInCatchment(anchor: building.anchor, footprint: footprint) {
-                        terrainGrid[tile.y * mapWidth + tile.x] = .grass
-                    }
-                }
+                clearHarvestedForest(after: building, footprint: footprint)
                 // Shipyard emits a Ship entity on cycle completion.
                 // Spec: `port-and-shipyard` / Shipyard emits ship on
                 // recipe completion. Persist the stockpile mutation
@@ -76,12 +71,23 @@ extension World {
                     // Re-fetch stockpile in case emitShip mutated it.
                     stockpile = stockpiles[id] ?? stockpile
                 }
+                if building.kind == .monument {
+                    completeProjectStage(of: id, events: &events)
+                }
                 progress.ticksThisCycle = 0
                 events.append(.productionCycleCompleted(producer: id, kind: building.kind))
             }
             productions[id] = progress
             stockpiles[id] = stockpile
         }
+    }
+
+    /// A lumberjack's completed cycle clears a forest tile.
+    private mutating func clearHarvestedForest(after building: Building, footprint: Footprint) {
+        guard building.kind == .lumberjackHut,
+              let tile = firstForestInCatchment(anchor: building.anchor, footprint: footprint)
+        else { return }
+        terrainGrid[tile.y * mapWidth + tile.x] = .grass
     }
 
     /// Carrier lifecycle: advance in-flight carriers along their path,
@@ -367,7 +373,7 @@ extension World {
             for (id, pop) in populations {
                 taxes[owner(of: id), default: 0] += Int64(pop.population) * pop.tier.taxPerResident * Economy.taxPerPopUnit
             }
-            let amount = taxes.removeValue(forKey: .player) ?? 0
+            let amount = taxWithMonumentBonus(taxes.removeValue(forKey: .player) ?? 0)
             economy.credit(amount)
             creditRivals(taxes)
             // Only emit when actual money flowed — `taxesCollected` is a

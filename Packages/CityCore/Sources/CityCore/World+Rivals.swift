@@ -17,6 +17,12 @@ public extension World {
         buildings[id]?.owner ?? .player
     }
 
+    /// The owner's culture: the world's for the player, the rival's own
+    /// otherwise.
+    func culture(of owner: Owner) -> Culture {
+        owner.rivalID.flatMap { rival($0)?.culture } ?? culture
+    }
+
     /// Goods buffers belonging to `owner`, in entity ID order.
     func goodsBuffers(of owner: Owner) -> [Building] {
         buildings.values
