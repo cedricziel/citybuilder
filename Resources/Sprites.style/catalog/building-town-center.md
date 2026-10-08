@@ -1,3 +1,6 @@
+---
+operational = "derived"
+---
 ## Function
 
 The first building placed on an island — the population and economic
@@ -40,3 +43,8 @@ Two loops: construction (one-shot) and flag-wave (forever).
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Flag-wave: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+
+Operational frames are derived locally from the base sprite (front matter
+`operational = "derived"`): the building stays pixel-identical and a chimney
+smoke plume rises over the roof, so the loop never swaps one drawing for
+another. The per-frame roles above describe the original AI frames.

@@ -1,3 +1,6 @@
+---
+operational = "derived"
+---
 ## Function
 
 Shore-placement ship producer. Consumes wood + planks from the land
@@ -36,3 +39,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Hull work: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+
+Operational frames are derived locally from the base sprite (front matter
+`operational = "derived"`): the building stays pixel-identical and a chimney
+smoke plume rises over the roof, so the loop never swaps one drawing for
+another. The per-frame roles above describe the original AI frames.

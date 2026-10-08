@@ -46,9 +46,12 @@ private func waterFrame(glintPhase: Int) -> RGBAImage {
     }
 }
 
-private func houseSprite() -> RGBAImage {
+private func houseSprite(shiftX: Int = 0, smoke: Bool = false) -> RGBAImage {
     image { x, y in
-        guard (20 ..< 44).contains(x), (4 ..< 28).contains(y) else { return nil }
+        if smoke, (34 ..< 37).contains(x), (0 ..< 4).contains(y) {
+            return glint
+        }
+        guard (20 + shiftX ..< 44 + shiftX).contains(x), (4 ..< 28).contains(y) else { return nil }
         return y < 14 ? roof : wall
     }
 }
@@ -160,7 +163,31 @@ struct SpriteContentGateTests {
 
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
 
-        #expect(failures == [.init(file: "building-sawmill-operational-0.png", reason: .frameIncoherent)])
+        #expect(failures.contains(.init(file: "building-sawmill-operational-0.png", reason: .frameIncoherent)))
+    }
+
+    @Test("scenario: content gate rejects a shifted operational frame")
+    func rejectsShiftedOperationalFrame() throws {
+        let root = temporaryResources()
+        let atlas = root.appendingPathComponent("Buildings.atlas")
+        try writePNG(houseSprite(), to: atlas.appendingPathComponent("building-sawmill.png"))
+        try writePNG(houseSprite(shiftX: -6), to: atlas.appendingPathComponent("building-sawmill-operational-0.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
+
+        #expect(failures == [.init(file: "building-sawmill-operational-0.png", reason: .frameMisaligned)])
+    }
+
+    @Test("scenario: content gate accepts smoke above the roof")
+    func acceptsSmokeAboveRoof() throws {
+        let root = temporaryResources()
+        let atlas = root.appendingPathComponent("Buildings.atlas")
+        try writePNG(houseSprite(), to: atlas.appendingPathComponent("building-sawmill.png"))
+        try writePNG(houseSprite(smoke: true), to: atlas.appendingPathComponent("building-sawmill-operational-0.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
+
+        #expect(failures.isEmpty)
     }
 
     @Test("scenario: verification fails on a content defect even when bytes reproduce")

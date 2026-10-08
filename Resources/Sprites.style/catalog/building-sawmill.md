@@ -1,3 +1,6 @@
+---
+operational = "derived"
+---
 ## Function
 
 Wood-to-planks producer. A sawmill consumes wood from adjacent storage
@@ -40,3 +43,8 @@ Two loops: construction (one-shot) and operational (forever, 4 frames).
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)` → `(1, 2)` → `(1, 3)`. All four
   frames are placed in adjacent cells on row 1.
+
+Operational frames are derived locally from the base sprite (front matter
+`operational = "derived"`): the building stays pixel-identical and a chimney
+smoke plume rises over the roof, so the loop never swaps one drawing for
+another. The per-frame roles above describe the original AI frames.

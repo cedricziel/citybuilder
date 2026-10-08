@@ -8,12 +8,16 @@ import ImageIO
 public enum SpriteContentGate {
     public static let minimumTerrainCoverage = 0.90
     public static let maximumOutsideRatio = 0.02
+    /// Allowed drift, in pixels, of an operational frame's left, right
+    /// and bottom edges from its base sprite's.
+    public static let silhouetteTolerance = 2
 
     public enum Reason: String, Sendable {
         case terrainCoverageBelowThreshold = "terrain_coverage_below_threshold"
         case terrainOutsideDiamond = "terrain_outside_diamond"
         case frameEmpty = "frame_empty"
         case frameIncoherent = "frame_incoherent"
+        case frameMisaligned = "frame_misaligned"
     }
 
     public struct Failure: Equatable, Sendable {
@@ -53,6 +57,9 @@ public enum SpriteContentGate {
                 }
                 if isIncoherent(name, image, in: images, maxDistance: coherenceMaxDistance) {
                     failures.append(.init(file: name, reason: .frameIncoherent))
+                }
+                if isMisaligned(name, in: images) {
+                    failures.append(.init(file: name, reason: .frameMisaligned))
                 }
             }
         }
@@ -111,6 +118,16 @@ public enum SpriteContentGate {
               base.opaquePixelCount > 0
         else { return false }
         return PaletteHistogram(of: image).distance(to: PaletteHistogram(of: base)) > maxDistance
+    }
+
+    private static func isMisaligned(_ name: String, in images: [String: RGBAImage]) -> Bool {
+        guard name.contains("-operational-"), let baseName = coherenceBase(for: name),
+              let frameBox = images[name]?.opaqueBounds, let baseBox = images[baseName]?.opaqueBounds
+        else { return false }
+        let tolerance = silhouetteTolerance
+        return abs(frameBox.minX - baseBox.minX) > tolerance
+            || abs(frameBox.maxX - baseBox.maxX) > tolerance
+            || abs(frameBox.maxY - baseBox.maxY) > tolerance
     }
 
     private static func flagDistance(_ arguments: [String]) -> Double? {
@@ -194,6 +211,17 @@ public struct RGBAImage: Sendable {
         rgba[(y * width + x) * 4 + 3]
     }
 
+    /// Inclusive pixel bounds of the opaque region, or nil when empty.
+    public var opaqueBounds: PixelBounds? {
+        var bounds: PixelBounds?
+        for y in 0 ..< height {
+            for x in 0 ..< width where alpha(x: x, y: y) >= Self.opaqueAlpha {
+                bounds = bounds?.including(x: x, y: y) ?? PixelBounds(minX: x, minY: y, maxX: x, maxY: y)
+            }
+        }
+        return bounds
+    }
+
     public var opaquePixelCount: Int {
         stride(from: 3, to: rgba.count, by: 4).reduce(0) { $0 + (rgba[$1] >= Self.opaqueAlpha ? 1 : 0) }
     }
@@ -208,6 +236,17 @@ public struct RGBAImage: Sendable {
             }
         }
         return out
+    }
+}
+
+public struct PixelBounds: Equatable, Sendable {
+    public let minX: Int
+    public let minY: Int
+    public let maxX: Int
+    public let maxY: Int
+
+    func including(x: Int, y: Int) -> PixelBounds {
+        PixelBounds(minX: min(minX, x), minY: min(minY, y), maxX: max(maxX, x), maxY: max(maxY, y))
     }
 }
 
