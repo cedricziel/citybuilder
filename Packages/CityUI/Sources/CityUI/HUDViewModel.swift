@@ -12,6 +12,9 @@ public final class HUDViewModel {
     /// water (keeps the previous island until the camera reaches a new
     /// one); nil only when the camera has never been on any island.
     public var currentIsland: IslandSummary?
+    /// Season and year, such as "Spring 1200". Spec: `platform-shells` /
+    /// HUD shows the date.
+    public var dateText: String = ""
 
     /// How long a placement rejection stays on screen.
     public static let rejectionDisplaySeconds: TimeInterval = 2.5
@@ -32,6 +35,7 @@ public final class HUDViewModel {
     public func apply(_ snapshot: WorldSnapshot) {
         money = snapshot.economy.balance
         population = snapshot.totalPopulation
+        dateText = snapshot.date.displayText
         currentIsland = resolveIsland(in: snapshot) ?? currentIsland.flatMap {
             // Sticky over water: keep showing the previous island, but
             // refresh its aggregates so any new deposits land in the

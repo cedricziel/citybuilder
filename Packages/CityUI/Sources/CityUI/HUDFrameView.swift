@@ -13,6 +13,12 @@ public struct HUDFrameView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if !viewModel.dateText.isEmpty {
+                Label(viewModel.dateText, systemImage: "calendar")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Date: \(viewModel.dateText)")
+            }
             HStack(spacing: 16) {
                 badge(label: "Money", value: viewModel.formattedMoney)
                 badge(label: "Population", value: viewModel.formattedPopulation)

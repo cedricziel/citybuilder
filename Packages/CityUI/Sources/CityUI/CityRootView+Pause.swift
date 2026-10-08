@@ -5,8 +5,6 @@ import SwiftUI
 /// file stays under SwiftLint's 500-line ceiling. Spec:
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
-    /// Pause button shown in the HUD top-right cluster. Glyph swaps
-    /// with `session.isPaused`; ESC and Cmd-. mirror the tap.
     var researchButton: some View {
         Button {
             researchPresented = true
@@ -20,6 +18,21 @@ extension CityRootView {
         .accessibilityLabel("Research")
     }
 
+    var settingsButton: some View {
+        Button {
+            settingsPresented = true
+        } label: {
+            Image(systemName: "gearshape.fill")
+                .imageScale(.large)
+                .padding(8)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Settings")
+    }
+
+    /// Pause button shown in the HUD top-right cluster. Glyph swaps
+    /// with `session.isPaused`; ESC and Cmd-. mirror the tap.
     var pauseButton: some View {
         Button {
             session.isPaused.toggle()

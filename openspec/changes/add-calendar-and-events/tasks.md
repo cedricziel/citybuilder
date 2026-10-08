@@ -11,8 +11,8 @@
 
 ## 3. M3 — UI and rendering
 
-- [ ] 3.1 Tests-first: translate `#### Scenario: HUD date text`, `#### Scenario: Banner appears and expires`, `#### Scenario: Winter tints grass` and `#### Scenario: Summer has no tint` into failing tests. Confirm red.
-- [ ] 3.2 Implement to green: HUD date label, event banner, seasonal terrain tint (D6, D7).
+- [x] 3.1 Tests-first: translate `#### Scenario: HUD date text`, `#### Scenario: Banner appears and expires`, `#### Scenario: Winter tints grass` and `#### Scenario: Summer has no tint` into failing tests. Confirm red.
+- [x] 3.2 Implement to green: HUD date label, event banner, seasonal terrain tint (D6, D7).
 
 ## 4. M4 — Verification
 
