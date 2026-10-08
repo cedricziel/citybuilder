@@ -5,6 +5,23 @@ import SwiftUI
 /// file stays under SwiftLint's 500-line ceiling. Spec:
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
+    /// Round HUD buttons in a 2×2 grid so the stats panel keeps its width
+    /// on a phone: pause and settings on top, research and goals below.
+    var hudButtons: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                pauseButton
+                if settingsContent != nil {
+                    settingsButton
+                }
+            }
+            HStack(spacing: 6) {
+                researchButton
+                goalsButton
+            }
+        }
+    }
+
     var researchButton: some View {
         Button {
             researchPresented = true

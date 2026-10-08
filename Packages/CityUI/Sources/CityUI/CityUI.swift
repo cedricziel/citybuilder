@@ -49,14 +49,9 @@ public struct CityRootView: View {
                 .simultaneousGesture(panGesture, including: Self.panGestureMask(for: session.selectedTool))
                 .simultaneousGesture(zoomGesture)
             VStack {
-                HStack {
+                HStack(alignment: .top) {
                     HUDFrameView(viewModel: session.hud)
-                    goalsButton
-                    researchButton
-                    pauseButton
-                    if settingsContent != nil {
-                        settingsButton
-                    }
+                    hudButtons
                 }
                 BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isObsolete) { tool in
                     session.selectTool(tool)
