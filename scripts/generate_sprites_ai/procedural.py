@@ -24,7 +24,7 @@ TILE = (64, 32)
 from .palette import (  # noqa: E402
     CREAM, CREVICE, DARK_LOAM, DARK_TIMBER, DEEP_WATER, GLINT, HIGHLIGHT_WATER, LEAF,
     LIGHT_LOAM, LIGHT_STONE, MEDIUM_LOAM, MID_WATER, OUTLINE, PALE_SAND, PINE, SAND,
-    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, TERRACOTTA, THATCH, TIMBER, Rgb,
+    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, SUN_TERRACOTTA, TERRACOTTA, THATCH, TIMBER, Rgb,
 )
 
 WHEAT = (0xD4, 0xA8, 0x6A)
@@ -82,15 +82,34 @@ def _clip_to_diamond(img: Image.Image) -> Image.Image:
 
 # ---------------- grass ----------------
 
-def _grass(wind: int) -> Image.Image:
+# Seasonal looks for vegetation (spec `rendering-2_5d` / Terrain shows
+# the season): None is spring and summer.
+_GRASS_TONES: dict[str | None, tuple[Rgb, Rgb, Rgb]] = {
+    # (mid, shadow, highlight)
+    None: (LEAF, SHADOW_GREEN, SUN_GRASS),
+    "autumn": (LIGHT_LOAM, SHADOW_GREEN, WHEAT),
+    "winter": (CREAM, GLINT, CREAM),
+}
+
+
+def _grass(wind: int, season: str | None = None) -> Image.Image:
+    mid, shadow, light = _GRASS_TONES[season]
+
     def paint(x: int, y: int) -> Rgb:
         n = _hash01(x, y, 11)
+        if season == "winter":
+            # Snow with blue hollows and the odd grass tuft poking through.
+            if n < 0.04:
+                return SHADOW_GREEN
+            return GLINT if n < 0.22 else CREAM
         if n < 0.16:
-            return SHADOW_GREEN
+            return shadow
+        if season == "autumn" and _hash01(x, y, 14) > 0.55:
+            return LEAF
         # Sunlit blade tips sway with the wind frame; shadows stay put.
         if _hash01(x + wind, y, 12) > 0.90:
-            return SUN_GRASS
-        return LEAF
+            return light
+        return mid
 
     img = _paint_diamond(paint)
     px = img.load()
@@ -100,24 +119,37 @@ def _grass(wind: int) -> Image.Image:
         for x in range(width):
             inside = in_diamond(x, y, width, height) and in_diamond(x, y + 1, width, height)
             if inside and _hash01(x + wind, y, 13) > 0.975:
-                px[x, y] = (*SUN_GRASS, 255)
-                px[x, y + 1] = (*SHADOW_GREEN, 255)
-    return _shade_south_rims(img, SHADOW_GREEN)
+                if season == "winter":
+                    px[x, y] = (*SHADOW_GREEN, 255)
+                    px[x, y + 1] = (*GLINT, 255)
+                else:
+                    px[x, y] = (*light, 255)
+                    px[x, y + 1] = (*shadow, 255)
+    return _shade_south_rims(img, GLINT if season == "winter" else shadow)
 
 
 # ---------------- forest ----------------
 
 _TREES = [(22, 12), (36, 9), (45, 16), (29, 19), (39, 21), (17, 17)]
 
+# Canopy tones: (sunlit, mid, alternate mid, shade).
+_CANOPY: dict[str | None, tuple[Rgb, Rgb, Rgb, Rgb]] = {
+    None: (SUN_GRASS, LEAF, SHADOW_GREEN, SHADOW_GREEN),
+    "autumn": (WHEAT, SUN_TERRACOTTA, THATCH, TERRACOTTA),
+    "winter": (CREAM, SHADOW_GREEN, SHADOW_GREEN, DARK_LOAM),
+}
 
-def _tree(px, cx: int, cy: int) -> None:
+
+def _tree(px, cx: int, cy: int, season: str | None = None) -> None:
     width, height = TILE
+    lit, mid, alt, shade = _CANOPY[season]
     # Ground shadow falls south-east.
+    ground_shadow = GLINT if season == "winter" else DARK_LOAM
     for dy in range(-1, 3):
         for dx in range(-3, 5):
             x, y = cx + dx + 2, cy + dy + 4
             if (dx / 4) ** 2 + (dy / 2) ** 2 <= 1 and in_diamond(x, y, width, height):
-                px[x, y] = (*DARK_LOAM, 255)
+                px[x, y] = (*ground_shadow, 255)
     px[cx, cy + 3] = (*DARK_TIMBER, 255)
     px[cx, cy + 4] = (*DARK_TIMBER, 255)
     rx, ry = 4.5, 3.5
@@ -130,17 +162,25 @@ def _tree(px, cx: int, cy: int) -> None:
             if d > 0.72 and (dx > 0 or dy > 0):
                 colour = OUTLINE
             elif dx + dy < -3:
-                colour = SUN_GRASS
+                colour = lit
+            elif season == "winter" and dy < -1 and _hash01(x, y, 22) > 0.35:
+                colour = CREAM  # snow settled on the upper boughs
             elif dx + dy > 2:
-                colour = SHADOW_GREEN
+                colour = shade
             else:
-                colour = LEAF if _hash01(x, y, 21) > 0.25 else SHADOW_GREEN
+                colour = mid if _hash01(x, y, 21) > 0.25 else alt
             px[x, y] = (*colour, 255)
 
 
-def _forest() -> Image.Image:
+def _forest(season: str | None = None) -> Image.Image:
     def paint(x: int, y: int) -> Rgb:
         n = _hash01(x, y, 20)
+        if season == "winter":
+            return GLINT if n < 0.30 else CREAM
+        if season == "autumn":
+            if n < 0.10:
+                return DARK_LOAM
+            return THATCH if n < 0.45 else (LIGHT_LOAM if n < 0.80 else SHADOW_GREEN)
         if n < 0.10:
             return DARK_LOAM
         return SHADOW_GREEN if n < 0.62 else LEAF
@@ -148,8 +188,9 @@ def _forest() -> Image.Image:
     img = _paint_diamond(paint)
     px = img.load()
     for cx, cy in sorted(_TREES, key=lambda t: t[1]):
-        _tree(px, cx, cy)
-    return _clip_to_diamond(_shade_south_rims(img, DARK_LOAM))
+        _tree(px, cx, cy, season)
+    rim = GLINT if season == "winter" else DARK_LOAM
+    return _clip_to_diamond(_shade_south_rims(img, rim))
 
 
 # ---------------- beach ----------------
@@ -376,6 +417,10 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
     "terrain-grass-0": lambda: _grass(0),
     "terrain-grass-1": lambda: _grass(3),
     "terrain-forest": _forest,
+    **{f"terrain-grass-{season}": (lambda season=season: _grass(0, season)) for season in ("autumn", "winter")},
+    **{f"terrain-grass-{season}-{i}": (lambda season=season, i=i: _grass(3 * i, season))
+       for season in ("autumn", "winter") for i in (0, 1)},
+    **{f"terrain-forest-{season}": (lambda season=season: _forest(season)) for season in ("autumn", "winter")},
     "terrain-beach": lambda: _beach(0),
     "terrain-beach-0": lambda: _beach(0),
     "terrain-beach-1": lambda: _beach(1),
