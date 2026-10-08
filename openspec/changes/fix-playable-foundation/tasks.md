@@ -51,7 +51,7 @@
 
 ## 5. M5 — Tooling and final verification
 
-- [ ] 5.1 Makefile: resolve `DESTINATION_IOS` to the first available iPhone simulator via `xcrun simctl list devices available`, falling back to an explicit `IOS_SIM` variable.
+- [x] 5.1 Makefile: resolve `DESTINATION_IOS` to the first available iPhone simulator via `xcrun simctl list devices available`, falling back to an explicit `IOS_SIM` variable.
 - [ ] 5.2 Final runtime pass: build both schemes, then play the iOS build for 5 in-game minutes from a new game (lumberjack → farm → house → sawmill → second house). Attach screenshots to the PR.
 - [ ] 5.3 Mac runtime pass: launch the Mac build, place a farm with the mouse, and confirm the icons and rejection message match iOS — DEFERRED (requires interactive Mac session)
 - [ ] 5.4 Run `make lint && make format`, then `openspec validate fix-playable-foundation --strict`.

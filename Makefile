@@ -5,7 +5,12 @@ PROJECT := Citybuilder.xcodeproj
 SCHEME_IOS := CitybuilderiOS
 SCHEME_MAC := CitybuilderMac
 SCHEME_CLI := citybuilder-cli
-DESTINATION_IOS := platform=iOS Simulator,name=iPhone 16
+# First available iPhone simulator; override with `make build IOS_SIM="iPhone 17"`.
+IOS_SIM ?= $(shell xcrun simctl list devices available 2>/dev/null | grep -m1 'iPhone' | sed -E 's/^ +//; s/ [(][0-9A-F-]+[)].*//')
+DESTINATION_IOS := platform=iOS Simulator,name=$(IOS_SIM)
+# `xcrun swift` picks the toolchain that matches the active Xcode SDK; a
+# bare `swift` on PATH may be a different toolchain that fails to build.
+SWIFT ?= xcrun swift
 DESTINATION_MAC := platform=macOS
 CITYCORE := Packages/CityCore
 
@@ -33,21 +38,21 @@ generate:
 build: generate
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_IOS) -destination '$(DESTINATION_IOS)' build | xcbeautify || true
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_MAC) -destination '$(DESTINATION_MAC)' build | xcbeautify || true
-	swift build --package-path $(CITYCORE)
+	$(SWIFT) build --package-path $(CITYCORE)
 
 test:
-	swift test --package-path $(CITYCORE) --enable-code-coverage
-	swift test --package-path Packages/CityPersistence --enable-code-coverage
-	swift test --package-path Packages/CityUI --enable-code-coverage
-	swift test --package-path Packages/CityRender2D --enable-code-coverage
-	swift test --package-path Packages/CityRender3D --enable-code-coverage
-	swift test --package-path Packages/CityAudio --enable-code-coverage
+	$(SWIFT) test --package-path $(CITYCORE) --enable-code-coverage
+	$(SWIFT) test --package-path Packages/CityPersistence --enable-code-coverage
+	$(SWIFT) test --package-path Packages/CityUI --enable-code-coverage
+	$(SWIFT) test --package-path Packages/CityRender2D --enable-code-coverage
+	$(SWIFT) test --package-path Packages/CityRender3D --enable-code-coverage
+	$(SWIFT) test --package-path Packages/CityAudio --enable-code-coverage
 
 test-coverage: test
 	./scripts/check-coverage.sh
 
 test-scenarios:
-	swift ./scripts/check-scenario-coverage.swift
+	$(SWIFT) ./scripts/check-scenario-coverage.swift
 
 test-citycore-framework-free:
 	./scripts/check-no-apple-ui-imports.sh
@@ -56,7 +61,7 @@ test-cli-no-audio:
 	./scripts/check-cli-no-audio.sh
 
 test-audio-manifest:
-	swift ./scripts/check-audio-manifest.swift
+	$(SWIFT) ./scripts/check-audio-manifest.swift
 
 lint:
 	@if find Apps CLI Packages -name '*.swift' -print -quit 2>/dev/null | grep -q .; then \
@@ -102,7 +107,7 @@ sprites-verify:
 	$(MAKE) sprites-content
 
 sprites-content:
-	xcrun swift run -q --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources
+	$(SWIFT) run -q --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)
