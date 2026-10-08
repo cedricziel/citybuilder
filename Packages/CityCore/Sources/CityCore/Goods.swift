@@ -7,6 +7,12 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case planks
     case food
     case bread
+    case grain
+    case flour
+    case ore
+    case charcoal
+    case iron
+    case tools
 }
 
 /// Goods catalog metadata. Unit / display name. Lightweight today; expands
@@ -28,7 +34,13 @@ public enum GoodsCatalog {
         .wood: GoodSpec(good: .wood, displayName: "Wood", stackUnit: "logs"),
         .planks: GoodSpec(good: .planks, displayName: "Planks", stackUnit: "bundles"),
         .food: GoodSpec(good: .food, displayName: "Food", stackUnit: "rations"),
-        .bread: GoodSpec(good: .bread, displayName: "Bread", stackUnit: "loaves")
+        .bread: GoodSpec(good: .bread, displayName: "Bread", stackUnit: "loaves"),
+        .grain: GoodSpec(good: .grain, displayName: "Grain", stackUnit: "sheaves"),
+        .flour: GoodSpec(good: .flour, displayName: "Flour", stackUnit: "sacks"),
+        .ore: GoodSpec(good: .ore, displayName: "Ore", stackUnit: "loads"),
+        .charcoal: GoodSpec(good: .charcoal, displayName: "Charcoal", stackUnit: "baskets"),
+        .iron: GoodSpec(good: .iron, displayName: "Iron", stackUnit: "bars"),
+        .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets")
     ]
 
     public static var all: [GoodSpec] {

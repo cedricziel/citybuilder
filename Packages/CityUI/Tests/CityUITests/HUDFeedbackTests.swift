@@ -121,3 +121,8 @@ func scenarioPaletteOmitsTheTownCenter() {
     #expect(kinds.contains(.house) && kinds.contains(.farm) && kinds.contains(.road))
     #expect(!kinds.contains(.townCenter))
 }
+
+@Test("scenario: mountain requirement message")
+func scenarioMountainRequirementMessage() {
+    #expect(PlacementRejectionText.message(for: .needsTerrain(.mountain)) == "Needs mountain ground")
+}

@@ -31,7 +31,19 @@ public enum ProductionCatalog {
         case .farm:
             ProductionRecipe(outputs: [.food: 1], cycleTicks: 40)
         case .bakery:
-            ProductionRecipe(inputs: [.food: 2], outputs: [.bread: 1], cycleTicks: 50)
+            ProductionRecipe(inputs: [.flour: 1], outputs: [.bread: 1], cycleTicks: 50)
+        case .grainFarm:
+            ProductionRecipe(outputs: [.grain: 1], cycleTicks: 40)
+        case .windmill:
+            ProductionRecipe(inputs: [.grain: 2], outputs: [.flour: 1], cycleTicks: 40)
+        case .mine:
+            ProductionRecipe(outputs: [.ore: 1], cycleTicks: 50)
+        case .charcoalBurner:
+            ProductionRecipe(inputs: [.wood: 2], outputs: [.charcoal: 1], cycleTicks: 40)
+        case .smelter:
+            ProductionRecipe(inputs: [.ore: 1, .charcoal: 1], outputs: [.iron: 1], cycleTicks: 50)
+        case .toolsmith:
+            ProductionRecipe(inputs: [.iron: 1, .planks: 1], outputs: [.tools: 1], cycleTicks: 60)
         case .house, .warehouse, .road, .townCenter, .port:
             nil
         case .shipyard:

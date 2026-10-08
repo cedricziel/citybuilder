@@ -20,7 +20,7 @@ public enum HouseTier: UInt8, Codable, Sendable, CaseIterable, Comparable {
         switch self {
         case .peasants: [.food]
         case .citizens: [.food, .planks]
-        case .merchants: [.food, .planks, .bread]
+        case .merchants: [.food, .planks, .bread, .tools]
         }
     }
 
@@ -60,6 +60,7 @@ public struct HousePopulation: Hashable, Codable, Sendable {
     public var foodSatisfied: Bool = false
     public var planksSatisfied: Bool = true
     public var breadSatisfied: Bool = false
+    public var toolsSatisfied: Bool = false
     public var ticksAtCurrentSatisfaction: UInt64 = 0
     /// Consecutive ticks the house has qualified to move up (or down)
     /// a tier. Spec: `population-and-needs` / Houses advance and
@@ -70,6 +71,7 @@ public struct HousePopulation: Hashable, Codable, Sendable {
     public var foodShortfall: Bool = false
     public var planksShortfall: Bool = false
     public var breadShortfall: Bool = false
+    public var toolsShortfall: Bool = false
 
     public static let growthIntervalTicks: UInt64 = 60
     public static let declineIntervalTicks: UInt64 = 60
@@ -89,7 +91,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case .food: return Int((population + 1) / 2)
         case .planks: return 1
         case .bread: return Int((population + 3) / 4)
-        case .wood: return 0
+        case .tools: return Int((population + 7) / 8)
+        default: return 0
         }
     }
 
@@ -98,7 +101,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case .food: foodSatisfied
         case .planks: planksSatisfied
         case .bread: breadSatisfied
-        case .wood: true
+        case .tools: toolsSatisfied
+        default: true
         }
     }
 
@@ -107,7 +111,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case .food: foodSatisfied = value
         case .planks: planksSatisfied = value
         case .bread: breadSatisfied = value
-        case .wood: break
+        case .tools: toolsSatisfied = value
+        default: break
         }
     }
 
@@ -116,7 +121,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case .food: foodShortfall
         case .planks: planksShortfall
         case .bread: breadShortfall
-        case .wood: false
+        case .tools: toolsShortfall
+        default: false
         }
     }
 
@@ -125,7 +131,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case .food: foodShortfall = value
         case .planks: planksShortfall = value
         case .bread: breadShortfall = value
-        case .wood: break
+        case .tools: toolsShortfall = value
+        default: break
         }
     }
 
@@ -135,6 +142,7 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         case population, tier, foodSatisfied, planksSatisfied, breadSatisfied
         case ticksAtCurrentSatisfaction, ticksAtTierCondition
         case foodShortfall, planksShortfall, breadShortfall
+        case toolsSatisfied, toolsShortfall
     }
 
     /// Older saves lack tier, bread and shortfall keys; they decode as
@@ -151,6 +159,8 @@ public struct HousePopulation: Hashable, Codable, Sendable {
         foodShortfall = try container.decodeIfPresent(Bool.self, forKey: .foodShortfall) ?? false
         planksShortfall = try container.decodeIfPresent(Bool.self, forKey: .planksShortfall) ?? false
         breadShortfall = try container.decodeIfPresent(Bool.self, forKey: .breadShortfall) ?? false
+        toolsSatisfied = try container.decodeIfPresent(Bool.self, forKey: .toolsSatisfied) ?? false
+        toolsShortfall = try container.decodeIfPresent(Bool.self, forKey: .toolsShortfall) ?? false
     }
 
     /// True when every need of the current tier is met.

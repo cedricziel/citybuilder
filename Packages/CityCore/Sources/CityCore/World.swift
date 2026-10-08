@@ -171,6 +171,10 @@ public struct World: Codable, Sendable, Equatable {
                 landCount += 1
             }
         }
+        if let required = spec.requiredTerrain {
+            let matching = tiles.count { terrain(at: $0) == required.terrain }
+            if matching < required.minTiles { return .rejected(.needsTerrain(required.terrain)) }
+        }
         if let shore = spec.shorePlacement {
             if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
             if waterCount < shore.minWaterTiles { return .rejected(.shoreRequiresWaterTile) }
@@ -389,7 +393,8 @@ public struct World: Codable, Sendable, Equatable {
     static func stockpileCapacity(for kind: BuildingKind) -> Int? {
         switch kind {
         case .warehouse: 200
-        case .lumberjackHut, .sawmill, .farm, .bakery: 16
+        case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .mine, .charcoalBurner, .smelter,
+             .toolsmith: 16
         case .house: 8
         case .townCenter: 40
         case .road: nil

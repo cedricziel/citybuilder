@@ -1,15 +1,15 @@
 ## 1. M1 — Goods, recipes and buildings
 
-- [ ] 1.1 Tests-first: translate every scenario in this change's goods-and-production, buildings-and-construction and population-and-needs specs into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: goods, building kinds, specs and recipes; bakery input becomes flour (design D1).
-- [ ] 1.3 Implement to green: terrain requirement and `needsTerrain` rejection (D2).
-- [ ] 1.4 Implement to green: merchants need and consume tools (D3, D4).
-- [ ] 1.5 Refactor under a green bar.
+- [x] 1.1 Tests-first: translate every scenario in this change's goods-and-production, buildings-and-construction and population-and-needs specs into failing tests in `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: goods, building kinds, specs and recipes; bakery input becomes flour (design D1).
+- [x] 1.3 Implement to green: terrain requirement and `needsTerrain` rejection (D2).
+- [x] 1.4 Implement to green: merchants need and consume tools (D3, D4).
+- [x] 1.5 Refactor under a green bar.
 
 ## 2. M2 — UI and art
 
-- [ ] 2.1 Tests-first then green: translate `#### Scenario: Mountain requirement message` into a `CityUITests` test; add palette labels and animation entries.
-- [ ] 2.2 Draw the six buildings and six icons procedurally; run `make sprites-procedural` and `make sprites-verify`.
+- [x] 2.1 Tests-first then green: translate `#### Scenario: Mountain requirement message` into a `CityUITests` test; add palette labels and animation entries.
+- [x] 2.2 Draw the six buildings and six icons procedurally; run `make sprites-procedural` and `make sprites-verify`.
 
 ## 3. M3 — Verification
 

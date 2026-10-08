@@ -12,7 +12,7 @@ private struct Fixture {
 }
 
 private func houseNextToTownCenter(
-    food: Int, planks: Int, bread: Int = 0, residents: UInt32, tier: HouseTier = .citizens
+    food: Int, planks: Int, bread: Int = 0, tools: Int = 0, residents: UInt32, tier: HouseTier = .citizens
 ) throws -> Fixture {
     var world = World.fixtureWithTerrain(width: 12, height: 8, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
@@ -45,6 +45,7 @@ private func houseNextToTownCenter(
     _ = stock.deposit(.food, amount: food)
     _ = stock.deposit(.planks, amount: planks)
     _ = stock.deposit(.bread, amount: bread)
+    _ = stock.deposit(.tools, amount: tools)
     world.stockpiles[center] = stock
     var pop = HousePopulation()
     pop.tier = tier
@@ -144,7 +145,7 @@ func scenarioFullPeasantHouseBecomesCitizens() throws {
 
 @Test("scenario: citizens with bread become merchants")
 func scenarioCitizensWithBreadBecomeMerchants() throws {
-    var fixture = try houseNextToTownCenter(food: 20, planks: 10, bread: 10, residents: 6, tier: .citizens)
+    var fixture = try houseNextToTownCenter(food: 20, planks: 6, bread: 6, tools: 5, residents: 6, tier: .citizens)
     run(&fixture.world, ticks: 121)
     let pop = try #require(fixture.world.populations[fixture.house])
     #expect(pop.tier == .merchants)
@@ -153,7 +154,7 @@ func scenarioCitizensWithBreadBecomeMerchants() throws {
 
 @Test("scenario: merchants without bread decline to citizens")
 func scenarioMerchantsWithoutBreadDeclineToCitizens() throws {
-    var fixture = try houseNextToTownCenter(food: 20, planks: 10, residents: 8, tier: .merchants)
+    var fixture = try houseNextToTownCenter(food: 20, planks: 10, tools: 5, residents: 8, tier: .merchants)
     run(&fixture.world, ticks: 121)
     let pop = try #require(fixture.world.populations[fixture.house])
     #expect(pop.tier == .citizens)
@@ -162,7 +163,7 @@ func scenarioMerchantsWithoutBreadDeclineToCitizens() throws {
 
 @Test("scenario: merchant residents pay four times the peasant rate")
 func scenarioMerchantResidentsPayFourTimesThePeasantRate() throws {
-    var fixture = try houseNextToTownCenter(food: 20, planks: 10, bread: 10, residents: 8, tier: .merchants)
+    var fixture = try houseNextToTownCenter(food: 20, planks: 6, bread: 6, tools: 5, residents: 8, tier: .merchants)
     while !(fixture.world.tickCount + 1).isMultiple(of: Economy.taxIntervalTicks) {
         fixture.world.tick()
     }
@@ -191,17 +192,16 @@ func scenarioBakerySpecExposesItsFootprintAndCosts() {
     #expect(spec.shorePlacement == nil)
 }
 
-@Test("scenario: bakery bakes bread from food")
-func scenarioBakeryBakesBreadFromFood() throws {
-    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
-    world.enqueue(.place(.bakery, at: TileCoordinate(x: 1, y: 1)))
-    world.tick()
-    let id = try #require(world.occupiedTiles[TileCoordinate(x: 1, y: 1)])
-    while world.buildings[id]?.state != .operational {
-        world.tick()
-    }
-    world.stockpiles[id]?.deposit(.food, amount: 2)
-    run(&world, ticks: 50)
-    #expect(world.stockpiles[id]?.quantity(of: .bread) == 1)
-    #expect(world.stockpiles[id]?.quantity(of: .food) == 0)
+@Test("scenario: merchants consume tools")
+func scenarioMerchantsConsumeTools() throws {
+    var fixture = try houseNextToTownCenter(food: 10, planks: 5, bread: 5, tools: 5, residents: 8, tier: .merchants)
+    advanceToNextConsumption(&fixture.world)
+    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .tools) == 4)
+}
+
+@Test("scenario: citizens cannot become merchants without tools")
+func scenarioCitizensCannotBecomeMerchantsWithoutTools() throws {
+    var fixture = try houseNextToTownCenter(food: 20, planks: 10, bread: 8, residents: 6, tier: .citizens)
+    run(&fixture.world, ticks: 121)
+    #expect(fixture.world.populations[fixture.house]?.tier == .citizens)
 }

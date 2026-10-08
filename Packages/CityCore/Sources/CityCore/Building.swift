@@ -18,6 +18,14 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case farm
     /// Bakes bread from food. Spec: `goods-and-production`.
     case bakery
+    case grainFarm = "grain-farm"
+    case windmill
+    /// Must stand on mountain ground. Spec: `buildings-and-construction`
+    /// / Terrain requirement for placement.
+    case mine
+    case charcoalBurner = "charcoal-burner"
+    case smelter
+    case toolsmith
     case townCenter = "town-center"
     /// Shore building, accepts deposits/withdrawals from both carriers
     /// (land side) and ships (sea side). Spec: `port-and-shipyard`.
@@ -90,6 +98,16 @@ public struct ShorePlacement: Hashable, Sendable {
     }
 }
 
+public struct TerrainRequirement: Hashable, Sendable {
+    public let terrain: TerrainType
+    public let minTiles: Int
+
+    public init(terrain: TerrainType, minTiles: Int) {
+        self.terrain = terrain
+        self.minTiles = minTiles
+    }
+}
+
 /// Per-kind metadata. The catalog is a Swift constant table (design D9).
 public struct BuildingSpec: Hashable, Sendable {
     public let kind: BuildingKind
@@ -103,6 +121,8 @@ public struct BuildingSpec: Hashable, Sendable {
     /// Goods consumed at placement. Default empty = free of materials
     /// (money cost still applies). Roads and town center stay empty.
     public let materialCost: [Good: Int]
+    /// Terrain the footprint must partly cover, and how many tiles of it.
+    public let requiredTerrain: TerrainRequirement?
 
     public init(
         kind: BuildingKind,
@@ -111,7 +131,8 @@ public struct BuildingSpec: Hashable, Sendable {
         upkeep: Int64 = 0,
         buildDurationTicks: UInt64 = 30,
         shorePlacement: ShorePlacement? = nil,
-        materialCost: [Good: Int] = [:]
+        materialCost: [Good: Int] = [:],
+        requiredTerrain: TerrainRequirement? = nil
     ) {
         self.kind = kind
         self.footprint = footprint
@@ -120,6 +141,7 @@ public struct BuildingSpec: Hashable, Sendable {
         self.buildDurationTicks = buildDurationTicks
         self.shorePlacement = shorePlacement
         self.materialCost = materialCost
+        self.requiredTerrain = requiredTerrain
     }
 }
 
@@ -158,6 +180,31 @@ public enum BuildingCatalog {
             kind: .bakery, footprint: Footprint(width: 2, height: 2),
             cost: 90, upkeep: 1, buildDurationTicks: 30,
             materialCost: [.wood: 2, .planks: 2]
+        ),
+        .grainFarm: BuildingSpec(
+            kind: .grainFarm, footprint: Footprint(width: 2, height: 2),
+            cost: 60, upkeep: 0, buildDurationTicks: 25, materialCost: [.wood: 2]
+        ),
+        .windmill: BuildingSpec(
+            kind: .windmill, footprint: Footprint(width: 2, height: 2),
+            cost: 110, upkeep: 1, buildDurationTicks: 35, materialCost: [.wood: 3, .planks: 3]
+        ),
+        .mine: BuildingSpec(
+            kind: .mine, footprint: Footprint(width: 2, height: 2),
+            cost: 120, upkeep: 2, buildDurationTicks: 40, materialCost: [.wood: 4, .planks: 2],
+            requiredTerrain: TerrainRequirement(terrain: .mountain, minTiles: 2)
+        ),
+        .charcoalBurner: BuildingSpec(
+            kind: .charcoalBurner, footprint: Footprint(width: 2, height: 2),
+            cost: 70, upkeep: 1, buildDurationTicks: 25, materialCost: [.wood: 3]
+        ),
+        .smelter: BuildingSpec(
+            kind: .smelter, footprint: Footprint(width: 2, height: 2),
+            cost: 150, upkeep: 2, buildDurationTicks: 40, materialCost: [.wood: 4, .planks: 4]
+        ),
+        .toolsmith: BuildingSpec(
+            kind: .toolsmith, footprint: Footprint(width: 2, height: 2),
+            cost: 140, upkeep: 2, buildDurationTicks: 35, materialCost: [.wood: 2, .planks: 4]
         ),
         .townCenter: BuildingSpec(
             kind: .townCenter, footprint: Footprint(width: 3, height: 3),

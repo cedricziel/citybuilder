@@ -42,3 +42,9 @@ A producer with several inputs MUST wait until all of them are in its stockpile 
 
 - **WHEN** an operational toolsmith holds 1 iron and 1 planks and 60 ticks pass
 - **THEN** it holds 1 tools and neither iron nor planks
+
+## REMOVED Requirements
+
+### Requirement: Bakery turns food into bread
+**Reason**: Bread is now baked from flour as part of the grain chain (see "Grain, flour and bread chain").
+**Migration**: Bakeries keep working; carriers now supply them with flour instead of food. Food already in a bakery's stockpile stays there unused.

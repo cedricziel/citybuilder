@@ -36,6 +36,8 @@ public enum PlacementRejection: Hashable, Sendable {
     /// for every good that came up short. Spec: `buildings-and-construction`
     /// / Placement rejected when island materials are short.
     case insufficientMaterials([Good: Int])
+    /// Too few footprint tiles of the building's required terrain.
+    case needsTerrain(TerrainType)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -46,6 +48,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .shoreRequiresLandTile: "shore_requires_land_tile"
         case .shoreRequiresWaterTile: "shore_requires_water_tile"
         case .insufficientMaterials: "insufficient_materials"
+        case .needsTerrain: "needs_terrain"
         }
     }
 }
