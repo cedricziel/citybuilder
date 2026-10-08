@@ -133,10 +133,13 @@ private struct PlacementHUDOverlay: View {
                         .disabled(!hud.isEnabled(direction))
                         .position(x: center.x + offset.width, y: center.y + offset.height)
                     }
+                    // Confirm and cancel sit side by side under the ghost so
+                    // the building being placed stays visible.
+                    let below = center.y + PlacementHUDLayout.arrowRadius + PlacementHUDLayout.actionGap
                     hudButton("checkmark", label: "Place", tint: hud.isValid ? .green : .orange, action: hud.confirm)
-                        .position(center)
+                        .position(x: center.x + PlacementHUDLayout.actionGap, y: below)
                     hudButton("xmark", label: "Cancel", tint: .red, action: hud.cancel)
-                        .position(x: center.x, y: center.y - PlacementHUDLayout.arrowRadius)
+                        .position(x: center.x - PlacementHUDLayout.actionGap, y: below)
                 }
             }
             .ignoresSafeArea()

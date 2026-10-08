@@ -55,7 +55,10 @@ public enum PlacementHUDLayout {
     /// Apple's minimum touch target.
     public static let buttonSize: CGFloat = 44
     /// Distance from the tile center to the middle of an arrow button.
-    public static let arrowRadius: CGFloat = 64
+    public static let arrowRadius: CGFloat = 84
+    /// Horizontal half-distance between confirm and cancel, and their drop
+    /// below the lowest arrow.
+    public static let actionGap: CGFloat = 32
 
     private static let halfTileWidth: CGFloat = 32
     private static let halfTileHeight: CGFloat = 16
