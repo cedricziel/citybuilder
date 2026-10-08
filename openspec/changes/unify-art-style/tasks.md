@@ -19,5 +19,5 @@
 - [x] 3.5 Draw walkers (4 directions × 2 frames) and ships (8 directions × 2 frames).
 - [x] 3.6 Mark every building, walker and ship catalog entry `source = "procedural"`, add the "Building register" section to `world.md`, run `make sprites-procedural`, and check that `make sprites-verify` passes.
 - [x] 3.7 Tests-first then green: translate `#### Scenario: Every building and unit entry is procedural`, `#### Scenario: Style bible pins the building register` and `#### Scenario: Committed building sprites pass outline and grounding checks` into tests.
-- [ ] 3.8 Runtime check on a dedicated simulator: a town with every building kind (including a port) shows one consistent style, with buildings sitting on their tiles.
-- [ ] 3.9 Verify that `make test-scenarios` is clean for this change, then run lint, format and `openspec validate unify-art-style --strict`.
+- [x] 3.8 Runtime check on a dedicated simulator: a town with every building kind (including a port) shows one consistent style, with buildings sitting on their tiles.
+- [x] 3.9 Verify that `make test-scenarios` is clean for this change, then run lint, format and `openspec validate unify-art-style --strict`.
