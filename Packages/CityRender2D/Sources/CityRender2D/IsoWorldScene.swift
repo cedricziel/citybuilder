@@ -86,15 +86,12 @@ public final class IsoWorldScene: SKScene {
     #if canImport(UIKit)
     override public func touchesEnded(_ touches: Set<UITouch>, with _: UIEvent?) {
         guard let touch = touches.first else { return }
-        let location = touch.location(in: self)
-        dispatchTap(at: location)
-        lastDragTile = nil
+        handlePointerReleased(at: touch.location(in: self))
     }
 
     override public func touchesMoved(_ touches: Set<UITouch>, with _: UIEvent?) {
         guard let touch = touches.first else { return }
-        let location = touch.location(in: self)
-        dispatchDrag(at: location)
+        handlePointerMoved(to: touch.location(in: self))
     }
 
     override public func touchesCancelled(_: Set<UITouch>, with _: UIEvent?) {
@@ -103,14 +100,11 @@ public final class IsoWorldScene: SKScene {
 
     #elseif canImport(AppKit)
     override public func mouseUp(with event: NSEvent) {
-        let location = event.location(in: self)
-        dispatchTap(at: location)
-        lastDragTile = nil
+        handlePointerReleased(at: event.location(in: self))
     }
 
     override public func mouseDragged(with event: NSEvent) {
-        let location = event.location(in: self)
-        dispatchDrag(at: location)
+        handlePointerMoved(to: event.location(in: self))
     }
 
     override public func mouseMoved(with event: NSEvent) {
@@ -122,6 +116,21 @@ public final class IsoWorldScene: SKScene {
         intentSink?(.hoverTile(nil))
     }
     #endif
+
+    /// Finger / mouse moved while down: paint the tile under it.
+    func handlePointerMoved(to sceneLocation: CGPoint) {
+        dispatchDrag(at: sceneLocation)
+    }
+
+    /// Finger / mouse released. A release that ends a drag sends no
+    /// tap: the drag already painted the last tile, and a tap there
+    /// would be rejected as occupied.
+    func handlePointerReleased(at sceneLocation: CGPoint) {
+        if lastDragTile == nil {
+            dispatchTap(at: sceneLocation)
+        }
+        lastDragTile = nil
+    }
 
     private func tile(forScene location: CGPoint, mapWidth: Int, mapHeight: Int) -> TileCoordinate? {
         let coord = IsoMath.nearestTile(toScreenPoint: location)
