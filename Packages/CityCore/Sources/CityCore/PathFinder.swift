@@ -31,7 +31,12 @@ public enum PathFinder {
             let current = openSet.removeFirst()
             if current == goal { return reconstruct(cameFrom, to: current) }
 
-            for neighbor in graph.adjacency[current] ?? [] {
+            // Neighbours in a fixed order: a `Set`'s order differs between
+            // worlds, and the first of two equal routes wins.
+            let linked = graph.adjacency[current] ?? []
+            for (dx, dy) in [(-1, 0), (0, -1), (0, 1), (1, 0)] {
+                let neighbor = TileCoordinate(x: current.x + dx, y: current.y + dy)
+                guard linked.contains(neighbor) else { continue }
                 let tentative = (gScore[current] ?? Int.max) + 1
                 if tentative < gScore[neighbor] ?? Int.max {
                     cameFrom[neighbor] = current

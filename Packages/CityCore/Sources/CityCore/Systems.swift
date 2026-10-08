@@ -6,8 +6,18 @@ import Foundation
 extension World {
     static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
 
+    /// Operational producers by entity ID. They share forests, buffers and
+    /// new entity IDs, so they run in this order and replays don't depend
+    /// on dictionary order.
+    func operationalProducersInEntityOrder() -> [Building] {
+        buildings.values
+            .filter { $0.state == .operational && ProductionCatalog.recipe(for: $0.kind) != nil }
+            .sorted { $0.id.raw < $1.id.raw }
+    }
+
     mutating func runProductionSystem(signatureSources: [Building], events: inout [WorldEvent]) {
-        for (id, building) in buildings where building.state == .operational {
+        for building in operationalProducersInEntityOrder() {
+            let id = building.id
             guard let recipe = Self.activeRecipe(of: building) else { continue }
             var progress = productions[id] ?? ProductionProgress()
             var stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
@@ -102,7 +112,9 @@ extension World {
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
-        for (id, carrier) in carriers {
+        // Arrivals fill shared stockpiles, so carriers move in entity order.
+        for id in carriers.keys.sorted(by: { $0.raw < $1.raw }) {
+            guard let carrier = carriers[id] else { continue }
             if carrier.hasArrived {
                 applyCarrierArrival(carrier, events: &events)
                 switch carrier.mission {
@@ -197,7 +209,8 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID],
         events: inout [WorldEvent]
     ) {
-        for (producerId, building) in buildings where building.state == .operational {
+        for building in operationalProducersInEntityOrder() {
+            let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
             guard inFlight < CarrierConfig.perProducerCap else { continue }
