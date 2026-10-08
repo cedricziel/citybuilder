@@ -303,8 +303,9 @@ extension World {
     /// Returns any road tile orthogonally adjacent to the footprint, or nil
     /// if the building isn't road-connected.
     private func anyAdjacentRoad(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
-        let occupied = Set(footprint.tiles(anchor: anchor))
-        for tile in occupied {
+        let tiles = footprint.tiles(anchor: anchor)
+        let occupied = Set(tiles)
+        for tile in tiles {
             for neighbor in [
                 TileCoordinate(x: tile.x + 1, y: tile.y),
                 TileCoordinate(x: tile.x - 1, y: tile.y),
@@ -455,8 +456,9 @@ extension World {
     }
 
     mutating func clearAdjacentForest(anchor: TileCoordinate, footprint: Footprint) {
-        let occupied = Set(footprint.tiles(anchor: anchor))
-        for tile in occupied {
+        let tiles = footprint.tiles(anchor: anchor)
+        let occupied = Set(tiles)
+        for tile in tiles {
             for neighbor in [
                 TileCoordinate(x: tile.x + 1, y: tile.y),
                 TileCoordinate(x: tile.x - 1, y: tile.y),
