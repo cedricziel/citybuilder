@@ -133,13 +133,7 @@ public extension World {
     /// called once per render frame, not once per draw call.
     func snapshot() -> WorldSnapshot {
         let pop = populations.values.reduce(UInt64(0)) { $0 + UInt64($1.population) }
-        let tileToIsland = IslandDetector.detect(
-            width: mapWidth,
-            height: mapHeight,
-            terrain: terrainGrid,
-            mapHeightForClimate: mapHeight,
-            seed: seed
-        ).tileToIsland
+        let tileToIsland = tileToIslandMap()
         let summaries = buildIslandSummaries(tileToIsland: tileToIsland)
         return WorldSnapshot(
             tickCount: tickCount,
