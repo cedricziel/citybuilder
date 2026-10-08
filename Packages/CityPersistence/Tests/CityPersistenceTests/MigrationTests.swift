@@ -310,6 +310,7 @@ private func makeV3Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var inner = json["world"] as? [String: Any] ?? [:]
     inner.removeValue(forKey: "research")
     inner.removeValue(forKey: "calendar")
+    inner.removeValue(forKey: "culture")
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
@@ -346,6 +347,7 @@ private func makeV4Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     json["version"] = 4
     var inner = json["world"] as? [String: Any] ?? [:]
     inner.removeValue(forKey: "calendar")
+    inner.removeValue(forKey: "culture")
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
@@ -366,6 +368,41 @@ func scenarioV4SaveLoadsWithACalendar() throws {
     #expect(parsed["version"] as? Int == 4, "fixture must be a v4 save")
     let loaded = try decodeWorld(data)
     #expect(loaded.calendar == CalendarState(startYear: 1200, isActive: true))
+}
+
+private func v5FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v5_single_island.json")
+}
+
+/// Encode a World as a v5 save: the current shape minus `culture`.
+private func makeV5Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 5
+    var inner = json["world"] as? [String: Any] ?? [:]
+    inner.removeValue(forKey: "culture")
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v5 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV5SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    // A v5 save predates `add-cultures`: no `culture` on World.
+    var data = try makeV5Payload(world: World.newGame(), writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v5FixtureURL())
+}
+
+@Test("scenario: v5 save loads as northern european")
+func scenarioV5SaveLoadsAsNorthernEuropean() throws {
+    let data = try Data(contentsOf: v5FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 5, "fixture must be a v5 save")
+    let loaded = try decodeWorld(data)
+    #expect(loaded.culture == .northernEuropean)
 }
 
 @Test("scenario: v1 fixture exists and migrates cleanly")

@@ -5,8 +5,8 @@
 
 ## 2. M2 — Persistence
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: v5 save loads as Northern European` into a failing test with a v5 fixture. Confirm red.
-- [ ] 2.2 Implement to green: version 6 and the v5 → v6 migration (D6).
+- [x] 2.1 Tests-first: translate `#### Scenario: v5 save loads as Northern European` into a failing test with a v5 fixture. Confirm red.
+- [x] 2.2 Implement to green: version 6 and the v5 → v6 migration (D6).
 
 ## 3. M3 — Art
 

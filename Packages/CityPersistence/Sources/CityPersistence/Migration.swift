@@ -24,7 +24,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV1ToV2(),
         MigrationV2ToV3(),
         MigrationV3ToV4(),
-        MigrationV4ToV5()
+        MigrationV4ToV5(),
+        MigrationV5ToV6()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -223,6 +224,25 @@ public struct MigrationV4ToV5: Migration {
         root["version"] = 5
         guard var world = root["world"] as? [String: Any] else { return root }
         world["calendar"] = ["startYear": 1200, "isActive": true] as [String: Any]
+        root["world"] = world
+        return root
+    }
+}
+
+/// Migration #5: v5 → v6. v5 saves predate `add-cultures`: `World` had
+/// no `culture`. Their towns were Northern European. Spec:
+/// `persistence-save-load` / Saves before cultures are Northern European.
+public struct MigrationV5ToV6: Migration {
+    public let fromVersion = 5
+    public let toVersion = 6
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 6
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["culture"] = "northern-european"
         root["world"] = world
         return root
     }
