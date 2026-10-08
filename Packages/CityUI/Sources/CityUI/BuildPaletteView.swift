@@ -9,14 +9,17 @@ public struct BuildPaletteView: View {
     public let armed: BuildTool
     public let selectTool: (BuildTool) -> Void
     public let isLocked: (BuildingKind) -> Bool
+    public let isHidden: (BuildingKind) -> Bool
 
     public init(
         armed: BuildTool,
         isLocked: @escaping (BuildingKind) -> Bool = { _ in false },
+        isHidden: @escaping (BuildingKind) -> Bool = { _ in false },
         selectTool: @escaping (BuildTool) -> Void
     ) {
         self.armed = armed
         self.isLocked = isLocked
+        self.isHidden = isHidden
         self.selectTool = selectTool
     }
 
@@ -26,10 +29,16 @@ public struct BuildPaletteView: View {
     /// free, so it is not offered.
     static let kinds = BuildingKind.allCases.filter { $0 != .townCenter }
 
+    /// Palette kinds minus hidden ones (obsolete buildings). Spec:
+    /// `platform-shells` / Palette hides obsolete buildings.
+    static func visibleKinds(isHidden: (BuildingKind) -> Bool) -> [BuildingKind] {
+        kinds.filter { !isHidden($0) }
+    }
+
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                ForEach(Self.kinds, id: \.self) { kind in
+                ForEach(Self.visibleKinds(isHidden: isHidden), id: \.self) { kind in
                     paletteButton(tool: .place(kind))
                 }
                 Divider().frame(height: 20)

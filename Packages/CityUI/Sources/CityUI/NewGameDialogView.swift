@@ -31,6 +31,8 @@ public struct NewGameDialogView: View {
 
             cultureSection
 
+            ageSection
+
             HStack {
                 Button("Cancel") {
                     viewModel.cancel()
@@ -51,6 +53,22 @@ public struct NewGameDialogView: View {
         }
         .padding(24)
         .frame(minWidth: 360, idealWidth: 440)
+    }
+
+    private var ageSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Starting age").font(.headline)
+            Picker("Starting age", selection: $viewModel.age) {
+                ForEach(Age.allCases, id: \.self) { age in
+                    Text(age.displayName).tag(age)
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("newGame.age")
+            Text(viewModel.age.blurb)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private var cultureSection: some View {

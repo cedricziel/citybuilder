@@ -28,14 +28,15 @@ public struct ResearchPanelModel: Equatable {
     /// Knowledge waiting for a tech to be chosen.
     public let unspent: Int
 
-    public init(research: ResearchState) {
+    public init(world: World) {
+        let research = world.research
         unspent = research.knowledge
         rows = Tech.allCases.map { tech in
             let state: State = if research.isResearched(tech) {
                 .researched
             } else if research.current == tech {
                 .inProgress
-            } else if research.canChoose(tech) {
+            } else if world.canChooseResearch(tech) {
                 .available
             } else {
                 .locked
@@ -45,10 +46,23 @@ public struct ResearchPanelModel: Equatable {
                 state: state,
                 cost: tech.cost,
                 progress: research.current == tech ? research.progress : 0,
-                prerequisites: tech.prerequisites.map(\.displayName).joined(separator: ", "),
-                unlocks: tech.unlocks.map { BuildTool.place($0).displayName }.joined(separator: ", ")
+                prerequisites: Self.requirements(of: tech, in: world),
+                unlocks: tech.era.map { "The \($0.displayName) age" }
+                    ?? tech.unlocks.map { BuildTool.place($0).displayName }.joined(separator: ", ")
             )
         }
+    }
+
+    /// Prerequisite techs, the residents an era tech needs, or the age a
+    /// later regular tech waits for.
+    static func requirements(of tech: Tech, in world: World) -> String {
+        var parts = tech.prerequisites.map(\.displayName)
+        if let gate = tech.eraGate {
+            parts.append("\(gate.residents) \(gate.tier.displayName(in: world.culture).lowercased())")
+        } else if tech.age > world.age {
+            parts.append("\(tech.age.displayName) age")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -106,6 +120,12 @@ public extension GameSession {
         !world.research.isAvailable(kind)
     }
 
+    /// True when a later tech replaced `kind`. Spec: `platform-shells` /
+    /// Palette hides obsolete buildings.
+    func isObsolete(_ kind: BuildingKind) -> Bool {
+        kind.obsoletedBy.map(world.research.isResearched) ?? false
+    }
+
     func chooseResearch(_ tech: Tech) {
         world.enqueue(.chooseResearch(tech))
     }
@@ -115,7 +135,7 @@ extension View {
     func researchSheet(isPresented: Binding<Bool>, session: GameSession) -> some View {
         sheet(isPresented: isPresented) {
             ResearchPanelView(
-                model: ResearchPanelModel(research: session.world.research),
+                model: ResearchPanelModel(world: session.world),
                 choose: { session.chooseResearch($0) },
                 dismiss: { isPresented.wrappedValue = false }
             )

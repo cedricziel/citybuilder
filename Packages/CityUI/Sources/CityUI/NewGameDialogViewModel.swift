@@ -20,15 +20,19 @@ public final class NewGameDialogViewModel {
     public var seedMode: SeedMode
     /// Spec: `platform-shells` / New Game offers a culture.
     public var culture: Culture
+    /// Spec: `platform-shells` / New Game offers a starting age.
+    public var age: Age
 
     public init(
         layout: WorldLayout = .singleIsland,
         seedMode: SeedMode = .default,
-        culture: Culture = .northernEuropean
+        culture: Culture = .northernEuropean,
+        age: Age = .medieval
     ) {
         self.layout = layout
         self.seedMode = seedMode
         self.culture = culture
+        self.age = age
     }
 
     /// Roll a new random seed and capture it into `.random(captured:)`.
@@ -49,7 +53,7 @@ public final class NewGameDialogViewModel {
     /// validation fails (custom seed with non-numeric text).
     public func commit() -> World? {
         guard let seed = resolvedSeed else { return nil }
-        return World.newGame(layout: layout, seed: seed, culture: culture)
+        return World.newGame(layout: layout, seed: seed, culture: culture, age: age)
     }
 
     /// Reset selection to defaults — invoked when the dialog is
@@ -58,6 +62,7 @@ public final class NewGameDialogViewModel {
         layout = .singleIsland
         seedMode = .default
         culture = .northernEuropean
+        age = .medieval
     }
 
     private var resolvedSeed: UInt64? {

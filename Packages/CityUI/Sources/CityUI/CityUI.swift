@@ -56,11 +56,11 @@ public struct CityRootView: View {
                         settingsButton
                     }
                 }
-                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked) { tool in
+                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isObsolete) { tool in
                     session.selectTool(tool)
                 }
                 PlacementRejectionBanner(hud: session.hud)
-                HistoryEventBanner(event: session.historyBanner)
+                SessionBannerView(banner: session.banner)
                 if session.selectedTool != .inspect {
                     Text(armedCaption)
                         .font(.caption2)
@@ -149,9 +149,8 @@ public final class GameSession {
 
     private var tickTimer: Timer?
 
-    /// The last history event and the tick its banner hides at. Spec:
-    /// `platform-shells` / History events show a banner.
-    var historyBannerState: (event: HistoryEvent, hidesAtTick: UInt64)?
+    /// The banner on screen and the tick it hides at.
+    var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes
@@ -161,7 +160,7 @@ public final class GameSession {
     public func step() {
         guard !isPaused else { return }
         let result = world.tick()
-        noteHistoryEvents(in: result.events)
+        noteBannerEvents(in: result.events)
         let snapshot = world.snapshot()
         hud.apply(snapshot)
         // Push the snapshot to audio before the matching events so the

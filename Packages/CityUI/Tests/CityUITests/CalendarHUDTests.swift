@@ -32,13 +32,13 @@ func scenarioBannerAppearsAndExpires() throws {
         world.tick()
     }
     let session = GameSession(world: world)
-    #expect(session.historyBanner == nil)
+    #expect(session.banner == nil)
     session.step()
-    #expect(session.historyBanner?.title == "Trade caravan")
+    #expect(session.banner?.title == "Trade caravan")
     for _ in 0 ..< 59 {
         session.step()
     }
-    #expect(session.historyBanner?.title == "Trade caravan")
+    #expect(session.banner?.title == "Trade caravan")
     session.step()
-    #expect(session.historyBanner == nil)
+    #expect(session.banner == nil)
 }

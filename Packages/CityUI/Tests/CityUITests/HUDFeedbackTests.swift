@@ -1,7 +1,7 @@
-import CityCore
 import Foundation
 import SpriteKit
 import Testing
+@testable import CityCore
 #if canImport(UIKit)
 import UIKit
 #else
@@ -134,7 +134,7 @@ func scenarioLockedPlacementMessage() {
 
 @Test("scenario: research panel lists tech states")
 func scenarioResearchPanelListsTechStates() {
-    let rows = ResearchPanelModel(research: World.newGame().research).rows
+    let rows = ResearchPanelModel(world: World.newGame()).rows
     func state(_ tech: Tech) -> ResearchPanelModel.State? {
         rows.first { $0.tech == tech }?.state
     }
@@ -148,7 +148,9 @@ func scenarioResearchPanelListsTechStates() {
 @Test("research panel marks the current tech with its progress")
 func researchPanelMarksCurrentTech() {
     let research = ResearchState(researched: [.scholarship], current: .mining, knowledge: 0, progress: 10)
-    let row = ResearchPanelModel(research: research).rows.first { $0.tech == .mining }
+    var world = World.newGame()
+    world.research = research
+    let row = ResearchPanelModel(world: world).rows.first { $0.tech == .mining }
     #expect(row?.state == .inProgress)
     #expect(row?.progress == 10)
     #expect(row?.unlocks == "Mine, Charcoal")
