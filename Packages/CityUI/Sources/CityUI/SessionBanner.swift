@@ -31,7 +31,9 @@ extension GameSession {
                 let fuel = kind.fuel.map(InspectorViewModel.fuelName) ?? "fuel"
                 show(SessionBanner(
                     title: "\(Self.sentenceCase(kind)) is out of \(fuel)",
-                    description: "Its effects stop until carriers bring more."
+                    description: kind.isCultureSignature
+                        ? "Its effect halves until carriers bring more."
+                        : "Its effects stop until carriers bring more."
                 ))
             case .monumentCompleted:
                 show(SessionBanner(title: "The monument is complete", description: "Taxes rise by 10%."))
@@ -57,6 +59,14 @@ extension GameSession {
     public func commissionArt() {
         guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .gallery else { return }
         world.enqueue(.commission(id))
+    }
+
+    /// Set or clear the selected caravanserai's export good. Spec:
+    /// `platform-shells` / Culture signature inspector.
+    public func pickExport(_ good: Good?) {
+        guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .caravanserai
+        else { return }
+        world.enqueue(.setExport(id, good))
     }
 
     private func show(_ banner: SessionBanner) {

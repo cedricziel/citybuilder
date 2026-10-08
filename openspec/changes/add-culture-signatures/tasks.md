@@ -15,12 +15,12 @@
 
 ## 4. M4 — Art
 
-- [ ] 4.1 Draw the four buildings in their culture styles with idle, construction and operational frames in `buildings.py`; add catalog entries; `make sprites-procedural`, `make sprites-verify` (D10).
+- [x] 4.1 Draw the four buildings in their culture styles with idle, construction and operational frames in `buildings.py`; add catalog entries; `make sprites-procedural`, `make sprites-verify` (D10).
 
 ## 5. M5 — Rendering and UI
 
-- [ ] 5.1 Tests-first: translate the rendering-2_5d and sprite-style-catalog scenarios into failing `CityRender2DTests` and the platform-shells scenarios into failing `CityUITests`. Confirm red.
-- [ ] 5.2 Implement to green: ring radii for the three ranged kinds, served-state animation, inspector sections, export picker, last-caravan line and the fuel-good banner text (D9).
+- [x] 5.1 Tests-first: translate the rendering-2_5d and sprite-style-catalog scenarios into failing `CityRender2DTests` and the platform-shells scenarios into failing `CityUITests`. Confirm red.
+- [x] 5.2 Implement to green: ring radii for the three ranged kinds, served-state animation, inspector sections, export picker, last-caravan line and the fuel-good banner text (D9).
 
 ## 6. M6 — Verification
 

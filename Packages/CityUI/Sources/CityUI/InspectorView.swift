@@ -8,10 +8,13 @@ public struct InspectorViewModel: Sendable {
     public let bullets: [String]
     /// The gallery's commission button, nil for other buildings.
     public let commission: CommissionButton?
+    /// The caravanserai's export picker, nil for other buildings.
+    public let exportPicker: ExportPicker?
 
-    public init(bullets: [String], commission: CommissionButton? = nil) {
+    public init(bullets: [String], commission: CommissionButton? = nil, exportPicker: ExportPicker? = nil) {
         self.bullets = bullets
         self.commission = commission
+        self.exportPicker = exportPicker
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -46,7 +49,8 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + signatureLines(for: building, in: snapshot) + houseLines,
-            commission: commissionButton(for: building, balance: snapshot.economy.balance)
+            commission: commissionButton(for: building, balance: snapshot.economy.balance),
+            exportPicker: exportPicker(for: building)
         )
     }
 }
@@ -55,10 +59,16 @@ public struct InspectorViewModel: Sendable {
 public struct InspectorView: View {
     public let viewModel: InspectorViewModel
     let onCommission: () -> Void
+    let onPickExport: (Good?) -> Void
 
-    public init(viewModel: InspectorViewModel, onCommission: @escaping () -> Void = {}) {
+    public init(
+        viewModel: InspectorViewModel,
+        onCommission: @escaping () -> Void = {},
+        onPickExport: @escaping (Good?) -> Void = { _ in }
+    ) {
         self.viewModel = viewModel
         self.onCommission = onCommission
+        self.onPickExport = onPickExport
     }
 
     public var body: some View {
@@ -73,6 +83,14 @@ public struct InspectorView: View {
                     Button(commission.title, action: onCommission)
                         .font(.caption)
                         .disabled(!commission.isEnabled)
+                }
+                if let picker = viewModel.exportPicker {
+                    Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {
+                        ForEach(picker.options, id: \.self) { option in
+                            Text(ExportPicker.title(of: option)).tag(option)
+                        }
+                    }
+                    .font(.caption)
                 }
             }
             .padding(12)
