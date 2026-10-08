@@ -16,7 +16,10 @@ public final class IsoWorldScene: SKScene {
 
     /// Tracks which sprite specs are currently present in the scene tree so
     /// each frame can compute add/remove diffs via SnapshotReconciler.
-    private var presentSprites: [SpriteSpec: SKNode] = [:]
+    var presentSprites: [SpriteSpec: SKNode] = [:]
+    /// City life (`add-city-life`): night shade and strolling residents.
+    let nightOverlay = SKSpriteNode()
+    var strollerNodes: [StrollerKey: SKSpriteNode] = [:]
     /// Season whose terrain tint is on screen. Spec: `rendering-2_5d` /
     /// Terrain shows the season.
     var appliedSeason: Season = .spring
@@ -82,6 +85,7 @@ public final class IsoWorldScene: SKScene {
         scaleMode = .resizeFill
         addChild(cameraNode)
         camera = cameraNode
+        installNightOverlay()
         #if canImport(AppKit)
         // mouseMoved only fires when the host window allows it; opt in here
         // so hover-driven ghost preview works on macOS.
@@ -199,8 +203,11 @@ public final class IsoWorldScene: SKScene {
         applyCamera(snapshot.camera)
         applySeason(snapshot.date.season)
         applyLook(culture: snapshot.culture, age: snapshot.age)
+        applyTimeOfDay(TimeOfDay(tick: snapshot.tickCount))
         reconcileSprites(with: snapshot)
+        updateWindowGlow(with: snapshot)
         reconcileCarriers(with: snapshot)
+        reconcileStrollers(with: snapshot)
         reconcileGhost()
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
     }
