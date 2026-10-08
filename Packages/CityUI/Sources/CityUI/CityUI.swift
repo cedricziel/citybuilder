@@ -11,6 +11,7 @@ public struct CityRootView: View {
     @State var session: GameSession
     @State var settingsPresented: Bool = false
     @State var researchPresented: Bool = false
+    @State var goalsPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
@@ -50,6 +51,7 @@ public struct CityRootView: View {
             VStack {
                 HStack {
                     HUDFrameView(viewModel: session.hud)
+                    goalsButton
                     researchButton
                     pauseButton
                     if settingsContent != nil {
@@ -80,6 +82,7 @@ public struct CityRootView: View {
             .padding()
         }
         .researchSheet(isPresented: $researchPresented, session: session)
+        .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
                 content()
@@ -151,6 +154,7 @@ public final class GameSession {
 
     /// The banner on screen and the tick it hides at.
     var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
+    public var isWinSheetPresented = false
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes

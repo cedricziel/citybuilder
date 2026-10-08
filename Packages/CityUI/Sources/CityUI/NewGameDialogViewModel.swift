@@ -22,6 +22,11 @@ public final class NewGameDialogViewModel {
     public var culture: Culture
     /// Spec: `platform-shells` / New Game offers a starting age.
     public var age: Age
+    /// Spec: `platform-shells` / New Game offers difficulty and scenarios.
+    public enum Mode: Hashable, Sendable { case sandbox, scenario }
+    public var mode: Mode = .sandbox
+    public var difficulty: Difficulty = .normal
+    public var scenario: Scenario = .firstHarvest
 
     public init(
         layout: WorldLayout = .singleIsland,
@@ -53,7 +58,12 @@ public final class NewGameDialogViewModel {
     /// validation fails (custom seed with non-numeric text).
     public func commit() -> World? {
         guard let seed = resolvedSeed else { return nil }
-        return World.newGame(layout: layout, seed: seed, culture: culture, age: age)
+        switch mode {
+        case .sandbox:
+            return World.newGame(layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty)
+        case .scenario:
+            return World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario)
+        }
     }
 
     /// Reset selection to defaults — invoked when the dialog is
@@ -63,6 +73,9 @@ public final class NewGameDialogViewModel {
         seedMode = .default
         culture = .northernEuropean
         age = .medieval
+        mode = .sandbox
+        difficulty = .normal
+        scenario = .firstHarvest
     }
 
     private var resolvedSeed: UInt64? {

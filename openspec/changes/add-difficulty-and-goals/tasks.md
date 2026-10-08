@@ -10,8 +10,8 @@
 
 ## 3. M3 — UI
 
-- [ ] 3.1 Tests-first: translate the platform-shells scenarios into failing `CityUITests`. Confirm red.
-- [ ] 3.2 Implement to green: mode and difficulty pickers, scenario list, goals panel, win sheet (D5).
+- [x] 3.1 Tests-first: translate the platform-shells scenarios into failing `CityUITests`. Confirm red.
+- [x] 3.2 Implement to green: mode and difficulty pickers, scenario list, goals panel, win sheet (D5).
 
 ## 4. M4 — Verification
 

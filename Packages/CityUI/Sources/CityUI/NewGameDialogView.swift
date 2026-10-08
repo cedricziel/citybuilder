@@ -22,16 +22,26 @@ public struct NewGameDialogView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        ScrollView {
+            content
+        }
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 20) {
             Text("New Game")
                 .font(.title.bold())
 
+            modeSection
             layoutSection
             seedSection
-
             cultureSection
-
-            ageSection
+            if viewModel.mode == .sandbox {
+                ageSection
+                difficultySection
+            } else {
+                scenarioSection
+            }
 
             HStack {
                 Button("Cancel") {
@@ -53,6 +63,47 @@ public struct NewGameDialogView: View {
         }
         .padding(24)
         .frame(minWidth: 360, idealWidth: 440)
+    }
+
+    private var modeSection: some View {
+        Picker("Mode", selection: $viewModel.mode) {
+            Text("Sandbox").tag(NewGameDialogViewModel.Mode.sandbox)
+            Text("Scenario").tag(NewGameDialogViewModel.Mode.scenario)
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("newGame.mode")
+    }
+
+    private var difficultySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Difficulty").font(.headline)
+            Picker("Difficulty", selection: $viewModel.difficulty) {
+                ForEach(Difficulty.allCases, id: \.self) { difficulty in
+                    Text(difficulty.displayName).tag(difficulty)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("newGame.difficulty")
+        }
+    }
+
+    private var scenarioSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Scenario").font(.headline)
+            Picker("Scenario", selection: $viewModel.scenario) {
+                ForEach(Scenario.allCases, id: \.self) { scenario in
+                    Text(scenario.title).tag(scenario)
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("newGame.scenario")
+            Text(viewModel.scenario.blurb)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text("\(viewModel.scenario.age.displayName) · \(viewModel.scenario.difficulty.displayName)")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+        }
     }
 
     private var ageSection: some View {

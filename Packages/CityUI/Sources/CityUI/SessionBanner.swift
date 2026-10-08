@@ -24,6 +24,9 @@ extension GameSession {
                 show(SessionBanner(title: history.title, description: history.description))
             case let .ageAdvanced(age):
                 show(SessionBanner(title: "The \(age.displayName) age begins", description: age.blurb))
+            case .scenarioWon:
+                show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
+                isWinSheetPresented = true
             default:
                 continue
             }
