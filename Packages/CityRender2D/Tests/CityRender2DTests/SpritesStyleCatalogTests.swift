@@ -169,6 +169,14 @@ private func expectedCatalogIds() -> Set<String> {
             ids.insert("building-\(kind.rawValue)-\(culture.rawValue)")
         }
     }
+    // Age house looks (`add-historical-ages`): one entry per non-medieval
+    // age and culture, holding all three house tiers.
+    for age in Age.allCases where age != .medieval {
+        for culture in Culture.allCases {
+            let suffix = culture == .northernEuropean ? "" : "-\(culture.rawValue)"
+            ids.insert("building-house-\(age.rawValue)\(suffix)")
+        }
+    }
     for terrain in IsoWorldScene.seasonalTerrain {
         for season in [Season.autumn, .winter] {
             if let name = IsoWorldScene.seasonalTerrainName(kind: terrain, season: season) { ids.insert(name) }

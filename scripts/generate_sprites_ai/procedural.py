@@ -528,6 +528,9 @@ def _register_buildings_and_units() -> None:
             if kind == "windmill":
                 _RENDERERS[f"{name}-operational-{i}"] = lambda i=i, frames=frames: buildings.draw_windmill_frame(i, frames)
                 continue
+            if kind == "quern-house":
+                _RENDERERS[f"{name}-operational-{i}"] = lambda i=i: buildings.draw_quern_frame(i)
+                continue
             _RENDERERS[f"{name}-operational-{i}"] = (
                 lambda kind=kind, i=i, frames=frames: derive_operational(buildings.draw(kind), i, frames)
             )
@@ -547,6 +550,12 @@ def _register_buildings_and_units() -> None:
             _RENDERERS[f"building-house-tier{tier}-{culture}"] = (
                 lambda tier=tier, culture=culture: buildings.draw_house_tier(tier, culture)
             )
+    for age in buildings.AGES:
+        for culture in buildings.STYLES:
+            for tier in (1, 2, 3):
+                _RENDERERS[buildings.age_house_name(age, tier, culture)] = (
+                    lambda age=age, tier=tier, culture=culture: buildings.draw_age_house(age, tier, culture)
+                )
     _RENDERERS["good-bread"] = _bread_icon
     for good, draw in _CHAIN_ICONS.items():
         _RENDERERS[f"good-{good}"] = draw

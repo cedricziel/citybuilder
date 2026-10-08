@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from PIL import Image, ImageDraw
 
 from .palette import (
-    CREAM, DARK_LOAM, DARK_TIMBER, DEEP_WATER, FLAG_RED, HIGHLIGHT_WATER, LEAF, LIGHT_LOAM, LIGHT_STONE,
+    CREAM, DARK_LOAM, DARK_TIMBER, DEEP_WATER, FLAG_RED, GLINT, HIGHLIGHT_WATER, LEAF, LIGHT_LOAM, LIGHT_STONE,
     MEDIUM_LOAM, MID_WATER, OUTLINE, PALE_SAND, PINE, SAND, SHADOW_GREEN, SHADOW_STONE, SLATE, STONE,
     SUN_GRASS, SUN_TERRACOTTA, TERRACOTTA, THATCH, TIMBER, WHEAT, Rgb,
 )
@@ -1486,10 +1486,1217 @@ def _shipyard(orientation: str, stage: str) -> Image.Image:
     return c.img
 
 
+# ---------------- ages ----------------
+#
+# House looks per historical age (design `add-historical-ages` D7). The
+# medieval look is the culture styles above; every other age composes
+# `age_style(culture, age)`: the culture's identity (roof shape, signature
+# details, accent) with the age's materials and shapes.
+
+AGES = ("antiquity", "renaissance", "industrial", "modern")
+
+BRICK = Material(SUN_TERRACOTTA, TERRACOTTA)
+MUD_BRICK = Material(LIGHT_LOAM, MEDIUM_LOAM)
+TRAVERTINE = Material(PALE_SAND, LIGHT_STONE)
+OCHRE_STUCCO = Material(WHEAT, PINE)
+CONCRETE = Material(CREAM, LIGHT_STONE)
+CLADDING = Material(PINE, TIMBER)
+DARK_PANEL = Material(SHADOW_STONE, SLATE)
+GLASS = Material(HIGHLIGHT_WATER, MID_WATER)
+
+
+@dataclass(frozen=True)
+class AgeStyle:
+    """A culture's style as built in one age."""
+    age: str
+    culture: Style
+    wall: Material
+    base: Material  # plinth, ground floor, cladding or dado
+    roof: Material
+    roof_kind: str  # hip | gable_u | gable_v | flared | parapet | flat
+    trim: Rgb  # cornices, lintels, window surrounds
+
+    @property
+    def name(self) -> str:
+        return self.culture.culture
+
+
+# (wall, base, roof, roof kind, trim) per age and culture.
+_AGE_LOOKS: dict[str, dict[str, tuple[Material, Material, Material, str, Rgb]]] = {
+    "antiquity": {
+        "northern-european": (STONE_WALL, STONE_WALL, THATCH_ROOF, "hip", LIGHT_STONE),
+        "mediterranean": (TRAVERTINE, BRICK, TILE_ROOF, "hip", CREAM),
+        "east-asian": (MUD_BRICK, STONE_WALL, THATCH_ROOF, "flared", TIMBER),
+        "middle-eastern": (MUD_BRICK, MUD_BRICK, MUD_BRICK, "parapet", SAND),
+    },
+    "renaissance": {
+        "northern-european": (WHITEWASH, STONE_WALL, TILE_ROOF, "gable_v", LIGHT_STONE),
+        "mediterranean": (OCHRE_STUCCO, STONE_WALL, TILE_ROOF, "hip", CREAM),
+        "east-asian": (WHITEWASH, DARK_PANEL, DARK_TILE_ROOF, "gable_u", DARK_TIMBER),
+        "middle-eastern": (TRAVERTINE, STONE_WALL, TRAVERTINE, "parapet", CREAM),
+    },
+    "industrial": {
+        "northern-european": (BRICK, STONE_WALL, SLATE_ROOF, "gable_u", LIGHT_STONE),
+        "mediterranean": (BRICK, STONE_WALL, SLATE_ROOF, "hip", LIGHT_STONE),
+        "east-asian": (BRICK, STONE_WALL, SLATE_ROOF, "flared", LIGHT_STONE),
+        "middle-eastern": (BRICK, STONE_WALL, BRICK, "parapet", PALE_SAND),
+    },
+    "modern": {
+        "northern-european": (CONCRETE, CLADDING, CONCRETE, "flat", FLAG_RED),
+        "mediterranean": (CONCRETE, CONCRETE, CONCRETE, "flat", MID_WATER),
+        "east-asian": (CONCRETE, DARK_PANEL, DARK_TILE_ROOF, "flat", SUN_TERRACOTTA),
+        "middle-eastern": (CONCRETE, SANDSTONE, CONCRETE, "flat", MID_WATER),
+    },
+}
+
+
+def age_style(culture: str, age: str) -> AgeStyle:
+    wall, base, roof, kind, trim = _AGE_LOOKS[age][culture]
+    return AgeStyle(age, STYLES[culture], wall, base, roof, kind, trim)
+
+
+def _face(c: Canvas, face: str, a0: float, a1: float, at: float, z0: float, z1: float, fill: Rgb) -> None:
+    """A rectangle on the lit (v = at, spanning u) or shaded (u = at,
+    spanning v) wall plane."""
+    if face == "lit":
+        pts = [c.p(a0, at, z0), c.p(a1, at, z0), c.p(a1, at, z1), c.p(a0, at, z1)]
+    else:
+        pts = [c.p(at, a0, z0), c.p(at, a1, z0), c.p(at, a1, z1), c.p(at, a0, z1)]
+    c.poly(pts, fill)
+
+
+def _face_line(c: Canvas, face: str, a0: float, a1: float, at: float, z: float, fill: Rgb) -> None:
+    if face == "lit":
+        c.line([c.p(a0, at, z), c.p(a1, at, z)], fill)
+    else:
+        c.line([c.p(at, a0, z), c.p(at, a1, z)], fill)
+
+
+def _brickwork(c: Canvas, u0: float, v0: float, u1: float, v1: float, z0: float, z1: float) -> None:
+    """Broken brick courses on both visible walls, staggered per row."""
+    row = 0
+    z = z0 + 3
+    while z < z1 - 1:
+        for (a, b, fill) in ((c.p(u0, v1, z), c.p(u1, v1, z), TERRACOTTA), (c.p(u1, v1, z), c.p(u1, v0, z), SLATE)):
+            xa, xb = round(a[0]) + 1, round(b[0]) - 1
+            for x in range(xa, xb):
+                if (x // 3 + row) % 2 == 0:
+                    y = a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])
+                    c.dot((x, y), fill)
+        row += 1
+        z += 4
+
+
+def _glass(c: Canvas, face: str, a0: float, a1: float, at: float, z0: float, z1: float) -> None:
+    """A wide window band: blue glass with dark mullions and a glint."""
+    _face(c, face, a0, a1, at, z0, z1, GLASS.lit if face == "lit" else GLASS.shade)
+    n = max(1, round((a1 - a0) / 0.22))
+    for i in range(1, n):
+        a = a0 + (a1 - a0) * i / n
+        if face == "lit":
+            c.line([c.p(a, at, z0), c.p(a, at, z1)], DEEP_WATER)
+        else:
+            c.line([c.p(at, a, z0), c.p(at, a, z1)], DEEP_WATER)
+    _face_line(c, face, a0, a1, at, z0, DEEP_WATER)
+    if face == "lit":
+        x, y = _px(c, a0 + 0.04, at, z1 - 1)
+        c.dot((x + 1, y + 1), GLINT)
+
+
+def _balcony(c: Canvas, face: str, a0: float, a1: float, at: float, z: float, depth: float = 0.14,
+             rail: Rgb = CREAM, slab: Rgb = LIGHT_STONE) -> None:
+    """A slab projecting from a wall with a railing along its edge."""
+    if face == "lit":
+        top = [c.p(a0, at, z), c.p(a1, at, z), c.p(a1, at + depth, z), c.p(a0, at + depth, z)]
+        edge = (c.p(a0, at + depth, z), c.p(a1, at + depth, z))
+        rail_pts = [c.p(a0, at + depth, z + 4), c.p(a1, at + depth, z + 4)]
+        ends = [(a0, at + depth), (a1, at + depth)]
+    else:
+        top = [c.p(at, a0, z), c.p(at, a1, z), c.p(at + depth, a1, z), c.p(at + depth, a0, z)]
+        edge = (c.p(at + depth, a0, z), c.p(at + depth, a1, z))
+        rail_pts = [c.p(at + depth, a0, z + 4), c.p(at + depth, a1, z + 4)]
+        ends = [(at + depth, a0), (at + depth, a1)]
+    c.poly(top, slab)
+    c.line([(edge[0][0], edge[0][1] + 1), (edge[1][0], edge[1][1] + 1)], OUTLINE)
+    c.line(list(edge), slab)
+    c.line(rail_pts, rail)
+    for u, v in ends:
+        c.line([c.p(u, v, z), c.p(u, v, z + 4)], rail)
+
+
+def _columns(c: Canvas, u0: float, u1: float, v: float, z0: float, z1: float, n: int,
+             lit: Rgb = CREAM, shade: Rgb = LIGHT_STONE) -> None:
+    """A row of round columns, 2 px wide, outlined on their shaded side."""
+    for i in range(n):
+        u = u0 + (u1 - u0) * i / max(1, n - 1)
+        x, y0 = _px(c, u, v, z0)
+        _, y1 = _px(c, u, v, z1)
+        c.draw.rectangle([x - 1, y1, x, y0], fill=(*lit, 255))
+        c.draw.line([(x, y1), (x, y0)], fill=(*shade, 255))
+        c.draw.line([(x + 1, y1 + 1), (x + 1, y0)], fill=(*OUTLINE, 255))
+
+
+def _portico(c: Canvas, u0: float, u1: float, v: float, depth: float, z: float, n: int, roof: Material,
+             pediment: Material, col: tuple[Rgb, Rgb] = (CREAM, LIGHT_STONE), recess: Rgb = SHADOW_STONE) -> None:
+    """A columned porch in front of the lit wall under a gable whose
+    pediment faces the viewer: a temple front."""
+    _face(c, "lit", u0, u1, v, 0, z, recess)
+    box(c, u0 - 0.04, v, u1 + 0.04, v + depth + 0.04, 2, STONE_WALL)
+    flat_top(c, u0 - 0.04, v, u1 + 0.04, v + depth + 0.04, 2, LIGHT_STONE)
+    _columns(c, u0 + 0.04, u1 - 0.04, v + depth, 2, z, n, *col)
+    box(c, u0, v, u1, v + depth, z + 3, pediment, z0=z)
+    gable_roof(c, u0, v - 0.05, u1, v + depth, z + 3, 9, roof, pediment, axis="v", overhang=0.05)
+
+
+def _stepped_gable(c: Canvas, u0: float, u1: float, v: float, z: float, rise: float, mat: Material,
+                   steps: int = 3) -> None:
+    """A Flemish stepped gable on the lit wall, covering the end of a
+    gable roof whose ridge runs along v."""
+    w = (u1 - u0) / 2 / steps
+    pts: list[Point] = [c.p(u0, v, z)]
+    for i in range(steps):
+        zt = z + rise * (i + 1) / steps
+        pts += [c.p(u0 + w * i, v, zt), c.p(u0 + w * (i + 1), v, zt)]
+    for i in reversed(range(steps)):
+        zt = z + rise * (i + 1) / steps
+        pts += [c.p(u1 - w * (i + 1), v, zt), c.p(u1 - w * i, v, zt)]
+    pts.append(c.p(u1, v, z))
+    c.poly(pts, mat.lit)
+    c.line(pts[1:-1], OUTLINE)
+    x, y = _px(c, (u0 + u1) / 2, v, z + rise * 0.5)
+    c.draw.ellipse([x - 1, y - 1, x + 1, y + 1], fill=(*DARK_TIMBER, 255))
+
+
+def _brick_chimney(c: Canvas, u: float, v: float, z0: float, z1: float) -> None:
+    box(c, u, v, u + 0.16, v + 0.16, z1, BRICK, z0=z0)
+    box(c, u - 0.02, v - 0.02, u + 0.18, v + 0.18, z1 + 2, STONE_WALL, z0=z1)
+    flat_top(c, u - 0.02, v - 0.02, u + 0.18, v + 0.18, z1 + 2, OUTLINE)
+
+
+def _age_window(c: Canvas, s: AgeStyle, u: float, v: float, z: float, lit: bool = True) -> None:
+    """One window in the age's manner, dressed in the culture's openings."""
+    x, y = _px(c, u, v, z)
+    dark = DARK_TIMBER if lit else OUTLINE
+    culture = s.culture
+    if s.age == "antiquity":
+        if culture.openings == "arch":
+            arch(c, x, y + 1, 3, 3, OUTLINE)
+        else:
+            c.draw.rectangle([x - 1, y - 1, x, y + 1], fill=(*dark, 255))
+        return
+    if s.age == "renaissance":
+        if culture.openings == "lattice":
+            c.draw.rectangle([x - 2, y - 2, x + 2, y + 1], fill=(*DARK_TIMBER, 255))
+            for dx in (-1, 0, 1):
+                c.draw.line([(x + dx, y - 1), (x + dx, y)], fill=(*(PALE_SAND if dx else DARK_TIMBER), 255))
+            return
+        frame = s.trim if lit else s.wall.shade
+        if culture.openings == "arch":
+            arch(c, x, y + 2, 5, 6, frame)
+            arch(c, x, y + 1, 3, 4, dark)
+            return
+        c.draw.rectangle([x - 2, y - 4, x + 2, y + 2], fill=(*frame, 255))
+        c.draw.rectangle([x - 1, y - 3, x + 1, y + 1], fill=(*dark, 255))
+        if culture.openings == "shutter":
+            sh = culture.accent if lit else DEEP_WATER
+            c.draw.line([(x - 2, y - 3), (x - 2, y + 1)], fill=(*sh, 255))
+            c.draw.line([(x + 2, y - 3), (x + 2, y + 1)], fill=(*sh, 255))
+        return
+    if s.age == "industrial":
+        c.draw.line([(x - 2, y - 4), (x + 2, y - 4)], fill=(*(s.trim if lit else STONE), 255))
+        if culture.openings == "arch":
+            arch(c, x, y + 1, 3, 4, dark)
+        else:
+            c.draw.rectangle([x - 1, y - 3, x + 1, y + 1], fill=(*dark, 255))
+        c.dot((x, y - 1), CREAM if lit else LIGHT_STONE)
+        return
+    c.draw.rectangle([x - 2, y - 2, x + 2, y + 1], fill=(*(GLASS.lit if lit else GLASS.shade), 255))
+    c.draw.line([(x, y - 2), (x, y + 1)], fill=(*DEEP_WATER, 255))
+
+
+def _age_door(c: Canvas, s: AgeStyle, u: float, v: float, height: int = 7, z0: float = 0) -> None:
+    x, y = _px(c, u, v, z0)
+    culture = s.culture
+    if s.age == "antiquity":
+        if culture.openings == "arch":
+            arch(c, x, y - 1, 3, height - 1, OUTLINE)
+        else:
+            c.draw.rectangle([x - 1, y - height, x + 1, y - 1], fill=(*OUTLINE, 255))
+        return
+    if s.age == "renaissance":
+        if culture.openings == "lattice":
+            style_door(c, culture, u, v, height=height, z0=z0)
+            return
+        arch(c, x, y - 1, 5, height + 1, s.trim)
+        arch(c, x, y - 1, 3, height, culture.accent if culture.openings != "mullion" else DARK_TIMBER)
+        return
+    if s.age == "industrial":
+        c.draw.rectangle([x - 2, y - height - 1, x + 2, y - 1], fill=(*s.trim, 255))
+        c.draw.rectangle([x - 1, y - height + 1, x + 1, y - 1], fill=(*DARK_TIMBER, 255))
+        c.draw.line([(x - 1, y - height), (x + 1, y - height)], fill=(*HIGHLIGHT_WATER, 255))
+        return
+    c.draw.rectangle([x - 2, y - height, x + 2, y - 1], fill=(*DEEP_WATER, 255))
+    c.draw.rectangle([x - 1, y - height + 1, x + 1, y - 1], fill=(*GLASS.lit, 255))
+    c.draw.line([(x - 3, y - height - 1), (x + 3, y - height - 1)], fill=(*s.trim, 255))
+
+
+def _age_roof(c: Canvas, s: AgeStyle, u0: float, v0: float, u1: float, v1: float, z: float, rise: float,
+              lift: float = 3) -> None:
+    kind = s.roof_kind
+    if kind == "hip":
+        hip_roof(c, u0, v0, u1, v1, z, rise, s.roof, overhang=0.1)
+    elif kind in ("gable_u", "gable_v"):
+        gable_roof(c, u0, v0, u1, v1, z, rise, s.roof, s.wall, axis=kind[-1])
+    elif kind == "flared":
+        flared_roof(c, u0, v0, u1, v1, z, rise, s.roof, overhang=0.18, lift=lift)
+    elif kind == "parapet":
+        deck = SHADOW_STONE if s.age == "industrial" else s.wall.shade
+        parapet(c, u0, v0, u1, v1, z, s.wall, cap=s.trim, deck=deck)
+    else:
+        parapet(c, u0, v0, u1, v1, z, s.wall, height=2, rim=0.05, cap=CREAM, deck=SHADOW_STONE)
+
+
+def _vigas(c: Canvas, u0: float, v0: float, u1: float, v1: float, z: float) -> None:
+    """Roof-beam ends poking through a mud-brick wall."""
+    n = max(2, round((u1 - u0) / 0.2))
+    for i in range(1, n):
+        x, y = _px(c, u0 + (u1 - u0) * i / n, v1, z)
+        c.dot((x, y), DARK_TIMBER)
+        c.dot((x - 1, y), DARK_TIMBER)
+    n = max(2, round((v1 - v0) / 0.2))
+    for i in range(1, n):
+        x, y = _px(c, u1, v0 + (v1 - v0) * i / n, z)
+        c.dot((x, y), OUTLINE)
+        c.dot((x + 1, y), OUTLINE)
+
+
+def _pilasters(c: Canvas, s: AgeStyle, u0: float, u1: float, v: float, z0: float, z1: float, n: int) -> None:
+    for i in range(n):
+        u = u0 + (u1 - u0) * i / max(1, n - 1)
+        x, y0 = _px(c, u, v, z0)
+        _, y1 = _px(c, u, v, z1)
+        c.draw.rectangle([x - 1, y1, x, y0], fill=(*s.trim, 255))
+
+
+def _lean_logs(c: Canvas, u: float, v: float) -> None:
+    log_pile(c, u, v, 2)
+
+
+# Antiquity ------------------------------------------------------------
+
+def _antiquity_1(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Stone-and-thatch longhouse: low walls under a deep roof.
+        u0, v0, u1, v1 = 0.15, 0.55, 1.85, 1.45
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 12, s.wall)
+        _age_door(c, s, 0.75, v1, height=7)
+        _age_window(c, s, 1.3, v1, 7)
+        _age_window(c, s, u1, 1.0, 7, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 12, 16, s.roof, overhang=0.1)
+        x, y = _px(c, 1.25, 1.0, 26)
+        c.draw.rectangle([x - 1, y - 1, x + 1, y], fill=(*DARK_LOAM, 255))
+        _lean_logs(c, 0.25, 1.85)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.3, 0.45, 1.65, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 14, s.wall)
+        box(c, u0, v0, u1, v1, 4, s.base)
+        _age_door(c, s, 0.8, v1, height=8)
+        _age_window(c, s, 1.3, v1, 10)
+        _age_window(c, s, u1, 1.0, 10, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 14, 6, s.roof, overhang=0.08)
+        amphora(c, 1.8, 1.85)
+    elif n == "east-asian":
+        u0, v0, u1, v1 = 0.3, 0.5, 1.65, 1.5
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 4, s.base)
+        flat_top(c, u0, v0, u1, v1, 4, LIGHT_STONE)
+        a0, b0, a1, b1 = u0 + 0.08, v0 + 0.08, u1 - 0.08, v1 - 0.08
+        box(c, a0, b0, a1, b1, 17, s.wall, z0=4)
+        posts(c, a0, b0, a1, b1, 4, 17, DARK_TIMBER, step=0.35)
+        _age_door(c, s, 0.75, b1, height=9, z0=4)
+        _age_window(c, s, 1.3, b1, 12)
+        _age_window(c, s, a1, 1.0, 12, lit=False)
+        flared_roof(c, a0, b0, a1, b1, 17, 14, s.roof, overhang=0.18, lift=4)
+        bale(c, 1.8, 1.8)
+    else:
+        u0, v0, u1, v1 = 0.35, 0.35, 1.6, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 14, s.wall)
+        _vigas(c, u0, v0, u1, v1, 12)
+        _age_door(c, s, 0.75, v1, height=7)
+        _age_window(c, s, 1.3, v1, 9)
+        _age_window(c, s, u1, 1.0, 9, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 14, 0)
+        sack(c, 1.8, 1.85)
+        palm(c, 0.15, 1.85, 18)
+
+
+def _antiquity_2(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # A longer longhouse with a timber byre lean-to.
+        box(c, 1.35, 0.15, 1.85, 0.6, 6, TIMBER_WALL)
+        gable_roof(c, 1.35, 0.15, 1.85, 0.6, 6, 7, s.roof, TIMBER_WALL, axis="v")
+        u0, v0, u1, v1 = 0.1, 0.55, 1.9, 1.65
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 14, s.wall)
+        _age_door(c, s, 0.6, v1, height=8)
+        _age_door(c, s, 1.5, v1, height=8)
+        _age_window(c, s, 1.05, v1, 9)
+        _age_window(c, s, u1, 1.1, 9, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 14, 20, s.roof, overhang=0.1)
+        for uu in (0.7, 1.3):
+            x, y = _px(c, uu, 1.1, 31)
+            c.draw.rectangle([x - 1, y - 1, x + 1, y], fill=(*DARK_LOAM, 255))
+    elif n == "mediterranean":
+        # Domus: a blank-walled block around an atrium open to the sky.
+        u0, v0, u1, v1 = 0.2, 0.25, 1.75, 1.7
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 16, s.wall)
+        box(c, u0, v0, u1, v1, 5, s.base)
+        _age_door(c, s, 0.7, v1, height=9)
+        for uu in (1.15, 1.45):
+            _age_window(c, s, uu, v1, 12)
+        _age_window(c, s, u1, 0.7, 12, lit=False)
+        _age_window(c, s, u1, 1.2, 12, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 16, 7, s.roof, overhang=0.08)
+        # Compluvium: the opening over the atrium pool.
+        a0, b0, a1, b1 = 0.8, 0.8, 1.15, 1.15
+        c.poly([c.p(a0, b0, 20), c.p(a1, b0, 20), c.p(a1, b1, 20), c.p(a0, b1, 20)], OUTLINE)
+        c.poly([c.p(a0 + 0.06, b0 + 0.06, 18), c.p(a1, b0 + 0.06, 18), c.p(a1, b1, 18), c.p(a0 + 0.06, b1, 18)],
+               MID_WATER)
+        amphora(c, 1.85, 1.85)
+    elif n == "east-asian":
+        # Hall on a stone base beside a raised granary on stilts.
+        u0, v0, u1, v1 = 0.15, 0.2, 1.4, 1.35
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 4, s.base)
+        flat_top(c, u0, v0, u1, v1, 4, LIGHT_STONE)
+        a0, b0, a1, b1 = u0 + 0.08, v0 + 0.08, u1 - 0.08, v1 - 0.08
+        box(c, a0, b0, a1, b1, 19, s.wall, z0=4)
+        posts(c, a0, b0, a1, b1, 4, 19, DARK_TIMBER, step=0.35)
+        _age_door(c, s, 0.55, b1, height=9, z0=4)
+        _age_window(c, s, 1.0, b1, 13)
+        _age_window(c, s, a1, 0.75, 13, lit=False)
+        flared_roof(c, a0, b0, a1, b1, 19, 16, s.roof, overhang=0.2, lift=4)
+        g0, h0, g1, h1 = 1.4, 1.3, 1.85, 1.75
+        for uu, vv in ((g0, h1), (g1, h1), (g1, h0)):
+            c.line([c.p(uu, vv, 0), c.p(uu, vv, 9)], DARK_TIMBER)
+            c.line([c.p(uu, vv, 0), c.p(uu, vv, 9)], DARK_TIMBER)
+        box(c, g0, h0, g1, h1, 18, CLADDING, z0=9)
+        c.line([c.p(g0 + 0.1, h1, 0), c.p(g0 + 0.25, h1, 9)], TIMBER)
+        flared_roof(c, g0, h0, g1, h1, 18, 10, s.roof, overhang=0.1, lift=2)
+    else:
+        # Courtyard house: two flat-roofed wings and a walled yard.
+        box(c, 0.2, 0.2, 1.8, 0.85, 22, s.wall)
+        _vigas(c, 0.2, 0.2, 1.8, 0.85, 20)
+        _age_window(c, s, 1.8, 0.5, 15, lit=False)
+        _age_roof(c, s, 0.2, 0.2, 1.8, 0.85, 22, 0)
+        u0, v0, u1, v1 = 0.2, 0.85, 0.95, 1.75
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 14, s.wall)
+        _vigas(c, u0, v0, u1, v1, 12)
+        _age_door(c, s, 0.55, v1, height=7)
+        _age_window(c, s, u1, 1.3, 9, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 14, 0)
+        # Courtyard wall with a gate, a palm inside.
+        palm(c, 1.35, 1.25, 20)
+        box(c, 0.95, 1.65, 1.8, 1.75, 7, s.wall)
+        box(c, 1.7, 0.85, 1.8, 1.75, 7, s.wall)
+        flat_top(c, 0.95, 1.65, 1.8, 1.75, 7, s.trim)
+        flat_top(c, 1.7, 0.85, 1.8, 1.75, 7, s.trim)
+        x, y = _px(c, 1.35, 1.75, 0)
+        c.draw.rectangle([x - 1, y - 6, x + 1, y - 1], fill=(*OUTLINE, 255))
+
+
+def _antiquity_3(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Chieftain's hall: high stone walls, a deep thatch roof and a
+        # timber-posted porch with its own gable.
+        u0, v0, u1, v1 = 0.12, 0.25, 1.88, 1.45
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 18, s.wall)
+        _age_window(c, s, 0.4, v1, 12)
+        _age_window(c, s, 1.6, v1, 12)
+        _age_window(c, s, u1, 0.6, 12, lit=False)
+        _age_window(c, s, u1, 1.1, 12, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 18, 26, s.roof, overhang=0.1)
+        x, y = _px(c, 1.0, 0.85, 40)
+        c.draw.rectangle([x - 1, y - 1, x + 1, y], fill=(*DARK_LOAM, 255))
+        _portico(c, 0.7, 1.3, v1, 0.32, 15, 3, s.roof, TIMBER_WALL, col=(PINE, TIMBER), recess=DARK_TIMBER)
+        _lean_logs(c, 0.2, 1.9)
+    elif n == "mediterranean":
+        # Domus with a temple-front portico and a peristyle colonnade.
+        u0, v0, u1, v1 = 0.15, 0.15, 1.8, 1.3
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 20, s.wall)
+        box(c, u0, v0, u1, v1, 5, s.base)
+        _age_window(c, s, u1, 0.5, 15, lit=False)
+        _age_window(c, s, u1, 0.95, 15, lit=False)
+        hip_roof(c, u0, v0, u1, v1, 20, 8, s.roof, overhang=0.08)
+        # Peristyle: a garden open to the sky, ringed by columns.
+        a0, b0, a1, b1 = 0.65, 0.45, 1.35, 0.95
+        c.poly([c.p(a0, b0, 25), c.p(a1, b0, 25), c.p(a1, b1, 25), c.p(a0, b1, 25)], OUTLINE)
+        c.poly([c.p(a0 + 0.05, b0 + 0.05, 22), c.p(a1, b0 + 0.05, 22), c.p(a1, b1, 22), c.p(a0 + 0.05, b1, 22)],
+               LEAF)
+        for k in range(4):
+            x, y = _px(c, a0 + 0.08 + (a1 - a0 - 0.12) * k / 3, b1, 22)
+            c.line([(x, y), (x, y - 3)], CREAM)
+        x, y = _px(c, (a0 + a1) / 2, (b0 + b1) / 2, 22)
+        c.dot((x, y), HIGHLIGHT_WATER)
+        c.dot((x + 1, y), HIGHLIGHT_WATER)
+        _portico(c, 0.45, 1.35, v1, 0.42, 18, 4, s.roof, TRAVERTINE)
+        amphora(c, 0.2, 1.9)
+    elif n == "east-asian":
+        # Great timber hall on a tall stone podium, red columns, tiled roof.
+        box(c, 0.1, 0.2, 1.9, 1.75, 6, STONE_WALL)
+        flat_top(c, 0.1, 0.2, 1.9, 1.75, 6, LIGHT_STONE)
+        box(c, 0.75, 1.75, 1.15, 1.9, 3, STONE_WALL)
+        flat_top(c, 0.75, 1.75, 1.15, 1.9, 3, LIGHT_STONE)
+        u0, v0, u1, v1 = 0.3, 0.4, 1.7, 1.45
+        _face(c, "lit", u0, u1, v1, 6, 22, DARK_TIMBER)
+        box(c, u0, v0, u1, v1 - 0.12, 22, s.wall, z0=6)
+        _columns(c, u0, u1, v1, 6, 22, 5, SUN_TERRACOTTA, TERRACOTTA)
+        _columns(c, u1, u1, v0 + 0.05, 6, 22, 1, SUN_TERRACOTTA, TERRACOTTA)
+        flared_roof(c, u0, v0, u1, v1, 22, 20, DARK_TILE_ROOF, overhang=0.26, lift=5)
+    else:
+        # Two-storey mud-brick house fronted by a columned porch (talar).
+        u0, v0, u1, v1 = 0.2, 0.2, 1.8, 1.35
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 30, s.wall)
+        _vigas(c, u0, v0, u1, v1, 28)
+        _vigas(c, u0, v0, u1, v1, 16)
+        for z in (9, 22):
+            _age_window(c, s, u1, 0.55, z, lit=False)
+            _age_window(c, s, u1, 1.0, z, lit=False)
+        _age_window(c, s, 0.45, v1, 22)
+        _age_window(c, s, 1.55, v1, 22)
+        _age_roof(c, s, u0, v0, u1, v1, 30, 0)
+        # Talar: timber columns carrying a flat roof terrace.
+        a0, a1 = 0.6, 1.5
+        _face(c, "lit", a0, a1, v1, 0, 15, MEDIUM_LOAM)
+        _age_door(c, s, 1.05, v1, height=8)
+        _columns(c, a0, a1, v1 + 0.35, 0, 15, 4, PINE, TIMBER)
+        box(c, a0 - 0.05, v1, a1 + 0.05, v1 + 0.4, 18, s.wall, z0=15)
+        parapet(c, a0 - 0.05, v1, a1 + 0.05, v1 + 0.4, 18, s.wall, height=2, rim=0.05, cap=s.trim,
+                deck=s.wall.shade)
+        palm(c, 0.1, 1.85, 22)
+
+
+# Renaissance ----------------------------------------------------------
+
+def _renaissance_1(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        u0, v0, u1, v1 = 0.35, 0.25, 1.55, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 26, s.wall)
+        _cornice(c, u0, v0, u1, v1, 12, s.trim)
+        _age_door(c, s, 0.7, v1, height=8)
+        _age_window(c, s, 1.2, v1, 7)
+        for uu in (0.6, 0.95, 1.3):
+            _age_window(c, s, uu, v1, 20)
+        for vv in (0.6, 1.05):
+            _age_window(c, s, u1, vv, 19, lit=False)
+            _age_window(c, s, u1, vv, 7, lit=False)
+        gable_roof(c, u0, v0, u1, v1, 26, 18, s.roof, s.wall, axis="v")
+        _stepped_gable(c, u0, u1, v1, 26, 18, s.wall)
+        chimney(c, 0.8, 0.45, 34, 50)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.25, 0.4, 1.7, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 26, s.wall)
+        box(c, u0, v0, u1, v1, 8, s.base)
+        _cornice(c, u0, v0, u1, v1, 8, LIGHT_STONE)
+        _age_door(c, s, 0.6, v1, height=7)
+        _age_window(c, s, 1.1, v1, 4)
+        _age_window(c, s, 1.45, v1, 4)
+        for uu in (0.55, 1.0, 1.45):
+            _age_window(c, s, uu, v1, 18)
+        _age_window(c, s, u1, 0.75, 17, lit=False)
+        _age_window(c, s, u1, 1.25, 17, lit=False)
+        box(c, u0 - 0.04, v0 - 0.04, u1 + 0.04, v1 + 0.04, 28, Material(CREAM, LIGHT_STONE), z0=25)
+        hip_roof(c, u0, v0, u1, v1, 28, 7, s.roof, overhang=0.08)
+        amphora(c, 1.85, 1.85)
+    elif n == "east-asian":
+        # Two-storey townhouse: dark lattice shopfront, white upper
+        # storey, a pent roof and a tiled gable roof.
+        u0, v0, u1, v1 = 0.25, 0.35, 1.7, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 12, s.base)
+        x0, y0 = c.p(u0, v1, 0)
+        x1, _ = c.p(u1, v1, 0)
+        for x in range(round(x0) + 2, round(x1) - 1, 2):
+            yb = y0 + (x - x0) * 0.5
+            c.line([(x, yb - 2), (x, yb - 10)], PINE)
+        flared_roof(c, u0, v0, u1, v1, 12, 4, s.roof, overhang=0.14, lift=1)
+        box(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 27, s.wall, z0=14)
+        posts(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 14, 27, DARK_TIMBER, step=0.35)
+        for uu in (0.7, 1.25):
+            _age_window(c, s, uu, v1 - 0.05, 21)
+        _age_window(c, s, u1 - 0.05, 1.0, 20, lit=False)
+        gable_roof(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 27, 12, s.roof, s.wall, overhang=0.16)
+    else:
+        u0, v0, u1, v1 = 0.3, 0.3, 1.65, 1.65
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 26, s.wall)
+        _cornice(c, u0, v0, u1, v1, 12, LIGHT_STONE)
+        _age_door(c, s, 0.65, v1, height=8)
+        _age_window(c, s, 1.35, v1, 6)
+        mashrabiya(c, 1.15, v1, 15, half=0.2, height=9)
+        _age_window(c, s, 0.6, v1, 19)
+        _age_window(c, s, u1, 0.75, 19, lit=False)
+        _age_window(c, s, u1, 1.25, 19, lit=False)
+        _age_window(c, s, u1, 1.0, 6, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 26, 0)
+
+
+def _renaissance_2(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Paired gable fronts of a merchant's house.
+        u0, v0, u1, v1 = 0.2, 0.25, 1.75, 1.65
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 32, s.wall)
+        box(c, u0, v0, u1, v1, 10, s.base)
+        _cornice(c, u0, v0, u1, v1, 10, s.trim)
+        _cornice(c, u0, v0, u1, v1, 21, s.trim)
+        _age_door(c, s, 0.55, v1, height=8)
+        for uu in (0.95, 1.4):
+            _age_window(c, s, uu, v1, 5)
+        for z in (16, 27):
+            for uu in (0.4, 0.75, 1.2, 1.55):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.6, 1.1):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        um = (u0 + u1) / 2
+        gable_roof(c, um, v0, u1, v1, 32, 16, s.roof, s.wall, axis="v")
+        gable_roof(c, u0, v0, um, v1, 32, 16, s.roof, s.wall, axis="v")
+        _stepped_gable(c, u0, um, v1, 32, 16, s.wall)
+        _stepped_gable(c, um, u1, v1, 32, 16, s.wall)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.2, 0.2, 1.75, 1.7
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 34, s.wall)
+        box(c, u0, v0, u1, v1, 11, s.base)
+        _cornice(c, u0, v0, u1, v1, 11, LIGHT_STONE)
+        for uu in (0.5, 0.9):
+            x, y = _px(c, uu, v1, 0)
+            arch(c, x, y - 1, 5, 8, DARK_TIMBER)
+        _age_door(c, s, 1.35, v1, height=8)
+        for z in (17, 27):
+            for uu in (0.45, 0.95, 1.45):
+                _age_window(c, s, uu, v1, z)
+            _age_window(c, s, u1, 0.65, z - 1, lit=False)
+            _age_window(c, s, u1, 1.2, z - 1, lit=False)
+        box(c, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, 37, Material(CREAM, LIGHT_STONE), z0=33)
+        hip_roof(c, u0, v0, u1, v1, 37, 7, s.roof, overhang=0.08)
+    elif n == "east-asian":
+        # Townhouse with a fire-proof white storehouse (kura) behind it.
+        box(c, 1.1, 0.15, 1.8, 0.75, 30, WHITEWASH)
+        _wainscot(c, 1.1, 0.15, 1.8, 0.75, 8)
+        box(c, 1.1, 0.15, 1.8, 0.75, 30, WHITEWASH, z0=8)
+        _age_window(c, s, 1.8, 0.45, 22, lit=False)
+        gable_roof(c, 1.1, 0.15, 1.8, 0.75, 30, 10, s.roof, WHITEWASH, axis="v", overhang=0.1)
+        u0, v0, u1, v1 = 0.2, 0.75, 1.75, 1.8
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 12, s.base)
+        x0, y0 = c.p(u0, v1, 0)
+        x1, _ = c.p(u1, v1, 0)
+        for x in range(round(x0) + 2, round(x1) - 1, 2):
+            yb = y0 + (x - x0) * 0.5
+            c.line([(x, yb - 2), (x, yb - 10)], PINE)
+        flared_roof(c, u0, v0, u1, v1, 12, 4, s.roof, overhang=0.14, lift=1)
+        box(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 28, s.wall, z0=14)
+        posts(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 14, 28, DARK_TIMBER, step=0.35)
+        for uu in (0.6, 1.0, 1.4):
+            _age_window(c, s, uu, v1 - 0.05, 21)
+        gable_roof(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 28, 11, s.roof, s.wall, overhang=0.16)
+    else:
+        u0, v0, u1, v1 = 0.2, 0.2, 1.75, 1.75
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 34, s.wall)
+        _cornice(c, u0, v0, u1, v1, 12, LIGHT_STONE)
+        _cornice(c, u0, v0, u1, v1, 23, LIGHT_STONE)
+        _age_door(c, s, 0.55, v1, height=9)
+        _age_window(c, s, 1.0, v1, 6)
+        _age_window(c, s, 1.45, v1, 6)
+        mashrabiya(c, 0.75, v1, 15, half=0.2, height=9)
+        mashrabiya(c, 1.35, v1, 15, half=0.2, height=9)
+        for uu in (0.5, 1.05, 1.55):
+            _age_window(c, s, uu, v1, 29)
+        for z in (6, 18, 29):
+            _age_window(c, s, u1, 0.65, z, lit=False)
+            _age_window(c, s, u1, 1.25, z, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 34, 0)
+
+
+def _renaissance_3(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Guild house: a tall stepped gable with pilasters and cornices.
+        u0, v0, u1, v1 = 0.2, 0.15, 1.75, 1.75
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 40, s.wall)
+        box(c, u0, v0, u1, v1, 12, s.base)
+        _pilasters(c, s, u0 + 0.08, u1 - 0.08, v1, 12, 40, 4)
+        for z in (12, 26, 40):
+            _cornice(c, u0, v0, u1, v1, z, s.trim)
+        _age_door(c, s, 0.75, v1, height=9)
+        _age_door(c, s, 1.2, v1, height=9)
+        for z in (20, 34):
+            for uu in (0.45, 0.97, 1.5):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.5, 0.95, 1.4):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        gable_roof(c, u0, v0, u1, v1, 40, 22, s.roof, s.wall, axis="v")
+        _stepped_gable(c, u0, u1, v1, 40, 22, s.wall, steps=4)
+        chimney(c, 0.6, 0.3, 46, 66)
+    elif n == "mediterranean":
+        # Palazzo: rusticated base, pilastered piano nobile, a deep
+        # cornice and a roof-top loggia.
+        t0, t1 = 0.25, 0.8
+        box(c, t0, t0, t1, t1, 56, s.wall)
+        for k in (0.33, 0.66):
+            x, y = _px(c, t0 + (t1 - t0) * k, t1, 47)
+            arch(c, x, y, 3, 6, DARK_TIMBER)
+            x, y = _px(c, t1, t0 + (t1 - t0) * k, 47)
+            arch(c, x, y, 3, 6, OUTLINE)
+        hip_roof(c, t0, t0, t1, t1, 56, 6, s.roof, overhang=0.06)
+        u0, v0, u1, v1 = 0.15, 0.15, 1.8, 1.8
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 40, s.wall)
+        box(c, u0, v0, u1, v1, 13, s.base)
+        for z in (4, 8):
+            _face_line(c, "lit", u0, u1, v1, z, STONE)
+        _cornice(c, u0, v0, u1, v1, 13, LIGHT_STONE)
+        _pilasters(c, s, u0 + 0.1, u1 - 0.1, v1, 13, 38, 4)
+        x, y = _px(c, 0.95, v1, 0)
+        arch(c, x, y - 1, 7, 11, LIGHT_STONE)
+        arch(c, x, y - 1, 5, 10, DARK_TIMBER)
+        for z in (21, 32):
+            for uu in (0.45, 0.8, 1.15, 1.5):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.55, 1.0, 1.45):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        box(c, u0 - 0.06, v0 - 0.06, u1 + 0.06, v1 + 0.06, 43, Material(CREAM, LIGHT_STONE), z0=39)
+        hip_roof(c, u0, v0, u1, v1, 43, 7, s.roof, overhang=0.08)
+    elif n == "east-asian":
+        # Merchant's residence: two full storeys over a stone base, a
+        # pent roof between them and a big tiled hip-and-gable roof.
+        box(c, 0.1, 0.15, 1.9, 1.85, 4, STONE_WALL)
+        flat_top(c, 0.1, 0.15, 1.9, 1.85, 4, LIGHT_STONE)
+        u0, v0, u1, v1 = 0.2, 0.25, 1.8, 1.75
+        box(c, u0, v0, u1, v1, 17, s.base, z0=4)
+        x0, y0 = c.p(u0, v1, 4)
+        x1, _ = c.p(u1, v1, 4)
+        for x in range(round(x0) + 2, round(x1) - 1, 2):
+            yb = y0 + (x - x0) * 0.5
+            c.line([(x, yb - 2), (x, yb - 11)], PINE)
+        _age_door(c, s, 0.6, v1, height=10, z0=4)
+        flared_roof(c, u0, v0, u1, v1, 17, 5, s.roof, overhang=0.14, lift=2)
+        a0, b0, a1, b1 = 0.3, 0.35, 1.7, 1.65
+        z = _skirt_top(17, 5, 0.75, 0.65, 0.14)
+        box(c, a0, b0, a1, b1, z + 16, s.wall, z0=z)
+        posts(c, a0, b0, a1, b1, z, z + 16, DARK_TIMBER, step=0.35)
+        for uu in (0.55, 0.9, 1.25, 1.55):
+            _age_window(c, s, uu, b1, z + 10)
+        for vv in (0.7, 1.3):
+            _age_window(c, s, a1, vv, z + 9, lit=False)
+        flared_roof(c, a0, b0, a1, b1, z + 16, 18, s.roof, overhang=0.2, lift=4)
+        x, y = _px(c, 1.0, 1.0, z + 16 + 14)
+        c.draw.polygon([(x - 3, y + 2), (x, y - 3), (x + 3, y + 2)], fill=(*s.wall.lit, 255),
+                       outline=(*OUTLINE, 255))
+    else:
+        # Stone mansion with mashrabiya bays, a cornice and a small dome.
+        u0, v0, u1, v1 = 0.15, 0.15, 1.8, 1.8
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 38, s.wall)
+        box(c, u0, v0, u1, v1, 12, s.base)
+        _cornice(c, u0, v0, u1, v1, 12, LIGHT_STONE)
+        _cornice(c, u0, v0, u1, v1, 25, LIGHT_STONE)
+        x, y = _px(c, 0.6, v1, 0)
+        arch(c, x, y - 1, 7, 11, s.culture.accent)
+        arch(c, x, y - 1, 5, 10, DARK_TIMBER)
+        _age_window(c, s, 1.1, v1, 6)
+        _age_window(c, s, 1.5, v1, 6)
+        mashrabiya(c, 0.65, v1, 16, half=0.2, height=8)
+        mashrabiya(c, 1.35, v1, 16, half=0.2, height=8)
+        mashrabiya(c, 1.0, v1, 28, half=0.2, height=8)
+        for uu in (0.5, 1.5):
+            _age_window(c, s, uu, v1, 32)
+        for z in (6, 19, 32):
+            _age_window(c, s, u1, 0.6, z, lit=False)
+            _age_window(c, s, u1, 1.3, z, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 38, 0)
+        dome(c, 0.75, 0.75, 41, 12, 4, TILE_DOME, s.wall, band=s.culture.accent)
+
+
+# Industrial -----------------------------------------------------------
+
+def _industrial_1(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # A pair of brick terraced cottages under one slate roof.
+        u0, v0, u1, v1 = 0.15, 0.45, 1.85, 1.5
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 20, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 20)
+        um = (u0 + u1) / 2
+        c.line([c.p(um, v1, 0), c.p(um, v1, 20)], s.trim)
+        for uu in (0.4, 1.1):
+            _age_door(c, s, uu, v1, height=8)
+        for uu in (0.75, 1.5):
+            _age_window(c, s, uu, v1, 6)
+        for uu in (0.45, 0.75, 1.15, 1.5):
+            _age_window(c, s, uu, v1, 16)
+        _age_window(c, s, u1, 1.0, 15, lit=False)
+        gable_roof(c, u0, v0, u1, v1, 20, 12, s.roof, s.wall, axis="u")
+        for uu in (0.3, um - 0.08, 1.55):
+            _brick_chimney(c, uu, 0.9, 26, 38)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.25, 0.4, 1.7, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 24, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 24)
+        _cornice(c, u0, v0, u1, v1, 23, s.trim)
+        _age_door(c, s, 0.6, v1, height=8)
+        _age_window(c, s, 1.1, v1, 6)
+        _age_window(c, s, 1.45, v1, 6)
+        for uu in (0.6, 1.1, 1.45):
+            _age_window(c, s, uu, v1, 18)
+        _age_window(c, s, u1, 0.75, 17, lit=False)
+        _age_window(c, s, u1, 1.25, 17, lit=False)
+        _balcony(c, "lit", 0.95, 1.6, v1, 13, rail=OUTLINE, slab=LIGHT_STONE)
+        hip_roof(c, u0, v0, u1, v1, 24, 7, s.roof, overhang=0.08)
+        _brick_chimney(c, 1.2, 0.65, 26, 38)
+        _brick_chimney(c, 0.5, 0.65, 26, 36)
+    elif n == "east-asian":
+        u0, v0, u1, v1 = 0.25, 0.45, 1.7, 1.55
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 3, s.base)
+        box(c, u0, v0, u1, v1, 20, s.wall, z0=3)
+        _brickwork(c, u0, v0, u1, v1, 3, 20)
+        _age_door(c, s, 0.65, v1, height=9, z0=3)
+        for uu in (1.1, 1.45):
+            _age_window(c, s, uu, v1, 13)
+        _age_window(c, s, u1, 0.8, 13, lit=False)
+        _age_window(c, s, u1, 1.25, 13, lit=False)
+        flared_roof(c, u0, v0, u1, v1, 20, 11, s.roof, overhang=0.18, lift=3)
+        _brick_chimney(c, 1.3, 0.75, 24, 40)
+    else:
+        u0, v0, u1, v1 = 0.3, 0.3, 1.65, 1.65
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 22, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 22)
+        _age_door(c, s, 0.65, v1, height=8)
+        _age_window(c, s, 1.2, v1, 7)
+        _age_window(c, s, 0.75, v1, 17)
+        _age_window(c, s, 1.3, v1, 17)
+        _age_window(c, s, u1, 0.75, 16, lit=False)
+        _age_window(c, s, u1, 1.25, 16, lit=False)
+        awning(c, 1.0, 1.5, v1, 11)
+        _age_roof(c, s, u0, v0, u1, v1, 22, 0)
+        _brick_chimney(c, 0.5, 0.5, 25, 36)
+        _brick_chimney(c, 1.3, 0.5, 25, 34)
+
+
+def _industrial_2(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Three-storey brick terrace with bay windows.
+        u0, v0, u1, v1 = 0.15, 0.35, 1.85, 1.6
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 30, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 30)
+        um = (u0 + u1) / 2
+        c.line([c.p(um, v1, 0), c.p(um, v1, 30)], s.trim)
+        for uu in (0.35, 1.2):
+            _age_door(c, s, uu, v1, height=8)
+        for a in (0.55, 1.4):
+            box(c, a, v1, a + 0.3, v1 + 0.12, 13, BRICK)
+            flat_top(c, a, v1, a + 0.3, v1 + 0.12, 13, SLATE)
+            _age_window(c, s, a + 0.15, v1 + 0.12, 7)
+        for z in (17, 26):
+            for uu in (0.4, 0.75, 1.25, 1.6):
+                _age_window(c, s, uu, v1, z)
+            _age_window(c, s, u1, 0.95, z - 1, lit=False)
+        gable_roof(c, u0, v0, u1, v1, 30, 12, s.roof, s.wall, axis="u")
+        for uu in (0.25, um - 0.08, 1.6):
+            _brick_chimney(c, uu, 0.85, 36, 48)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.2, 0.2, 1.75, 1.7
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 32, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 32)
+        box(c, u0, v0, u1, v1, 10, s.base)
+        _cornice(c, u0, v0, u1, v1, 31, s.trim)
+        for uu in (0.5, 0.9):
+            x, y = _px(c, uu, v1, 0)
+            arch(c, x, y - 1, 5, 8, DARK_TIMBER)
+        _age_door(c, s, 1.4, v1, height=8)
+        for z in (17, 26):
+            for uu in (0.45, 0.95, 1.45):
+                _age_window(c, s, uu, v1, z)
+            _age_window(c, s, u1, 0.65, z - 1, lit=False)
+            _age_window(c, s, u1, 1.2, z - 1, lit=False)
+        _balcony(c, "lit", 0.3, 1.65, v1, 21, rail=OUTLINE)
+        hip_roof(c, u0, v0, u1, v1, 32, 7, s.roof, overhang=0.08)
+        for uu in (0.45, 1.0, 1.45):
+            _brick_chimney(c, uu, 0.5, 34, 46)
+    elif n == "east-asian":
+        u0, v0, u1, v1 = 0.2, 0.3, 1.75, 1.65
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 3, s.base)
+        box(c, u0, v0, u1, v1, 28, s.wall, z0=3)
+        _brickwork(c, u0, v0, u1, v1, 3, 28)
+        _cornice(c, u0, v0, u1, v1, 15, s.trim)
+        _age_door(c, s, 0.55, v1, height=9, z0=3)
+        for uu in (1.0, 1.45):
+            _age_window(c, s, uu, v1, 11)
+        for uu in (0.55, 1.0, 1.45):
+            _age_window(c, s, uu, v1, 23)
+        for z in (11, 23):
+            _age_window(c, s, u1, 0.75, z, lit=False)
+            _age_window(c, s, u1, 1.25, z, lit=False)
+        _balcony(c, "lit", 0.35, 1.6, v1, 16, rail=DARK_TIMBER)
+        flared_roof(c, u0, v0, u1, v1, 28, 13, s.roof, overhang=0.18, lift=3)
+        _brick_chimney(c, 1.35, 0.6, 32, 50)
+        _brick_chimney(c, 0.45, 0.6, 32, 46)
+    else:
+        u0, v0, u1, v1 = 0.2, 0.2, 1.75, 1.75
+        shadow(c, u0, v0, u1, v1)
+        box(c, u0, v0, u1, v1, 32, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 32)
+        _cornice(c, u0, v0, u1, v1, 12, s.trim)
+        for uu in (0.5, 0.9, 1.3):
+            x, y = _px(c, uu, v1, 0)
+            arch(c, x, y - 1, 5, 9, DARK_TIMBER)
+            c.draw.line([(x - 3, y - 11), (x + 3, y - 11)], fill=(*s.trim, 255))
+        for z in (18, 27):
+            for uu in (0.5, 0.9, 1.3, 1.6):
+                _age_window(c, s, uu, v1, z)
+            _age_window(c, s, u1, 0.65, z - 1, lit=False)
+            _age_window(c, s, u1, 1.25, z - 1, lit=False)
+        _age_roof(c, s, u0, v0, u1, v1, 32, 0)
+        for uu in (0.4, 0.9, 1.4):
+            _brick_chimney(c, uu, 0.4, 35, 46)
+
+
+def _industrial_3(c: Canvas, s: AgeStyle) -> None:
+    n = s.name
+    if n == "northern-european":
+        # Tall brick townhouse with a slate mansard and dormers.
+        u0, v0, u1, v1 = 0.2, 0.2, 1.75, 1.75
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 40, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 40)
+        box(c, u0, v0, u1, v1, 10, s.base)
+        for z in (10, 40):
+            _cornice(c, u0, v0, u1, v1, z, s.trim)
+        _age_door(c, s, 0.6, v1, height=8)
+        _age_window(c, s, 1.05, v1, 5)
+        _age_window(c, s, 1.45, v1, 5)
+        for z in (17, 26, 35):
+            for uu in (0.45, 0.85, 1.25, 1.55):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.55, 1.0, 1.45):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        # Mansard: steep slate lower slope, then a low hip.
+        box(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 50, SLATE_ROOF, z0=40)
+        for uu in (0.55, 1.0, 1.45):
+            x, y = _px(c, uu, v1 - 0.05, 45)
+            c.draw.rectangle([x - 2, y - 3, x + 2, y + 2], fill=(*LIGHT_STONE, 255))
+            c.draw.rectangle([x - 1, y - 2, x + 1, y + 1], fill=(*DARK_TIMBER, 255))
+        hip_roof(c, u0 + 0.05, v0 + 0.05, u1 - 0.05, v1 - 0.05, 50, 6, s.roof, overhang=0.04)
+        for uu, vv in ((0.3, 0.35), (0.85, 0.3), (1.4, 0.35)):
+            _brick_chimney(c, uu, vv, 50, 64)
+    elif n == "mediterranean":
+        u0, v0, u1, v1 = 0.15, 0.15, 1.8, 1.8
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 44, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 44)
+        box(c, u0, v0, u1, v1, 11, s.base)
+        _cornice(c, u0, v0, u1, v1, 11, s.trim)
+        box(c, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, 46, STONE_WALL, z0=43)
+        for uu in (0.5, 0.95, 1.4):
+            x, y = _px(c, uu, v1, 0)
+            arch(c, x, y - 1, 5, 9, DARK_TIMBER)
+        for z in (18, 27, 36):
+            for uu in (0.45, 0.85, 1.25, 1.6):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.55, 1.0, 1.45):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        for z in (22, 31):
+            _balcony(c, "lit", 0.3, 1.7, v1, z - 9, rail=OUTLINE)
+        hip_roof(c, u0, v0, u1, v1, 46, 7, s.roof, overhang=0.08)
+        for uu in (0.35, 0.9, 1.45):
+            _brick_chimney(c, uu, 0.4, 48, 60)
+    elif n == "east-asian":
+        u0, v0, u1, v1 = 0.15, 0.2, 1.8, 1.75
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 4, s.base)
+        box(c, u0, v0, u1, v1, 40, s.wall, z0=4)
+        _brickwork(c, u0, v0, u1, v1, 4, 40)
+        for z in (16, 28):
+            _cornice(c, u0, v0, u1, v1, z, s.trim)
+        x, y = _px(c, 0.95, v1, 4)
+        arch(c, x, y - 1, 7, 11, s.trim)
+        arch(c, x, y - 1, 5, 10, DARK_TIMBER)
+        for uu in (0.45, 1.45):
+            _age_window(c, s, uu, v1, 11)
+        for z in (23, 35):
+            for uu in (0.45, 0.8, 1.15, 1.5):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.6, 1.0, 1.4):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        flared_roof(c, u0, v0, u1, v1, 40, 14, s.roof, overhang=0.2, lift=4)
+        # Clock turret on the ridge.
+        box(c, 0.85, 0.85, 1.1, 1.1, 64, s.wall, z0=48)
+        x, y = _px(c, 0.975, 1.1, 58)
+        c.draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(*CREAM, 255), outline=(*OUTLINE, 255))
+        flared_roof(c, 0.85, 0.85, 1.1, 1.1, 64, 7, s.roof, overhang=0.08, lift=2)
+        _brick_chimney(c, 1.45, 0.45, 44, 58)
+    else:
+        u0, v0, u1, v1 = 0.15, 0.15, 1.8, 1.8
+        shadow(c, u0, v0, u1, v1, 0.4)
+        box(c, u0, v0, u1, v1, 44, s.wall)
+        _brickwork(c, u0, v0, u1, v1, 0, 44)
+        _cornice(c, u0, v0, u1, v1, 13, s.trim)
+        for uu in (0.4, 0.75, 1.1, 1.45):
+            x, y = _px(c, uu, v1, 0)
+            arch(c, x, y - 1, 5, 10, DARK_TIMBER)
+            c.draw.line([(x - 3, y - 12), (x + 3, y - 12)], fill=(*s.trim, 255))
+        for z in (20, 29, 38):
+            for uu in (0.45, 0.85, 1.25, 1.6):
+                _age_window(c, s, uu, v1, z)
+            for vv in (0.55, 1.0, 1.45):
+                _age_window(c, s, u1, vv, z - 1, lit=False)
+        mashrabiya(c, 1.0, v1, 23, half=0.22, height=8)
+        _age_roof(c, s, u0, v0, u1, v1, 44, 0)
+        for uu in (0.35, 0.8, 1.25):
+            _brick_chimney(c, uu, 0.35, 47, 60)
+
+
+# Modern ---------------------------------------------------------------
+
+def _modern_accent(c: Canvas, s: AgeStyle, u0: float, v0: float, u1: float, v1: float, z: float) -> None:
+    """The culture's mark on a modern flat roof."""
+    n = s.name
+    if n == "mediterranean":
+        # Roof terrace pergola and a parasol.
+        a0, a1, b0, b1 = u0 + 0.15, u0 + 0.6, v0 + 0.15, v0 + 0.6
+        for uu, vv in ((a0, b1), (a1, b1), (a1, b0)):
+            c.line([c.p(uu, vv, z), c.p(uu, vv, z + 7)], PINE)
+        for k in range(4):
+            vv = b0 + (b1 - b0) * k / 3
+            c.line([c.p(a0, vv, z + 7), c.p(a1, vv, z + 7)], TIMBER)
+        x, y = _px(c, (u0 + u1) / 2 + 0.25, (v0 + v1) / 2 + 0.2, z)
+        c.line([(x, y), (x, y - 7)], DARK_TIMBER)
+        c.poly([(x - 5, y - 6), (x + 5, y - 6), (x, y - 9)], s.trim)
+    elif n == "east-asian":
+        # A flared tiled canopy over the roof edge.
+        flared_roof(c, u0 + 0.1, v0 + 0.1, u1 - 0.1, v1 - 0.1, z + 2, 6, s.roof, overhang=0.14, lift=3)
+    elif n == "middle-eastern":
+        a = min(u1 - u0, v1 - v0) * 0.18
+        dome(c, u0 + a + 0.15, v0 + a + 0.15, z, 7, 3, TILE_DOME, CONCRETE)
+    else:
+        # Solar panels on the flat roof.
+        a0, a1, b0, b1 = u0 + 0.2, u1 - 0.25, v0 + 0.2, v0 + 0.55
+        c.poly([c.p(a0, b0, z + 4), c.p(a1, b0, z + 4), c.p(a1, b1, z + 1), c.p(a0, b1, z + 1)], DEEP_WATER)
+        c.line([c.p(a0, b1, z + 1), c.p(a1, b1, z + 1)], OUTLINE)
+        c.line([c.p((a0 + a1) / 2, b0, z + 4), c.p((a0 + a1) / 2, b1, z + 1)], MID_WATER)
+
+
+def _modern_base(c: Canvas, s: AgeStyle, u0: float, v0: float, u1: float, v1: float, z: float) -> None:
+    """A culture-tinted lower storey or cladding panel."""
+    if s.base is CONCRETE:
+        return
+    box(c, u0, v0, u1, v1, z, s.base)
+    if s.name == "northern-european":
+        x0, y0 = c.p(u0, v1, 0)
+        x1, _ = c.p(u1, v1, 0)
+        for x in range(round(x0) + 2, round(x1) - 1, 3):
+            yb = y0 + (x - x0) * 0.5
+            c.line([(x, yb - 1), (x, yb - z + 1)], TIMBER)
+    elif s.name == "middle-eastern":
+        _face_line(c, "lit", u0, u1, v1, z - 1, s.trim)
+        _face_line(c, "shade", v0, v1, u1, z - 1, DEEP_WATER)
+
+
+def _screen(c: Canvas, u0: float, u1: float, v: float, z0: float, z1: float) -> None:
+    """A pierced sun screen (modern mashrabiya) over the lit wall."""
+    _face(c, "lit", u0, u1, v, z0, z1, PALE_SAND)
+    x0, y0 = c.p(u0, v, z0)
+    x1, _ = c.p(u1, v, z0)
+    for x in range(round(x0) + 1, round(x1)):
+        yb = y0 + (x - x0) * 0.5
+        for k in range(1, int(z1 - z0)):
+            if (x + k) % 3 == 0:
+                c.dot((x, yb - k), MID_WATER)
+
+
+def _modern_1(c: Canvas, s: AgeStyle) -> None:
+    u0, v0, u1, v1 = 0.25, 0.35, 1.7, 1.6
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 20, s.wall)
+    _modern_base(c, s, u0, v0, u1, v1, 10)
+    _glass(c, "lit", 0.95, 1.6, v1, 2, 8)
+    _age_door(c, s, 0.55, v1, height=8)
+    if s.name == "middle-eastern":
+        _screen(c, 0.35, 1.0, v1, 12, 18)
+        _glass(c, "lit", 1.1, 1.6, v1, 12, 18)
+    else:
+        _glass(c, "lit", 0.35, 1.6, v1, 12, 18)
+    _glass(c, "shade", 0.5, 1.45, u1, 12, 18)
+    _glass(c, "shade", 0.8, 1.4, u1, 2, 8)
+    _age_roof(c, s, u0, v0, u1, v1, 20, 0)
+    _modern_accent(c, s, u0, v0, u1, v1, 20)
+    # Car port slab on a slim post.
+    box(c, 1.75, 0.5, 1.95, 1.35, 1, CONCRETE)
+    c.line([c.p(1.95, 1.3, 0), c.p(1.95, 1.3, 9)], LIGHT_STONE)
+    box(c, 1.7, 0.45, 1.98, 1.38, 11, CONCRETE, z0=9)
+    flat_top(c, 1.7, 0.45, 1.98, 1.38, 11, LIGHT_STONE)
+
+
+def _modern_2(c: Canvas, s: AgeStyle) -> None:
+    # L-shaped villa: a three-storey wing behind a two-storey wing.
+    a0, b0, a1, b1 = 0.2, 0.2, 1.05, 1.0
+    box(c, a0, b0, a1, b1, 32, s.wall)
+    _glass(c, "shade", b0 + 0.15, b1 - 0.1, a1, 24, 30)
+    _age_roof(c, s, a0, b0, a1, b1, 32, 0)
+    _modern_accent(c, s, a0, b0, a1, b1, 32)
+    u0, v0, u1, v1 = 0.2, 0.75, 1.8, 1.7
+    shadow(c, u0, v0, u1, v1)
+    box(c, u0, v0, u1, v1, 22, s.wall)
+    _modern_base(c, s, u0, v0, u1, v1, 11)
+    _age_door(c, s, 0.5, v1, height=8)
+    _glass(c, "lit", 0.8, 1.7, v1, 2, 9)
+    if s.name == "middle-eastern":
+        _screen(c, 0.3, 1.0, v1, 13, 20)
+        _glass(c, "lit", 1.1, 1.7, v1, 13, 20)
+    else:
+        _glass(c, "lit", 0.3, 1.7, v1, 13, 20)
+    _glass(c, "shade", 0.9, 1.6, u1, 13, 20)
+    _glass(c, "shade", 0.9, 1.6, u1, 2, 9)
+    _balcony(c, "lit", 0.9, 1.7, v1, 12, rail=GLINT)
+    _age_roof(c, s, u0, v0, u1, v1, 22, 0)
+    if s.name == "mediterranean":
+        # Rooftop pool on the lower wing.
+        c.poly([c.p(1.15, 0.95, 22), c.p(1.65, 0.95, 22), c.p(1.65, 1.5, 22), c.p(1.15, 1.5, 22)], HIGHLIGHT_WATER)
+        c.line([c.p(1.15, 0.95, 22), c.p(1.65, 0.95, 22)], MID_WATER)
+
+
+def _modern_3(c: Canvas, s: AgeStyle) -> None:
+    # A small apartment block: five storeys with stacked balconies.
+    u0, v0, u1, v1 = 0.25, 0.25, 1.75, 1.75
+    shadow(c, u0, v0, u1, v1, 0.4)
+    top = 52
+    box(c, u0, v0, u1, v1, top, s.wall)
+    _modern_base(c, s, u0, v0, u1, v1, 10)
+    _age_door(c, s, 0.55, v1, height=8)
+    _glass(c, "lit", 0.85, 1.65, v1, 2, 8)
+    _glass(c, "shade", 0.4, 1.6, u1, 2, 8)
+    for z in (12, 22, 32, 42):
+        if s.name == "middle-eastern":
+            _screen(c, 0.35, 0.85, v1, z + 1, z + 8)
+            _glass(c, "lit", 0.95, 1.65, v1, z + 1, z + 8)
+        else:
+            _glass(c, "lit", 0.35, 1.65, v1, z + 1, z + 8)
+        _glass(c, "shade", 0.4, 1.6, u1, z + 1, z + 8)
+        _balcony(c, "lit", 0.9, 1.6, v1, z, rail=GLINT if s.name != "east-asian" else DARK_TIMBER)
+        _balcony(c, "shade", 0.45, 0.95, u1, z, rail=GLINT)
+    _age_roof(c, s, u0, v0, u1, v1, top, 0)
+    if s.name == "east-asian":
+        _modern_accent(c, s, u0, v0, u1, v1, top)
+        return
+    box(c, 0.45, 0.45, 0.9, 0.85, top + 7, CONCRETE, z0=top)
+    flat_top(c, 0.45, 0.45, 0.9, 0.85, top + 7, LIGHT_STONE)
+    _modern_accent(c, s, 0.85, 0.85, u1, u1, top)
+
+
+_AGE_DRAWERS: dict[str, tuple[Callable[[Canvas, AgeStyle], None], ...]] = {
+    "antiquity": (_antiquity_1, _antiquity_2, _antiquity_3),
+    "renaissance": (_renaissance_1, _renaissance_2, _renaissance_3),
+    "industrial": (_industrial_1, _industrial_2, _industrial_3),
+    "modern": (_modern_1, _modern_2, _modern_3),
+}
+
+
+def draw_age_house(age: str, tier: int, culture: str = "northern-european") -> Image.Image:
+    """The house look for `tier` (1–3) of `culture` in `age`: same 2×2
+    footprint and bottom anchor as `building-house`, trimmed to the
+    smoke-plume headroom."""
+    c = Canvas(2, 2, 140)
+    yard(c)
+    _AGE_DRAWERS[age][tier - 1](c, age_style(culture, age))
+    return _trim(c.img)
+
+
+def age_house_name(age: str, tier: int, culture: str = "northern-european") -> str:
+    tier_part = "" if tier == 1 else f"-tier{tier}"
+    culture_part = "" if culture == NORTHERN_EUROPEAN.culture else f"-{culture}"
+    return f"building-house{tier_part}-{age}{culture_part}"
+
+
+# Quern house ----------------------------------------------------------
+
+def _millstone(c: Canvas, u: float, v: float, handle: float) -> None:
+    """A hand quern on a low stone block: two stacked stones, the upper
+    one turned by an upright handle at angle `handle` (radians)."""
+    box(c, u - 0.22, v - 0.22, u + 0.22, v + 0.22, 4, STONE_WALL)
+    flat_top(c, u - 0.22, v - 0.22, u + 0.22, v + 0.22, 4, LIGHT_STONE)
+    x, y = _px(c, u, v, 4)
+    c.draw.ellipse([x - 10, y - 5, x + 10, y + 4], fill=(*SHADOW_STONE, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - 9, y - 9, x + 9, y + 1], fill=(*STONE, 255), outline=(*OUTLINE, 255))
+    c.draw.ellipse([x - 8, y - 9, x + 7, y - 2], fill=(*LIGHT_STONE, 255))
+    c.draw.ellipse([x - 2, y - 6, x + 1, y - 4], fill=(*OUTLINE, 255))
+    # Flour spilling from the lower stone's lip.
+    for dx, dy, fill in ((9, 3, CREAM), (10, 4, PALE_SAND), (8, 4, CREAM), (11, 5, PALE_SAND)):
+        c.dot((x + dx, y + dy), fill)
+    hx, hy = round(x + math.cos(handle) * 6), round(y - 5 + math.sin(handle) * 2)
+    c.line([(hx, hy), (hx, hy - 8)], DARK_TIMBER, width=2)
+    c.dot((hx, hy - 8), PINE)
+
+
+QUERN_HANDLE = (math.pi * 0.85, math.pi * 0.15)
+
+
+def _quern_house(stage: str, handle: float = QUERN_HANDLE[0]) -> Image.Image:
+    c = Canvas(2, 2, 44)
+    yard(c)
+    b = Block(0.2, 0.2, 1.25, 1.15, 12, MUD_BRICK, THATCH_ROOF, "gable_u", 10)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        x, y = _px(c, 0.6, 1.15, 0)
+        c.draw.rectangle([x - 1, y - 7, x + 1, y - 1], fill=(*OUTLINE, 255))
+        x, y = _px(c, 1.25, 0.65, 8)
+        c.draw.rectangle([x, y - 1, x + 1, y], fill=(*OUTLINE, 255))
+    if stage == "done":
+        for u, v in ((0.3, 1.45), (0.5, 1.55), (0.35, 1.75), (0.6, 1.8)):
+            sack(c, u, v)
+        _millstone(c, 1.45, 1.5, handle)
+        sack(c, 1.8, 0.95)
+        sack(c, 1.9, 1.15)
+    return c.img
+
+
+def draw_quern_frame(frame: int) -> Image.Image:
+    """Operational quern house: the millstone handle goes round."""
+    img = _quern_house("done", QUERN_HANDLE[frame % len(QUERN_HANDLE)])
+    top = _quern_house("done").getbbox()[1]
+    return img.crop((0, max(0, top - HEADROOM), img.width, img.height))
+
+
 FOOTPRINTS: dict[str, tuple[int, int]] = {
     "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "sawmill": (2, 2),
     "town-center": (3, 3), "bakery": (2, 2), "grain-farm": (2, 2), "windmill": (2, 2), "mine": (2, 2),
-    "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), "library": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
+    "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), "library": (2, 2), "quern-house": (2, 2),
+    **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
 }
 
 _DRAWERS: dict[str, Callable[..., Image.Image]] = {
@@ -1506,6 +2713,7 @@ _DRAWERS: dict[str, Callable[..., Image.Image]] = {
     "smelter": _smelter,
     "toolsmith": _toolsmith,
     "library": _library,
+    "quern-house": _quern_house,
     **{f"port-{o}": (lambda stage, o=o: _port(o, stage)) for o in "nesw"},
     **{f"shipyard-{o}": (lambda stage, o=o: _shipyard(o, stage)) for o in "nesw"},
 }
@@ -1513,7 +2721,7 @@ _DRAWERS: dict[str, Callable[..., Image.Image]] = {
 OPERATIONAL_FRAMES: dict[str, int] = {
     "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
     "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2, "library": 2,
-    **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
+    "quern-house": 2, **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
 }
 
 
