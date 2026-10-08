@@ -5,6 +5,11 @@ import Testing
 
 // Tests for the GameSession gesture handlers. These are the load-bearing
 // behaviors the user noticed when the world wasn't following their finger.
+//
+// add-touch-first-placement audit: the tap and drag tests here arm the
+// road or demolish tool, which commit immediately on every platform, so
+// they hold on iOS unchanged. Building-tap behaviour lives in
+// PendingPlacementTests.
 
 @MainActor
 @Test("session: forwards per-tick events to audio consumer")

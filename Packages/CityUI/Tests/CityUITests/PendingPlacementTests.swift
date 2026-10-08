@@ -123,7 +123,7 @@ func scenarioConfirmPlacementIntentEnqueuesAPlaceCommand() {
     #expect(session.pendingPlacement == nil)
 }
 
-@Test("confirming a placement the world rejects keeps it pending and says why")
+@Test("scenario: confirm of a rejected placement keeps it pending")
 @MainActor
 func confirmingARejectedPlacementKeepsItPendingAndSaysWhy() {
     let session = makeSession()
@@ -242,7 +242,7 @@ func demolishKeepsPaintingImmediatelyOnIOS() {
     #expect(session.world.pendingCommands == [.demolish(at: tile(3, 4))])
 }
 
-@Test("a drag with a building armed does not paint buildings on iOS")
+@Test("scenario: palette-armed building drag does not paint on iOS")
 @MainActor
 func aDragWithABuildingArmedDoesNotPaintBuildingsOnIOS() {
     let session = makeSession(confirms: true)
@@ -251,7 +251,7 @@ func aDragWithABuildingArmedDoesNotPaintBuildingsOnIOS() {
     #expect(session.world.pendingCommands.isEmpty)
 }
 
-@Test("a palette-armed building tap still commits on click when confirmation is off")
+@Test("scenario: palette-armed building tap commits on click on macOS")
 @MainActor
 func aPaletteArmedBuildingTapStillCommitsOnClickWhenConfirmationIsOff() {
     let session = makeSession(confirms: false)
@@ -272,7 +272,7 @@ func confirmationDefaultsToThePlatform() {
     #endif
 }
 
-@Test("the camera pans unless a tool paints tile by tile")
+@Test("scenario: camera pans unless a tool paints tile by tile")
 @MainActor
 func theCameraPansUnlessAToolPaintsTileByTile() {
     let session = makeSession(confirms: true)
