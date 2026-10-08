@@ -25,4 +25,4 @@
 ## 6. M6 — Verification
 
 - [ ] 6.1 Runtime check: in a Middle Eastern sandbox, build a caravanserai, export bread, and watch caravans sell and the balance rise; add a coffee chain and see caravans double. In a Mediterranean sandbox, place a forum and see its ring and the tax rise. Run a Middle Eastern game exporting tools with coffee for 6,000 ticks and record the caravan income.
-- [ ] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-culture-signatures --strict`.
+- [x] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-culture-signatures --strict`.
