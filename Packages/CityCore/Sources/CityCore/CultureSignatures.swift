@@ -69,4 +69,17 @@ public extension Building {
     var isServed: Bool {
         kind.isCultureSignature && fuelled
     }
+
+    /// A culture signature's effect per resident or its upkeep share:
+    /// 2 served, 1 unserved.
+    var servedRate: Int64 {
+        isServed ? 2 : 1
+    }
+}
+
+public extension HousePopulation {
+    /// Temple gardens only reach houses at citizens or above (design D6).
+    var contemplates: Bool {
+        tier >= .citizens
+    }
 }

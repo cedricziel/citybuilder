@@ -13,7 +13,7 @@ extension World {
             let distance = footprintDistance(source, target)
             guard source.kind.signatureReaches.contains(where: { $0.effect == effect && distance <= $0.tiles })
             else { continue }
-            rate = max(rate, source.isServed ? 2 : 1)
+            rate = max(rate, source.servedRate)
         }
         return rate
     }
@@ -40,7 +40,7 @@ extension World {
     /// Knowledge the house adds each resident interval: 1 per resident at
     /// citizens or above, plus the temple garden's 1 or 2 (design D6).
     func residentKnowledge(house id: EntityID, population: HousePopulation, sources: [Building]) -> Int {
-        guard population.tier >= .citizens else { return 0 }
+        guard population.contemplates else { return 0 }
         let temple = buildings[id].map { Self.cultureRate(of: .contemplation, on: $0, from: sources) } ?? 0
         return Int(population.population) * (1 + Int(temple))
     }

@@ -14,7 +14,7 @@ public struct CaravanSale: Hashable, Codable, Sendable {
 
 /// The caravanserai's export good, export supply and caravans (design D7).
 extension World {
-    static let caravanIntervalTicks: UInt64 = 100
+    public static let caravanIntervalTicks: UInt64 = 100
     /// Export good on hand plus in flight that supply stops at.
     static let exportStockCap = 8
     /// Units of the export good the island's buffers keep for themselves.
