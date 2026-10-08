@@ -119,6 +119,26 @@ The content gate gains a `frame_misaligned` rule: an operational frame's left, r
 - **Alternative — stop animating AI-drawn buildings.** Rejected. It breaks the sprite-animation spec's "Operational sawmill animates" scenario, and the city looks dead.
 - **Alternative — redraw the buildings procedurally.** Deferred. That's a bigger art pass, and a natural fit for the ages work, where every building needs per-age variants anyway.
 
+### D11 — Producers pull inputs through buffer→producer carriers
+
+The carrier model already had a `.retrieve` mission (buffer → consumer, deposited on arrival), but nothing ever spawned it, so a sawmill could only run in tests that filled its stockpile by hand. A new `spawnSupplyCarriers` pass runs after producer carriers each tick:
+
+- It visits producers with inputs in entity-ID order and goods in catalog order.
+- It dispatches one-unit carriers while the producer's stock plus in-flight supply is below twice the recipe amount, up to the per-producer carrier cap.
+- It picks the operational buffer with the shortest road path; ties go to the lowest ID.
+- The good leaves the buffer at departure, so two carriers never count the same unit.
+
+- **Alternative — producers deliver outputs straight to consumers that need them.** Rejected as the only path. Wood already sitting in the town center or a warehouse would still never reach a sawmill. Buffer-first keeps one logistics model: everything flows through storage.
+- **Alternative — let producers read buffer stock directly, without carriers.** Rejected. It skips the road network, which is the core spatial puzzle of the genre.
+
+### D12 — Lumberjacks harvest a 2-tile catchment; needs require a shared road network
+
+A lumberjack harvested only orthogonally adjacent forest and cleared one tile per wood, so a hut placed at a forest edge stalled for good after 2–4 wood. It now harvests forest within Chebyshev distance 2 of its footprint, clearing the first tile in row-major order. That's 32 candidate tiles for a 2×2 hut.
+
+House needs used to count any buffer that touched any road, even a separate network that carriers can't route across. Needs now require a road path between a road next to the house and a road next to the buffer (`sharesRoadNetwork`), so what the player sees satisfied matches what carriers can deliver.
+
+- **Alternative — forest regrowth instead of a larger catchment.** Deferred to the ages work, where forestry can be an era mechanic. A catchment alone already fixes the stall.
+
 ### D6 — Rejection feedback lives in `HUDViewModel`, triggered by a `canPlace` check on tap
 
 Until now, `GameSession.handleTap` enqueued `.place` without checking, and the simulation dropped rejected commands silently at the tick boundary. Now:

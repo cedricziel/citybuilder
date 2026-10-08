@@ -23,7 +23,7 @@ extension World {
             // proxy by checking adjacent forest tiles.
             let footprint = BuildingCatalog.spec(for: building.kind).footprint
             let lumberjackHasForest = building.kind == .lumberjackHut
-                ? hasAdjacentForest(anchor: building.anchor, footprint: footprint)
+                ? firstForestInCatchment(anchor: building.anchor, footprint: footprint) != nil
                 : true
 
             // Capture the prior-tick stall state so transitions emit
@@ -56,7 +56,9 @@ extension World {
                 }
                 // Lumberjack also clears a forest tile.
                 if building.kind == .lumberjackHut {
-                    clearAdjacentForest(anchor: building.anchor, footprint: footprint)
+                    if let tile = firstForestInCatchment(anchor: building.anchor, footprint: footprint) {
+                        terrainGrid[tile.y * mapWidth + tile.x] = .grass
+                    }
                 }
                 // Shipyard emits a Ship entity on cycle completion.
                 // Spec: `port-and-shipyard` / Shipyard emits ship on
@@ -83,6 +85,7 @@ extension World {
     mutating func runCarrierSystem(events: inout [WorldEvent]) {
         advanceCarriers(events: &events)
         spawnCarriersFromProducers(events: &events)
+        spawnSupplyCarriers(events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
@@ -303,7 +306,7 @@ extension World {
 
     /// Returns any road tile orthogonally adjacent to the footprint, or nil
     /// if the building isn't road-connected.
-    private func anyAdjacentRoad(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
+    func anyAdjacentRoad(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
         let tiles = footprint.tiles(anchor: anchor)
         let occupied = Set(tiles)
         for tile in tiles {
@@ -435,43 +438,10 @@ extension World {
         for building in goodsBuffers() where building.state == .operational {
             guard (stockpiles[building.id]?.quantity(of: good) ?? 0) > 0 else { continue }
             let bufferFootprint = BuildingCatalog.spec(for: building.kind).footprint
-            if roadGraph.isAnchorRoadConnected(building.anchor, footprint: bufferFootprint) {
+            if sharesRoadNetwork(anchor, footprint, with: building.anchor, bufferFootprint) {
                 return true
             }
         }
         return false
-    }
-
-    func hasAdjacentForest(anchor: TileCoordinate, footprint: Footprint) -> Bool {
-        let occupied = Set(footprint.tiles(anchor: anchor))
-        for tile in occupied {
-            for neighbor in [
-                TileCoordinate(x: tile.x + 1, y: tile.y),
-                TileCoordinate(x: tile.x - 1, y: tile.y),
-                TileCoordinate(x: tile.x, y: tile.y + 1),
-                TileCoordinate(x: tile.x, y: tile.y - 1)
-            ] where !occupied.contains(neighbor) {
-                if terrain(at: neighbor) == .forest { return true }
-            }
-        }
-        return false
-    }
-
-    mutating func clearAdjacentForest(anchor: TileCoordinate, footprint: Footprint) {
-        let tiles = footprint.tiles(anchor: anchor)
-        let occupied = Set(tiles)
-        for tile in tiles {
-            for neighbor in [
-                TileCoordinate(x: tile.x + 1, y: tile.y),
-                TileCoordinate(x: tile.x - 1, y: tile.y),
-                TileCoordinate(x: tile.x, y: tile.y + 1),
-                TileCoordinate(x: tile.x, y: tile.y - 1)
-            ] where !occupied.contains(neighbor) {
-                if terrain(at: neighbor) == .forest {
-                    terrainGrid[neighbor.y * mapWidth + neighbor.x] = .grass
-                    return
-                }
-            }
-        }
     }
 }
