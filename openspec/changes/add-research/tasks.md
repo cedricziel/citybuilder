@@ -17,5 +17,5 @@
 
 ## 4. M4 — Verification
 
-- [ ] 4.1 Runtime check on a dedicated simulator: a new game shows Mine locked; choosing Mining in the panel and waiting with a library unlocks it.
-- [ ] 4.2 Run lint, format, `make test-scenarios` and `openspec validate add-research --strict`.
+- [x] 4.1 Runtime check on a dedicated simulator: a new game shows Mine locked; choosing Mining in the panel and waiting with a library unlocks it.
+- [x] 4.2 Run lint, format, `make test-scenarios` and `openspec validate add-research --strict`.
