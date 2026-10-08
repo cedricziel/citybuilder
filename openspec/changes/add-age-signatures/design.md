@@ -106,14 +106,14 @@ A smoky peasant house has capacity 2 and so counts as full at 2 residents. Accep
 
 ### D9 — Rendering
 
-- **Range rings:** while placing a signature kind, and while one is selected, the scene outlines the tiles within its range (8 / 6 and 4 / 10 / 8 for the guild hall / steam engine smoke and speed / power plant / gallery) as a translucent diamond outline drawn in code, and highlights buildings it would affect.
+- **Range rings:** while placing a signature kind, and while one is selected (the scene reads the inspected tile through a `selectionProvider`, passed through `SnapshotRendererRegistry`), the scene outlines the tiles within its range (8 / 6 and 4 / 10 / 8 for the guild hall / steam engine smoke and speed / power plant / gallery) as a translucent diamond outline drawn in code, and highlights buildings it would affect.
 - **Monument stages:** an operational, unfinished monument shows `building-monument-constructing-0` for stages 0–8, `-1` for 9–16 and `-2` for 17–24; a finished one shows its operational animation.
 - **Animation by state:** steam engines and power plants play their operational frames only while fuelled, and galleries only while a commission runs; otherwise they show the idle sprite. Guild halls animate whenever operational.
 - **Smoke tint:** smoky houses get a grey blend (`#808080`, blend factor 0.25).
 
 ### D10 — UI
 
-- **Inspector:** monument "Stage 12 of 25" or "Complete: taxes +10%"; guild hall "Speeds up 4 workshops"; gallery button "Commission art ($200)" (disabled while running or when the balance is short) and "Commission ends in 1:04"; steam engine "Fuelled" or "Out of charcoal", "Speeds up 3 workshops · smokes 2 houses"; power plant "Fuelled" or "Out of charcoal", "Energises 9 houses, 4 workshops". Counts come from `World.signatureCoverage(of:)`.
+- **Inspector:** monument "Stage 12 of 25" or "Complete: taxes +10%"; guild hall "Speeds up 4 workshops"; gallery button "Commission art ($200)" (disabled while running or when the balance is short) and "Commission ends in 1:04"; steam engine "Fuelled" or "Out of charcoal", "Speeds up 3 workshops · smokes 2 houses"; power plant "Fuelled" or "Out of charcoal", "Energises 9 houses, 4 workshops". Counts come from `World.signatureCoverage(of:among:)`, which counts `World.signatureTargets(of:among:)`, the same targets the range-ring highlight uses.
 - **House notes:** "Smoky: −2 residents", "Energised: +2 residents", "Inspired by patronage".
 - **Banners:** `monumentCompleted` "The monument is complete", `fuelRanOut` "<Kind> is out of charcoal", `commissionEnded` "The gallery's commission has ended".
 
@@ -135,5 +135,5 @@ No migration. `Building` gains `projectStages: UInt8`, `fuelled: Bool` and `comm
 
 - **[Risk] Speed bonuses starve workshops of inputs.** A doubled sawmill needs twice the wood. → Accepted: that is the steam age's decision; the inspector shows stalls.
 - **[Risk] Charcoal demand from engines and plants starves smelters.** → Accepted as the intended trade-off; coal is listed as deferred.
-- **[Risk] Range checks cost time every tick.** → Mitigation: `runSignatureSystem` builds the list of active sources once per tick (at most a few dozen), and each workshop or house checks only that list. The performance budget test gets a world with 10 guild halls, 10 steam engines and 3 power plants.
+- **[Risk] Range checks cost time every tick.** → Mitigation: production and population each build the list of active sources (`World.activeSignatureSources()`, at most a few dozen) once per tick, and each workshop or house checks only that list. A tick budget test runs a world with 10 guild halls, 10 steam engines and 3 power plants and keeps the mean tick under 100 ms.
 - **[Trade-off] Modern cities stack all five signatures.** Accepted: the numbers are small and each source needs upkeep, fuel or money.

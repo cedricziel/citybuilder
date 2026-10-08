@@ -179,7 +179,7 @@ public struct World: Codable, Sendable, Equatable {
         let tiles = spec.footprint.tiles(anchor: anchor)
         var landCount = 0
         var waterCount = 0
-        if let rejection = researchOrTerrainRejection(kind, tiles: tiles) {
+        if let rejection = researchOrTerrainRejection(kind, tiles: tiles) ?? uniquenessRejection(kind) {
             return .rejected(rejection)
         }
         for tile in tiles {
@@ -255,10 +255,14 @@ public struct World: Codable, Sendable, Equatable {
         tickCount &+= 1
         simulatedTime += .tick
         advanceBuildings(events: &events)
-        runProductionSystem(events: &events)
+        runSignatureSystem(events: &events)
+        // Signature state only changes in commands and the signature
+        // system, so production and population share one source list.
+        let signatureSources = activeSignatureSources()
+        runProductionSystem(signatureSources: signatureSources, events: &events)
         runCarrierSystem(events: &events)
         runShipSystem()
-        runPopulationSystem()
+        runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
@@ -328,6 +332,8 @@ public struct World: Codable, Sendable, Equatable {
             applyAssignShipToRoute(shipID: shipID, routeID: routeID)
         case let .unassignShip(shipID):
             applyUnassignShip(shipID: shipID)
+        case let .commission(gallery):
+            applyCommission(gallery, events: &events)
         }
     }
 
@@ -419,10 +425,11 @@ public struct World: Codable, Sendable, Equatable {
         switch kind {
         case .warehouse: 200
         case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .quernHouse, .mine, .charcoalBurner, .smelter,
-             .toolsmith, .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery: 16
+             .toolsmith, .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery,
+             .monument, .steamEngine, .powerPlant: 16
         case .house: 8
         case .townCenter: 40
-        case .road, .library: nil
+        case .road, .library, .guildHall, .gallery: nil
         case .port: 200
         case .shipyard: 64
         }

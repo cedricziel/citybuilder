@@ -53,7 +53,11 @@ public enum ProductionCatalog {
             kind.culture.map {
                 ProductionRecipe(inputs: [$0.luxuryChain.raw: 2], outputs: [$0.luxury: 1], cycleTicks: 50)
             }
-        case .house, .warehouse, .road, .townCenter, .port, .library:
+        case .monument:
+            // One project stage; see `World.monumentStages`.
+            ProductionRecipe(inputs: [.wood: 2, .planks: 2, .bread: 1], outputs: [:], cycleTicks: 60)
+        case .house, .warehouse, .road, .townCenter, .port, .library,
+             .guildHall, .gallery, .steamEngine, .powerPlant:
             nil
         case .shipyard:
             // Shipyard recipe: 20 wood + 10 planks per ship hull. The

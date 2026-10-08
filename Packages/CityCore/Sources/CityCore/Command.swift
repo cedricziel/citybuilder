@@ -59,4 +59,8 @@ public enum Command: Codable, Equatable, Sendable {
     /// Clear the ship's route assignment. The ship transitions to
     /// `.idle` next tick.
     case unassignShip(shipID: EntityID)
+
+    /// Pay for a commission at a gallery. Spec: `age-signatures` /
+    /// Gallery commissions inspire houses.
+    case commission(EntityID)
 }

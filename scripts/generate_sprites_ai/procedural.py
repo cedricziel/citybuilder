@@ -624,6 +624,9 @@ def _register_buildings_and_units() -> None:
             if kind == "quern-house":
                 _RENDERERS[f"{name}-operational-{i}"] = lambda i=i: buildings.draw_quern_frame(i)
                 continue
+            if kind in buildings.SIGNATURE_DRAWERS:
+                _RENDERERS[f"{name}-operational-{i}"] = lambda kind=kind, i=i: buildings.draw_signature_frame(kind, i)
+                continue
             _RENDERERS[f"{name}-operational-{i}"] = (
                 lambda kind=kind, i=i, frames=frames: derive_operational(buildings.draw(kind), i, frames)
             )

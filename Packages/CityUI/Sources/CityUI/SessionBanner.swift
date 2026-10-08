@@ -27,10 +27,36 @@ extension GameSession {
             case .scenarioWon:
                 show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
                 isWinSheetPresented = true
+            case let .fuelRanOut(_, kind):
+                let fuel = kind.fuel.map(InspectorViewModel.fuelName) ?? "fuel"
+                show(SessionBanner(
+                    title: "\(Self.sentenceCase(kind)) is out of \(fuel)",
+                    description: "Its effects stop until carriers bring more."
+                ))
+            case .monumentCompleted:
+                show(SessionBanner(title: "The monument is complete", description: "Taxes rise by 10%."))
+            case .commissionEnded:
+                show(SessionBanner(
+                    title: "The gallery's commission has ended",
+                    description: "Commission new art to inspire the houses again."
+                ))
             default:
                 continue
             }
         }
+    }
+
+    /// "Steam engine" from the palette's "Steam Engine".
+    static func sentenceCase(_ kind: BuildingKind) -> String {
+        let name = BuildTool.place(kind).displayName.lowercased()
+        return name.prefix(1).uppercased() + name.dropFirst()
+    }
+
+    /// Pay for a commission at the selected gallery. Spec: `platform-shells`
+    /// / Signature inspector.
+    public func commissionArt() {
+        guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .gallery else { return }
+        world.enqueue(.commission(id))
     }
 
     private func show(_ banner: SessionBanner) {

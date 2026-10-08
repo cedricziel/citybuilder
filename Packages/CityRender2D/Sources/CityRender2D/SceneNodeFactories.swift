@@ -24,7 +24,7 @@ extension IsoWorldScene {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
         node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
-        if case let .building(_, _, footprint, _, _, _, _, _) = spec.kind {
+        if case let .building(_, _, footprint, _, _, _, _, _, _) = spec.kind {
             let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
             node.zPosition = 10 + CGFloat(depth) * 0.01
         }
@@ -65,7 +65,7 @@ extension IsoWorldScene {
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
         guard case let .building(
             kind, state, footprint, constructionFrameIndex, orientation,
-            isWaitingForMaterials, isRoadDisconnected, houseTier
+            isWaitingForMaterials, isRoadDisconnected, houseTier, look
         ) = spec.kind
         else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
@@ -74,7 +74,11 @@ extension IsoWorldScene {
         let texture: SKTexture
         var textureName: String?
         var cultureName: String?
-        if let (name, cultureTexture) = cultureTexture(kind: kind, state: state, houseTier: houseTier) {
+        let signature = Self.signatureTexture(kind: kind, look: look)
+        if let (name, signatureTexture) = signature {
+            textureName = name
+            texture = signatureTexture
+        } else if let (name, cultureTexture) = cultureTexture(kind: kind, state: state, houseTier: houseTier) {
             textureName = name
             cultureName = name
             texture = cultureTexture
@@ -110,12 +114,9 @@ extension IsoWorldScene {
         if let textureName {
             node.userData = [Self.textureNameKey: textureName]
         }
-        if let cultureName {
-            if state == .operational, let action = Self.cultureOperationalAction(baseName: cultureName, kind: kind) {
-                node.run(action, withKey: "anim")
-            }
-        } else {
-            armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
+        applyLook(look, to: node)
+        if signature == nil {
+            armAnimation(on: node, kind: kind, state: state, cultureName: cultureName)
         }
         if isWaitingForMaterials, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
@@ -160,6 +161,35 @@ extension IsoWorldScene {
         badge.position = CGPoint(x: IsoMath.tileWidth / 2, y: IsoMath.tileHeight * 2)
         badge.zPosition = 100
         return badge
+    }
+
+    /// The idle sprite of a signature building that is off, or the
+    /// construction frame of an unfinished monument; nil otherwise.
+    static func signatureTexture(kind: BuildingKind, look: BuildingLook) -> (String, SKTexture)? {
+        if let frame = look.projectFrame {
+            let name = "building-\(kind.rawValue)-constructing-\(frame)"
+            return (name, SpriteAtlas.textureOrPlaceholder(named: name))
+        }
+        guard look.idle else { return nil }
+        let name = "building-\(kind.rawValue)"
+        return (name, SpriteAtlas.textureOrPlaceholder(named: name))
+    }
+
+    /// Smoky houses are tinted grey (design D9).
+    private func applyLook(_ look: BuildingLook, to node: SKSpriteNode) {
+        guard look.smoky else { return }
+        node.color = SKColor(white: 0.5, alpha: 1)
+        node.colorBlendFactor = 0.25
+    }
+
+    private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, cultureName: String?) {
+        guard let cultureName else {
+            armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
+            return
+        }
+        if state == .operational, let action = Self.cultureOperationalAction(baseName: cultureName, kind: kind) {
+            node.run(action, withKey: "anim")
+        }
     }
 
     private func armOperationalAnimationIfNeeded(

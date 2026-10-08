@@ -70,7 +70,7 @@ public struct CityRootView: View {
                 let inspector = session.inspector
                 if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
                     HStack {
-                        InspectorView(viewModel: inspector)
+                        InspectorView(viewModel: inspector, onCommission: session.commissionArt)
                         inspectorActionsButton
                         Spacer()
                     }
@@ -464,7 +464,8 @@ public final class GameSession {
             dragSink: dragSink,
             hoverSink: hoverSink,
             longPressSink: longPressSink,
-            ghostProvider: ghostProvider
+            ghostProvider: ghostProvider,
+            selectionProvider: { [weak self] in self?.selectedTool == .inspect ? self?.selectedTile : nil }
         )
     }
 }
