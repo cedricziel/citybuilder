@@ -1,7 +1,7 @@
 ## 1. M1 — Core
 
-- [ ] 1.1 Tests-first: translate the city-life scenarios into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `TimeOfDay`, resident names, wishes (design D1, D5, D6).
+- [x] 1.1 Tests-first: translate the city-life scenarios into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `TimeOfDay`, resident names, wishes (design D1, D5, D6).
 
 ## 2. M2 — Rendering and UI
 
