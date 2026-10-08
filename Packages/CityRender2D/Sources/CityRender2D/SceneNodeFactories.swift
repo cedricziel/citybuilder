@@ -16,6 +16,21 @@ extension IsoWorldScene {
     /// `userData` key holding the texture name chosen for a tiered house.
     public static let textureNameKey = "textureName"
 
+    /// A node for `spec`, positioned in the scene: the factory's local
+    /// offset (a building's footprint offset) is added to the anchor
+    /// tile's screen point, and buildings are depth-sorted by the
+    /// iso depth of their footprint centre so nearer ones draw on top.
+    func placedNode(for spec: SpriteSpec) -> SKNode {
+        let node = makeNode(for: spec)
+        let tile = IsoMath.screenPoint(forTile: spec.coord)
+        node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
+        if case let .building(_, _, footprint, _, _, _, _, _) = spec.kind {
+            let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
+            node.zPosition = 10 + CGFloat(depth) * 0.01
+        }
+        return node
+    }
+
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
         case let .terrain(kind):
@@ -180,7 +195,7 @@ extension IsoWorldScene {
         let offsetX = (footprintW - footprintH) * IsoMath.tileWidth / 4
         node.position = CGPoint(x: offsetX, y: offsetY)
         if state == .constructing { node.alpha = 0.85 }
-        node.zPosition = 10 + footprintH
+        node.zPosition = 10
         return node
     }
 

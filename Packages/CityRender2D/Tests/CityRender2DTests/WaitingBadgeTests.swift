@@ -135,3 +135,42 @@ private func withHousePopulations(_ base: WorldSnapshot, _ pops: [EntityID: Hous
         housePopulations: pops
     )
 }
+
+@Test("placed building keeps its footprint offset from the anchor tile")
+@MainActor
+func placedBuildingKeepsFootprintOffset() {
+    let scene = IsoWorldScene()
+    let spec = SpriteSpec(coord: TileCoordinate(x: 10, y: 4), kind: sawmillSpec(state: .operational, isWaiting: false).kind)
+    let node = scene.placedNode(for: spec)
+    let tile = IsoMath.screenPoint(forTile: spec.coord)
+    #expect(node.position == CGPoint(x: tile.x, y: tile.y - 48))
+}
+
+@Test("a building nearer the camera draws above one behind it")
+@MainActor
+func nearerBuildingDrawsAbove() {
+    let scene = IsoWorldScene()
+    let townCenter = SpriteSpec(
+        coord: TileCoordinate(x: 45, y: 46),
+        kind: .building(
+            kind: .townCenter,
+            state: .operational,
+            footprint: Footprint(width: 3, height: 3),
+            constructionFrameIndex: nil,
+            orientation: nil,
+            isWaitingForMaterials: false
+        )
+    )
+    let houseInFront = SpriteSpec(
+        coord: TileCoordinate(x: 44, y: 49),
+        kind: .building(
+            kind: .house,
+            state: .operational,
+            footprint: footprint,
+            constructionFrameIndex: nil,
+            orientation: nil,
+            isWaitingForMaterials: false
+        )
+    )
+    #expect(scene.placedNode(for: houseInFront).zPosition > scene.placedNode(for: townCenter).zPosition)
+}

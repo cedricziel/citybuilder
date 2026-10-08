@@ -334,8 +334,7 @@ public final class IsoWorldScene: SKScene {
             presentSprites.removeValue(forKey: spec)?.removeFromParent()
         }
         for spec in diff.added {
-            let node = makeNode(for: spec)
-            node.position = IsoMath.screenPoint(forTile: spec.coord)
+            let node = placedNode(for: spec)
             addChild(node)
             presentSprites[spec] = node
         }
