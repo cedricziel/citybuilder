@@ -24,5 +24,5 @@
 
 ## 6. M6 — Verification
 
-- [ ] 6.1 Runtime check: in a Middle Eastern sandbox, build a caravanserai, export bread, and watch caravans sell and the balance rise; add a coffee chain and see caravans double. In a Mediterranean sandbox, place a forum and see its ring and the tax rise. Run a Middle Eastern game exporting tools with coffee for 6,000 ticks and record the caravan income.
+- [x] 6.1 Runtime check (simulator, demo saves: caravanserai sold 4 bread for $48 with coffee served, balance $998→$1,042, export picker shown; forum showed its ring, served frame and "+2 tax per resident" line; 6,000-tick tools-with-coffee income recorded headless at $14,400): in a Middle Eastern sandbox, build a caravanserai, export bread, and watch caravans sell and the balance rise; add a coffee chain and see caravans double. In a Mediterranean sandbox, place a forum and see its ring and the tax rise. Run a Middle Eastern game exporting tools with coffee for 6,000 ticks and record the caravan income.
 - [x] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-culture-signatures --strict`.
