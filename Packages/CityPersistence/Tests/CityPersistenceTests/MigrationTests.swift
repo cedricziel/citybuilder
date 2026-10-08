@@ -12,8 +12,8 @@ import Testing
 /// Builds the JSON for a v1-shape save by encoding a current World
 /// and stripping the v2-only fields. Used by tests that need a v1
 /// payload without checking in a hand-authored fixture.
-private func makeV1Payload(world: World) throws -> Data {
-    var v2 = try JSONEncoder().encode(SaveFile(world: world))
+private func makeV1Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    var v2 = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
     var json = try JSONSerialization.jsonObject(with: v2) as? [String: Any] ?? [:]
     json["version"] = 1
     var inner = json["world"] as? [String: Any] ?? [:]
@@ -203,11 +203,26 @@ private func v2FixtureURL() -> URL {
         .appendingPathComponent("Fixtures/saves/v2_single_island.json")
 }
 
-@Test("fixture: regenerate v1 single-island save")
+/// Regeneration rewrites committed files, so it only runs when asked:
+/// `SWIFT_DETERMINISTIC_HASHING=1 REGENERATE_FIXTURES=1 xcrun swift test --package-path Packages/CityPersistence`.
+private let regenerateFixtures = ProcessInfo.processInfo.environment["REGENERATE_FIXTURES"] == "1"
+
+/// Dictionaries with non-string keys encode in hash order, which is
+/// seeded per process unless deterministic hashing is on.
+private func requireDeterministicHashing() throws {
+    try #require(
+        ProcessInfo.processInfo.environment["SWIFT_DETERMINISTIC_HASHING"] == "1",
+        "set SWIFT_DETERMINISTIC_HASHING=1 so regenerated fixtures are byte-stable"
+    )
+}
+
+/// Fixed `writtenAt` for regenerated fixtures so a regen diff only
+/// shows real schema changes.
+private let fixtureWrittenAt = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+@Test("fixture: regenerate v1 single-island save", .enabled(if: regenerateFixtures))
 func regenerateV1SingleIslandFixture() throws {
-    // Writes a representative v1 save to the fixture path. The
-    // resulting file is committed; this test is idempotent — it
-    // overwrites on every run with byte-identical output.
+    try requireDeterministicHashing()
     var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
     let warehouseID = EntityID(raw: 1001)
     world.buildings[warehouseID] = Building(
@@ -220,7 +235,7 @@ func regenerateV1SingleIslandFixture() throws {
         _ = sp.deposit(.wood, amount: 50)
         world.stockpiles[warehouseID] = sp
     }
-    var data = try makeV1Payload(world: world)
+    var data = try makeV1Payload(world: world, writtenAt: fixtureWrittenAt)
     // Append a trailing newline so the pre-commit `end-of-file-fixer`
     // hook does not rewrite the file every commit.
     data.append(0x0A)
@@ -231,8 +246,9 @@ func regenerateV1SingleIslandFixture() throws {
     try data.write(to: url)
 }
 
-@Test("fixture: regenerate v2 single-island save")
+@Test("fixture: regenerate v2 single-island save", .enabled(if: regenerateFixtures))
 func regenerateV2SingleIslandFixture() throws {
+    try requireDeterministicHashing()
     // Writes a representative v2 save (pre-`add-construction-stalls`)
     // to the fixture path so the migration-coverage gate has something
     // to point at for the v2 → v3 step. v2 is shaped exactly like the
@@ -247,7 +263,7 @@ func regenerateV2SingleIslandFixture() throws {
     )
     world.occupiedTiles[TileCoordinate(x: 1, y: 1)] = warehouseID
     world.stockpiles[warehouseID] = Stockpile(capacity: 200)
-    var data = try makeV2Payload(world: world)
+    var data = try makeV2Payload(world: world, writtenAt: fixtureWrittenAt)
     data.append(0x0A)
     let url = v2FixtureURL()
     try FileManager.default.createDirectory(
@@ -260,8 +276,8 @@ func regenerateV2SingleIslandFixture() throws {
 /// fields that v2 didn't carry (`constructionState`,
 /// `materialsDelivered` on Building). Mirrors `makeV1Payload`'s
 /// strip-then-re-encode approach.
-private func makeV2Payload(world: World) throws -> Data {
-    var data = try JSONEncoder().encode(SaveFile(world: world))
+private func makeV2Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    var data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 2
     var inner = json["world"] as? [String: Any] ?? [:]
@@ -292,6 +308,17 @@ func scenarioV1FixtureExistsAndMigratesCleanly() throws {
     #expect(loaded.routes.isEmpty)
     let warehouses = loaded.buildings.values.filter { $0.kind == .warehouse }
     #expect(warehouses.count >= 1)
+}
+
+@Test("fixture: v2 fixture exists and migrates cleanly")
+func v2FixtureExistsAndMigratesCleanly() throws {
+    let data = try Data(contentsOf: v2FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 2, "fixture must be a v2 save")
+    let loaded = try decodeWorld(data)
+    let warehouse = try #require(loaded.buildings[EntityID(raw: 1001)])
+    #expect(warehouse.kind == .warehouse)
+    #expect(warehouse.state == .constructing)
 }
 
 // MARK: - Test helpers
