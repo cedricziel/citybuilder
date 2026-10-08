@@ -27,4 +27,4 @@
 ## 6. M6 — Verification
 
 - [ ] 6.1 Runtime check: start an Industrial sandbox, build a charcoal burner, a steam engine next to a sawmill and a house 3 tiles away; see the range rings while placing, the engine animate once fuelled, the sawmill's faster cycles in the inspector and the house's "Smoky" note and grey tint. Commission art at a gallery and watch the countdown. Build a monument and see its stage rise.
-- [ ] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-age-signatures --strict`.
+- [x] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-age-signatures --strict`.
