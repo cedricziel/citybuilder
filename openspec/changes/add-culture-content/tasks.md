@@ -15,4 +15,4 @@
 ## 4. M4 — Verification
 
 - [ ] 4.1 Runtime check: a Mediterranean game shows vineyard and winery after Cultivation, and a winery produces wine.
-- [ ] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-culture-content --strict`.
+- [x] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-culture-content --strict`.
