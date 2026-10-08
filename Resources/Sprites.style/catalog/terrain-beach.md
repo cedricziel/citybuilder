@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Walkable sand band one tile wide between grass interior and water.

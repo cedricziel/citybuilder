@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Non-walkable water tile. Ships path across water; carriers never enter.

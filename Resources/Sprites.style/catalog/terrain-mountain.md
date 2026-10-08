@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Non-walkable mountain tile. Mountains block carriers, ships, and

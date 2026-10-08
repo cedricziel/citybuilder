@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Non-walkable forest tile. Lumberjack huts extract wood from adjacent

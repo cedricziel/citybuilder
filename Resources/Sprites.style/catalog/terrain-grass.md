@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Walkable grassland tile, the dominant ground texture of the island

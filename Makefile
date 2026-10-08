@@ -1,4 +1,4 @@
-.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify
+.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-content sprites-procedural
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -91,11 +91,18 @@ sprites:
 sprites-offline:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --offline
 
+sprites-procedural:
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --procedural
+
 sprites-reference:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
 
 sprites-verify:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
+	$(MAKE) sprites-content
+
+sprites-content:
+	xcrun swift run -q --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)
