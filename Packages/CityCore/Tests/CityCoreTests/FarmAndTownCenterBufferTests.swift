@@ -104,7 +104,7 @@ func scenarioFarmFoodSatisfiesAConnectedHouse() throws {
     placeRoad(in: &world, y: 3, xs: 0 ... 12)
     tick(&world, 600)
     let houseID = try building(at: house, in: world)
-    #expect(world.populations[houseID]?.foodSatisfied == true)
+    #expect(world.populations[houseID]?.isSatisfied(.food) == true)
 }
 
 // MARK: - Town center as goods buffer
@@ -145,7 +145,7 @@ func scenarioTownCenterFoodSatisfiesAConnectedHouse() throws {
     placeRoad(in: &world, y: 3, xs: 0 ... 8)
     tick(&world, 60)
     let houseID = try building(at: house, in: world)
-    #expect(world.populations[houseID]?.foodSatisfied == true)
+    #expect(world.populations[houseID]?.isSatisfied(.food) == true)
 }
 
 @Test("scenario: unconnected town center does not satisfy needs")
@@ -157,7 +157,7 @@ func scenarioUnconnectedTownCenterDoesNotSatisfyNeeds() throws {
     placeRoad(in: &world, y: 3, xs: 0 ... 4)
     tick(&world, 60)
     let houseID = try building(at: house, in: world)
-    #expect(world.populations[houseID]?.foodSatisfied == false)
+    #expect(world.populations[houseID]?.isSatisfied(.food) == false)
 }
 
 // MARK: - Starter inventory

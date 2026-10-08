@@ -209,10 +209,10 @@ func scenarioProducerRespectsCarrierCap() {
 @Test("scenario: house grows when needs met")
 func scenarioHouseGrowsWhenNeedsMet() {
     var pop = HousePopulation()
-    pop.foodSatisfied = true
-    pop.planksSatisfied = true
+    pop.setSatisfied(.food, true)
+    pop.setSatisfied(.planks, true)
     pop.ticksAtCurrentSatisfaction = HousePopulation.growthIntervalTicks
-    #expect(pop.allNeedsSatisfied)
+    #expect(pop.allNeedsSatisfied(in: .northernEuropean))
     #expect(pop.population == 0)
     // The growth/decline transition is driven by World.runPopulationSystem;
     // this test asserts the model invariants. A full end-to-end house-grows
@@ -224,9 +224,9 @@ func scenarioHouseGrowsWhenNeedsMet() {
 func scenarioHouseShrinksWhenNeedsUnmet() {
     var pop = HousePopulation()
     pop.population = 2
-    pop.foodSatisfied = false
-    pop.planksSatisfied = false
-    #expect(!pop.allNeedsSatisfied, "missing both needs marks the house as declining")
+    pop.setSatisfied(.food, false)
+    pop.setSatisfied(.planks, false)
+    #expect(!pop.allNeedsSatisfied(in: .northernEuropean), "missing both needs marks the house as declining")
 }
 
 @Test("scenario: food need satisfied by stocked warehouse")
@@ -258,21 +258,21 @@ func scenarioFoodNeedSatisfiedByStockedWarehouse() {
 
 @Test("scenario: plank upkeep consumed over time")
 func scenarioPlankUpkeepConsumedOverTime() {
-    // The model: HousePopulation.planksSatisfied is recomputed each tick
+    // The model: HousePopulation.isSatisfied(.planks) is recomputed each tick
     // by World.runPopulationSystem. With no planks reachable, an empty
     // house is vacuously satisfied; a populated house tracks the streak.
     var pop = HousePopulation()
     pop.population = 1
-    pop.planksSatisfied = false
-    #expect(!pop.allNeedsSatisfied)
+    pop.setSatisfied(.planks, false)
+    #expect(!pop.allNeedsSatisfied(in: .northernEuropean))
 }
 
 @Test("scenario: UI reads satisfaction per house")
 func scenarioUIReadsSatisfactionPerHouse() {
     var pop = HousePopulation()
-    pop.foodSatisfied = true
-    pop.planksSatisfied = true
-    #expect(pop.allNeedsSatisfied, "UI must be able to read aggregate satisfaction")
+    pop.setSatisfied(.food, true)
+    pop.setSatisfied(.planks, true)
+    #expect(pop.allNeedsSatisfied(in: .northernEuropean), "UI must be able to read aggregate satisfaction")
 }
 
 @Test("scenario: populated house produces tax")

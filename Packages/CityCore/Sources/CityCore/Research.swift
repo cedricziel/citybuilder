@@ -8,6 +8,9 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
     case mining
     case metallurgy
     case seafaring
+    /// Unlocks every culture's luxury chain. Spec: `culture-content` /
+    /// Cultivation unlocks the luxury chain.
+    case cultivation
     /// Era techs: each opens the next age. Spec: `research` / Era techs
     /// need a thriving city.
     case feudalOrder = "feudal-order"
@@ -22,6 +25,7 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .mining: 40
         case .metallurgy: 80
         case .seafaring: 60
+        case .cultivation: 50
         case .feudalOrder: 150
         case .printingPress: 250
         case .steamPower: 400
@@ -46,6 +50,7 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .mining: [.mine, .charcoalBurner]
         case .metallurgy: [.smelter, .toolsmith]
         case .seafaring: [.port, .shipyard]
+        case .cultivation: Culture.luxuryBuildings
         case .feudalOrder, .printingPress, .steamPower, .electricity: []
         }
     }
@@ -54,7 +59,7 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
     public var age: Age {
         switch self {
         case .scholarship: .antiquity
-        case .milling, .mining, .metallurgy, .seafaring: .medieval
+        case .milling, .mining, .metallurgy, .seafaring, .cultivation: .medieval
         case .feudalOrder: .antiquity
         case .printingPress: .medieval
         case .steamPower: .renaissance
@@ -172,8 +177,12 @@ extension World {
         }
     }
 
-    /// Tech lock and terrain requirement, checked by `canPlace`.
+    /// Culture rule, tech lock and terrain requirement, checked by
+    /// `canPlace`.
     func researchOrTerrainRejection(_ kind: BuildingKind, tiles: [TileCoordinate]) -> PlacementRejection? {
+        if !kind.isBuildable(in: culture), let owner = kind.culture {
+            return .wrongCulture(owner)
+        }
         if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
             return .locked(tech)
         }

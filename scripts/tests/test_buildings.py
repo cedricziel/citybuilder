@@ -12,12 +12,13 @@ from generate_sprites_ai.postprocess import downsample
 
 OUTLINE = (0x1A, 0x14, 0x10)
 
+CULTURE_CHAIN = ["hop-garden", "brewery", "vineyard", "winery", "tea-garden", "tea-house", "coffee-grove", "roastery"]
 KINDS = ["house", "warehouse", "lumberjack-hut", "sawmill", "town-center", "bakery",
          "grain-farm", "windmill", "mine", "charcoal-burner", "smelter", "toolsmith", "library",
-         *[f"port-{o}" for o in "nesw"], *[f"shipyard-{o}" for o in "nesw"]]
+         *CULTURE_CHAIN, *[f"port-{o}" for o in "nesw"], *[f"shipyard-{o}" for o in "nesw"]]
 OPERATIONAL = {"lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2,
                "grain-farm": 2, "windmill": 4, "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2,
-               "library": 2,
+               "library": 2, **{kind: 2 for kind in CULTURE_CHAIN},
                **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"}}
 UNITS = [f"walker-{d}-{f}" for d in ("ne", "se", "sw", "nw") for f in (0, 1)] + \
         [f"ship-{d}-{f}" for d in ("n", "ne", "e", "se", "s", "sw", "w", "nw") for f in (0, 1)]
@@ -128,7 +129,8 @@ def test_windmill_sails_turn() -> None:
     assert len(set(frames)) == 4
 
 
-@pytest.mark.parametrize("good", ["grain", "flour", "ore", "charcoal", "iron", "tools"])
+@pytest.mark.parametrize("good", ["grain", "flour", "ore", "charcoal", "iron", "tools", "hops", "beer", "grapes",
+                                  "wine", "tea-leaves", "tea", "coffee-cherries", "coffee"])
 def test_chain_good_icons(good: str) -> None:
     img = render(f"good-{good}")
     assert img.size == (24, 24)

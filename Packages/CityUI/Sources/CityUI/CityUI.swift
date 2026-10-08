@@ -54,7 +54,7 @@ public struct CityRootView: View {
                     HUDFrameView(viewModel: session.hud)
                     hudButtons
                 }
-                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isObsolete) { tool in
+                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isHidden) { tool in
                     session.selectTool(tool)
                 }
                 PlacementRejectionBanner(hud: session.hud)

@@ -37,6 +37,15 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case port
     /// Shore producer that emits Ship entities. Spec: `port-and-shipyard`.
     case shipyard
+    /// Culture-only luxury chains. Spec: `culture-content`.
+    case hopGarden = "hop-garden"
+    case brewery
+    case vineyard
+    case winery
+    case teaGarden = "tea-garden"
+    case teaHouse = "tea-house"
+    case coffeeGrove = "coffee-grove"
+    case roastery
 }
 
 extension BuildingKind: Codable {
@@ -235,7 +244,24 @@ public enum BuildingCatalog {
             shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1),
             materialCost: [.wood: 12, .planks: 8]
         )
-    ]
+    ].merging(cultureSpecs) { _, _ in preconditionFailure("Culture kind with a hand-written spec") }
+
+    /// Gardens and producers of the culture luxury chains (design D3).
+    private static var cultureSpecs: [BuildingKind: BuildingSpec] {
+        var result: [BuildingKind: BuildingSpec] = [:]
+        for culture in Culture.allCases {
+            let chain = culture.luxuryChain
+            result[chain.garden] = BuildingSpec(
+                kind: chain.garden, footprint: Footprint(width: 2, height: 2),
+                cost: 60, upkeep: 0, buildDurationTicks: 25, materialCost: [.wood: 2]
+            )
+            result[chain.producer] = BuildingSpec(
+                kind: chain.producer, footprint: Footprint(width: 2, height: 2),
+                cost: 120, upkeep: 1, buildDurationTicks: 30, materialCost: [.wood: 3, .planks: 3]
+            )
+        }
+        return result
+    }
 
     public static var all: [BuildingSpec] {
         Array(specs.values)
@@ -354,5 +380,22 @@ public extension BuildingKind {
     /// The tech that makes this building obsolete, if any.
     var obsoletedBy: Tech? {
         self == .quernHouse ? .milling : nil
+    }
+
+    /// The culture that may build this kind, nil for buildings every
+    /// culture shares. Spec: `culture-content` / Culture-only buildings.
+    var culture: Culture? {
+        switch self {
+        case .hopGarden, .brewery: .northernEuropean
+        case .vineyard, .winery: .mediterranean
+        case .teaGarden, .teaHouse: .eastAsian
+        case .coffeeGrove, .roastery: .middleEastern
+        default: nil
+        }
+    }
+
+    /// False for buildings tied to another culture.
+    func isBuildable(in culture: Culture) -> Bool {
+        self.culture.map { $0 == culture } ?? true
     }
 }
