@@ -68,6 +68,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let culture: Culture
     /// Spec: `historical-ages` / Snapshot carries the age.
     public let age: Age
+    /// Houses under a signature effect; others are absent. Spec:
+    /// `age-signatures`.
+    public let houseModifiers: [EntityID: HouseModifiers]
 
     public init(
         tickCount: UInt64,
@@ -89,7 +92,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         housePopulations: [EntityID: HousePopulation] = [:],
         date: GameDate = GameDate(year: 1200, season: .spring),
         culture: Culture = .northernEuropean,
-        age: Age = .medieval
+        age: Age = .medieval,
+        houseModifiers: [EntityID: HouseModifiers] = [:]
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -111,6 +115,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.date = date
         self.culture = culture
         self.age = age
+        self.houseModifiers = houseModifiers
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -161,8 +166,20 @@ public extension World {
             housePopulations: populations,
             date: date,
             culture: culture,
-            age: age
+            age: age,
+            houseModifiers: snapshotHouseModifiers()
         )
+    }
+
+    private func snapshotHouseModifiers() -> [EntityID: HouseModifiers] {
+        let sources = activeSignatureSources()
+        guard !sources.isEmpty else { return [:] }
+        var result: [EntityID: HouseModifiers] = [:]
+        for house in buildings.values where house.kind == .house {
+            let modifiers = houseModifiers(of: house, sources: sources)
+            if modifiers != .none { result[house.id] = modifiers }
+        }
+        return result
     }
 
     private func roadDisconnectedBuildings() -> Set<EntityID> {

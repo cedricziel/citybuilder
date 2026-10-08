@@ -169,7 +169,14 @@ public extension Building {
     }
 }
 
-extension Building {
+public extension TileBoundingBox {
+    /// This box grown by `tiles` on every side.
+    func expanded(by tiles: Int) -> TileBoundingBox {
+        TileBoundingBox(minX: minX - tiles, minY: minY - tiles, maxX: maxX + tiles, maxY: maxY + tiles)
+    }
+}
+
+public extension Building {
     /// Inclusive tile bounds of the footprint.
     var bounds: TileBoundingBox {
         let footprint = BuildingCatalog.spec(for: kind).footprint

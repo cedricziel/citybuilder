@@ -32,6 +32,22 @@ public struct HouseModifiers: Hashable, Sendable {
     }
 }
 
+/// What a signature building reaches: the counts its inspector shows
+/// (design D10).
+public struct SignatureCoverage: Hashable, Sendable {
+    public var workshops: Int
+    public var smokyHouses: Int
+    public var energisedHouses: Int
+    public var inspiredHouses: Int
+
+    public init(workshops: Int = 0, smokyHouses: Int = 0, energisedHouses: Int = 0, inspiredHouses: Int = 0) {
+        self.workshops = workshops
+        self.smokyHouses = smokyHouses
+        self.energisedHouses = energisedHouses
+        self.inspiredHouses = inspiredHouses
+    }
+}
+
 public extension World {
     static let monumentStages: UInt8 = 25
     static let commissionCost: Int64 = 200
@@ -58,6 +74,46 @@ public extension World {
 public extension Building {
     var isCompletedMonument: Bool {
         kind == .monument && projectStages >= World.monumentStages
+    }
+}
+
+public extension World {
+    /// Operational buildings of `source`'s owner that `source` reaches,
+    /// once per effect that applies to them, whether or not `source` is
+    /// active. `source` may be a placement ghost that is not in the world.
+    static func signatureTargets(
+        of source: Building,
+        among buildings: some Sequence<Building>
+    ) -> [(target: Building, effect: SignatureEffect)] {
+        var result: [(target: Building, effect: SignatureEffect)] = []
+        for target in buildings where target.state == .operational && target.id != source.id {
+            guard haveSameOwner(source, target) else { continue }
+            let distance = footprintDistance(source, target)
+            for reach in source.kind.signatureReaches where distance <= reach.tiles && isAffected(target.kind, by: reach.effect) {
+                result.append((target, reach.effect))
+            }
+        }
+        return result
+    }
+
+    /// The counts the inspector shows for `source` (design D10).
+    static func signatureCoverage(of source: Building, among buildings: some Sequence<Building>) -> SignatureCoverage {
+        var coverage = SignatureCoverage()
+        for (_, effect) in signatureTargets(of: source, among: buildings) {
+            switch effect {
+            case .workshopSpeed: coverage.workshops += 1
+            case .smoke: coverage.smokyHouses += 1
+            case .energy: coverage.energisedHouses += 1
+            case .inspiration: coverage.inspiredHouses += 1
+            }
+        }
+        return coverage
+    }
+
+    /// True when a signature `effect` applies to buildings of `kind`.
+    static func isAffected(_ kind: BuildingKind, by effect: SignatureEffect) -> Bool {
+        if case .workshopSpeed = effect { return kind.isWorkshop }
+        return kind == .house
     }
 }
 
