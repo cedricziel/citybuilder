@@ -309,6 +309,7 @@ private func makeV3Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     json["version"] = 3
     var inner = json["world"] as? [String: Any] ?? [:]
     inner.removeValue(forKey: "research")
+    inner.removeValue(forKey: "calendar")
     json["world"] = inner
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
@@ -330,6 +331,41 @@ func scenarioV3SaveLoadsWithAllTechsResearched() throws {
     let loaded = try decodeWorld(data)
     #expect(Tech.allCases.allSatisfy(loaded.research.isResearched))
     #expect(loaded.research.current == nil)
+}
+
+private func v4FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v4_single_island.json")
+}
+
+/// Encode a World as a v4 save: the current shape minus `calendar`.
+private func makeV4Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 4
+    var inner = json["world"] as? [String: Any] ?? [:]
+    inner.removeValue(forKey: "calendar")
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v4 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV4SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    // A v4 save predates `add-calendar-and-events`: no `calendar` on World.
+    var data = try makeV4Payload(world: World.newGame(), writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v4FixtureURL())
+}
+
+@Test("scenario: v4 save loads with a calendar")
+func scenarioV4SaveLoadsWithACalendar() throws {
+    let data = try Data(contentsOf: v4FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 4, "fixture must be a v4 save")
+    let loaded = try decodeWorld(data)
+    #expect(loaded.calendar == CalendarState(startYear: 1200, isActive: true))
 }
 
 @Test("scenario: v1 fixture exists and migrates cleanly")

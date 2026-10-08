@@ -23,7 +23,8 @@ public struct MigrationRegistry: Sendable {
     public static let defaultMigrations: [Migration] = [
         MigrationV1ToV2(),
         MigrationV2ToV3(),
-        MigrationV3ToV4()
+        MigrationV3ToV4(),
+        MigrationV4ToV5()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -202,6 +203,26 @@ public struct MigrationV3ToV4: Migration {
             "knowledge": 0,
             "progress": 0
         ] as [String: Any]
+        root["world"] = world
+        return root
+    }
+}
+
+/// Migration #4: v4 → v5. v4 saves predate `add-calendar-and-events`:
+/// `World` had no `calendar`. They migrate with an active calendar
+/// starting in 1200, so their date is 1200 plus however long they have
+/// run. Spec: `persistence-save-load` / Saves before the calendar get one.
+public struct MigrationV4ToV5: Migration {
+    public let fromVersion = 4
+    public let toVersion = 5
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 5
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["calendar"] = ["startYear": 1200, "isActive": true] as [String: Any]
         root["world"] = world
         return root
     }

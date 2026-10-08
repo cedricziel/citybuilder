@@ -6,8 +6,8 @@
 
 ## 2. M2 — Persistence
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: v4 save loads with a calendar` into a failing `CityPersistenceTests` test with a v4 fixture. Confirm red.
-- [ ] 2.2 Implement to green: version 5 and the v4 → v5 migration (D8).
+- [x] 2.1 Tests-first: translate `#### Scenario: v4 save loads with a calendar` into a failing `CityPersistenceTests` test with a v4 fixture. Confirm red.
+- [x] 2.2 Implement to green: version 5 and the v4 → v5 migration (D8).
 
 ## 3. M3 — UI and rendering
 
