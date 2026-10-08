@@ -32,8 +32,8 @@ func inspectorShowsHouseTierAndNeeds() throws {
     var pop = HousePopulation()
     pop.tier = .citizens
     pop.population = 3
-    pop.foodSatisfied = true
-    pop.planksSatisfied = false
+    pop.setSatisfied(.food, true)
+    pop.setSatisfied(.planks, false)
     let snapshot = withHousePopulations(world.snapshot(), [house: pop])
     let lines = InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings).bullets
     #expect(lines.contains("Tier: Citizens"))

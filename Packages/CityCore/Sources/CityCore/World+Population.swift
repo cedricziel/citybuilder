@@ -20,8 +20,8 @@ extension World {
 
     private mutating func consumeIfDue(_ pop: inout HousePopulation, building: Building) {
         guard pop.population > 0, tickCount.isMultiple(of: HousePopulation.consumptionIntervalTicks) else { return }
-        for good in pop.tier.needs {
-            let amount = pop.consumption(of: good)
+        for good in pop.tier.needs(in: culture) {
+            let amount = pop.consumption(of: good, in: culture)
             pop.setShort(good, consume(good, amount: amount, by: building) < amount)
         }
     }
@@ -30,7 +30,7 @@ extension World {
     /// the good and the last consumption of it was not short.
     private func updateSatisfaction(_ pop: inout HousePopulation, building: Building) {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
-        for good in HouseTier.merchants.needs {
+        for good in HouseTier.merchants.needs(in: culture) {
             let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint)
             pop.setSatisfied(good, inReach && !pop.isShort(good))
         }
@@ -38,7 +38,7 @@ extension World {
 
     private func updateGrowth(_ pop: inout HousePopulation) {
         pop.ticksAtCurrentSatisfaction &+= 1
-        let met = pop.allNeedsSatisfied
+        let met = pop.allNeedsSatisfied(in: culture)
         let streak = pop.ticksAtCurrentSatisfaction
         let canGrow = met && streak >= HousePopulation.growthIntervalTicks && pop.population < pop.capacity
         let mustShrink = !met && streak >= HousePopulation.declineIntervalTicks && pop.population > 0
@@ -57,9 +57,9 @@ extension World {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         let canAdvance = pop.tier.next.map { next in
             pop.population >= pop.capacity
-                && next.needs.allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint) }
+                && next.needs(in: culture).allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint) }
         } ?? false
-        let mustDecline = pop.tier.previous != nil && !pop.allNeedsSatisfied
+        let mustDecline = pop.tier.previous != nil && !pop.allNeedsSatisfied(in: culture)
         guard canAdvance || mustDecline else {
             pop.ticksAtTierCondition = 0
             return

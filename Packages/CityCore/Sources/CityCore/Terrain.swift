@@ -43,6 +43,9 @@ public enum PlacementRejection: Hashable, Sendable {
     /// A later tech replaced this building. Spec: `historical-ages` /
     /// Obsolete buildings.
     case obsolete(Tech)
+    /// The building belongs to another culture. Spec: `culture-content`
+    /// / Culture-only buildings.
+    case wrongCulture(Culture)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -56,6 +59,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .needsTerrain: "needs_terrain"
         case .locked: "locked"
         case .obsolete: "obsolete"
+        case .wrongCulture: "wrong_culture"
         }
     }
 }

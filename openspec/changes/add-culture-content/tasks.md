@@ -1,7 +1,7 @@
 ## 1. M1 — Core
 
-- [ ] 1.1 Tests-first: translate every scenario in the culture-content, population-and-needs, goods-and-production and buildings-and-construction specs into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: goods, buildings, recipes, culture rule, Cultivation, needs by culture, satisfaction storage with the tolerant decoder (design D1–D4).
+- [x] 1.1 Tests-first: translate every scenario in the culture-content, population-and-needs, goods-and-production and buildings-and-construction specs into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: goods, buildings, recipes, culture rule, Cultivation, needs by culture, satisfaction storage with the tolerant decoder (design D1–D4).
 
 ## 2. M2 — Art
 

@@ -13,6 +13,14 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case charcoal
     case iron
     case tools
+    case hops
+    case beer
+    case grapes
+    case wine
+    case teaLeaves = "tea-leaves"
+    case tea
+    case coffeeCherries = "coffee-cherries"
+    case coffee
 }
 
 /// Goods catalog metadata. Unit / display name. Lightweight today; expands
@@ -40,7 +48,15 @@ public enum GoodsCatalog {
         .ore: GoodSpec(good: .ore, displayName: "Ore", stackUnit: "loads"),
         .charcoal: GoodSpec(good: .charcoal, displayName: "Charcoal", stackUnit: "baskets"),
         .iron: GoodSpec(good: .iron, displayName: "Iron", stackUnit: "bars"),
-        .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets")
+        .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets"),
+        .hops: GoodSpec(good: .hops, displayName: "Hops", stackUnit: "bales"),
+        .beer: GoodSpec(good: .beer, displayName: "Beer", stackUnit: "casks"),
+        .grapes: GoodSpec(good: .grapes, displayName: "Grapes", stackUnit: "baskets"),
+        .wine: GoodSpec(good: .wine, displayName: "Wine", stackUnit: "amphorae"),
+        .teaLeaves: GoodSpec(good: .teaLeaves, displayName: "Tea Leaves", stackUnit: "baskets"),
+        .tea: GoodSpec(good: .tea, displayName: "Tea", stackUnit: "chests"),
+        .coffeeCherries: GoodSpec(good: .coffeeCherries, displayName: "Coffee Cherries", stackUnit: "sacks"),
+        .coffee: GoodSpec(good: .coffee, displayName: "Coffee", stackUnit: "sacks")
     ]
 
     public static var all: [GoodSpec] {
