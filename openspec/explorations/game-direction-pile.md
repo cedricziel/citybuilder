@@ -57,10 +57,13 @@ Each item is one OpenSpec change, in dependency order. Bigger items may split wh
 | 5 | add-calendar-and-events | archived (seasons use drawn autumn/winter terrain; a tint can't lighten to snow) |
 | 6 | add-cultures | archived |
 | 7 | add-historical-ages | archived (age signatures split into `add-age-signatures`) |
-| 8 | add-culture-content | in progress (culture signatures split into `add-culture-signatures`) |
+| 8 | add-culture-content | archived (culture signatures split into `add-culture-signatures`) |
 | 9 | add-difficulty-and-goals | archived |
-| 10 | add-city-life | in progress (inspector residents wait on 8; ambient sound deferred until audio assets exist) |
+| 10 | add-city-life | archived (ambient sound deferred until audio assets exist) |
 | 11 | add-rival-towns + add-rival-trade | towns in progress; trade proposed |
+| — | add-touch-first-placement | archived (iPad and landscape playtests deferred) |
+| — | add-age-signatures | in progress |
+| — | add-culture-signatures | proposed (after age signatures and culture content) |
 
 **In parallel, any time:** finish `add-touch-first-placement` (open, 0/28), the Mac runtime pass (deferred from the foundation), and archive `replace-procedural-sprites-with-ai-pipeline` (complete but not archived).
 
