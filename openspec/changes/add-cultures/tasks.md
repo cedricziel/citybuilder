@@ -1,7 +1,7 @@
 ## 1. M1 — Culture in CityCore
 
-- [ ] 1.1 Tests-first: translate every scenario in this change's cultures spec into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Culture`, `World.culture`, `newGame(layout:seed:culture:)`, tier names, snapshot culture (design D1, D2).
+- [x] 1.1 Tests-first: translate every scenario in this change's cultures spec into failing tests in `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Culture`, `World.culture`, `newGame(layout:seed:culture:)`, tier names, snapshot culture (design D1, D2).
 
 ## 2. M2 — Persistence
 

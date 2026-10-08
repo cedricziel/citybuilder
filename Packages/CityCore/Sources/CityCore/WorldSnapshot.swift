@@ -64,6 +64,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let housePopulations: [EntityID: HousePopulation]
     /// Spec: `calendar-and-events` / The world has a date.
     public let date: GameDate
+    /// Spec: `cultures` / Snapshot carries the culture.
+    public let culture: Culture
 
     public init(
         tickCount: UInt64,
@@ -83,7 +85,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         tileToIsland: [TileCoordinate: IslandID] = [:],
         roadDisconnectedBuildings: Set<EntityID> = [],
         housePopulations: [EntityID: HousePopulation] = [:],
-        date: GameDate = GameDate(year: 1200, season: .spring)
+        date: GameDate = GameDate(year: 1200, season: .spring),
+        culture: Culture = .northernEuropean
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -103,6 +106,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.roadDisconnectedBuildings = roadDisconnectedBuildings
         self.housePopulations = housePopulations
         self.date = date
+        self.culture = culture
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -151,7 +155,8 @@ public extension World {
             tileToIsland: tileToIsland,
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
             housePopulations: populations,
-            date: date
+            date: date,
+            culture: culture
         )
     }
 

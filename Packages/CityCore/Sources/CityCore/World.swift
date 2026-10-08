@@ -75,6 +75,9 @@ public struct World: Codable, Sendable, Equatable {
     /// their meaning; `newGame` and the v5 migration turn it on.
     public internal(set) var calendar: CalendarState = .inactive
 
+    /// Spec: `cultures` / The world has a culture.
+    public internal(set) var culture: Culture = .northernEuropean
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
