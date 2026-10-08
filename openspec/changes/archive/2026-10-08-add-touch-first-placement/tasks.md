@@ -53,5 +53,5 @@
 - [x] 10.1 README: short "Touch placement" section explaining the long-press → menu → arrows → ✓ flow. Cross-link to the BuildPaletteView and to `add-build-materials-cost` for the cost-breakdown story.
 - [x] 10.2 Final `make test && make lint && make format`.
 - [ ] 10.3 Visual playtest on iPad simulator: long-press a tile, pick House, nudge, confirm. Long-press a tile, pick Road, drag. Long-press a built tile, pick Demolish. — DEFERRED (interactive).
-- [ ] 10.4 Visual playtest on iPhone simulator (portrait + landscape): same flows, verify hit targets ≥ 44 pt and that the PlacementHUD doesn't overlap the inspector or pause button. — DEFERRED (interactive).
+- [x] 10.4 Visual playtest on iPhone simulator (portrait + landscape): same flows, verify hit targets ≥ 44 pt and that the PlacementHUD doesn't overlap the inspector or pause button. — portrait verified on iPhone 17 Pro Max: long-press menu, House, nudge, confirm, inspector Actions; the confirm button covered the ghost and was moved below it. Landscape deferred with 10.3.
 - [x] 10.5 Verify `make test-scenarios` is clean for the rendering-2_5d and buildings-and-construction capabilities after this change.
