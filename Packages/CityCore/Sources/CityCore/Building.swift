@@ -52,6 +52,11 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case gallery
     case steamEngine = "steam-engine"
     case powerPlant = "power-plant"
+    /// Culture signature buildings. Spec: `culture-signatures`.
+    case meadHall = "mead-hall"
+    case forum
+    case templeGarden = "temple-garden"
+    case caravanserai
 }
 
 extension BuildingKind: Codable {
@@ -253,6 +258,7 @@ public enum BuildingCatalog {
     ]
     .merging(cultureSpecs) { _, _ in preconditionFailure("Culture kind with a hand-written spec") }
     .merging(signatureSpecs) { _, _ in preconditionFailure("Signature kind with a hand-written spec") }
+    .merging(cultureSignatureSpecs) { _, _ in preconditionFailure("Culture signature with a hand-written spec") }
 
     /// Gardens and producers of the culture luxury chains (design D3).
     private static var cultureSpecs: [BuildingKind: BuildingSpec] {
@@ -335,6 +341,11 @@ public struct Building: Hashable, Codable, Sendable {
     public var fuelled: Bool
     /// Ticks left of a running gallery commission, 0 when none runs.
     public var commissionTicksLeft: UInt32
+    /// The good a caravanserai's caravans sell first. Spec:
+    /// `culture-signatures` / The caravanserai exports a chosen good.
+    public var exportGood: Good?
+    /// What the caravanserai's last caravan sold, nil before its first.
+    public var lastCaravan: CaravanSale?
 
     public init(
         id: EntityID,
@@ -349,7 +360,9 @@ public struct Building: Hashable, Codable, Sendable {
         materialsDelivered: [Good: Int] = [:],
         projectStages: UInt8 = 0,
         fuelled: Bool = false,
-        commissionTicksLeft: UInt32 = 0
+        commissionTicksLeft: UInt32 = 0,
+        exportGood: Good? = nil,
+        lastCaravan: CaravanSale? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -364,6 +377,8 @@ public struct Building: Hashable, Codable, Sendable {
         self.projectStages = projectStages
         self.fuelled = fuelled
         self.commissionTicksLeft = commissionTicksLeft
+        self.exportGood = exportGood
+        self.lastCaravan = lastCaravan
     }
 }
 
@@ -374,7 +389,8 @@ public extension Building {
     /// saves missing the construction-stalls fields default to the
     /// post-migration values (`.actively`, empty delivered); saves
     /// without the age-signature fields load as stage 0, unfuelled and
-    /// without a commission.
+    /// without a commission, and buildings without an export good or a
+    /// last caravan have none.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(EntityID.self, forKey: .id)
@@ -400,6 +416,8 @@ public extension Building {
         self.projectStages = try container.decodeIfPresent(UInt8.self, forKey: .projectStages) ?? 0
         self.fuelled = try container.decodeIfPresent(Bool.self, forKey: .fuelled) ?? false
         self.commissionTicksLeft = try container.decodeIfPresent(UInt32.self, forKey: .commissionTicksLeft) ?? 0
+        self.exportGood = try container.decodeIfPresent(Good.self, forKey: .exportGood)
+        self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
     }
 }
 
@@ -417,6 +435,7 @@ public extension BuildingKind {
         case .vineyard, .winery: .mediterranean
         case .teaGarden, .teaHouse: .eastAsian
         case .coffeeGrove, .roastery: .middleEastern
+        case .meadHall, .forum, .templeGarden, .caravanserai: signatureCulture
         default: nil
         }
     }

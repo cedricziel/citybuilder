@@ -95,8 +95,10 @@ extension World {
     /// whose output stockpiles have something to ship.
     mutating func runCarrierSystem(events: inout [WorldEvent]) {
         advanceCarriers(events: &events)
-        spawnCarriersFromProducers(events: &events)
+        let tileToIsland = tileToIslandMap()
+        spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
         spawnSupplyCarriers(events: &events)
+        spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
@@ -191,8 +193,10 @@ extension World {
         }
     }
 
-    private mutating func spawnCarriersFromProducers(events: inout [WorldEvent]) {
-        let tileToIsland = tileToIslandMap()
+    private mutating func spawnCarriersFromProducers(
+        tileToIsland: [TileCoordinate: IslandID],
+        events: inout [WorldEvent]
+    ) {
         for (producerId, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
@@ -304,7 +308,7 @@ extension World {
         return best
     }
 
-    private func islandFor(
+    func islandFor(
         building: Building,
         tileToIsland: [TileCoordinate: IslandID]
     ) -> IslandID? {
@@ -363,12 +367,12 @@ extension World {
         return best
     }
 
-    mutating func runEconomySystem(events: inout [WorldEvent]) {
+    mutating func runEconomySystem(signatureSources sources: [Building], events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
             // Spec: `population-and-needs` / Taxes scale with tier.
-            let amount = taxWithMonumentBonus(populations.values.reduce(Int64(0)) {
-                $0 + Int64($1.population) * $1.tier.taxPerResident * Economy.taxPerPopUnit
+            let amount = taxWithMonumentBonus(populations.reduce(Int64(0)) {
+                $0 + houseTax(house: $1.key, population: $1.value, sources: sources)
             })
             economy.credit(amount)
             // Only emit when actual money flowed — `taxesCollected` is a
@@ -381,7 +385,7 @@ extension World {
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
             var totalUpkeep: Int64 = 0
             for building in buildings.values where building.state == .operational {
-                totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
+                totalUpkeep += upkeep(of: building, sources: sources)
             }
             totalUpkeep = difficulty.scaledUpkeep(totalUpkeep)
             economy.deduct(totalUpkeep)

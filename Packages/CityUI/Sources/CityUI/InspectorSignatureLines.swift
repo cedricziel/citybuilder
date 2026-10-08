@@ -30,7 +30,7 @@ extension InspectorViewModel {
         case .powerPlant:
             return fuelLines(building) { "Energises \(count(coverage.energisedHouses, "house")), \(count(coverage.workshops, "workshop"))" }
         default:
-            return []
+            return cultureSignatureLines(for: building, coverage: coverage, in: snapshot)
         }
     }
 
@@ -56,10 +56,10 @@ extension InspectorViewModel {
     }
 
     static func fuelName(_ fuel: FuelSpec) -> String {
-        GoodsCatalog.spec(for: fuel.good).displayName.lowercased()
+        goodName(fuel.good)
     }
 
-    private static func count(_ value: Int, _ noun: String) -> String {
+    static func count(_ value: Int, _ noun: String) -> String {
         "\(value) \(noun)\(value == 1 ? "" : "s")"
     }
 

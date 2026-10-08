@@ -71,6 +71,24 @@ public enum GoodsCatalog {
     }
 }
 
+public extension Good {
+    /// What a caravan pays per unit, and the base of rival trade prices
+    /// (`add-rival-trade` D1). Design D8.
+    var basePrice: Int64 {
+        switch self {
+        case .wood, .food: 4
+        case .planks: 8
+        case .bread: 12
+        case .grain, .hops, .grapes, .teaLeaves, .coffeeCherries: 3
+        case .flour: 6
+        case .ore, .charcoal: 5
+        case .iron: 14
+        case .tools: 30
+        case .beer, .wine, .tea, .coffee: 16
+        }
+    }
+}
+
 /// Storage container holding mixed goods with a single total capacity.
 public struct Stockpile: Hashable, Codable, Sendable {
     public private(set) var capacity: Int

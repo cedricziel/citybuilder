@@ -263,10 +263,10 @@ public struct World: Codable, Sendable, Equatable {
         runCarrierSystem(events: &events)
         runShipSystem()
         runPopulationSystem(signatureSources: signatureSources)
-        runResearchSystem(events: &events)
+        runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
-        runEconomySystem(events: &events)
+        runEconomySystem(signatureSources: signatureSources, events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0
@@ -313,11 +313,7 @@ public struct World: Codable, Sendable, Equatable {
         case let .chooseResearch(tech):
             applyChooseResearch(tech)
         case let .harvestForest(coord):
-            // Forests becoming grass when harvested per spec
-            // `world-terrain` ("Forest tile can be cleared").
-            guard contains(coord), terrain(at: coord) == .forest else { return }
-            terrainGrid[coord.y * mapWidth + coord.x] = .grass
-            events.append(.forestHarvested(at: coord))
+            applyHarvestForest(at: coord, events: &events)
         case let .place(kind, anchor):
             applyPlace(kind: kind, anchor: anchor, events: &events)
         case let .demolish(anchor):
@@ -334,7 +330,17 @@ public struct World: Codable, Sendable, Equatable {
             applyUnassignShip(shipID: shipID)
         case let .commission(gallery):
             applyCommission(gallery, events: &events)
+        case let .setExport(caravanserai, good):
+            applySetExport(caravanserai, good: good)
         }
+    }
+
+    /// Forests becoming grass when harvested per spec `world-terrain`
+    /// ("Forest tile can be cleared").
+    private mutating func applyHarvestForest(at coord: TileCoordinate, events: inout [WorldEvent]) {
+        guard contains(coord), terrain(at: coord) == .forest else { return }
+        terrainGrid[coord.y * mapWidth + coord.x] = .grass
+        events.append(.forestHarvested(at: coord))
     }
 
     private mutating func applyPlace(
@@ -426,7 +432,7 @@ public struct World: Codable, Sendable, Equatable {
         case .warehouse: 200
         case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .quernHouse, .mine, .charcoalBurner, .smelter,
              .toolsmith, .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery,
-             .monument, .steamEngine, .powerPlant: 16
+             .monument, .steamEngine, .powerPlant, .meadHall, .forum, .templeGarden, .caravanserai: 16
         case .house: 8
         case .townCenter: 40
         case .road, .library, .guildHall, .gallery: nil
