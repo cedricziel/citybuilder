@@ -34,9 +34,14 @@ extension IsoWorldScene {
 
     /// The look variant's name and texture for a finished building, when
     /// the atlas has one. Houses follow age and culture; the other
-    /// culture kinds follow culture only.
-    func cultureTexture(kind: BuildingKind, state: BuildingState, houseTier: HouseTier) -> (String, SKTexture)? {
+    /// culture kinds follow culture only. A rival's building uses the
+    /// rival's culture and age, the player's the scene's.
+    func cultureTexture(
+        kind: BuildingKind, state: BuildingState, houseTier: HouseTier, rival: RivalSummary?
+    ) -> (String, SKTexture)? {
         guard state != .constructing else { return nil }
+        let culture = rival?.culture ?? culture
+        let age = rival?.age ?? age
         let candidates: [String] = if kind == .house {
             Self.houseLookNames(houseTier: houseTier, culture: culture, age: age)
         } else {
