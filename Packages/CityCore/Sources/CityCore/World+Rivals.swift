@@ -37,6 +37,12 @@ public extension World {
 }
 
 extension World {
+    /// The building a player command targets, when it is the player's
+    /// and of `kind`; player commands never reach a rival's buildings.
+    func playerBuilding(_ id: EntityID, kind: BuildingKind) -> Building? {
+        buildings[id].flatMap { $0.kind == kind && $0.owner == .player ? $0 : nil }
+    }
+
     /// Populations of `owner`'s houses.
     func populations(of owner: Owner) -> [HousePopulation] {
         populations.filter { self.owner(of: $0.key) == owner }.map(\.value)

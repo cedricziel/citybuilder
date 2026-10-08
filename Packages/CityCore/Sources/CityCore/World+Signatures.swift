@@ -174,7 +174,7 @@ extension World {
 
     /// Spec: `age-signatures` / Gallery commissions inspire houses.
     mutating func applyCommission(_ id: EntityID, events: inout [WorldEvent]) {
-        guard let gallery = buildings[id], gallery.kind == .gallery, gallery.state == .operational,
+        guard let gallery = playerBuilding(id, kind: .gallery), gallery.state == .operational,
               gallery.commissionTicksLeft == 0, economy.balance >= Self.commissionCost
         else { return }
         economy.deduct(Self.commissionCost)

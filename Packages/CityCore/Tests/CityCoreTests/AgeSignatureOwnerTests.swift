@@ -50,3 +50,15 @@ func rivalMonumentRaisesOnlyTheRivalsTax() throws {
     #expect(world.economy.balance == balance + 32)
     #expect(world.rival(1)?.treasury == treasury + 35)
 }
+
+@Test("the player can't commission a rival gallery")
+func playerCannotCommissionARivalGallery() {
+    var world = Fixture.grass()
+    world.testSeatRival()
+    let gallery = Fixture.inject(.gallery, at: TileCoordinate(x: 2, y: 2), in: &world, owner: .rival(1))
+    let balance = world.economy.balance
+    world.enqueue(.commission(gallery))
+    world.tick()
+    #expect(world.buildings[gallery]?.commissionTicksLeft == 0)
+    #expect(world.economy.balance == balance)
+}

@@ -26,10 +26,8 @@ extension World {
     }
 
     /// Spec: `culture-signatures` / The caravanserai exports a chosen good.
-    /// Every building is the player's until `add-rival-towns` lands; then
-    /// this also checks the caravanserai is the player's.
     mutating func applySetExport(_ id: EntityID, good: Good?) {
-        guard let building = buildings[id], building.kind == .caravanserai else { return }
+        guard let building = playerBuilding(id, kind: .caravanserai) else { return }
         let luxury = building.kind.fuel?.good
         guard good.map({ $0 != luxury }) ?? true else { return }
         buildings[id]?.exportGood = good
@@ -101,15 +99,8 @@ extension World {
             let revenue = sold.reduce(Int64(0)) { $0 + Int64($1.value) * $1.key.basePrice }
             stockpiles[caravanserai.id] = stock
             buildings[caravanserai.id]?.lastCaravan = CaravanSale(goods: sold, revenue: revenue)
-            credit(revenue, toOwnerOf: caravanserai)
+            credit(revenue, to: caravanserai.owner)
             events.append(.caravanSold(building: caravanserai.id, goods: sold, revenue: revenue))
         }
-    }
-
-    /// Owner seam for income outside the tax interval. Every building is
-    /// the player's until `add-rival-towns` lands; then this credits the
-    /// owner's purse.
-    private mutating func credit(_ amount: Int64, toOwnerOf _: Building) {
-        economy.credit(amount)
     }
 }
