@@ -61,3 +61,33 @@ func dragDoesNotSuppressNextTap() {
     scene.handlePointerReleased(at: IsoMath.screenPoint(forTile: TileCoordinate(x: 5, y: 5)))
     #expect(harness.intents.last == .tapTile(TileCoordinate(x: 5, y: 5)))
 }
+
+@Test("a diagonal drag step paints a connecting tile")
+@MainActor
+func diagonalDragStepPaintsConnectingTile() {
+    let harness = Harness()
+    harness.scene.handlePointerMoved(to: IsoMath.screenPoint(forTile: TileCoordinate(x: 2, y: 2)))
+    harness.scene.handlePointerMoved(to: IsoMath.screenPoint(forTile: TileCoordinate(x: 3, y: 3)))
+    #expect(harness.intents == [
+        .dragTile(TileCoordinate(x: 2, y: 2)),
+        .dragTile(TileCoordinate(x: 3, y: 2)),
+        .dragTile(TileCoordinate(x: 3, y: 3))
+    ])
+}
+
+@Test("a long drag jump paints every tile between")
+@MainActor
+func longDragJumpPaintsEveryTileBetween() {
+    let harness = Harness()
+    harness.scene.handlePointerMoved(to: IsoMath.screenPoint(forTile: TileCoordinate(x: 1, y: 1)))
+    harness.scene.handlePointerMoved(to: IsoMath.screenPoint(forTile: TileCoordinate(x: 4, y: 2)))
+    let tiles = harness.intents.compactMap { intent -> TileCoordinate? in
+        if case let .dragTile(tile) = intent { return tile }
+        return nil
+    }
+    #expect(tiles.first == TileCoordinate(x: 1, y: 1))
+    #expect(tiles.last == TileCoordinate(x: 4, y: 2))
+    for (from, to) in zip(tiles, tiles.dropFirst()) {
+        #expect(abs(from.x - to.x) + abs(from.y - to.y) == 1, "\(from) → \(to) is not one orthogonal step")
+    }
+}

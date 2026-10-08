@@ -152,8 +152,27 @@ public final class IsoWorldScene: SKScene {
               let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
         else { return }
         guard coord != lastDragTile else { return }
+        for tile in Self.orthogonalSteps(from: lastDragTile, to: coord) {
+            intentSink?(.dragTile(tile))
+        }
         lastDragTile = coord
-        intentSink?(.dragTile(coord))
+    }
+
+    /// Tiles to paint when the finger moves from `from` to `to`: every
+    /// tile on a 4-connected path, so a fast or diagonal drag never
+    /// leaves a corner-only gap in a road. Steps along x first.
+    static func orthogonalSteps(from: TileCoordinate?, to: TileCoordinate) -> [TileCoordinate] {
+        guard var current = from else { return [to] }
+        var steps: [TileCoordinate] = []
+        while current != to {
+            if current.x != to.x {
+                current = TileCoordinate(x: current.x + (to.x > current.x ? 1 : -1), y: current.y)
+            } else {
+                current = TileCoordinate(x: current.x, y: current.y + (to.y > current.y ? 1 : -1))
+            }
+            steps.append(current)
+        }
+        return steps
     }
 
     private func dispatchHover(at sceneLocation: CGPoint) {
