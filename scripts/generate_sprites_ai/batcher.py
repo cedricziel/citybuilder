@@ -97,6 +97,8 @@ def _target_size(sprite_name: str) -> tuple[int, int]:
     existing committed PNG's dimensions (so a regen drops in byte-for-
     byte against the current atlas layout); falls back to the
     per-prefix default for never-before-shipped names."""
+    if sprite_name in procedural.supported():
+        return procedural.size(sprite_name)
     try:
         atlas_dir = paths.atlas_dir_for(sprite_name)
     except ValueError:
@@ -437,7 +439,8 @@ def _derived_sheet(entry: CatalogEntry, sprite_name: str) -> Image.Image:
     frames = sorted(name for _, name in slice_plan(entry) if _is_operational_frame(name))
     index = int(sprite_name.rsplit("-", 1)[1])
     derived = procedural.derive_operational(base, index, len(frames))
-    return derived.resize((procedural.SHEET_SIZE, procedural.SHEET_SIZE), resample=Image.Resampling.NEAREST)
+    scale = procedural.SHEET_SCALE
+    return derived.resize((derived.width * scale, derived.height * scale), resample=Image.Resampling.NEAREST)
 
 
 def write_procedural_sheets() -> list[str]:

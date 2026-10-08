@@ -331,7 +331,7 @@ def test_procedural_entry_never_calls_the_api(
         )
         mocked.assert_not_called()
 
-    assert out.size == (1024, 1024)
+    assert out.size == (64 * 8, 32 * 8)
     assert cache.read_sheet("terrain-water") is not None
 
 

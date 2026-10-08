@@ -8,7 +8,7 @@ from PIL import Image
 
 from generate_sprites_ai.batcher import PALETTE
 from generate_sprites_ai.postprocess import downsample, in_diamond
-from generate_sprites_ai.procedural import SHEET_SIZE, render, render_sheet, supported
+from generate_sprites_ai.procedural import SHEET_SCALE, render, render_sheet, supported
 
 TERRAIN = [
     "terrain-grass", "terrain-grass-0", "terrain-grass-1",
@@ -62,7 +62,7 @@ def test_sheet_round_trips_through_nearest_downsample() -> None:
     neighbour; the result must equal the canonical sprite exactly."""
     for name in ("terrain-water-1", "terrain-forest"):
         sheet = render_sheet(name)
-        assert sheet.size == (SHEET_SIZE, SHEET_SIZE)
+        assert sheet.size == (64 * SHEET_SCALE, 32 * SHEET_SCALE)
         assert downsample(sheet, (64, 32)).tobytes() == render(name).tobytes()
 
 

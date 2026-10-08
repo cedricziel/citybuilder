@@ -18,35 +18,16 @@ from PIL import Image, ImageDraw
 
 from .postprocess import in_diamond
 
-SHEET_SIZE = 1024
+SHEET_SCALE = 8
 TILE = (64, 32)
 
-Rgb = tuple[int, int, int]
+from .palette import (  # noqa: E402
+    CREAM, CREVICE, DARK_LOAM, DARK_TIMBER, DEEP_WATER, GLINT, HIGHLIGHT_WATER, LEAF,
+    LIGHT_LOAM, LIGHT_STONE, MEDIUM_LOAM, MID_WATER, OUTLINE, PALE_SAND, PINE, SAND,
+    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, THATCH, TIMBER, Rgb,
+)
 
-# `world.md` palette roles used here.
-DARK_LOAM: Rgb = (0x3D, 0x2A, 0x1D)
-MEDIUM_LOAM: Rgb = (0x5C, 0x3F, 0x28)
-LIGHT_LOAM: Rgb = (0x8C, 0x6A, 0x45)
-SAND: Rgb = (0xC9, 0xA6, 0x71)
-LEAF: Rgb = (0x5C, 0x80, 0x38)
-SHADOW_GREEN: Rgb = (0x3F, 0x5C, 0x26)
-SUN_GRASS: Rgb = (0x8F, 0xB0, 0x4E)
-STONE: Rgb = (0x7A, 0x6B, 0x59)
-SHADOW_STONE: Rgb = (0x5C, 0x50, 0x46)
-LIGHT_STONE: Rgb = (0xA8, 0x98, 0x84)
-DARK_TIMBER: Rgb = (0x4A, 0x2F, 0x1A)
-PALE_SAND: Rgb = (0xD2, 0xC0, 0x94)
-CREVICE: Rgb = (0x3F, 0x2A, 0x26)
-DEEP_WATER: Rgb = (0x2A, 0x4E, 0x6E)
-MID_WATER: Rgb = (0x3F, 0x6E, 0x94)
-HIGHLIGHT_WATER: Rgb = (0x6F, 0xA4, 0xC2)
-GLINT: Rgb = (0xA8, 0xCC, 0xDD)
-OUTLINE: Rgb = (0x1A, 0x14, 0x10)
-CREAM: Rgb = (0xFF, 0xE9, 0xC8)
-TIMBER: Rgb = (0x6E, 0x4A, 0x2A)
-PINE: Rgb = (0xA0, 0x7C, 0x50)
-WHEAT: Rgb = (0xD4, 0xA8, 0x6A)
-THATCH: Rgb = (0x8B, 0x5A, 0x2B)
+WHEAT = (0xD4, 0xA8, 0x6A)
 
 
 def _hash01(x: int, y: int, seed: int) -> float:
@@ -413,6 +394,28 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
 }
 
 
+def _register_buildings_and_units() -> None:
+    from . import buildings, units
+
+    stages = ("pad", "frame", "walls")
+    for kind in buildings.FOOTPRINTS:
+        name = f"building-{kind}"
+        _RENDERERS[name] = lambda kind=kind: buildings.draw(kind)
+        for i, stage in enumerate(stages):
+            _RENDERERS[f"{name}-constructing-{i}"] = lambda kind=kind, stage=stage: buildings.draw(kind, stage)
+        frames = buildings.OPERATIONAL_FRAMES.get(kind, 0)
+        for i in range(frames):
+            _RENDERERS[f"{name}-operational-{i}"] = (
+                lambda kind=kind, i=i, frames=frames: derive_operational(buildings.draw(kind), i, frames)
+            )
+    for facing in ("ne", "se", "sw", "nw"):
+        for frame in (0, 1):
+            _RENDERERS[f"walker-{facing}-{frame}"] = lambda facing=facing, frame=frame: units.walker(facing, frame)
+    for facing in ("n", "ne", "e", "se", "s", "sw", "w", "nw"):
+        for frame in (0, 1):
+            _RENDERERS[f"ship-{facing}-{frame}"] = lambda facing=facing, frame=frame: units.ship(facing, frame)
+
+
 def supported() -> list[str]:
     return sorted(_RENDERERS)
 
@@ -422,10 +425,17 @@ def render(sprite_name: str) -> Image.Image:
     return _RENDERERS[sprite_name]()
 
 
+def size(sprite_name: str) -> tuple[int, int]:
+    """Canonical canvas size; procedural sprites own their size."""
+    return render(sprite_name).size
+
+
 def render_sheet(sprite_name: str) -> Image.Image:
-    """The sprite upscaled with nearest-neighbour to the square sheet
-    size the pipeline's offline path reads from `_sheets/`."""
-    return render(sprite_name).resize((SHEET_SIZE, SHEET_SIZE), resample=Image.Resampling.NEAREST)
+    """The sprite upscaled by an integer factor with nearest-neighbour,
+    so the offline path's downsample reproduces it exactly whatever its
+    aspect ratio."""
+    img = render(sprite_name)
+    return img.resize((img.width * SHEET_SCALE, img.height * SHEET_SCALE), resample=Image.Resampling.NEAREST)
 
 
 # ---------------- derived operational frames ----------------
@@ -464,3 +474,6 @@ def derive_operational(base: Image.Image, frame: int, frame_count: int) -> Image
                     colour = LIGHT_STONE
                 px[x, y] = (*colour, 255)
     return img
+
+
+_register_buildings_and_units()
