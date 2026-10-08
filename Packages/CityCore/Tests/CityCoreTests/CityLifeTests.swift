@@ -6,19 +6,20 @@ import Testing
 
 @Test("scenario: midday is bright")
 func scenarioMiddayIsBright() {
-    let time = TimeOfDay(tick: 600)
+    let time = TimeOfDay(tick: 180)
     #expect(time.phase == .day)
     #expect(time.darkness == 0)
 }
 
 @Test("scenario: midnight is dark")
 func scenarioMidnightIsDark() {
-    let time = TimeOfDay(tick: 1200)
+    let time = TimeOfDay(tick: 780)
     #expect(time.phase == .night)
     #expect(time.darkness == 0.55)
-    #expect(TimeOfDay(tick: 300).phase == .dawn)
-    #expect(TimeOfDay(tick: 960).phase == .dusk)
-    #expect(abs(TimeOfDay(tick: 300).darkness - 0.275) < 1e-9)
+    #expect(TimeOfDay(tick: 1080).phase == .dawn)
+    #expect(TimeOfDay(tick: 540).phase == .dusk)
+    #expect(abs(TimeOfDay(tick: 1080).darkness - 0.275) < 1e-9)
+    #expect(TimeOfDay(tick: 0).phase == .day)
 }
 
 @Test("scenario: names are stable")

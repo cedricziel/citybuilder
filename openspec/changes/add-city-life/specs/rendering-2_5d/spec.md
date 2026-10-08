@@ -6,7 +6,7 @@ The scene SHALL darken by the time of day's darkness, and inhabited houses SHALL
 
 #### Scenario: Night overlay
 
-- **WHEN** the scene renders a snapshot at tick 1200
+- **WHEN** the scene renders a snapshot at tick 780
 - **THEN** its night overlay has alpha 0.55
 
 ### Requirement: Residents stroll the streets

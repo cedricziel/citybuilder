@@ -32,7 +32,7 @@ func scenarioStrollersByDay() throws {
     let (base, house) = try houseOnRoad()
     var pop = HousePopulation()
     pop.population = 9
-    let strollers = StrollerPlanner.strollers(in: snapshot(base, tick: 600, pops: [house: pop]))
+    let strollers = StrollerPlanner.strollers(in: snapshot(base, tick: 180, pops: [house: pop]))
     #expect(strollers.count { $0.house == house } == 3)
 }
 
@@ -41,7 +41,7 @@ func scenarioNoStrollersAtNight() throws {
     let (base, house) = try houseOnRoad()
     var pop = HousePopulation()
     pop.population = 9
-    #expect(StrollerPlanner.strollers(in: snapshot(base, tick: 1200, pops: [house: pop])).isEmpty)
+    #expect(StrollerPlanner.strollers(in: snapshot(base, tick: 780, pops: [house: pop])).isEmpty)
 }
 
 @Test("strollers stay on road tiles near their house")
@@ -63,8 +63,8 @@ func scenarioNightOverlay() throws {
     let (base, _) = try houseOnRoad()
     let scene = IsoWorldScene()
     scene.size = CGSize(width: 1024, height: 768)
-    scene.applyTimeOfDay(TimeOfDay(tick: snapshot(base, tick: 1200, pops: [:]).tickCount))
+    scene.applyTimeOfDay(TimeOfDay(tick: snapshot(base, tick: 780, pops: [:]).tickCount))
     #expect(abs(scene.nightOverlay.alpha - 0.55) < 0.001)
-    scene.applyTimeOfDay(TimeOfDay(tick: 600))
+    scene.applyTimeOfDay(TimeOfDay(tick: 180))
     #expect(scene.nightOverlay.alpha == 0)
 }

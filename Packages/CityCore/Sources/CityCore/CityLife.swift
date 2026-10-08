@@ -8,11 +8,16 @@ public struct TimeOfDay: Hashable, Sendable {
     public static let ticksPerDay: UInt64 = 1200
     public static let nightDarkness = 0.55
 
-    /// 0 is midnight, 0.5 is noon.
+    /// 0 is midnight, 0.5 is noon. Tick 0 is `startFraction`.
     public let fraction: Double
 
+    /// Games start at this point of the day, mid-morning, so a new city
+    /// is not first seen in the dark.
+    public static let startFraction = 0.35
+
     public init(tick: UInt64) {
-        fraction = Double(tick % Self.ticksPerDay) / Double(Self.ticksPerDay)
+        let raw = Double(tick % Self.ticksPerDay) / Double(Self.ticksPerDay) + Self.startFraction
+        fraction = raw >= 1 ? raw - 1 : raw
     }
 
     public var phase: Phase {
