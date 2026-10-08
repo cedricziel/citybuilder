@@ -359,6 +359,10 @@ def _sprite_for_atlas_name(
         write_sheet(sprite_name, procedural.render_sheet(sprite_name))
         return _read_back(sprite_name)
 
+    if _is_derived_operational(entry, sprite_name) and not offline:
+        write_sheet(sprite_name, _derived_sheet(entry, sprite_name))
+        return _read_back(sprite_name)
+
     if offline:
         sheet = read_sheet(sprite_name)
         if sheet is None:
@@ -415,17 +419,43 @@ def _is_procedural(entry: CatalogEntry) -> bool:
     return entry.front_matter.get("source", "").strip().lower() == "procedural"
 
 
+def _is_derived_operational(entry: CatalogEntry, sprite_name: str) -> bool:
+    """`operational = "derived"` entries build their operational
+    frames from the base sprite instead of drawing each one separately,
+    so the animation never swaps one building for a different one."""
+    derived = entry.front_matter.get("operational", "").strip().lower() == "derived"
+    return derived and _is_operational_frame(sprite_name)
+
+
+def _derived_sheet(entry: CatalogEntry, sprite_name: str) -> Image.Image:
+    base_name = _base_name_for_kind(sprite_name)
+    base_sheet = read_sheet(base_name)
+    if base_sheet is None:
+        raise RuntimeError(f"derived frame {sprite_name} needs _sheets/{base_name}.png")
+    target = _target_size(base_name)
+    base = quantize(downsample(threshold_alpha(base_sheet, threshold=128), target, mode="nearest"), PALETTE)
+    frames = sorted(name for _, name in slice_plan(entry) if _is_operational_frame(name))
+    index = int(sprite_name.rsplit("-", 1)[1])
+    derived = procedural.derive_operational(base, index, len(frames))
+    return derived.resize((procedural.SHEET_SIZE, procedural.SHEET_SIZE), resample=Image.Resampling.NEAREST)
+
+
 def write_procedural_sheets() -> list[str]:
-    """Write `_sheets/<sprite>.png` for every sprite declared by a
-    procedural catalog entry. Returns the sprite names written. Needs
-    no API key; follow with an offline run to refresh the atlases."""
+    """Write `_sheets/<sprite>.png` for every sprite that is drawn
+    locally: all sprites of procedural catalog entries, plus the
+    operational frames of `operational = "derived"` entries. Returns
+    the sprite names written. Needs no API key; follow with an offline
+    run to refresh the atlases."""
     written: list[str] = []
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         entry = parse_catalog_entry(md.stem, md.read_text(encoding="utf-8"))
-        if not _is_procedural(entry):
-            continue
         for _, sprite_name in slice_plan(entry):
-            write_sheet(sprite_name, procedural.render_sheet(sprite_name))
+            if _is_procedural(entry):
+                write_sheet(sprite_name, procedural.render_sheet(sprite_name))
+            elif _is_derived_operational(entry, sprite_name):
+                write_sheet(sprite_name, _derived_sheet(entry, sprite_name))
+            else:
+                continue
             written.append(sprite_name)
     return written
 

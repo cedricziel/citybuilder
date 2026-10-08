@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from .postprocess import in_diamond
 
@@ -43,6 +43,10 @@ HIGHLIGHT_WATER: Rgb = (0x6F, 0xA4, 0xC2)
 GLINT: Rgb = (0xA8, 0xCC, 0xDD)
 OUTLINE: Rgb = (0x1A, 0x14, 0x10)
 CREAM: Rgb = (0xFF, 0xE9, 0xC8)
+TIMBER: Rgb = (0x6E, 0x4A, 0x2A)
+PINE: Rgb = (0xA0, 0x7C, 0x50)
+WHEAT: Rgb = (0xD4, 0xA8, 0x6A)
+THATCH: Rgb = (0x8B, 0x5A, 0x2B)
 
 
 def _hash01(x: int, y: int, seed: int) -> float:
@@ -250,6 +254,94 @@ def _water(frame: int) -> Image.Image:
     return _paint_diamond(paint)
 
 
+# ---------------- farm (2×2 building) ----------------
+
+BUILDING = (128, 128)
+# The 2×2 footprint diamond fills the canvas's bottom 64 rows; the
+# renderer anchors building sprites at the footprint's bottom vertex.
+_FIELD_TOP = 64
+
+
+def _in_field(x: int, y: int) -> bool:
+    return y >= _FIELD_TOP and in_diamond(x, y - _FIELD_TOP, 128, 64)
+
+
+def _field(stage: str, wind: int) -> Image.Image:
+    """Crop rows run along the iso x-axis (down-right). `stage` is one
+    of tilled / seedlings / green / ripe."""
+    img = Image.new("RGBA", BUILDING, (0, 0, 0, 0))
+    px = img.load()
+    for y in range(_FIELD_TOP, 128):
+        for x in range(128):
+            if not _in_field(x, y):
+                continue
+            row = (x - 2 * y) % 8
+            furrow = row in (0, 1)
+            n = _hash01(x, y, 60)
+            if stage == "tilled" or furrow:
+                colour = DARK_LOAM if furrow else (MEDIUM_LOAM if n > 0.3 else LIGHT_LOAM)
+            elif stage == "seedlings":
+                colour = LEAF if n > 0.78 else MEDIUM_LOAM
+            elif stage == "green":
+                colour = SUN_GRASS if n > 0.85 else (LEAF if n > 0.25 else SHADOW_GREEN)
+            else:
+                band = (x + 2 * y + wind * 6) % 24
+                if band in (0, 1, 2):
+                    colour = CREAM if n > 0.5 else PALE_SAND
+                elif row == 2:
+                    colour = THATCH
+                else:
+                    colour = WHEAT if n > 0.12 else PINE
+            px[x, y] = (*colour, 255)
+    return img
+
+
+def _barn(img: Image.Image, stage: str) -> None:
+    """A small thatched barn on the field's back corner. Box corners
+    are iso: footprint diamond centred at (64, 76), 40×20, walls 14 px."""
+    draw = ImageDraw.Draw(img)
+    cx, cy, hw, hh, wall = 64, 76, 20, 10, 14
+    top, right, bottom, left = (cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy)
+    if stage == "pad":
+        draw.polygon([top, right, bottom, left], fill=(*STONE, 255), outline=(*SHADOW_STONE, 255))
+        return
+    up = (0, -wall)
+
+    def lift(p: tuple[int, int]) -> tuple[int, int]:
+        return (p[0] + up[0], p[1] + up[1])
+
+    # Shadow falls south-east onto the field.
+    draw.polygon([right, (right[0] + 10, right[1] + 5), (bottom[0] + 10, bottom[1] + 5), bottom],
+                 fill=(*DARK_LOAM, 255))
+    if stage == "frame":
+        for p in (left, bottom, right):
+            draw.line([p, lift(p)], fill=(*TIMBER, 255), width=2)
+        draw.line([lift(left), lift(bottom), lift(right)], fill=(*TIMBER, 255), width=1)
+        return
+    # South-west wall (lit) and south-east wall (shaded).
+    draw.polygon([left, bottom, lift(bottom), lift(left)], fill=(*WHEAT, 255), outline=(*OUTLINE, 255))
+    draw.polygon([bottom, right, lift(right), lift(bottom)], fill=(*PINE, 255), outline=(*OUTLINE, 255))
+    for x0, y0 in ((cx - 12, cy + 2), (cx - 5, cy + 5)):
+        draw.line([(x0, y0 - 10), (x0, y0)], fill=(*TIMBER, 255))
+    draw.rectangle([cx + 6, cy - 1, cx + 10, cy + 6], fill=(*DARK_TIMBER, 255))  # door
+    if stage == "walls":
+        return
+    # Gable roof: ridge runs along the iso x-axis, overhanging walls.
+    ridge_a = (left[0] + hw // 2 - 2, left[1] - hh // 2 - wall - 12)
+    ridge_b = (bottom[0] + hw // 2 + 2, bottom[1] - hh // 2 - wall - 12)
+    eave_l, eave_b, eave_r = (left[0] - 3, left[1] - wall + 1), (bottom[0], bottom[1] - wall + 3), (right[0] + 3, right[1] - wall + 1)
+    draw.polygon([eave_l, eave_b, ridge_b, ridge_a], fill=(*THATCH, 255), outline=(*OUTLINE, 255))
+    draw.polygon([eave_b, eave_r, (ridge_b[0] + hw // 2, ridge_b[1] - hh // 2 + 2), ridge_b],
+                 fill=(*TIMBER, 255), outline=(*OUTLINE, 255))
+    draw.line([ridge_a, ridge_b], fill=(*WHEAT, 255))
+
+
+def _farm(field_stage: str, barn_stage: str, wind: int = 0) -> Image.Image:
+    img = _field(field_stage, wind)
+    _barn(img, barn_stage)
+    return img
+
+
 # ---------------- registry ----------------
 
 _RENDERERS: dict[str, Callable[[], Image.Image]] = {
@@ -263,6 +355,12 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
     "terrain-water": lambda: _water(0),
     **{f"terrain-water-{i}": (lambda i=i: _water(i)) for i in range(4)},
     **{name: (lambda name=name: _mountain(name)) for name in _MOUNTAINS},
+    "building-farm": lambda: _farm("ripe", "roof"),
+    "building-farm-constructing-0": lambda: _farm("tilled", "pad"),
+    "building-farm-constructing-1": lambda: _farm("seedlings", "frame"),
+    "building-farm-constructing-2": lambda: _farm("green", "walls"),
+    "building-farm-operational-0": lambda: _farm("ripe", "roof", wind=0),
+    "building-farm-operational-1": lambda: _farm("ripe", "roof", wind=2),
 }
 
 
@@ -279,3 +377,41 @@ def render_sheet(sprite_name: str) -> Image.Image:
     """The sprite upscaled with nearest-neighbour to the square sheet
     size the pipeline's offline path reads from `_sheets/`."""
     return render(sprite_name).resize((SHEET_SIZE, SHEET_SIZE), resample=Image.Resampling.NEAREST)
+
+
+# ---------------- derived operational frames ----------------
+
+def derive_operational(base: Image.Image, frame: int, frame_count: int) -> Image.Image:
+    """An operational frame built from the finished base sprite: the
+    building stays pixel-identical, and a chimney smoke plume rises
+    over the roof. Keeps every frame on one silhouette, so animation
+    never shifts or rescales the building."""
+    img = base.convert("RGBA").copy()
+    bbox = img.getbbox()
+    if bbox is None:
+        return img
+    left, top, right, _ = bbox
+    chimney_x = left + (right - left) * 2 // 3
+    px = img.load()
+    width, height = img.size
+    step = 12 / max(frame_count, 1)
+    # Three puffs spaced along the plume; each frame lifts them by one
+    # step and the plume drifts slightly east, like wind.
+    for puff in range(3):
+        rise = (puff * 12 / 3 + frame * step) % 12
+        cx = chimney_x + int(rise / 4)
+        cy = top + 4 - int(rise)
+        radius = 1 + puff % 2 + (1 if rise > 6 else 0)
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                x, y = cx + dx, cy + dy
+                if not (0 <= x < width and 0 <= y < height) or dx * dx + dy * dy > radius * radius:
+                    continue
+                if dx + dy < 0:
+                    colour = CREAM
+                elif dx + dy > radius // 2:
+                    colour = STONE
+                else:
+                    colour = LIGHT_STONE
+                px[x, y] = (*colour, 255)
+    return img

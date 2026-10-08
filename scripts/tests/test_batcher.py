@@ -371,3 +371,49 @@ def test_terrain_cells_are_diamond_fitted(
     from generate_sprites_ai.postprocess import in_diamond
     inside = [img.getpixel((x, y))[3] for y in range(32) for x in range(64) if in_diamond(x, y, 64, 32)]
     assert sum(1 for a in inside if a) / len(inside) >= 0.9
+
+
+_DERIVED_ENTRY = """---
+operational = "derived"
+---
+## Function
+
+Mill.
+
+## Sheet
+
+Grid: 3 cols × 1 rows.
+
+- (0, 0): `building-sawmill` — base
+- (0, 1): `building-sawmill-operational-0` — frame
+- (0, 2): `building-sawmill-operational-1` — frame
+"""
+
+
+def test_derived_operational_frames_reuse_the_base_building(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With `operational = "derived"`, operational sheets are built
+    from the processed base sprite, so the building's lower part is
+    pixel-identical across base and frames."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    (catalog / "building-sawmill.md").write_text(_DERIVED_ENTRY, encoding="utf-8")
+    monkeypatch.setattr(paths, "CATALOG_DIR", catalog)
+    base_sheet = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    for y in range(300, 1000):
+        for x in range(200, 800):
+            base_sheet.putpixel((x, y), (0x6E, 0x4A, 0x2A, 255))
+    cache.write_sheet("building-sawmill", base_sheet)
+
+    written = batcher.write_procedural_sheets()
+
+    assert sorted(written) == ["building-sawmill-operational-0", "building-sawmill-operational-1"]
+    base = Image.open(batcher._process_and_write_cell("building-sawmill", cache.read_sheet("building-sawmill")))
+    frame = Image.open(batcher._process_and_write_cell(
+        "building-sawmill-operational-0", cache.read_sheet("building-sawmill-operational-0")
+    ))
+    w, h = base.size
+    lower = (0, h // 2, w, h)
+    assert base.convert("RGBA").crop(lower).tobytes() == frame.convert("RGBA").crop(lower).tobytes()

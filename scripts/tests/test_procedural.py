@@ -69,3 +69,93 @@ def test_sheet_round_trips_through_nearest_downsample() -> None:
 def test_unknown_sprite_raises() -> None:
     with pytest.raises(KeyError):
         render("terrain-lava")
+
+
+FARM = [
+    "building-farm",
+    "building-farm-constructing-0", "building-farm-constructing-1", "building-farm-constructing-2",
+    "building-farm-operational-0", "building-farm-operational-1",
+]
+
+
+def test_every_farm_sprite_is_supported() -> None:
+    assert set(FARM) <= set(supported())
+
+
+@pytest.mark.parametrize("name", FARM)
+def test_farm_sprite_is_a_building_canvas_in_palette(name: str) -> None:
+    img = render(name)
+    assert img.size == (128, 128)
+    palette = set(PALETTE)
+    for r, g, b, a in img.getdata():
+        assert a in (0, 255), name
+        if a:
+            assert (r, g, b) in palette, name
+
+
+@pytest.mark.parametrize("name", FARM)
+def test_farm_field_covers_the_footprint_diamond(name: str) -> None:
+    """The 2×2 footprint diamond occupies the canvas's bottom 64 rows;
+    the field must fill it so the farm sits flush on its tiles."""
+    img = render(name)
+    inside = [
+        img.getpixel((x, y + 64))[3]
+        for y in range(64) for x in range(128)
+        if in_diamond(x, y, 128, 64)
+    ]
+    assert sum(1 for a in inside if a) / len(inside) >= 0.95, name
+
+
+def test_farm_operational_frames_animate() -> None:
+    assert render("building-farm-operational-0").tobytes() != render("building-farm-operational-1").tobytes()
+
+
+def test_farm_sheet_round_trips() -> None:
+    sheet = render_sheet("building-farm")
+    assert downsample(sheet, (128, 128)).tobytes() == render("building-farm").tobytes()
+
+
+# ---------------- derived operational frames ----------------
+
+from generate_sprites_ai.procedural import derive_operational  # noqa: E402
+
+
+def _house_like() -> Image.Image:
+    img = Image.new("RGBA", (128, 106), (0, 0, 0, 0))
+    for y in range(30, 90):
+        for x in range(30, 100):
+            img.putpixel((x, y), (*PALETTE[10], 255))
+    return img
+
+
+def test_derived_frames_keep_the_building_pixels() -> None:
+    """Every opaque pixel of the base survives unchanged except where
+    smoke is drawn above the roof line."""
+    base = _house_like()
+    for i in range(4):
+        frame = derive_operational(base, i, 4)
+        assert frame.size == base.size
+        for y in range(40, 106):
+            for x in range(128):
+                assert frame.getpixel((x, y)) == base.getpixel((x, y))
+
+
+def test_derived_frames_keep_left_right_bottom_edges() -> None:
+    base = _house_like()
+    _, _, br, bb = base.getbbox()
+    bl = base.getbbox()[0]
+    for i in range(4):
+        left, _, right, bottom = derive_operational(base, i, 4).getbbox()
+        assert abs(left - bl) <= 2 and abs(right - br) <= 2 and bottom == bb
+
+
+def test_derived_frames_differ_and_stay_in_palette() -> None:
+    base = _house_like()
+    frames = [derive_operational(base, i, 2) for i in range(2)]
+    assert frames[0].tobytes() != frames[1].tobytes()
+    palette = set(PALETTE)
+    for f in frames:
+        for r, g, b, a in f.getdata():
+            assert a in (0, 255)
+            if a:
+                assert (r, g, b) in palette
