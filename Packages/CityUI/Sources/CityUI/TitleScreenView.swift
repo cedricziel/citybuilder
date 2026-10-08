@@ -90,6 +90,17 @@ public struct TitleScreenView: View {
                 }
             )
         }
+        .alert(
+            SaveLoadFailure.title,
+            isPresented: Binding(
+                get: { viewModel.loadFailure != nil },
+                set: { if !$0 { viewModel.dismissLoadFailure() } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The file may be damaged or from an older version of the game. You can still start a new game.")
+        }
         .sheet(isPresented: $viewModel.presentingSettings) {
             if let content = settingsContent {
                 content()
