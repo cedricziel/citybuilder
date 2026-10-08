@@ -159,3 +159,31 @@ def test_derived_frames_differ_and_stay_in_palette() -> None:
             assert a in (0, 255)
             if a:
                 assert (r, g, b) in palette
+
+
+ROAD_FULL = ["building-road", "building-road-v1", "building-road-v2", "building-road-v3", "building-road-constructing-2"]
+ROAD_STAGES = ["building-road-constructing-0", "building-road-constructing-1"]
+
+
+@pytest.mark.parametrize("name", ROAD_FULL)
+def test_finished_road_fills_the_diamond(name: str) -> None:
+    """Road tiles fill the whole diamond so neighbouring road tiles
+    read as one continuous path."""
+    img = render(name)
+    assert img.size == (64, 32)
+    for y in range(32):
+        for x in range(64):
+            assert (img.getpixel((x, y))[3] == 255) == in_diamond(x, y, 64, 32), (name, x, y)
+
+
+@pytest.mark.parametrize("name", ROAD_FULL + ROAD_STAGES)
+def test_road_sprites_stay_in_palette(name: str) -> None:
+    palette = set(PALETTE)
+    for r, g, b, a in render(name).getdata():
+        assert a in (0, 255)
+        if a:
+            assert (r, g, b) in palette, name
+
+
+def test_road_variants_differ() -> None:
+    assert len({render(n).tobytes() for n in ROAD_FULL[:4]}) == 4

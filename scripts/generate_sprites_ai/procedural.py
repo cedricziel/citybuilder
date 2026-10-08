@@ -342,6 +342,52 @@ def _farm(field_stage: str, barn_stage: str, wind: int = 0) -> Image.Image:
     return img
 
 
+# ---------------- road (1×1 building) ----------------
+
+def _road(variant: int) -> Image.Image:
+    """Packed-earth road filling the whole diamond, so neighbouring road
+    tiles join into one path. Variants add ruts, cobbles or a puddle."""
+
+    def paint(x: int, y: int) -> Rgb:
+        n = _hash01(x, y, 70)
+        colour = MEDIUM_LOAM if n < 0.22 else (PALE_SAND if n > 0.93 else LIGHT_LOAM)
+        if n > 0.985:
+            colour = STONE
+        if variant == 1 and (x - 2 * y) % 16 in (3, 11):
+            colour = MEDIUM_LOAM
+        if variant == 2 and _hash01(x // 3, y // 2, 71) > 0.82:
+            colour = LIGHT_STONE if (x + y) % 3 else STONE
+        if variant == 3 and ((x - 38) / 7) ** 2 + ((y - 17) / 3) ** 2 <= 1:
+            colour = MID_WATER if ((x - 37) / 5) ** 2 + ((y - 16) / 2) ** 2 <= 1 else DARK_LOAM
+        return colour
+
+    return _shade_south_rims(_paint_diamond(paint), MEDIUM_LOAM)
+
+
+def _road_stage(stage: int) -> Image.Image:
+    """Construction: 0 staked-out track, 1 centre band cleared, 2 bare
+    compacted earth."""
+    if stage == 2:
+        return _shade_south_rims(
+            _paint_diamond(lambda x, y: MEDIUM_LOAM if _hash01(x, y, 72) < 0.35 else LIGHT_LOAM), MEDIUM_LOAM
+        )
+    img = _canvas()
+    px = img.load()
+    width, height = TILE
+    for y in range(height):
+        for x in range(width):
+            if not in_diamond(x, y, width, height):
+                continue
+            band = abs((x - 32) / 2 + (y - 16)) <= (4 if stage == 1 else 0)
+            if band and _hash01(x, y, 73) > 0.15:
+                px[x, y] = (*MEDIUM_LOAM, 255)
+    for sx, sy in ((14, 16), (32, 7), (50, 16), (32, 25)):
+        px[sx, sy] = (*TIMBER, 255)
+        px[sx, sy - 1] = (*TIMBER, 255)
+        px[sx, sy - 2] = (*CREAM, 255)
+    return img
+
+
 # ---------------- registry ----------------
 
 _RENDERERS: dict[str, Callable[[], Image.Image]] = {
@@ -355,6 +401,9 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
     "terrain-water": lambda: _water(0),
     **{f"terrain-water-{i}": (lambda i=i: _water(i)) for i in range(4)},
     **{name: (lambda name=name: _mountain(name)) for name in _MOUNTAINS},
+    "building-road": lambda: _road(0),
+    **{f"building-road-v{v}": (lambda v=v: _road(v)) for v in (1, 2, 3)},
+    **{f"building-road-constructing-{i}": (lambda i=i: _road_stage(i)) for i in range(3)},
     "building-farm": lambda: _farm("ripe", "roof"),
     "building-farm-constructing-0": lambda: _farm("tilled", "pad"),
     "building-farm-constructing-1": lambda: _farm("seedlings", "frame"),
