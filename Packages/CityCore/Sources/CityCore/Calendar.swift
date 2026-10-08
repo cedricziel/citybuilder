@@ -23,8 +23,10 @@ public struct GameDate: Hashable, Sendable {
         self.season = season
     }
 
+    /// Years ≤ 0 read as BC: year 0 is 1 BC (design D2 of
+    /// `add-historical-ages`).
     public var displayText: String {
-        "\(season.displayName) \(year)"
+        year > 0 ? "\(season.displayName) \(year)" : "\(season.displayName) \(1 - year) BC"
     }
 }
 

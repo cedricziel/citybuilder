@@ -142,6 +142,7 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .gameOver: return "gameOver"
         case .seasonChanged: return "seasonChanged"
         case .historyEvent: return "historyEvent"
+        case .ageAdvanced: return "ageAdvanced"
         }
     }
 }

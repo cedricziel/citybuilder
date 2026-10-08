@@ -8,6 +8,12 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
     case mining
     case metallurgy
     case seafaring
+    /// Era techs: each opens the next age. Spec: `research` / Era techs
+    /// need a thriving city.
+    case feudalOrder = "feudal-order"
+    case printingPress = "printing-press"
+    case steamPower = "steam-power"
+    case electricity
 
     public var cost: Int {
         switch self {
@@ -16,25 +22,75 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .mining: 40
         case .metallurgy: 80
         case .seafaring: 60
+        case .feudalOrder: 150
+        case .printingPress: 250
+        case .steamPower: 400
+        case .electricity: 600
         }
     }
 
     public var prerequisites: [Tech] {
-        self == .metallurgy ? [.mining] : []
+        switch self {
+        case .metallurgy: [.mining]
+        case .printingPress: [.feudalOrder]
+        case .steamPower: [.printingPress]
+        case .electricity: [.steamPower]
+        default: []
+        }
     }
 
     public var unlocks: [BuildingKind] {
         switch self {
         case .scholarship: [.library]
-        case .milling: [.grainFarm, .windmill, .bakery]
+        case .milling: [.windmill]
         case .mining: [.mine, .charcoalBurner]
         case .metallurgy: [.smelter, .toolsmith]
         case .seafaring: [.port, .shipyard]
+        case .feudalOrder, .printingPress, .steamPower, .electricity: []
+        }
+    }
+
+    /// The age from which a regular tech can be researched.
+    public var age: Age {
+        switch self {
+        case .scholarship: .antiquity
+        case .milling, .mining, .metallurgy, .seafaring: .medieval
+        case .feudalOrder: .antiquity
+        case .printingPress: .medieval
+        case .steamPower: .renaissance
+        case .electricity: .industrial
+        }
+    }
+
+    /// The age an era tech opens, nil for regular techs.
+    public var era: Age? {
+        switch self {
+        case .feudalOrder: .medieval
+        case .printingPress: .renaissance
+        case .steamPower: .industrial
+        case .electricity: .modern
+        default: nil
+        }
+    }
+
+    /// Residents the city needs, at a tier or above, to choose an era tech.
+    public var eraGate: (tier: HouseTier, residents: Int)? {
+        switch self {
+        case .feudalOrder: (.citizens, 20)
+        case .printingPress: (.merchants, 20)
+        case .steamPower: (.merchants, 40)
+        case .electricity: (.merchants, 60)
+        default: nil
         }
     }
 
     public var displayName: String {
-        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+        switch self {
+        case .feudalOrder: "Feudal Order"
+        case .printingPress: "Printing Press"
+        case .steamPower: "Steam Power"
+        default: rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+        }
     }
 
     /// The tech that unlocks `kind`, or nil when it is always available.
@@ -93,7 +149,7 @@ extension World {
     static let residentKnowledgeIntervalTicks: UInt64 = 100
 
     /// Spec: `research` / Knowledge accumulates, Choosing research.
-    mutating func runResearchSystem() {
+    mutating func runResearchSystem(events: inout [WorldEvent]) {
         if tickCount.isMultiple(of: Self.libraryKnowledgeIntervalTicks) {
             research.knowledge += buildings.values.count { $0.kind == .library && $0.state == .operational }
         }
@@ -110,6 +166,9 @@ extension World {
             research.progress = 0
             research.current = nil
             research.markResearched(tech)
+            if let era = tech.era {
+                advanceAge(to: era, events: &events)
+            }
         }
     }
 
@@ -117,6 +176,9 @@ extension World {
     func researchOrTerrainRejection(_ kind: BuildingKind, tiles: [TileCoordinate]) -> PlacementRejection? {
         if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
             return .locked(tech)
+        }
+        if let tech = kind.obsoletedBy, research.isResearched(tech) {
+            return .obsolete(tech)
         }
         if let required = BuildingCatalog.spec(for: kind).requiredTerrain {
             let matching = tiles.count { terrain(at: $0) == required.terrain }
@@ -126,7 +188,7 @@ extension World {
     }
 
     mutating func applyChooseResearch(_ tech: Tech) {
-        guard research.canChoose(tech) else { return }
+        guard canChooseResearch(tech) else { return }
         research.knowledge += research.progress
         research.progress = 0
         research.current = tech

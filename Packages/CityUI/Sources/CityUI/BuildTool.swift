@@ -23,6 +23,7 @@ public enum BuildTool: Hashable, Sendable {
             case .bakery: return "Bakery"
             case .grainFarm: return "Grain Farm"
             case .windmill: return "Windmill"
+            case .quernHouse: return "Quern House"
             case .mine: return "Mine"
             case .charcoalBurner: return "Charcoal"
             case .smelter: return "Smelter"

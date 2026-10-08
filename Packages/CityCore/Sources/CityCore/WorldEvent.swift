@@ -73,6 +73,8 @@ public enum WorldEvent: Sendable {
     case seasonChanged(Season)
     /// A history event fired and applied this tick.
     case historyEvent(HistoryEvent)
+    /// The city entered a new age. Spec: `historical-ages`.
+    case ageAdvanced(Age)
 }
 
 extension WorldEvent: Equatable {
@@ -122,6 +124,8 @@ extension WorldEvent: Equatable {
             return lSeason == rSeason
         case let (.historyEvent(lEvent), .historyEvent(rEvent)):
             return lEvent == rEvent
+        case let (.ageAdvanced(lAge), .ageAdvanced(rAge)):
+            return lAge == rAge
         default:
             return false
         }
@@ -159,7 +163,8 @@ public extension WorldEvent {
              .bankruptcyResolved,
              .gameOver,
              .seasonChanged,
-             .historyEvent:
+             .historyEvent,
+             .ageAdvanced:
             return nil
         }
     }
@@ -191,7 +196,8 @@ public extension WorldEvent {
              .bankruptcyResolved,
              .gameOver,
              .seasonChanged,
-             .historyEvent:
+             .historyEvent,
+             .ageAdvanced:
             return nil
         }
     }
@@ -222,6 +228,7 @@ public extension WorldEvent {
         case .gameOver: return 17
         case .seasonChanged: return 18
         case .historyEvent: return 19
+        case .ageAdvanced: return 20
         }
     }
 }

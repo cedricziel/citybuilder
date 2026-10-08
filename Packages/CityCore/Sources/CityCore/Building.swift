@@ -20,6 +20,9 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case bakery
     case grainFarm = "grain-farm"
     case windmill
+    /// Antiquity hand mill, replaced by the windmill. Spec:
+    /// `historical-ages` / Obsolete buildings.
+    case quernHouse = "quern-house"
     /// Must stand on mountain ground. Spec: `buildings-and-construction`
     /// / Terrain requirement for placement.
     case mine
@@ -187,6 +190,10 @@ public enum BuildingCatalog {
             kind: .grainFarm, footprint: Footprint(width: 2, height: 2),
             cost: 60, upkeep: 0, buildDurationTicks: 25, materialCost: [.wood: 2]
         ),
+        .quernHouse: BuildingSpec(
+            kind: .quernHouse, footprint: Footprint(width: 2, height: 2),
+            cost: 60, upkeep: 1, buildDurationTicks: 25, materialCost: [.wood: 2, .planks: 2]
+        ),
         .windmill: BuildingSpec(
             kind: .windmill, footprint: Footprint(width: 2, height: 2),
             cost: 110, upkeep: 1, buildDurationTicks: 35, materialCost: [.wood: 3, .planks: 3]
@@ -340,5 +347,12 @@ public extension Building {
         self.materialsDelivered = try container.decodeIfPresent(
             [Good: Int].self, forKey: .materialsDelivered
         ) ?? [:]
+    }
+}
+
+public extension BuildingKind {
+    /// The tech that makes this building obsolete, if any.
+    var obsoletedBy: Tech? {
+        self == .quernHouse ? .milling : nil
     }
 }

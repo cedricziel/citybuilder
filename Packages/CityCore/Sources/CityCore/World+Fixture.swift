@@ -30,7 +30,12 @@ public extension World {
 
     /// Constructs a fresh new game with the named topology and seed.
     /// Spec: `world-terrain` / Requirement: World layout.
-    static func newGame(layout: WorldLayout, seed: UInt64, culture: Culture = .northernEuropean) -> World {
+    static func newGame(
+        layout: WorldLayout,
+        seed: UInt64,
+        culture: Culture = .northernEuropean,
+        age: Age = .medieval
+    ) -> World {
         let grid: [TerrainType]
         let width: Int
         let height: Int
@@ -54,9 +59,10 @@ public extension World {
             seed: seed
         )
         world.seedTownCenters()
-        world.research = .initial
-        world.calendar = CalendarState(startYear: 1200, isActive: true)
+        world.research = initialResearch(for: age)
+        world.calendar = CalendarState(startYear: age.startYear, isActive: true)
         world.culture = culture
+        world.age = age
         return world
     }
 

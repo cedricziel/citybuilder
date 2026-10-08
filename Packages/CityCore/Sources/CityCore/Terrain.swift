@@ -40,6 +40,9 @@ public enum PlacementRejection: Hashable, Sendable {
     case needsTerrain(TerrainType)
     /// The building's tech is not researched yet. Spec: `research`.
     case locked(Tech)
+    /// A later tech replaced this building. Spec: `historical-ages` /
+    /// Obsolete buildings.
+    case obsolete(Tech)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -52,6 +55,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .insufficientMaterials: "insufficient_materials"
         case .needsTerrain: "needs_terrain"
         case .locked: "locked"
+        case .obsolete: "obsolete"
         }
     }
 }

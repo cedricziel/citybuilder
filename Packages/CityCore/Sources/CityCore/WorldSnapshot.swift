@@ -66,6 +66,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let date: GameDate
     /// Spec: `cultures` / Snapshot carries the culture.
     public let culture: Culture
+    /// Spec: `historical-ages` / Snapshot carries the age.
+    public let age: Age
 
     public init(
         tickCount: UInt64,
@@ -86,7 +88,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         roadDisconnectedBuildings: Set<EntityID> = [],
         housePopulations: [EntityID: HousePopulation] = [:],
         date: GameDate = GameDate(year: 1200, season: .spring),
-        culture: Culture = .northernEuropean
+        culture: Culture = .northernEuropean,
+        age: Age = .medieval
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -107,6 +110,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.housePopulations = housePopulations
         self.date = date
         self.culture = culture
+        self.age = age
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -156,7 +160,8 @@ public extension World {
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
             housePopulations: populations,
             date: date,
-            culture: culture
+            culture: culture,
+            age: age
         )
     }
 

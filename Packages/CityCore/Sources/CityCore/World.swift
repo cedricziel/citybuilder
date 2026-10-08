@@ -78,6 +78,9 @@ public struct World: Codable, Sendable, Equatable {
     /// Spec: `cultures` / The world has a culture.
     public internal(set) var culture: Culture = .northernEuropean
 
+    /// Spec: `historical-ages` / The world is in an age.
+    public internal(set) var age: Age = .medieval
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
@@ -250,7 +253,7 @@ public struct World: Codable, Sendable, Equatable {
         runCarrierSystem(events: &events)
         runShipSystem()
         runPopulationSystem()
-        runResearchSystem()
+        runResearchSystem(events: &events)
         runCalendarSystem(events: &events)
         runEconomySystem(events: &events)
 
@@ -408,7 +411,7 @@ public struct World: Codable, Sendable, Equatable {
     static func stockpileCapacity(for kind: BuildingKind) -> Int? {
         switch kind {
         case .warehouse: 200
-        case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .mine, .charcoalBurner, .smelter,
+        case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .quernHouse, .mine, .charcoalBurner, .smelter,
              .toolsmith: 16
         case .house: 8
         case .townCenter: 40

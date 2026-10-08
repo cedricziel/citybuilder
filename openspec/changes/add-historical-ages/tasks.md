@@ -1,7 +1,7 @@
 ## 1. M1 — Ages in CityCore
 
-- [ ] 1.1 Tests-first: translate every scenario in this change's historical-ages, research and buildings-and-construction specs into failing tests in `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Age`, BC dates, era techs and tech ages, the top-tier gate, advancing and calendar jumps, starting age, obsolescence, the quern house (design D1–D6).
+- [x] 1.1 Tests-first: translate every scenario in this change's historical-ages, research and buildings-and-construction specs into failing tests in `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Age`, BC dates, era techs and tech ages, the top-tier gate, advancing and calendar jumps, starting age, obsolescence, the quern house (design D1–D6).
 
 ## 2. M2 — Persistence
 

@@ -22,6 +22,7 @@ public struct ProductionProgress: Hashable, Codable, Sendable {
 }
 
 public enum ProductionCatalog {
+    // swiftlint:disable:next cyclomatic_complexity
     public static func recipe(for kind: BuildingKind) -> ProductionRecipe? {
         switch kind {
         case .lumberjackHut:
@@ -36,6 +37,8 @@ public enum ProductionCatalog {
             ProductionRecipe(outputs: [.grain: 1], cycleTicks: 40)
         case .windmill:
             ProductionRecipe(inputs: [.grain: 2], outputs: [.flour: 1], cycleTicks: 40)
+        case .quernHouse:
+            ProductionRecipe(inputs: [.grain: 2], outputs: [.flour: 1], cycleTicks: 80)
         case .mine:
             ProductionRecipe(outputs: [.ore: 1], cycleTicks: 50)
         case .charcoalBurner:

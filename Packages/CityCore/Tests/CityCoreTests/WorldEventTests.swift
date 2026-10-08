@@ -33,9 +33,10 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
         .bankruptcyResolved,
         .gameOver,
         .seasonChanged(.summer),
-        .historyEvent(.tradeCaravan)
+        .historyEvent(.tradeCaravan),
+        .ageAdvanced(.renaissance)
     ]
-    #expect(samples.count == 20)
+    #expect(samples.count == 21)
     for event in samples {
         switch event {
         case .buildingPlaced,
@@ -57,7 +58,8 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .bankruptcyResolved,
              .gameOver,
              .seasonChanged,
-             .historyEvent:
+             .historyEvent,
+             .ageAdvanced:
             break
         }
     }
