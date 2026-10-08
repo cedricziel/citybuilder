@@ -27,7 +27,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV4ToV5(),
         MigrationV5ToV6(),
         MigrationV6ToV7(),
-        MigrationV7ToV8()
+        MigrationV7ToV8(),
+        MigrationV8ToV9()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -292,6 +293,26 @@ public struct MigrationV7ToV8: Migration {
         world["difficulty"] = "normal"
         world["goals"] = [Any]()
         world["scenarioWon"] = false
+        root["world"] = world
+        return root
+    }
+}
+
+/// Migration #8: v8 → v9. v8 saves predate `add-rival-towns`: they have
+/// no rivals, and buildings and ships without an `owner` decode as the
+/// player's. Spec: `persistence-save-load` / Saves before rivals have
+/// none.
+public struct MigrationV8ToV9: Migration {
+    public let fromVersion = 8
+    public let toVersion = 9
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 9
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["rivals"] = [Any]()
         root["world"] = world
         return root
     }

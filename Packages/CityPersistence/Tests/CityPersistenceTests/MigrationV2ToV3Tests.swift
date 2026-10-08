@@ -19,6 +19,7 @@ private func makeV2Payload(world: World) throws -> Data {
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 2
     var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
     if var buildings = inner["buildings"] as? [Any] {
         for idx in stride(from: 1, to: buildings.count, by: 2) {
             if var building = buildings[idx] as? [String: Any] {

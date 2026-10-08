@@ -87,6 +87,9 @@ public struct World: Codable, Sendable, Equatable {
     public internal(set) var goals: [GoalState] = []
     public internal(set) var scenarioWon: Bool = false
 
+    /// Spec: `rival-towns`. Sorted by ID; empty outside archipelago games.
+    public internal(set) var rivals: [RivalTown] = []
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
@@ -159,53 +162,16 @@ public struct World: Codable, Sendable, Equatable {
 
     /// Returns the `IslandID` of the island whose buildable tiles
     /// contain `coord`, or `nil` for water tiles outside any island.
-    /// Re-runs the connected-component detector — placement validation
-    /// is rare enough to absorb the cost; the snapshot path caches its
-    /// own copy of the map for the renderer.
     public func islandID(at coord: TileCoordinate) -> IslandID? {
         guard contains(coord) else { return nil }
-        let map = IslandDetector.detect(
-            width: mapWidth,
-            height: mapHeight,
-            terrain: terrainGrid,
-            mapHeightForClimate: mapHeight,
-            seed: seed
-        ).tileToIsland
-        return map[coord]
+        return tileToIslandMap()[coord]
     }
 
-    public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate) -> PlacementResult {
-        let spec = BuildingCatalog.spec(for: kind)
-        let tiles = spec.footprint.tiles(anchor: anchor)
-        var landCount = 0
-        var waterCount = 0
-        if let rejection = researchOrTerrainRejection(kind, tiles: tiles) ?? uniquenessRejection(kind) {
-            return .rejected(rejection)
-        }
-        for tile in tiles {
-            guard contains(tile) else { return .rejected(.outOfBounds) }
-            if occupiedTiles[tile] != nil { return .rejected(.tileOccupied) }
-            let terrainHere = terrain(at: tile) ?? .water
-            if terrainHere == .water {
-                if spec.shorePlacement == nil {
-                    return .rejected(.terrainNotBuildable)
-                }
-                waterCount += 1
-            } else {
-                landCount += 1
-            }
-        }
-        if let shore = spec.shorePlacement {
-            if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
-            if waterCount < shore.minWaterTiles { return .rejected(.shoreRequiresWaterTile) }
-        }
-        if !spec.materialCost.isEmpty {
-            let shortfall = materialShortfall(cost: spec.materialCost, anchor: anchor)
-            if !shortfall.isEmpty {
-                return .rejected(.insufficientMaterials(shortfall))
-            }
-        }
-        return .allowed
+    public func canPlace(_ kind: BuildingKind, at anchor: TileCoordinate, for owner: Owner = .player) -> PlacementResult {
+        let tileToIsland = tileToIslandMap()
+        let rejection = siteRejection(kind, at: anchor, for: owner, tileToIsland: tileToIsland)
+            ?? materialRejection(kind, at: anchor, for: owner, tileToIsland: tileToIsland)
+        return rejection.map { .rejected($0) } ?? .allowed
     }
 
     /// Classifies a candidate building's footprint into land-face and
@@ -266,6 +232,7 @@ public struct World: Codable, Sendable, Equatable {
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runGoalSystem(events: &events)
+        runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
@@ -315,9 +282,22 @@ public struct World: Codable, Sendable, Equatable {
         case let .harvestForest(coord):
             applyHarvestForest(at: coord, events: &events)
         case let .place(kind, anchor):
-            applyPlace(kind: kind, anchor: anchor, events: &events)
+            applyPlace(kind: kind, anchor: anchor, owner: .player, events: &events)
+        case let .rivalPlace(id, kind, anchor):
+            applyPlace(kind: kind, anchor: anchor, owner: .rival(id), events: &events)
         case let .demolish(anchor):
             applyDemolish(anchor: anchor, events: &events)
+        case .createRoute, .editRoute, .deleteRoute, .assignShipToRoute, .unassignShip:
+            applyRouteCommand(command)
+        case let .commission(gallery):
+            applyCommission(gallery, events: &events)
+        case let .setExport(caravanserai, good):
+            applySetExport(caravanserai, good: good)
+        }
+    }
+
+    private mutating func applyRouteCommand(_ command: Command) {
+        switch command {
         case let .createRoute(waypoints, manifest, speed):
             applyCreateRoute(waypoints: waypoints, manifest: manifest, speed: speed)
         case let .editRoute(id, waypoints, manifest):
@@ -328,37 +308,35 @@ public struct World: Codable, Sendable, Equatable {
             applyAssignShipToRoute(shipID: shipID, routeID: routeID)
         case let .unassignShip(shipID):
             applyUnassignShip(shipID: shipID)
-        case let .commission(gallery):
-            applyCommission(gallery, events: &events)
-        case let .setExport(caravanserai, good):
-            applySetExport(caravanserai, good: good)
+        default:
+            return
         }
     }
 
     /// Forests becoming grass when harvested per spec `world-terrain`
-    /// ("Forest tile can be cleared").
+    /// ("Forest tile can be cleared"); never on a rival's island.
     private mutating func applyHarvestForest(at coord: TileCoordinate, events: inout [WorldEvent]) {
-        guard contains(coord), terrain(at: coord) == .forest else { return }
+        guard contains(coord), terrain(at: coord) == .forest, isPlayerLand(coord) else { return }
         terrainGrid[coord.y * mapWidth + coord.x] = .grass
         events.append(.forestHarvested(at: coord))
     }
 
+    /// Rival rejections are silent: the player never sees a banner for
+    /// the AI (design D3).
     private mutating func applyPlace(
         kind: BuildingKind,
         anchor: TileCoordinate,
+        owner: Owner,
         events: inout [WorldEvent]
     ) {
-        guard case .allowed = canPlace(kind, at: anchor) else {
-            events.append(.placementRejected(kind: kind, anchor: anchor))
-            return
-        }
         let spec = BuildingCatalog.spec(for: kind)
         // Insufficient funds rejects the placement (spec economy).
-        if economy.balance < spec.cost {
-            events.append(.placementRejected(kind: kind, anchor: anchor))
+        guard case .allowed = canPlace(kind, at: anchor, for: owner), charge(spec.cost, to: owner) else {
+            if owner == .player {
+                events.append(.placementRejected(kind: kind, anchor: anchor))
+            }
             return
         }
-        economy.deduct(spec.cost)
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         let initialState: BuildingState = spec.buildDurationTicks == 0 ? .operational : .constructing
@@ -379,7 +357,7 @@ public struct World: Codable, Sendable, Equatable {
         }
         let building = Building(
             id: id, kind: kind, anchor: anchor, state: initialState,
-            landFaceTiles: landFace, seaFaceTiles: seaFace, shipAnchor: shipAnchor
+            landFaceTiles: landFace, seaFaceTiles: seaFace, shipAnchor: shipAnchor, owner: owner
         )
         buildings[id] = building
         for tile in spec.footprint.tiles(anchor: anchor) {
@@ -391,12 +369,13 @@ public struct World: Codable, Sendable, Equatable {
         if let capacity = Self.stockpileCapacity(for: kind) {
             stockpiles[id] = Stockpile(capacity: capacity)
         }
-        if !spec.materialCost.isEmpty {
-            let delivered = deductMaterialsPartial(cost: spec.materialCost, anchor: anchor)
+        let materialCost = materialCost(of: kind, for: owner)
+        if !materialCost.isEmpty {
+            let delivered = deductMaterialsPartial(cost: materialCost, anchor: anchor)
             buildings[id]?.materialsDelivered = delivered
-            let missing = shortfall(for: spec.materialCost, delivered: delivered)
+            let missing = shortfall(for: materialCost, delivered: delivered)
             if missing.isEmpty {
-                events.append(.materialsDeducted(building: id, cost: spec.materialCost))
+                events.append(.materialsDeducted(building: id, cost: materialCost))
             } else {
                 buildings[id]?.constructionState = .waitingForMaterials
                 events.append(.constructionWaitingForMaterials(building: id, missing: missing))
@@ -442,8 +421,10 @@ public struct World: Codable, Sendable, Equatable {
     }
 
     private mutating func applyDemolish(anchor: TileCoordinate, events: inout [WorldEvent]) {
+        // Only the player demolishes, and never a rival's building.
         guard let id = occupiedTiles[anchor],
-              let building = buildings[id]
+              let building = buildings[id],
+              building.owner == .player
         else { return }
         // Anchor lookup uses the literal tile — but multi-tile buildings
         // resolve via the building's recorded anchor.

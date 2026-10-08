@@ -54,7 +54,8 @@ public extension World {
             waypointIdx: 0,
             cargo: [:],
             state: .idle,
-            shipClass: .default
+            shipClass: .default,
+            owner: shipyard.owner
         )
         return id
     }

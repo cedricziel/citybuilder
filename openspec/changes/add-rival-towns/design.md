@@ -38,7 +38,7 @@ See proposal.md (Why). Relevant facts about the model at the base commit:
 
 ### D3 — Island ownership and the placement rule
 
-`World.owner(ofIsland:)` returns the rival whose `islandID` matches, otherwise `.player`. `canPlace(_:at:for owner: Owner = .player)` adds one check before the tech check: every land tile of the footprint must lie on an island owned by `owner`; otherwise `canPlace` returns `.rejected(.foreignIsland(RivalID))`, naming the rival that owns the island. (Rivals only search their own island, so the rejection is only ever shown to the player.) Water tiles of shore buildings are not checked.
+`World.owner(ofIsland:)` returns the rival whose `islandID` matches, otherwise `.player`. `canPlace(_:at:for owner: Owner = .player)` adds one check before the tech check: every land tile of the footprint must lie on an island owned by `owner`; otherwise `canPlace` returns `.rejected(.foreignIsland(Owner))`, naming the island's owner. The payload is an `Owner` rather than a `RivalID` so a rival probing a player island gets a well-formed answer too. (Rivals only search their own island, so in play the rejection is only ever shown to the player, naming a rival.) Water tiles of shore buildings are not checked.
 
 - **Demolish:** `.demolish(at:)` from the player is ignored when the building's owner is a rival. Town centers stay demolishable by their owner, as today.
 - **Forests:** `.harvestForest(at:)` is ignored on a rival island.
@@ -66,20 +66,23 @@ Since `pendingCommands` is part of the saved world, a save taken between the dec
 
 **Turn interval** (`Difficulty.rivalTurnTicks`): Easy 80, Normal 50, Hard 30.
 
-**Choosing a step.** On its turn a rival takes the first rule that applies:
+**Choosing a step.** On its turn a rival takes the first threshold rule that applies and that it can carry out (affordable, suppliable, with a slot); when none can, it takes the script step:
 
-1. **Threshold rules**, only once the opening is complete (so a fresh rival with the starter stock doesn't build a farm first), checked in this order against the rival's island stock (goods buffers on its island):
-   - food < 4 and farms < 1 + houses / 3 → farm
-   - planks < 6 and sawmills < lumberjack huts → sawmill
-   - wood < 4 and lumberjack huts < 1 + houses / 4 → lumberjack hut
-2. **Build order.** Otherwise the next entry of the script. The opening is played once: lumberjack hut, farm, house, house, sawmill, house, house, farm, house, house, lumberjack hut, warehouse. After that the growth loop repeats: house, house, farm, house, house, lumberjack hut, house, sawmill.
+1. **Threshold rules**, checked in this order against the rival's island stock (goods buffers on its island). Huts with fewer than 4 forest tiles left in their catchment don't count as huts here, so a replacement goes up while the old hut still cuts.
+   - food < 4 and farms < (4 × houses + 4) / 5 → farm (any time; a peasant house eats about what one farm grows)
+   - planks < 6 and sawmills < lumberjack huts → sawmill (only once the opening is complete, so it doesn't duplicate the opening's sawmill)
+   - wood < 4 and (lumberjack huts < 1 + houses / 4 or the forest left in all the rival's hut catchments < 6) → lumberjack hut (any time)
+2. **Build order.** Otherwise the next entry of the script. The opening is played once: lumberjack hut, sawmill, farm, house, lumberjack hut, house, house, farm, house, house, lumberjack hut, warehouse. After that the growth loop repeats: house, house, farm, house, house, lumberjack hut, house, sawmill.
 
 **Caps.** A house step is skipped (the script advances) once the rival has 30 houses; no step is taken once the rival has 50 non-road buildings.
 
-**Affordability.** A step is issued only when the treasury is at least the building's cost + road cost (D6) + $50, and the island stock covers the full material cost, so rival buildings never wait for materials. Otherwise the rival waits and keeps the same step. After 10 turns waiting on a script step, it skips that step. Threshold rules never advance the script.
+**Affordability.** A step is issued only when the treasury is at least the building's cost + road cost (D6) + $50, and its materials can be supplied: the island stock covers them, or the rival's own huts can still cut the missing wood (stock wood + forest left in their catchments) and, for planks, the rival has a sawmill. Such a site waits for materials and the huts deliver to it first. While one of the rival's sites waits, it takes no script step, and only a lumberjack hut may join it (when no hut site is waiting), so wood keeps coming. Otherwise the rival waits and keeps the same step. After 10 turns waiting on a script step, it skips that step. Threshold rules never advance the script.
+
+**Rival huts cost no wood.** A rival's lumberjack hut has no material cost (`World.materialCost(of:for:)`), in placement checks and when placed. Every wood cut clears a forest tile, so a rival whose huts have cleared their catchments and whose sawmill has turned the last wood into planks would otherwise never get wood again.
 
 **State.** `RivalAIState` stores `scriptIndex` (0…11 opening, then 12…19 loop, wrapping to 12) and `waitTurns`.
 
+- **Why the rules changed during implementation.** The first cut followed the numbers above it literally (opening hut, farm, house, house, sawmill; thresholds only after the opening; full stock up front). Headless runs of a Hard archipelago showed every rival stuck at 0 residents for 6,000 ticks: the starter stock (4 wood, 3 planks) never covers a house, the sawmill turns every delivered wood into planks so wood never sits in stock, huts clear their catchment in a few hundred ticks, and one farm feeds about one house. The rules above are the smallest set that got rivals to grow; measured numbers are in tasks 6.1.
 - **Alternative — utility scoring or a planner.** Rejected: harder to test, harder to tune, and nothing in this slice needs it.
 - **Alternative — rivals as an abstract population number with no buildings.** Rejected: rivals would be invisible on the map, which defeats the point of a pretty, lively archipelago.
 
@@ -88,8 +91,8 @@ Since `pendingCommands` is part of the saved world, a save taken between the dec
 Each rival builds on a road grid anchored to its town center. With the town center anchor at `(ax, ay)`, grid lines are the columns `x ≡ ax − 1 (mod 5)` and rows `y ≡ ay − 1 (mod 5)`. Between grid lines lie 4×4 **blocks**; the town center's 3×3 footprint sits in block (0, 0).
 
 - A block has four 2×2 **slots** (its corners), each touching the block's ring road. A 3×3 kind (warehouse) takes a whole empty block.
-- **Opening a block** means placing every missing road tile on its 5×5 ring. A block can be opened only when all its missing ring tiles are placeable roads and it shares an edge with an opened block (block (0, 0) is always eligible), so the network stays connected to the town center.
-- **Slot search.** Blocks are visited by Chebyshev block distance from (0, 0), then row, then column, up to distance 4. Within a block, slots go top-left, top-right, bottom-left, bottom-right. The first slot where `canPlace(kind, at:, for: rival)` is allowed wins. A lumberjack hut additionally needs a forest tile in its catchment (`firstForestInCatchment` non-nil).
+- **Opening a block** means placing every missing road tile on its ring: the 6×6 ring of 20 tiles on the grid lines around it (for block (0, 0), from `(ax − 1, ay − 1)` to `(ax + 4, ay + 4)`). A block can be opened only when all its missing ring tiles are placeable roads and it shares an edge with an opened block (block (0, 0) is always eligible), so the network stays connected to the town center.
+- **Slot search.** Blocks are visited by Chebyshev block distance from (0, 0), then row, then column, up to distance 4. Within a block, slots go top-left, top-right, bottom-left, bottom-right. The first slot where the placement rules other than materials (`World.siteRejection`, with the island map looked up once per turn) allow the kind wins; materials are checked once per step (D5). A lumberjack hut instead goes to the slot with the most forest in its catchment, at least 6 tiles, among the blocks reachable through at most one unopened block, each opened block counting as 8 forest tiles less; the first in breadth-first block order wins a tie.
 - **Commands.** A step enqueues, in one batch, the missing ring roads of each block it opens (block (0, 0) first while it is unopened, then the chosen block; each ring row-major; a tile already in the batch is not repeated), then the building. Block (0, 0) has no free slot because the town center fills it, so the first building always lands in a neighbouring block. Road cost is $5 per enqueued tile and counts toward affordability.
 - If no slot exists, the step counts as waiting.
 
@@ -123,7 +126,7 @@ After its turn a rival checks its residents (all tiers) against the next age's t
 
 - **New Game:** a "Rival towns" toggle, visible only for the Archipelago layout in Sandbox mode, default on. Choosing Island Rivalry forces the layout to Archipelago and disables the layout picker.
 - **Standings panel:** a HUD button (trophy icon) shown when the world has rivals, opening a list with one row per standing: colour swatch, name, population, age name and wealth (`$1,234`). The player's row is bold.
-- **Rejection text:** `.foreignIsland(id)` reads "<Rival name>'s island — you can't build here."
+- **Rejection text:** `.foreignIsland(.rival(id))` reads "<Rival name>'s island — you can't build here."
 - **Inspector:** on a rival building it shows the rival's name and colour above the building name, uses the rival's culture tier names, and hides Demolish.
 - **Island HUD:** when the camera's island belongs to a rival, the island overlay shows "<name> (rival)" and hides the stocks row.
 - **Banner:** `rivalAgeAdvanced` shows "<name> enters the <Age>".

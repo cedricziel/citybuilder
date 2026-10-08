@@ -49,7 +49,7 @@ public enum Age: String, CaseIterable, Codable, Hashable, Sendable, Comparable {
 extension World {
     /// Residents living at `tier` or above.
     func residents(atLeast tier: HouseTier) -> Int {
-        populations.values.filter { $0.tier >= tier }.reduce(0) { $0 + Int($1.population) }
+        populations(of: .player).filter { $0.tier >= tier }.reduce(0) { $0 + Int($1.population) }
     }
 
     /// Regular techs need their age; era techs need to open the next age

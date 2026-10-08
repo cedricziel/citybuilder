@@ -42,6 +42,14 @@ func scenarioGoalProgressText() {
     #expect(GoalsPanelModel(world: steam).rows.first?.text == "Reach the Industrial age")
 }
 
+@Test("outgrow goal row reads player against the largest rival")
+func outgrowGoalRowText() {
+    let world = World.newGame(layout: .archipelago, seed: 0, culture: .northernEuropean, scenario: .islandRivalry)
+    let rows = GoalsPanelModel(world: world).rows
+    #expect(rows.first?.text == "Outgrow every rival 0/1")
+    #expect(rows.last?.text == "Residents 0/80")
+}
+
 @MainActor
 @Test("scenario: win sheet appears")
 func scenarioWinSheetAppears() {

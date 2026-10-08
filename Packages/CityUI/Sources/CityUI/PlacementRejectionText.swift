@@ -16,10 +16,19 @@ public enum PlacementRejectionText {
         case let .obsolete(tech): "Replaced by \(tech.displayName)"
         case let .wrongCulture(culture): "Only \(culture.displayName) towns build this"
         case let .alreadyBuilt(kind): "Only one \(BuildTool.place(kind).displayName.lowercased()) per city"
+        case .foreignIsland: "Another town's island"
         case let .insufficientMaterials(shortfall):
             "Needs " + Good.allCases.compactMap { good in
                 shortfall[good].map { "\($0) more \(GoodsCatalog.spec(for: good).displayName.lowercased())" }
             }.joined(separator: ", ")
         }
+    }
+
+    /// Like `message(for:)`, naming the rival whose island it is.
+    public static func message(for rejection: PlacementRejection, in world: World) -> String {
+        if case let .foreignIsland(.rival(id)) = rejection, let name = world.rival(id)?.name {
+            return "\(name)'s island — you can't build here."
+        }
+        return message(for: rejection)
     }
 }

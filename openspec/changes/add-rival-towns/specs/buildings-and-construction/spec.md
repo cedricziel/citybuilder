@@ -16,12 +16,12 @@ Every building SHALL have an owner: the player or a rival. A building placed by 
 
 ### Requirement: Placement on another owner's island is rejected
 
-Placement SHALL be rejected with `foreignIsland(rivalID)` when any land tile of the footprint lies on an island owned by someone other than the placing owner. Water tiles of a shore building SHALL NOT be checked. Rival placements SHALL skip the research lock and the obsolete check; terrain, occupancy, shore and material checks SHALL apply to every owner.
+Placement SHALL be rejected with `foreignIsland(owner)`, naming the island's owner, when any land tile of the footprint lies on an island owned by someone other than the placing owner. Water tiles of a shore building SHALL NOT be checked. Rival placements SHALL skip the research lock and the obsolete check, and a rival's lumberjack hut SHALL cost no materials; terrain, occupancy, shore and material checks SHALL apply to every owner.
 
 #### Scenario: Player builds on a rival island
 
 - **WHEN** the player asks whether a house can be placed on rival 1's island
-- **THEN** the answer is rejected with `foreignIsland(1)`
+- **THEN** the answer is rejected with `foreignIsland(rival 1)`
 
 #### Scenario: Rival builds without research
 

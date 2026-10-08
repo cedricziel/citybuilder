@@ -8,8 +8,10 @@ import Testing
 private typealias Fixture = SignatureFixture
 
 @discardableResult
-private func caravanserai(holding goods: [Good: Int], export: Good? = nil, in world: inout World) -> EntityID {
-    let id = Fixture.inject(.caravanserai, at: TileCoordinate(x: 2, y: 2), in: &world)
+private func caravanserai(
+    holding goods: [Good: Int], export: Good? = nil, owner: Owner = .player, in world: inout World
+) -> EntityID {
+    let id = Fixture.inject(.caravanserai, at: TileCoordinate(x: 2, y: 2), in: &world, owner: owner)
     world.buildings[id]?.exportGood = export
     for good in Good.allCases {
         if let amount = goods[good] { world.stockpiles[id]?.deposit(good, amount: amount) }
@@ -153,6 +155,30 @@ func onlyCoffeeSendsNoCaravan() {
     let events = caravanTick(&world)
     #expect(caravanEvent(events) == nil)
     #expect(world.stockpiles[id]?.quantity(of: .coffee) == 2)
+}
+
+@Test("a rival's caravan pays the rival")
+func rivalCaravanPaysTheRival() throws {
+    var world = Fixture.grass()
+    world.testSeatRival()
+    let id = caravanserai(holding: [.bread: 6], owner: .rival(1), in: &world)
+    Fixture.runUntilBefore(multipleOf: 100, in: &world)
+    let balance = world.economy.balance
+    let treasury = try #require(world.rival(1)).treasury
+    world.tick()
+    #expect(world.economy.balance == balance)
+    // $48 for 4 bread, less the caravanserai's $2 upkeep.
+    #expect(world.rival(1)?.treasury == treasury + 46)
+}
+
+@Test("the player can't set a rival caravanserai's export")
+func playerCannotSetARivalExport() {
+    var world = Fixture.grass()
+    world.testSeatRival()
+    let id = caravanserai(holding: [:], export: .bread, owner: .rival(1), in: &world)
+    world.enqueue(.setExport(id, .tools))
+    world.tick()
+    #expect(world.buildings[id]?.exportGood == .bread)
 }
 
 @Test("scenario: caravan income is not tax")

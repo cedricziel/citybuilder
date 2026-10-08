@@ -82,9 +82,9 @@ public extension World {
         return houseModifiers(of: id).capacity(of: tier)
     }
 
-    /// True once the monument has completed every project stage.
-    var hasCompletedMonument: Bool {
-        buildings.values.contains { $0.isCompletedMonument }
+    /// True once `owner`'s monument has completed every project stage.
+    func hasCompletedMonument(of owner: Owner) -> Bool {
+        buildings.values.contains { $0.isCompletedMonument && $0.owner == owner }
     }
 }
 
@@ -174,7 +174,7 @@ extension World {
 
     /// Spec: `age-signatures` / Gallery commissions inspire houses.
     mutating func applyCommission(_ id: EntityID, events: inout [WorldEvent]) {
-        guard let gallery = buildings[id], gallery.kind == .gallery, gallery.state == .operational,
+        guard let gallery = playerBuilding(id, kind: .gallery), gallery.state == .operational,
               gallery.commissionTicksLeft == 0, economy.balance >= Self.commissionCost
         else { return }
         economy.deduct(Self.commissionCost)
@@ -183,8 +183,7 @@ extension World {
     }
 
     /// A completed monument raises its owner's tax by 10 % (design D6).
-    /// Every building is the player's until `add-rival-towns` lands.
-    func taxWithMonumentBonus(_ amount: Int64) -> Int64 {
-        hasCompletedMonument ? amount * 110 / 100 : amount
+    func taxWithMonumentBonus(_ amount: Int64, for owner: Owner) -> Int64 {
+        hasCompletedMonument(of: owner) ? amount * 110 / 100 : amount
     }
 }

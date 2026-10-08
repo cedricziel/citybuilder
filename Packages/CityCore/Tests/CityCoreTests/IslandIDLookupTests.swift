@@ -22,3 +22,14 @@ func scenarioIslandIDLookupReturnsNilForWater() {
     let world = World.newGame(layout: .archipelago, seed: 5)
     #expect(world.islandID(at: TileCoordinate(x: 0, y: 0)) == nil)
 }
+
+@Test("island lookup follows a water change after a cached lookup")
+func islandLookupFollowsAWaterChange() {
+    var world = World.fixtureWithTerrain(width: 5, height: 1, fill: .grass, seed: 1)
+    #expect(world.islandID(at: TileCoordinate(x: 4, y: 0)) == 1)
+    world.terrainGrid[2] = .water
+    #expect(world.islandID(at: TileCoordinate(x: 2, y: 0)) == nil)
+    #expect(world.islandID(at: TileCoordinate(x: 4, y: 0)) == 2)
+    world.terrainGrid[0] = .forest
+    #expect(world.islandID(at: TileCoordinate(x: 0, y: 0)) == 1)
+}

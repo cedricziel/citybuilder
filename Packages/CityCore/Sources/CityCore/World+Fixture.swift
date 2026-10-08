@@ -35,7 +35,8 @@ public extension World {
         seed: UInt64,
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
-        difficulty: Difficulty = .normal
+        difficulty: Difficulty = .normal,
+        rivals: Bool = true
     ) -> World {
         let grid: [TerrainType]
         let width: Int
@@ -66,6 +67,9 @@ public extension World {
         world.calendar = CalendarState(startYear: age.startYear, isActive: true)
         world.culture = culture
         world.age = age
+        if layout == .archipelago, rivals {
+            world.seedRivals()
+        }
         return world
     }
 
@@ -162,11 +166,13 @@ public extension World {
 }
 
 public extension World {
-    /// A new game set up by a built-in scenario: its age, difficulty and
-    /// goals. Spec: `difficulty-and-goals` / Built-in scenarios.
+    /// A new game set up by a built-in scenario: its age, difficulty,
+    /// goals and, when it has one, its layout. Rivals are always on.
+    /// Spec: `difficulty-and-goals` / Built-in scenarios.
     static func newGame(layout: WorldLayout, seed: UInt64, culture: Culture, scenario: Scenario) -> World {
         var world = newGame(
-            layout: layout, seed: seed, culture: culture, age: scenario.age, difficulty: scenario.difficulty
+            layout: scenario.requiredLayout ?? layout, seed: seed, culture: culture,
+            age: scenario.age, difficulty: scenario.difficulty, rivals: true
         )
         world.goals = scenario.goals.map { GoalState(goal: $0) }
         return world

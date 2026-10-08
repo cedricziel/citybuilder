@@ -12,11 +12,14 @@ public struct BuildingLook: Hashable, Sendable {
     public var projectFrame: Int?
     /// Grey tint of a smoky house.
     public var smoky: Bool
+    /// The rival owning the building, nil for the player's.
+    public var rival: RivalSummary?
 
-    public init(idle: Bool = false, projectFrame: Int? = nil, smoky: Bool = false) {
+    public init(idle: Bool = false, projectFrame: Int? = nil, smoky: Bool = false, rival: RivalSummary? = nil) {
         self.idle = idle
         self.projectFrame = projectFrame
         self.smoky = smoky
+        self.rival = rival
     }
 
     public static let standard = BuildingLook()
@@ -36,8 +39,9 @@ public enum SignatureLooks {
     }
 
     static func look(for building: Building, in snapshot: WorldSnapshot) -> BuildingLook {
-        guard building.state == .operational else { return .standard }
-        var look = BuildingLook()
+        let rival = building.owner.rivalID.flatMap(snapshot.rival)
+        guard building.state == .operational else { return BuildingLook(rival: rival) }
+        var look = BuildingLook(rival: rival)
         if building.kind == .monument, !building.isCompletedMonument {
             look.projectFrame = projectFrame(stages: building.projectStages)
         }

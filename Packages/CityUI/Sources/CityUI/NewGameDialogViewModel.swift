@@ -24,9 +24,27 @@ public final class NewGameDialogViewModel {
     public var age: Age
     /// Spec: `platform-shells` / New Game offers difficulty and scenarios.
     public enum Mode: Hashable, Sendable { case sandbox, scenario }
-    public var mode: Mode = .sandbox
+    public var mode: Mode = .sandbox {
+        didSet { applyRequiredLayout() }
+    }
+
     public var difficulty: Difficulty = .normal
-    public var scenario: Scenario = .firstHarvest
+    public var scenario: Scenario = .firstHarvest {
+        didSet { applyRequiredLayout() }
+    }
+
+    /// Spec: `platform-shells` / New Game offers rival towns.
+    public var rivalTowns = true
+
+    /// The "Rival towns" toggle shows for a sandbox archipelago only.
+    public var showsRivalToggle: Bool {
+        mode == .sandbox && layout == .archipelago
+    }
+
+    /// A scenario with a required layout locks the layout picker.
+    public var isLayoutLocked: Bool {
+        mode == .scenario && scenario.requiredLayout != nil
+    }
 
     public init(
         layout: WorldLayout = .singleIsland,
@@ -60,7 +78,9 @@ public final class NewGameDialogViewModel {
         guard let seed = resolvedSeed else { return nil }
         switch mode {
         case .sandbox:
-            return World.newGame(layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty)
+            return World.newGame(
+                layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty, rivals: rivalTowns
+            )
         case .scenario:
             return World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario)
         }
@@ -76,6 +96,13 @@ public final class NewGameDialogViewModel {
         mode = .sandbox
         difficulty = .normal
         scenario = .firstHarvest
+        rivalTowns = true
+    }
+
+    private func applyRequiredLayout() {
+        if mode == .scenario, let required = scenario.requiredLayout {
+            layout = required
+        }
     }
 
     private var resolvedSeed: UInt64? {

@@ -83,6 +83,15 @@ func scenarioEmptyHouseConsumesNothing() throws {
     #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 10)
 }
 
+@Test("an emptied house recovers once food is back")
+func emptiedHouseRecoversOnceFoodIsBack() throws {
+    var fixture = try houseNextToTownCenter(food: 10, planks: 10, residents: 0, tier: .peasants)
+    fixture.world.populations[fixture.house]?.setShort(.food, true)
+    advanceToNextConsumption(&fixture.world)
+    #expect(fixture.world.populations[fixture.house]?.isShort(.food) == false)
+    #expect(fixture.world.populations[fixture.house]?.isSatisfied(.food) == true)
+}
+
 @Test("house population saved before consumption still decodes")
 func housePopulationFromOlderSaveDecodes() throws {
     let older = Data(#"{"population":3,"foodSatisfied":true,"planksSatisfied":true,"ticksAtCurrentSatisfaction":12}"#.utf8)

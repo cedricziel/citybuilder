@@ -159,11 +159,14 @@ extension World {
     /// Spec: `research` / Knowledge accumulates, Choosing research.
     mutating func runResearchSystem(signatureSources sources: [Building], events: inout [WorldEvent]) {
         if tickCount.isMultiple(of: Self.libraryKnowledgeIntervalTicks) {
-            research.knowledge += buildings.values.count { $0.kind == .library && $0.state == .operational }
+            research.knowledge += buildings.values.count {
+                $0.kind == .library && $0.state == .operational && $0.owner == .player
+            }
         }
         if tickCount.isMultiple(of: Self.residentKnowledgeIntervalTicks) {
-            research.knowledge += populations.reduce(0) {
-                $0 + residentKnowledge(house: $1.key, population: $1.value, sources: sources)
+            research.knowledge += populations.reduce(0) { total, entry in
+                guard owner(of: entry.key) == .player else { return total }
+                return total + residentKnowledge(house: entry.key, population: entry.value, sources: sources)
             }
         }
         guard let tech = research.current else { return }
@@ -181,16 +184,21 @@ extension World {
     }
 
     /// Culture rule, tech lock and terrain requirement, checked by
-    /// `canPlace`.
-    func researchOrTerrainRejection(_ kind: BuildingKind, tiles: [TileCoordinate]) -> PlacementRejection? {
-        if !kind.isBuildable(in: culture), let owner = kind.culture {
-            return .wrongCulture(owner)
+    /// `canPlace`. The culture rule uses the owner's culture; rivals
+    /// don't research, so they skip the lock and the obsolete check.
+    func researchOrTerrainRejection(
+        _ kind: BuildingKind, tiles: [TileCoordinate], for owner: Owner = .player
+    ) -> PlacementRejection? {
+        if !kind.isBuildable(in: culture(of: owner)), let kindCulture = kind.culture {
+            return .wrongCulture(kindCulture)
         }
-        if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
-            return .locked(tech)
-        }
-        if let tech = kind.obsoletedBy, research.isResearched(tech) {
-            return .obsolete(tech)
+        if owner == .player {
+            if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
+                return .locked(tech)
+            }
+            if let tech = kind.obsoletedBy, research.isResearched(tech) {
+                return .obsolete(tech)
+            }
         }
         if let required = BuildingCatalog.spec(for: kind).requiredTerrain {
             let matching = tiles.count { terrain(at: $0) == required.terrain }

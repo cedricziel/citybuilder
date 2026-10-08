@@ -38,7 +38,7 @@ func scenarioOccupiedTileMessage() {
 func scenarioRejectionMessageExpires() {
     let hud = HUDViewModel()
     let start = Date(timeIntervalSinceReferenceDate: 1000)
-    hud.showRejection(.tileOccupied, now: start)
+    hud.showRejection(.tileOccupied, in: World.newGame(), now: start)
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(1)) == "Tile occupied")
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(2.5)) == nil)
 }
@@ -47,8 +47,8 @@ func scenarioRejectionMessageExpires() {
 func newerRejectionReplacesOlder() {
     let hud = HUDViewModel()
     let start = Date(timeIntervalSinceReferenceDate: 1000)
-    hud.showRejection(.tileOccupied, now: start)
-    hud.showRejection(.terrainNotBuildable, now: start.addingTimeInterval(2))
+    hud.showRejection(.tileOccupied, in: World.newGame(), now: start)
+    hud.showRejection(.terrainNotBuildable, in: World.newGame(), now: start.addingTimeInterval(2))
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(3)) == "Can't build on water")
 }
 

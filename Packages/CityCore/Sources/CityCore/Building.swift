@@ -346,6 +346,9 @@ public struct Building: Hashable, Codable, Sendable {
     public var exportGood: Good?
     /// What the caravanserai's last caravan sold, nil before its first.
     public var lastCaravan: CaravanSale?
+    /// The player or a rival. Spec: `buildings-and-construction` /
+    /// Buildings have an owner.
+    public internal(set) var owner: Owner
 
     public init(
         id: EntityID,
@@ -362,7 +365,8 @@ public struct Building: Hashable, Codable, Sendable {
         fuelled: Bool = false,
         commissionTicksLeft: UInt32 = 0,
         exportGood: Good? = nil,
-        lastCaravan: CaravanSale? = nil
+        lastCaravan: CaravanSale? = nil,
+        owner: Owner = .player
     ) {
         self.id = id
         self.kind = kind
@@ -379,6 +383,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.commissionTicksLeft = commissionTicksLeft
         self.exportGood = exportGood
         self.lastCaravan = lastCaravan
+        self.owner = owner
     }
 }
 
@@ -418,6 +423,7 @@ public extension Building {
         self.commissionTicksLeft = try container.decodeIfPresent(UInt32.self, forKey: .commissionTicksLeft) ?? 0
         self.exportGood = try container.decodeIfPresent(Good.self, forKey: .exportGood)
         self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
+        self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
     }
 }
 

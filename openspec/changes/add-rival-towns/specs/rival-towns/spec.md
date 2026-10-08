@@ -59,12 +59,12 @@ On a rival's turn (every 80 ticks on Easy, 50 on Normal, 30 on Hard, on ticks wh
 
 ### Requirement: Rival build order
 
-A rival SHALL build only houses, roads, lumberjack huts, sawmills, farms and warehouses. On its turn it SHALL take the first applicable rule; once the opening is complete, the threshold rules come first: food below 4 with fewer than 1 + houses / 3 farms → farm; planks below 6 with fewer sawmills than lumberjack huts → sawmill; wood below 4 with fewer than 1 + houses / 4 lumberjack huts → lumberjack hut; otherwise the next script step. The script SHALL be the opening (lumberjack hut, farm, house, house, sawmill, house, house, farm, house, house, lumberjack hut, warehouse) played once, then the growth loop (house, house, farm, house, house, lumberjack hut, house, sawmill) repeated. Stock SHALL be the rival's island stock. A step SHALL be issued only when the treasury covers the building cost, the road cost and $50, and the island stock covers the full material cost; otherwise the rival waits. A script step waited on for 10 turns SHALL be skipped. House steps SHALL be skipped at 30 houses, and no step SHALL be taken at 50 non-road buildings.
+A rival SHALL build only houses, roads, lumberjack huts, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step. The threshold rules, in order: food below 4 with fewer than (4 × houses + 4) / 5 farms → farm; once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill; wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut. Huts with fewer than 4 forest tiles left in their catchment SHALL not count as huts in these rules. The script SHALL be the opening (lumberjack hut, sawmill, farm, house, lumberjack hut, house, house, farm, house, house, lumberjack hut, warehouse) played once, then the growth loop (house, house, farm, house, house, lumberjack hut, house, sawmill) repeated. Stock SHALL be the rival's island stock. A step SHALL be issued only when the treasury covers the building cost, the road cost and $50, and the island stock covers the material cost or the rival's own huts (and, for planks, its sawmill) can still deliver the rest; otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped. House steps SHALL be skipped at 30 houses, and no step SHALL be taken at 50 non-road buildings.
 
 #### Scenario: Opening step
 
 - **WHEN** a fresh rival takes its first turn with 6 wood, 5 planks and 2 food
-- **THEN** its commands end with a lumberjack hut placement and its script index becomes 1, although food is below 4
+- **THEN** its commands end with a lumberjack hut placement and its script index becomes 1, although food is below 4 and there are no houses to feed
 
 #### Scenario: Food threshold overrides the script
 
@@ -88,12 +88,12 @@ A rival SHALL build only houses, roads, lumberjack huts, sawmills, farms and war
 
 ### Requirement: Rival town plan
 
-A rival SHALL build on a road grid anchored to its town center: grid lines at `x ≡ ax − 1 (mod 5)` and `y ≡ ay − 1 (mod 5)` for town center anchor `(ax, ay)`, enclosing 4×4 blocks with four 2×2 corner slots each; a 3×3 building SHALL take a whole empty block. Blocks SHALL be searched by Chebyshev block distance from the town center's block up to 4, then row, then column, and only blocks sharing an edge with an opened block SHALL be opened. A step SHALL enqueue the missing ring roads of each block it opens (the town center's block first while it is unopened, then the chosen block), each ring in row-major order and each tile once, then the building. The town center's block has no free slot. A lumberjack hut slot SHALL have a forest tile in its catchment.
+A rival SHALL build on a road grid anchored to its town center: grid lines at `x ≡ ax − 1 (mod 5)` and `y ≡ ay − 1 (mod 5)` for town center anchor `(ax, ay)`, enclosing 4×4 blocks with four 2×2 corner slots each; a 3×3 building SHALL take a whole empty block. Blocks SHALL be searched by Chebyshev block distance from the town center's block up to 4, then row, then column, and only blocks sharing an edge with an opened block SHALL be opened. A lumberjack hut SHALL instead take the slot with the most forest tiles in its catchment (at least 6) among the blocks reachable through at most one unopened block, each opened block counting as 8 tiles less. A step SHALL enqueue the missing ring roads of each block it opens (the town center's block first while it is unopened, then the blocks on the way to the chosen block), each ring in row-major order and each tile once, then the building. The town center's block has no free slot.
 
 #### Scenario: First building opens the home block
 
 - **WHEN** a fresh rival with town center anchor (ax, ay) places its first building
-- **THEN** its commands start with the 16 road tiles of the ring from (ax − 1, ay − 1) to (ax + 3, ay + 3) in row-major order, end with the building, and the building lies in a block next to the town center's block
+- **THEN** its commands start with the 20 road tiles of the ring from (ax − 1, ay − 1) to (ax + 4, ay + 4) in row-major order, end with the building, and the building lies in a block next to the town center's block
 
 #### Scenario: Rival buildings touch a road
 
