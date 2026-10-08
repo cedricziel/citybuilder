@@ -37,23 +37,23 @@ func scenarioCostBreakdownReadsAvailableStockFromCurrentIsland() throws {
     let session = session(armed: .sawmill)
     let ghost = try #require(session.ghostState())
     let breakdown = try #require(ghost.costBreakdown)
-    // Fresh world: town center starter inventory is 6 wood + 4 planks.
+    // Fresh world: town center starter inventory is 6 wood + 5 planks.
     #expect(breakdown[.wood]?.have == 6)
-    #expect(breakdown[.planks]?.have == 4)
+    #expect(breakdown[.planks]?.have == 5)
 }
 
 @MainActor
 @Test("scenario: shortfall good highlights red")
 func scenarioShortfallGoodHighlightsRed() throws {
-    // Town center has 4 planks. Warehouse needs 6 planks → planks
-    // short by 2; its 2 wood are covered. The ghost-preview's
+    // Town center has 5 planks. Warehouse needs 6 planks → planks
+    // short by 1; its 2 wood are covered. The ghost-preview's
     // `shortfall(for:)` helper is what the view consults for the red
     // highlight.
     let session = session(armed: .warehouse)
     let ghost = try #require(session.ghostState())
     let breakdown = try #require(ghost.costBreakdown)
     #expect(breakdown[.planks]?.need == 6)
-    #expect(breakdown[.planks]?.have == 4)
+    #expect(breakdown[.planks]?.have == 5)
     #expect(GameSession.GhostPreview.isShort(.planks, in: breakdown))
     #expect(!GameSession.GhostPreview.isShort(.wood, in: breakdown))
 }

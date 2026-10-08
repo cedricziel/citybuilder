@@ -265,7 +265,7 @@ func scenarioFirstLumberjackPlacementConsumesStarterWood() throws {
     let townCenter = try #require(world.buildings.values.first { $0.kind == .townCenter })
     let stockpile = try #require(world.stockpiles[townCenter.id])
     #expect(stockpile.quantity(of: .wood) == 4)
-    #expect(stockpile.quantity(of: .planks) == 4)
+    #expect(stockpile.quantity(of: .planks) == 5)
     #expect(stockpile.quantity(of: .food) == 2)
 }
 

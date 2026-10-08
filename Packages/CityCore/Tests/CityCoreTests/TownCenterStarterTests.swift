@@ -20,7 +20,7 @@ func scenarioFreshWorldTownCenterHoldsStarterGoods() throws {
     let center = try #require(townCenter(in: world))
     let stockpile = try #require(world.stockpiles[center.id])
     #expect(stockpile.quantity(of: .wood) == 6)
-    #expect(stockpile.quantity(of: .planks) == 4)
+    #expect(stockpile.quantity(of: .planks) == 5)
     #expect(stockpile.quantity(of: .food) == 2)
 }
 
@@ -31,7 +31,7 @@ func scenarioStarterGoodsArePartOfTheIslandStockpileAggregate() throws {
     let onlyIsland = try #require(world.islands.first?.id)
     let summary = try #require(snapshot.islandSummaries[onlyIsland])
     #expect(summary.stockpile[.wood] == 6)
-    #expect(summary.stockpile[.planks] == 4)
+    #expect(summary.stockpile[.planks] == 5)
     #expect(summary.stockpile[.food] == 2)
 }
 

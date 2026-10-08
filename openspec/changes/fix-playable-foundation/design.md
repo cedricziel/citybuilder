@@ -77,7 +77,7 @@ All five terrain entries (16 sprites) move to this source. The art is lit from t
 
 `BuildingKind.farm` goes through the existing generic producer system: recipe `[] → [.food: 1]` every 40 ticks, a 2×2 footprint, $60, and 2 wood. It has no fertility or terrain requirement. Fertility is a candidate "surprise" mechanic for `add-historical-ages`.
 
-The starter stock goes from 4 wood + 2 planks to 6 wood + 4 planks + 2 food. That covers lumberjack (2 wood) + farm (2 wood) + house (4 planks), with 2 wood to spare toward a sawmill.
+The starter stock goes from 4 wood + 2 planks to 6 wood + 5 planks + 2 food. That covers lumberjack (2 wood) + farm (2 wood) + house (4 planks), plus the sawmill's 1 plank. A playthrough with 4 planks deadlocked: the house used every plank, and the material rule only queues a building on a missing good when the island already has a producer of that good, which the sawmill itself would be. With 5 planks, no other plank-costing building is affordable, so the last plank is always left for the sawmill.
 
 Old saves keep their old starter stock. The stock is only seeded at world-gen, so no migration is needed.
 

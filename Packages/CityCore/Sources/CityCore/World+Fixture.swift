@@ -59,11 +59,11 @@ public extension World {
 
     /// Seed an operational town center on every island that can host
     /// the 3×3 footprint, with the starter inventory of 6 wood +
-    /// 4 planks + 2 food. Run once at world-gen; the town center
+    /// 5 planks + 2 food. Run once at world-gen; the town center
     /// becomes the bootstrap goods-buffer for the first placements.
     internal mutating func seedTownCenters() {
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
-        let starter: [(Good, Int)] = [(.wood, 6), (.planks, 4), (.food, 2)]
+        let starter: [(Good, Int)] = [(.wood, 6), (.planks, 5), (.food, 2)]
         for island in islands {
             guard let anchor = findFootprint(footprint, on: island) else { continue }
             let id = EntityID(raw: nextEntityRaw)

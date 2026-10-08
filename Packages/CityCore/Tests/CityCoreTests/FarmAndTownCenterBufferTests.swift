@@ -174,7 +174,20 @@ func scenarioStarterGoodsAffordALumberjackAFarmAndAHouse() throws {
     }
     let center = try townCenterID(in: world)
     #expect(world.stockpiles[center]?.quantity(of: .wood) == 2)
-    #expect(world.stockpiles[center]?.quantity(of: .planks) == 0)
+    #expect(world.stockpiles[center]?.quantity(of: .planks) == 1)
+}
+
+@Test("scenario: starter goods never strand the sawmill")
+func scenarioStarterGoodsNeverStrandTheSawmill() throws {
+    var world = World.newGame()
+    world.economy.credit(100_000)
+    for kind in [BuildingKind.house, .lumberjackHut] {
+        let anchor = try #require(freeLandAnchor(BuildingCatalog.spec(for: kind).footprint, in: world))
+        world.enqueue(.place(kind, at: anchor))
+        world.tick()
+    }
+    let anchor = try #require(freeLandAnchor(BuildingCatalog.spec(for: .sawmill).footprint, in: world))
+    #expect(world.canPlace(.sawmill, at: anchor) == .allowed)
 }
 
 @Test("scenario: port accepts carrier deposits")
