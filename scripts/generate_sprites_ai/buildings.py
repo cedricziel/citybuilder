@@ -13,6 +13,7 @@ Register rules (also pinned in `world.md` § Building register):
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -421,6 +422,138 @@ def _bakery(stage: str) -> Image.Image:
     return c.img
 
 
+def _field_rows(c: Canvas, u0: float, v0: float, u1: float, v1: float, ripe: Rgb, row: Rgb) -> None:
+    def paint(x: int, y: int) -> Rgb:
+        u, v = c.proj.uv(x, y)
+        return row if int(u * 6) % 2 == 0 else (ripe if _hash01(x, y, 95) > 0.15 else row)
+
+    c.ground(u0, v0, u1, v1, paint)
+
+
+def _grain_farm(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 40)
+    yard(c)
+    if stage != "pad":
+        ripe = PALE_SAND if stage == "done" else (WHEAT if stage == "walls" else LIGHT_LOAM)
+        _field_rows(c, 0.05, 0.75, 1.95, 1.95, ripe, MEDIUM_LOAM)
+        # Low wattle fence along the field's near edges.
+        c.line([c.p(0.05, 1.95, 2), c.p(1.95, 1.95, 2), c.p(1.95, 0.75, 2)], OUTLINE)
+        c.line([c.p(0.05, 1.95, 0), c.p(1.95, 1.95, 0), c.p(1.95, 0.75, 0)], OUTLINE)
+    b = Block(0.25, 0.1, 1.25, 0.65, 10, TIMBER_WALL, THATCH_ROOF, "gable_u", 9)
+    draw_block(c, b, stage)
+    if stage == "done":
+        door(c, 0.6, 0.65, height=6)
+        for i in range(3):
+            x, y = c.p(1.45 + i * 0.15, 0.4, 0)
+            c.poly([(x - 2, y), (x + 2, y), (x, y - 7)], WHEAT)
+            c.line([(x - 2, y), (x, y - 7), (x + 2, y)], THATCH)
+    return c.img
+
+
+def _sails(c: Canvas, hub: Point, angle: float) -> None:
+    for k in range(4):
+        a = angle + k * math.pi / 2
+        tip = (hub[0] + math.cos(a) * 26, hub[1] + math.sin(a) * 26)
+        mid = (hub[0] + math.cos(a) * 8, hub[1] + math.sin(a) * 8)
+        side = (math.cos(a + math.pi / 2) * 4, math.sin(a + math.pi / 2) * 4)
+        c.poly([mid, tip, (tip[0] + side[0], tip[1] + side[1]), (mid[0] + side[0], mid[1] + side[1])], PALE_SAND)
+        c.line([hub, tip], DARK_TIMBER)
+        c.line([(tip[0] + side[0], tip[1] + side[1]), tip], OUTLINE)
+    c.draw.ellipse([round(hub[0]) - 2, round(hub[1]) - 2, round(hub[0]) + 2, round(hub[1]) + 2],
+                   fill=(*DARK_TIMBER, 255), outline=(*OUTLINE, 255))
+
+
+def _windmill(stage: str, angle: float = math.pi / 4) -> Image.Image:
+    c = Canvas(2, 2, 92)
+    yard(c)
+    b = Block(0.55, 0.55, 1.45, 1.45, 34, STONE_WALL, THATCH_ROOF, "hip", 20)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.95, 1.45, height=8)
+        window(c, "left", 0.8, 1.45, 24)
+        window(c, "right", 1.45, 1.0, 22, lit=False)
+    if stage == "done":
+        _sails(c, c.p(1.0, 1.45, 40), angle)
+        crate(c, 0.2, 1.6)
+    return c.img
+
+
+def _mine(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 44)
+    yard(c)
+    if stage == "done":
+        # Timbered adit into the slope, an ore heap and a cart track.
+        box(c, 0.2, 0.2, 1.1, 0.9, 16, STONE_WALL)
+        flat_top(c, 0.2, 0.2, 1.1, 0.9, 16, SHADOW_STONE)
+        x, y = c.p(0.65, 0.9, 0)
+        c.draw.rectangle([round(x) - 5, round(y) - 11, round(x) + 5, round(y) - 1], fill=(*OUTLINE, 255))
+        c.line([(round(x) - 6, round(y)), (round(x) - 6, round(y) - 12), (round(x) + 6, round(y) - 12),
+                (round(x) + 6, round(y))], TIMBER, width=2)
+        for i in range(5):
+            px, py = c.p(1.4 + (i % 3) * 0.12, 1.4 + (i // 3) * 0.12, 2 + (i // 3) * 2)
+            c.draw.ellipse([round(px) - 3, round(py) - 2, round(px) + 2, round(py) + 2],
+                           fill=(*(SHADOW_STONE if i % 2 else STONE), 255), outline=(*OUTLINE, 255))
+        c.line([c.p(0.65, 1.0, 0), c.p(0.65, 1.9, 0)], DARK_TIMBER)
+        c.line([c.p(0.8, 1.0, 0), c.p(0.8, 1.9, 0)], DARK_TIMBER)
+        crate(c, 0.62, 1.5, 0.2)
+    elif stage == "walls":
+        box(c, 0.2, 0.2, 1.1, 0.9, 10, STONE_WALL)
+        flat_top(c, 0.2, 0.2, 1.1, 0.9, 10, SHADOW_STONE)
+    else:
+        b = Block(0.2, 0.2, 1.1, 0.9, 16, STONE_WALL, SLATE_ROOF, "flat")
+        draw_block(c, b, stage)
+    return c.img
+
+
+def _charcoal_burner(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 40)
+    yard(c)
+    b = Block(0.2, 0.2, 0.95, 0.85, 10, TIMBER_WALL, THATCH_ROOF, "gable_v", 9)
+    draw_block(c, b, stage)
+    if stage == "done":
+        # Turf-covered charcoal clamp.
+        x, y = c.p(1.35, 1.35, 0)
+        c.draw.ellipse([round(x) - 22, round(y) - 18, round(x) + 22, round(y) + 6],
+                       fill=(*DARK_LOAM, 255), outline=(*OUTLINE, 255))
+        c.draw.ellipse([round(x) - 16, round(y) - 16, round(x) + 6, round(y) - 6], fill=(*MEDIUM_LOAM, 255))
+        log_pile(c, 0.2, 1.6, 2)
+    return c.img
+
+
+def _smelter(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 60)
+    yard(c)
+    b = Block(0.2, 0.35, 1.3, 1.5, 16, STONE_WALL, SLATE_ROOF, "gable_u", 12)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.6, 1.5, height=8)
+    if stage == "done":
+        box(c, 1.35, 0.4, 1.8, 0.85, 34, STONE_WALL)
+        flat_top(c, 1.35, 0.4, 1.8, 0.85, 34, SHADOW_STONE)
+        x, y = c.p(1.8, 0.62, 6)
+        c.draw.rectangle([round(x) - 2, round(y) - 3, round(x) + 1, round(y)], fill=(*SUN_TERRACOTTA, 255))
+        crate(c, 1.5, 1.6)
+    return c.img
+
+
+def _toolsmith(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 52)
+    yard(c)
+    b = Block(0.2, 0.25, 1.4, 1.3, 15, PLASTER, TILE_ROOF, "gable_v", 12, framed=True)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.6, 1.3, height=8)
+        window(c, "left", 1.1, 1.3, 10)
+    if stage == "done":
+        chimney(c, 0.5, 0.4, 15, 34)
+        # Anvil on a block under a lean-to.
+        x, y = c.p(1.7, 1.2, 0)
+        c.draw.rectangle([round(x) - 2, round(y) - 5, round(x) + 2, round(y)], fill=(*DARK_TIMBER, 255))
+        c.draw.rectangle([round(x) - 4, round(y) - 8, round(x) + 4, round(y) - 6], fill=(*SHADOW_STONE, 255),
+                         outline=(*OUTLINE, 255))
+    return c.img
+
+
 def _warehouse(stage: str) -> Image.Image:
     c = Canvas(3, 3, 60)
     yard(c)
@@ -558,7 +691,8 @@ def _shipyard(orientation: str, stage: str) -> Image.Image:
 
 FOOTPRINTS: dict[str, tuple[int, int]] = {
     "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "sawmill": (2, 2),
-    "town-center": (3, 3), "bakery": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
+    "town-center": (3, 3), "bakery": (2, 2), "grain-farm": (2, 2), "windmill": (2, 2), "mine": (2, 2),
+    "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
 }
 
 _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
@@ -568,18 +702,32 @@ _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
     "sawmill": _sawmill,
     "town-center": _town_center,
     "bakery": _bakery,
+    "grain-farm": _grain_farm,
+    "windmill": _windmill,
+    "mine": _mine,
+    "charcoal-burner": _charcoal_burner,
+    "smelter": _smelter,
+    "toolsmith": _toolsmith,
     **{f"port-{o}": (lambda stage, o=o: _port(o, stage)) for o in "nesw"},
     **{f"shipyard-{o}": (lambda stage, o=o: _shipyard(o, stage)) for o in "nesw"},
 }
 
 OPERATIONAL_FRAMES: dict[str, int] = {
-    "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2,
+    "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
+    "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2,
     **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
 }
 
 
 # Upgraded house looks, keyed by tier; tier 1 is the plain house.
 TIER_HOUSES: dict[int, Callable[[], Image.Image]] = {2: _house_tier2, 3: _house_tier3}
+
+
+def draw_windmill_frame(frame: int, frames: int) -> Image.Image:
+    """Operational windmill frame: the sails turn a quarter turn per cycle."""
+    img = _windmill("done", math.pi / 4 + frame * (math.pi / 2) / frames)
+    top = _windmill("done").getbbox()[1]
+    return img.crop((0, max(0, top - HEADROOM), img.width, img.height))
 
 
 def draw_house_tier(tier: int) -> Image.Image:

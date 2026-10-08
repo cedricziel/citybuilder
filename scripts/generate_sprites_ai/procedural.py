@@ -24,7 +24,7 @@ TILE = (64, 32)
 from .palette import (  # noqa: E402
     CREAM, CREVICE, DARK_LOAM, DARK_TIMBER, DEEP_WATER, GLINT, HIGHLIGHT_WATER, LEAF,
     LIGHT_LOAM, LIGHT_STONE, MEDIUM_LOAM, MID_WATER, OUTLINE, PALE_SAND, PINE, SAND,
-    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, THATCH, TIMBER, Rgb,
+    SHADOW_GREEN, SHADOW_STONE, STONE, SUN_GRASS, TERRACOTTA, THATCH, TIMBER, Rgb,
 )
 
 WHEAT = (0xD4, 0xA8, 0x6A)
@@ -407,6 +407,68 @@ def _bread_icon() -> Image.Image:
     return img
 
 
+def _icon() -> tuple[Image.Image, ImageDraw.ImageDraw]:
+    img = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
+    return img, ImageDraw.Draw(img)
+
+
+def _grain_icon() -> Image.Image:
+    img, d = _icon()
+    for dx in (-5, 0, 5):
+        d.line([(12 + dx, 21), (12 + dx // 2, 6)], fill=(*THATCH, 255), width=2)
+        d.ellipse([10 + dx // 2, 3, 15 + dx // 2, 11], fill=(*WHEAT, 255), outline=(*OUTLINE, 255))
+    d.rectangle([7, 15, 17, 17], fill=(*PINE, 255), outline=(*OUTLINE, 255))
+    return img
+
+
+def _flour_icon() -> Image.Image:
+    img, d = _icon()
+    d.polygon([(6, 21), (18, 21), (19, 9), (15, 5), (9, 5), (5, 9)], fill=(*PALE_SAND, 255), outline=(*OUTLINE, 255))
+    d.line([(9, 5), (12, 8), (15, 5)], fill=(*THATCH, 255))
+    d.ellipse([9, 12, 15, 17], fill=(*CREAM, 255))
+    return img
+
+
+def _ore_icon() -> Image.Image:
+    img, d = _icon()
+    d.polygon([(3, 19), (7, 9), (13, 6), (20, 10), (21, 19)], fill=(*STONE, 255), outline=(*OUTLINE, 255))
+    d.polygon([(7, 9), (13, 6), (12, 12)], fill=(*LIGHT_STONE, 255))
+    for x, y in ((9, 14), (15, 12), (16, 16)):
+        d.rectangle([x, y, x + 2, y + 1], fill=(*TERRACOTTA, 255))
+    return img
+
+
+def _charcoal_icon() -> Image.Image:
+    img, d = _icon()
+    for x0, y0 in ((3, 12), (11, 12), (7, 6)):
+        d.rectangle([x0, y0, x0 + 9, y0 + 6], fill=(*DARK_LOAM, 255), outline=(*OUTLINE, 255))
+        d.line([(x0 + 1, y0 + 1), (x0 + 7, y0 + 1)], fill=(*MEDIUM_LOAM, 255))
+    return img
+
+
+def _iron_icon() -> Image.Image:
+    img, d = _icon()
+    for y0 in (14, 8):
+        d.polygon([(4, y0 + 6), (20, y0 + 6), (17, y0), (7, y0)], fill=(*SHADOW_STONE, 255), outline=(*OUTLINE, 255))
+        d.line([(8, y0 + 1), (16, y0 + 1)], fill=(*LIGHT_STONE, 255))
+    return img
+
+
+def _tools_icon() -> Image.Image:
+    img, d = _icon()
+    d.line([(5, 20), (15, 8)], fill=(*TIMBER, 255), width=3)
+    d.polygon([(12, 4), (20, 7), (18, 11), (11, 8)], fill=(*SHADOW_STONE, 255), outline=(*OUTLINE, 255))
+    d.line([(19, 20), (9, 9)], fill=(*PINE, 255), width=2)
+    d.rectangle([6, 5, 10, 9], fill=(*LIGHT_STONE, 255), outline=(*OUTLINE, 255))
+    return img
+
+
+_CHAIN_ICONS = {
+    "grain": _grain_icon, "flour": _flour_icon, "ore": _ore_icon,
+    "charcoal": _charcoal_icon, "iron": _iron_icon, "tools": _tools_icon,
+}
+
+
 def _register_buildings_and_units() -> None:
     from . import buildings, units
 
@@ -418,12 +480,17 @@ def _register_buildings_and_units() -> None:
             _RENDERERS[f"{name}-constructing-{i}"] = lambda kind=kind, stage=stage: buildings.draw(kind, stage)
         frames = buildings.OPERATIONAL_FRAMES.get(kind, 0)
         for i in range(frames):
+            if kind == "windmill":
+                _RENDERERS[f"{name}-operational-{i}"] = lambda i=i, frames=frames: buildings.draw_windmill_frame(i, frames)
+                continue
             _RENDERERS[f"{name}-operational-{i}"] = (
                 lambda kind=kind, i=i, frames=frames: derive_operational(buildings.draw(kind), i, frames)
             )
     for tier in buildings.TIER_HOUSES:
         _RENDERERS[f"building-house-tier{tier}"] = lambda tier=tier: buildings.draw_house_tier(tier)
     _RENDERERS["good-bread"] = _bread_icon
+    for good, draw in _CHAIN_ICONS.items():
+        _RENDERERS[f"good-{good}"] = draw
     for facing in ("ne", "se", "sw", "nw"):
         for frame in (0, 1):
             _RENDERERS[f"walker-{facing}-{frame}"] = lambda facing=facing, frame=frame: units.walker(facing, frame)
