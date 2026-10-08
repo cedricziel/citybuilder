@@ -119,11 +119,23 @@ The content gate gains a `frame_misaligned` rule: an operational frame's left, r
 - **Alternative — stop animating AI-drawn buildings.** Rejected. It breaks the sprite-animation spec's "Operational sawmill animates" scenario, and the city looks dead.
 - **Alternative — redraw the buildings procedurally.** Deferred. That's a bigger art pass, and a natural fit for the ages work, where every building needs per-age variants anyway.
 
-### D6 — Rejection feedback lives in `HUDViewModel`, driven by `GameSession`'s placement result
+### D6 — Rejection feedback lives in `HUDViewModel`, triggered by a `canPlace` check on tap
 
-`GameSession` already calls `canPlace` before it enqueues a placement. When the result is `.rejected(reason)`, it forwards the reason to `HUDViewModel.showRejection(_:now:)`. The view model maps the reason to a message (`PlacementRejectionText`) and stores an expiry time. The view reads the message through `TimelineView`, so it expires without a timer.
+Until now, `GameSession.handleTap` enqueued `.place` without checking, and the simulation dropped rejected commands silently at the tick boundary. Now:
 
-- **Alternative — emit a `WorldEvent.placementRejected` from CityCore.** Rejected. A rejection never reaches the simulation, because the command is never enqueued. Routing it through the world would put UI feedback into deterministic state.
+1. A tap with a build tool armed runs `world.canPlace` first.
+2. On `.rejected(reason)`, the session calls `HUDViewModel.showRejection(_:now:)` and enqueues nothing.
+3. The view model maps the reason to text (`PlacementRejectionText`) and stores the time it was shown.
+4. `PlacementRejectionBanner` reads the message through a `TimelineView`, so it expires without a timer.
+
+Drag-to-paint gets no feedback. Painting a road across existing road tiles would otherwise flood the banner with "Tile occupied".
+
+- **Alternative — emit a `WorldEvent.placementRejected` from CityCore.** Rejected. A rejection never reaches the simulation once the session checks first, and routing UI feedback through the world would put it into deterministic state.
+
+Two runtime findings shaped the implementation:
+
+- The compiled `Icons.atlasc` lists texture names with the `.png` extension, so the icon lookup accepts both forms.
+- The pan `DragGesture` cancelled the scene's touches, which broke drag-to-paint. It is now masked off while a build tool is armed.
 
 ### D7 — Compact labels use `lineLimit(1)` with `minimumScaleFactor(0.7)`
 

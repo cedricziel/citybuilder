@@ -33,21 +33,21 @@
 - [x] 3b.1 Tests-first: translate `#### Scenario: Content gate rejects a shifted operational frame` and `#### Scenario: Content gate accepts smoke above the roof` into failing tests in `SpriteContentGateTests`. Add pytest coverage for derived frames. Confirm red.
 - [x] 3b.2 Implement to green: add the `frame_misaligned` gate rule, `procedural.derive_operational`, and `operational = "derived"` support in the batcher (design D10).
 - [x] 3b.3 Mark all eleven building entries with operational frames as derived and run `make sprites-procedural`; `make sprites-verify` passes.
-- [ ] 3b.4 Runtime check in the simulator: operational buildings hold still and only the smoke moves.
+- [x] 3b.4 Runtime check in the simulator: operational buildings hold still and only the smoke moves.
 
 ## 4. M4 — HUD feedback, icons, compact layout
 
-- [ ] 4.1 Tests-first: translate `#### Scenario: Material shortfall message names the missing goods`, `#### Scenario: Occupied tile message`, `#### Scenario: Rejection message expires`, `#### Scenario: Bundled good icon resolves from the compiled atlas`, `#### Scenario: Missing good icon falls back to the symbol`, `#### Scenario: Compact money value uses grouped digits`, and `#### Scenario: Compact layout limits labels to one line` into failing tests in `CityUITests`. Confirm red.
-- [ ] 4.2 Implement to green: add `PlacementRejectionText` and `HUDViewModel.showRejection(_:now:)` with a 2.5 s expiry, and have `GameSession` forward rejected `canPlace` results (design D6).
-- [ ] 4.3 Implement to green: add an atlas resolver to `GoodIconLoader` and an `Origin.atlas(name:)` case (design D4).
-- [ ] 4.4 Implement to green: add the compact label configuration to `PlatformLayout` and grouped-digit money formatting. Apply both in the HUD and palette views (design D7).
-- [ ] 4.5 Runtime check in the simulator:
+- [x] 4.1 Tests-first: translate `#### Scenario: Material shortfall message names the missing goods`, `#### Scenario: Occupied tile message`, `#### Scenario: Rejection message expires`, `#### Scenario: Bundled good icon resolves from the compiled atlas`, `#### Scenario: Missing good icon falls back to the symbol`, `#### Scenario: Compact money value uses grouped digits`, and `#### Scenario: Compact layout limits labels to one line` into failing tests in `CityUITests`. Confirm red.
+- [x] 4.2 Implement to green: add `PlacementRejectionText` and `HUDViewModel.showRejection(_:now:)` with a 2.5 s expiry, and have `GameSession` forward rejected `canPlace` results (design D6).
+- [x] 4.3 Implement to green: add an atlas resolver to `GoodIconLoader` and an `Origin.atlas(name:)` case (design D4).
+- [x] 4.4 Implement to green: add the compact label configuration to `PlatformLayout` and grouped-digit money formatting. Apply both in the HUD and palette views (design D7).
+- [x] 4.5 Runtime check in the simulator:
   - The HUD shows three distinct good icons.
   - "$1,000" sits on one line.
   - Palette labels don't wrap.
   - Placing a house with too few planks shows "Needs N more planks" and the message clears after about 2.5 s.
-- [ ] 4.6 Refactor under a green bar.
-- [ ] 4.7 Verify that `make test-scenarios` is clean for the M4 scenarios.
+- [x] 4.6 Refactor under a green bar.
+- [x] 4.7 Verify that `make test-scenarios` is clean for the M4 scenarios.
 
 ## 5. M5 — Tooling and final verification
 
