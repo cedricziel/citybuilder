@@ -19,8 +19,9 @@ func scenarioFreshWorldTownCenterHoldsStarterGoods() throws {
     let world = World.newGame()
     let center = try #require(townCenter(in: world))
     let stockpile = try #require(world.stockpiles[center.id])
-    #expect(stockpile.quantity(of: .wood) == 4)
-    #expect(stockpile.quantity(of: .planks) == 2)
+    #expect(stockpile.quantity(of: .wood) == 6)
+    #expect(stockpile.quantity(of: .planks) == 4)
+    #expect(stockpile.quantity(of: .food) == 2)
 }
 
 @Test("scenario: starter goods are part of the island stockpile aggregate")
@@ -29,8 +30,9 @@ func scenarioStarterGoodsArePartOfTheIslandStockpileAggregate() throws {
     let snapshot = world.snapshot()
     let onlyIsland = try #require(world.islands.first?.id)
     let summary = try #require(snapshot.islandSummaries[onlyIsland])
-    #expect(summary.stockpile[.wood] == 4)
-    #expect(summary.stockpile[.planks] == 2)
+    #expect(summary.stockpile[.wood] == 6)
+    #expect(summary.stockpile[.planks] == 4)
+    #expect(summary.stockpile[.food] == 2)
 }
 
 @Test("scenario: archipelago seeds a town center on every island")

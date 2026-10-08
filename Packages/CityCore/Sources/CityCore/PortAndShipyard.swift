@@ -20,13 +20,17 @@ public extension World {
         return false
     }
 
-    /// Goods-buffer query — returns every warehouse and port in the
-    /// world, sorted by `EntityID.raw` so callers that pick "first
-    /// equidistant buffer" get deterministic tie-breaking.
+    /// Building kinds that take carrier deliveries and supply house
+    /// needs. Spec: `warehouses-and-logistics` / Goods buffer storage.
+    static let logisticsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .townCenter]
+
+    /// Goods-buffer query — returns every warehouse, port and town
+    /// center in the world, sorted by `EntityID.raw` so callers that
+    /// pick "first equidistant buffer" get deterministic tie-breaking.
     /// Spec: `warehouses-and-logistics` / Deterministic tie-break.
     func goodsBuffers() -> [Building] {
         buildings.values
-            .filter { $0.kind == .warehouse || $0.kind == .port }
+            .filter { Self.logisticsBufferKinds.contains($0.kind) }
             .sorted { $0.id.raw < $1.id.raw }
     }
 

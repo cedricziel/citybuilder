@@ -208,7 +208,7 @@ extension World {
                     )
                     break
                 }
-                guard let (warehouseId, path) = findRoadConnectedWarehouse(
+                guard let (warehouseId, path) = findRoadConnectedBuffer(
                     fromRoad: road, good: good
                 )
                 else { continue }
@@ -265,7 +265,8 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID]
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for (id, site) in buildings {
+        for site in buildings.values.sorted(by: { $0.id.raw < $1.id.raw }) {
+            let id = site.id
             guard site.state == .constructing else { continue }
             guard site.constructionState == .waitingForMaterials else { continue }
             let cost = BuildingCatalog.spec(for: site.kind).materialCost
@@ -318,25 +319,26 @@ extension World {
         return nil
     }
 
-    /// Find the road-connected warehouse with capacity for `good`. Returns
-    /// (warehouseId, road path) on the shortest path; nil if none reachable.
-    private func findRoadConnectedWarehouse(
+    /// Find the road-connected goods buffer with capacity for `good`.
+    /// Returns (bufferId, road path) on the shortest path; nil if none
+    /// reachable. Equal-length paths resolve to the lowest entity ID.
+    func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for (id, building) in buildings where building.kind == .warehouse && building.state == .operational {
-            let warehouseFootprint = BuildingCatalog.spec(for: .warehouse).footprint
-            guard let warehouseRoad = anyAdjacentRoad(
+        for building in goodsBuffers() where building.state == .operational {
+            let id = building.id
+            guard let bufferRoad = anyAdjacentRoad(
                 anchor: building.anchor,
-                footprint: warehouseFootprint
+                footprint: BuildingCatalog.spec(for: building.kind).footprint
             )
             else { continue }
             guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
             _ = good // future: check warehouse accepts this good type
             guard let path = PathFinder.path(
                 from: start,
-                to: warehouseRoad,
+                to: bufferRoad,
                 in: roadGraph
             )
             else { continue }
@@ -430,10 +432,10 @@ extension World {
     /// warehouses, not a full path-finding query. Carriers do the rest.
     func hasGoodInReach(_ good: Good, fromAnchor anchor: TileCoordinate, footprint: Footprint) -> Bool {
         guard roadGraph.isAnchorRoadConnected(anchor, footprint: footprint) else { return false }
-        for (id, building) in buildings where building.kind == .warehouse && building.state == .operational {
-            let stock = stockpiles[id] ?? Stockpile(capacity: 0)
-            guard stock.quantity(of: good) > 0 else { continue }
-            if roadGraph.isAnchorRoadConnected(building.anchor, footprint: BuildingCatalog.spec(for: .warehouse).footprint) {
+        for building in goodsBuffers() where building.state == .operational {
+            guard (stockpiles[building.id]?.quantity(of: good) ?? 0) > 0 else { continue }
+            let bufferFootprint = BuildingCatalog.spec(for: building.kind).footprint
+            if roadGraph.isAnchorRoadConnected(building.anchor, footprint: bufferFootprint) {
                 return true
             }
         }

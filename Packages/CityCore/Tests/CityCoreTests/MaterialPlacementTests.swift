@@ -261,11 +261,12 @@ func scenarioFirstLumberjackPlacementConsumesStarterWood() throws {
     world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
     _ = world.tick()
     // Town center (the only goods-buffer on a fresh world) goes
-    // from 4 wood → 2 wood, planks unchanged.
+    // from 6 wood → 4 wood; planks and food unchanged.
     let townCenter = try #require(world.buildings.values.first { $0.kind == .townCenter })
     let stockpile = try #require(world.stockpiles[townCenter.id])
-    #expect(stockpile.quantity(of: .wood) == 2)
-    #expect(stockpile.quantity(of: .planks) == 2)
+    #expect(stockpile.quantity(of: .wood) == 4)
+    #expect(stockpile.quantity(of: .planks) == 4)
+    #expect(stockpile.quantity(of: .food) == 2)
 }
 
 // MARK: - Test helpers

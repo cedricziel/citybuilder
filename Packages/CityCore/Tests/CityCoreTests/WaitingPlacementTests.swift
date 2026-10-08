@@ -94,7 +94,7 @@ func scenarioApplyPlaceMarksBuildingWaitingForMaterialsWhenPartiallySupplied() t
 func scenarioApplyPlaceMarksBuildingActivelyWhenFullySupplied() throws {
     var world = World.newGame()
     world.economy.credit(100_000)
-    // Town center starter is 4 wood + 2 planks; lumberjack costs 2 wood.
+    // Town center starter is 6 wood + 4 planks; lumberjack costs 2 wood.
     let anchor = try #require(firstFreeGrassAnchor2x2(in: world))
     world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
     _ = world.tick()

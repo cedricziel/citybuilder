@@ -55,10 +55,10 @@ func scenarioQueryReturnsGoodsBuffersOnTheNamedIslandOnly() {
         y: (firstIsland.bounds.minY + firstIsland.bounds.maxY) / 2
     )
     let stockpile1 = world.islandStockpile(at: center1, tileToIsland: map)
-    // Town center starter = 4 wood + 2 planks. If the scope leaked
-    // to other islands, totals would be 4 * islands wood.
-    #expect(stockpile1[.wood] == 4)
-    #expect(stockpile1[.planks] == 2)
+    // Town center starter = 6 wood + 4 planks. If the scope leaked
+    // to other islands, totals would be 6 * islands wood.
+    #expect(stockpile1[.wood] == 6)
+    #expect(stockpile1[.planks] == 4)
 }
 
 @Test("scenario: query order is shortest road-distance first")

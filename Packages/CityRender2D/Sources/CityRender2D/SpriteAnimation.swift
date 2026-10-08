@@ -45,16 +45,21 @@ public enum SpriteAnimation {
             case .forest, .mountain: nil
             }
         case let .buildingOperational(kind):
-            switch kind {
-            case .sawmill: Entry(frameCount: 4, timePerFrame: 0.18, loop: .forever)
-            case .lumberjackHut: Entry(frameCount: 2, timePerFrame: 0.35, loop: .forever)
-            case .townCenter: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
-            case .house, .warehouse, .road, .port, .shipyard: nil
-            }
+            operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
         case .walker:
             Entry(frameCount: 2, timePerFrame: 0.15, loop: .forever)
+        }
+    }
+
+    private static func operationalEntry(for kind: BuildingKind) -> Entry? {
+        switch kind {
+        case .sawmill: Entry(frameCount: 4, timePerFrame: 0.18, loop: .forever)
+        case .lumberjackHut: Entry(frameCount: 2, timePerFrame: 0.35, loop: .forever)
+        case .farm: Entry(frameCount: 2, timePerFrame: 0.50, loop: .forever)
+        case .townCenter: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
+        case .house, .warehouse, .road, .port, .shipyard: nil
         }
     }
 
@@ -91,7 +96,9 @@ public enum SpriteAnimation {
     public static func loopingAction(for key: AnimationKey) -> SKAction? {
         var hit: SKAction?
         actionCacheQueue.sync { hit = actionCache[key] }
-        if let hit { return hit }
+        if let hit {
+            return hit
+        }
 
         guard let entry = entry(for: key),
               entry.loop == .forever,

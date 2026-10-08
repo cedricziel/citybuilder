@@ -385,12 +385,13 @@ public struct World: Codable, Sendable, Equatable {
     }
 
     /// Default stockpile capacity per building kind. nil means "this kind
-    /// has no stockpile" — e.g. roads and the town center.
-    private static func stockpileCapacity(for kind: BuildingKind) -> Int? {
+    /// has no stockpile" — e.g. roads.
+    static func stockpileCapacity(for kind: BuildingKind) -> Int? {
         switch kind {
         case .warehouse: 200
-        case .lumberjackHut, .sawmill: 16
-        case .house, .townCenter: 8
+        case .lumberjackHut, .sawmill, .farm: 16
+        case .house: 8
+        case .townCenter: 40
         case .road: nil
         case .port: 200
         case .shipyard: 64
