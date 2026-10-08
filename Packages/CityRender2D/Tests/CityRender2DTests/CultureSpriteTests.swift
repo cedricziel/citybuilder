@@ -107,3 +107,20 @@ func scenarioEveryCultureVariantIsCatalogued() {
     #expect(IsoWorldScene.cultureVariantKinds.count * 3 == 12)
     #expect(missing.isEmpty, "missing: \(missing)")
 }
+
+@Test("scenario: every age house is catalogued")
+func scenarioEveryAgeHouseIsCatalogued() {
+    let catalog = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Resources/Sprites.style/catalog")
+    var ids = ["building-quern-house"]
+    for age in Age.allCases where age != .medieval {
+        for culture in Culture.allCases {
+            ids.append(culture == .northernEuropean ? "building-house-\(age.rawValue)"
+                : "building-house-\(age.rawValue)-\(culture.rawValue)")
+        }
+    }
+    let missing = ids.filter { !FileManager.default.fileExists(atPath: catalog.appendingPathComponent("\($0).md").path) }
+    #expect(missing.isEmpty, "missing: \(missing)")
+}
