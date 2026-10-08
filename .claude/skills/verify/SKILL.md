@@ -36,6 +36,10 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 
 ## Gotchas
 
+- **One simulator per session.** Parallel sessions on this repo install builds with the same bundle id. If two share a simulator, each overwrites the other's app and data container: saves appear or vanish, and Continue fails with errors from code you didn't write. Pick a simulator no other session is using, and when the app misbehaves, check `log show --predicate 'process == "Citybuilder"'` for messages your branch doesn't contain.
+- **Continue row loads asynchronously.** Right after launch, New Game sits where Continue will appear. Wait about 3 s before tapping.
+- **Finding a tile's screen position.** With no tool armed, tap a building; the inspector shows its anchor. From two such points you can work out the tile pitch (at zoom 1 an x-step is about (+32.5, +16) pt).
+
 - **Stale art after sprite changes.** Incremental `xcodebuild` doesn't recompile an `*.atlas` folder when PNGs inside it change, because the folder's own timestamp stays the same. Run `touch Resources/*.atlas` before building, then check that the timestamp of `Citybuilder.app/Terrain.atlasc/Terrain.1.png` is new.
 
 - Sheet transitions are slow. Take a second screenshot before deciding a tap failed.
