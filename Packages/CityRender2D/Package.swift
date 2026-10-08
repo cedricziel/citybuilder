@@ -8,7 +8,8 @@ let package = Package(
         .macOS(.v15)
     ],
     products: [
-        .library(name: "CityRender2D", targets: ["CityRender2D"])
+        .library(name: "CityRender2D", targets: ["CityRender2D"]),
+        .executable(name: "sprite-content-gate", targets: ["SpriteContentGateCLI"])
     ],
     dependencies: [
         .package(path: "../CityCore")
@@ -19,10 +20,24 @@ let package = Package(
             dependencies: ["CityCore"],
             path: "Sources/CityRender2D"
         ),
+        .target(
+            name: "SpriteContentGate",
+            path: "Sources/SpriteContentGate"
+        ),
+        .executableTarget(
+            name: "SpriteContentGateCLI",
+            dependencies: ["SpriteContentGate"],
+            path: "Sources/SpriteContentGateCLI"
+        ),
         .testTarget(
             name: "CityRender2DTests",
             dependencies: ["CityRender2D"],
             path: "Tests/CityRender2DTests"
+        ),
+        .testTarget(
+            name: "SpriteContentGateTests",
+            dependencies: ["SpriteContentGate"],
+            path: "Tests/SpriteContentGateTests"
         )
     ]
 )

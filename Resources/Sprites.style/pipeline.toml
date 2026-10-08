@@ -42,6 +42,13 @@ background = "transparent"
 # crisp after nearest-neighbour downsampling.
 alpha_threshold = 128
 
+# Content gate (`make sprites-verify`): maximum chi-squared distance
+# between an animation frame's or variant's 16-bin palette histogram
+# and its base sprite's. Calibrated on the e57823e atlas: known-good
+# frames (grass, road variants, lumberjack, mountain-v3) stay below
+# 0.3; the broken water and beach frames land above it.
+coherence_max_distance = 0.3
+
 # Concurrent /v1/images/edits calls in a single `make sprites` run.
 # Tuned by the spike at 4 — within tier rate limits, completes a
 # full regen in ~2 minutes wall-clock. Tighten to 1 if a contributor
