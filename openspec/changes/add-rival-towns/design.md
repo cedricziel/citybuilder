@@ -38,7 +38,7 @@ See proposal.md (Why). Relevant facts about the model at the base commit:
 
 ### D3 — Island ownership and the placement rule
 
-`World.owner(ofIsland:)` returns the rival whose `islandID` matches, otherwise `.player`. `canPlace(_:at:for owner: Owner = .player)` adds one check before the tech check: every land tile of the footprint must lie on an island owned by `owner`; otherwise `canPlace` returns `.rejected(.foreignIsland(RivalID))`, naming the rival that owns the island. (Rivals only search their own island, so the rejection is only ever shown to the player.) Water tiles of shore buildings are not checked.
+`World.owner(ofIsland:)` returns the rival whose `islandID` matches, otherwise `.player`. `canPlace(_:at:for owner: Owner = .player)` adds one check before the tech check: every land tile of the footprint must lie on an island owned by `owner`; otherwise `canPlace` returns `.rejected(.foreignIsland(Owner))`, naming the island's owner. The payload is an `Owner` rather than a `RivalID` so a rival probing a player island gets a well-formed answer too. (Rivals only search their own island, so in play the rejection is only ever shown to the player, naming a rival.) Water tiles of shore buildings are not checked.
 
 - **Demolish:** `.demolish(at:)` from the player is ignored when the building's owner is a rival. Town centers stay demolishable by their owner, as today.
 - **Forests:** `.harvestForest(at:)` is ignored on a rival island.
@@ -123,7 +123,7 @@ After its turn a rival checks its residents (all tiers) against the next age's t
 
 - **New Game:** a "Rival towns" toggle, visible only for the Archipelago layout in Sandbox mode, default on. Choosing Island Rivalry forces the layout to Archipelago and disables the layout picker.
 - **Standings panel:** a HUD button (trophy icon) shown when the world has rivals, opening a list with one row per standing: colour swatch, name, population, age name and wealth (`$1,234`). The player's row is bold.
-- **Rejection text:** `.foreignIsland(id)` reads "<Rival name>'s island — you can't build here."
+- **Rejection text:** `.foreignIsland(.rival(id))` reads "<Rival name>'s island — you can't build here."
 - **Inspector:** on a rival building it shows the rival's name and colour above the building name, uses the rival's culture tier names, and hides Demolish.
 - **Island HUD:** when the camera's island belongs to a rival, the island overlay shows "<name> (rival)" and hides the stocks row.
 - **Banner:** `rivalAgeAdvanced` shows "<name> enters the <Age>".

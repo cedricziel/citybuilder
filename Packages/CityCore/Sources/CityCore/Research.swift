@@ -151,12 +151,12 @@ extension World {
     /// Spec: `research` / Knowledge accumulates, Choosing research.
     mutating func runResearchSystem(events: inout [WorldEvent]) {
         if tickCount.isMultiple(of: Self.libraryKnowledgeIntervalTicks) {
-            research.knowledge += buildings.values.count { $0.kind == .library && $0.state == .operational }
+            research.knowledge += buildings.values.count {
+                $0.kind == .library && $0.state == .operational && $0.owner == .player
+            }
         }
         if tickCount.isMultiple(of: Self.residentKnowledgeIntervalTicks) {
-            research.knowledge += populations.values
-                .filter { $0.tier >= .citizens }
-                .reduce(0) { $0 + Int($1.population) }
+            research.knowledge += residents(atLeast: .citizens)
         }
         guard let tech = research.current else { return }
         research.progress += research.knowledge
@@ -172,13 +172,18 @@ extension World {
         }
     }
 
-    /// Tech lock and terrain requirement, checked by `canPlace`.
-    func researchOrTerrainRejection(_ kind: BuildingKind, tiles: [TileCoordinate]) -> PlacementRejection? {
-        if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
-            return .locked(tech)
-        }
-        if let tech = kind.obsoletedBy, research.isResearched(tech) {
-            return .obsolete(tech)
+    /// Tech lock and terrain requirement, checked by `canPlace`. Rivals
+    /// don't research, so they skip the lock and the obsolete check.
+    func researchOrTerrainRejection(
+        _ kind: BuildingKind, tiles: [TileCoordinate], for owner: Owner = .player
+    ) -> PlacementRejection? {
+        if owner == .player {
+            if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
+                return .locked(tech)
+            }
+            if let tech = kind.obsoletedBy, research.isResearched(tech) {
+                return .obsolete(tech)
+            }
         }
         if let required = BuildingCatalog.spec(for: kind).requiredTerrain {
             let matching = tiles.count { terrain(at: $0) == required.terrain }

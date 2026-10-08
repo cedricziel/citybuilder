@@ -132,7 +132,7 @@ public extension World {
     /// Extract a render-ready snapshot. O(N) in map size; intended to be
     /// called once per render frame, not once per draw call.
     func snapshot() -> WorldSnapshot {
-        let pop = populations.values.reduce(UInt64(0)) { $0 + UInt64($1.population) }
+        let pop = UInt64(population(of: .player))
         let tileToIsland = tileToIslandMap()
         let summaries = buildIslandSummaries(tileToIsland: tileToIsland)
         return WorldSnapshot(

@@ -360,11 +360,16 @@ extension World {
     mutating func runEconomySystem(events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
-            // Spec: `population-and-needs` / Taxes scale with tier.
-            let amount = populations.values.reduce(Int64(0)) {
-                $0 + Int64($1.population) * $1.tier.taxPerResident * Economy.taxPerPopUnit
+            // Spec: `population-and-needs` / Taxes scale with tier; each
+            // house pays its owner (spec `economy` / Each owner has its
+            // own purse).
+            var taxes: [Owner: Int64] = [:]
+            for (id, pop) in populations {
+                taxes[owner(of: id), default: 0] += Int64(pop.population) * pop.tier.taxPerResident * Economy.taxPerPopUnit
             }
+            let amount = taxes.removeValue(forKey: .player) ?? 0
             economy.credit(amount)
+            creditRivals(taxes)
             // Only emit when actual money flowed — `taxesCollected` is a
             // meaningful event the audio layer binds to a coin sound, not
             // a 5-second heartbeat for empty cities.
@@ -373,12 +378,14 @@ extension World {
             }
         }
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
-            var totalUpkeep: Int64 = 0
+            var upkeep: [Owner: Int64] = [:]
             for building in buildings.values where building.state == .operational {
-                totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
+                upkeep[building.owner, default: 0] += BuildingCatalog.spec(for: building.kind).upkeep
             }
-            totalUpkeep = difficulty.scaledUpkeep(totalUpkeep)
+            // Difficulty scaling applies to the player only.
+            let totalUpkeep = difficulty.scaledUpkeep(upkeep.removeValue(forKey: .player) ?? 0)
             economy.deduct(totalUpkeep)
+            creditRivals(upkeep.mapValues { -$0 })
             // Same as above — empty cities and free-upkeep buildings shouldn't
             // generate a per-interval no-op event.
             if totalUpkeep > 0 {
@@ -404,6 +411,14 @@ extension World {
             if priorDeficitTicks > 0 {
                 events.append(.bankruptcyResolved)
             }
+        }
+    }
+
+    /// Books per-rival amounts in rival ID order. Rivals never go
+    /// bankrupt; a negative treasury only makes them wait.
+    private mutating func creditRivals(_ amounts: [Owner: Int64]) {
+        for (owner, amount) in amounts.sorted(by: { ($0.key.rivalID ?? 0) < ($1.key.rivalID ?? 0) }) {
+            credit(amount, to: owner)
         }
     }
 

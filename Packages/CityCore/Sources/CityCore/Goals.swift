@@ -69,9 +69,9 @@ public enum Scenario: String, CaseIterable, Hashable, Sendable {
 extension World {
     static let goalCheckIntervalTicks: UInt64 = 10
 
-    /// Units of `good` held by all goods buffers.
+    /// Units of `good` held by the player's goods buffers.
     public func storedQuantity(of good: Good) -> Int {
-        goodsBuffers().reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
+        goodsBuffers(of: .player).reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
     }
 
     /// Current value toward a goal, and its target.

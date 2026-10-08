@@ -1,7 +1,7 @@
 ## 1. M1 — Ownership and rival setup
 
-- [ ] 1.1 Tests-first: translate the buildings-and-construction, sea-transport, economy and population-and-needs scenarios, and the rival-towns scenarios "Rivals in archipelago games", "Rival identity", "Rival purse" and "Rivals don't share the player's effects", into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Owner`, `RivalID`, `RivalTown`, `RivalColour`, `Building.owner` and `Ship.owner` with tolerant decoders, `World.rivals`, home and rival island selection, rival cultures, colours and treasuries, `newGame(... rivals:)`, `owner(ofIsland:)`, owner-aware `canPlace` with `.foreignIsland`, demolish and harvest guards, per-owner tax and upkeep, `goodsBuffers(of:)` and the player-only filters (design D1–D3, D7).
+- [x] 1.1 Tests-first: translate the buildings-and-construction, sea-transport, economy and population-and-needs scenarios, and the rival-towns scenarios "Rivals in archipelago games", "Rival identity", "Rival purse" and "Rivals don't share the player's effects", into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Owner`, `RivalID`, `RivalTown`, `RivalColour`, `Building.owner` and `Ship.owner` with tolerant decoders, `World.rivals`, home and rival island selection, rival cultures, colours and treasuries, `newGame(... rivals:)`, `owner(ofIsland:)`, owner-aware `canPlace` with `.foreignIsland`, demolish and harvest guards, `Command.rivalPlace` and `applyPlace(... owner:)` (pulled forward from 2.2 for the "Rival placement" scenario), per-owner tax and upkeep, `goodsBuffers(of:)` and the player-only filters (design D1–D3, D7).
 
 ## 2. M2 — Rival AI
 

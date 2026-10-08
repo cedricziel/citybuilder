@@ -35,7 +35,8 @@ public extension World {
         seed: UInt64,
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
-        difficulty: Difficulty = .normal
+        difficulty: Difficulty = .normal,
+        rivals: Bool = true
     ) -> World {
         let grid: [TerrainType]
         let width: Int
@@ -66,6 +67,9 @@ public extension World {
         world.calendar = CalendarState(startYear: age.startYear, isActive: true)
         world.culture = culture
         world.age = age
+        if layout == .archipelago, rivals {
+            world.seedRivals()
+        }
         return world
     }
 

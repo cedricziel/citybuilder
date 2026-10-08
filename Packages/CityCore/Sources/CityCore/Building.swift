@@ -293,6 +293,9 @@ public struct Building: Hashable, Codable, Sendable {
     /// .waitingForMaterials`, the building tracks accumulation here;
     /// once the map satisfies `materialCost` it flips to `.actively`.
     public var materialsDelivered: [Good: Int]
+    /// The player or a rival. Spec: `buildings-and-construction` /
+    /// Buildings have an owner.
+    public internal(set) var owner: Owner
 
     public init(
         id: EntityID,
@@ -304,7 +307,8 @@ public struct Building: Hashable, Codable, Sendable {
         seaFaceTiles: [TileCoordinate] = [],
         shipAnchor: TileCoordinate? = nil,
         constructionState: ConstructionState = .actively,
-        materialsDelivered: [Good: Int] = [:]
+        materialsDelivered: [Good: Int] = [:],
+        owner: Owner = .player
     ) {
         self.id = id
         self.kind = kind
@@ -316,6 +320,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.shipAnchor = shipAnchor
         self.constructionState = constructionState
         self.materialsDelivered = materialsDelivered
+        self.owner = owner
     }
 }
 
@@ -347,6 +352,7 @@ public extension Building {
         self.materialsDelivered = try container.decodeIfPresent(
             [Good: Int].self, forKey: .materialsDelivered
         ) ?? [:]
+        self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
     }
 }
 

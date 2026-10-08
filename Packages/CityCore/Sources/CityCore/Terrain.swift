@@ -43,6 +43,10 @@ public enum PlacementRejection: Hashable, Sendable {
     /// A later tech replaced this building. Spec: `historical-ages` /
     /// Obsolete buildings.
     case obsolete(Tech)
+    /// A land tile lies on an island owned by someone else, named here.
+    /// Spec: `buildings-and-construction` / Placement on another owner's
+    /// island is rejected.
+    case foreignIsland(Owner)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -56,6 +60,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .needsTerrain: "needs_terrain"
         case .locked: "locked"
         case .obsolete: "obsolete"
+        case .foreignIsland: "foreign_island"
         }
     }
 }

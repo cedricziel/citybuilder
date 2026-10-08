@@ -108,7 +108,7 @@ extension World {
     public mutating func applyHistoryEvent(_ event: HistoryEvent) {
         switch event {
         case .bountifulHarvest:
-            guard let buffer = goodsBuffers().first(where: { $0.state == .operational }),
+            guard let buffer = goodsBuffers(of: .player).first(where: { $0.state == .operational }),
                   var stockpile = stockpiles[buffer.id]
             else { return }
             let room = stockpile.capacity - stockpile.totalStored
@@ -119,7 +119,7 @@ extension World {
         case .travellingScholar:
             research.knowledge += Self.scholarKnowledge
         case .ratsInTheGranary:
-            for buffer in goodsBuffers() where buffer.state == .operational {
+            for buffer in goodsBuffers(of: .player) where buffer.state == .operational {
                 let food = stockpiles[buffer.id]?.quantity(of: .food) ?? 0
                 stockpiles[buffer.id]?.withdraw(.food, amount: food / 2)
             }
