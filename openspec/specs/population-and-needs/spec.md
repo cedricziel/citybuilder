@@ -106,7 +106,7 @@ Each house SHALL belong to one of three tiers: peasants (1), citizens (2) and me
 |---|---|---|
 | Peasants | 4 | food |
 | Citizens | 6 | food, planks |
-| Merchants | 8 | food, planks, bread |
+| Merchants | 8 | food, planks, bread, tools |
 
 A house's population grows towards its tier's capacity while that tier's needs are met. A house MUST report each need of its current tier as satisfied or unmet.
 
@@ -120,6 +120,11 @@ A house's population grows towards its tier's capacity while that tier's needs a
 - **WHEN** a peasant house shares a road network with a buffer holding food but no planks, and enough ticks pass for growth
 - **THEN** its population increases
 
+#### Scenario: Citizens cannot become merchants without tools
+
+- **WHEN** a full citizen house has food, planks and bread in reach but no tools for 120 ticks
+- **THEN** it stays citizens
+
 ### Requirement: Houses advance and decline between tiers
 
 A house at full capacity whose next tier's needs are all met for 120 consecutive ticks SHALL move up one tier. A house whose current tier's needs are not all met for 120 consecutive ticks SHALL move down one tier (never below peasants), and its population MUST be reduced to the lower tier's capacity if it exceeds it.
@@ -131,7 +136,7 @@ A house at full capacity whose next tier's needs are all met for 120 consecutive
 
 #### Scenario: Citizens with bread become merchants
 
-- **WHEN** a citizen house with 6 residents shares a road network with a buffer holding food, planks and bread for 120 ticks
+- **WHEN** a citizen house with 6 residents shares a road network with a buffer holding food, planks, bread and tools for 120 ticks
 - **THEN** the house becomes merchants with capacity 8
 
 #### Scenario: Merchants without bread decline to citizens
@@ -147,3 +152,12 @@ Tax income per resident SHALL be 1 for peasants, 2 for citizens and 4 for mercha
 
 - **WHEN** one tax interval passes with a single merchant house of 8 residents and no other population
 - **THEN** the money balance increases by 32
+
+### Requirement: Merchants consume tools
+
+Merchant houses SHALL consume 1 tools per 8 residents (rounded up) each consumption interval, drawn from goods buffers on their road network like their other needs.
+
+#### Scenario: Merchants consume tools
+
+- **WHEN** the consumption interval elapses for a merchant house with 8 residents next to a buffer holding food, planks, bread and 5 tools
+- **THEN** the buffer holds 4 tools
