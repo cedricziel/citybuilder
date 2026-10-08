@@ -28,6 +28,8 @@ public struct GoalsPanelModel: Equatable {
             return "Reach the \(age.displayName) age"
         case let .stock(good, _):
             return "\(GoodsCatalog.spec(for: good).displayName) \(progress.current)/\(progress.target)"
+        case .outgrowRivals:
+            return "Outgrow every rival \(progress.current)/\(progress.target)"
         }
     }
 }

@@ -36,6 +36,38 @@ public extension World {
     }
 }
 
+/// One town's row in the standings (design D9).
+public struct TownStanding: Hashable, Sendable {
+    public let owner: Owner
+    public let name: String
+    public let colourHex: String
+    public let population: Int
+    public let age: Age
+    /// The player's balance or the rival's treasury.
+    public let wealth: Int64
+}
+
+public extension World {
+    /// Every town by population, ties with the player first, then by
+    /// rival ID. Spec: `rival-towns` / Standings.
+    func standings() -> [TownStanding] {
+        let you = TownStanding(
+            owner: .player, name: "You", colourHex: RivalColour.playerHex,
+            population: population(of: .player), age: age, wealth: economy.balance
+        )
+        let others = rivals.map { rival in
+            TownStanding(
+                owner: rival.owner, name: rival.name, colourHex: rival.colour.hex,
+                population: population(of: rival.owner), age: rival.age, wealth: rival.treasury
+            )
+        }
+        // `rivals` is sorted by ID, so a stable sort keeps the tie order.
+        return ([you] + others).enumerated()
+            .sorted { ($0.element.population, $1.offset) > ($1.element.population, $0.offset) }
+            .map(\.element)
+    }
+}
+
 extension World {
     /// The building a player command targets, when it is the player's
     /// and of `kind`; player commands never reach a rival's buildings.

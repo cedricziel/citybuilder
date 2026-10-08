@@ -11,8 +11,8 @@
 
 ## 3. M3 — Standings, goal and scenario
 
-- [ ] 3.1 Tests-first: translate "Standings", "Outgrow every rival" and "Island Rivalry scenario". Confirm red.
-- [ ] 3.2 Implement to green: `World.standings()`, `Goal.outgrowRivals` and its progress, `Scenario.requiredLayout`, `Scenario.islandRivalry` (D9).
+- [x] 3.1 Tests-first: translate "Standings", "Outgrow every rival" and "Island Rivalry scenario". Confirm red.
+- [x] 3.2 Implement to green: `World.standings()`, `Goal.outgrowRivals` and its progress, `Scenario.requiredLayout`, `Scenario.islandRivalry` (D9).
 
 ## 4. M4 — Persistence
 
