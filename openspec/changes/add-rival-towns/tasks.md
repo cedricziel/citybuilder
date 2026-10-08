@@ -28,4 +28,5 @@
 ## 6. M6 — Verification
 
 - [ ] 6.1 Runtime check: start a Hard archipelago sandbox, pan to the south-east island and watch the rival lay roads and build with pennants in its own culture; try to place a house there and see the rejection; open the standings panel. Let the game run for 6,000 ticks (10 simulated minutes) and record each rival's population, age and wealth from the standings panel.
-- [ ] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-rival-towns --strict`.
+  - Headless baseline (not this check): a Hard archipelago, seed 42, with no player commands, after 6,000 ticks in a debug build: rival 1 8 residents, Medieval, $463; rival 2 10, Medieval, $147; rival 3 10, Medieval, $813. Each has 5–6 houses, 1–2 farms and 6–8 lumberjack huts; growth is bounded by the forest near the town center and by money. The design's original rules left all three at 0 residents.
+- [x] 6.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-rival-towns --strict`.
