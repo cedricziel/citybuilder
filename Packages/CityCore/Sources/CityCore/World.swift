@@ -313,11 +313,7 @@ public struct World: Codable, Sendable, Equatable {
         case let .chooseResearch(tech):
             applyChooseResearch(tech)
         case let .harvestForest(coord):
-            // Forests becoming grass when harvested per spec
-            // `world-terrain` ("Forest tile can be cleared").
-            guard contains(coord), terrain(at: coord) == .forest else { return }
-            terrainGrid[coord.y * mapWidth + coord.x] = .grass
-            events.append(.forestHarvested(at: coord))
+            applyHarvestForest(at: coord, events: &events)
         case let .place(kind, anchor):
             applyPlace(kind: kind, anchor: anchor, events: &events)
         case let .demolish(anchor):
@@ -334,7 +330,17 @@ public struct World: Codable, Sendable, Equatable {
             applyUnassignShip(shipID: shipID)
         case let .commission(gallery):
             applyCommission(gallery, events: &events)
+        case let .setExport(caravanserai, good):
+            applySetExport(caravanserai, good: good)
         }
+    }
+
+    /// Forests becoming grass when harvested per spec `world-terrain`
+    /// ("Forest tile can be cleared").
+    private mutating func applyHarvestForest(at coord: TileCoordinate, events: inout [WorldEvent]) {
+        guard contains(coord), terrain(at: coord) == .forest else { return }
+        terrainGrid[coord.y * mapWidth + coord.x] = .grass
+        events.append(.forestHarvested(at: coord))
     }
 
     private mutating func applyPlace(

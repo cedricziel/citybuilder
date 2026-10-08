@@ -148,6 +148,7 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .monumentCompleted: return "monumentCompleted"
         case .commissionStarted: return "commissionStarted"
         case .commissionEnded: return "commissionEnded"
+        case .caravanSold: return "caravanSold"
         }
     }
 }

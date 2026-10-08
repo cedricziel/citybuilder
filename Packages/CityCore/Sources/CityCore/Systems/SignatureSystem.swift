@@ -6,6 +6,7 @@ extension World {
     /// sees this tick's fuel state (design D5).
     mutating func runSignatureSystem(events: inout [WorldEvent]) {
         burnFuel(events: &events)
+        sendCaravans(events: &events)
         countDownCommissions(events: &events)
     }
 

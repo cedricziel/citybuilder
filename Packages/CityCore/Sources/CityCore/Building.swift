@@ -344,6 +344,8 @@ public struct Building: Hashable, Codable, Sendable {
     /// The good a caravanserai's caravans sell first. Spec:
     /// `culture-signatures` / The caravanserai exports a chosen good.
     public var exportGood: Good?
+    /// What the caravanserai's last caravan sold, nil before its first.
+    public var lastCaravan: CaravanSale?
 
     public init(
         id: EntityID,
@@ -359,7 +361,8 @@ public struct Building: Hashable, Codable, Sendable {
         projectStages: UInt8 = 0,
         fuelled: Bool = false,
         commissionTicksLeft: UInt32 = 0,
-        exportGood: Good? = nil
+        exportGood: Good? = nil,
+        lastCaravan: CaravanSale? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -375,6 +378,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.fuelled = fuelled
         self.commissionTicksLeft = commissionTicksLeft
         self.exportGood = exportGood
+        self.lastCaravan = lastCaravan
     }
 }
 
@@ -385,8 +389,8 @@ public extension Building {
     /// saves missing the construction-stalls fields default to the
     /// post-migration values (`.actively`, empty delivered); saves
     /// without the age-signature fields load as stage 0, unfuelled and
-    /// without a commission, and buildings without an export good have
-    /// none.
+    /// without a commission, and buildings without an export good or a
+    /// last caravan have none.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(EntityID.self, forKey: .id)
@@ -413,6 +417,7 @@ public extension Building {
         self.fuelled = try container.decodeIfPresent(Bool.self, forKey: .fuelled) ?? false
         self.commissionTicksLeft = try container.decodeIfPresent(UInt32.self, forKey: .commissionTicksLeft) ?? 0
         self.exportGood = try container.decodeIfPresent(Good.self, forKey: .exportGood)
+        self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
     }
 }
 

@@ -95,8 +95,10 @@ extension World {
     /// whose output stockpiles have something to ship.
     mutating func runCarrierSystem(events: inout [WorldEvent]) {
         advanceCarriers(events: &events)
-        spawnCarriersFromProducers(events: &events)
+        let tileToIsland = tileToIslandMap()
+        spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
         spawnSupplyCarriers(events: &events)
+        spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
@@ -191,8 +193,10 @@ extension World {
         }
     }
 
-    private mutating func spawnCarriersFromProducers(events: inout [WorldEvent]) {
-        let tileToIsland = tileToIslandMap()
+    private mutating func spawnCarriersFromProducers(
+        tileToIsland: [TileCoordinate: IslandID],
+        events: inout [WorldEvent]
+    ) {
         for (producerId, building) in buildings where building.state == .operational {
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
@@ -304,7 +308,7 @@ extension World {
         return best
     }
 
-    private func islandFor(
+    func islandFor(
         building: Building,
         tileToIsland: [TileCoordinate: IslandID]
     ) -> IslandID? {

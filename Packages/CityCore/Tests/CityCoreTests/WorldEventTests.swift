@@ -8,41 +8,44 @@ import Testing
 
 // MARK: - Enum surface
 
+/// One event of every case.
+private let eventSamples: [WorldEvent] = [
+    .buildingPlaced(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
+    .buildingDemolished(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
+    .constructionCompleted(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
+    .materialsDeducted(building: EntityID(raw: 1), cost: [.wood: 2]),
+    .constructionWaitingForMaterials(building: EntityID(raw: 1), missing: [.wood: 1]),
+    .constructionStarted(building: EntityID(raw: 1)),
+    .forestHarvested(at: TileCoordinate(x: 0, y: 0)),
+    .carrierDeparted(carrier: EntityID(raw: 1), from: TileCoordinate(x: 0, y: 0), good: .wood),
+    .carrierArrived(carrier: EntityID(raw: 1), at: TileCoordinate(x: 0, y: 0), good: .wood, amount: 1),
+    .productionCycleCompleted(producer: EntityID(raw: 1), kind: .sawmill),
+    .productionStalled(producer: EntityID(raw: 1), kind: .sawmill),
+    .productionResumed(producer: EntityID(raw: 1), kind: .sawmill),
+    .placementRejected(kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
+    .taxesCollected(amount: 100),
+    .upkeepPaid(amount: 50),
+    .bankruptcyWarning(deficitTicks: 1),
+    .bankruptcyResolved,
+    .gameOver,
+    .seasonChanged(.summer),
+    .historyEvent(.tradeCaravan),
+    .ageAdvanced(.renaissance),
+    .scenarioWon,
+    .fuelRanOut(building: EntityID(raw: 1), kind: .steamEngine),
+    .monumentCompleted(building: EntityID(raw: 1)),
+    .commissionStarted(building: EntityID(raw: 1)),
+    .commissionEnded(building: EntityID(raw: 1)),
+    .caravanSold(building: EntityID(raw: 1), goods: [.bread: 4], revenue: 48)
+]
+
 @Test("scenario: event enum is exhaustive over mvp capabilities")
 func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
     // Construct one event of every case. Exhaustiveness is enforced by the
     // case-less switch below: removing a case breaks the construction;
     // adding a case without updating the test makes the compiler warn.
-    let samples: [WorldEvent] = [
-        .buildingPlaced(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
-        .buildingDemolished(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
-        .constructionCompleted(building: EntityID(raw: 1), kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
-        .materialsDeducted(building: EntityID(raw: 1), cost: [.wood: 2]),
-        .constructionWaitingForMaterials(building: EntityID(raw: 1), missing: [.wood: 1]),
-        .constructionStarted(building: EntityID(raw: 1)),
-        .forestHarvested(at: TileCoordinate(x: 0, y: 0)),
-        .carrierDeparted(carrier: EntityID(raw: 1), from: TileCoordinate(x: 0, y: 0), good: .wood),
-        .carrierArrived(carrier: EntityID(raw: 1), at: TileCoordinate(x: 0, y: 0), good: .wood, amount: 1),
-        .productionCycleCompleted(producer: EntityID(raw: 1), kind: .sawmill),
-        .productionStalled(producer: EntityID(raw: 1), kind: .sawmill),
-        .productionResumed(producer: EntityID(raw: 1), kind: .sawmill),
-        .placementRejected(kind: .house, anchor: TileCoordinate(x: 0, y: 0)),
-        .taxesCollected(amount: 100),
-        .upkeepPaid(amount: 50),
-        .bankruptcyWarning(deficitTicks: 1),
-        .bankruptcyResolved,
-        .gameOver,
-        .seasonChanged(.summer),
-        .historyEvent(.tradeCaravan),
-        .ageAdvanced(.renaissance),
-        .scenarioWon,
-        .fuelRanOut(building: EntityID(raw: 1), kind: .steamEngine),
-        .monumentCompleted(building: EntityID(raw: 1)),
-        .commissionStarted(building: EntityID(raw: 1)),
-        .commissionEnded(building: EntityID(raw: 1))
-    ]
-    #expect(samples.count == 26)
-    for event in samples {
+    #expect(eventSamples.count == 27)
+    for event in eventSamples {
         switch event {
         case .buildingPlaced,
              .buildingDemolished,
@@ -69,7 +72,8 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .fuelRanOut,
              .monumentCompleted,
              .commissionStarted,
-             .commissionEnded:
+             .commissionEnded,
+             .caravanSold:
             break
         }
     }

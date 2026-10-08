@@ -10,8 +10,8 @@
 
 ## 3. M3 — Caravanserai
 
-- [ ] 3.1 Tests-first: translate the export and caravan scenarios and "Caravan income is not tax". Confirm red.
-- [ ] 3.2 Implement to green: `Command.setExport`, export supply with the 8-unit cap and the 10-unit island reserve, caravans in `runSignatureSystem` after fuel burns, sale order, revenue to the owner, `WorldEvent.caravanSold` (D7).
+- [x] 3.1 Tests-first: translate the export and caravan scenarios and "Caravan income is not tax". Confirm red.
+- [x] 3.2 Implement to green: `Command.setExport`, export supply with the 8-unit cap and the 10-unit island reserve, caravans in `runSignatureSystem` after fuel burns, sale order, revenue to the owner, `WorldEvent.caravanSold` (D7).
 
 ## 4. M4 — Art
 
