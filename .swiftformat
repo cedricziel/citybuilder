@@ -32,5 +32,5 @@
 --importgrouping testable-bottom
 
 # Disabled rules that conflict with SwiftLint or are noisy
---disable redundantSelf,redundantReturn
+--disable redundantSelf,redundantReturn,wrapIfStatementBodies,wrapIfExpressionBodies
 --enable isEmpty,blankLinesAroundMark,blankLinesBetweenScopes,redundantParens,trailingCommas
