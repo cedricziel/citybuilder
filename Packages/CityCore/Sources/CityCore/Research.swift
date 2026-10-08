@@ -51,7 +51,10 @@ public enum Tech: String, Codable, Sendable, CaseIterable, Comparable {
         case .metallurgy: [.smelter, .toolsmith]
         case .seafaring: [.port, .shipyard]
         case .cultivation: Culture.luxuryBuildings
-        case .feudalOrder, .printingPress, .steamPower, .electricity: []
+        case .feudalOrder: [.guildHall]
+        case .printingPress: [.gallery]
+        case .steamPower: [.steamEngine]
+        case .electricity: [.powerPlant]
         }
     }
 

@@ -1,7 +1,7 @@
 ## 1. M1 — Catalog, unlocks and ranges
 
-- [ ] 1.1 Tests-first: translate the research and buildings-and-construction scenarios, and the age-signatures scenarios "Renaissance start has three signatures", "Antiquity start has the monument", "Touching footprints", "Just out of range", "Smelters are workshops" and "Older building loads", into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: five `BuildingKind`s and catalog specs, stockpile capacities, `Tech.unlocks` for the era techs, `BuildingKind.isWorkshop`, `World.footprintDistance`, owner-scoped coverage queries, `PlacementRejection.alreadyBuilt` and the one-monument rule, `Building.projectStages` / `fuelled` / `commissionTicksLeft` with tolerant decoding (design D1–D3, D6, D12).
+- [x] 1.1 Tests-first: translate the research and buildings-and-construction scenarios, and the age-signatures scenarios "Renaissance start has three signatures", "Antiquity start has the monument", "Touching footprints", "Just out of range", "Smelters are workshops" and "Older building loads", into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: five `BuildingKind`s and catalog specs, stockpile capacities, `Tech.unlocks` for the era techs, `BuildingKind.isWorkshop`, `World.footprintDistance`, owner-scoped coverage queries, `PlacementRejection.alreadyBuilt` and the one-monument rule, `Building.projectStages` / `fuelled` / `commissionTicksLeft` with tolerant decoding (design D1–D3, D6, D12).
 
 ## 2. M2 — Workshops and fuel
 
@@ -16,7 +16,7 @@
 
 ## 4. M4 — Art
 
-- [ ] 4.1 Draw the five buildings with idle, construction and operational frames in `buildings.py`; add catalog entries; `make sprites-procedural`, `make sprites-verify` (D11).
+- [x] 4.1 Draw the five buildings with idle, construction and operational frames in `buildings.py`; add catalog entries; `make sprites-procedural`, `make sprites-verify` (D11).
 
 ## 5. M5 — Rendering and UI
 

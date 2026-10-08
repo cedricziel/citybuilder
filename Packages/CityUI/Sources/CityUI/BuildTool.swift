@@ -41,6 +41,11 @@ public enum BuildTool: Hashable, Sendable {
             case .teaHouse: return "Tea House"
             case .coffeeGrove: return "Coffee Grove"
             case .roastery: return "Roastery"
+            case .monument: return "Monument"
+            case .guildHall: return "Guild Hall"
+            case .gallery: return "Gallery"
+            case .steamEngine: return "Steam Engine"
+            case .powerPlant: return "Power Plant"
             }
         }
     }

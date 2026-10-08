@@ -46,6 +46,10 @@ public enum PlacementRejection: Hashable, Sendable {
     /// The building belongs to another culture. Spec: `culture-content`
     /// / Culture-only buildings.
     case wrongCulture(Culture)
+    /// The owner already has this one-per-city building, under
+    /// construction or operational. Spec: `buildings-and-construction`
+    /// / One monument per city.
+    case alreadyBuilt(BuildingKind)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -60,6 +64,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .locked: "locked"
         case .obsolete: "obsolete"
         case .wrongCulture: "wrong_culture"
+        case .alreadyBuilt: "already_built"
         }
     }
 }
