@@ -17,13 +17,32 @@ extension IsoWorldScene {
         return "building-\(kind.rawValue)-\(culture.rawValue)"
     }
 
-    /// The culture variant's name and texture for a finished building,
-    /// when the atlas has one.
+    /// Candidate names for a finished house, most specific first:
+    /// age+culture, age, culture (design D7 of `add-historical-ages`).
+    /// The age part is omitted for Medieval, the culture part for
+    /// Northern European; the shared name is the caller's fallback.
+    static func houseLookNames(houseTier: HouseTier, culture: Culture, age: Age) -> [String] {
+        let stem = houseTier == .peasants ? "building-house" : "building-house-tier\(houseTier.rawValue)"
+        let agePart = age == .medieval ? nil : age.rawValue
+        let culturePart = culture == .northernEuropean ? nil : culture.rawValue
+        var names: [String] = []
+        if let agePart, let culturePart { names.append("\(stem)-\(agePart)-\(culturePart)") }
+        if let agePart { names.append("\(stem)-\(agePart)") }
+        if let culturePart { names.append("\(stem)-\(culturePart)") }
+        return names
+    }
+
+    /// The look variant's name and texture for a finished building, when
+    /// the atlas has one. Houses follow age and culture; the other
+    /// culture kinds follow culture only.
     func cultureTexture(kind: BuildingKind, state: BuildingState, houseTier: HouseTier) -> (String, SKTexture)? {
-        guard state != .constructing,
-              let name = Self.cultureTextureName(kind: kind, houseTier: houseTier, culture: culture),
-              hasSprite(name)
-        else { return nil }
+        guard state != .constructing else { return nil }
+        let candidates: [String] = if kind == .house {
+            Self.houseLookNames(houseTier: houseTier, culture: culture, age: age)
+        } else {
+            Self.cultureTextureName(kind: kind, houseTier: houseTier, culture: culture).map { [$0] } ?? []
+        }
+        guard let name = candidates.first(where: hasSprite) else { return nil }
         return (name, SpriteAtlas.textureOrPlaceholder(named: name))
     }
 

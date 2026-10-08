@@ -23,6 +23,9 @@ public final class IsoWorldScene: SKScene {
     /// Culture whose building looks are on screen. Spec: `rendering-2_5d`
     /// / Buildings render in the world's culture.
     public var culture: Culture = .northernEuropean
+    /// Age whose house looks are on screen. Spec: `rendering-2_5d` /
+    /// Houses render in the world's age.
+    public var age: Age = .medieval
     /// Whether the atlas holds a sprite. Optional looks (culture and
     /// seasonal variants) check it before falling back; tests replace it
     /// because SwiftPM test bundles carry no atlases.
@@ -195,7 +198,7 @@ public final class IsoWorldScene: SKScene {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
         applySeason(snapshot.date.season)
-        applyCulture(snapshot.culture)
+        applyLook(culture: snapshot.culture, age: snapshot.age)
         reconcileSprites(with: snapshot)
         reconcileCarriers(with: snapshot)
         reconcileGhost()
@@ -324,9 +327,12 @@ public final class IsoWorldScene: SKScene {
         cameraNode.setScale(scale)
     }
 
-    private func applyCulture(_ newCulture: Culture) {
-        guard newCulture != culture else { return }
+    /// Rebuilds every sprite when culture or age changes, so houses
+    /// restyle in place.
+    private func applyLook(culture newCulture: Culture, age newAge: Age) {
+        guard newCulture != culture || newAge != age else { return }
         culture = newCulture
+        age = newAge
         for node in presentSprites.values {
             node.removeFromParent()
         }

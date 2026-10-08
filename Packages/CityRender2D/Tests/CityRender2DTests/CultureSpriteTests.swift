@@ -1,4 +1,5 @@
 import CityCore
+import Foundation
 import SpriteKit
 import Testing
 @testable import CityRender2D
@@ -54,4 +55,55 @@ func mediterraneanMerchantHouseUsesItsCultureTierSprite() {
 @Test("northern european keeps the shared names")
 func northernEuropeanKeepsTheSharedNames() {
     #expect(textureName(spec(.townCenter, state: .operational, size: 3), culture: .northernEuropean) == nil)
+}
+
+// Scenarios from openspec/changes/add-historical-ages.
+
+@MainActor
+private func houseTextureName(tier: HouseTier, culture: Culture, age: Age) -> String? {
+    let scene = IsoWorldScene()
+    scene.culture = culture
+    scene.age = age
+    scene.hasSprite = { _ in true }
+    return scene.makeBuildingNode(for: spec(.house, state: .operational, size: 2, tier: tier))
+        .userData?[IsoWorldScene.textureNameKey] as? String
+}
+
+@MainActor
+@Test("scenario: industrial mediterranean citizens")
+func scenarioIndustrialMediterraneanCitizens() {
+    #expect(houseTextureName(tier: .citizens, culture: .mediterranean, age: .industrial)
+        == "building-house-tier2-industrial-mediterranean")
+}
+
+@MainActor
+@Test("scenario: medieval names are unchanged")
+func scenarioMedievalNamesAreUnchanged() {
+    #expect(houseTextureName(tier: .peasants, culture: .northernEuropean, age: .medieval) == nil)
+}
+
+@Test("house look names fall back from age and culture to culture")
+func houseLookNamesFallBack() {
+    #expect(IsoWorldScene.houseLookNames(houseTier: .merchants, culture: .eastAsian, age: .modern) == [
+        "building-house-tier3-modern-east-asian", "building-house-tier3-modern", "building-house-tier3-east-asian"
+    ])
+}
+
+@Test("scenario: every culture variant is catalogued")
+func scenarioEveryCultureVariantIsCatalogued() {
+    let catalog = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Resources/Sprites.style/catalog")
+    var missing: [String] = []
+    for culture in Culture.allCases where culture != .northernEuropean {
+        for kind in IsoWorldScene.cultureVariantKinds {
+            let id = "building-\(kind.rawValue)-\(culture.rawValue)"
+            if !FileManager.default.fileExists(atPath: catalog.appendingPathComponent("\(id).md").path) {
+                missing.append(id)
+            }
+        }
+    }
+    #expect(IsoWorldScene.cultureVariantKinds.count * 3 == 12)
+    #expect(missing.isEmpty, "missing: \(missing)")
 }

@@ -10,12 +10,12 @@
 
 ## 3. M3 — Art
 
-- [ ] 3.1 Compose `style(culture, age)` in the building kit and draw the 48 age houses and the quern house; register them; run `make sprites-procedural` and `make sprites-verify` (D7).
+- [x] 3.1 Compose `style(culture, age)` in the building kit and draw the 48 age houses and the quern house; register them; run `make sprites-procedural` and `make sprites-verify` (D7).
 
 ## 4. M4 — UI and rendering
 
-- [ ] 4.1 Tests-first: translate the platform-shells, rendering-2_5d and sprite-style-catalog scenarios into failing tests. Confirm red.
-- [ ] 4.2 Implement to green: age picker, age banner, palette filtering, research panel era rows, age house lookup (D7, D8).
+- [x] 4.1 Tests-first: translate the platform-shells, rendering-2_5d and sprite-style-catalog scenarios into failing tests. Confirm red.
+- [x] 4.2 Implement to green: age picker, age banner, palette filtering, research panel era rows, age house lookup (D7, D8).
 
 ## 5. M5 — Verification
 
