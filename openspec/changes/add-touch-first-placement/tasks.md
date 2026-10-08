@@ -24,14 +24,14 @@
 
 ## 5. M5 — Long-press intent → menu presentation (CityUI)
 
-- [ ] 5.1 Tests-first: translate `#### Scenario: Long-press intent opens the tile menu request on iOS`, `#### Scenario: Menu Build choice for a non-road kind enters pending placement`, and `#### Scenario: Menu Build choice for road arms the road place tool` into failing tests in `CityUITests`.
-- [ ] 5.2 Implement to green: extend `GameSession` with `tileMenuRequest: TileMenuRequest?` (a published binding for the SwiftUI dialog) and `handleLongPress(at:)` that sets `tileMenuRequest = TileMenuRequest(tile: tile)`. Wire the long-press intent in the renderer-intent dispatcher path (the closure already exists for `tapTile`). Implement `TileContextMenuPresenter` SwiftUI view conditional on `#if os(iOS)` and attach it to `worldView`.
+- [x] 5.1 Tests-first: translate `#### Scenario: Long-press intent opens the tile menu request on iOS`, `#### Scenario: Menu Build choice for a non-road kind enters pending placement`, and `#### Scenario: Menu Build choice for road arms the road place tool` into failing tests in `CityUITests`.
+- [x] 5.2 Implement to green: extend `GameSession` with `tileMenuRequest: TileMenuRequest?` (a published binding for the SwiftUI dialog) and `handleLongPress(at:)` that sets `tileMenuRequest = TileMenuRequest(tile: tile)`. Wire the long-press intent in the renderer-intent dispatcher path (the closure already exists for `tapTile`). Implement `TileContextMenuPresenter` SwiftUI view conditional on `#if os(iOS)` and attach it to `worldView`.
 
 ## 6. M6 — Placement HUD with iso arrows and checkmark (CityUI + CityRender2D)
 
 - [ ] 6.1 Tests-first: translate `#### Scenario: PlacementHUD renders four arrow buttons positioned around the pending tile`, `#### Scenario: PlacementHUD checkmark button dispatches confirmPlacement`, `#### Scenario: PlacementHUD cancel button dispatches cancelPlacement`, and `#### Scenario: PlacementHUD arrow button dispatches the matching nudgePlacement direction` into failing tests in `CityUITests`. Cover the HUD as a small ViewModel + scenario assertions on the callback dispatch; do not assert SwiftUI view geometry.
-- [ ] 6.2 Implement to green: add `PlacementHUDViewModel` exposing `arrows: [IsoDirection]`, `confirmEnabled: Bool`, `cancelEnabled: Bool`, plus selection callbacks. Add `PlacementHUD` SwiftUI view that subscribes to `GameSession.pendingPlacement` and renders four arrow buttons + a central ✓ + a cancel ✕. The view anchors to the pending tile via `IsoMath` conversion of `pendingPlacement.anchor` to scene coordinates and from there to SwiftUI overlay coordinates.
-- [ ] 6.3 Refactor under a green bar.
+- [x] 6.2 Implement to green: add `PlacementHUDViewModel` exposing `arrows: [IsoDirection]`, `confirmEnabled: Bool`, `cancelEnabled: Bool`, plus selection callbacks. Add `PlacementHUD` SwiftUI view that subscribes to `GameSession.pendingPlacement` and renders four arrow buttons + a central ✓ + a cancel ✕. The view anchors to the pending tile via `IsoMath` conversion of `pendingPlacement.anchor` to scene coordinates and from there to SwiftUI overlay coordinates.
+- [x] 6.3 Refactor under a green bar.
 
 ## 7. M7 — Palette path also routes through pending placement on iOS (CityUI)
 
@@ -40,8 +40,8 @@
 
 ## 8. M8 — First-run coach mark (CityUI)
 
-- [ ] 8.1 Tests-first: translate `#### Scenario: First-run coach mark shows once and is dismissable` and `#### Scenario: Coach mark does not show after dismissal flag is set` into failing tests in `CityUITests` that drive the `CoachmarkStore` directly (UserDefaults-backed with an injectable provider).
-- [ ] 8.2 Implement to green: add a small `CoachmarkStore` with a single `hasSeenTouchPlacementHint: Bool` property backed by `UserDefaults` (injected protocol for tests). On iOS `CityRootView`, show a one-time overlay ("Long-press a tile to build") that flips the flag on dismiss. macOS path skips the coach mark.
+- [x] 8.1 Tests-first: translate `#### Scenario: First-run coach mark shows once and is dismissable` and `#### Scenario: Coach mark does not show after dismissal flag is set` into failing tests in `CityUITests` that drive the `CoachmarkStore` directly (UserDefaults-backed with an injectable provider).
+- [x] 8.2 Implement to green: add a small `CoachmarkStore` with a single `hasSeenTouchPlacementHint: Bool` property backed by `UserDefaults` (injected protocol for tests). On iOS `CityRootView`, show a one-time overlay ("Long-press a tile to build") that flips the flag on dismiss. macOS path skips the coach mark.
 
 ## 9. M9 — Audit and update existing tests for the new commit semantics on iOS
 

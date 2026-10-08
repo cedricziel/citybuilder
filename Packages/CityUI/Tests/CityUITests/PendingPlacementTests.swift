@@ -271,3 +271,25 @@ func confirmationDefaultsToThePlatform() {
     #expect(!session.confirmsBuildingPlacement)
     #endif
 }
+
+@Test("the camera pans unless a tool paints tile by tile")
+@MainActor
+func theCameraPansUnlessAToolPaintsTileByTile() {
+    let session = makeSession(confirms: true)
+    #expect(session.allowsCameraPan)
+    session.selectTool(.place(.house))
+    #expect(session.allowsCameraPan, "a confirmed building does not paint, so a drag may pan")
+    session.selectTool(.place(.road))
+    #expect(!session.allowsCameraPan)
+    session.selectTool(.demolish)
+    #expect(!session.allowsCameraPan)
+    let mac = makeSession(confirms: false)
+    mac.selectTool(.place(.house))
+    #expect(!mac.allowsCameraPan)
+}
+
+@Test("the pan mask follows the session rule")
+func thePanMaskFollowsTheSessionRule() {
+    #expect(CityRootView.panGestureMask(allowsPan: true) == .all)
+    #expect(CityRootView.panGestureMask(allowsPan: false) == .subviews)
+}

@@ -45,6 +45,17 @@ extension GameSession {
 }
 
 public extension GameSession {
+    /// A drag pans the camera unless the armed tool paints tile by tile.
+    /// A building that waits for confirmation does not paint, so the
+    /// player can still move the view while positioning it.
+    var allowsCameraPan: Bool {
+        switch selectedTool {
+        case .inspect: true
+        case let .place(kind): needsConfirmation(kind)
+        case .demolish: false
+        }
+    }
+
     func beginPendingPlacement(kind: BuildingKind, at tile: TileCoordinate) {
         pendingPlacement = PendingPlacement(kind: kind, anchor: tile, origin: tile)
     }

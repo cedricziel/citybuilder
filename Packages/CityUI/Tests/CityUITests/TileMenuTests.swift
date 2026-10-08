@@ -173,3 +173,11 @@ func theDemolishChoiceEnqueuesADemolishAtOnce() {
     #expect(session.world.pendingCommands == [.demolish(at: tile(3, 4))])
     #expect(session.pendingPlacement == nil)
 }
+
+@Test("menu rows read as name and cost, or name and why not")
+func menuRowsReadAsNameAndCostOrNameAndWhyNot() {
+    #expect(TileMenuItem.build(.road, enabled: true, reason: nil).title == "Road — $\(BuildingCatalog.spec(for: .road).cost)")
+    #expect(TileMenuItem.build(.mine, enabled: false, reason: "Needs Mining research").title == "Mine — Needs Mining research")
+    #expect(TileMenuItem.demolish.title == "Demolish")
+    #expect(TileMenuItem.dismiss.title == "Cancel")
+}

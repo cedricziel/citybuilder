@@ -46,8 +46,9 @@ public struct CityRootView: View {
                 // tap-tile selection. A bare .gesture(DragGesture(...))
                 // claims the touch sequence and starves the scene's
                 // touchesEnded / mouseUp handlers.
-                .simultaneousGesture(panGesture, including: Self.panGestureMask(for: session.selectedTool))
+                .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
                 .simultaneousGesture(zoomGesture)
+            touchPlacementHUD
             VStack {
                 HStack {
                     HUDFrameView(viewModel: session.hud)
@@ -75,12 +76,14 @@ public struct CityRootView: View {
                 if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
                     HStack {
                         InspectorView(viewModel: inspector)
+                        inspectorActionsButton
                         Spacer()
                     }
                 }
             }
             .padding()
         }
+        .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .sheet(isPresented: $settingsPresented) {
@@ -454,6 +457,9 @@ public final class GameSession {
         let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void = { [weak self] tile in
             self?.handleHover(at: tile)
         }
+        let longPressSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
+            self?.handleLongPress(at: tile)
+        }
         let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview? = { [weak self] in
             self?.ghostState()
         }
@@ -462,6 +468,7 @@ public final class GameSession {
             tapSink: tapSink,
             dragSink: dragSink,
             hoverSink: hoverSink,
+            longPressSink: longPressSink,
             ghostProvider: ghostProvider
         )
     }

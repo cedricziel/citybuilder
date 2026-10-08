@@ -10,14 +10,11 @@ struct SnapshotHostView: View {
     let tapSink: @MainActor @Sendable (TileCoordinate) -> Void
     let dragSink: @MainActor @Sendable (TileCoordinate) -> Void
     let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void
+    let longPressSink: @MainActor @Sendable (TileCoordinate) -> Void
     let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview?
     var body: some View {
-        SnapshotRendererRegistry.shared.makeView(
-            snapshotProvider: snapshotProvider,
-            tapSink: tapSink,
-            dragSink: dragSink,
-            hoverSink: hoverSink,
-            ghostProvider: ghostProvider
+        SnapshotRendererRegistry.shared.factory(
+            snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider
         )
     }
 }
@@ -39,6 +36,7 @@ public final class SnapshotRendererRegistry {
     public typealias TapSink = @MainActor @Sendable (TileCoordinate) -> Void
     public typealias DragSink = @MainActor @Sendable (TileCoordinate) -> Void
     public typealias HoverSink = @MainActor @Sendable (TileCoordinate?) -> Void
+    public typealias LongPressSink = @MainActor @Sendable (TileCoordinate) -> Void
     public typealias GhostProvider = @MainActor @Sendable () -> GameSession.GhostPreview?
 
     public var factory: (
@@ -46,23 +44,14 @@ public final class SnapshotRendererRegistry {
         @escaping TapSink,
         @escaping DragSink,
         @escaping HoverSink,
+        @escaping LongPressSink,
         @escaping GhostProvider
-    ) -> AnyView = { _, _, _, _, _ in
+    ) -> AnyView = { _, _, _, _, _, _ in
         AnyView(
             Color.black.overlay(
                 Text("World renderer not registered")
                     .foregroundStyle(.white)
             )
         )
-    }
-
-    func makeView(
-        snapshotProvider: @escaping SnapshotProvider,
-        tapSink: @escaping TapSink,
-        dragSink: @escaping DragSink,
-        hoverSink: @escaping HoverSink,
-        ghostProvider: @escaping GhostProvider
-    ) -> AnyView {
-        factory(snapshotProvider, tapSink, dragSink, hoverSink, ghostProvider)
     }
 }

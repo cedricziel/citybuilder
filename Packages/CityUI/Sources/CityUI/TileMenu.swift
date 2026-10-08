@@ -19,11 +19,27 @@ public enum TileMenuChoice: Equatable, Sendable {
 }
 
 /// One row of the tile menu.
-public enum TileMenuItem: Equatable, Sendable {
+public enum TileMenuItem: Hashable, Sendable {
     /// `reason` says why a disabled entry is disabled.
     case build(BuildingKind, enabled: Bool, reason: String?)
     case demolish
     case dismiss
+}
+
+extension TileMenuItem {
+    /// Dialog button text: name plus cost, or why the entry is disabled.
+    var title: String {
+        switch self {
+        case let .build(kind, enabled, reason):
+            let name = BuildTool.place(kind).displayName
+            if enabled {
+                return "\(name) — $\(BuildingCatalog.spec(for: kind).cost)"
+            }
+            return reason.map { "\(name) — \($0)" } ?? name
+        case .demolish: return "Demolish"
+        case .dismiss: return "Cancel"
+        }
+    }
 }
 
 /// Rows of the tile menu for one tile. Follows the palette's rules: the
