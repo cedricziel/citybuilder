@@ -2,7 +2,6 @@
 
 ## Purpose
 TBD - created by archiving change add-mvp-foundation. Update Purpose after archive.
-
 ## Requirements
 ### Requirement: Codable snapshot save format
 A save SHALL be a single file containing the JSON-encoded `World` value plus a top-level `version` integer. The file MUST be self-describing: loaders MUST refuse to load a save whose version is unknown. The current write format version is `2`; loaders MUST accept version `1` and version `2` saves. Version `1` saves MUST be migrated in memory to the version `2` schema during load.
@@ -109,3 +108,17 @@ The persistence test suite SHALL include at least one binary fixture per support
 #### Scenario: v1 fixture exists and migrates cleanly
 - **WHEN** the persistence test suite runs
 - **THEN** a fixture at `Tests/CityPersistenceTests/Fixtures/saves/v1_single_island.json` is loaded, migrated to v2, and validated against expected post-migration field values
+
+### Requirement: Failed load is visible on the title screen
+
+When the player picks Continue and the save fails to load (unreadable file, unknown version, decode failure, or integrity failure), the title screen SHALL show an alert that says "This save could not be loaded". The underlying error MUST be written to the system log. The title screen MUST NOT commit a game session, and New Game MUST stay available.
+
+#### Scenario: Undecodable save shows a load-failure alert
+
+- **WHEN** the player picks Continue and the most recent save cannot be decoded
+- **THEN** the title-screen view-model exposes a load-failure state, no game session is committed, and the title screen shows "This save could not be loaded"
+
+#### Scenario: New Game still works after a failed load
+
+- **WHEN** a Continue load has failed and the player dismisses the alert and picks New Game
+- **THEN** the load-failure state is cleared and the New Game dialog opens
