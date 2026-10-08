@@ -34,7 +34,10 @@ public struct SpriteSpec: Hashable, Sendable {
             isWaitingForMaterials: Bool,
             // True when no road touches the footprint; drives the
             // `overlay-no-road` marker.
-            isRoadDisconnected: Bool = false
+            isRoadDisconnected: Bool = false,
+            // Houses draw a different sprite per tier; part of the key
+            // so a tier change swaps the node.
+            houseTier: HouseTier = .peasants
         )
     }
 
@@ -95,7 +98,8 @@ public enum SnapshotReconciler {
                     constructionFrameIndex: frameIndex,
                     orientation: orientation,
                     isWaitingForMaterials: isWaiting,
-                    isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id)
+                    isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id),
+                    houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants
                 )
             ))
         }

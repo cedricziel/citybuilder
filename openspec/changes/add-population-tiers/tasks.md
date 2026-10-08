@@ -7,8 +7,8 @@
 
 ## 2. M2 — Rendering and UI
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: Merchant house uses the tier 3 sprite` and `#### Scenario: Tier change swaps the house sprite` into failing tests in `CityRender2DTests`, plus an inspector test for tier lines. Confirm red.
-- [ ] 2.2 Implement to green: `houseTiers` on the snapshot, tier in the sprite spec and texture lookup (D5); inspector tier and needs lines; bakery in the palette and switches.
+- [x] 2.1 Tests-first: translate `#### Scenario: Merchant house uses the tier 3 sprite` and `#### Scenario: Tier change swaps the house sprite` into failing tests in `CityRender2DTests`, plus an inspector test for tier lines. Confirm red.
+- [x] 2.2 Implement to green: `houseTiers` on the snapshot, tier in the sprite spec and texture lookup (D5); inspector tier and needs lines; bakery in the palette and switches.
 - [x] 2.3 Draw the tier-2 and tier-3 houses, the bakery and the bread icon procedurally; run `make sprites-procedural` and `make sprites-verify`.
 
 ## 3. M3 — Verification

@@ -87,3 +87,51 @@ func scenarioSquareFootprintsKeepTheirExistingAnchor() {
     let node = IsoWorldScene().makeBuildingNode(for: sawmillSpec(state: .operational, isWaiting: false))
     #expect(node.position == CGPoint(x: 0, y: -48))
 }
+
+private func houseSpec(tier: HouseTier) -> SpriteSpec {
+    SpriteSpec(
+        coord: TileCoordinate(x: 0, y: 0),
+        kind: .building(
+            kind: .house, state: .operational, footprint: footprint,
+            constructionFrameIndex: nil, orientation: nil,
+            isWaitingForMaterials: false, houseTier: tier
+        )
+    )
+}
+
+@Test("scenario: merchant house uses the tier 3 sprite")
+@MainActor
+func scenarioMerchantHouseUsesTheTier3Sprite() {
+    let node = IsoWorldScene().makeBuildingNode(for: houseSpec(tier: .merchants))
+    #expect(node.userData?[IsoWorldScene.textureNameKey] as? String == "building-house-tier3")
+}
+
+@Test("scenario: tier change swaps the house sprite")
+func scenarioTierChangeSwapsTheHouseSprite() throws {
+    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    world.enqueue(.place(.house, at: TileCoordinate(x: 1, y: 1)))
+    for _ in 0 ..< 30 {
+        world.tick()
+    }
+    let house = try #require(world.occupiedTiles[TileCoordinate(x: 1, y: 1)])
+    let snapshot = world.snapshot()
+    var citizens = HousePopulation()
+    citizens.tier = .citizens
+    let before = SnapshotReconciler.desiredSprites(in: snapshot, xRange: 0 ... 5, yRange: 0 ... 5)
+    let after = SnapshotReconciler.desiredSprites(
+        in: withHousePopulations(snapshot, [house: citizens]), xRange: 0 ... 5, yRange: 0 ... 5
+    )
+    let diff = SnapshotReconciler.diff(previous: before, current: after)
+    #expect(diff.added.contains { $0.coord == TileCoordinate(x: 1, y: 1) })
+    #expect(diff.removed.contains { $0.coord == TileCoordinate(x: 1, y: 1) })
+}
+
+private func withHousePopulations(_ base: WorldSnapshot, _ pops: [EntityID: HousePopulation]) -> WorldSnapshot {
+    WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: base.mapWidth, mapHeight: base.mapHeight,
+        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: base.carriers,
+        ships: base.ships, routes: base.routes, economy: base.economy, totalPopulation: base.totalPopulation, camera: base.camera,
+        islandSummaries: base.islandSummaries, roadDisconnectedBuildings: base.roadDisconnectedBuildings,
+        housePopulations: pops
+    )
+}

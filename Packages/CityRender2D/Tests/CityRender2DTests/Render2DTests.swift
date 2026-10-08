@@ -73,7 +73,7 @@ func scenarioShoreBuildingSpriteCarriesItsCardinalOrientation() {
     var portOrientation: ShoreOrientation??
     var houseOrientation: ShoreOrientation??
     for spec in desired {
-        if case let .building(kind, _, _, _, orientation, _, _) = spec.kind {
+        if case let .building(kind, _, _, _, orientation, _, _, _) = spec.kind {
             if kind == .port { portOrientation = orientation }
             if kind == .house { houseOrientation = orientation }
         }

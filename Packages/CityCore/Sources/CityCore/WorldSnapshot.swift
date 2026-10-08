@@ -59,6 +59,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Non-road buildings with no road tile orthogonally adjacent to
     /// their footprint. Spec: `rendering-2_5d` / Road-access marker.
     public let roadDisconnectedBuildings: Set<EntityID>
+    /// Population state of every house, keyed by building. Spec:
+    /// `rendering-2_5d` / Houses render their tier.
+    public let housePopulations: [EntityID: HousePopulation]
 
     public init(
         tickCount: UInt64,
@@ -76,7 +79,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         camera: Camera,
         islandSummaries: [IslandID: IslandSummary] = [:],
         tileToIsland: [TileCoordinate: IslandID] = [:],
-        roadDisconnectedBuildings: Set<EntityID> = []
+        roadDisconnectedBuildings: Set<EntityID> = [],
+        housePopulations: [EntityID: HousePopulation] = [:]
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -94,6 +98,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.islandSummaries = islandSummaries
         self.tileToIsland = tileToIsland
         self.roadDisconnectedBuildings = roadDisconnectedBuildings
+        self.housePopulations = housePopulations
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -140,7 +145,8 @@ public extension World {
             camera: camera,
             islandSummaries: summaries,
             tileToIsland: tileToIsland,
-            roadDisconnectedBuildings: roadDisconnectedBuildings()
+            roadDisconnectedBuildings: roadDisconnectedBuildings(),
+            housePopulations: populations
         )
     }
 

@@ -24,6 +24,15 @@ public struct InspectorViewModel: Sendable {
         } else {
             "\(building.ticksSincePlacement)/\(spec.buildDurationTicks) ticks"
         }
+        var houseLines: [String] = []
+        if let pop = snapshot.housePopulations[entityID] {
+            let needs = pop.tier.needs.map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
+            houseLines = [
+                "Tier: \(pop.tier.displayName)",
+                "Residents: \(pop.population)/\(pop.capacity)",
+                "Needs: \(needs.joined(separator: " · "))"
+            ]
+        }
         return InspectorViewModel(bullets: [
             "Kind: \(building.kind.rawValue)",
             "Anchor: (\(building.anchor.x), \(building.anchor.y))",
@@ -31,7 +40,7 @@ public struct InspectorViewModel: Sendable {
             "State: \(building.state.rawValue)",
             "Build: \(buildProgress)",
             "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-        ])
+        ] + houseLines)
     }
 }
 

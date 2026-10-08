@@ -13,6 +13,8 @@ extension IsoWorldScene {
     public static let waitingBadgeNodeName = "overlay-waiting-materials"
     /// Name applied to the no-road-access marker child node.
     public static let noRoadBadgeNodeName = "overlay-no-road"
+    /// `userData` key holding the texture name chosen for a tiered house.
+    public static let textureNameKey = "textureName"
 
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
@@ -43,14 +45,21 @@ extension IsoWorldScene {
     /// See the design doc for the offset derivation.
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
         guard case let .building(
-            kind, state, footprint, constructionFrameIndex, orientation, isWaitingForMaterials, isRoadDisconnected
+            kind, state, footprint, constructionFrameIndex, orientation,
+            isWaitingForMaterials, isRoadDisconnected, houseTier
         ) = spec.kind
         else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
         }
         let coord = spec.coord
         let texture: SKTexture
-        if let orientation {
+        var textureName: String?
+        if kind == .house, houseTier != .peasants, state != .constructing {
+            // Spec: `rendering-2_5d` / Houses render their tier.
+            let name = "building-house-tier\(houseTier.rawValue)"
+            textureName = name
+            texture = SpriteAtlas.textureOrPlaceholder(named: name)
+        } else if let orientation {
             // Shore buildings live under the `building-<kind>-<orientation>-*`
             // grammar; resolve the right state-keyed name and skip the
             // non-orientation fallback (which would magenta out).
@@ -74,6 +83,9 @@ extension IsoWorldScene {
             state: state,
             footprint: footprint
         )
+        if let textureName {
+            node.userData = [Self.textureNameKey: textureName]
+        }
         armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
         if isWaitingForMaterials, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
