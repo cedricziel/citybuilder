@@ -12,9 +12,9 @@
 
 ## 3. M3 — PendingPlacement state on GameSession (CityUI)
 
-- [ ] 3.1 Tests-first: translate `#### Scenario: beginPendingPlacement sets the pending state with the requested kind and anchor`, `#### Scenario: nudgePendingPlacement moves the anchor along the iso direction`, `#### Scenario: nudgePendingPlacement is clamped to map bounds`, `#### Scenario: confirmPendingPlacement enqueues a place command at the pending anchor`, `#### Scenario: confirmPendingPlacement clears the pending state`, `#### Scenario: cancelPendingPlacement clears the pending state without enqueuing`, `#### Scenario: handleTap is suppressed while a placement is pending`, and `#### Scenario: ghostState reads from pendingPlacement when set` into failing tests in `CityUITests`. Confirm red.
-- [ ] 3.2 Implement to green: add `PendingPlacement` struct and `GameSession.pendingPlacement` property; implement `beginPendingPlacement(kind:at:)`, `nudgePendingPlacement(_:)`, `confirmPendingPlacement()`, `cancelPendingPlacement()`; gate `handleTap` to no-op while pending; route `ghostState()` through `pendingPlacement.anchor` when set; ensure `selectedTool` is unchanged by the new methods.
-- [ ] 3.3 Refactor under a green bar.
+- [x] 3.1 Tests-first: translate `#### Scenario: beginPendingPlacement sets the pending state with the requested kind and anchor`, `#### Scenario: nudgePendingPlacement moves the anchor along the iso direction`, `#### Scenario: nudgePendingPlacement is clamped to map bounds`, `#### Scenario: confirmPendingPlacement enqueues a place command at the pending anchor`, `#### Scenario: confirmPendingPlacement clears the pending state`, `#### Scenario: cancelPendingPlacement clears the pending state without enqueuing`, `#### Scenario: handleTap is suppressed while a placement is pending`, and `#### Scenario: ghostState reads from pendingPlacement when set` into failing tests in `CityUITests`. Confirm red.
+- [x] 3.2 Implement to green: add `PendingPlacement` struct and `GameSession.pendingPlacement` property; implement `beginPendingPlacement(kind:at:)`, `nudgePendingPlacement(_:)`, `confirmPendingPlacement()`, `cancelPendingPlacement()`; gate `handleTap` to no-op while pending; route `ghostState()` through `pendingPlacement.anchor` when set; ensure `selectedTool` is unchanged by the new methods.
+- [x] 3.3 Refactor under a green bar.
 
 ## 4. M4 — Tile context menu view-model (CityUI)
 
@@ -35,8 +35,8 @@
 
 ## 7. M7 — Palette path also routes through pending placement on iOS (CityUI)
 
-- [ ] 7.1 Tests-first: translate `#### Scenario: Palette-armed building tap enters pending placement on iOS` and `#### Scenario: Palette-armed road tap or drag paints immediately on iOS` into failing tests in `CityUITests`.
-- [ ] 7.2 Implement to green: in `GameSession.handleTap(at:)`, when running on iOS and the armed tool is `.place(kind)` with `kind != .road`, instead of enqueuing immediately call `beginPendingPlacement(kind:at:)`. Road and demolish keep the existing immediate-place behavior. Wrap the new branch in `#if os(iOS)`; macOS continues commit-on-click.
+- [x] 7.1 Tests-first: translate `#### Scenario: Palette-armed building tap enters pending placement on iOS` and `#### Scenario: Palette-armed road tap or drag paints immediately on iOS` into failing tests in `CityUITests`.
+- [x] 7.2 Implement to green: in `GameSession.handleTap(at:)`, when running on iOS and the armed tool is `.place(kind)` with `kind != .road`, instead of enqueuing immediately call `beginPendingPlacement(kind:at:)`. Road and demolish keep the existing immediate-place behavior. Wrap the new branch in `#if os(iOS)`; macOS continues commit-on-click.
 
 ## 8. M8 — First-run coach mark (CityUI)
 

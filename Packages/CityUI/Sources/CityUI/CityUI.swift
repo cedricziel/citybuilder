@@ -255,11 +255,17 @@ public final class GameSession {
     /// - .inspect (default): select the tile for the inspector.
     /// - .place(kind): enqueue a `.place` command. Tool stays armed so
     ///   the player can place a run of roads or houses without re-arming.
+    ///   On iOS a building other than a road starts a pending placement
+    ///   instead (see `confirmsBuildingPlacement`).
     /// - .demolish: enqueue a `.demolish` command.
+    /// Ignored while a placement is pending.
     public func handleTap(at tile: TileCoordinate) {
+        guard pendingPlacement == nil else { return }
         switch selectedTool {
         case .inspect:
             selectedTile = tile
+        case let .place(kind) where needsConfirmation(kind):
+            beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
                 hud.showRejection(reason, now: Date())
@@ -272,6 +278,22 @@ public final class GameSession {
     }
 
     public var selectedTile: TileCoordinate?
+
+    /// The building the player is positioning before committing it.
+    /// Transient: never saved. Spec: `rendering-2_5d` / Placement HUD.
+    public var pendingPlacement: PendingPlacement?
+
+    /// Whether a building other than a road waits for a confirmation
+    /// instead of committing on tap. On by default on iOS only; macOS
+    /// keeps commit-on-click. A flag rather than `#if` so the touch flow
+    /// is testable on the Mac.
+    public var confirmsBuildingPlacement: Bool = {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }()
 
     /// Tile currently under the pointer / fingertip. Drives the ghost
     /// preview. nil when no hover position is known (e.g. on iPhone
@@ -288,8 +310,11 @@ public final class GameSession {
     /// demolish command enqueued. In inspect mode, drag is a no-op (pan
     /// camera handles the gesture instead).
     public func handleDrag(at tile: TileCoordinate) {
+        guard pendingPlacement == nil else { return }
         switch selectedTool {
         case .inspect:
+            return
+        case let .place(kind) where needsConfirmation(kind):
             return
         case let .place(kind):
             world.enqueue(.place(kind, at: tile))
@@ -301,24 +326,30 @@ public final class GameSession {
     /// Ghost preview state derived from the armed tool + hovered tile.
     /// `valid` runs the same canPlace check the simulation will use at
     /// the tick boundary, so the green / red tint matches reality.
+    /// A pending placement overrides the hover.
     public func ghostState() -> GhostPreview? {
+        if let pending = pendingPlacement {
+            return ghostPreview(kind: pending.kind, tile: pending.anchor)
+        }
         guard let tile = hoveredTile else { return nil }
         switch selectedTool {
         case .inspect, .demolish:
             return nil
         case let .place(kind):
-            let valid: Bool
-            if case .allowed = world.canPlace(kind, at: tile) {
-                let spec = BuildingCatalog.spec(for: kind)
-                valid = world.economy.balance >= spec.cost
-            } else {
-                valid = false
-            }
-            return GhostPreview(
-                kind: kind, tile: tile, valid: valid,
-                costBreakdown: costBreakdown(for: kind, anchor: tile)
-            )
+            return ghostPreview(kind: kind, tile: tile)
         }
+    }
+
+    private func ghostPreview(kind: BuildingKind, tile: TileCoordinate) -> GhostPreview {
+        let valid: Bool = if case .allowed = world.canPlace(kind, at: tile) {
+            world.economy.balance >= BuildingCatalog.spec(for: kind).cost
+        } else {
+            false
+        }
+        return GhostPreview(
+            kind: kind, tile: tile, valid: valid,
+            costBreakdown: costBreakdown(for: kind, anchor: tile)
+        )
     }
 
     private func costBreakdown(
