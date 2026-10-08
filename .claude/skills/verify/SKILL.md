@@ -1,0 +1,40 @@
+---
+name: verify
+description: Build, launch, and drive Citybuilder in the iOS Simulator to observe a change at runtime.
+---
+
+# Verify Citybuilder at runtime
+
+## Build
+
+```bash
+xcodegen generate
+xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderiOS \
+  -destination 'platform=iOS Simulator,id=<UDID>' -derivedDataPath <scratch>/dd-ios build
+xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
+  -destination 'platform=macOS' -derivedDataPath <scratch>/dd-mac CODE_SIGNING_ALLOWED=NO build
+```
+
+- The Makefile's `DESTINATION_IOS` names `iPhone 16`, which may not be installed. Pick a UDID from `xcrun simctl list devices available`.
+- The app lands at `<scratch>/dd-ios/Build/Products/Debug-iphonesimulator/Citybuilder.app`. The bundle id is `com.cedricziel.citybuilder`.
+
+## Launch
+
+1. `xcrun simctl boot <UDID>`, then attach the simulator panel.
+2. The first `launch` after a cold boot can time out. If it does, run `xcrun simctl launch --terminate-running-process <UDID> com.cedricziel.citybuilder`.
+3. The app has no logging of its own. `log show --predicate 'process == "Citybuilder"'` only shows UIKit noise.
+
+## Flows worth driving
+
+- **Title:** New Game… → Single Island / Default seed → Start.
+- **Build:** Arm a palette button, then tap a grass tile.
+  - Starting stock is wood 4 / planks 2.
+  - Lumberjack (2 wood, $80) succeeds.
+  - House needs 4 planks and is rejected with no UI feedback.
+- **Camera:** Pinch with two fingers (`touch2_path`) to zoom out and read the whole island.
+- **Pause:** The pause button opens the menu. Tap Save Game ("Saved" appears), then Quit to Title. The title screen should now offer Continue, which restores money, buildings, and camera.
+
+## Gotchas
+
+- Sheet transitions are slow. Take a second screenshot before deciding a tap failed.
+- To check art, render the files in `Resources/*.atlas/*.png` onto a magenta contact sheet with PIL. Wrong-image bugs are obvious there and hard to see in-game.
