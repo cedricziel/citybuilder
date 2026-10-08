@@ -554,6 +554,26 @@ def _toolsmith(stage: str) -> Image.Image:
     return c.img
 
 
+def _library(stage: str) -> Image.Image:
+    """Stone hall with tall arched windows under a slate roof and a
+    small bell turret."""
+    c = Canvas(2, 2, 70)
+    yard(c)
+    b = Block(0.2, 0.3, 1.75, 1.6, 24, STONE_WALL, SLATE_ROOF, "gable_u", 16)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.5, 1.6, height=10)
+        for u in (0.9, 1.25, 1.6):
+            x, y = c.p(u, 1.6, 8)
+            c.draw.rectangle([round(x) - 1, round(y) - 11, round(x) + 1, round(y)], fill=(*DARK_TIMBER, 255))
+            c.draw.point((round(x), round(y) - 12), fill=(*DARK_TIMBER, 255))
+        window(c, "right", 1.75, 0.9, 16, lit=False)
+    if stage == "done":
+        box(c, 0.85, 0.8, 1.15, 1.1, 50, STONE_WALL, z0=30)
+        hip_roof(c, 0.85, 0.8, 1.15, 1.1, 50, 10, SLATE_ROOF, overhang=0.05)
+    return c.img
+
+
 def _warehouse(stage: str) -> Image.Image:
     c = Canvas(3, 3, 60)
     yard(c)
@@ -692,7 +712,7 @@ def _shipyard(orientation: str, stage: str) -> Image.Image:
 FOOTPRINTS: dict[str, tuple[int, int]] = {
     "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "sawmill": (2, 2),
     "town-center": (3, 3), "bakery": (2, 2), "grain-farm": (2, 2), "windmill": (2, 2), "mine": (2, 2),
-    "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
+    "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), "library": (2, 2), **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
 }
 
 _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
@@ -708,13 +728,14 @@ _DRAWERS: dict[str, Callable[[str], Image.Image]] = {
     "charcoal-burner": _charcoal_burner,
     "smelter": _smelter,
     "toolsmith": _toolsmith,
+    "library": _library,
     **{f"port-{o}": (lambda stage, o=o: _port(o, stage)) for o in "nesw"},
     **{f"shipyard-{o}": (lambda stage, o=o: _shipyard(o, stage)) for o in "nesw"},
 }
 
 OPERATIONAL_FRAMES: dict[str, int] = {
     "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
-    "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2,
+    "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2, "library": 2,
     **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
 }
 

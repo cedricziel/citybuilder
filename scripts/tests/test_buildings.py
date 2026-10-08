@@ -13,10 +13,11 @@ from generate_sprites_ai.postprocess import downsample
 OUTLINE = (0x1A, 0x14, 0x10)
 
 KINDS = ["house", "warehouse", "lumberjack-hut", "sawmill", "town-center", "bakery",
-         "grain-farm", "windmill", "mine", "charcoal-burner", "smelter", "toolsmith",
+         "grain-farm", "windmill", "mine", "charcoal-burner", "smelter", "toolsmith", "library",
          *[f"port-{o}" for o in "nesw"], *[f"shipyard-{o}" for o in "nesw"]]
 OPERATIONAL = {"lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2,
                "grain-farm": 2, "windmill": 4, "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2,
+               "library": 2,
                **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"}}
 UNITS = [f"walker-{d}-{f}" for d in ("ne", "se", "sw", "nw") for f in (0, 1)] + \
         [f"ship-{d}-{f}" for d in ("n", "ne", "e", "se", "s", "sw", "w", "nw") for f in (0, 1)]
