@@ -44,7 +44,7 @@ public struct CityRootView: View {
                 // tap-tile selection. A bare .gesture(DragGesture(...))
                 // claims the touch sequence and starves the scene's
                 // touchesEnded / mouseUp handlers.
-                .simultaneousGesture(panGesture)
+                .simultaneousGesture(panGesture, including: Self.panGestureMask(for: session.selectedTool))
                 .simultaneousGesture(zoomGesture)
             VStack {
                 HStack {

@@ -4,6 +4,14 @@ import SwiftUI
 /// Pan / zoom gesture helpers split out of `CityRootView` so the main
 /// file stays under SwiftLint's 500-line ceiling.
 extension CityRootView {
+    /// A recognised SwiftUI drag cancels the SpriteKit scene's touches
+    /// (UIKit's `cancelsTouchesInView`), so while a build tool is armed
+    /// the pan gesture is masked off and drag-to-paint reaches the
+    /// scene's `touchesMoved`.
+    static func panGestureMask(for tool: BuildTool) -> GestureMask {
+        tool == .inspect ? .all : .subviews
+    }
+
     /// One-finger drag (iOS) / left-mouse drag (Mac) pans the camera.
     /// Deltas are kept in screen pixels; the GameSession translates to
     /// tile-space via CityRender2D.InputTranslator.
