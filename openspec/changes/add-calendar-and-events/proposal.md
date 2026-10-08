@@ -13,7 +13,7 @@ The game direction drifts between ages through three forces: population tiers cr
   - **Rats in the granary:** half the food in every store is lost.
 - **World events:** `seasonChanged` and `historyEvent` join the tick event stream.
 - **HUD:** shows the date ("Spring 1200") and a banner when a history event fires.
-- **Seasonal look:** grass and forest tiles take a warm tint in autumn and a frosty tint in winter.
+- **Seasonal look:** grass and forest tiles switch to autumn colours and to snow in winter.
 - **Saves:** a v4 → v5 migration adds the calendar to existing saves.
 
 ## Capabilities
@@ -26,11 +26,12 @@ The game direction drifts between ages through three forces: population tiers cr
 
 - `persistence-save-load`: the v4 → v5 migration.
 - `platform-shells`: the HUD date and the event banner.
-- `rendering-2_5d`: seasonal terrain tint.
+- `rendering-2_5d`: seasonal terrain sprites.
 
 ## Impact
 
 - **CityCore:** `Season`, `GameDate`, `CalendarState` on `World`, `HistoryEvent`, a calendar system, new `WorldEvent` cases, the winter rule in production, the date on `WorldSnapshot`.
 - **CityPersistence:** save version 5 and its migration.
 - **CityUI:** date label, event banner.
-- **CityRender2D:** terrain tint per season.
+- **CityRender2D:** seasonal terrain sprites.
+- **Art:** autumn and winter grass and forest sprites.

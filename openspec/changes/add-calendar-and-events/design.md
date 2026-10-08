@@ -41,9 +41,11 @@ Effects apply immediately:
 
 `WorldSnapshot` gains `date: GameDate` (defaulted in the public init so existing call sites compile). The HUD shows `"\(season) \(year)"`. `GameSession.step()` keeps the latest `historyEvent` with the tick it fired; the HUD shows a banner with the event's title and line of text for 60 ticks.
 
-### D7 — Seasonal tint in the scene
+### D7 — Seasonal terrain sprites
 
-`IsoWorldScene` remembers the season it last applied. When the snapshot's season changes, it sets `color`/`colorBlendFactor` on every present grass and forest node; nodes added later get the current tint. Autumn uses a warm orange at 0.25, winter a pale blue-white at 0.45, spring and summer none. No new textures.
+`IsoWorldScene` remembers the season it last applied. Grass and forest have procedural autumn and winter variants (`terrain-grass-autumn`, `terrain-forest-winter`, …, plus animation frames for grass). On a season change the scene drops its present terrain nodes so the next reconcile rebuilds them with the season's sprites; a missing variant falls back to the regular sprite.
+
+- **Alternative — tint the existing sprites with `colorBlendFactor`.** Tried first and rejected: SpriteKit's colour blend multiplies the texture by the colour, so it can darken grass toward orange but never lighten it to snow. The first runtime check showed winter grass unchanged.
 
 ### D8 — Migration v4 → v5
 
