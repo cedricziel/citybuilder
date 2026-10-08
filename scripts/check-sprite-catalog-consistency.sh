@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Fast pre-commit gate: if a catalog edit is staged, its `_sheets/<id>.png`
-# MUST be staged too. Otherwise the next CI offline regen will produce
+# Fast pre-commit gate: if a catalog edit is staged, at least one of its
+# sheets (`_sheets/<id>.png` or `_sheets/<id>-*.png`) MUST be staged too. Otherwise the next CI offline regen will produce
 # different atlas bytes than what's committed and the build will fail.
 #
 # This hook does NOT enforce the reverse direction — a sheet-only edit
@@ -42,7 +42,9 @@ missing=()
 for id in "${catalog_changes[@]}"; do
     found=0
     for s in "${sheet_changes[@]:-}"; do
-        if [ "$s" = "$id" ]; then
+        # One sheet per sprite: an entry's sheets are `<id>.png` plus
+        # `<id>-<suffix>.png` for its frames and variants.
+        if [ "$s" = "$id" ] || [[ "$s" == "$id"-* ]]; then
             found=1
             break
         fi
