@@ -293,3 +293,81 @@ def test_role_for_falls_back_for_walker_and_ship() -> None:
     assert "facing sw" in batcher.role_for("walker-sw-1", {})
     assert "facing nw" in batcher.role_for("ship-nw-1", {})
     assert "goods icon" in batcher.role_for("good-wood", {})
+
+
+# ---------------- procedural source ----------------
+
+_PROCEDURAL_ENTRY = """---
+source = "procedural"
+---
+## Function
+
+Water.
+
+## Sheet
+
+Grid: 2 cols × 1 rows.
+
+- (0, 0): `terrain-water` — base
+- (0, 1): `terrain-water-0` — frame
+"""
+
+
+def test_procedural_entry_never_calls_the_api(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A `source = "procedural"` entry is drawn locally: no API key,
+    no `_post_edit`, and the sheet lands in `_sheets/` for offline
+    regen."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    entry = parse_catalog_entry("terrain-water", _PROCEDURAL_ENTRY)
+
+    with patch("generate_sprites_ai.batcher._post_edit") as mocked:
+        out = batcher._sprite_for_atlas_name(
+            "terrain-water", "base", entry, _PROCEDURAL_ENTRY,
+            paths.WORLD_MD.read_text(encoding="utf-8"), _read_pipeline_model(),
+            offline=False,
+        )
+        mocked.assert_not_called()
+
+    assert out.size == (1024, 1024)
+    assert cache.read_sheet("terrain-water") is not None
+
+
+def test_procedural_regen_writes_sheets_only_for_procedural_entries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_dirs_to(tmp_path, monkeypatch)
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    (catalog / "terrain-water.md").write_text(_PROCEDURAL_ENTRY, encoding="utf-8")
+    (catalog / "building-house.md").write_text(
+        (paths.CATALOG_DIR / "building-house.md").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(paths, "CATALOG_DIR", catalog)
+
+    written = batcher.write_procedural_sheets()
+
+    assert sorted(written) == ["terrain-water", "terrain-water-0"]
+    assert cache.read_sheet("building-house") is None
+
+
+def test_terrain_cells_are_diamond_fitted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A terrain sprite whose opaque blob fills only the tile centre
+    comes out covering the full diamond."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    sheet = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    for y in range(384, 640):
+        for x in range(384, 640):
+            sheet.putpixel((x, y), (0x5C, 0x80, 0x38, 255))
+
+    out = batcher._process_and_write_cell("terrain-grass", sheet)
+
+    img = Image.open(out).convert("RGBA")
+    from generate_sprites_ai.postprocess import in_diamond
+    inside = [img.getpixel((x, y))[3] for y in range(32) for x in range(64) if in_diamond(x, y, 64, 32)]
+    assert sum(1 for a in inside if a) / len(inside) >= 0.9

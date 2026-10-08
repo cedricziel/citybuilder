@@ -2,7 +2,7 @@
 
 Usage:
     python -m generate_sprites_ai [--offline] [--regenerate-reference]
-                                  [--verify]
+                                  [--verify] [--procedural]
 """
 
 from __future__ import annotations
@@ -48,6 +48,14 @@ def _cmd_sprites(offline: bool, verify: bool) -> int:
     return run_pipeline(offline=offline, verify=verify)
 
 
+def _cmd_procedural() -> int:
+    from .batcher import run_pipeline, write_procedural_sheets
+
+    written = write_procedural_sheets()
+    print(f"[procedural] wrote {len(written)} sheet(s)", flush=True)
+    return run_pipeline(offline=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="generate_sprites_ai")
     p.add_argument(
@@ -70,10 +78,19 @@ def main(argv: list[str] | None = None) -> int:
         "and diff against the committed atlas PNGs. Exits non-zero on "
         "any diff.",
     )
+    p.add_argument(
+        "--procedural",
+        action="store_true",
+        help="redraw the _sheets/ of every `source = \"procedural\"` "
+        "catalog entry locally, then regenerate all atlases offline. "
+        "Needs no API key.",
+    )
     args = p.parse_args(argv)
 
     if args.regenerate_reference:
         return _cmd_regenerate_reference()
+    if args.procedural:
+        return _cmd_procedural()
     return _cmd_sprites(offline=args.offline, verify=args.verify)
 
 

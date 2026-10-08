@@ -86,3 +86,64 @@ def test_preserve_outline_keeps_dark_silhouette_intact() -> None:
     for y in [0, 2]:
         for x in [0, 1, 2]:
             assert out.convert("RGB").getpixel((x, y)) == (0x1A, 0x14, 0x10)
+
+
+# ---------------- diamond_fit ----------------
+
+from generate_sprites_ai.postprocess import diamond_fit, in_diamond  # noqa: E402
+
+
+def _diamond_coverage(img: Image.Image) -> tuple[float, float]:
+    w, h = img.size
+    inside = inside_opaque = outside_opaque = 0
+    for y in range(h):
+        for x in range(w):
+            opaque = img.getpixel((x, y))[3] >= 128
+            if in_diamond(x, y, w, h):
+                inside += 1
+                inside_opaque += opaque
+            elif opaque:
+                outside_opaque += 1
+    opaque = inside_opaque + outside_opaque
+    return inside_opaque / inside, (outside_opaque / opaque if opaque else 0.0)
+
+
+def test_diamond_fit_fills_an_under_filled_terrain_sprite() -> None:
+    """A sprite whose opaque blob covers ~40% of the diamond is scaled
+    to the full tile extent and clipped to the diamond mask."""
+    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    for y in range(8, 24):
+        for x in range(16, 48):
+            img.putpixel((x, y), (0x5C, 0x80, 0x38, 255))
+    before, _ = _diamond_coverage(img)
+    assert before < 0.6
+
+    fitted = diamond_fit(img)
+
+    coverage, outside = _diamond_coverage(fitted)
+    assert fitted.size == (64, 32)
+    assert coverage >= 0.9
+    assert outside <= 0.02
+
+
+def test_diamond_fit_is_identity_on_a_full_diamond() -> None:
+    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    for y in range(32):
+        for x in range(64):
+            if in_diamond(x, y, 64, 32):
+                colour = (0x3F, 0x6E, 0x94) if (x * 7 + y * 3) % 5 else (0xA8, 0xCC, 0xDD)
+                img.putpixel((x, y), (*colour, 255))
+    assert diamond_fit(img).tobytes() == img.tobytes()
+
+
+def test_diamond_fit_is_deterministic() -> None:
+    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    for y in range(10, 20):
+        for x in range(5, 50, 3):
+            img.putpixel((x, y), (0xC9, 0xA6, 0x71, 255))
+    assert diamond_fit(img).tobytes() == diamond_fit(img).tobytes()
+
+
+def test_diamond_fit_leaves_an_empty_sprite_empty() -> None:
+    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    assert diamond_fit(img).getbbox() is None

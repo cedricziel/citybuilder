@@ -99,3 +99,43 @@ def preserve_outline(image: Image.Image) -> Image.Image:
     mid-tone for).
     """
     return image.copy()
+
+
+def in_diamond(x: int, y: int, width: int, height: int) -> bool:
+    """True when pixel (x, y)'s centre lies inside the iso diamond
+    inscribed in a `width × height` canvas. Mirrors `DiamondMask` in
+    the Swift content gate so both sides agree on every pixel."""
+    dx = abs((x + 0.5) - width / 2) / (width / 2)
+    dy = abs((y + 0.5) - height / 2) / (height / 2)
+    return dx + dy <= 1
+
+
+def diamond_bbox(width: int, height: int) -> tuple[int, int, int, int]:
+    """Bounding box (left, top, right, bottom) of the diamond's pixels."""
+    xs = [x for y in range(height) for x in range(width) if in_diamond(x, y, width, height)]
+    ys = [y for y in range(height) for x in range(width) if in_diamond(x, y, width, height)]
+    return min(xs), min(ys), max(xs) + 1, max(ys) + 1
+
+
+def diamond_fit(image: Image.Image) -> Image.Image:
+    """Scale a terrain sprite's opaque region to the diamond's extent, then
+    clip it to the iso diamond, so adjacent tiles meet without gaps.
+
+    Nearest-neighbour throughout, so the step is deterministic and
+    keeps the palette. An empty sprite comes back empty.
+    """
+    src = image.convert("RGBA")
+    width, height = src.size
+    bbox = src.getchannel("A").point(lambda v: 255 if v >= 128 else 0).getbbox()
+    if bbox is None:
+        return src.copy()
+    left, top, right, bottom = diamond_bbox(width, height)
+    scaled = src.crop(bbox).resize((right - left, bottom - top), resample=Image.Resampling.NEAREST)
+    fitted = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    fitted.paste(scaled, (left, top))
+    px = fitted.load()
+    for y in range(height):
+        for x in range(width):
+            if not in_diamond(x, y, width, height):
+                px[x, y] = (0, 0, 0, 0)
+    return fitted

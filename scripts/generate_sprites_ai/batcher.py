@@ -36,7 +36,7 @@ import httpx
 from PIL import Image
 
 from . import cache as _cache_mod
-from . import paths
+from . import paths, procedural
 from .cache import (
     cache_key,
     read_cache,
@@ -45,7 +45,7 @@ from .cache import (
     write_sheet,
 )
 from .composer import compose_single_sprite_prompt
-from .postprocess import downsample, quantize, threshold_alpha
+from .postprocess import diamond_fit, downsample, quantize, threshold_alpha
 from .slicer import CatalogEntry, parse_catalog_entry, slice_plan
 
 
@@ -154,6 +154,8 @@ def _process_and_write_cell(
     binarized = threshold_alpha(tile, threshold=128)
     resized = downsample(binarized, target, mode="nearest")
     quantized = quantize(resized, PALETTE)
+    if sprite_name.startswith("terrain-"):
+        quantized = diamond_fit(quantized)
     resolver = output_dir_resolver or paths.atlas_dir_for
     out_path = resolver(sprite_name) / f"{sprite_name}.png"
     _save_indexed_png(quantized, out_path)
@@ -353,6 +355,10 @@ def _sprite_for_atlas_name(
     24-bit RGBA output; the round-trip collapses online and offline
     onto a single deterministic input).
     """
+    if _is_procedural(entry) and not offline:
+        write_sheet(sprite_name, procedural.render_sheet(sprite_name))
+        return _read_back(sprite_name)
+
     if offline:
         sheet = read_sheet(sprite_name)
         if sheet is None:
@@ -391,12 +397,37 @@ def _sprite_for_atlas_name(
     )
     write_cache(key, fresh, api_response_json=None)
     write_sheet(sprite_name, fresh)
+    return _read_back(sprite_name)
+
+
+def _read_back(sprite_name: str) -> Image.Image:
     sheet = read_sheet(sprite_name)
     if sheet is None:
         raise RuntimeError(
             f"failed to read back just-written sheet for {sprite_name}"
         )
     return sheet
+
+
+def _is_procedural(entry: CatalogEntry) -> bool:
+    """`source = "procedural"` entries are drawn locally by
+    `procedural.render_sheet` instead of the image API."""
+    return entry.front_matter.get("source", "").strip().lower() == "procedural"
+
+
+def write_procedural_sheets() -> list[str]:
+    """Write `_sheets/<sprite>.png` for every sprite declared by a
+    procedural catalog entry. Returns the sprite names written. Needs
+    no API key; follow with an offline run to refresh the atlases."""
+    written: list[str] = []
+    for md in sorted(paths.CATALOG_DIR.glob("*.md")):
+        entry = parse_catalog_entry(md.stem, md.read_text(encoding="utf-8"))
+        if not _is_procedural(entry):
+            continue
+        for _, sprite_name in slice_plan(entry):
+            write_sheet(sprite_name, procedural.render_sheet(sprite_name))
+            written.append(sprite_name)
+    return written
 
 
 def _diff_against_committed(written: list[Path]) -> list[Path]:
