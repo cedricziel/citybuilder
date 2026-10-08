@@ -27,6 +27,7 @@ public enum BuildTool: Hashable, Sendable {
             case .charcoalBurner: return "Charcoal"
             case .smelter: return "Smelter"
             case .toolsmith: return "Toolsmith"
+            case .library: return "Library"
             case .sawmill: return "Sawmill"
             case .townCenter: return "Town Ctr."
             case .port: return "Port"

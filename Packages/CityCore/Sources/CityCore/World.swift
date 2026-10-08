@@ -66,6 +66,10 @@ public struct World: Codable, Sendable, Equatable {
     /// ---- pending player commands ----------------------------------
     public internal(set) var pendingCommands: [Command]
 
+    /// ---- research --------------------------------------------------
+    /// Fixtures and migrated saves have everything; `newGame` resets it.
+    public internal(set) var research: ResearchState = .everything
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
@@ -158,6 +162,9 @@ public struct World: Codable, Sendable, Equatable {
         let tiles = spec.footprint.tiles(anchor: anchor)
         var landCount = 0
         var waterCount = 0
+        if let rejection = researchOrTerrainRejection(kind, tiles: tiles) {
+            return .rejected(rejection)
+        }
         for tile in tiles {
             guard contains(tile) else { return .rejected(.outOfBounds) }
             if occupiedTiles[tile] != nil { return .rejected(.tileOccupied) }
@@ -170,10 +177,6 @@ public struct World: Codable, Sendable, Equatable {
             } else {
                 landCount += 1
             }
-        }
-        if let required = spec.requiredTerrain {
-            let matching = tiles.count { terrain(at: $0) == required.terrain }
-            if matching < required.minTiles { return .rejected(.needsTerrain(required.terrain)) }
         }
         if let shore = spec.shorePlacement {
             if landCount < shore.minLandTiles { return .rejected(.shoreRequiresLandTile) }
@@ -239,6 +242,7 @@ public struct World: Codable, Sendable, Equatable {
         runCarrierSystem(events: &events)
         runShipSystem()
         runPopulationSystem()
+        runResearchSystem()
         runEconomySystem(events: &events)
 
         let endNanos = currentMonotonicNanoseconds()
@@ -283,6 +287,8 @@ public struct World: Codable, Sendable, Equatable {
         switch command {
         case .noop:
             return
+        case let .chooseResearch(tech):
+            applyChooseResearch(tech)
         case let .harvestForest(coord):
             // Forests becoming grass when harvested per spec
             // `world-terrain` ("Forest tile can be cleared").
@@ -397,7 +403,7 @@ public struct World: Codable, Sendable, Equatable {
              .toolsmith: 16
         case .house: 8
         case .townCenter: 40
-        case .road: nil
+        case .road, .library: nil
         case .port: 200
         case .shipyard: 64
         }

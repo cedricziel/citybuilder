@@ -26,6 +26,8 @@ public enum BuildingKind: String, CaseIterable, Sendable {
     case charcoalBurner = "charcoal-burner"
     case smelter
     case toolsmith
+    /// Produces knowledge. Spec: `research`.
+    case library
     case townCenter = "town-center"
     /// Shore building, accepts deposits/withdrawals from both carriers
     /// (land side) and ships (sea side). Spec: `port-and-shipyard`.
@@ -205,6 +207,10 @@ public enum BuildingCatalog {
         .toolsmith: BuildingSpec(
             kind: .toolsmith, footprint: Footprint(width: 2, height: 2),
             cost: 140, upkeep: 2, buildDurationTicks: 35, materialCost: [.wood: 2, .planks: 4]
+        ),
+        .library: BuildingSpec(
+            kind: .library, footprint: Footprint(width: 2, height: 2),
+            cost: 100, upkeep: 2, buildDurationTicks: 35, materialCost: [.wood: 2, .planks: 4]
         ),
         .townCenter: BuildingSpec(
             kind: .townCenter, footprint: Footprint(width: 3, height: 3),

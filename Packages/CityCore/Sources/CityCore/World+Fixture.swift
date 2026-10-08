@@ -54,6 +54,7 @@ public extension World {
             seed: seed
         )
         world.seedTownCenters()
+        world.research = .initial
         return world
     }
 

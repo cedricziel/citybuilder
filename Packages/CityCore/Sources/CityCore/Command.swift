@@ -24,6 +24,10 @@ public enum Command: Codable, Equatable, Sendable {
     /// Demolish the building anchored at the given tile (if any).
     case demolish(at: TileCoordinate)
 
+    /// Make `tech` the current research. Spec: `research` / Choosing
+    /// research.
+    case chooseResearch(Tech)
+
     // MARK: - sea-transport / Route lifecycle commands (M3)
 
     /// Create a new route. The command applies at the next tick

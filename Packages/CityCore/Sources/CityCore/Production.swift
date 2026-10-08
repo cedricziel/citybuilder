@@ -44,7 +44,7 @@ public enum ProductionCatalog {
             ProductionRecipe(inputs: [.ore: 1, .charcoal: 1], outputs: [.iron: 1], cycleTicks: 50)
         case .toolsmith:
             ProductionRecipe(inputs: [.iron: 1, .planks: 1], outputs: [.tools: 1], cycleTicks: 60)
-        case .house, .warehouse, .road, .townCenter, .port:
+        case .house, .warehouse, .road, .townCenter, .port, .library:
             nil
         case .shipyard:
             // Shipyard recipe: 20 wood + 10 planks per ship hull. The

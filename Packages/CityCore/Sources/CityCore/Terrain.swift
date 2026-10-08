@@ -38,6 +38,8 @@ public enum PlacementRejection: Hashable, Sendable {
     case insufficientMaterials([Good: Int])
     /// Too few footprint tiles of the building's required terrain.
     case needsTerrain(TerrainType)
+    /// The building's tech is not researched yet. Spec: `research`.
+    case locked(Tech)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -49,6 +51,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .shoreRequiresWaterTile: "shore_requires_water_tile"
         case .insufficientMaterials: "insufficient_materials"
         case .needsTerrain: "needs_terrain"
+        case .locked: "locked"
         }
     }
 }
