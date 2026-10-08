@@ -488,6 +488,20 @@ def _register_buildings_and_units() -> None:
             )
     for tier in buildings.TIER_HOUSES:
         _RENDERERS[f"building-house-tier{tier}"] = lambda tier=tier: buildings.draw_house_tier(tier)
+    for culture in buildings.CULTURES:
+        for kind in buildings.CULTURE_KINDS:
+            name = f"building-{kind}-{culture}"
+            _RENDERERS[name] = lambda kind=kind, culture=culture: buildings.draw(kind, culture=culture)
+            frames = buildings.OPERATIONAL_FRAMES.get(kind, 0)
+            for i in range(frames):
+                _RENDERERS[f"{name}-operational-{i}"] = (
+                    lambda kind=kind, culture=culture, i=i, frames=frames:
+                    derive_operational(buildings.draw(kind, culture=culture), i, frames)
+                )
+        for tier in buildings.TIER_HOUSES:
+            _RENDERERS[f"building-house-tier{tier}-{culture}"] = (
+                lambda tier=tier, culture=culture: buildings.draw_house_tier(tier, culture)
+            )
     _RENDERERS["good-bread"] = _bread_icon
     for good, draw in _CHAIN_ICONS.items():
         _RENDERERS[f"good-{good}"] = draw
