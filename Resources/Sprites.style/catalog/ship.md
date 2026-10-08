@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Sailing-ship unit sprite. Ships emit from shipyards and traverse water
@@ -54,3 +57,8 @@ Eight independent 2-frame sail-luff cycles, one per facing.
 - SW luff: `(1, 2)` → `(1, 3)`. Adjacent on row 1.
 - W luff: `(1, 4)` → `(1, 5)`. Adjacent on row 1.
 - NW luff: `(1, 6)` → `(1, 7)`. Adjacent on row 1.
+
+Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
+`units.py`) in the register pinned by `world.md` § Building register.
+Operational frames keep the finished building and add a rising smoke plume.
+The per-cell roles above describe the original AI sprites.

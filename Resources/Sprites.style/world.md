@@ -122,6 +122,33 @@ hex.
   opacity black (`#1A1410` at α≈0.5 before chroma-key pass). The shadow
   shape mirrors the building footprint, not the roof silhouette.
 
+## Building register
+
+Every building, walker and ship is drawn by the procedural kit in
+`scripts/generate_sprites_ai/buildings.py` and `units.py`, following
+these rules so new content always belongs:
+
+- **Geometry.** Sprites are drawn in footprint space and projected onto a
+  canvas exactly as wide as the footprint diamond ((w + h) × 32 px). The
+  canvas bottom row is the diamond's bottom vertex. Each building stands
+  on a packed-earth yard covering its whole footprint.
+- **Light.** From the north-west. The south-west wall (left on screen)
+  takes the material's mid-tone; the south-east wall (right) its shade.
+- **Outline.** 1 px `#1A1410` on the shaded wall's outer edges, along the
+  bottom of both walls and under roof eaves. The lit wall's far edge
+  uses the material's shade instead.
+- **Height.** 10 px per storey. Roofs overhang walls by 0.12 tiles and
+  carry tile courses in the roof material's shade.
+- **Materials.** Plaster `#D4A86A`/`#A07C50`, timber `#A07C50`/`#6E4A2A`,
+  stone `#A89884`/`#7A6B59`, terracotta `#A53329`/`#7A1F1A`, slate
+  `#7A6B59`/`#3F2A26`, thatch `#D2C094`/`#8B5A2B`.
+- **Cast shadow.** A short `#3D2A1D` contact shadow along the south-east
+  side, drawn opaque (sprites use binary alpha).
+- **Construction.** Every building shows the same three stages: stone
+  pad, timber frame, walls with scaffolding.
+- **Animation.** Operational frames keep the finished building
+  pixel-identical and add a rising smoke plume.
+
 ## Background
 
 Generated sprites SHALL ship with **real PNG transparency**, not a

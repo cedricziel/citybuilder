@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Low-tier residential dwelling. Houses are the population anchor — every
@@ -37,3 +40,8 @@ duration.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Frames are placed in
   adjacent cells on row 0.
+
+Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
+`units.py`) in the register pinned by `world.md` § Building register.
+Operational frames keep the finished building and add a rising smoke plume.
+The per-cell roles above describe the original AI sprites.

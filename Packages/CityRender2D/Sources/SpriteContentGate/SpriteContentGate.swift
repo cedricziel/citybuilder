@@ -11,6 +11,9 @@ public enum SpriteContentGate {
     /// Allowed drift, in pixels, of an operational frame's left, right
     /// and bottom edges from its base sprite's.
     public static let silhouetteTolerance = 2
+    /// Minimum share of a building base sprite's opaque pixels that
+    /// must be the outline colour `#1A1410`.
+    public static let minimumOutlineShare = 0.03
 
     public enum Reason: String, Sendable {
         case terrainCoverageBelowThreshold = "terrain_coverage_below_threshold"
@@ -18,6 +21,8 @@ public enum SpriteContentGate {
         case frameEmpty = "frame_empty"
         case frameIncoherent = "frame_incoherent"
         case frameMisaligned = "frame_misaligned"
+        case outlineMissing = "outline_missing"
+        case notGrounded = "not_grounded"
     }
 
     public struct Failure: Equatable, Sendable {
@@ -60,6 +65,9 @@ public enum SpriteContentGate {
                 }
                 if isMisaligned(name, in: images) {
                     failures.append(.init(file: name, reason: .frameMisaligned))
+                }
+                if isBuildingBase(name) {
+                    failures += buildingRegisterFailures(name, image)
                 }
             }
         }
@@ -128,6 +136,25 @@ public enum SpriteContentGate {
         return abs(frameBox.minX - baseBox.minX) > tolerance
             || abs(frameBox.maxX - baseBox.maxX) > tolerance
             || abs(frameBox.maxY - baseBox.maxY) > tolerance
+    }
+
+    /// `building-<kind>.png` or `building-<kind>-<n|e|s|w>.png`; roads,
+    /// construction stages, operational frames and variants excluded.
+    static func isBuildingBase(_ fileName: String) -> Bool {
+        let stem = (fileName as NSString).deletingPathExtension
+        guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road") else { return false }
+        return coherenceBase(for: fileName) == nil && !stem.contains("-constructing-")
+    }
+
+    private static func buildingRegisterFailures(_ name: String, _ image: RGBAImage) -> [Failure] {
+        var failures: [Failure] = []
+        if image.outlineShare < minimumOutlineShare {
+            failures.append(.init(file: name, reason: .outlineMissing))
+        }
+        if let bounds = image.opaqueBounds, bounds.maxY < image.height - 2 {
+            failures.append(.init(file: name, reason: .notGrounded))
+        }
+        return failures
     }
 
     private static func flagDistance(_ arguments: [String]) -> Double? {
@@ -220,6 +247,19 @@ public struct RGBAImage: Sendable {
             }
         }
         return bounds
+    }
+
+    /// Share of opaque pixels that are exactly the outline colour.
+    public var outlineShare: Double {
+        var opaque = 0
+        var outline = 0
+        for offset in stride(from: 0, to: rgba.count, by: 4) where rgba[offset + 3] >= Self.opaqueAlpha {
+            opaque += 1
+            if rgba[offset] == 0x1A, rgba[offset + 1] == 0x14, rgba[offset + 2] == 0x10 {
+                outline += 1
+            }
+        }
+        return opaque == 0 ? 0 : Double(outline) / Double(opaque)
     }
 
     public var opaquePixelCount: Int {

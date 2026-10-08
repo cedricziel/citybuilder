@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Bulk-goods storage building used as a central buffer for the carrier
@@ -33,3 +36,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 Construction-stage progression — not a loop.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
+
+Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
+`units.py`) in the register pinned by `world.md` § Building register.
+Operational frames keep the finished building and add a rising smoke plume.
+The per-cell roles above describe the original AI sprites.

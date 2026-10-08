@@ -1,3 +1,6 @@
+---
+source = "procedural"
+---
 ## Function
 
 Generic land-walking unit sprite used by every walker class (carrier,
@@ -36,3 +39,8 @@ are placed in adjacent cells.
 - SE step: `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - SW step: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 - NW step: `(1, 2)` → `(1, 3)`. Adjacent on row 1.
+
+Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
+`units.py`) in the register pinned by `world.md` § Building register.
+Operational frames keep the finished building and add a rising smoke plume.
+The per-cell roles above describe the original AI sprites.

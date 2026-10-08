@@ -9,6 +9,7 @@ private let water = Pixel(red: 0x3F, green: 0x6E, blue: 0x94)
 private let glint = Pixel(red: 0xA8, green: 0xCC, blue: 0xDD)
 private let roof = Pixel(red: 0x8B, green: 0x2E, blue: 0x1F)
 private let wall = Pixel(red: 0xD9, green: 0xB0, blue: 0x7A)
+private let outline = Pixel(red: 0x1A, green: 0x14, blue: 0x10)
 
 private struct Pixel {
     let red: UInt8
@@ -51,7 +52,8 @@ private func houseSprite(shiftX: Int = 0, smoke: Bool = false) -> RGBAImage {
         if smoke, (34 ..< 37).contains(x), (0 ..< 4).contains(y) {
             return glint
         }
-        guard (20 + shiftX ..< 44 + shiftX).contains(x), (4 ..< 28).contains(y) else { return nil }
+        guard (20 + shiftX ..< 44 + shiftX).contains(x), (4 ..< 32).contains(y) else { return nil }
+        if y == 31 || x == 43 + shiftX { return outline }
         return y < 14 ? roof : wall
     }
 }
@@ -184,6 +186,43 @@ struct SpriteContentGateTests {
         let atlas = root.appendingPathComponent("Buildings.atlas")
         try writePNG(houseSprite(), to: atlas.appendingPathComponent("building-sawmill.png"))
         try writePNG(houseSprite(smoke: true), to: atlas.appendingPathComponent("building-sawmill-operational-0.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
+
+        #expect(failures.isEmpty)
+    }
+
+    @Test("scenario: content gate rejects a building without the outline colour")
+    func rejectsBuildingWithoutOutline() throws {
+        let root = temporaryResources()
+        let flat = image { x, y in (20 ..< 44).contains(x) && (4 ..< 32).contains(y) ? wall : nil }
+        try writePNG(flat, to: root.appendingPathComponent("Buildings.atlas/building-house.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
+
+        #expect(failures == [.init(file: "building-house.png", reason: .outlineMissing)])
+    }
+
+    @Test("scenario: content gate rejects a floating building")
+    func rejectsFloatingBuilding() throws {
+        let root = temporaryResources()
+        let floating = image { x, y in
+            guard (20 ..< 44).contains(x), (4 ..< 22).contains(y) else { return nil }
+            return y == 21 ? outline : wall
+        }
+        try writePNG(floating, to: root.appendingPathComponent("Buildings.atlas/building-port-e.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
+
+        #expect(failures == [.init(file: "building-port-e.png", reason: .notGrounded)])
+    }
+
+    @Test("roads and frames are exempt from building base checks")
+    func roadsAndFramesExempt() throws {
+        let root = temporaryResources()
+        let floating = image { x, y in (20 ..< 44).contains(x) && (4 ..< 20).contains(y) ? wall : nil }
+        try writePNG(floating, to: root.appendingPathComponent("Buildings.atlas/building-road.png"))
+        try writePNG(floating, to: root.appendingPathComponent("Buildings.atlas/building-house-constructing-0.png"))
 
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
 

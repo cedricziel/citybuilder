@@ -1,5 +1,5 @@
 ---
-operational = "derived"
+source = "procedural"
 ---
 ## Function
 
@@ -43,7 +43,7 @@ Two animation loops: construction (one-shot) and operational (forever).
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
-Operational frames are derived locally from the base sprite (front matter
-`operational = "derived"`): the building stays pixel-identical and a chimney
-smoke plume rises over the roof, so the loop never swaps one drawing for
-another. The per-frame roles above describe the original AI frames.
+Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
+`units.py`) in the register pinned by `world.md` § Building register.
+Operational frames keep the finished building and add a rising smoke plume.
+The per-cell roles above describe the original AI sprites.
