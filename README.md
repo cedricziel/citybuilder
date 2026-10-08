@@ -281,6 +281,12 @@ World-gen seeds each island's town center with **4 wood + 2 planks** — enough 
 
 When a build tool is armed, the HUD's `CostBreakdownView` renders one chip per required good showing `have/need`. Goods where `have < need` paint red so the player sees the shortfall before clicking.
 
+## Touch placement
+
+On iOS you place buildings without arming the palette first: long-press a tile (0.4 s), pick a building from the menu, nudge the ghost with the four iso arrows, then tap the checkmark to place it (or the cross to cancel). Nothing is spent until the checkmark. The menu follows the palette's rules: obsolete buildings are hidden, locked ones are disabled with the research they need, and entries you cannot afford or place on that tile say why. An **Actions** button beside the inspector opens the same menu, and a one-time hint teaches the long-press.
+
+The palette still works: arming a building and tapping a tile starts the same pending placement. Road and Demolish keep painting tile by tile, because confirming every road tile would be miserable. macOS keeps palette, hover and click-to-place; the long-press gesture, menu and HUD are iOS-only. The pending placement is session state and is never saved. Costs and materials are described under [Material costs](#material-costs).
+
 ## Construction stalls
 
 When the player places a building whose recipe is partially met, the

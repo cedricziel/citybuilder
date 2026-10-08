@@ -118,8 +118,7 @@ public enum IsoDirection: Hashable, Sendable {
 public struct PendingPlacement: Equatable, Sendable {
     public let kind: BuildingKind
     public var anchor: TileCoordinate
-    /// Tile the player long-pressed, kept for analytics / future undo
-    /// of nudges. Not currently consumed.
+    /// Tile the placement started on. Not currently consumed.
     public let origin: TileCoordinate
 }
 
@@ -131,17 +130,21 @@ public final class GameSession {
         pendingPlacement = PendingPlacement(kind: kind, anchor: tile, origin: tile)
     }
 
-    public func nudgePendingPlacement(_ direction: IsoDirection) {
+    public func nudgePendingPlacement(_ direction: NudgeDirection) {
         guard var pending = pendingPlacement else { return }
         let (dx, dy) = direction.tileOffset
         let next = TileCoordinate(x: pending.anchor.x + dx, y: pending.anchor.y + dy)
-        guard isInBounds(next) else { return }
+        guard world.contains(next) else { return }
         pending.anchor = next
         pendingPlacement = pending
     }
 
     public func confirmPendingPlacement() {
         guard let pending = pendingPlacement else { return }
+        if case let .rejected(reason) = world.canPlace(pending.kind, at: pending.anchor) {
+            hud.showRejection(reason, now: Date())   // stays pending
+            return
+        }
         world.enqueue(.place(pending.kind, at: pending.anchor))
         pendingPlacement = nil
     }
@@ -152,9 +155,13 @@ public final class GameSession {
 }
 ```
 
-While `pendingPlacement` is non-nil, `handleTap(at:)` ignores world taps (they don't commit, they don't change the anchor — the player must use the arrows or the HUD buttons). This prevents the common "I tapped to dismiss the menu and accidentally moved the ghost" failure mode.
+CityUI does not depend on CityRender2D (the renderer plugs in through `SnapshotRendererRegistry`), so `GameSession` cannot take CityRender2D's `IsoDirection`. CityUI declares `NudgeDirection`, a four-case mirror with the same `tileOffset` table; the renderer's nudge intents are never emitted (the HUD is SwiftUI and calls the session), so the two enums never need converting.
+
+While `pendingPlacement` is non-nil, `handleTap(at:)` and `handleDrag(at:)` ignore world input (they don't commit, they don't change the anchor — the player must use the arrows or the HUD buttons). This prevents the common "I tapped to dismiss the menu and accidentally moved the ghost" failure mode.
 
 The ghost-preview pipeline reads `pendingPlacement.anchor` when set, falling back to `hoveredTile` otherwise. So the existing green/red affordance, cost breakdown, and shore-rule checks all just work through the same `ghostState()` path.
+
+Confirming a placement that `canPlace` now rejects (the tile got occupied, money ran out) keeps it pending and shows the rejection banner, the same as a rejected tap, so the player can nudge it somewhere valid instead of losing the pending state.
 
 **Alternatives considered:**
 
@@ -163,7 +170,9 @@ The ghost-preview pipeline reads `pendingPlacement.anchor` when set, falling bac
 
 ### D4. Roads and demolish bypass the pending step
 
-Picking `.road` from the context menu, or arming `.demolish`, transitions `selectedTool` directly with NO pending state. The player then taps or drags to paint.
+Picking `.road` from the context menu arms the road tool directly with NO pending state; the player then taps or drags to paint. Picking Demolish from the menu enqueues `.demolish` at the long-pressed tile at once. Arming `.demolish` from the palette keeps tap and drag erasing.
+
+On iOS a drag with a non-road building armed from the palette paints nothing (buildings are singletons, see Non-Goals) and pans the camera, so the player can still move the view while positioning a building.
 
 Reasoning: roads are painted in long runs (10-30 tiles at a stretch is common). Forcing a confirmation per tile would make the painting flow miserable, and per-tile money cost already provides feedback. Demolish is reversible by re-placing (modulo cost) and is typically aimed at obvious targets the player can already see.
 
@@ -172,17 +181,12 @@ The asymmetry is documented in the menu itself: "Build › Road" and "Demolish" 
 ```
                   Long-press menu items
                   ──────────────────────
-                       Build  ▶
                           Road           → arms .place(.road), tap/drag paints
                           House          → enters pending placement
                           Warehouse      → enters pending placement
-                          Sawmill        → enters pending placement
-                          Lumberjack     → enters pending placement
-                          Port           → enters pending placement
-                          Shipyard       → enters pending placement
-                          Town Center    → enters pending placement
-                       Demolish          → arms .demolish, tap removes
-                       Inspect           → dismiss, keep tile selected
+                          ...            (every kind the palette offers)
+                       Demolish          → enqueues .demolish at the tile
+                       Cancel            → dismiss, keep tile selected
 ```
 
 **Alternatives considered:**
@@ -192,7 +196,7 @@ The asymmetry is documented in the menu itself: "Build › Road" and "Demolish" 
 
 ### D5. Mac shell stays on the old model
 
-The iOS-specific paths (`UILongPressGestureRecognizer`, `TileContextMenu`, `PlacementHUD`) are conditioned on `#if os(iOS)`. The Mac shell continues to use:
+The iOS-specific paths (`UILongPressGestureRecognizer`, the tile menu dialog, `PlacementHUD`, the coach mark) are conditioned on `#if os(iOS)`. The behavioural rule "a palette-armed building waits for a confirmation" is the session flag `GameSession.confirmsBuildingPlacement` (default on for iOS, off for macOS) rather than an `#if` inside `handleTap`, so `swift test` on a Mac covers both behaviours. The Mac shell continues to use:
 
 - Palette to arm a tool.
 - Hover for the ghost preview.
@@ -246,7 +250,7 @@ struct TileContextMenuPresenter: View {
 }
 ```
 
-The dialog filters: only buildings whose `canPlace` returns `.allowed` (or returns `.rejected(.insufficientMaterials)` but with enough money — the affordable-soon set) appear enabled. Demolish appears only when the tile holds a player-owned building.
+`TileMenuViewModel` follows the palette's rules, which landed after this design was written: it lists `BuildPaletteView.visibleKinds(isHidden:)` (no town center; obsolete kinds hidden through the same `isHidden` hook, `GameSession.isObsolete`). An entry is enabled when `canPlace` allows the tile and the balance covers the cost, the same test the ghost preview uses. Every other entry stays visible but disabled and carries a reason: `PlacementRejectionText` for a rejection (a locked kind reads "Needs <tech> research"), "Costs $N" when only money is short. Dialog buttons read "House — $20" or "Mine — Needs Mining research". Demolish appears when the tile holds a building (all buildings are the player's today).
 
 **Alternatives considered:**
 

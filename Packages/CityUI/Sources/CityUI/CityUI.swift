@@ -46,8 +46,9 @@ public struct CityRootView: View {
                 // tap-tile selection. A bare .gesture(DragGesture(...))
                 // claims the touch sequence and starves the scene's
                 // touchesEnded / mouseUp handlers.
-                .simultaneousGesture(panGesture, including: Self.panGestureMask(for: session.selectedTool))
+                .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
                 .simultaneousGesture(zoomGesture)
+            touchPlacementHUD
             VStack {
                 HStack(alignment: .top) {
                     HUDFrameView(viewModel: session.hud)
@@ -70,12 +71,14 @@ public struct CityRootView: View {
                 if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
                     HStack {
                         InspectorView(viewModel: inspector)
+                        inspectorActionsButton
                         Spacer()
                     }
                 }
             }
             .padding()
         }
+        .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .sheet(isPresented: $settingsPresented) {
@@ -250,11 +253,17 @@ public final class GameSession {
     /// - .inspect (default): select the tile for the inspector.
     /// - .place(kind): enqueue a `.place` command. Tool stays armed so
     ///   the player can place a run of roads or houses without re-arming.
+    ///   On iOS a building other than a road starts a pending placement
+    ///   instead (see `confirmsBuildingPlacement`).
     /// - .demolish: enqueue a `.demolish` command.
+    /// Ignored while a placement is pending.
     public func handleTap(at tile: TileCoordinate) {
+        guard pendingPlacement == nil else { return }
         switch selectedTool {
         case .inspect:
             selectedTile = tile
+        case let .place(kind) where needsConfirmation(kind):
+            beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
                 hud.showRejection(reason, now: Date())
@@ -267,6 +276,25 @@ public final class GameSession {
     }
 
     public var selectedTile: TileCoordinate?
+
+    /// The building the player is positioning before committing it.
+    /// Transient: never saved. Spec: `rendering-2_5d` / Placement HUD.
+    public var pendingPlacement: PendingPlacement?
+
+    /// Set by a long-press; the iOS shell shows the tile menu while non-nil.
+    public var tileMenuRequest: TileMenuRequest?
+
+    /// Whether a building other than a road waits for a confirmation
+    /// instead of committing on tap. On by default on iOS only; macOS
+    /// keeps commit-on-click. A flag rather than `#if` so the touch flow
+    /// is testable on the Mac.
+    public var confirmsBuildingPlacement: Bool = {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }()
 
     /// Tile currently under the pointer / fingertip. Drives the ghost
     /// preview. nil when no hover position is known (e.g. on iPhone
@@ -283,8 +311,11 @@ public final class GameSession {
     /// demolish command enqueued. In inspect mode, drag is a no-op (pan
     /// camera handles the gesture instead).
     public func handleDrag(at tile: TileCoordinate) {
+        guard pendingPlacement == nil else { return }
         switch selectedTool {
         case .inspect:
+            return
+        case let .place(kind) where needsConfirmation(kind):
             return
         case let .place(kind):
             world.enqueue(.place(kind, at: tile))
@@ -296,24 +327,30 @@ public final class GameSession {
     /// Ghost preview state derived from the armed tool + hovered tile.
     /// `valid` runs the same canPlace check the simulation will use at
     /// the tick boundary, so the green / red tint matches reality.
+    /// A pending placement overrides the hover.
     public func ghostState() -> GhostPreview? {
+        if let pending = pendingPlacement {
+            return ghostPreview(kind: pending.kind, tile: pending.anchor)
+        }
         guard let tile = hoveredTile else { return nil }
         switch selectedTool {
         case .inspect, .demolish:
             return nil
         case let .place(kind):
-            let valid: Bool
-            if case .allowed = world.canPlace(kind, at: tile) {
-                let spec = BuildingCatalog.spec(for: kind)
-                valid = world.economy.balance >= spec.cost
-            } else {
-                valid = false
-            }
-            return GhostPreview(
-                kind: kind, tile: tile, valid: valid,
-                costBreakdown: costBreakdown(for: kind, anchor: tile)
-            )
+            return ghostPreview(kind: kind, tile: tile)
         }
+    }
+
+    private func ghostPreview(kind: BuildingKind, tile: TileCoordinate) -> GhostPreview {
+        let valid: Bool = if case .allowed = world.canPlace(kind, at: tile) {
+            world.economy.balance >= BuildingCatalog.spec(for: kind).cost
+        } else {
+            false
+        }
+        return GhostPreview(
+            kind: kind, tile: tile, valid: valid,
+            costBreakdown: costBreakdown(for: kind, anchor: tile)
+        )
     }
 
     private func costBreakdown(
@@ -415,6 +452,9 @@ public final class GameSession {
         let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void = { [weak self] tile in
             self?.handleHover(at: tile)
         }
+        let longPressSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
+            self?.handleLongPress(at: tile)
+        }
         let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview? = { [weak self] in
             self?.ghostState()
         }
@@ -423,73 +463,8 @@ public final class GameSession {
             tapSink: tapSink,
             dragSink: dragSink,
             hoverSink: hoverSink,
+            longPressSink: longPressSink,
             ghostProvider: ghostProvider
         )
-    }
-}
-
-/// Tiny indirection so CityUI does not need to know about CityRender2D's
-/// view type at the public API boundary. Apps that want the SpriteKit
-/// renderer wire it here.
-@MainActor
-struct SnapshotHostView: View {
-    let snapshotProvider: @MainActor @Sendable () -> WorldSnapshot?
-    let tapSink: @MainActor @Sendable (TileCoordinate) -> Void
-    let dragSink: @MainActor @Sendable (TileCoordinate) -> Void
-    let hoverSink: @MainActor @Sendable (TileCoordinate?) -> Void
-    let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview?
-    var body: some View {
-        SnapshotRendererRegistry.shared.makeView(
-            snapshotProvider: snapshotProvider,
-            tapSink: tapSink,
-            dragSink: dragSink,
-            hoverSink: hoverSink,
-            ghostProvider: ghostProvider
-        )
-    }
-}
-
-/// Plug-in point so the renderer package can register itself without
-/// CityUI directly depending on it. App shells call
-/// `SnapshotRendererRegistry.shared.factory = …` at launch.
-///
-/// MainActor-isolated because the factory produces SwiftUI views and is
-/// only meant to be touched from the main thread.
-@MainActor
-public final class SnapshotRendererRegistry {
-    public static let shared = SnapshotRendererRegistry()
-
-    /// Returns a SwiftUI view that draws the world from the given snapshot
-    /// provider. Default is a placeholder text view; CityRender2D registers
-    /// a real implementation on app launch.
-    public typealias SnapshotProvider = @MainActor @Sendable () -> WorldSnapshot?
-    public typealias TapSink = @MainActor @Sendable (TileCoordinate) -> Void
-    public typealias DragSink = @MainActor @Sendable (TileCoordinate) -> Void
-    public typealias HoverSink = @MainActor @Sendable (TileCoordinate?) -> Void
-    public typealias GhostProvider = @MainActor @Sendable () -> GameSession.GhostPreview?
-
-    public var factory: (
-        @escaping SnapshotProvider,
-        @escaping TapSink,
-        @escaping DragSink,
-        @escaping HoverSink,
-        @escaping GhostProvider
-    ) -> AnyView = { _, _, _, _, _ in
-        AnyView(
-            Color.black.overlay(
-                Text("World renderer not registered")
-                    .foregroundStyle(.white)
-            )
-        )
-    }
-
-    func makeView(
-        snapshotProvider: @escaping SnapshotProvider,
-        tapSink: @escaping TapSink,
-        dragSink: @escaping DragSink,
-        hoverSink: @escaping HoverSink,
-        ghostProvider: @escaping GhostProvider
-    ) -> AnyView {
-        factory(snapshotProvider, tapSink, dragSink, hoverSink, ghostProvider)
     }
 }

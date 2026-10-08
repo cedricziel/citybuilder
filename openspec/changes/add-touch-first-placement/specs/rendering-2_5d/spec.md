@@ -45,7 +45,9 @@ The renderer's `InputTranslator` SHALL expose `longPressIntent(atScreenPoint:map
 
 ### Requirement: Placement-confirmation intents
 
-The `Intent` enum SHALL include `.confirmPlacement`, `.cancelPlacement`, and `.nudgePlacement(direction: IsoDirection)` cases. These intents MUST drive `GameSession`'s pending-placement state machine: confirm enqueues a `.place` command at the pending anchor and clears pending state, cancel clears pending state without enqueuing, nudge moves the pending anchor by `IsoDirection.tileOffset`. The intents MUST be platform-neutral so headless tests and the CLI can drive the flow.
+The `Intent` enum SHALL include `.confirmPlacement`, `.cancelPlacement`, and `.nudgePlacement(direction: IsoDirection)` cases. They name the pending-placement state machine's transitions: confirm enqueues a `.place` command at the pending anchor and clears pending state, cancel clears pending state without enqueuing, nudge moves the pending anchor one tile along the direction's `tileOffset`. The renderer never emits these three intents (the placement HUD is SwiftUI and calls `GameSession.confirmPendingPlacement()`, `cancelPendingPlacement()` and `nudgePendingPlacement(_:)` directly), so the app shells ignore them. `GameSession` mirrors `IsoDirection` as `NudgeDirection` because CityUI does not depend on CityRender2D. The transitions MUST be platform-neutral so headless tests and the CLI can drive the flow.
+
+A confirm whose placement `World.canPlace` rejects (the tile became occupied, the player lost the money) MUST NOT clear the pending state: it shows the rejection on the HUD so the player can nudge somewhere valid.
 
 #### Scenario: Confirm placement intent enqueues a place command
 
@@ -56,6 +58,11 @@ The `Intent` enum SHALL include `.confirmPlacement`, `.cancelPlacement`, and `.n
 
 - **WHEN** a `PendingPlacement` is active and the controller receives `.cancelPlacement`
 - **THEN** the pending placement is cleared and no command is enqueued
+
+#### Scenario: Confirm of a rejected placement keeps it pending
+
+- **WHEN** a `PendingPlacement` is active on a tile the world would reject and the controller receives `.confirmPlacement`
+- **THEN** the pending placement stays, no command is enqueued, and the HUD shows the rejection message
 
 #### Scenario: Nudge placement intent moves the pending anchor
 
@@ -78,7 +85,7 @@ The pending placement's anchor SHALL be clamped to the map's tile range `(0..<ma
 
 ### Requirement: Placement HUD
 
-CityUI on iOS SHALL render a `PlacementHUD` overlay whenever `GameSession.pendingPlacement` is non-nil. The HUD MUST display four iso-aligned arrow buttons (NE, SE, SW, NW), a central checkmark button, and a cancel button. Each arrow button MUST dispatch `.nudgePlacement(direction:)` with the matching `IsoDirection`. The checkmark button MUST dispatch `.confirmPlacement`. The cancel button MUST dispatch `.cancelPlacement`. All buttons MUST have hit targets of at least 44 × 44 points to satisfy iOS touch-target guidelines.
+CityUI on iOS SHALL render a `PlacementHUD` overlay whenever `GameSession.pendingPlacement` is non-nil. The HUD MUST display four iso-aligned arrow buttons (NE, SE, SW, NW), a central checkmark button, and a cancel button. Each arrow button MUST nudge the pending anchor along the matching direction (the `.nudgePlacement` transition) and MAY be disabled when that step would leave the map. The checkmark button MUST confirm (the `.confirmPlacement` transition) and is tinted by whether the placement is currently valid; confirming an invalid one shows why instead of placing. The cancel button MUST cancel (the `.cancelPlacement` transition). All buttons MUST have hit targets of at least 44 × 44 points to satisfy iOS touch-target guidelines. The arrows sit a fixed distance from the tile, along the rendered diamond's diagonals, so they stay large at any zoom.
 
 The HUD anchors to the screen position of the pending tile, derived by `IsoMath` projection of `pendingPlacement.anchor` through the current `Camera`. The HUD MUST track the anchor as the player nudges and MUST reposition on camera pan / zoom.
 
@@ -87,7 +94,7 @@ The HUD MUST NOT render on macOS; the Mac shell continues to commit placement on
 #### Scenario: PlacementHUD renders four arrow buttons positioned around the pending tile
 
 - **WHEN** `GameSession.pendingPlacement` is non-nil on iOS
-- **THEN** the `PlacementHUDViewModel.arrows` array contains exactly four entries — one each for `.ne`, `.se`, `.sw`, `.nw` — in stable order
+- **THEN** the `PlacementHUDViewModel.arrows` array contains exactly four entries — one each for `.ne`, `.se`, `.sw`, `.nw` (as `NudgeDirection`) — in stable order, and each has a distinct offset from the tile
 
 #### Scenario: PlacementHUD checkmark button dispatches confirmPlacement
 
@@ -102,24 +109,26 @@ The HUD MUST NOT render on macOS; the Mac shell continues to commit placement on
 #### Scenario: PlacementHUD arrow button dispatches the matching nudgePlacement direction
 
 - **WHEN** the player taps the NE arrow on a visible PlacementHUD
-- **THEN** the view model dispatches `.nudgePlacement(direction: .ne)` and the pending anchor moves by `(dx: 0, dy: -1)` on the next render
+- **THEN** the view model nudges the session along `.ne` and the pending anchor moves by `(dx: 0, dy: -1)` on the next render
 
 ### Requirement: Tile context menu on long-press
 
 CityUI on iOS SHALL present a `TileContextMenu` whenever the controller receives a `.longPressTile(coord)` intent. The menu MUST list:
 
-1. One Build entry per `BuildingKind`, ordered as in `BuildingKind.allCases`. Entries whose `canPlace(_:at:)` would reject for terrain, occupancy, or insufficient materials MUST appear disabled. The road entry MUST always appear (roads are always allowed unless terrain rejects).
+1. One Build entry per kind the build palette offers, in the palette's order: every `BuildingKind` except the town center, minus buildings the player's research made obsolete (hidden, exactly as in the palette). Entries whose `canPlace(_:at:)` would reject for research, terrain, occupancy, or insufficient materials, or that the player cannot afford, MUST appear disabled and MUST say why (a locked kind reads "Needs <tech> research"). The road entry appears whenever the palette offers it.
 2. A Demolish entry, visible only when the tile holds a player-owned building, rendered with the destructive role.
 3. A Cancel entry that dismisses the menu and keeps the inspector selection on the long-pressed tile.
+
+A long-press MUST also select the tile for the inspector, and the inspector SHALL offer an Actions button that opens the same menu for the selected tile.
 
 Selecting a non-road Build entry MUST enter pending-placement mode at the long-pressed tile via `GameSession.beginPendingPlacement(kind:at:)`. Selecting the road Build entry MUST arm the road place tool via `selectedTool = .place(.road)` WITHOUT entering pending-placement mode (roads paint via drag). Selecting Demolish MUST immediately enqueue `.demolish` at the long-pressed tile. Selecting Cancel MUST be a no-op beyond dismissing the menu.
 
 The menu MUST NOT present on macOS; the Mac shell continues to use the palette + click model.
 
-#### Scenario: Menu lists all building kinds except road as separate entries
+#### Scenario: Menu lists every placeable building kind as a separate entry
 
 - **WHEN** `TileMenuViewModel(tile:, world:, money:)` is built for any tile
-- **THEN** its items contain exactly one `.build(kind, enabled:)` entry per `BuildingKind` (including `.road`)
+- **THEN** its items contain exactly one `.build(kind, enabled:, reason:)` entry per kind the palette shows (including `.road`)
 
 #### Scenario: Road menu entry arms the place tool without entering pending state
 
@@ -129,7 +138,17 @@ The menu MUST NOT present on macOS; the Mac shell continues to use the palette +
 #### Scenario: Unaffordable buildings appear disabled in the menu
 
 - **WHEN** `TileMenuViewModel` is built for a tile where the player cannot afford a sawmill (e.g. insufficient money or insufficient island materials)
-- **THEN** the `.build(.sawmill, enabled: false)` entry has `enabled == false`
+- **THEN** the `.build(.sawmill, enabled: false, reason:)` entry has `enabled == false` and a reason
+
+#### Scenario: Locked buildings appear disabled with the research reason
+
+- **WHEN** `TileMenuViewModel` is built for a world where the mine's tech is not researched
+- **THEN** the mine entry is disabled and its reason reads "Needs <tech> research"
+
+#### Scenario: Obsolete buildings are left out of the menu
+
+- **WHEN** `TileMenuViewModel` is built for a world that researched the tech replacing the quern house
+- **THEN** the items contain no quern house entry
 
 #### Scenario: Demolish entry appears only when tile holds a player-owned building
 
@@ -189,12 +208,31 @@ CityUI on iOS SHALL show a one-time coach mark "Long-press a tile to build" on f
 
 ### Requirement: Palette-armed buildings route through pending placement on iOS
 
-On iOS, when the player taps a world tile with a build tool armed via the `BuildPaletteView`, the tap SHALL enter pending-placement mode for that building kind at the tapped tile (matching the long-press → menu → pick flow), EXCEPT when the armed tool is `.place(.road)` or `.demolish`. Road and demolish MUST continue to commit immediately on tap / drag (paint behavior). On macOS, palette-armed taps MUST commit immediately on click for every kind, including non-road buildings.
+On iOS, when the player taps a world tile with a build tool armed via the `BuildPaletteView`, the tap SHALL enter pending-placement mode for that building kind at the tapped tile (matching the long-press → menu → pick flow), EXCEPT when the armed tool is `.place(.road)` or `.demolish`. Road and demolish MUST continue to commit immediately on tap / drag (paint behavior). A drag with a non-road building armed MUST NOT paint buildings, and a drag pans the camera in that case. On macOS, palette-armed taps MUST commit immediately on click for every kind, including non-road buildings.
+
+The rule is the session flag `GameSession.confirmsBuildingPlacement`, on by default on iOS and off on macOS, so both behaviours are testable on either platform.
 
 #### Scenario: Palette-armed building tap enters pending placement on iOS
 
 - **WHEN** `selectedTool == .place(.house)` on iOS and the player taps tile `(3, 4)`
 - **THEN** `pendingPlacement?.kind == .house` and `pendingPlacement?.anchor == TileCoordinate(x: 3, y: 4)` and no `.place` command is yet enqueued
+
+#### Scenario: Palette-armed building drag does not paint on iOS
+
+- **WHEN** `selectedTool == .place(.house)` on iOS and the player drags across tile `(3, 4)`
+- **THEN** no `.place` command is enqueued
+
+#### Scenario: Camera pans unless a tool paints tile by tile
+
+- **WHEN** the armed tool is inspect, or a non-road building on iOS
+- **THEN** a one-finger drag pans the camera
+- **WHEN** the armed tool is road or demolish, or any place tool on macOS
+- **THEN** the pan gesture is masked off so drag-to-paint reaches the scene
+
+#### Scenario: Palette-armed building tap commits on click on macOS
+
+- **WHEN** `selectedTool == .place(.house)` on macOS and the player clicks tile `(3, 4)`
+- **THEN** a `.place(.house, at: TileCoordinate(x: 3, y: 4))` command is enqueued and `pendingPlacement == nil`
 
 #### Scenario: Palette-armed road tap or drag paints immediately on iOS
 

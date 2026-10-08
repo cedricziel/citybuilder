@@ -18,7 +18,7 @@ struct CitybuilderiOSApp: App {
     init() {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
-        SnapshotRendererRegistry.shared.factory = { [audio] provider, tapSink, dragSink, hoverSink, ghostProvider in
+        SnapshotRendererRegistry.shared.factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider in
             AnyView(
                 IsoWorldView(
                     snapshotProvider: provider,
@@ -27,7 +27,10 @@ struct CitybuilderiOSApp: App {
                         case let .tapTile(coord): tapSink(coord)
                         case let .dragTile(coord): dragSink(coord)
                         case let .hoverTile(coord): hoverSink(coord)
-                        case .panCamera, .pinchZoom: break
+                        case let .longPressTile(coord): longPressSink(coord)
+                        // The scene never emits these; the placement HUD drives
+                        // the session directly.
+                        case .panCamera, .pinchZoom, .confirmPlacement, .cancelPlacement, .nudgePlacement: break
                         }
                     },
                     ghostProvider: {

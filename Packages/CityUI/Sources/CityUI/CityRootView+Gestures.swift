@@ -8,8 +8,8 @@ extension CityRootView {
     /// (UIKit's `cancelsTouchesInView`), so while a build tool is armed
     /// the pan gesture is masked off and drag-to-paint reaches the
     /// scene's `touchesMoved`.
-    static func panGestureMask(for tool: BuildTool) -> GestureMask {
-        tool == .inspect ? .all : .subviews
+    static func panGestureMask(allowsPan: Bool) -> GestureMask {
+        allowsPan ? .all : .subviews
     }
 
     /// One-finger drag (iOS) / left-mouse drag (Mac) pans the camera.
@@ -21,7 +21,7 @@ extension CityRootView {
                 // When a build tool is armed, drag is "paint" — handled
                 // by the SKScene's mouseDragged / touchesMoved. The pan
                 // gesture stays out of the way.
-                guard session.selectedTool == .inspect else { return }
+                guard session.allowsCameraPan else { return }
                 session.handlePanDelta(
                     deltaX: value.translation.width - session.lastPanX,
                     deltaY: value.translation.height - session.lastPanY
