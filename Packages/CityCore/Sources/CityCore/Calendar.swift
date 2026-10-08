@@ -56,6 +56,10 @@ public struct CalendarState: Codable, Hashable, Sendable {
 public enum HistoryEvent: Int, CaseIterable, Hashable, Sendable {
     case bountifulHarvest, tradeCaravan, travellingScholar, ratsInTheGranary
 
+    public var isHarmful: Bool {
+        self == .ratsInTheGranary
+    }
+
     public var title: String {
         switch self {
         case .bountifulHarvest: "Bountiful harvest"
@@ -92,9 +96,13 @@ extension World {
     /// year alone so the world's own RNG is never consumed (design D4).
     public func historyEvent(forYear year: Int) -> HistoryEvent? {
         var rng = DeterministicRNG(seed: seed &+ UInt64(truncatingIfNeeded: year) &* 0x9E37_79B9_7F4A_7C15)
-        guard rng.next().isMultiple(of: 2) else { return nil }
-        let index = Int(rng.next() % UInt64(HistoryEvent.allCases.count))
-        return HistoryEvent.allCases[index]
+        guard rng.next() % 100 < difficulty.eventChancePercent else { return nil }
+        // Harmful events are weighted by difficulty (design D2 of
+        // `add-difficulty-and-goals`).
+        let weighted = HistoryEvent.allCases.flatMap { event in
+            Array(repeating: event, count: event.isHarmful ? difficulty.harmfulEventWeight : 1)
+        }
+        return weighted[Int(rng.next() % UInt64(weighted.count))]
     }
 
     public mutating func applyHistoryEvent(_ event: HistoryEvent) {

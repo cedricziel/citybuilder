@@ -81,6 +81,12 @@ public struct World: Codable, Sendable, Equatable {
     /// Spec: `historical-ages` / The world is in an age.
     public internal(set) var age: Age = .medieval
 
+    /// Spec: `difficulty-and-goals`. Normal by default so fixtures keep
+    /// today's numbers; sandboxes have no goals.
+    public internal(set) var difficulty: Difficulty = .normal
+    public internal(set) var goals: [GoalState] = []
+    public internal(set) var scenarioWon: Bool = false
+
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
 
@@ -255,6 +261,7 @@ public struct World: Codable, Sendable, Equatable {
         runPopulationSystem()
         runResearchSystem(events: &events)
         runCalendarSystem(events: &events)
+        runGoalSystem(events: &events)
         runEconomySystem(events: &events)
 
         let endNanos = currentMonotonicNanoseconds()

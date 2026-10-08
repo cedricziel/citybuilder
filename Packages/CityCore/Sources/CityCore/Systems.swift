@@ -377,6 +377,7 @@ extension World {
             for building in buildings.values where building.state == .operational {
                 totalUpkeep += BuildingCatalog.spec(for: building.kind).upkeep
             }
+            totalUpkeep = difficulty.scaledUpkeep(totalUpkeep)
             economy.deduct(totalUpkeep)
             // Same as above — empty cities and free-upkeep buildings shouldn't
             // generate a per-interval no-op event.
@@ -392,7 +393,7 @@ extension World {
             if priorDeficitTicks == 0 {
                 events.append(.bankruptcyWarning(deficitTicks: economy.bankruptcyDeficitTicks))
             }
-            if economy.bankruptcyDeficitTicks >= Economy.bankruptcyGraceTicks {
+            if economy.bankruptcyDeficitTicks >= difficulty.bankruptcyGraceTicks {
                 economy.gameOver = true
                 if !priorGameOver {
                     events.append(.gameOver)

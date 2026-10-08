@@ -34,7 +34,8 @@ public extension World {
         layout: WorldLayout,
         seed: UInt64,
         culture: Culture = .northernEuropean,
-        age: Age = .medieval
+        age: Age = .medieval,
+        difficulty: Difficulty = .normal
     ) -> World {
         let grid: [TerrainType]
         let width: Int
@@ -58,6 +59,8 @@ public extension World {
             mapHeightForClimate: height,
             seed: seed
         )
+        world.difficulty = difficulty
+        world.economy.balance = difficulty.startingBalance
         world.seedTownCenters()
         world.research = initialResearch(for: age)
         world.calendar = CalendarState(startYear: age.startYear, isActive: true)
@@ -72,7 +75,7 @@ public extension World {
     /// becomes the bootstrap goods-buffer for the first placements.
     internal mutating func seedTownCenters() {
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
-        let starter: [(Good, Int)] = [(.wood, 6), (.planks, 5), (.food, 2)]
+        let starter = difficulty.starterStock
         for island in islands {
             guard let anchor = findFootprint(footprint, on: island) else { continue }
             let id = EntityID(raw: nextEntityRaw)
@@ -155,5 +158,17 @@ public extension World {
     /// real goods-buffer stockpiles.
     mutating func seedUnlimitedTestInventory() {
         testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
+    }
+}
+
+public extension World {
+    /// A new game set up by a built-in scenario: its age, difficulty and
+    /// goals. Spec: `difficulty-and-goals` / Built-in scenarios.
+    static func newGame(layout: WorldLayout, seed: UInt64, culture: Culture, scenario: Scenario) -> World {
+        var world = newGame(
+            layout: layout, seed: seed, culture: culture, age: scenario.age, difficulty: scenario.difficulty
+        )
+        world.goals = scenario.goals.map { GoalState(goal: $0) }
+        return world
     }
 }

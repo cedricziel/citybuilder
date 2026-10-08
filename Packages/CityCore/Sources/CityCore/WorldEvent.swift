@@ -75,6 +75,8 @@ public enum WorldEvent: Sendable {
     case historyEvent(HistoryEvent)
     /// The city entered a new age. Spec: `historical-ages`.
     case ageAdvanced(Age)
+    /// Every scenario goal is met. Spec: `difficulty-and-goals`.
+    case scenarioWon
 }
 
 extension WorldEvent: Equatable {
@@ -126,6 +128,8 @@ extension WorldEvent: Equatable {
             return lEvent == rEvent
         case let (.ageAdvanced(lAge), .ageAdvanced(rAge)):
             return lAge == rAge
+        case (.scenarioWon, .scenarioWon):
+            return true
         default:
             return false
         }
@@ -164,7 +168,8 @@ public extension WorldEvent {
              .gameOver,
              .seasonChanged,
              .historyEvent,
-             .ageAdvanced:
+             .ageAdvanced,
+             .scenarioWon:
             return nil
         }
     }
@@ -197,7 +202,8 @@ public extension WorldEvent {
              .gameOver,
              .seasonChanged,
              .historyEvent,
-             .ageAdvanced:
+             .ageAdvanced,
+             .scenarioWon:
             return nil
         }
     }
@@ -229,6 +235,7 @@ public extension WorldEvent {
         case .seasonChanged: return 18
         case .historyEvent: return 19
         case .ageAdvanced: return 20
+        case .scenarioWon: return 21
         }
     }
 }

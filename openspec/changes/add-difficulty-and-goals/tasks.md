@@ -1,7 +1,7 @@
 ## 1. M1 — Core
 
-- [ ] 1.1 Tests-first: translate the difficulty-and-goals scenarios into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Difficulty`, economy and event scaling, goals system, scenarios, `newGame` overloads (design D1–D4).
+- [x] 1.1 Tests-first: translate the difficulty-and-goals scenarios into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Difficulty`, economy and event scaling, goals system, scenarios, `newGame` overloads (design D1–D4).
 
 ## 2. M2 — Persistence
 
