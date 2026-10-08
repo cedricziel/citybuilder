@@ -140,6 +140,8 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .bankruptcyWarning: return "bankruptcyWarning"
         case .bankruptcyResolved: return "bankruptcyResolved"
         case .gameOver: return "gameOver"
+        case .seasonChanged: return "seasonChanged"
+        case .historyEvent: return "historyEvent"
         }
     }
 }
