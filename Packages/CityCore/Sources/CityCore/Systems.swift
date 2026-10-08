@@ -350,11 +350,7 @@ extension World {
             else { continue }
             guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
             _ = good // future: check warehouse accepts this good type
-            guard let path = PathFinder.path(
-                from: start,
-                to: bufferRoad,
-                in: roadGraph
-            )
+            guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)

@@ -99,7 +99,7 @@ extension World {
                       anchor: buffer.anchor,
                       footprint: BuildingCatalog.spec(for: buffer.kind).footprint
                   ),
-                  let path = PathFinder.path(from: bufferRoad, to: road, in: roadGraph)
+                  let path = roadPath(from: bufferRoad, to: road)
             else { continue }
             if best.map({ path.count < $0.1.count }) ?? true {
                 best = (buffer.id, path)
@@ -124,6 +124,14 @@ extension World {
         return amount - remaining
     }
 
+    /// Road path between two road tiles. Roads never cross water, so
+    /// tiles on different islands are answered without a search.
+    func roadPath(from start: TileCoordinate, to goal: TileCoordinate) -> [TileCoordinate]? {
+        let islands = tileToIslandMap()
+        guard islands[start] == islands[goal] else { return nil }
+        return PathFinder.path(from: start, to: goal, in: roadGraph)
+    }
+
     /// True when a road path joins a road next to `anchor`'s footprint
     /// and a road next to `other`'s footprint.
     func sharesRoadNetwork(
@@ -135,6 +143,6 @@ extension World {
         guard let from = anyAdjacentRoad(anchor: anchor, footprint: footprint),
               let to = anyAdjacentRoad(anchor: other, footprint: otherFootprint)
         else { return false }
-        return PathFinder.path(from: from, to: to, in: roadGraph) != nil
+        return roadPath(from: from, to: to) != nil
     }
 }
