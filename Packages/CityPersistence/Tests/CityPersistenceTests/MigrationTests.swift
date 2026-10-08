@@ -296,6 +296,42 @@ private func makeV2Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     return data
 }
 
+private func v3FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v3_single_island.json")
+}
+
+/// Encode a World as a v3 save: the current shape minus `research`.
+private func makeV3Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 3
+    var inner = json["world"] as? [String: Any] ?? [:]
+    inner.removeValue(forKey: "research")
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v3 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV3SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    // A v3 save predates `add-research`: no `research` on World.
+    var data = try makeV3Payload(world: World.newGame(), writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v3FixtureURL())
+}
+
+@Test("scenario: v3 save loads with all techs researched")
+func scenarioV3SaveLoadsWithAllTechsResearched() throws {
+    let data = try Data(contentsOf: v3FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 3, "fixture must be a v3 save")
+    let loaded = try decodeWorld(data)
+    #expect(Tech.allCases.allSatisfy(loaded.research.isResearched))
+    #expect(loaded.research.current == nil)
+}
+
 @Test("scenario: v1 fixture exists and migrates cleanly")
 func scenarioV1FixtureExistsAndMigratesCleanly() throws {
     let data = try Data(contentsOf: fixtureURL())

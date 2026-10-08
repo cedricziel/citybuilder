@@ -22,7 +22,8 @@ public struct MigrationRegistry: Sendable {
     /// at the end of this array.
     public static let defaultMigrations: [Migration] = [
         MigrationV1ToV2(),
-        MigrationV2ToV3()
+        MigrationV2ToV3(),
+        MigrationV3ToV4()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -179,5 +180,29 @@ public struct MigrationV2ToV3: Migration {
             result.append(amount)
         }
         return result
+    }
+}
+
+/// Migration #3: v3 → v4. v3 saves predate `add-research`: `World` had
+/// no `research`. Older games keep every building available, so they
+/// migrate with every tech researched. Spec: `persistence-save-load` /
+/// Saves before research unlock every tech.
+public struct MigrationV3ToV4: Migration {
+    public let fromVersion = 3
+    public let toVersion = 4
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 4
+        guard var world = root["world"] as? [String: Any] else { return root }
+        world["research"] = [
+            "researched": ["metallurgy", "milling", "mining", "scholarship", "seafaring"],
+            "knowledge": 0,
+            "progress": 0
+        ] as [String: Any]
+        root["world"] = world
+        return root
     }
 }
