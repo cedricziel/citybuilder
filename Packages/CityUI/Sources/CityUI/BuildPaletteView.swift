@@ -16,10 +16,14 @@ public struct BuildPaletteView: View {
 
     private let labels = LayoutDecisions.decisions(for: .compact).labels
 
+    /// Kinds the player may place. World-gen seeds the town center for
+    /// free, so it is not offered.
+    static let kinds = BuildingKind.allCases.filter { $0 != .townCenter }
+
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                ForEach(BuildingKind.allCases, id: \.self) { kind in
+                ForEach(Self.kinds, id: \.self) { kind in
                     paletteButton(tool: .place(kind))
                 }
                 Divider().frame(height: 20)

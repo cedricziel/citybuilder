@@ -46,3 +46,12 @@ On the compact (iPhone) idiom, HUD stat values, stat captions, and build-palette
 
 - **WHEN** the compact layout's label configuration is queried
 - **THEN** stat values, stat captions, and palette labels each declare a line limit of 1
+
+### Requirement: Build palette lists only player-buildable kinds
+
+The build palette SHALL offer every building kind the player may place, and MUST NOT offer the town center, which world generation seeds for free.
+
+#### Scenario: Palette omits the town center
+
+- **WHEN** the build palette's kind list is queried
+- **THEN** it contains house, farm and road, and does not contain the town center

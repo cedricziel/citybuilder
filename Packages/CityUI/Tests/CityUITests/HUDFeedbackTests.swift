@@ -114,3 +114,10 @@ func compiledAtlasNamesWithExtensionResolve() throws {
     let atlas = try SKTextureAtlas(dictionary: ["good-planks.png": tinyImage()])
     #expect(GoodIconLoader.origin(for: .planks, atlas: atlas) == .atlas(name: GoodIconLoader.atlasName))
 }
+
+@Test("scenario: palette omits the town center")
+func scenarioPaletteOmitsTheTownCenter() {
+    let kinds = BuildPaletteView.kinds
+    #expect(kinds.contains(.house) && kinds.contains(.farm) && kinds.contains(.road))
+    #expect(!kinds.contains(.townCenter))
+}
