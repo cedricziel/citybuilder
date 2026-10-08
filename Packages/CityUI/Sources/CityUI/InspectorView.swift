@@ -29,7 +29,8 @@ public struct InspectorViewModel: Sendable {
             "Anchor: (\(building.anchor.x), \(building.anchor.y))",
             "Footprint: \(spec.footprint.width)×\(spec.footprint.height)",
             "State: \(building.state.rawValue)",
-            "Build: \(buildProgress)"
+            "Build: \(buildProgress)",
+            "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
         ])
     }
 }

@@ -31,7 +31,10 @@ public struct SpriteSpec: Hashable, Sendable {
             // diff-based reconciler swaps the node — and its
             // `overlay-waiting-materials` child — the moment the
             // substate flips.
-            isWaitingForMaterials: Bool
+            isWaitingForMaterials: Bool,
+            // True when no road touches the footprint; drives the
+            // `overlay-no-road` marker.
+            isRoadDisconnected: Bool = false
         )
     }
 
@@ -91,7 +94,8 @@ public enum SnapshotReconciler {
                     footprint: spec.footprint,
                     constructionFrameIndex: frameIndex,
                     orientation: orientation,
-                    isWaitingForMaterials: isWaiting
+                    isWaitingForMaterials: isWaiting,
+                    isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id)
                 )
             ))
         }

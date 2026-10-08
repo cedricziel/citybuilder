@@ -11,6 +11,8 @@ extension IsoWorldScene {
     /// Name applied to the waiting-for-materials overlay child node.
     /// Tests use it to assert the badge attaches at the right moment.
     public static let waitingBadgeNodeName = "overlay-waiting-materials"
+    /// Name applied to the no-road-access marker child node.
+    public static let noRoadBadgeNodeName = "overlay-no-road"
 
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
@@ -41,7 +43,7 @@ extension IsoWorldScene {
     /// See the design doc for the offset derivation.
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
         guard case let .building(
-            kind, state, footprint, constructionFrameIndex, orientation, isWaitingForMaterials
+            kind, state, footprint, constructionFrameIndex, orientation, isWaitingForMaterials, isRoadDisconnected
         ) = spec.kind
         else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
@@ -76,7 +78,29 @@ extension IsoWorldScene {
         if isWaitingForMaterials, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
         }
+        if isRoadDisconnected {
+            node.addChild(makeNoRoadBadgeNode(spriteHeight: node.size.height))
+        }
         return node
+    }
+
+    /// Red disc with a white bar floating over a building that no road
+    /// touches. Drawn in code so it needs no atlas texture. Spec:
+    /// `rendering-2_5d` / Road-access marker.
+    private func makeNoRoadBadgeNode(spriteHeight: CGFloat) -> SKNode {
+        let badge = SKShapeNode(circleOfRadius: 7)
+        badge.name = Self.noRoadBadgeNodeName
+        badge.fillColor = SKColor(red: 0.85, green: 0.15, blue: 0.12, alpha: 1)
+        badge.strokeColor = SKColor(red: 0.10, green: 0.08, blue: 0.06, alpha: 1)
+        badge.lineWidth = 1.5
+        let bar = SKShapeNode(rectOf: CGSize(width: 8, height: 2.5))
+        bar.fillColor = .white
+        bar.strokeColor = .clear
+        badge.addChild(bar)
+        badge.position = CGPoint(x: 0, y: spriteHeight + 6)
+        badge.zPosition = 100
+        badge.run(.repeatForever(.sequence([.fadeAlpha(to: 0.55, duration: 0.6), .fadeAlpha(to: 1, duration: 0.6)])))
+        return badge
     }
 
     /// Top-right clock-face overlay rendered while a constructing

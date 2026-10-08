@@ -56,6 +56,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let islandSummaries: [IslandID: IslandSummary]
     /// Cached tile→island map backing `island(at:)`. O(1) lookups.
     let tileToIsland: [TileCoordinate: IslandID]
+    /// Non-road buildings with no road tile orthogonally adjacent to
+    /// their footprint. Spec: `rendering-2_5d` / Road-access marker.
+    public let roadDisconnectedBuildings: Set<EntityID>
 
     public init(
         tickCount: UInt64,
@@ -72,7 +75,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         totalPopulation: UInt64,
         camera: Camera,
         islandSummaries: [IslandID: IslandSummary] = [:],
-        tileToIsland: [TileCoordinate: IslandID] = [:]
+        tileToIsland: [TileCoordinate: IslandID] = [:],
+        roadDisconnectedBuildings: Set<EntityID> = []
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -89,6 +93,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.camera = camera
         self.islandSummaries = islandSummaries
         self.tileToIsland = tileToIsland
+        self.roadDisconnectedBuildings = roadDisconnectedBuildings
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -134,8 +139,18 @@ public extension World {
             totalPopulation: pop,
             camera: camera,
             islandSummaries: summaries,
-            tileToIsland: tileToIsland
+            tileToIsland: tileToIsland,
+            roadDisconnectedBuildings: roadDisconnectedBuildings()
         )
+    }
+
+    private func roadDisconnectedBuildings() -> Set<EntityID> {
+        Set(buildings.values.lazy.filter { building in
+            building.kind != .road && !roadGraph.isAnchorRoadConnected(
+                building.anchor,
+                footprint: BuildingCatalog.spec(for: building.kind).footprint
+            )
+        }.map(\.id))
     }
 
     /// Building kinds whose stockpiles count toward island aggregates.

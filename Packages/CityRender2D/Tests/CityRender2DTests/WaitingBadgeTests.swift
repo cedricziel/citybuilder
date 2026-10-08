@@ -49,3 +49,20 @@ func scenarioOperationalBuildingShowsNoBadge() {
     let node = scene.makeBuildingNode(for: sawmillSpec(state: .operational, isWaiting: false))
     #expect(node.childNode(withName: IsoWorldScene.waitingBadgeNodeName) == nil)
 }
+
+@Test("scenario: disconnected building sprite carries the no-road marker")
+@MainActor
+func scenarioDisconnectedBuildingSpriteCarriesTheNoRoadMarker() {
+    let scene = IsoWorldScene()
+    let spec = SpriteSpec(
+        coord: TileCoordinate(x: 0, y: 0),
+        kind: .building(
+            kind: .house, state: .operational, footprint: footprint,
+            constructionFrameIndex: nil, orientation: nil,
+            isWaitingForMaterials: false, isRoadDisconnected: true
+        )
+    )
+    #expect(scene.makeBuildingNode(for: spec).childNode(withName: IsoWorldScene.noRoadBadgeNodeName) != nil)
+    #expect(scene.makeBuildingNode(for: sawmillSpec(state: .operational, isWaiting: false))
+        .childNode(withName: IsoWorldScene.noRoadBadgeNodeName) == nil)
+}
