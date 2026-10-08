@@ -1,5 +1,6 @@
 import CityCore
 import Foundation
+import os
 
 /// Lightweight summary of a save file, surfaced through the title-
 /// screen `Continue` row. Mirrors `CityPersistence.SaveMetadata` but
@@ -15,6 +16,22 @@ public struct SaveSummary: Sendable, Equatable {
         self.gameID = gameID
         self.writeDate = writeDate
         self.displayName = displayName
+    }
+}
+
+/// A Continue load that failed. `reason` carries the underlying error
+/// text for the log; the player sees `title`. Spec:
+/// `surface-save-load-failure` / `persistence-save-load` Requirement:
+/// Failed load is visible on the title screen.
+public struct SaveLoadFailure: Sendable, Equatable {
+    public static let title = "This save could not be loaded"
+
+    public let gameID: UUID
+    public let reason: String
+
+    public init(gameID: UUID, reason: String) {
+        self.gameID = gameID
+        self.reason = reason
     }
 }
 
@@ -44,6 +61,9 @@ public final class TitleScreenViewModel {
     /// Set once the player has committed a world. Apps watch this to
     /// transition from the title screen to `CityRootView`.
     public private(set) var committedSession: GameSession?
+    public private(set) var loadFailure: SaveLoadFailure?
+
+    private static let logger = Logger(subsystem: "com.cedricziel.citybuilder", category: "TitleScreen")
 
     private let saveStore: SaveStoreFacade
     private let sessionFactory: GameSessionFactory
@@ -62,11 +82,26 @@ public final class TitleScreenViewModel {
 
     public func continueRequested() {
         guard let summary = mostRecentSave else { return }
-        guard let world = try? saveStore.load(gameID: summary.gameID) else { return }
+        let world: World
+        do {
+            world = try saveStore.load(gameID: summary.gameID)
+        } catch {
+            let failure = SaveLoadFailure(gameID: summary.gameID, reason: String(describing: error))
+            Self.logger.error(
+                "Continue failed to load save \(failure.gameID, privacy: .public): \(failure.reason, privacy: .public)"
+            )
+            loadFailure = failure
+            return
+        }
         commit(world: world)
     }
 
+    public func dismissLoadFailure() {
+        loadFailure = nil
+    }
+
     public func newGameRequested() {
+        loadFailure = nil
         presentingNewGameDialog = true
     }
 

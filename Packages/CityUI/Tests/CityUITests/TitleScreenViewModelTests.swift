@@ -123,3 +123,62 @@ func scenarioTitleCommitInvokesFactory() {
     #expect(seenSeed == 7)
     #expect(viewModel.committedSession != nil)
 }
+
+private struct UndecodableSave: Error, CustomStringConvertible {
+    var description: String {
+        "integrity_failed: keyNotFound(\"terrainGrid\")"
+    }
+}
+
+private final class CorruptSaveFacade: SaveStoreFacade, @unchecked Sendable {
+    let summary: SaveSummary
+
+    init(summary: SaveSummary) {
+        self.summary = summary
+    }
+
+    func mostRecentSave() throws -> SaveSummary? {
+        summary
+    }
+
+    func load(gameID _: UUID) throws -> World {
+        throw UndecodableSave()
+    }
+}
+
+@MainActor
+@Test("scenario: Undecodable save shows a load-failure alert")
+func scenarioTitleUndecodableSaveShowsFailure() {
+    let summary = SaveSummary(gameID: UUID(), writeDate: Date(), displayName: "Old save")
+    var factoryCalls = 0
+    let viewModel = TitleScreenViewModel(
+        saveStore: CorruptSaveFacade(summary: summary),
+        sessionFactory: { world in
+            factoryCalls += 1
+            return GameSession(world: world)
+        }
+    )
+    viewModel.continueRequested()
+    #expect(viewModel.loadFailure == SaveLoadFailure(
+        gameID: summary.gameID,
+        reason: "integrity_failed: keyNotFound(\"terrainGrid\")"
+    ))
+    #expect(SaveLoadFailure.title == "This save could not be loaded")
+    #expect(viewModel.committedSession == nil)
+    #expect(factoryCalls == 0)
+}
+
+@MainActor
+@Test("scenario: New Game still works after a failed load")
+func scenarioTitleNewGameAfterFailedLoad() {
+    let summary = SaveSummary(gameID: UUID(), writeDate: Date(), displayName: "Old save")
+    let viewModel = TitleScreenViewModel(
+        saveStore: CorruptSaveFacade(summary: summary),
+        sessionFactory: { GameSession(world: $0) }
+    )
+    viewModel.continueRequested()
+    viewModel.dismissLoadFailure()
+    #expect(viewModel.loadFailure == nil)
+    viewModel.newGameRequested()
+    #expect(viewModel.presentingNewGameDialog)
+}
