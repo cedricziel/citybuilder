@@ -347,3 +347,36 @@ The world snapshot SHALL report each house's tier. The renderer MUST draw a peas
 
 - **WHEN** a house's tier changes between two snapshots
 - **THEN** the reconciler replaces that house's node
+
+### Requirement: Terrain shows the season
+
+Grass and forest tiles SHALL use their autumn sprites in autumn and their winter sprites in winter (`terrain-<kind>-autumn`, `terrain-<kind>-winter`, with matching animation frames), and their regular sprites in spring and summer. Tiles that come into view later SHALL use the current season's sprites. A missing seasonal sprite SHALL fall back to the regular one.
+
+#### Scenario: Winter tints grass
+
+- **WHEN** the scene renders a snapshot dated winter
+- **THEN** visible grass nodes show the winter grass sprite
+
+#### Scenario: Summer has no tint
+
+- **WHEN** the scene renders a snapshot dated summer
+- **THEN** visible grass nodes show the regular grass sprite
+
+### Requirement: Buildings render in the world's culture
+
+An operational building or upgraded house SHALL use its culture variant sprite (`building-<kind>-<culture>`, `building-house-tier<N>-<culture>`) when the world's culture is not Northern European and the variant exists, and the shared sprite otherwise. Construction stages SHALL use the shared sprites.
+
+#### Scenario: East Asian town center
+
+- **WHEN** the scene draws an operational town center in an East Asian world
+- **THEN** the node's texture name is "building-town-center-east-asian"
+
+#### Scenario: Shared fallback
+
+- **WHEN** the scene draws an operational sawmill in an East Asian world
+- **THEN** the node uses the shared sawmill sprite
+
+#### Scenario: Construction stays shared
+
+- **WHEN** the scene draws a house under construction in a Middle Eastern world
+- **THEN** the node uses the shared construction sprite

@@ -131,3 +131,21 @@ Loading a version-3 save SHALL migrate it to version 4 with every tech researche
 
 - **WHEN** a version-3 save is loaded
 - **THEN** the world has every tech researched
+
+### Requirement: Saves before the calendar get one
+
+Loading a version-4 save SHALL migrate it to version 5 with an active calendar starting in 1200.
+
+#### Scenario: v4 save loads with a calendar
+
+- **WHEN** a version-4 save is loaded
+- **THEN** the world's calendar is active with start year 1200
+
+### Requirement: Saves before cultures are Northern European
+
+Loading a version-5 save SHALL migrate it to version 6 with the Northern European culture.
+
+#### Scenario: v5 save loads as Northern European
+
+- **WHEN** a version-5 save is loaded
+- **THEN** the world's culture is Northern European

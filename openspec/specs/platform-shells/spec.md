@@ -209,3 +209,44 @@ Build palette entries for buildings whose tech is not researched SHALL be marked
 
 - **WHEN** a placement is rejected with `locked(.mining)`
 - **THEN** the HUD message reads "Needs Mining research"
+
+### Requirement: HUD shows the date
+
+The HUD SHALL show the current season and year, such as "Spring 1200".
+
+#### Scenario: HUD date text
+
+- **WHEN** the HUD applies a snapshot dated autumn 1203
+- **THEN** its date text is "Autumn 1203"
+
+### Requirement: History events show a banner
+
+When a history event fires, the game screen SHALL show a banner with the event's title and description for 60 ticks.
+
+#### Scenario: Banner appears and expires
+
+- **WHEN** a tick emits a trade caravan history event
+- **THEN** the session exposes a banner titled "Trade caravan" for the next 60 ticks, and none after
+
+### Requirement: New Game offers a culture
+
+The New Game dialog SHALL let the player pick one of the four cultures, show a one-line description of the selected culture, default to Northern European, and create the world with the selected culture.
+
+#### Scenario: Chosen culture reaches the world
+
+- **WHEN** the player selects Middle Eastern and starts
+- **THEN** the committed world's culture is Middle Eastern
+
+#### Scenario: Cancel resets the culture
+
+- **WHEN** the player selects East Asian and cancels
+- **THEN** the dialog's culture is Northern European again
+
+### Requirement: Inspector uses culture tier names
+
+The inspector SHALL name a house's tier with the world culture's name for it.
+
+#### Scenario: Mediterranean inspector
+
+- **WHEN** the inspector shows a peasants-tier house in a Mediterranean world
+- **THEN** its tier line reads "Tier: Plebeians"
