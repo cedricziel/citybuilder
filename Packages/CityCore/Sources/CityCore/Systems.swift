@@ -366,14 +366,8 @@ extension World {
     mutating func runEconomySystem(events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
-            // Spec: `population-and-needs` / Taxes scale with tier; each
-            // house pays its owner (spec `economy` / Each owner has its
-            // own purse).
-            var taxes: [Owner: Int64] = [:]
-            for (id, pop) in populations {
-                taxes[owner(of: id), default: 0] += Int64(pop.population) * pop.tier.taxPerResident * Economy.taxPerPopUnit
-            }
-            let amount = taxWithMonumentBonus(taxes.removeValue(forKey: .player) ?? 0)
+            var taxes = taxesByOwner()
+            let amount = taxes.removeValue(forKey: .player) ?? 0
             economy.credit(amount)
             creditRivals(taxes)
             // Only emit when actual money flowed — `taxesCollected` is a
@@ -418,6 +412,20 @@ extension World {
                 events.append(.bankruptcyResolved)
             }
         }
+    }
+
+    /// Spec: `population-and-needs` / Taxes scale with tier; each house
+    /// pays its owner (spec `economy` / Each owner has its own purse),
+    /// with the owner's monument bonus.
+    private func taxesByOwner() -> [Owner: Int64] {
+        var taxes: [Owner: Int64] = [:]
+        for (id, pop) in populations {
+            taxes[owner(of: id), default: 0] += Int64(pop.population) * pop.tier.taxPerResident * Economy.taxPerPopUnit
+        }
+        for (owner, amount) in taxes {
+            taxes[owner] = taxWithMonumentBonus(amount, for: owner)
+        }
+        return taxes
     }
 
     /// Books per-rival amounts in rival ID order. Rivals never go

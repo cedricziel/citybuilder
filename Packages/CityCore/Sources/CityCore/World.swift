@@ -174,7 +174,7 @@ public struct World: Codable, Sendable, Equatable {
         var waterCount = 0
         let rejection = foreignIslandRejection(tiles: tiles, for: owner, tileToIsland: tileToIslandMap())
             ?? researchOrTerrainRejection(kind, tiles: tiles, for: owner)
-            ?? uniquenessRejection(kind)
+            ?? uniquenessRejection(kind, for: owner)
         if let rejection {
             return .rejected(rejection)
         }

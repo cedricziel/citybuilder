@@ -139,19 +139,18 @@ public extension World {
     }
 
     /// Owner seam for signature effects (design D3): effects reach only
-    /// buildings of the source's owner. Every building is the player's
-    /// until `add-rival-towns` lands; then this compares `owner`.
-    static func haveSameOwner(_: Building, _: Building) -> Bool {
-        true
+    /// buildings of the source's owner.
+    static func haveSameOwner(_ lhs: Building, _ rhs: Building) -> Bool {
+        lhs.owner == rhs.owner
     }
 }
 
 extension World {
-    /// One-monument rule, checked by `canPlace` after the tech check.
-    /// Every building is the player's until `add-rival-towns` lands;
-    /// then this filters by the placing owner.
-    func uniquenessRejection(_ kind: BuildingKind) -> PlacementRejection? {
-        guard kind.isUnique, buildings.values.contains(where: { $0.kind == kind }) else { return nil }
+    /// One-monument rule per owner, checked by `canPlace` after the tech
+    /// check.
+    func uniquenessRejection(_ kind: BuildingKind, for owner: Owner) -> PlacementRejection? {
+        guard kind.isUnique, buildings.values.contains(where: { $0.kind == kind && $0.owner == owner })
+        else { return nil }
         return .alreadyBuilt(kind)
     }
 }
