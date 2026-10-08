@@ -1,14 +1,14 @@
 ## 1. M1 — Intent extension and IsoDirection (CityRender2D)
 
-- [ ] 1.1 Tests-first: translate `#### Scenario: IsoDirection NE moves ghost up-right by one tile`, `#### Scenario: IsoDirection SE moves ghost down-right by one tile`, `#### Scenario: IsoDirection SW moves ghost down-left by one tile`, `#### Scenario: IsoDirection NW moves ghost up-left by one tile`, and `#### Scenario: Long-press point translates to long-press intent at the tile under the touch` into failing tests in `CityRender2DTests`. Confirm red.
-- [ ] 1.2 Implement to green: add `IsoDirection` enum with `tileOffset` property; extend `Intent` with `.longPressTile(TileCoordinate)`, `.confirmPlacement`, `.cancelPlacement`, `.nudgePlacement(direction: IsoDirection)`; add `InputTranslator.longPressIntent(atScreenPoint:mapWidth:mapHeight:)` paralleling `tapIntent`.
-- [ ] 1.3 Refactor under a green bar.
+- [x] 1.1 Tests-first: translate `#### Scenario: IsoDirection NE moves ghost up-right by one tile`, `#### Scenario: IsoDirection SE moves ghost down-right by one tile`, `#### Scenario: IsoDirection SW moves ghost down-left by one tile`, `#### Scenario: IsoDirection NW moves ghost up-left by one tile`, and `#### Scenario: Long-press point translates to long-press intent at the tile under the touch` into failing tests in `CityRender2DTests`. Confirm red.
+- [x] 1.2 Implement to green: add `IsoDirection` enum with `tileOffset` property; extend `Intent` with `.longPressTile(TileCoordinate)`, `.confirmPlacement`, `.cancelPlacement`, `.nudgePlacement(direction: IsoDirection)`; add `InputTranslator.longPressIntent(atScreenPoint:mapWidth:mapHeight:)` paralleling `tapIntent`.
+- [x] 1.3 Refactor under a green bar.
 
 ## 2. M2 — Long-press recognizer on iOS scene (CityRender2D)
 
-- [ ] 2.1 Tests-first: translate `#### Scenario: Long-press inside map bounds dispatches longPressTile intent` and `#### Scenario: Long-press outside map bounds dispatches no intent` into failing tests in `CityRender2DTests` that exercise the gesture-recognizer callback directly (no live UIKit; call the dispatch path with a fake touch location).
-- [ ] 2.2 Implement to green: in `IsoWorldScene` add a `UILongPressGestureRecognizer` to the SKView on `didMove(to:)` with `minimumPressDuration = 0.4`. Wire its `.began` action to call `dispatchLongPress(at:)` which uses the existing `tile(forScene:mapWidth:mapHeight:)` helper and emits `.longPressTile(coord)` via `intentSink`. Mac code path unchanged.
-- [ ] 2.3 Refactor under a green bar.
+- [x] 2.1 Tests-first: translate `#### Scenario: Long-press inside map bounds dispatches longPressTile intent` and `#### Scenario: Long-press outside map bounds dispatches no intent` into failing tests in `CityRender2DTests` that exercise the gesture-recognizer callback directly (no live UIKit; call the dispatch path with a fake touch location).
+- [x] 2.2 Implement to green: in `IsoWorldScene` add a `UILongPressGestureRecognizer` to the SKView on `didMove(to:)` with `minimumPressDuration = 0.4`. Wire its `.began` action to call `dispatchLongPress(at:)` which uses the existing `tile(forScene:mapWidth:mapHeight:)` helper and emits `.longPressTile(coord)` via `intentSink`. Mac code path unchanged.
+- [x] 2.3 Refactor under a green bar.
 
 ## 3. M3 — PendingPlacement state on GameSession (CityUI)
 

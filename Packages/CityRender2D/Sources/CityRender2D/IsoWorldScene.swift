@@ -86,7 +86,9 @@ public final class IsoWorldScene: SKScene {
         addChild(cameraNode)
         camera = cameraNode
         installNightOverlay()
-        #if canImport(AppKit)
+        #if canImport(UIKit)
+        installLongPressRecognizer(on: view)
+        #elseif canImport(AppKit)
         // mouseMoved only fires when the host window allows it; opt in here
         // so hover-driven ghost preview works on macOS.
         view.window?.acceptsMouseMovedEvents = true
@@ -150,11 +152,7 @@ public final class IsoWorldScene: SKScene {
     }
 
     private func tile(forScene location: CGPoint, mapWidth: Int, mapHeight: Int) -> TileCoordinate? {
-        let coord = IsoMath.nearestTile(toScreenPoint: location)
-        guard coord.x >= 0, coord.x < mapWidth, coord.y >= 0, coord.y < mapHeight else {
-            return nil
-        }
-        return coord
+        InputTranslator.tile(atScreenPoint: location, mapWidth: mapWidth, mapHeight: mapHeight)
     }
 
     private func dispatchTap(at sceneLocation: CGPoint) {
@@ -162,6 +160,15 @@ public final class IsoWorldScene: SKScene {
               let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
         else { return }
         intentSink?(.tapTile(coord))
+    }
+
+    /// Long-press recognizer callback (`.began`): open the tile menu for
+    /// the tile under the finger.
+    func dispatchLongPress(at sceneLocation: CGPoint) {
+        guard let snapshot = dataSource?.currentSnapshot(),
+              let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
+        else { return }
+        intentSink?(.longPressTile(coord))
     }
 
     private func dispatchDrag(at sceneLocation: CGPoint) {
