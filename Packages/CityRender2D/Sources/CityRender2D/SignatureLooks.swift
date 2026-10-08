@@ -41,7 +41,10 @@ public enum SignatureLooks {
         if building.kind == .monument, !building.isCompletedMonument {
             look.projectFrame = projectFrame(stages: building.projectStages)
         }
-        look.idle = !building.kind.signatureReaches.isEmpty && !building.isSignatureActive
+        // Culture signatures animate only while served (add-culture-signatures D9).
+        look.idle = building.kind.isCultureSignature
+            ? !building.isServed
+            : !building.kind.signatureReaches.isEmpty && !building.isSignatureActive
         look.smoky = snapshot.houseModifiers[building.id]?.smoky ?? false
         return look
     }
@@ -64,7 +67,8 @@ public enum SignatureLooks {
         let placed = snapshot.occupiedTiles[anchor].flatMap { snapshot.buildings[$0] }
         let source = placed.flatMap { $0.kind == kind && $0.anchor == anchor ? $0 : nil }
             ?? Building(id: EntityID(raw: .max), kind: kind, anchor: anchor)
-        return Set(World.signatureTargets(of: source, among: snapshot.buildings.values).map(\.target.id))
-            .sorted { $0.raw < $1.raw }
+        let targets = World.signatureTargets(of: source, among: snapshot.buildings.values)
+            .filter { $0.effect != .contemplation || snapshot.housePopulations[$0.target.id]?.contemplates == true }
+        return Set(targets.map(\.target.id)).sorted { $0.raw < $1.raw }
     }
 }
