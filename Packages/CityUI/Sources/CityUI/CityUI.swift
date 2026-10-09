@@ -353,7 +353,7 @@ public final class GameSession {
         )
     }
 
-    private func costBreakdown(
+    func costBreakdown(
         for kind: BuildingKind,
         anchor: TileCoordinate
     ) -> [Good: GhostCost]? {

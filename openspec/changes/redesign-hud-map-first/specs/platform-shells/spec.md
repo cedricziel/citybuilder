@@ -64,8 +64,8 @@ The build controls SHALL offer three categories, Town, Gather and Craft, followe
 While a build or demolish tool is armed, the HUD SHALL show a tool strip with the tool's name, its cost, a one-line hint, the material chips for the island under the camera when no tile is hovered, and a cancel button that returns to inspect. The hint SHALL read "Tap or drag to place" on touch devices and "Click or drag to place" on the Mac, and for demolish "Tap a building to demolish" or "Click a building to demolish".
 
 #### Scenario: Tool strip chips without hover
-- **WHEN** the house tool is armed, no tile is hovered, and the camera is on the player's island
-- **THEN** the armed cost breakdown lists the house's materials with the island's stock
+- **WHEN** the sawmill tool is armed, no tile is hovered, and the camera is on the starting island
+- **THEN** the armed cost breakdown lists 4 wood with 6 on hand and 1 plank with 5 on hand
 
 #### Scenario: Tool strip hint
 - **WHEN** the tool strip hint is built for the house on a touch device and for demolish on the Mac
