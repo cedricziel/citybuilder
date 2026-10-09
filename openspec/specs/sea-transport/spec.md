@@ -178,3 +178,36 @@ Every ship SHALL have an owner. A ship emitted by a shipyard SHALL have the ship
 
 - **WHEN** a ship encoded without an `owner` key is decoded
 - **THEN** its owner is the player
+
+### Requirement: Routes may stop at rival ports
+
+A route waypoint SHALL accept a port of any owner, and manifest actions at a rival port SHALL execute as trades (spec `rival-trade`) instead of moving goods to or from the port's own stockpile. Manifest actions at a player port SHALL behave as before.
+
+#### Scenario: Route to a rival port is valid
+
+- **WHEN** the player creates a route between their own port and rival 1's port
+- **THEN** the route is added in the active state
+
+#### Scenario: Player port unchanged
+
+- **WHEN** a player ship executes "unload up to 10 planks" at the player's own port
+- **THEN** 10 planks move into that port's stockpile and the player's balance does not change
+
+### Requirement: Pausing a route
+
+The command system SHALL accept `SetRoutePaused(id:paused:)` at tick boundaries. Pausing an `.active` route SHALL make it `.paused`, and resuming a `.paused` route SHALL make it `.active`. A broken route or an unknown route ID SHALL be left unchanged. While its route is paused, a `.sailing` or `.docked` ship SHALL keep its position, waypoint index, manifest progress and dock wait. Idle and returning ships SHALL be unaffected.
+
+#### Scenario: Paused route holds its ships
+
+- **WHEN** a route with a sailing ship and a docked ship is paused and the world ticks 10 times
+- **THEN** the route is paused, the sailing ship's position is unchanged and the docked ship's cargo and manifest index are unchanged
+
+#### Scenario: Resumed route sails on
+
+- **WHEN** a paused route with a sailing ship is resumed
+- **THEN** the route is active and the ship moves on the next tick
+
+#### Scenario: Broken route stays broken
+
+- **WHEN** `SetRoutePaused(id:paused: false)` is applied to a broken route
+- **THEN** the route is still broken
