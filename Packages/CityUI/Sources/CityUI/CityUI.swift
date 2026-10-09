@@ -133,6 +133,10 @@ public final class GameSession {
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
+    /// Route mode's view-model; non-nil while the player authors a route.
+    public var routeAuthoring: RouteAuthoringViewModel?
+    /// The route list; its selection drives the map's route overlay.
+    public let routeList = RouteListViewModel()
 
     public init(
         world: World = World.newGame(),
@@ -143,6 +147,7 @@ public final class GameSession {
         self.hud = HUDViewModel(money: 0, population: 0)
         self.audioEventConsumer = audioEventConsumer
         self.audioSnapshotConsumer = audioSnapshotConsumer
+        routeList.commandSink = { [weak self] in self?.world.enqueue($0) }
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.step()
@@ -167,6 +172,8 @@ public final class GameSession {
         noteBannerEvents(in: result.events)
         let snapshot = world.snapshot()
         hud.apply(snapshot)
+        routeList.snapshot = snapshot
+        routeAuthoring?.snapshot = snapshot
         // Push the snapshot to audio before the matching events so the
         // coordinator's primaryEntityID → tile resolution sees this tick's
         // building positions, not the prior tick's.
@@ -261,6 +268,7 @@ public final class GameSession {
     /// Ignored while a placement is pending.
     public func handleTap(at tile: TileCoordinate) {
         guard pendingPlacement == nil else { return }
+        if routeAuthoring != nil { return handleRouteTap(at: tile) }
         switch selectedTool {
         case .inspect:
             selectedTile = tile

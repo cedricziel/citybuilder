@@ -14,19 +14,23 @@ public struct InspectorViewModel: Sendable {
     public let rival: RivalSummary?
     /// A rival port's market, nil elsewhere.
     public let market: RivalMarketSection?
+    /// A port of any owner, for Route from here; nil elsewhere.
+    public let routeStartPort: EntityID?
 
     public init(
         bullets: [String],
         commission: CommissionButton? = nil,
         exportPicker: ExportPicker? = nil,
         rival: RivalSummary? = nil,
-        market: RivalMarketSection? = nil
+        market: RivalMarketSection? = nil,
+        routeStartPort: EntityID? = nil
     ) {
         self.bullets = bullets
         self.commission = commission
         self.exportPicker = exportPicker
         self.rival = rival
         self.market = market
+        self.routeStartPort = routeStartPort
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -67,7 +71,8 @@ public struct InspectorViewModel: Sendable {
             commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
             exportPicker: rival == nil ? exportPicker(for: building) : nil,
             rival: rival,
-            market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil
+            market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
+            routeStartPort: building.kind == .port ? entityID : nil
         )
     }
 }

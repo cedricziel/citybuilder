@@ -88,7 +88,7 @@ public extension GameSession {
     /// Long-press on a tile: select it for the inspector and ask for the
     /// menu. Ignored while a placement is pending, like taps.
     func handleLongPress(at tile: TileCoordinate) {
-        guard pendingPlacement == nil else { return }
+        guard pendingPlacement == nil, routeAuthoring == nil else { return }
         selectedTile = tile
         tileMenuRequest = TileMenuRequest(tile: tile)
     }

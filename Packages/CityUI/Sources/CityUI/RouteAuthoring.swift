@@ -55,6 +55,8 @@ public final class RouteAuthoringViewModel {
     public private(set) var redSegments: Set<Int> = []
     /// Last rejected tap, consumed by the scene to draw a red flash.
     public private(set) var rejectedTapFeedback: RejectedTapFeedback?
+    /// Whether the last tap hit land; the overlay explains it.
+    private var lastTapWasLand = false
 
     /// Per-port manifest the player has authored inside this mode.
     /// `commit()` packages it into the `CreateRoute` command.
@@ -91,6 +93,7 @@ public final class RouteAuthoringViewModel {
 
     public func tapHandler(target: RouteAuthoringTapTarget) {
         commitRejectionReason = nil
+        lastTapWasLand = false
         switch target {
         case let .port(id):
             inProgressWaypoints.append(.port(id: id))
@@ -100,6 +103,7 @@ public final class RouteAuthoringViewModel {
             inProgressWaypoints.append(.sea(position: pos))
             recomputeRedSegments()
         case let .land(tile):
+            lastTapWasLand = true
             // Land taps are rejected with a red-flash signal at the
             // tap location. The in-progress route is unchanged.
             rejectedTapFeedback = RejectedTapFeedback(
@@ -110,27 +114,30 @@ public final class RouteAuthoringViewModel {
     }
 
     public func consumeRejectedTapFeedback() -> RejectedTapFeedback? {
-        let consumed = rejectedTapFeedback
+        // The scene polls every frame; skip the observable write when empty.
+        guard let consumed = rejectedTapFeedback else { return nil }
         rejectedTapFeedback = nil
         return consumed
     }
 
     // MARK: - Commit / cancel
 
-    public func commit() {
-        guard let snapshot else { return }
+    /// Sends `createRoute` and resets; returns false when rejected.
+    @discardableResult
+    public func commit() -> Bool {
+        guard let snapshot else { return false }
         let portWaypoints = inProgressWaypoints.compactMap { waypoint -> EntityID? in
             if case let .port(id) = waypoint { return id }
             return nil
         }
         guard portWaypoints.count >= 2 else {
             commitRejectionReason = .fewerThanTwoPorts
-            return
+            return false
         }
         recomputeRedSegments(in: snapshot)
         guard redSegments.isEmpty else {
             commitRejectionReason = .landCrossingSegment
-            return
+            return false
         }
         commandSink(.createRoute(
             waypoints: inProgressWaypoints,
@@ -138,10 +145,33 @@ public final class RouteAuthoringViewModel {
             speed: speed
         ))
         reset()
+        return true
     }
 
     public func cancel() {
         reset()
+    }
+
+    /// Undo: drops the last stop, and the manifest of a port that is no
+    /// longer a stop.
+    public func removeLastWaypoint() {
+        guard let removed = inProgressWaypoints.popLast() else { return }
+        commitRejectionReason = nil
+        lastTapWasLand = false
+        if case let .port(id) = removed, !inProgressWaypoints.contains(.port(id: id)) {
+            manifest.removeValue(forKey: id)
+        }
+        recomputeRedSegments()
+    }
+
+    /// The overlay's one-line message. Spec: `platform-shells` / Route
+    /// mode.
+    public var message: String {
+        switch commitRejectionReason {
+        case .fewerThanTwoPorts: return "A route needs at least two ports."
+        case .landCrossingSegment: return "A red leg crosses land. Add water stops around it."
+        case nil: return lastTapWasLand ? "Ships can't stop on land." : "Tap ports and water to add stops."
+        }
     }
 
     private func reset() {
@@ -150,6 +180,7 @@ public final class RouteAuthoringViewModel {
         manifest.removeAll()
         commitRejectionReason = nil
         rejectedTapFeedback = nil
+        lastTapWasLand = false
     }
 
     // MARK: - Manifest editing

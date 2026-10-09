@@ -5,10 +5,10 @@
 
 ## 2. M2 — Session route mode and models (CityUI)
 
-- [ ] 2.1 Tests-first: translate the platform-shells scenarios (Routes button and route list, Assigning a ship to a route, Route mode, Manifest editor sheet) and the rendering-2_5d scenario "Session overlay follows route mode and selection" into failing `CityUITests`. Confirm red.
-- [ ] 2.2 Implement to green: `RouteListViewModel` rows, idle ships, `assignIdleShip(to:)`, pause and resume through `setRoutePaused`; stop labels; `RouteAuthoringViewModel.removeLastWaypoint()` and `rejectedLandTile`; overlay message text (design D3, D5).
-- [ ] 2.3 Implement to green: `GameSession.routeAuthoring` and `routeList`, `beginRouteAuthoring(from:)`, `commitRouteAuthoring()`, `cancelRouteAuthoring()`, route-mode tap and long-press handling, `routeOverlay()`, Routes button availability, the inspector's route start port (design D1, D2, D6).
-- [ ] 2.4 Implement to green: `ManifestDraft`, `ManifestEditorModel.line(for:)` and `ManifestGoodRow.title` (design D4).
+- [x] 2.1 Tests-first: translate the platform-shells scenarios (Routes button and route list, Assigning a ship to a route, Route mode, Manifest editor sheet) and the rendering-2_5d scenario "Session overlay follows route mode and selection" into failing `CityUITests`. Confirm red.
+- [x] 2.2 Implement to green: `RouteListViewModel` rows, idle ships, `assignIdleShip(to:)`, pause and resume through `setRoutePaused`; stop labels; `RouteAuthoringViewModel.removeLastWaypoint()` and `rejectedLandTile`; overlay message text (design D3, D5).
+- [x] 2.3 Implement to green: `GameSession.routeAuthoring` and `routeList`, `beginRouteAuthoring(from:)`, `commitRouteAuthoring()`, `cancelRouteAuthoring()`, route-mode tap and long-press handling, `routeOverlay()`, Routes button availability, the inspector's route start port (design D1, D2, D6).
+- [x] 2.4 Implement to green: `ManifestDraft`, `ManifestEditorModel.line(for:)` and `ManifestGoodRow.title` (design D4).
 
 ## 3. M3 — Scene overlay and ships (CityRender2D, apps)
 
