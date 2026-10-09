@@ -134,7 +134,7 @@ extension World {
         guard turn.waiting.isEmpty else { return }
         let portRuleTookTurn = takeRivalPortTurn(
             index, houses: turn.counts[.house, default: 0], hasPort: turn.counts[.port, default: 0] > 0,
-            stock: turn.stock, tileToIsland: plan.tileToIsland
+            tileToIsland: plan.tileToIsland
         )
         guard !portRuleTookTurn else { return }
         var ai = rival.ai

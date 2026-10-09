@@ -71,8 +71,8 @@ func rivalWithAPortBuildsNoSecond() {
 @Test("a port the rival can't afford holds the script, then is suspended for 100 turns")
 func unaffordablePortIsSuspended() throws {
     var world = portReadyWorld()
-    // Two wood short of the port's 8.
-    world.setRivalStock(1, [.wood: 6, .planks: 8, .food: 20])
+    // One dollar short of the port's $250 plus the $50 margin.
+    world.setRival(1) { $0.treasury = 299 }
     for turn in 1 ... 10 {
         #expect(world.takeTurn(1).isEmpty, "turn \(turn)")
     }
@@ -80,9 +80,26 @@ func unaffordablePortIsSuspended() throws {
     #expect(ai.scriptIndex == 0)
     #expect(ai.portWaitTurns == 0)
     #expect(ai.portRetryTick == world.tickCount + 100 * world.difficulty.rivalTurnTicks)
+    // Rich again, but the rule is suspended: the script takes the turn.
+    world.setRival(1) { $0.treasury = 1000 }
     let next = world.takeTurn(1)
     #expect(placedKind(next.last) == .lumberjackHut)
     #expect(world.rival(1)?.ai.scriptIndex == 1)
+}
+
+@Test("a rival's port costs money but no materials")
+func rivalPortCostsNoMaterials() {
+    var world = portReadyWorld()
+    // Too little wood and no planks for the player's price of a port.
+    world.setRivalStock(1, [.wood: 4, .food: 20])
+    #expect(world.materialCost(of: .port, for: .rival(1)).isEmpty)
+    #expect(world.materialCost(of: .port, for: .player) == [.wood: 8, .planks: 6])
+    let commands = world.takeTurn(1)
+    #expect(commands.count == 1)
+    #expect(placedKind(commands.first) == .port)
+    world.tick()
+    #expect(world.rival(1)?.treasury == 250)
+    #expect(world.buildings.values.contains { $0.kind == .port && $0.owner == .rival(1) && $0.constructionState == .actively })
 }
 
 @Test("ai state from a rival-towns save reads the port counters as zero")

@@ -12,21 +12,20 @@ extension RivalAI {
 extension World {
     /// The port rule, after the threshold rules and before the script.
     /// Returns true when it takes the turn: it places the port, or waits
-    /// for money, materials or a shore spot. After `RivalAI.waitLimit`
+    /// for money or a shore spot. After `RivalAI.waitLimit`
     /// waiting turns it is suspended for `RivalAI.portSuspendTurns`
     /// turns, so the script keeps running. It never moves the script.
     mutating func takeRivalPortTurn(
         _ index: Int,
         houses: Int,
         hasPort: Bool,
-        stock: [Good: Int],
         tileToIsland: [TileCoordinate: IslandID]
     ) -> Bool {
         let rival = rivals[index]
         guard !hasPort, houses >= RivalAI.portMinHouses, tickCount >= rival.ai.portRetryTick,
               let center = buildings[rival.townCenterID]
         else { return false }
-        let anchor = canAffordPort(rival, stock: stock)
+        let anchor = rival.treasury >= BuildingCatalog.spec(for: .port).cost + RivalAI.safetyMargin
             ? rivalPortAnchor(for: rival, around: center.anchor, tileToIsland: tileToIsland)
             : nil
         var ai = rival.ai
@@ -44,17 +43,9 @@ extension World {
         return true
     }
 
-    /// The port's price plus the safety margin, and its materials in
-    /// stock: a port has no road, so nothing could deliver them later.
-    private func canAffordPort(_ rival: RivalTown, stock: [Good: Int]) -> Bool {
-        rival.treasury >= BuildingCatalog.spec(for: .port).cost + RivalAI.safetyMargin
-            && materialCost(of: .port, for: rival.owner).allSatisfy { stock[$0.key, default: 0] >= $0.value }
-    }
-
-    /// The first anchor where the rival may place a port, ring by ring
-    /// around `center`, each ring row-major. With the materials in
-    /// stock, this matches `canPlace`, which looks materials up on the
-    /// anchor tile's island. Visits each anchor within
+    /// The first anchor where the rival may place a port (`canPlace`; a
+    /// rival's port costs no materials), ring by ring around `center`,
+    /// each ring row-major. Visits each anchor within
     /// `RivalAI.portSearchRadius` at most once.
     func rivalPortAnchor(
         for rival: RivalTown,
@@ -67,7 +58,6 @@ extension World {
                 let step = abs(dy) == ring ? 1 : 2 * ring
                 for dx in stride(from: -ring, through: ring, by: step) {
                     let anchor = TileCoordinate(x: center.x + dx, y: center.y + dy)
-                    guard tileToIsland[anchor] == rival.islandID else { continue }
                     if siteRejection(.port, at: anchor, for: rival.owner, tileToIsland: tileToIsland) == nil {
                         return anchor
                     }
