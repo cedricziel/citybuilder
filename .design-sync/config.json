@@ -1,0 +1,18 @@
+{
+  "projectId": "53d40ca0-357c-4259-8861-aaf08d4efcab",
+  "shape": "package",
+  "pkg": "@citybuilder/ui",
+  "globalName": "CitybuilderUI",
+  "buildCmd": "cd design/web && npm ci && npm run build",
+  "cssEntry": "dist/index.css",
+  "docsDir": "docs",
+  "guidelinesGlob": ["guides/**/*.md"],
+  "provider": {
+    "component": "CityProvider"
+  },
+  "componentSrcMap": {
+    "PaletteButton": null,
+    "HUDButtonCluster": null,
+    "ListRow": null
+  }
+}
