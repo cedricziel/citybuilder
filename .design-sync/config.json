@@ -6,7 +6,9 @@
   "buildCmd": "cd design/web && npm ci && npm run build",
   "cssEntry": "dist/index.css",
   "docsDir": "docs",
-  "guidelinesGlob": ["guides/**/*.md"],
+  "guidelinesGlob": [
+    "guides/**/*.md"
+  ],
   "provider": {
     "component": "CityProvider"
   },
@@ -14,5 +16,80 @@
     "PaletteButton": null,
     "HUDButtonCluster": null,
     "ListRow": null
-  }
+  },
+  "overrides": {
+    "BuildingSprite": {
+      "cardMode": "column"
+    },
+    "TerrainTile": {
+      "cardMode": "column"
+    },
+    "WorldBackdrop": {
+      "cardMode": "column"
+    },
+    "Glass": {
+      "cardMode": "column"
+    },
+    "Icon": {
+      "cardMode": "column"
+    },
+    "SegmentedPicker": {
+      "cardMode": "column"
+    },
+    "BuildPalette": {
+      "cardMode": "column"
+    },
+    "CostBreakdown": {
+      "cardMode": "column"
+    },
+    "HUDFrame": {
+      "cardMode": "column"
+    },
+    "Inspector": {
+      "cardMode": "column"
+    },
+    "SessionBanner": {
+      "cardMode": "column"
+    },
+    "StatBadge": {
+      "cardMode": "column"
+    },
+    "GameScreen": {
+      "cardMode": "column"
+    },
+    "TitleScreen": {
+      "cardMode": "column"
+    },
+    "GoalsPanel": {
+      "cardMode": "column"
+    },
+    "InsetList": {
+      "cardMode": "column"
+    },
+    "NewGameDialog": {
+      "cardMode": "column"
+    },
+    "PauseMenu": {
+      "cardMode": "column"
+    },
+    "ScenarioWon": {
+      "cardMode": "column"
+    },
+    "Sheet": {
+      "cardMode": "column"
+    },
+    "TileMenu": {
+      "cardMode": "column"
+    },
+    "Button": {
+      "cardMode": "column"
+    },
+    "CityProvider": {
+      "cardMode": "column"
+    },
+    "MenuPicker": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
 }
