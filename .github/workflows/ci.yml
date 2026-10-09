@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout (with full history for diff-cover)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -39,7 +39,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Set up Python for sprite pipeline
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -47,7 +47,7 @@ jobs:
         run: make sprites-venv
 
       - name: Cache pre-commit
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -136,14 +136,14 @@ jobs:
           shasum -a 256 determinism/macos.json determinism/macos-36k.json
 
       - name: Upload macOS determinism JSON
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage
           path: coverage/
@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Print Swift version
         run: swift --version
@@ -173,7 +173,7 @@ jobs:
           sha256sum determinism/linux.json determinism/linux-36k.json
 
       - name: Upload Linux determinism JSON
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: determinism-linux
           path: determinism/linux*.json
@@ -186,13 +186,13 @@ jobs:
 
     steps:
       - name: Download macOS artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: determinism-macos
           path: determinism
 
       - name: Download Linux artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: determinism-linux
           path: determinism
