@@ -25,4 +25,4 @@
 ## 5. M5 — Verification
 
 - [ ] 5.1 Runtime check (iPhone 17 Pro Max simulator, portrait, prepared save with a player port, an idle player ship and a rival port): inspect your port, tap Route from here, tap the rival port, open its chip and add "Sell 20 Planks", commit; open Routes, assign the idle ship, watch it sail to the rival port and the balance change when it docks; select the route and see its line on the map; pause and resume it; try a land tap and a one-port commit and read the messages.
-- [ ] 5.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate add-route-authoring-ui --strict` and the iOS simulator `xcodebuild`.
+- [x] 5.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate add-route-authoring-ui --strict` and the iOS simulator `xcodebuild`.

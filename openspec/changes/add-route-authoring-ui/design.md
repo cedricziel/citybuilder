@@ -22,12 +22,10 @@ See proposal.md (Why). What exists today:
 
 `GameSession` gains `routeAuthoring: RouteAuthoringViewModel?` (non-nil means route mode is on) and `routeList: RouteListViewModel` (always present; its selection drives the overlay). Both are transient and never saved.
 
-- `beginRouteAuthoring(from port: EntityID? = nil)` clears a pending placement, the tile menu request and the route selection, resets the tool to inspect, creates the view-model with a fresh snapshot, and adds `port` as the first stop when given. Its `commandSink` enqueues the command and ends route mode, so only a successful commit leaves the mode.
-- `commitRouteAuthoring()` refreshes the snapshot and calls `commit()`. `cancelRouteAuthoring()` calls `cancel()` and ends the mode.
-- `handleTap(at:)` sends the tap to the view-model while route mode is on: it refreshes the snapshot, resolves the tile with `RouteAuthoringTapTarget.resolve` and calls `tapHandler(target:)`. The tool, selection and command queue are untouched. `handleLongPress(at:)` does nothing in route mode.
-- `step()` hands each tick's snapshot to `routeList`, so the list and its ship counts stay current without an extra snapshot.
-
-A snapshot per tap is cheap next to the per-tick snapshot the HUD already takes.
+- `beginRouteAuthoring(from port: EntityID? = nil)` clears a pending placement, the tile menu request and the route selection, resets the tool to inspect, creates the view-model with a fresh snapshot, and adds `port` as the first stop when given. Its `commandSink` enqueues commands.
+- `commitRouteAuthoring()` calls `commit()`, which returns whether it sent `createRoute`; only then does route mode end. `cancelRouteAuthoring()` ends the mode.
+- `handleTap(at:)` sends the tap to the view-model while route mode is on: it resolves the tile against the view-model's snapshot with `RouteAuthoringTapTarget.resolve` and calls `tapHandler(target:)`. The tool, selection and command queue are untouched. `handleLongPress(at:)` does nothing in route mode.
+- `step()` hands each tick's snapshot to `routeList` and `routeAuthoring`. The world only changes inside a tick, so taps and commits never see a stale snapshot, and nothing takes an extra one.
 
 - **Alternative — a separate `BuildTool.route` case.** Rejected: the tool enum drives the palette, pan mask and ghost; route mode needs none of them and has its own overlay.
 
@@ -98,4 +96,8 @@ Ships: a ships layer reconciles one `SKSpriteNode` per ship inside the view (usi
 
 ## Implementation notes
 
-(Filled in during implementation.)
+- **Sim change (deviation from "UI only").** Pausing could not work without CityCore: `RouteListViewModel.pause` sent an `editRoute`, which keeps the route's state, and `ShipTick` ignored `.paused`. D7 adds `setRoutePaused` and the hold. Making `.paused` reachable exposed a second spot: port demolition sent home every ship whose route was not `.active`, so demolishing any port would have recalled ships from an unrelated paused route. It now recalls ships whose route is broken or gone (`RouteState.isBroken`), with a test.
+- **Ships are drawn.** `IsoWorldScene` had no ship sprites at all, although `rendering-2_5d` / Ship sprite rendering, Ship facing selection and Off-screen ship culling already asked for them. The ships layer implements them, and the scene tests now map the formerly unmapped "Ship zRotation always zero" and "Unselected route does not render polyline". The layer reconciles only when the tick, camera or view size changes, not every frame. `RouteLayerZPosition.ships` moved from 15 to 50: buildings sit at 10 plus depth / 100, which passes 15 on large maps.
+- **Route mode feedback.** `RouteAuthoringViewModel` gained `isWarning` so the overlay colours the message without comparing strings, and `commit()` returns a Bool (D1).
+- **Manifest sheet prices.** The sheet takes the rival's prices and offers when it opens; they don't refresh while it is open. The trade itself uses the prices at docking.
+- **Not built:** editing an existing route's stops or manifest (delete and re-author), and validation of the closing leg.
