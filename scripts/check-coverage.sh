@@ -19,6 +19,8 @@
 #   BRANCH_COV_MIN   default 70   (percent; soft warning if missing)
 #   COVERAGE_BASE_REF  default main
 #   COVERAGE_STRICT  default 0    set 1 to fail when diff-cover not installed
+#   COVERAGE_REUSE   default 0    set 1 to reuse the profdata of a test run
+#                                 that already used --enable-code-coverage
 set -euo pipefail
 
 LINE_COV_MIN=${LINE_COV_MIN:-80}
@@ -31,8 +33,10 @@ BUILD_DIR="$PKG/.build"
 COVERAGE_DIR=coverage
 mkdir -p "$COVERAGE_DIR"
 
-echo "==> Running CityCore tests with coverage instrumentation"
-swift test --package-path "$PKG" --enable-code-coverage > /dev/null
+if [ "${COVERAGE_REUSE:-0}" != "1" ]; then
+    echo "==> Running CityCore tests with coverage instrumentation"
+    swift test --package-path "$PKG" --enable-code-coverage > /dev/null
+fi
 
 # Find the .profdata and the test binary llvm-cov needs.
 PROFDATA=$(find "$BUILD_DIR" -name "default.profdata" -path "*debug*" | head -1)

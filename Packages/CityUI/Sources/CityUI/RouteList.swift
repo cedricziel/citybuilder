@@ -73,7 +73,7 @@ public final class RouteListViewModel {
         }
     }
 
-    private static func isIdle(_ ship: Ship) -> Bool {
+    private nonisolated static func isIdle(_ ship: Ship) -> Bool {
         ship.owner == .player && ship.state == .idle && ship.routeID == nil
     }
 

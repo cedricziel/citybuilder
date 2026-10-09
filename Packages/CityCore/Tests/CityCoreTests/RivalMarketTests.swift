@@ -21,13 +21,15 @@ private func portReadyWorld(houses: Int = 6) -> World {
 /// row-major, as design D1 orders the port search. Written out here on
 /// purpose, as an oracle independent of the AI's search.
 private func spiral(around center: TileCoordinate, radius: Int) -> [TileCoordinate] {
-    (0 ... radius).flatMap { ring in
-        (-ring ... ring).flatMap { dy in
-            (-ring ... ring).compactMap { dx in
-                max(abs(dx), abs(dy)) == ring ? TileCoordinate(x: center.x + dx, y: center.y + dy) : nil
+    var anchors: [TileCoordinate] = []
+    for ring in 0 ... radius {
+        for dy in -ring ... ring {
+            for dx in -ring ... ring where max(abs(dx), abs(dy)) == ring {
+                anchors.append(TileCoordinate(x: center.x + dx, y: center.y + dy))
             }
         }
     }
+    return anchors
 }
 
 // MARK: - Rivals build a port
