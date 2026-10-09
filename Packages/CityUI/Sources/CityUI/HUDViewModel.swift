@@ -21,6 +21,10 @@ public final class HUDViewModel {
     /// SF Symbol for the time of day. Spec: `platform-shells` (city life).
     public var timeOfDaySymbol: String = "sun.max.fill"
 
+    /// Whether the status pill's stocks tray is open. Spec:
+    /// `platform-shells` / Status pill and stocks tray.
+    public private(set) var isStocksTrayOpen = false
+
     /// How long a placement rejection stays on screen.
     public static let rejectionDisplaySeconds: TimeInterval = 2.5
 
@@ -94,6 +98,15 @@ public final class HUDViewModel {
     /// island row is hidden (camera never landed on any island).
     public var currentIslandName: String? {
         currentIslandRival.map { "\($0) (rival)" } ?? currentIsland?.name
+    }
+
+    public func toggleStocksTray() {
+        isStocksTrayOpen.toggle()
+    }
+
+    /// The tray's chips: `stocksRow` while open, empty while closed.
+    public var stocksTray: [HUDGoodChip] {
+        isStocksTrayOpen ? stocksRow : []
     }
 
     /// Goods chips to render under the badge row. A chip exists for
