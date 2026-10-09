@@ -86,6 +86,7 @@ public struct BuildRailModel: Equatable, Sendable {
 
     @MainActor
     public mutating func arm(_ kind: BuildingKind, in session: GameSession) {
+        guard !session.isLocked(kind) else { return }
         if session.selectedTool != .place(kind) {
             session.selectTool(.place(kind))
         }
