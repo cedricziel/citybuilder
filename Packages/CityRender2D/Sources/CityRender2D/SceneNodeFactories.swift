@@ -78,7 +78,9 @@ extension IsoWorldScene {
         if let (name, signatureTexture) = signature {
             textureName = name
             texture = signatureTexture
-        } else if let (name, cultureTexture) = cultureTexture(kind: kind, state: state, houseTier: houseTier) {
+        } else if let (name, cultureTexture) = cultureTexture(
+            kind: kind, state: state, houseTier: houseTier, rival: look.rival
+        ) {
             textureName = name
             cultureName = name
             texture = cultureTexture
@@ -106,15 +108,12 @@ extension IsoWorldScene {
                 coord: coord
             ) ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         }
-        let node = buildingSpriteNode(
-            texture: texture,
-            state: state,
-            footprint: footprint
-        )
+        let node = buildingSpriteNode(texture: texture, state: state, footprint: footprint)
         if let textureName {
             node.userData = [Self.textureNameKey: textureName]
         }
         applyLook(look, to: node)
+        addPennant(for: look, kind: kind, to: node)
         if signature == nil {
             armAnimation(on: node, kind: kind, state: state, cultureName: cultureName)
         }
@@ -180,6 +179,12 @@ extension IsoWorldScene {
         guard look.smoky else { return }
         node.color = SKColor(white: 0.5, alpha: 1)
         node.colorBlendFactor = 0.25
+    }
+
+    /// Every rival building but a road flies its rival's pennant.
+    private func addPennant(for look: BuildingLook, kind: BuildingKind, to node: SKSpriteNode) {
+        guard let rival = look.rival, kind != .road else { return }
+        node.addChild(Self.makePennantNode(colourHex: rival.colour.hex, on: node))
     }
 
     private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, cultureName: String?) {

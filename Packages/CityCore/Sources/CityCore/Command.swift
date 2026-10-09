@@ -21,6 +21,11 @@ public enum Command: Codable, Equatable, Sendable {
     /// allocated EntityID and are recorded in `occupiedTiles`.
     case place(BuildingKind, at: TileCoordinate)
 
+    /// A rival AI placement, applied like `place` with the rival as
+    /// owner and payer. Rejections are silent. Spec: `rival-towns` /
+    /// Rival turns go through the command queue.
+    case rivalPlace(RivalID, BuildingKind, at: TileCoordinate)
+
     /// Demolish the building anchored at the given tile (if any).
     case demolish(at: TileCoordinate)
 
@@ -59,6 +64,9 @@ public enum Command: Codable, Equatable, Sendable {
     /// Clear the ship's route assignment. The ship transitions to
     /// `.idle` next tick.
     case unassignShip(shipID: EntityID)
+
+    /// Pause or resume a route. Spec: `sea-transport` / Pausing a route.
+    case setRoutePaused(id: RouteID, paused: Bool)
 
     /// Pay for a commission at a gallery. Spec: `age-signatures` /
     /// Gallery commissions inspire houses.

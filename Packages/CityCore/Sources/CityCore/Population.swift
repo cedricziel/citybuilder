@@ -107,6 +107,11 @@ public struct HousePopulation: Hashable, Sendable {
         shortGoods.set(good, value)
     }
 
+    /// An empty house eats nothing, so nothing is short.
+    mutating func clearShortages() {
+        shortGoods.removeAll()
+    }
+
     public init() {}
 
     /// True when every need of the current tier in `culture` is met.

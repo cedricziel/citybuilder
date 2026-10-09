@@ -71,6 +71,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Houses under a signature effect; others are absent. Spec:
     /// `age-signatures`.
     public let houseModifiers: [EntityID: HouseModifiers]
+    /// Every rival town, by ID. Spec: `rendering-2_5d` / Buildings render
+    /// in their owner's culture.
+    public let rivals: [RivalSummary]
 
     public init(
         tickCount: UInt64,
@@ -93,7 +96,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         date: GameDate = GameDate(year: 1200, season: .spring),
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
-        houseModifiers: [EntityID: HouseModifiers] = [:]
+        houseModifiers: [EntityID: HouseModifiers] = [:],
+        rivals: [RivalSummary] = []
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -116,6 +120,21 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.culture = culture
         self.age = age
         self.houseModifiers = houseModifiers
+        self.rivals = rivals
+    }
+
+    public func rival(_ id: RivalID) -> RivalSummary? {
+        rivals.first { $0.id == id }
+    }
+
+    /// The rival seated on the island, nil for the player's islands.
+    public func rival(onIsland islandID: IslandID) -> RivalSummary? {
+        rivals.first { $0.islandID == islandID }
+    }
+
+    /// The owner's culture: the world's for the player.
+    public func culture(for owner: Owner) -> Culture {
+        owner.rivalID.flatMap { rival($0)?.culture } ?? culture
     }
 
     public func terrain(at coord: TileCoordinate) -> TerrainType? {
@@ -133,18 +152,43 @@ public struct WorldSnapshot: Hashable, Sendable {
     }
 }
 
+/// What the renderer and UI need of a rival town (design D10).
+public struct RivalSummary: Hashable, Sendable {
+    public let id: RivalID
+    public let name: String
+    public let colour: RivalColour
+    public let culture: Culture
+    public let age: Age
+    public let islandID: IslandID
+    /// Goods across the rival's buffers, which its market offers come
+    /// from (`add-rival-trade` D5).
+    public let stock: [Good: Int]
+
+    public init(_ rival: RivalTown, stock: [Good: Int] = [:]) {
+        id = rival.id
+        name = rival.name
+        colour = rival.colour
+        culture = rival.culture
+        age = rival.age
+        islandID = rival.islandID
+        self.stock = stock
+    }
+
+    public var sellOffers: [RivalOffer] {
+        RivalMarket.sellOffers(stock: stock)
+    }
+
+    public var buyOffers: [RivalOffer] {
+        RivalMarket.buyOffers(stock: stock)
+    }
+}
+
 public extension World {
     /// Extract a render-ready snapshot. O(N) in map size; intended to be
     /// called once per render frame, not once per draw call.
     func snapshot() -> WorldSnapshot {
-        let pop = populations.values.reduce(UInt64(0)) { $0 + UInt64($1.population) }
-        let tileToIsland = IslandDetector.detect(
-            width: mapWidth,
-            height: mapHeight,
-            terrain: terrainGrid,
-            mapHeightForClimate: mapHeight,
-            seed: seed
-        ).tileToIsland
+        let pop = UInt64(population(of: .player))
+        let tileToIsland = tileToIslandMap()
         let summaries = buildIslandSummaries(tileToIsland: tileToIsland)
         return WorldSnapshot(
             tickCount: tickCount,
@@ -167,7 +211,8 @@ public extension World {
             date: date,
             culture: culture,
             age: age,
-            houseModifiers: snapshotHouseModifiers()
+            houseModifiers: snapshotHouseModifiers(),
+            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id)) }
         )
     }
 

@@ -30,7 +30,8 @@ public enum RouteLayerZPosition {
     public static let terrain: CGFloat = 0
     public static let routes: CGFloat = 5
     public static let buildings: CGFloat = 10
-    public static let ships: CGFloat = 15
+    /// Above every building (10 + depth / 100), like carriers.
+    public static let ships: CGFloat = 50
 }
 
 public enum ShipRenderMath {
@@ -177,7 +178,13 @@ public enum RoutePolylineProjector {
     public static func projectedPoints(
         for route: Route, snapshot: WorldSnapshot
     ) -> [CGPoint] {
-        route.waypoints.map { waypoint in
+        projectedPoints(for: route.waypoints, snapshot: snapshot)
+    }
+
+    public static func projectedPoints(
+        for waypoints: [Waypoint], snapshot: WorldSnapshot
+    ) -> [CGPoint] {
+        waypoints.map { waypoint in
             let position = position(for: waypoint, snapshot: snapshot)
             return ShipRenderMath.screenPoint(for: position)
         }

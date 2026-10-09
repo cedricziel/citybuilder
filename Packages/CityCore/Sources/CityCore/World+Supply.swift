@@ -11,16 +11,37 @@ extension World {
     /// First forest tile within the catchment, scanning row-major from
     /// the top-left corner, or nil when the catchment is cleared.
     func firstForestInCatchment(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
+        var first: TileCoordinate?
+        visitCatchmentForest(anchor: anchor, footprint: footprint) { tile in
+            first = tile
+            return false
+        }
+        return first
+    }
+
+    /// Unoccupied forest tiles within the catchment.
+    func forestTiles(inCatchmentOf anchor: TileCoordinate, footprint: Footprint) -> Int {
+        var count = 0
+        visitCatchmentForest(anchor: anchor, footprint: footprint) { _ in
+            count += 1
+            return true
+        }
+        return count
+    }
+
+    /// Visits the catchment's unoccupied forest tiles row-major from the
+    /// top-left corner while `visit` returns true. Runs per lumberjack
+    /// per tick, so it allocates nothing.
+    private func visitCatchmentForest(
+        anchor: TileCoordinate, footprint: Footprint, _ visit: (TileCoordinate) -> Bool
+    ) {
         let radius = Self.lumberjackCatchmentRadius
         for y in anchor.y - radius ... anchor.y + footprint.height - 1 + radius {
             for x in anchor.x - radius ... anchor.x + footprint.width - 1 + radius {
                 let tile = TileCoordinate(x: x, y: y)
-                if terrain(at: tile) == .forest, occupiedTiles[tile] == nil {
-                    return tile
-                }
+                if terrain(at: tile) == .forest, occupiedTiles[tile] == nil, !visit(tile) { return }
             }
         }
-        return nil
     }
 
     /// Dispatch buffer→producer carriers for producers short of inputs.
@@ -99,7 +120,7 @@ extension World {
                       anchor: buffer.anchor,
                       footprint: BuildingCatalog.spec(for: buffer.kind).footprint
                   ),
-                  let path = PathFinder.path(from: bufferRoad, to: road, in: roadGraph)
+                  let path = roadPath(from: bufferRoad, to: road)
             else { continue }
             if best.map({ path.count < $0.1.count }) ?? true {
                 best = (buffer.id, path)
@@ -124,6 +145,14 @@ extension World {
         return amount - remaining
     }
 
+    /// Road path between two road tiles. Roads never cross water, so
+    /// tiles on different islands are answered without a search.
+    func roadPath(from start: TileCoordinate, to goal: TileCoordinate) -> [TileCoordinate]? {
+        let islands = tileToIslandMap()
+        guard islands[start] == islands[goal] else { return nil }
+        return PathFinder.path(from: start, to: goal, in: roadGraph)
+    }
+
     /// True when a road path joins a road next to `anchor`'s footprint
     /// and a road next to `other`'s footprint.
     func sharesRoadNetwork(
@@ -135,6 +164,6 @@ extension World {
         guard let from = anyAdjacentRoad(anchor: anchor, footprint: footprint),
               let to = anyAdjacentRoad(anchor: other, footprint: otherFootprint)
         else { return false }
-        return PathFinder.path(from: from, to: to, in: roadGraph) != nil
+        return roadPath(from: from, to: to) != nil
     }
 }

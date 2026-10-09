@@ -20,7 +20,12 @@ extension World {
     }
 
     private mutating func consumeIfDue(_ pop: inout HousePopulation, building: Building) {
-        guard pop.population > 0, tickCount.isMultiple(of: HousePopulation.consumptionIntervalTicks) else { return }
+        guard tickCount.isMultiple(of: HousePopulation.consumptionIntervalTicks) else { return }
+        guard pop.population > 0 else {
+            // Otherwise a house that emptied in a shortage never refills.
+            pop.clearShortages()
+            return
+        }
         for good in pop.tier.needs(in: culture) {
             let amount = pop.consumption(of: good, in: culture)
             pop.setShort(good, consume(good, amount: amount, by: building) < amount)

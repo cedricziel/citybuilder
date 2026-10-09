@@ -50,6 +50,10 @@ public enum PlacementRejection: Hashable, Sendable {
     /// construction or operational. Spec: `buildings-and-construction`
     /// / One monument per city.
     case alreadyBuilt(BuildingKind)
+    /// A land tile lies on an island owned by someone else, named here.
+    /// Spec: `buildings-and-construction` / Placement on another owner's
+    /// island is rejected.
+    case foreignIsland(Owner)
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -65,6 +69,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .obsolete: "obsolete"
         case .wrongCulture: "wrong_culture"
         case .alreadyBuilt: "already_built"
+        case .foreignIsland: "foreign_island"
         }
     }
 }

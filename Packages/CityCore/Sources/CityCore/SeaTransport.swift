@@ -57,6 +57,8 @@ public struct Ship: Hashable, Codable, Sendable {
     /// policy. Reset on entering `.docked`, ticked by the M5 system,
     /// persisted so a load mid-wait resumes the countdown.
     public var dockedTicksWaited: Int
+    /// Spec: `sea-transport` / Ships have an owner.
+    public internal(set) var owner: Owner
 
     public init(
         id: EntityID,
@@ -68,7 +70,8 @@ public struct Ship: Hashable, Codable, Sendable {
         state: ShipState,
         shipClass: ShipClass,
         dockedManifestIndex: Int = 0,
-        dockedTicksWaited: Int = 0
+        dockedTicksWaited: Int = 0,
+        owner: Owner = .player
     ) {
         self.id = id
         self.position = position
@@ -80,6 +83,30 @@ public struct Ship: Hashable, Codable, Sendable {
         self.shipClass = shipClass
         self.dockedManifestIndex = dockedManifestIndex
         self.dockedTicksWaited = dockedTicksWaited
+        self.owner = owner
+    }
+}
+
+public extension Ship {
+    /// Cargo the ship can still take on.
+    var freeSpace: Int {
+        shipClass.capacity - cargo.values.reduce(0, +)
+    }
+
+    /// Reads a missing `owner` (saves before rivals) as the player's.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(EntityID.self, forKey: .id)
+        self.position = try container.decode(Fixed2D.self, forKey: .position)
+        self.heading = try container.decode(Fixed.self, forKey: .heading)
+        self.routeID = try container.decodeIfPresent(RouteID.self, forKey: .routeID)
+        self.waypointIdx = try container.decode(Int.self, forKey: .waypointIdx)
+        self.cargo = try container.decode([Good: Int].self, forKey: .cargo)
+        self.state = try container.decode(ShipState.self, forKey: .state)
+        self.shipClass = try container.decode(ShipClass.self, forKey: .shipClass)
+        self.dockedManifestIndex = try container.decode(Int.self, forKey: .dockedManifestIndex)
+        self.dockedTicksWaited = try container.decode(Int.self, forKey: .dockedTicksWaited)
+        self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
     }
 }
 
@@ -107,6 +134,11 @@ public enum RouteState: Hashable, Codable, Sendable {
     case active
     case paused
     case broken(reason: BrokenReason)
+
+    public var isBroken: Bool {
+        if case .broken = self { return true }
+        return false
+    }
 
     public enum BrokenReason: Hashable, Codable, Sendable {
         case segmentCrossesLand(segmentIndex: Int)

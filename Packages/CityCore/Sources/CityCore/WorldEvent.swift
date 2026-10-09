@@ -95,6 +95,24 @@ public enum WorldEvent: Sendable {
     /// A caravanserai's caravan sold `goods` for `revenue`. Spec:
     /// `culture-signatures` / Caravans sell at base price.
     case caravanSold(building: EntityID, goods: [Good: Int], revenue: Int64)
+
+    // MARK: Rival towns
+
+    /// A rival town entered a new age. Spec: `rival-towns` / Rival ages.
+    case rivalAgeAdvanced(RivalID, Age)
+
+    // MARK: Rival trade
+
+    /// A player ship bought from or sold to a rival at its port: `quantity`
+    /// units of `good` for `total`. Spec: `rival-trade` / Trading at a
+    /// rival port.
+    case tradeCompleted(rival: RivalID, good: Good, quantity: Int, total: Int64, direction: TradeDirection)
+}
+
+/// Which way goods went in a trade, from the player's point of view.
+public enum TradeDirection: Hashable, Sendable {
+    case bought
+    case sold
 }
 
 extension WorldEvent: Equatable {
@@ -114,8 +132,6 @@ extension WorldEvent: Equatable {
             .constructionWaitingForMaterials(rBuilding, rMissing)
         ):
             return lBuilding == rBuilding && lMissing == rMissing
-        case let (.constructionStarted(lBuilding), .constructionStarted(rBuilding)):
-            return lBuilding == rBuilding
         case let (.forestHarvested(lAt), .forestHarvested(rAt)):
             return lAt == rAt
         case let (.placementRejected(lKind, lAnchor), .placementRejected(rKind, rAnchor)):
@@ -124,21 +140,17 @@ extension WorldEvent: Equatable {
             return lEntity == rEntity && lFrom == rFrom && lGood == rGood
         case let (.carrierArrived(lEntity, lAt, lGood, lAmount), .carrierArrived(rEntity, rAt, rGood, rAmount)):
             return lEntity == rEntity && lAt == rAt && lGood == rGood && lAmount == rAmount
-        case let (.productionCycleCompleted(lEntity, lKind), .productionCycleCompleted(rEntity, rKind)):
+        case let (.productionCycleCompleted(lEntity, lKind), .productionCycleCompleted(rEntity, rKind)),
+             let (.productionStalled(lEntity, lKind), .productionStalled(rEntity, rKind)),
+             let (.productionResumed(lEntity, lKind), .productionResumed(rEntity, rKind)),
+             let (.fuelRanOut(lEntity, lKind), .fuelRanOut(rEntity, rKind)):
             return lEntity == rEntity && lKind == rKind
-        case let (.productionStalled(lEntity, lKind), .productionStalled(rEntity, rKind)):
-            return lEntity == rEntity && lKind == rKind
-        case let (.productionResumed(lEntity, lKind), .productionResumed(rEntity, rKind)):
-            return lEntity == rEntity && lKind == rKind
-        case let (.taxesCollected(lAmount), .taxesCollected(rAmount)):
-            return lAmount == rAmount
-        case let (.upkeepPaid(lAmount), .upkeepPaid(rAmount)):
+        case let (.taxesCollected(lAmount), .taxesCollected(rAmount)),
+             let (.upkeepPaid(lAmount), .upkeepPaid(rAmount)):
             return lAmount == rAmount
         case let (.bankruptcyWarning(lTicks), .bankruptcyWarning(rTicks)):
             return lTicks == rTicks
-        case (.bankruptcyResolved, .bankruptcyResolved):
-            return true
-        case (.gameOver, .gameOver):
+        case (.bankruptcyResolved, .bankruptcyResolved), (.gameOver, .gameOver), (.scenarioWon, .scenarioWon):
             return true
         case let (.seasonChanged(lSeason), .seasonChanged(rSeason)):
             return lSeason == rSeason
@@ -146,16 +158,21 @@ extension WorldEvent: Equatable {
             return lEvent == rEvent
         case let (.ageAdvanced(lAge), .ageAdvanced(rAge)):
             return lAge == rAge
-        case (.scenarioWon, .scenarioWon):
-            return true
-        case let (.fuelRanOut(lBuilding, lKind), .fuelRanOut(rBuilding, rKind)):
-            return lBuilding == rBuilding && lKind == rKind
-        case let (.monumentCompleted(lBuilding), .monumentCompleted(rBuilding)),
+        case let (.constructionStarted(lBuilding), .constructionStarted(rBuilding)),
+             let (.monumentCompleted(lBuilding), .monumentCompleted(rBuilding)),
              let (.commissionStarted(lBuilding), .commissionStarted(rBuilding)),
              let (.commissionEnded(lBuilding), .commissionEnded(rBuilding)):
             return lBuilding == rBuilding
         case let (.caravanSold(lBuilding, lGoods, lRevenue), .caravanSold(rBuilding, rGoods, rRevenue)):
             return lBuilding == rBuilding && lGoods == rGoods && lRevenue == rRevenue
+        case let (.rivalAgeAdvanced(lRival, lAge), .rivalAgeAdvanced(rRival, rAge)):
+            return lRival == rRival && lAge == rAge
+        case let (
+            .tradeCompleted(lRival, lGood, lQuantity, lTotal, lDirection),
+            .tradeCompleted(rRival, rGood, rQuantity, rTotal, rDirection)
+        ):
+            return lRival == rRival && lGood == rGood && lQuantity == rQuantity && lTotal == rTotal
+                && lDirection == rDirection
         default:
             return false
         }
@@ -173,9 +190,8 @@ public extension WorldEvent {
              let .buildingDemolished(building, _, _),
              let .constructionCompleted(building, _, _):
             return building
-        case let .materialsDeducted(building, _):
-            return building
-        case let .constructionWaitingForMaterials(building, _),
+        case let .materialsDeducted(building, _),
+             let .constructionWaitingForMaterials(building, _),
              let .constructionStarted(building):
             return building
         case let .carrierDeparted(carrier, _, _),
@@ -185,9 +201,8 @@ public extension WorldEvent {
              let .productionStalled(producer, _),
              let .productionResumed(producer, _):
             return producer
-        case let .fuelRanOut(building, _):
-            return building
-        case let .monumentCompleted(building),
+        case let .fuelRanOut(building, _),
+             let .monumentCompleted(building),
              let .commissionStarted(building),
              let .commissionEnded(building),
              let .caravanSold(building, _, _):
@@ -202,7 +217,9 @@ public extension WorldEvent {
              .seasonChanged,
              .historyEvent,
              .ageAdvanced,
-             .scenarioWon:
+             .scenarioWon,
+             .rivalAgeAdvanced,
+             .tradeCompleted:
             return nil
         }
     }
@@ -241,7 +258,9 @@ public extension WorldEvent {
              .monumentCompleted,
              .commissionStarted,
              .commissionEnded,
-             .caravanSold:
+             .caravanSold,
+             .rivalAgeAdvanced,
+             .tradeCompleted:
             return nil
         }
     }
@@ -279,6 +298,8 @@ public extension WorldEvent {
         case .commissionStarted: return 24
         case .commissionEnded: return 25
         case .caravanSold: return 26
+        case .rivalAgeAdvanced: return 27
+        case .tradeCompleted: return 28
         }
     }
 }

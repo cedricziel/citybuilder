@@ -22,6 +22,7 @@ private func makeV4Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 4
     var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "calendar")
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
@@ -62,6 +63,7 @@ private func makeV5Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 5
     var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "culture")
     inner.removeValue(forKey: "age")
     for key in ["difficulty", "goals", "scenarioWon"] {
@@ -102,6 +104,7 @@ private func makeV6Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 6
     var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
     inner.removeValue(forKey: "age")
     for key in ["difficulty", "goals", "scenarioWon"] {
         inner.removeValue(forKey: key)
@@ -146,6 +149,7 @@ private func makeV7Payload(world: World, writtenAt: Date = Date()) throws -> Dat
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     json["version"] = 7
     var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
     for key in ["difficulty", "goals", "scenarioWon"] {
         inner.removeValue(forKey: key)
     }
@@ -171,4 +175,48 @@ func scenarioV7SaveLoadsAsANormalSandbox() throws {
     #expect(loaded.difficulty == .normal)
     #expect(loaded.goals.isEmpty)
     #expect(!loaded.scenarioWon)
+}
+
+private func v8FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v8_archipelago.json")
+}
+
+/// Encode a World as a v8 save: the current shape minus rivals and owners.
+private func makeV8Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 8
+    var inner = json["world"] as? [String: Any] ?? [:]
+    stripKeysNewerThanV8(&inner)
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v8 archipelago save", .enabled(if: regenerateFixtures))
+func regenerateV8ArchipelagoFixture() throws {
+    try requireDeterministicHashing()
+    // A v8 save predates `add-rival-towns`: no rivals, no owners.
+    let world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal, rivals: false)
+    var data = try makeV8Payload(world: world, writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v8FixtureURL())
+}
+
+@Test("scenario: v8 save loads without rivals")
+func scenarioV8SaveLoadsWithoutRivals() throws {
+    let data = try Data(contentsOf: v8FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 8, "fixture must be a v8 save")
+    let migrated = try MigrationRegistry().migrate(payload: data, toVersion: SaveFile.currentVersion)
+    let migratedJSON = try JSONSerialization.jsonObject(with: migrated) as? [String: Any] ?? [:]
+    #expect(migratedJSON["version"] as? Int == 9)
+    let loaded = try decodeWorld(data)
+    #expect(loaded.layout == .archipelago)
+    #expect(loaded.rivals.isEmpty)
+    #expect(!loaded.buildings.isEmpty)
+    #expect(loaded.buildings.values.allSatisfy { $0.owner == .player })
+    #expect(loaded.ships.values.allSatisfy { $0.owner == .player })
+    #expect(loaded.islands.allSatisfy { loaded.owner(ofIsland: $0.id) == .player })
 }

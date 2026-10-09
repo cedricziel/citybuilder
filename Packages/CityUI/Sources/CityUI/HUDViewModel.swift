@@ -12,6 +12,9 @@ public final class HUDViewModel {
     /// water (keeps the previous island until the camera reaches a new
     /// one); nil only when the camera has never been on any island.
     public var currentIsland: IslandSummary?
+    /// The rival seated on `currentIsland`, nil on the player's islands.
+    /// Spec: `platform-shells` / Rival islands and buildings in the UI.
+    public var currentIslandRival: String?
     /// Season and year, such as "Spring 1200". Spec: `platform-shells` /
     /// HUD shows the date.
     public var dateText: String = ""
@@ -45,6 +48,7 @@ public final class HUDViewModel {
             // stocks row.
             snapshot.islandSummaries[$0.id]
         }
+        currentIslandRival = currentIsland.flatMap { snapshot.rival(onIsland: $0.id)?.name }
     }
 
     private func resolveIsland(in snapshot: WorldSnapshot) -> IslandSummary? {
@@ -59,14 +63,19 @@ public final class HUDViewModel {
 
     /// Money with locale-grouped digits, e.g. "$1,000" in `en_US`.
     public func formattedMoney(locale: Locale) -> String {
-        let prefix = money < 0 ? "-" : ""
-        return "\(prefix)$\(abs(money).formatted(.number.grouping(.automatic).locale(locale)))"
+        Self.formatMoney(money, locale: locale)
+    }
+
+    /// "$1,234" (or "-$1,234") with locale-grouped digits.
+    static func formatMoney(_ amount: Int64, locale: Locale) -> String {
+        let prefix = amount < 0 ? "-" : ""
+        return "\(prefix)$\(abs(amount).formatted(.number.grouping(.automatic).locale(locale)))"
     }
 
     /// Show `rejection` as the HUD's transient message, replacing any
     /// message already showing.
-    public func showRejection(_ rejection: PlacementRejection, now: Date) {
-        self.rejection = (PlacementRejectionText.message(for: rejection), now)
+    public func showRejection(_ rejection: PlacementRejection, in world: World, now: Date) {
+        self.rejection = (PlacementRejectionText.message(for: rejection, in: world), now)
     }
 
     /// The rejection message to show at `date`, or nil once it expired.
@@ -84,7 +93,7 @@ public final class HUDViewModel {
     /// Name of the currently displayed island, or nil when the HUD's
     /// island row is hidden (camera never landed on any island).
     public var currentIslandName: String? {
-        currentIsland?.name
+        currentIslandRival.map { "\($0) (rival)" } ?? currentIsland?.name
     }
 
     /// Goods chips to render under the badge row. A chip exists for
@@ -92,7 +101,7 @@ public final class HUDViewModel {
     /// current island. Iteration follows `Good.allCases`, which is the
     /// stable catalog order — chips never reshuffle frame-to-frame.
     public var stocksRow: [HUDGoodChip] {
-        guard let island = currentIsland else { return [] }
+        guard let island = currentIsland, currentIslandRival == nil else { return [] }
         return Good.allCases.compactMap { good in
             let stock = island.stockpile[good] ?? 0
             let capacity = island.capacity[good] ?? 0

@@ -42,6 +42,9 @@ extension GameSession {
                     title: "The gallery's commission has ended",
                     description: "Commission new art to inspire the houses again."
                 ))
+            case let .rivalAgeAdvanced(id, age):
+                guard let name = world.rival(id)?.name else { continue }
+                show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
             default:
                 continue
             }

@@ -5,8 +5,10 @@ import SwiftUI
 /// file stays under SwiftLint's 500-line ceiling. Spec:
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
-    /// Round HUD buttons in a 2×2 grid so the stats panel keeps its width
-    /// on a phone: pause and settings on top, research and goals below.
+    /// Round HUD buttons in a grid so the stats panel keeps its width on
+    /// a phone: pause and settings on top, research and goals below, then
+    /// standings when the world has rivals and routes once the player
+    /// has a port, ship or route.
     var hudButtons: some View {
         VStack(spacing: 6) {
             HStack(spacing: 6) {
@@ -18,6 +20,10 @@ extension CityRootView {
             HStack(spacing: 6) {
                 researchButton
                 goalsButton
+            }
+            HStack(spacing: 6) {
+                standingsButton
+                routesButton
             }
         }
     }

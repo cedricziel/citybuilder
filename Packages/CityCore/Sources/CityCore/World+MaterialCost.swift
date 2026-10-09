@@ -35,17 +35,11 @@ public extension World {
         return totals
     }
 
-    /// One-shot connected-component scan used to scope placement
-    /// lookups to a single island. Tests + production paths re-build
-    /// the map per placement; canPlace + applyPlace each pay one O(N).
+    /// Tile-to-island map used to scope placement lookups to a single
+    /// island. Served from `IslandMapCache`, which only rescans when the
+    /// water mask changes.
     func tileToIslandMap() -> [TileCoordinate: IslandID] {
-        IslandDetector.detect(
-            width: mapWidth,
-            height: mapHeight,
-            terrain: terrainGrid,
-            mapHeightForClimate: mapHeight,
-            seed: seed
-        ).tileToIsland
+        IslandMapCache.shared.map(width: mapWidth, height: mapHeight, terrain: terrainGrid)
     }
 }
 
@@ -61,9 +55,9 @@ extension World {
     /// exists".
     func materialShortfall(
         cost: [Good: Int],
-        anchor: TileCoordinate
+        anchor: TileCoordinate,
+        tileToIsland map: [TileCoordinate: IslandID]
     ) -> [Good: Int] {
-        let map = tileToIslandMap()
         let availability = islandStockpile(at: anchor, tileToIsland: map)
         let islandID = map[anchor]
         var shortfall: [Good: Int] = [:]

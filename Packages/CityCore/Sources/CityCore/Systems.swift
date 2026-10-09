@@ -6,8 +6,18 @@ import Foundation
 extension World {
     static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
 
+    /// Operational producers by entity ID. They share forests, buffers and
+    /// new entity IDs, so they run in this order and replays don't depend
+    /// on dictionary order.
+    func operationalProducersInEntityOrder() -> [Building] {
+        buildings.values
+            .filter { $0.state == .operational && ProductionCatalog.recipe(for: $0.kind) != nil }
+            .sorted { $0.id.raw < $1.id.raw }
+    }
+
     mutating func runProductionSystem(signatureSources: [Building], events: inout [WorldEvent]) {
-        for (id, building) in buildings where building.state == .operational {
+        for building in operationalProducersInEntityOrder() {
+            let id = building.id
             guard let recipe = Self.activeRecipe(of: building) else { continue }
             var progress = productions[id] ?? ProductionProgress()
             var stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
@@ -102,7 +112,9 @@ extension World {
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
-        for (id, carrier) in carriers {
+        // Arrivals fill shared stockpiles, so carriers move in entity order.
+        for id in carriers.keys.sorted(by: { $0.raw < $1.raw }) {
+            guard let carrier = carriers[id] else { continue }
             if carrier.hasArrived {
                 applyCarrierArrival(carrier, events: &events)
                 switch carrier.mission {
@@ -197,7 +209,8 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID],
         events: inout [WorldEvent]
     ) {
-        for (producerId, building) in buildings where building.state == .operational {
+        for building in operationalProducersInEntityOrder() {
+            let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
             guard inFlight < CarrierConfig.perProducerCap else { continue }
@@ -354,11 +367,7 @@ extension World {
             else { continue }
             guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
             _ = good // future: check warehouse accepts this good type
-            guard let path = PathFinder.path(
-                from: start,
-                to: bufferRoad,
-                in: roadGraph
-            )
+            guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)
@@ -370,11 +379,10 @@ extension World {
     mutating func runEconomySystem(signatureSources sources: [Building], events: inout [WorldEvent]) {
         guard !economy.gameOver else { return }
         if tickCount > 0, tickCount.isMultiple(of: Economy.taxIntervalTicks) {
-            // Spec: `population-and-needs` / Taxes scale with tier.
-            let amount = taxWithMonumentBonus(populations.reduce(Int64(0)) {
-                $0 + houseTax(house: $1.key, population: $1.value, sources: sources)
-            })
+            var taxes = taxesByOwner(sources: sources)
+            let amount = taxes.removeValue(forKey: .player) ?? 0
             economy.credit(amount)
+            creditRivals(taxes)
             // Only emit when actual money flowed — `taxesCollected` is a
             // meaningful event the audio layer binds to a coin sound, not
             // a 5-second heartbeat for empty cities.
@@ -383,12 +391,14 @@ extension World {
             }
         }
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
-            var totalUpkeep: Int64 = 0
+            var upkeepByOwner: [Owner: Int64] = [:]
             for building in buildings.values where building.state == .operational {
-                totalUpkeep += upkeep(of: building, sources: sources)
+                upkeepByOwner[building.owner, default: 0] += upkeep(of: building, sources: sources)
             }
-            totalUpkeep = difficulty.scaledUpkeep(totalUpkeep)
+            // Difficulty scaling applies to the player only.
+            let totalUpkeep = difficulty.scaledUpkeep(upkeepByOwner.removeValue(forKey: .player) ?? 0)
             economy.deduct(totalUpkeep)
+            creditRivals(upkeepByOwner.mapValues { -$0 })
             // Same as above — empty cities and free-upkeep buildings shouldn't
             // generate a per-interval no-op event.
             if totalUpkeep > 0 {
@@ -414,6 +424,28 @@ extension World {
             if priorDeficitTicks > 0 {
                 events.append(.bankruptcyResolved)
             }
+        }
+    }
+
+    /// Spec: `population-and-needs` / Taxes scale with tier; each house
+    /// pays its owner (spec `economy` / Each owner has its own purse),
+    /// with the owner's monument bonus.
+    private func taxesByOwner(sources: [Building]) -> [Owner: Int64] {
+        var taxes: [Owner: Int64] = [:]
+        for (id, pop) in populations {
+            taxes[owner(of: id), default: 0] += houseTax(house: id, population: pop, sources: sources)
+        }
+        for (owner, amount) in taxes {
+            taxes[owner] = taxWithMonumentBonus(amount, for: owner)
+        }
+        return taxes
+    }
+
+    /// Books per-rival amounts in rival ID order. Rivals never go
+    /// bankrupt; a negative treasury only makes them wait.
+    private mutating func creditRivals(_ amounts: [Owner: Int64]) {
+        for (owner, amount) in amounts.sorted(by: { ($0.key.rivalID ?? 0) < ($1.key.rivalID ?? 0) }) {
+            credit(amount, to: owner)
         }
     }
 

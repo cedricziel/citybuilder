@@ -16,11 +16,12 @@ enum SignatureFixture {
         _ kind: BuildingKind,
         at anchor: TileCoordinate,
         in world: inout World,
-        state: BuildingState = .operational
+        state: BuildingState = .operational,
+        owner: Owner = .player
     ) -> EntityID {
         let id = EntityID(raw: world.nextEntityRaw)
         world.nextEntityRaw &+= 1
-        world.buildings[id] = Building(id: id, kind: kind, anchor: anchor, state: state)
+        world.buildings[id] = Building(id: id, kind: kind, anchor: anchor, state: state, owner: owner)
         for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
             world.occupiedTiles[tile] = id
         }

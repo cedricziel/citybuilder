@@ -10,11 +10,27 @@ public struct InspectorViewModel: Sendable {
     public let commission: CommissionButton?
     /// The caravanserai's export picker, nil for other buildings.
     public let exportPicker: ExportPicker?
+    /// The rival owning the building, nil for the player's.
+    public let rival: RivalSummary?
+    /// A rival port's market, nil elsewhere.
+    public let market: RivalMarketSection?
+    /// A port of any owner, for Route from here; nil elsewhere.
+    public let routeStartPort: EntityID?
 
-    public init(bullets: [String], commission: CommissionButton? = nil, exportPicker: ExportPicker? = nil) {
+    public init(
+        bullets: [String],
+        commission: CommissionButton? = nil,
+        exportPicker: ExportPicker? = nil,
+        rival: RivalSummary? = nil,
+        market: RivalMarketSection? = nil,
+        routeStartPort: EntityID? = nil
+    ) {
         self.bullets = bullets
         self.commission = commission
         self.exportPicker = exportPicker
+        self.rival = rival
+        self.market = market
+        self.routeStartPort = routeStartPort
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -30,15 +46,17 @@ public struct InspectorViewModel: Sendable {
         } else {
             "\(building.ticksSincePlacement)/\(spec.buildDurationTicks) ticks"
         }
+        let rival = building.owner.rivalID.flatMap(snapshot.rival)
+        let culture = snapshot.culture(for: building.owner)
         var houseLines: [String] = []
         if let pop = snapshot.housePopulations[entityID] {
-            let needs = pop.tier.needs(in: snapshot.culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
+            let needs = pop.tier.needs(in: culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
-                "Tier: \(pop.tier.displayName(in: snapshot.culture))",
+                "Tier: \(pop.tier.displayName(in: culture))",
                 "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
-            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: snapshot.culture)
+            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: culture)
         }
         return InspectorViewModel(
             bullets: [
@@ -49,8 +67,12 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + signatureLines(for: building, in: snapshot) + houseLines,
-            commission: commissionButton(for: building, balance: snapshot.economy.balance),
-            exportPicker: exportPicker(for: building)
+            // A rival's building is read-only.
+            commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
+            exportPicker: rival == nil ? exportPicker(for: building) : nil,
+            rival: rival,
+            market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
+            routeStartPort: building.kind == .port ? entityID : nil
         )
     }
 }
@@ -60,15 +82,18 @@ public struct InspectorView: View {
     public let viewModel: InspectorViewModel
     let onCommission: () -> Void
     let onPickExport: (Good?) -> Void
+    let onStartRoute: (EntityID) -> Void
 
     public init(
         viewModel: InspectorViewModel,
         onCommission: @escaping () -> Void = {},
-        onPickExport: @escaping (Good?) -> Void = { _ in }
+        onPickExport: @escaping (Good?) -> Void = { _ in },
+        onStartRoute: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.viewModel = viewModel
         self.onCommission = onCommission
         self.onPickExport = onPickExport
+        self.onStartRoute = onStartRoute
     }
 
     public var body: some View {
@@ -76,6 +101,13 @@ public struct InspectorView: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 4) {
+                if let rival = viewModel.rival {
+                    Label {
+                        Text(rival.name).font(.caption.bold())
+                    } icon: {
+                        Circle().fill(Color(hex: rival.colour.hex)).frame(width: 10, height: 10)
+                    }
+                }
                 ForEach(viewModel.bullets, id: \.self) { line in
                     Text(line).font(.caption.monospaced())
                 }
@@ -83,6 +115,16 @@ public struct InspectorView: View {
                     Button(commission.title, action: onCommission)
                         .font(.caption)
                         .disabled(!commission.isEnabled)
+                }
+                if let market = viewModel.market {
+                    marketSection(market)
+                }
+                if let port = viewModel.routeStartPort {
+                    Button("Route from here", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
+                        onStartRoute(port)
+                    }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
                 }
                 if let picker = viewModel.exportPicker {
                     Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {
@@ -95,6 +137,16 @@ public struct InspectorView: View {
             }
             .padding(12)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+    }
+
+    private func marketSection(_ market: RivalMarketSection) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Market").font(.caption.bold())
+            Text("Sells").font(.caption2.bold())
+            ForEach(market.sells, id: \.self) { Text($0).font(.caption.monospaced()) }
+            Text("Buys").font(.caption2.bold())
+            ForEach(market.buys, id: \.self) { Text($0).font(.caption.monospaced()) }
         }
     }
 }

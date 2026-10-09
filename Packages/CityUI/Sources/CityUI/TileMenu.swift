@@ -60,7 +60,8 @@ public struct TileMenuViewModel: Equatable, Sendable {
         var items = BuildPaletteView.visibleKinds(isHidden: isHidden).map { kind in
             Self.buildItem(kind, at: tile, world: world, money: money)
         }
-        if world.occupiedTiles[tile] != nil {
+        // The player can't demolish a rival's building (design D3).
+        if let id = world.occupiedTiles[tile], world.owner(of: id) == .player {
             items.append(.demolish)
         }
         items.append(.dismiss)
@@ -69,7 +70,7 @@ public struct TileMenuViewModel: Equatable, Sendable {
 
     private static func buildItem(_ kind: BuildingKind, at tile: TileCoordinate, world: World, money: Int64) -> TileMenuItem {
         if case let .rejected(reason) = world.canPlace(kind, at: tile) {
-            return .build(kind, enabled: false, reason: PlacementRejectionText.message(for: reason))
+            return .build(kind, enabled: false, reason: PlacementRejectionText.message(for: reason, in: world))
         }
         let cost = BuildingCatalog.spec(for: kind).cost
         if money < cost {
@@ -87,7 +88,7 @@ public extension GameSession {
     /// Long-press on a tile: select it for the inspector and ask for the
     /// menu. Ignored while a placement is pending, like taps.
     func handleLongPress(at tile: TileCoordinate) {
-        guard pendingPlacement == nil else { return }
+        guard pendingPlacement == nil, routeAuthoring == nil else { return }
         selectedTile = tile
         tileMenuRequest = TileMenuRequest(tile: tile)
     }

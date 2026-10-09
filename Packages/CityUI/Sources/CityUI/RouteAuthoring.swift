@@ -2,13 +2,24 @@ import CityCore
 import Foundation
 
 /// Tap target classification surfaced from the scene to the
-/// route-authoring view-model. The scene resolves a tap point into
-/// one of these cases via `IsoMath.nearestTile` + a building lookup;
-/// the view-model only sees the resolved target.
+/// route-authoring view-model. The scene finds the tapped tile via
+/// `IsoMath.nearestTile` and `resolve` classifies it; the view-model
+/// only sees the resolved target.
 public enum RouteAuthoringTapTarget: Hashable, Sendable {
     case port(id: EntityID)
     case water(tile: TileCoordinate)
     case land(tile: TileCoordinate)
+}
+
+public extension RouteAuthoringTapTarget {
+    /// A port of any owner, else water or land. Spec: `platform-shells`
+    /// / Buy and Sell in the manifest editor (rival ports are tappable).
+    static func resolve(tile: TileCoordinate, in snapshot: WorldSnapshot) -> RouteAuthoringTapTarget {
+        if let id = snapshot.occupiedTiles[tile], snapshot.buildings[id]?.kind == .port {
+            return .port(id: id)
+        }
+        return snapshot.terrain(at: tile) == .water ? .water(tile: tile) : .land(tile: tile)
+    }
 }
 
 /// Visual-feedback signal the view-model raises when a tap is
@@ -44,6 +55,8 @@ public final class RouteAuthoringViewModel {
     public private(set) var redSegments: Set<Int> = []
     /// Last rejected tap, consumed by the scene to draw a red flash.
     public private(set) var rejectedTapFeedback: RejectedTapFeedback?
+    /// Whether the last tap hit land; the overlay explains it.
+    private var lastTapWasLand = false
 
     /// Per-port manifest the player has authored inside this mode.
     /// `commit()` packages it into the `CreateRoute` command.
@@ -80,6 +93,7 @@ public final class RouteAuthoringViewModel {
 
     public func tapHandler(target: RouteAuthoringTapTarget) {
         commitRejectionReason = nil
+        lastTapWasLand = false
         switch target {
         case let .port(id):
             inProgressWaypoints.append(.port(id: id))
@@ -89,6 +103,7 @@ public final class RouteAuthoringViewModel {
             inProgressWaypoints.append(.sea(position: pos))
             recomputeRedSegments()
         case let .land(tile):
+            lastTapWasLand = true
             // Land taps are rejected with a red-flash signal at the
             // tap location. The in-progress route is unchanged.
             rejectedTapFeedback = RejectedTapFeedback(
@@ -99,27 +114,30 @@ public final class RouteAuthoringViewModel {
     }
 
     public func consumeRejectedTapFeedback() -> RejectedTapFeedback? {
-        let consumed = rejectedTapFeedback
+        // The scene polls every frame; skip the observable write when empty.
+        guard let consumed = rejectedTapFeedback else { return nil }
         rejectedTapFeedback = nil
         return consumed
     }
 
     // MARK: - Commit / cancel
 
-    public func commit() {
-        guard let snapshot else { return }
+    /// Sends `createRoute` and resets; returns false when rejected.
+    @discardableResult
+    public func commit() -> Bool {
+        guard let snapshot else { return false }
         let portWaypoints = inProgressWaypoints.compactMap { waypoint -> EntityID? in
             if case let .port(id) = waypoint { return id }
             return nil
         }
         guard portWaypoints.count >= 2 else {
             commitRejectionReason = .fewerThanTwoPorts
-            return
+            return false
         }
         recomputeRedSegments(in: snapshot)
         guard redSegments.isEmpty else {
             commitRejectionReason = .landCrossingSegment
-            return
+            return false
         }
         commandSink(.createRoute(
             waypoints: inProgressWaypoints,
@@ -127,10 +145,38 @@ public final class RouteAuthoringViewModel {
             speed: speed
         ))
         reset()
+        return true
     }
 
     public func cancel() {
         reset()
+    }
+
+    /// Undo: drops the last stop, and the manifest of a port that is no
+    /// longer a stop.
+    public func removeLastWaypoint() {
+        guard let removed = inProgressWaypoints.popLast() else { return }
+        commitRejectionReason = nil
+        lastTapWasLand = false
+        if case let .port(id) = removed, !inProgressWaypoints.contains(.port(id: id)) {
+            manifest.removeValue(forKey: id)
+        }
+        recomputeRedSegments()
+    }
+
+    /// True when `message` explains a rejection rather than the hint.
+    public var isWarning: Bool {
+        commitRejectionReason != nil || lastTapWasLand
+    }
+
+    /// The overlay's one-line message. Spec: `platform-shells` / Route
+    /// mode.
+    public var message: String {
+        switch commitRejectionReason {
+        case .fewerThanTwoPorts: return "A route needs at least two ports."
+        case .landCrossingSegment: return "A red leg crosses land. Add water stops around it."
+        case nil: return lastTapWasLand ? "Ships can't stop on land." : "Tap ports and water to add stops."
+        }
     }
 
     private func reset() {
@@ -139,6 +185,7 @@ public final class RouteAuthoringViewModel {
         manifest.removeAll()
         commitRejectionReason = nil
         rejectedTapFeedback = nil
+        lastTapWasLand = false
     }
 
     // MARK: - Manifest editing
@@ -211,71 +258,6 @@ public final class RouteAuthoringViewModel {
             next = (current + value / current) / 2
         }
         return current
-    }
-}
-
-/// View-model for the route-list panel. Shows every route in the
-/// world, lets the player select one (which drives the M8 polyline
-/// overlay's visibility), and exposes `Edit` / `Pause` / `Resume` /
-/// `Delete` affordances that translate to the existing M3 command
-/// set.
-///
-/// Spec: `sea-transport` / Requirement: Route lifecycle commands
-/// (consumer side). The view itself is a thin SwiftUI list bound to
-/// these mutations.
-@MainActor
-@Observable
-public final class RouteListViewModel {
-    public private(set) var selectedRouteID: EntityID?
-
-    /// Snapshot the view-model reads from. The session refreshes it
-    /// per render frame; the view-model only walks the `routes` dict.
-    public var snapshot: WorldSnapshot?
-
-    /// Sink the view-model uses to enqueue lifecycle commands.
-    public var commandSink: (Command) -> Void
-
-    public init(commandSink: @escaping (Command) -> Void = { _ in }) {
-        self.commandSink = commandSink
-    }
-
-    /// All routes in deterministic ID order so the SwiftUI list does
-    /// not jitter between snapshots.
-    public var routes: [Route] {
-        guard let snapshot else { return [] }
-        return snapshot.routes.values.sorted { $0.id.raw < $1.id.raw }
-    }
-
-    public func select(_ routeID: EntityID?) {
-        // Deselection clears; selecting a non-existent route is a no-op.
-        guard let routeID else { selectedRouteID = nil; return }
-        guard snapshot?.routes[routeID] != nil else { return }
-        selectedRouteID = routeID
-    }
-
-    public func delete(_ routeID: EntityID) {
-        guard snapshot?.routes[routeID] != nil else { return }
-        commandSink(.deleteRoute(id: routeID))
-        if selectedRouteID == routeID { selectedRouteID = nil }
-    }
-
-    public func pause(_ routeID: EntityID) {
-        guard let snapshot, var route = snapshot.routes[routeID] else { return }
-        route.state = .paused
-        // Pause is modeled as an `editRoute` that preserves waypoints
-        // + manifest but transitions state. The M3 apply path picks
-        // up the new state on the next tick.
-        commandSink(.editRoute(
-            id: routeID, waypoints: route.waypoints, manifest: route.manifest
-        ))
-    }
-
-    public func resume(_ routeID: EntityID) {
-        guard let snapshot, var route = snapshot.routes[routeID] else { return }
-        route.state = .active
-        commandSink(.editRoute(
-            id: routeID, waypoints: route.waypoints, manifest: route.manifest
-        ))
     }
 }
 

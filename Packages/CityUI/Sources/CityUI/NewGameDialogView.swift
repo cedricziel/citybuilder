@@ -146,7 +146,12 @@ public struct NewGameDialogView: View {
                 Text("Archipelago").tag(WorldLayout.archipelago)
             }
             .pickerStyle(.segmented)
+            .disabled(viewModel.isLayoutLocked)
             .accessibilityIdentifier("newGame.layout")
+            if viewModel.showsRivalToggle {
+                Toggle("Rival towns", isOn: $viewModel.rivalTowns)
+                    .accessibilityIdentifier("newGame.rivalTowns")
+            }
         }
     }
 
