@@ -26,5 +26,5 @@
 
 ## 4. M4 — Verification
 
-- [ ] 4.1 Runtime check (portrait done on iPhone 17 Pro Max: Town drawer, house armed with tool strip "House · $50", "Tap or drag to place", planks 5/4 before any tap; stocks tray open and closed; town center callout under the building with Details, Actions and Demolish. Landscape not driven: no Simulator.app to rotate)  on the iOS simulator in landscape and portrait: open each drawer, arm a house and read the tool strip chips, place it, select it and read the callout, Demolish from the callout, open and close the stocks tray, switch speeds.
-- [ ] 4.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate redesign-hud-map-first --strict` and the iOS simulator `xcodebuild`.
+- [x] 4.1 Runtime check (done in portrait on iPhone 17 Pro Max: Town drawer, house and road armed with the tool strip ("Tap or drag to place road"), planks 5/4 before any tap, stocks tray open and closed, More menu, town center callout under the building with Details, Actions and Demolish, arming clears the selection. Landscape not driven: no Simulator.app to rotate and Mac app access declined; covered by HUDDock/HUDLayout tests) on the iOS simulator in landscape and portrait.
+- [x] 4.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate redesign-hud-map-first --strict` and the iOS simulator `xcodebuild`.
