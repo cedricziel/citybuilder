@@ -1,7 +1,7 @@
 ## 1. M1 — Pausing a route (CityCore)
 
-- [ ] 1.1 Tests-first: translate the sea-transport scenarios "Paused route holds its ships", "Resumed route sails on" and "Broken route stays broken" into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Command.setRoutePaused(id:paused:)`, its apply rule, and the paused-route hold for sailing and docked ships in `ShipTick` (design D7).
+- [x] 1.1 Tests-first: translate the sea-transport scenarios "Paused route holds its ships", "Resumed route sails on" and "Broken route stays broken" into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Command.setRoutePaused(id:paused:)`, its apply rule, and the paused-route hold for sailing and docked ships in `ShipTick` (design D7).
 
 ## 2. M2 — Session route mode and models (CityUI)
 

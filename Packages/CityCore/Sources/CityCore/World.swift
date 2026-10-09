@@ -287,7 +287,7 @@ public struct World: Codable, Sendable, Equatable {
             applyPlace(kind: kind, anchor: anchor, owner: .rival(id), events: &events)
         case let .demolish(anchor):
             applyDemolish(anchor: anchor, events: &events)
-        case .createRoute, .editRoute, .deleteRoute, .assignShipToRoute, .unassignShip:
+        case .createRoute, .editRoute, .deleteRoute, .assignShipToRoute, .unassignShip, .setRoutePaused:
             applyRouteCommand(command)
         case let .commission(gallery):
             applyCommission(gallery, events: &events)
@@ -308,6 +308,8 @@ public struct World: Codable, Sendable, Equatable {
             applyAssignShipToRoute(shipID: shipID, routeID: routeID)
         case let .unassignShip(shipID):
             applyUnassignShip(shipID: shipID)
+        case let .setRoutePaused(id, paused):
+            applySetRoutePaused(id: id, paused: paused)
         default:
             return
         }
@@ -450,18 +452,10 @@ public struct World: Codable, Sendable, Equatable {
                 guard referencesPort else { continue }
                 routes[routeID]?.state = .broken(reason: .unknownPort(portID: id))
             }
+            // Ships on a route that is now broken, or gone, head home.
             for (shipID, ship) in ships {
-                guard let routeID = ship.routeID, routes[routeID]?.state != .active else {
-                    continue
-                }
-                ships[shipID]?.state = .returning
-            }
-            // Second pass: any ship sailing a route that JUST became
-            // broken on this demolish needs to flip too.
-            for (shipID, ship) in ships {
-                guard let routeID = ship.routeID,
-                      case .broken = routes[routeID]?.state
-                else { continue }
+                guard let routeID = ship.routeID else { continue }
+                if let state = routes[routeID]?.state, !state.isBroken { continue }
                 ships[shipID]?.state = .returning
             }
         }

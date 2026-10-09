@@ -65,6 +65,9 @@ public enum Command: Codable, Equatable, Sendable {
     /// `.idle` next tick.
     case unassignShip(shipID: EntityID)
 
+    /// Pause or resume a route. Spec: `sea-transport` / Pausing a route.
+    case setRoutePaused(id: RouteID, paused: Bool)
+
     /// Pay for a commission at a gallery. Spec: `age-signatures` /
     /// Gallery commissions inspire houses.
     case commission(EntityID)

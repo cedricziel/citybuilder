@@ -135,6 +135,11 @@ public enum RouteState: Hashable, Codable, Sendable {
     case paused
     case broken(reason: BrokenReason)
 
+    public var isBroken: Bool {
+        if case .broken = self { return true }
+        return false
+    }
+
     public enum BrokenReason: Hashable, Codable, Sendable {
         case segmentCrossesLand(segmentIndex: Int)
         case unknownPort(portID: PortID)
