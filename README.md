@@ -10,7 +10,7 @@ CloudKit container: `iCloud.com.cedricziel.citybuilder`
 Install once via Homebrew:
 
 ```sh
-brew install xcodegen pre-commit swiftlint swiftformat
+brew install xcodegen pre-commit swiftlint swiftformat libimagequant jpeg-turbo
 ```
 
 Xcode 26 or newer (Swift 6.3+) is required.

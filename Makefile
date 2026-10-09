@@ -85,7 +85,7 @@ hooks:
 sprites-venv:
 	python3 -m venv $(SPRITES_VENV)
 	$(SPRITES_VENV)/bin/pip install --upgrade pip
-	$(SPRITES_VENV)/bin/pip install -r scripts/requirements.txt
+	$(SPRITES_VENV)/bin/pip install --no-binary Pillow -r scripts/requirements.txt
 
 sprites-test:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m pytest tests

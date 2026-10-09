@@ -35,7 +35,7 @@ jobs:
 
       - name: Install Homebrew tools
         run: |
-          brew install xcodegen swiftlint swiftformat pre-commit pipx
+          brew install xcodegen swiftlint swiftformat pre-commit pipx libimagequant jpeg-turbo
           pipx ensurepath
           pipx install diff-cover
           echo "$HOME/.local/bin" >> $GITHUB_PATH
