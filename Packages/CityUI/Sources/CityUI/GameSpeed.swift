@@ -15,3 +15,18 @@ public enum GameSpeed: Int, CaseIterable, Sendable {
         GameSpeed(rawValue: rawValue % 3 + 1) ?? .normal
     }
 }
+
+/// Spec: `platform-shells` / Game speed.
+@MainActor
+public extension GameSession {
+    /// Sets the speed and resumes a paused game.
+    func choose(speed: GameSpeed) {
+        self.speed = speed
+        isPaused = false
+    }
+
+    /// The phone's single speed button: steps the speed and resumes.
+    func stepSpeed() {
+        choose(speed: speed.next)
+    }
+}

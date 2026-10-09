@@ -25,3 +25,17 @@ func scenarioCompactSpeedButtonCycles() {
     }
     #expect(seen == ["2×", "3×", "1×"])
 }
+
+@MainActor
+@Test("scenario: choosing a speed resumes")
+func scenarioChoosingASpeedResumes() {
+    let session = GameSession()
+    session.isPaused = true
+    session.choose(speed: .triple)
+    #expect(session.speed == .triple)
+    #expect(!session.isPaused)
+    session.isPaused = true
+    session.stepSpeed()
+    #expect(session.speed == .normal)
+    #expect(!session.isPaused)
+}
