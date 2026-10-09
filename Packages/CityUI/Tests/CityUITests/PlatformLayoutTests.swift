@@ -26,6 +26,27 @@ func scenarioIPhoneCompactHUD() {
     #expect(BuildRailModel().openDrawer == nil)
 }
 
+@Test("scenario: phone portrait folds the menus")
+func scenarioPhonePortraitFoldsTheMenus() {
+    let portrait = HUDLayout.make(size: CGSize(width: 390, height: 844), isPhone: true, isTouch: true)
+    let landscape = HUDLayout.make(size: CGSize(width: 844, height: 390), isPhone: true, isTouch: true)
+    #expect(portrait.foldsMenus)
+    #expect(!landscape.foldsMenus)
+    #expect(!HUDLayout.make(size: CGSize(width: 820, height: 1180), isPhone: false, isTouch: true).foldsMenus)
+}
+
+@Test("HUD layout follows the handoff's idiom rules")
+func hudLayoutFollowsIdiomRules() {
+    let phone = HUDLayout.make(size: CGSize(width: 844, height: 390), isPhone: true, isTouch: true)
+    #expect(phone.placement == .leftRail)
+    #expect(!phone.showsDate && phone.usesSpeedCycleButton && !phone.railShowsLabels)
+    #expect(phone.margin == 8 && phone.railWidth == 56 && phone.controlHeight == 50)
+    let mac = HUDLayout.make(size: CGSize(width: 1280, height: 800), isPhone: false, isTouch: false)
+    #expect(mac.showsDate && !mac.usesSpeedCycleButton && mac.railShowsLabels)
+    #expect(mac.margin == 16 && mac.railWidth == 76 && mac.controlHeight == 40 && mac.drawerColumns == 3)
+    #expect(HUDLayout.make(size: CGSize(width: 820, height: 1180), isPhone: false, isTouch: true).drawerColumns == 4)
+}
+
 @Test("scenario: Mac HUD with menu bar")
 func scenarioMacHUDWithMenuBar() {
     let decisions = LayoutDecisions.decisions(for: .mac)
