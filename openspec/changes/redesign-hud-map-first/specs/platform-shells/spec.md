@@ -92,8 +92,8 @@ While a build or demolish tool is armed, the HUD SHALL show a tool strip with th
 Selecting a building SHALL show the inspector as a callout next to it: 14 points right of the building's edge when the build controls are in the rail, 12 points below it when they are in the dock. When that side has no room the callout MUST flip to the other side, and it MUST stay inside the area the status pill, menus, rail and dock leave free. The callout SHALL show the building's name with a house's tier beside it, a residents meter for a house, and its key lines: residents and needs for a house, otherwise state and road. Details SHALL show every other inspector line and control, and stays open for the session once chosen. The callout SHALL offer Demolish for the player's buildings, which enqueues a demolish command for the selected tile and clears the selection.
 
 #### Scenario: Callout title and key lines
-- **WHEN** the player selects a house with 2 of 6 residents
-- **THEN** the inspector title is "House", its tier is "Peasants", its residents fill is one third, and its key lines start with "Residents: 2/6" followed by a "Needs:" line
+- **WHEN** the player selects a peasant house with 2 of 4 residents
+- **THEN** the inspector title is "House", its tier is "Peasants", its residents fill is one half, and its key lines start with "Residents: 2/4" followed by a "Needs:" line
 
 #### Scenario: Callout key lines for other buildings
 - **WHEN** the player selects a lumberjack hut
