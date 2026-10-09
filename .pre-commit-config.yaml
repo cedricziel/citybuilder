@@ -107,7 +107,7 @@ repos:
         name: Run CityCore tests before push
         entry: |
           bash -c 'if [ -d Packages/CityCore ]; then
-            swift test --package-path Packages/CityCore;
+            xcrun swift test --package-path Packages/CityCore;
           else
             echo "pre-push: CityCore package not yet present, skipping";
           fi'
