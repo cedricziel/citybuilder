@@ -6,7 +6,7 @@ import Foundation
 /// Producer behavior.
 extension World {
     /// Chebyshev radius around a lumberjack's footprint it harvests from.
-    static let lumberjackCatchmentRadius = 2
+    public static let lumberjackCatchmentRadius = 2
 
     /// First forest tile within the catchment, scanning row-major from
     /// the top-left corner, or nil when the catchment is cleared.
