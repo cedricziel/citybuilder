@@ -10,43 +10,26 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Independent jobs run in parallel, so one failure no longer hides the
+# rest. `ci-ok` is the single required check: add or rename jobs freely,
+# as long as they stay in its `needs`.
 jobs:
-  ci:
-    name: lint + build + test + coverage
+  lint:
+    name: lint
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout (with full history for diff-cover)
+      - name: Checkout
         uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
 
-      - name: Print toolchain versions
-        run: |
-          xcodebuild -version
-          swift --version
-          uname -a
-
       - name: Install Homebrew tools
-        run: |
-          brew install xcodegen swiftlint swiftformat pre-commit pipx libimagequant jpeg-turbo
-          pipx ensurepath
-          pipx install diff-cover
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Set up Python for sprite pipeline
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Bootstrap sprite venv
-        run: make sprites-venv
+        run: brew install swiftlint swiftformat pre-commit
 
       - name: Cache pre-commit
         uses: actions/cache@v6
@@ -59,78 +42,71 @@ jobs:
       - name: pre-commit run --all-files
         run: pre-commit run --all-files --show-diff-on-failure
 
-      - name: make generate
-        run: make generate
-
-      - name: Verify CityCore is framework-free
-        run: make test-citycore-framework-free
-
-      - name: swift test (all packages)
-        run: |
-          for pkg in CityCore CityPersistence CityUI CityRender2D CityRender3D; do
-            echo "::group::swift test $pkg"
-            swift test --package-path "Packages/$pkg" --enable-code-coverage
-            echo "::endgroup::"
-          done
-
-      - name: Coverage gate (CityCore floors + diff-cover vs main)
-        env:
-          COVERAGE_BASE_REF: origin/main
-          COVERAGE_STRICT: "1"
-        run: make test-coverage
-
       - name: Scenario-to-test coverage report
         env:
           SCENARIO_COVERAGE_STRICT: "0"
         run: make test-scenarios
 
-      - name: Sprite pipeline hermetic-regen check
-        # CI MUST run without OPENAI_API_KEY in its environment — the
-        # whole point of the gate is that committed atlas PNGs are
-        # reproducible from committed catalog + sheets offline.
+  test:
+    name: test (${{ matrix.package }})
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [CityCore, CityPersistence, CityUI, CityRender2D, CityRender3D, CityAudio]
+
+    steps:
+      - name: Checkout (with full history for diff-cover)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: ${{ matrix.package == 'CityCore' && '0' || '1' }}
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Print toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # CityRender2D's cutover test drives `make sprites-verify`, the
+      # hermetic regen gate, so it needs the sprite pipeline's venv.
+      - name: Install sprite pipeline libraries
+        if: matrix.package == 'CityRender2D'
+        run: brew install libimagequant jpeg-turbo
+
+      - name: Set up Python for sprite pipeline
+        if: matrix.package == 'CityRender2D'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Bootstrap sprite venv
+        if: matrix.package == 'CityRender2D'
+        run: make sprites-venv
+
+      - name: swift test
         env:
+          # The hermetic gate must pass without an API key.
           OPENAI_API_KEY: ""
-        run: make sprites-verify
+        run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
 
-      - name: Sprite pipeline pytest
+      - name: Coverage gate (CityCore floors + diff-cover vs main)
+        if: matrix.package == 'CityCore'
         env:
-          OPENAI_API_KEY: ""
-        run: make sprites-test
-
-      - name: Build CitybuilderiOS
+          COVERAGE_BASE_REF: origin/main
+          COVERAGE_STRICT: "1"
+          COVERAGE_REUSE: "1"
         run: |
-          xcodebuild \
-            -project Citybuilder.xcodeproj \
-            -scheme CitybuilderiOS \
-            -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            build | xcbeautify --renderer github-actions
-        shell: bash
-
-      - name: Build CitybuilderMac
-        run: |
-          xcodebuild \
-            -project Citybuilder.xcodeproj \
-            -scheme CitybuilderMac \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            build | xcbeautify --renderer github-actions
-        shell: bash
-
-      - name: Build citybuilder-cli
-        run: |
-          xcodebuild \
-            -project Citybuilder.xcodeproj \
-            -scheme citybuilder-cli \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            build | xcbeautify --renderer github-actions
-        shell: bash
+          pipx install diff-cover
+          export PATH="$HOME/.local/bin:$PATH"
+          ./scripts/check-coverage.sh
 
       - name: DeterminismFixture (macOS) — produce post-tick JSON
+        if: matrix.package == 'CityCore'
         run: |
           mkdir -p determinism
           swift run --package-path Packages/CityCore DeterminismFixture > determinism/macos.json
@@ -138,18 +114,89 @@ jobs:
           shasum -a 256 determinism/macos.json determinism/macos-36k.json
 
       - name: Upload macOS determinism JSON
+        if: matrix.package == 'CityCore'
         uses: actions/upload-artifact@v6
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
-        if: always()
+        if: always() && matrix.package == 'CityCore'
         uses: actions/upload-artifact@v6
         with:
           name: coverage
           path: coverage/
           if-no-files-found: ignore
+
+  sprites:
+    name: sprite pipeline pytest
+    runs-on: macos-26
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install sprite pipeline libraries
+        run: brew install libimagequant jpeg-turbo
+
+      - name: Set up Python for sprite pipeline
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Bootstrap sprite venv
+        run: make sprites-venv
+
+      # The hermetic-regen check (`make sprites-verify`) runs inside the
+      # CityRender2D tests; only the pipeline's own unit tests run here.
+      - name: Sprite pipeline pytest
+        env:
+          OPENAI_API_KEY: ""
+        run: make sprites-test
+
+  build:
+    name: build (${{ matrix.scheme }})
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scheme: CitybuilderiOS
+            destination: generic/platform=iOS Simulator
+          - scheme: CitybuilderMac
+            destination: platform=macOS
+          - scheme: citybuilder-cli
+            destination: platform=macOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: make generate
+        run: make generate
+
+      - name: xcodebuild
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Citybuilder.xcodeproj \
+            -scheme "${{ matrix.scheme }}" \
+            -destination "${{ matrix.destination }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build | xcbeautify --renderer github-actions
 
   determinism-linux:
     name: determinism — Linux toolchain build + fixture
@@ -183,7 +230,7 @@ jobs:
   determinism-compare:
     name: determinism — macOS vs Linux byte equality
     runs-on: ubuntu-latest
-    needs: [ci, determinism-linux]
+    needs: [test, determinism-linux]
     timeout-minutes: 5
 
     steps:
@@ -205,3 +252,20 @@ jobs:
           sha256sum determinism/*.json
           diff -q determinism/macos.json determinism/linux.json
           diff -q determinism/macos-36k.json determinism/linux-36k.json
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [lint, test, sprites, build, determinism-linux, determinism-compare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require every job to succeed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = "success" ] || exit 1
+          done
