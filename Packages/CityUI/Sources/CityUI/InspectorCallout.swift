@@ -142,7 +142,14 @@ struct InspectorCalloutView<Actions: View>: View {
                 residentsMeter(fill)
             }
             ForEach(keyLines, id: \.self) { line in
-                Text(line).font(.caption.monospaced()).lineLimit(2)
+                if let problem = viewModel.problem, line.hasPrefix("Problem:") {
+                    Label(problem, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(line).font(.caption.monospaced()).lineLimit(2)
+                }
             }
             InspectorView(
                 viewModel: viewModel,
@@ -152,7 +159,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 onPickExport: session.pickExport,
                 onStartRoute: { session.beginRouteAuthoring(from: $0) }
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.primary.opacity(0.75))
             HStack(spacing: 8) {
                 Button(isExpanded ? "Less" : "Details") { isExpanded.toggle() }
                 Spacer(minLength: 0)
@@ -168,7 +175,7 @@ struct InspectorCalloutView<Actions: View>: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(width: InspectorCalloutLayout.width, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
     }
 
@@ -195,7 +202,7 @@ struct InspectorCalloutView<Actions: View>: View {
         case .above: CGSize(width: alongX, height: size.height - 6)
         }
         return Rectangle()
-            .fill(.thinMaterial)
+            .fill(.regularMaterial)
             .frame(width: 12, height: 12)
             .rotationEffect(.degrees(45))
             .offset(offset)

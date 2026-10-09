@@ -64,7 +64,7 @@ func scenarioNightOverlay() throws {
     let scene = IsoWorldScene()
     scene.size = CGSize(width: 1024, height: 768)
     scene.applyTimeOfDay(TimeOfDay(tick: snapshot(base, tick: 780, pops: [:]).tickCount))
-    #expect(abs(scene.nightOverlay.alpha - 0.55) < 0.001)
+    #expect(abs(scene.nightOverlay.alpha - 0.4) < 0.001)
     scene.applyTimeOfDay(TimeOfDay(tick: 180))
     #expect(scene.nightOverlay.alpha == 0)
 }

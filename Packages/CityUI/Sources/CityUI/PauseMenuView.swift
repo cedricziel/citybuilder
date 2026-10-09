@@ -45,6 +45,11 @@ public struct PauseMenuView: View {
         }
         .frame(minWidth: 320, minHeight: 320)
         .padding(.vertical, 8)
+        .confirmationDialog("Save before quitting?", isPresented: $viewModel.isConfirmingQuit) {
+            Button("Save and Quit") { viewModel.confirmQuit(saving: true) }
+            Button("Quit Without Saving", role: .destructive) { viewModel.confirmQuit(saving: false) }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 
     @ViewBuilder

@@ -6,7 +6,7 @@ public struct TimeOfDay: Hashable, Sendable {
     public enum Phase: Hashable, Sendable { case night, dawn, day, dusk }
 
     public static let ticksPerDay: UInt64 = 1200
-    public static let nightDarkness = 0.55
+    public static let nightDarkness = 0.4
 
     /// 0 is midnight, 0.5 is noon. Tick 0 is `startFraction`.
     public let fraction: Double

@@ -59,6 +59,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Non-road buildings with no road tile orthogonally adjacent to
     /// their footprint. Spec: `rendering-2_5d` / Road-access marker.
     public let roadDisconnectedBuildings: Set<EntityID>
+    /// Why idle player buildings are idle. Spec:
+    /// `warehouses-and-logistics` / Buildings report why they are idle.
+    public let buildingIssues: [EntityID: BuildingIssue]
     /// Population state of every house, keyed by building. Spec:
     /// `rendering-2_5d` / Houses render their tier.
     public let housePopulations: [EntityID: HousePopulation]
@@ -92,6 +95,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         islandSummaries: [IslandID: IslandSummary] = [:],
         tileToIsland: [TileCoordinate: IslandID] = [:],
         roadDisconnectedBuildings: Set<EntityID> = [],
+        buildingIssues: [EntityID: BuildingIssue] = [:],
         housePopulations: [EntityID: HousePopulation] = [:],
         date: GameDate = GameDate(year: 1200, season: .spring),
         culture: Culture = .northernEuropean,
@@ -115,6 +119,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.islandSummaries = islandSummaries
         self.tileToIsland = tileToIsland
         self.roadDisconnectedBuildings = roadDisconnectedBuildings
+        self.buildingIssues = buildingIssues
         self.housePopulations = housePopulations
         self.date = date
         self.culture = culture
@@ -207,6 +212,7 @@ public extension World {
             islandSummaries: summaries,
             tileToIsland: tileToIsland,
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
+            buildingIssues: buildingIssues(),
             housePopulations: populations,
             date: date,
             culture: culture,

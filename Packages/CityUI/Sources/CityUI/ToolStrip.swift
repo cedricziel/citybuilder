@@ -53,8 +53,13 @@ struct ToolStripView: View {
                     Divider().frame(height: 28)
                     ForEach(Good.allCases.filter { breakdown[$0] != nil }, id: \.self) { good in
                         if let cost = breakdown[good] {
-                            GoodChipView(good: good, text: "\(cost.have)/\(cost.need)", color: Self.color(for: cost.status))
-                                .accessibilityLabel(Self.label(for: good, cost: cost))
+                            GoodChipView(
+                                good: good,
+                                text: "\(cost.have)/\(cost.need)",
+                                color: Self.color(for: cost.status),
+                                help: Self.label(for: good, cost: cost)
+                            )
+                            .accessibilityLabel(Self.label(for: good, cost: cost))
                         }
                     }
                 }
@@ -110,11 +115,11 @@ struct ToolStripView: View {
     }
 
     static func label(for good: Good, cost: GhostCost) -> String {
-        let base = "\(good.rawValue) \(cost.have) of \(cost.need)"
+        let base = "\(GoodsCatalog.spec(for: good).displayName): \(cost.have) in store, \(cost.need) needed"
         return switch cost.status {
         case .ok: base
-        case .queueable: "\(base), queue OK"
-        case .blocked: "\(base), blocked"
+        case .queueable: "\(base). It waits for the rest"
+        case .blocked: "\(base). Not enough"
         }
     }
 }

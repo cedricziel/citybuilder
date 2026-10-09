@@ -15,10 +15,10 @@ func scenarioMiddayIsBright() {
 func scenarioMidnightIsDark() {
     let time = TimeOfDay(tick: 780)
     #expect(time.phase == .night)
-    #expect(time.darkness == 0.55)
+    #expect(time.darkness == 0.4)
     #expect(TimeOfDay(tick: 1080).phase == .dawn)
     #expect(TimeOfDay(tick: 540).phase == .dusk)
-    #expect(abs(TimeOfDay(tick: 1080).darkness - 0.275) < 1e-9)
+    #expect(abs(TimeOfDay(tick: 1080).darkness - 0.2) < 1e-9)
     #expect(TimeOfDay(tick: 0).phase == .day)
 }
 

@@ -22,6 +22,8 @@ public struct InspectorViewModel: Sendable {
     public let market: RivalMarketSection?
     /// A port of any owner, for Route from here; nil elsewhere.
     public let routeStartPort: EntityID?
+    /// What stops the building working, nil when nothing does.
+    public let problem: String?
 
     public init(
         bullets: [String],
@@ -32,7 +34,8 @@ public struct InspectorViewModel: Sendable {
         exportPicker: ExportPicker? = nil,
         rival: RivalSummary? = nil,
         market: RivalMarketSection? = nil,
-        routeStartPort: EntityID? = nil
+        routeStartPort: EntityID? = nil,
+        problem: String? = nil
     ) {
         self.bullets = bullets
         self.title = title
@@ -43,6 +46,7 @@ public struct InspectorViewModel: Sendable {
         self.rival = rival
         self.market = market
         self.routeStartPort = routeStartPort
+        self.problem = problem
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -75,6 +79,7 @@ public struct InspectorViewModel: Sendable {
                 "Needs: \(needs.joined(separator: " · "))"
             ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: culture)
         }
+        let problem = snapshot.buildingIssues[entityID].map(problemText)
         return InspectorViewModel(
             bullets: [
                 "Kind: \(building.kind.rawValue)",
@@ -83,7 +88,7 @@ public struct InspectorViewModel: Sendable {
                 "State: \(building.state.rawValue)",
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-            ] + signatureLines(for: building, in: snapshot) + houseLines,
+            ] + signatureLines(for: building, in: snapshot) + houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
             title: BuildTool.place(building.kind).displayName,
             tier: tier,
             residentsFill: residentsFill,
@@ -92,8 +97,21 @@ public struct InspectorViewModel: Sendable {
             exportPicker: rival == nil ? exportPicker(for: building) : nil,
             rival: rival,
             market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
-            routeStartPort: building.kind == .port ? entityID : nil
+            routeStartPort: building.kind == .port ? entityID : nil,
+            problem: problem
         )
+    }
+
+    /// Spec: `platform-shells` / Inspector names what stops a building.
+    static func problemText(_ issue: BuildingIssue) -> String {
+        switch issue {
+        case .noRoad: "No road: connect it to a road"
+        case .noRouteToStorage: "Its road doesn't reach a warehouse or the town center"
+        case .noTreesInReach: "No forest within \(World.lumberjackCatchmentRadius) tiles"
+        case let .missingInputs(goods):
+            "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
+        case .storageFull: "Store full: no carrier can take its goods"
+        }
     }
 }
 
@@ -186,7 +204,7 @@ extension InspectorViewModel {
     /// a house, otherwise state and road. Spec: `platform-shells` /
     /// Inspector callout.
     public var keyLines: [String] {
-        let prefixes = tier == nil ? ["State:", "Road:"] : ["Residents:", "Needs:"]
+        let prefixes = (tier == nil ? ["State:", "Road:"] : ["Residents:", "Needs:"]) + ["Problem:"]
         return prefixes.compactMap { prefix in bullets.first { $0.hasPrefix(prefix) } }
     }
 

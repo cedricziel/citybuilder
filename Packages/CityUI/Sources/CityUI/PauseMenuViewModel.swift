@@ -85,6 +85,8 @@ public enum ButtonRole: Sendable {
 public final class PauseMenuViewModel {
     public let session: GameSession
     public private(set) var statusMessage: String?
+    /// True while the Quit row's save-or-discard prompt is showing.
+    public var isConfirmingQuit = false
 
     private let platform: PauseMenuPlatform
     private let onSaveGame: () throws -> Void
@@ -160,7 +162,22 @@ public final class PauseMenuViewModel {
             try? onSaveGame()
             onQuitToTitle?()
         case .quit:
-            onQuit?()
+            isConfirmingQuit = true
         }
+    }
+
+    /// Answer the Quit prompt. A failed save keeps the game open and
+    /// reports the error, so the player never loses progress silently.
+    public func confirmQuit(saving: Bool) {
+        isConfirmingQuit = false
+        if saving {
+            do {
+                try onSaveGame()
+            } catch {
+                statusMessage = "Couldn't save: \(error)"
+                return
+            }
+        }
+        onQuit?()
     }
 }
