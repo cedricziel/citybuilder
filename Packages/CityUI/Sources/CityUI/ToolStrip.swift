@@ -8,7 +8,7 @@ public enum ToolStripText {
         switch tool {
         case .inspect: ""
         case .demolish: touch ? "Tap a building to demolish" : "Click a building to demolish"
-        case .place: touch ? "Tap or drag to place" : "Click or drag to place"
+        case .place: "\(touch ? "Tap" : "Click") or drag to place \(tool.displayName.lowercased())"
         }
     }
 

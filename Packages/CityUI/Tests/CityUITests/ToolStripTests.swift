@@ -18,6 +18,6 @@ func scenarioToolStripChipsWithoutHover() throws {
 
 @Test("scenario: tool strip hint")
 func scenarioToolStripHint() {
-    #expect(ToolStripText.hint(for: .place(.house), touch: true) == "Tap or drag to place")
+    #expect(ToolStripText.hint(for: .place(.house), touch: true) == "Tap or drag to place house")
     #expect(ToolStripText.hint(for: .demolish, touch: false) == "Click a building to demolish")
 }
