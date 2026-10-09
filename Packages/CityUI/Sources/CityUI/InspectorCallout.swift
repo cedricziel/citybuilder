@@ -142,7 +142,14 @@ struct InspectorCalloutView<Actions: View>: View {
                 residentsMeter(fill)
             }
             ForEach(keyLines, id: \.self) { line in
-                Text(line).font(.caption.monospaced()).lineLimit(2)
+                if let problem = viewModel.problem, line.hasPrefix("Problem:") {
+                    Label(problem, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(line).font(.caption.monospaced()).lineLimit(2)
+                }
             }
             InspectorView(
                 viewModel: viewModel,
