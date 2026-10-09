@@ -17,4 +17,4 @@
 ## 4. M4 — Verification
 
 - [ ] 4.1 Runtime check: in a Normal archipelago game, wait until a rival builds its port, inspect its market, build a route from your port to it that sells planks and buys a surplus good, and watch the balance and the rival's wealth in the standings change when the ship docks. Record rival stock and offers after 6,000 ticks.
-- [ ] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-rival-trade --strict`.
+- [x] 4.2 Run lint, format, `make test`, `make test-scenarios` and `openspec validate add-rival-trade --strict`.
