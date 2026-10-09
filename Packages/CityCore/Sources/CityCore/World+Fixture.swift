@@ -70,6 +70,7 @@ public extension World {
         if layout == .archipelago, rivals {
             world.seedRivals()
         }
+        world.seedStarterRoads()
         return world
     }
 
@@ -100,6 +101,33 @@ public extension World {
                 _ = stockpile.deposit(good, amount: amount)
             }
             stockpiles[id] = stockpile
+        }
+    }
+
+    /// Ring each player town center with free road so the first
+    /// buildings can reach its goods. Rivals lay their own grid. Spec:
+    /// `buildings-and-construction` / Town center starter road.
+    internal mutating func seedStarterRoads() {
+        let footprint = BuildingCatalog.spec(for: .townCenter).footprint
+        let centers = buildings.values
+            .filter { $0.kind == .townCenter && $0.owner == .player }
+            .sorted { $0.id.raw < $1.id.raw }
+        for center in centers {
+            let anchor = center.anchor
+            for y in anchor.y - 1 ... anchor.y + footprint.height {
+                for x in anchor.x - 1 ... anchor.x + footprint.width {
+                    let inside = x >= anchor.x && x < anchor.x + footprint.width
+                        && y >= anchor.y && y < anchor.y + footprint.height
+                    let tile = TileCoordinate(x: x, y: y)
+                    guard !inside, contains(tile), terrain(at: tile) != .water, occupiedTiles[tile] == nil
+                    else { continue }
+                    let id = EntityID(raw: nextEntityRaw)
+                    nextEntityRaw &+= 1
+                    buildings[id] = Building(id: id, kind: .road, anchor: tile, state: .operational, ticksSincePlacement: 0)
+                    occupiedTiles[tile] = id
+                    roadGraph.addRoad(at: tile)
+                }
+            }
         }
     }
 
