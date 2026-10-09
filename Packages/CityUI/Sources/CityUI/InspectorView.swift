@@ -88,14 +88,21 @@ public struct InspectorView: View {
     let onCommission: () -> Void
     let onPickExport: (Good?) -> Void
     let onStartRoute: (EntityID) -> Void
+    /// The lines to list; nil lists every bullet.
+    let lines: [String]?
+    let isFramed: Bool
 
     public init(
         viewModel: InspectorViewModel,
+        lines: [String]? = nil,
+        isFramed: Bool = true,
         onCommission: @escaping () -> Void = {},
         onPickExport: @escaping (Good?) -> Void = { _ in },
         onStartRoute: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.viewModel = viewModel
+        self.lines = lines
+        self.isFramed = isFramed
         self.onCommission = onCommission
         self.onPickExport = onPickExport
         self.onStartRoute = onStartRoute
@@ -113,7 +120,7 @@ public struct InspectorView: View {
                         Circle().fill(Color(hex: rival.colour.hex)).frame(width: 10, height: 10)
                     }
                 }
-                ForEach(viewModel.bullets, id: \.self) { line in
+                ForEach(lines ?? viewModel.bullets, id: \.self) { line in
                     Text(line).font(.caption.monospaced())
                 }
                 if let commission = viewModel.commission {
@@ -140,8 +147,11 @@ public struct InspectorView: View {
                     .font(.caption)
                 }
             }
-            .padding(12)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(isFramed ? 12 : 0)
+            .background(
+                isFramed ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.clear),
+                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            )
         }
     }
 
