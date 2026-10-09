@@ -475,7 +475,8 @@ public final class GameSession {
             hoverSink: hoverSink,
             longPressSink: longPressSink,
             ghostProvider: ghostProvider,
-            selectionProvider: { [weak self] in self?.selectedTool == .inspect ? self?.selectedTile : nil }
+            selectionProvider: { [weak self] in self?.selectedTool == .inspect ? self?.selectedTile : nil },
+            routeOverlayProvider: { [weak self] in self?.routeOverlay() }
         )
     }
 }
