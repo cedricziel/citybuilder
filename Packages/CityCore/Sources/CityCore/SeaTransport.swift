@@ -88,6 +88,11 @@ public struct Ship: Hashable, Codable, Sendable {
 }
 
 public extension Ship {
+    /// Cargo the ship can still take on.
+    var freeSpace: Int {
+        shipClass.capacity - cargo.values.reduce(0, +)
+    }
+
     /// Reads a missing `owner` (saves before rivals) as the player's.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

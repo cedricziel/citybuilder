@@ -5,9 +5,9 @@
 
 ## 2. M2 — Trading
 
-- [ ] 2.1 Tests-first: translate "Trading at a rival port" and the sea-transport scenarios into failing `CityCoreTests`. Confirm red.
-- [ ] 2.2 Implement to green: owner-aware `applyManifestAction`, island withdrawals and deposits in ID order, money transfer, `WorldEvent.tradeCompleted` and its sort key, the game-over guard (D4).
-- [ ] 2.3 Add a determinism test: two Hard archipelago worlds with a player route to a rival port stay equal over 3,000 ticks.
+- [x] 2.1 Tests-first: translate "Trading at a rival port" and the sea-transport scenarios into failing `CityCoreTests`. Confirm red.
+- [x] 2.2 Implement to green: owner-aware `applyManifestAction`, island withdrawals and deposits in ID order, money transfer, `WorldEvent.tradeCompleted` and its sort key, the game-over guard (D4).
+- [x] 2.3 Add a determinism test: two Hard archipelago worlds with a player route to a rival port stay equal over 3,000 ticks.
 
 ## 3. M3 — UI
 

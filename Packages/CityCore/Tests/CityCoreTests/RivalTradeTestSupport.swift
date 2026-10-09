@@ -62,6 +62,13 @@ struct TradeFixture {
         return shipID
     }
 
+    /// Runs the ship system once and returns its events.
+    mutating func dock() -> [WorldEvent] {
+        var events: [WorldEvent] = []
+        world.runShipSystem(events: &events)
+        return events
+    }
+
     var treasury: Int64 {
         world.rival(1)?.treasury ?? 0
     }

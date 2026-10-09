@@ -14,6 +14,11 @@ public extension Good {
     var rivalBuyPrice: Int64 {
         max(1, basePrice * 3 / 4)
     }
+
+    /// The unit price of a trade in `direction`, from the player's side.
+    func rivalPrice(_ direction: TradeDirection) -> Int64 {
+        direction == .bought ? rivalSellPrice : rivalBuyPrice
+    }
 }
 
 /// One line of a rival's market: a good, how many units and the unit
@@ -40,20 +45,29 @@ public enum RivalMarket {
     /// become merchants.
     public static let boughtGoods: Set<Good> = [.wood, .planks, .food, .bread, .tools]
 
+    /// Units of `good` on sale: the stock above the reserve.
+    public static func sellQuantity(of good: Good, stock: [Good: Int]) -> Int {
+        max(0, stock[good, default: 0] - sellReserve)
+    }
+
+    /// Units of `good` wanted: a bought good's shortfall to the target.
+    public static func buyQuantity(of good: Good, stock: [Good: Int]) -> Int {
+        boughtGoods.contains(good) ? max(0, buyTarget - stock[good, default: 0]) : 0
+    }
+
     /// Every good above the reserve, in catalog order.
     public static func sellOffers(stock: [Good: Int]) -> [RivalOffer] {
         Good.allCases.compactMap { good in
-            let surplus = stock[good, default: 0] - sellReserve
-            return surplus > 0 ? RivalOffer(good: good, quantity: surplus, price: good.rivalSellPrice) : nil
+            let quantity = sellQuantity(of: good, stock: stock)
+            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalSellPrice) : nil
         }
     }
 
     /// Every bought good below the target, in catalog order.
     public static func buyOffers(stock: [Good: Int]) -> [RivalOffer] {
         Good.allCases.compactMap { good in
-            let wanted = buyTarget - stock[good, default: 0]
-            guard boughtGoods.contains(good), wanted > 0 else { return nil }
-            return RivalOffer(good: good, quantity: wanted, price: good.rivalBuyPrice)
+            let quantity = buyQuantity(of: good, stock: stock)
+            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalBuyPrice) : nil
         }
     }
 }

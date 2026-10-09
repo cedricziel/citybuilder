@@ -227,7 +227,7 @@ public struct World: Codable, Sendable, Equatable {
         let signatureSources = activeSignatureSources()
         runProductionSystem(signatureSources: signatureSources, events: &events)
         runCarrierSystem(events: &events)
-        runShipSystem()
+        runShipSystem(events: &events)
         runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)

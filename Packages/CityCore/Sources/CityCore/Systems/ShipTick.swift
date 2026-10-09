@@ -23,19 +23,19 @@ public extension World {
     /// integration, dock manifest execution, and the
     /// route-broken / returning transitions. Called once per tick
     /// after building advance and before economy.
-    mutating func runShipSystem() {
+    mutating func runShipSystem(events: inout [WorldEvent]) {
         // Snapshot ship IDs at the start of the tick so additions
         // mid-system (the ship-emission factory invoked elsewhere)
         // do not race with the iteration.
         let shipIDs = ships.keys.sorted { $0.raw < $1.raw }
         for shipID in shipIDs {
             guard var ship = ships[shipID] else { continue }
-            tickShip(&ship)
+            tickShip(&ship, events: &events)
             ships[shipID] = ship
         }
     }
 
-    private mutating func tickShip(_ ship: inout Ship) {
+    private mutating func tickShip(_ ship: inout Ship, events: inout [WorldEvent]) {
         // Route-broken detection: a `.sailing` ship whose route is no
         // longer `.active` transitions to `.returning`.
         if ship.state == .sailing, let routeID = ship.routeID {
@@ -51,7 +51,7 @@ public extension World {
         case .sailing:
             tickShipSailing(&ship)
         case .docked:
-            tickShipDocked(&ship)
+            tickShipDocked(&ship, events: &events)
         case .returning:
             tickShipReturning(&ship)
         }
@@ -77,7 +77,7 @@ public extension World {
         }
     }
 
-    private mutating func tickShipDocked(_ ship: inout Ship) {
+    private mutating func tickShipDocked(_ ship: inout Ship, events: inout [WorldEvent]) {
         guard let routeID = ship.routeID, let route = routes[routeID] else {
             // Route disappeared mid-dock — flip to returning.
             ship.state = .returning
@@ -97,20 +97,17 @@ public extension World {
         // "manifest actions execute in declared order") means an
         // unload that frees capacity lets a subsequent load proceed
         // without waiting another tick.
-        var drainedThisTick = false
         while ship.dockedManifestIndex < actions.count {
             let action = actions[ship.dockedManifestIndex]
-            let progressed = applyManifestAction(action, ship: &ship, portID: portID)
+            let progressed = applyManifestAction(action, ship: &ship, portID: portID, events: &events)
             if progressed {
                 ship.dockedManifestIndex &+= 1
                 ship.dockedTicksWaited = 0
-                drainedThisTick = true
             } else {
                 ship.dockedTicksWaited &+= 1
                 if ship.dockedTicksWaited >= Self.shipDockTimeout {
                     ship.dockedManifestIndex &+= 1
                     ship.dockedTicksWaited = 0
-                    drainedThisTick = true
                 }
                 break
             }
@@ -122,7 +119,6 @@ public extension World {
             ship.dockedManifestIndex = 0
             ship.dockedTicksWaited = 0
         }
-        _ = drainedThisTick
     }
 
     private mutating func tickShipReturning(_ ship: inout Ship) {
@@ -214,27 +210,30 @@ public extension World {
     /// Apply one manifest action and return `true` if any cargo
     /// transfer occurred (so the caller advances to the next
     /// action). Returns `false` when the port's stock/free-capacity
-    /// prevents any progress (the caller stalls or times out).
+    /// prevents any progress (the caller stalls or times out). At a
+    /// rival's port the action is a trade (spec `rival-trade`).
     private mutating func applyManifestAction(
         _ action: ManifestAction,
         ship: inout Ship,
-        portID: EntityID
+        portID: EntityID,
+        events: inout [WorldEvent]
     ) -> Bool {
+        if let rivalID = buildings[portID]?.owner.rivalID {
+            return applyTrade(action, ship: &ship, rival: rivalID, events: &events)
+        }
         guard var portStockpile = stockpiles[portID] else { return false }
         defer { stockpiles[portID] = portStockpile }
         switch action {
         case let .loadUpTo(good, qty):
             let portStock = portStockpile.quantity(of: good)
-            let shipFree = ship.shipClass.capacity - ship.cargo.values.reduce(0, +)
-            let amount = min(qty, min(portStock, shipFree))
+            let amount = min(qty, portStock, ship.freeSpace)
             if amount <= 0 { return false }
             let withdrawn = portStockpile.withdraw(good, amount: amount)
             ship.cargo[good, default: 0] += withdrawn
             return withdrawn > 0
         case let .unloadUpTo(good, qty):
             let shipStock = ship.cargo[good] ?? 0
-            let portFree = portStockpile.capacity - portStockpile.totalStored
-            let amount = min(qty, min(shipStock, portFree))
+            let amount = min(qty, shipStock, portStockpile.freeSpace)
             if amount <= 0 { return false }
             let deposited = portStockpile.deposit(good, amount: amount)
             ship.cargo[good] = shipStock - deposited
