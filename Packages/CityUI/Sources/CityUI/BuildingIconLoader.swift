@@ -22,7 +22,24 @@ public enum BuildingIconLoader {
         kind == .road ? "road.lanes" : "building.2.fill"
     }
 
+    /// One image per kind, built on first use: view bodies ask for these on
+    /// every 10 Hz HUD refresh.
+    @MainActor private static var cache: [BuildingKind: Image] = [:]
+
+    @MainActor static var cachedKinds: Set<BuildingKind> {
+        Set(cache.keys)
+    }
+
+    @MainActor
     public static func image(for kind: BuildingKind) -> Image {
+        if let cached = cache[kind] { return cached }
+        let image = loadImage(for: kind)
+        cache[kind] = image
+        return image
+    }
+
+    @MainActor
+    private static func loadImage(for kind: BuildingKind) -> Image {
         let atlas = SKTextureAtlas(named: atlasName)
         let name = textureName(for: kind)
         let names = Set(atlas.textureNames)

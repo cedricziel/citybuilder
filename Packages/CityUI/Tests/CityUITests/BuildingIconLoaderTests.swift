@@ -15,3 +15,10 @@ func buildingIconsFallBackToASymbol() {
     #expect(BuildingIconLoader.fallbackSymbolName(for: .road) == "road.lanes")
     #expect(BuildingIconLoader.fallbackSymbolName(for: .house) == "building.2.fill")
 }
+
+@MainActor
+@Test("building icons are cached per kind")
+func buildingIconsAreCachedPerKind() {
+    _ = BuildingIconLoader.image(for: .monument)
+    #expect(BuildingIconLoader.cachedKinds.contains(.monument))
+}
