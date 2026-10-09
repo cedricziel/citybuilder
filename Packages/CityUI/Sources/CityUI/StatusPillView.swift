@@ -181,8 +181,8 @@ struct StocksTrayView: View {
         let chips = hud.stocksTray
         if !chips.isEmpty {
             let columns = Array(
-                repeating: GridItem(.flexible(minimum: 52), spacing: 14, alignment: .leading),
-                count: min(layout.isPhone ? 4 : 6, chips.count)
+                repeating: GridItem(.flexible(minimum: 96), spacing: 14, alignment: .leading),
+                count: min(layout.isPhone ? 3 : 6, chips.count)
             )
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(hud.currentIslandName ?? "Island") stocks · \(chips.count) goods".uppercased())
@@ -190,8 +190,13 @@ struct StocksTrayView: View {
                     .foregroundStyle(.secondary)
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
                     ForEach(chips, id: \.good) { chip in
-                        GoodChipView(good: chip.good, text: "\(chip.count)")
-                            .accessibilityLabel("\(chip.good.rawValue.capitalized) \(chip.count)")
+                        let name = GoodsCatalog.spec(for: chip.good).displayName
+                        HStack(spacing: 6) {
+                            GoodChipView(good: chip.good, text: "\(chip.count)")
+                            Text(name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(name) \(chip.count)")
                     }
                 }
             }
@@ -210,6 +215,8 @@ struct GoodChipView: View {
     let good: Good
     let text: String
     var color: Color = .primary
+    /// Hover text; the good's name when nil.
+    var help: String?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -223,6 +230,7 @@ struct GoodChipView: View {
                 .foregroundStyle(color)
         }
         .fixedSize()
+        .help(help ?? GoodsCatalog.spec(for: good).displayName)
         .accessibilityElement(children: .combine)
     }
 }
