@@ -60,10 +60,11 @@ Each item is one OpenSpec change, in dependency order. Bigger items may split wh
 | 8 | add-culture-content | archived (culture signatures split into `add-culture-signatures`) |
 | 9 | add-difficulty-and-goals | archived |
 | 10 | add-city-life | archived (ambient sound deferred until audio assets exist) |
-| 11 | add-rival-towns + add-rival-trade | towns archived; trade in progress |
+| 11 | add-rival-towns + add-rival-trade | archived (rival ports cost money only; rival growth needs a balance pass) |
 | — | add-touch-first-placement | archived (iPad and landscape playtests deferred) |
 | — | add-age-signatures | archived |
 | — | add-culture-signatures | archived |
+| — | add-route-authoring-ui | archived (routes, manifests, route list and ship assignment were unreachable before; editing an existing route is not built) |
 
 **In parallel, any time:** finish `add-touch-first-placement` (open, 0/28), the Mac runtime pass (deferred from the foundation), and archive `replace-procedural-sprites-with-ai-pipeline` (complete but not archived).
 
