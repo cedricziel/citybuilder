@@ -6,7 +6,7 @@ This change depends on `add-rival-towns` and lands after it.
 
 ## What Changes
 
-- **Rival ports:** a rival with at least 6 houses and no port builds one at the first valid shore spot near its town center ($250, 8 wood, 6 planks, as for the player). Rivals don't need Seafaring.
+- **Rival ports:** a rival with at least 6 houses and no port builds one at the first valid shore spot near its town center ($250 and, unlike the player's, no materials: the port has no road to deliver them). Rivals don't need Seafaring.
 - **Prices:** every good has a base price (wood $4, planks $8, food $4, bread $12, grain $3, flour $6, ore $5, charcoal $5, iron $14, tools $30). Rivals sell at 125% of base and buy at 75%, rounded down, never below $1. Prices are fixed, so buying from one rival and selling to another always loses money.
 - **Offers:** a rival offers to sell any good it holds more than 30 of (the amount above 30). It offers to buy wood, planks, food, bread and tools up to 20 in stock. Offers are worked out from the rival's island stock whenever they are needed, never stored.
 - **Trading by ship:** a player route may stop at a rival port. There, the route's manifest becomes trade: "load" buys from the rival and "unload" sells to it, limited by the offer, the ship's cargo or space, the buyer's money and the rival's storage. Money moves between the player's balance and the rival's treasury, and each trade emits `tradeCompleted`.

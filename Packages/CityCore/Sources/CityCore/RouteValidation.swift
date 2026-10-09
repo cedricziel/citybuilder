@@ -47,19 +47,10 @@ public extension World {
         buildings[id]?.kind == .port
     }
 
-    /// Anchor position of a waypoint in Fixed2D space. For `.port` we
-    /// use the building's anchor tile.
+    /// Position of a waypoint in Fixed2D space: where ships steer to, so
+    /// a port is its docking water tile (`shipTargetPosition`).
     func waypointPosition(_ waypoint: Waypoint) -> Fixed2D {
-        switch waypoint {
-        case let .sea(pos):
-            return pos
-        case let .port(id):
-            guard let anchor = buildings[id]?.anchor else { return .zero }
-            return Fixed2D(
-                x: Fixed(Int32(anchor.x)),
-                y: Fixed(Int32(anchor.y))
-            )
-        }
+        shipTargetPosition(for: waypoint)
     }
 
     private func segmentCrossesLand(from start: Fixed2D, to end: Fixed2D) -> Bool {

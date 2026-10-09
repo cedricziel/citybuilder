@@ -2,13 +2,24 @@ import CityCore
 import Foundation
 
 /// Tap target classification surfaced from the scene to the
-/// route-authoring view-model. The scene resolves a tap point into
-/// one of these cases via `IsoMath.nearestTile` + a building lookup;
-/// the view-model only sees the resolved target.
+/// route-authoring view-model. The scene finds the tapped tile via
+/// `IsoMath.nearestTile` and `resolve` classifies it; the view-model
+/// only sees the resolved target.
 public enum RouteAuthoringTapTarget: Hashable, Sendable {
     case port(id: EntityID)
     case water(tile: TileCoordinate)
     case land(tile: TileCoordinate)
+}
+
+public extension RouteAuthoringTapTarget {
+    /// A port of any owner, else water or land. Spec: `platform-shells`
+    /// / Buy and Sell in the manifest editor (rival ports are tappable).
+    static func resolve(tile: TileCoordinate, in snapshot: WorldSnapshot) -> RouteAuthoringTapTarget {
+        if let id = snapshot.occupiedTiles[tile], snapshot.buildings[id]?.kind == .port {
+            return .port(id: id)
+        }
+        return snapshot.terrain(at: tile) == .water ? .water(tile: tile) : .land(tile: tile)
+    }
 }
 
 /// Visual-feedback signal the view-model raises when a tap is

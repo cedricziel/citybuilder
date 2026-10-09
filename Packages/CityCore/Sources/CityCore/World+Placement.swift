@@ -54,8 +54,11 @@ extension World {
 
     /// The materials `kind` costs `owner`. A rival's lumberjack hut costs
     /// none, so a rival whose huts have cut all their forest can always
-    /// start cutting again (design D5).
+    /// start cutting again (`rival-towns` D5). A rival's port costs none
+    /// either: it has no road, so no carrier could bring them, and a
+    /// rival's stock rarely holds them all at once (`add-rival-trade` D1).
     func materialCost(of kind: BuildingKind, for owner: Owner) -> [Good: Int] {
-        owner != .player && kind == .lumberjackHut ? [:] : BuildingCatalog.spec(for: kind).materialCost
+        let free: Set<BuildingKind> = [.lumberjackHut, .port]
+        return owner != .player && free.contains(kind) ? [:] : BuildingCatalog.spec(for: kind).materialCost
     }
 }

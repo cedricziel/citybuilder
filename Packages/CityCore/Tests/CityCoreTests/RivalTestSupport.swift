@@ -74,4 +74,37 @@ extension World {
     mutating func testRun(ticks: Int) -> [WorldEvent] {
         (0 ..< ticks).flatMap { _ in tick().events }
     }
+
+    mutating func setRival(_ id: RivalID, _ change: (inout RivalTown) -> Void) {
+        guard let index = rivalIndex(id) else { return }
+        change(&rivals[index])
+    }
+
+    /// Replaces the rival town center's stock.
+    mutating func setRivalStock(_ id: RivalID, _ stock: [Good: Int]) {
+        guard let rival = rival(id) else { return }
+        testSetStock(stock, in: rival.townCenterID)
+    }
+
+    /// Replaces a building's stock, keeping its kind's capacity.
+    mutating func testSetStock(_ stock: [Good: Int], in id: EntityID) {
+        let capacity = buildings[id].flatMap { World.stockpileCapacity(for: $0.kind) } ?? 0
+        var pile = Stockpile(capacity: capacity)
+        for good in Good.allCases {
+            if let amount = stock[good] { pile.deposit(good, amount: amount) }
+        }
+        stockpiles[id] = pile
+    }
+
+    /// Takes one turn for the rival and returns what it enqueued.
+    mutating func takeTurn(_ id: RivalID) -> [Command] {
+        let before = pendingCommands.count
+        var events: [WorldEvent] = []
+        runRivalTurn(id, events: &events)
+        return Array(pendingCommands[before...])
+    }
+}
+
+func placedKind(_ command: Command?) -> BuildingKind? {
+    if case let .rivalPlace(_, kind, _) = command { kind } else { nil }
 }
