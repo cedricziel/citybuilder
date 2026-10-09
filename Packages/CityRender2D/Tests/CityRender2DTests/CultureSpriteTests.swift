@@ -82,6 +82,7 @@ func scenarioMedievalNamesAreUnchanged() {
     #expect(houseTextureName(tier: .peasants, culture: .northernEuropean, age: .medieval) == nil)
 }
 
+@MainActor
 @Test("house look names fall back from age and culture to culture")
 func houseLookNamesFallBack() {
     #expect(IsoWorldScene.houseLookNames(houseTier: .merchants, culture: .eastAsian, age: .modern) == [
@@ -95,6 +96,7 @@ private let resources = URL(fileURLWithPath: #filePath)
     .appendingPathComponent("Resources")
 private let catalog = resources.appendingPathComponent("Sprites.style/catalog")
 
+@MainActor
 @Test("scenario: every culture variant is catalogued")
 func scenarioEveryCultureVariantIsCatalogued() {
     var missing: [String] = []

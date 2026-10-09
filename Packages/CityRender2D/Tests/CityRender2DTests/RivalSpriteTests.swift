@@ -26,10 +26,12 @@ private func node(at tile: TileCoordinate, in world: World) throws -> SKNode {
     return scene.makeBuildingNode(for: spec)
 }
 
+@MainActor
 private func textureName(_ node: SKNode) -> String? {
     node.userData?[IsoWorldScene.textureNameKey] as? String
 }
 
+@MainActor
 private func pennant(_ node: SKNode) -> SKNode? {
     node.childNode(withName: IsoWorldScene.pennantNodeName)
 }

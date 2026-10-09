@@ -5,27 +5,45 @@ import SwiftUI
 /// file stays under SwiftLint's 500-line ceiling. Spec:
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
-    /// Round HUD buttons in a grid so the stats panel keeps its width on
-    /// a phone: pause and settings on top, research and goals below, then
-    /// standings when the world has rivals and routes once the player
-    /// has a port, ship or route.
-    var hudButtons: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                pauseButton
-                if settingsContent != nil {
-                    settingsButton
-                }
-            }
-            HStack(spacing: 6) {
-                researchButton
-                goalsButton
-            }
-            HStack(spacing: 6) {
-                standingsButton
-                routesButton
+    /// The menu buttons in one row at the top right: goals, research,
+    /// standings and routes when they apply, then settings.
+    var menuButtons: some View {
+        HStack(spacing: 6) {
+            goalsButton
+            researchButton
+            standingsButton
+            routesButton
+            if settingsContent != nil {
+                settingsButton
             }
         }
+    }
+
+    /// The same buttons folded into one More menu, for a phone in
+    /// portrait. Spec: `platform-shells` / Adaptive HUD per idiom.
+    var moreMenu: some View {
+        Menu {
+            if !session.world.goals.isEmpty {
+                Button("Goals", systemImage: "flag.checkered") { goalsPresented = true }
+            }
+            Button("Research", systemImage: "book.fill") { researchPresented = true }
+            if StandingsPanelModel.isAvailable(in: session.world) {
+                Button("Standings", systemImage: "trophy.fill") { standingsPresented = true }
+            }
+            if session.showsRoutesButton {
+                Button("Routes", systemImage: "ferry.fill") { routesPresented = true }
+            }
+            if settingsContent != nil {
+                Button("Settings", systemImage: "gearshape.fill") { settingsPresented = true }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .imageScale(.large)
+                .padding(8)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("More")
     }
 
     var researchButton: some View {
@@ -52,23 +70,6 @@ extension CityRootView {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Settings")
-    }
-
-    /// Pause button shown in the HUD top-right cluster. Glyph swaps
-    /// with `session.isPaused`; ESC and Cmd-. mirror the tap.
-    var pauseButton: some View {
-        Button {
-            session.isPaused.toggle()
-        } label: {
-            Image(systemName: pauseButtonSymbolName(isPaused: session.isPaused))
-                .imageScale(.large)
-                .padding(8)
-                .background(.thinMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(session.isPaused ? "Resume" : "Pause")
-        .keyboardShortcut(.escape, modifiers: [])
-        .keyboardShortcut(".", modifiers: .command)
     }
 
     @ViewBuilder

@@ -15,6 +15,8 @@ public struct CityRootView: View {
     @State var standingsPresented: Bool = false
     @State var routesPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
+    @State var buildRail = BuildRailModel()
+    @State var inspectorExpanded = false
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
 
@@ -50,27 +52,17 @@ public struct CityRootView: View {
                 // touchesEnded / mouseUp handlers.
                 .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
                 .simultaneousGesture(zoomGesture)
-            touchPlacementHUD
-            VStack {
-                HStack(alignment: .top) {
-                    HUDFrameView(viewModel: session.hud)
-                    hudButtons
-                }
-                if session.routeAuthoring == nil {
-                    BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isHidden) { tool in
-                        session.selectTool(tool)
-                    }
-                }
-                PlacementRejectionBanner(hud: session.hud)
-                SessionBannerView(banner: session.banner)
-                if let authoring = session.routeAuthoring {
-                    Spacer()
-                    RouteAuthoringOverlay(session: session, authoring: authoring)
-                } else {
-                    buildControls
-                }
+            inspectorCallout
+            GeometryReader { proxy in
+                let layout = HUDMetrics.layout(for: proxy.size)
+                hudLayer(layout: layout)
+                    .padding(layout.margin)
             }
-            .padding()
+            touchPlacementHUD
+                .zIndex(1)
+        }
+        .onChange(of: isAnySheetPresented) { _, presented in
+            if presented { buildRail.close() }
         }
         .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
@@ -79,14 +71,19 @@ public struct CityRootView: View {
         .routesSheet(session: session, isPresented: $routesPresented)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
-                content()
+                content().hudSheetDetents()
             }
         }
         .sheet(
             isPresented: isPausedBinding,
             onDismiss: dismissPause,
-            content: pauseMenuContent
+            content: { pauseMenuContent().hudSheetDetents() }
         )
+    }
+
+    private var isAnySheetPresented: Bool {
+        settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
+            || session.isPaused
     }
 }
 
@@ -114,6 +111,8 @@ public final class GameSession {
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
+    /// Ticks per timer firing. Session state, never saved.
+    public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
     public var routeAuthoring: RouteAuthoringViewModel?
     /// The route list; its selection drives the map's route overlay.
@@ -131,7 +130,7 @@ public final class GameSession {
         routeList.commandSink = { [weak self] in self?.world.enqueue($0) }
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.step()
+                self?.timerFired()
             }
         }
     }
@@ -162,6 +161,13 @@ public final class GameSession {
         audioEventConsumer?(result.events)
     }
 
+    /// One firing of the 10 Hz timer: `speed` ticks.
+    public func timerFired() {
+        for _ in 0 ..< speed.rawValue {
+            step()
+        }
+    }
+
     /// The build tool currently armed for placement / demolition. When
     /// `.inspect`, taps select the tile for the inspector. When `.place`
     /// or `.demolish`, taps enqueue the corresponding command and leave
@@ -175,6 +181,9 @@ public final class GameSession {
             selectedTool = .inspect
         } else {
             selectedTool = tool
+            if tool != .inspect {
+                selectedTile = nil
+            }
         }
     }
 
@@ -344,7 +353,7 @@ public final class GameSession {
         )
     }
 
-    private func costBreakdown(
+    func costBreakdown(
         for kind: BuildingKind,
         anchor: TileCoordinate
     ) -> [Good: GhostCost]? {

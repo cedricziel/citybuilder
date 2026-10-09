@@ -146,6 +146,7 @@ extension View {
                 choose: { session.chooseResearch($0) },
                 dismiss: { isPresented.wrappedValue = false }
             )
+            .hudSheetDetents()
         }
     }
 }

@@ -29,9 +29,9 @@ func scenarioQuernHouseLeavesThePalette() {
     var world = World.newGame()
     world.research.markResearched(.milling)
     let session = GameSession(world: world)
-    #expect(!BuildPaletteView.visibleKinds(isHidden: session.isObsolete).contains(.quernHouse))
+    #expect(!BuildPalette.visibleKinds(isHidden: session.isObsolete).contains(.quernHouse))
     let antiquity = GameSession(world: World.newGame(layout: .singleIsland, seed: 0, age: .antiquity))
-    #expect(BuildPaletteView.visibleKinds(isHidden: antiquity.isObsolete).contains(.quernHouse))
+    #expect(BuildPalette.visibleKinds(isHidden: antiquity.isObsolete).contains(.quernHouse))
 }
 
 @Test("era tech row shows the age it opens and its residents gate")

@@ -94,6 +94,7 @@ extension View {
     func goalsSheets(session: GameSession, goalsPresented: Binding<Bool>, onQuitToTitle: (() -> Void)?) -> some View {
         sheet(isPresented: goalsPresented) {
             GoalsPanelView(model: GoalsPanelModel(world: session.world)) { goalsPresented.wrappedValue = false }
+                .hudSheetDetents()
         }
         .sheet(isPresented: Binding(get: { session.isWinSheetPresented }, set: { session.isWinSheetPresented = $0 })) {
             ScenarioWonView(keepPlaying: { session.isWinSheetPresented = false }, quitToTitle: onQuitToTitle)

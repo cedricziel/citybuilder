@@ -8,7 +8,7 @@ extension CityRootView {
     /// (UIKit's `cancelsTouchesInView`), so while a build tool is armed
     /// the pan gesture is masked off and drag-to-paint reaches the
     /// scene's `touchesMoved`.
-    static func panGestureMask(allowsPan: Bool) -> GestureMask {
+    nonisolated static func panGestureMask(allowsPan: Bool) -> GestureMask {
         allowsPan ? .all : .subviews
     }
 

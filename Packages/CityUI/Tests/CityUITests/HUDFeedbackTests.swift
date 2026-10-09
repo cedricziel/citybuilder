@@ -123,7 +123,7 @@ func compiledAtlasNamesWithExtensionResolve() throws {
 
 @Test("scenario: palette omits the town center")
 func scenarioPaletteOmitsTheTownCenter() {
-    let kinds = BuildPaletteView.kinds
+    let kinds = BuildPalette.kinds
     #expect(kinds.contains(.house) && kinds.contains(.farm) && kinds.contains(.road))
     #expect(!kinds.contains(.townCenter))
 }

@@ -37,7 +37,7 @@ func scenarioMenuListsEveryPlaceableBuildingKindAsASeparateEntry() {
     let session = grassSession()
     let items = session.tileMenuViewModel(for: tile(3, 4)).items
     let kinds = buildKinds(in: items)
-    #expect(kinds == BuildPaletteView.visibleKinds(isHidden: session.isObsolete))
+    #expect(kinds == BuildPalette.visibleKinds(isHidden: session.isObsolete))
     #expect(kinds.contains(.road))
     #expect(Set(kinds).count == kinds.count)
 }

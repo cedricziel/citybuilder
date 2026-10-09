@@ -9,7 +9,7 @@ import Testing
 @Test("scenario: mediterranean palette")
 func scenarioMediterraneanPalette() {
     let session = GameSession(world: World.newGame(layout: .singleIsland, seed: 0, culture: .mediterranean))
-    let kinds = BuildPaletteView.visibleKinds(isHidden: session.isHidden)
+    let kinds = BuildPalette.visibleKinds(isHidden: session.isHidden)
     #expect(kinds.contains(.vineyard))
     #expect(kinds.contains(.winery))
     #expect(!kinds.contains(.brewery))

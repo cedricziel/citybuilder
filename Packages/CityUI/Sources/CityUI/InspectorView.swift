@@ -6,6 +6,12 @@ import SwiftUI
 /// SwiftUI inspector renders.
 public struct InspectorViewModel: Sendable {
     public let bullets: [String]
+    /// The building's name, such as "House"; nil for an empty tile.
+    public let title: String?
+    /// A house's tier name, nil for other buildings.
+    public let tier: String?
+    /// A house's residents over its capacity, 0...1; nil for other buildings.
+    public let residentsFill: Double?
     /// The gallery's commission button, nil for other buildings.
     public let commission: CommissionButton?
     /// The caravanserai's export picker, nil for other buildings.
@@ -19,6 +25,9 @@ public struct InspectorViewModel: Sendable {
 
     public init(
         bullets: [String],
+        title: String? = nil,
+        tier: String? = nil,
+        residentsFill: Double? = nil,
         commission: CommissionButton? = nil,
         exportPicker: ExportPicker? = nil,
         rival: RivalSummary? = nil,
@@ -26,6 +35,9 @@ public struct InspectorViewModel: Sendable {
         routeStartPort: EntityID? = nil
     ) {
         self.bullets = bullets
+        self.title = title
+        self.tier = tier
+        self.residentsFill = residentsFill
         self.commission = commission
         self.exportPicker = exportPicker
         self.rival = rival
@@ -49,7 +61,12 @@ public struct InspectorViewModel: Sendable {
         let rival = building.owner.rivalID.flatMap(snapshot.rival)
         let culture = snapshot.culture(for: building.owner)
         var houseLines: [String] = []
+        var tier: String?
+        var residentsFill: Double?
         if let pop = snapshot.housePopulations[entityID] {
+            let capacity = (snapshot.houseModifiers[entityID] ?? .none).capacity(of: pop.tier)
+            tier = pop.tier.displayName(in: culture)
+            residentsFill = capacity > 0 ? min(1, Double(pop.population) / Double(capacity)) : 0
             let needs = pop.tier.needs(in: culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
@@ -67,6 +84,9 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + signatureLines(for: building, in: snapshot) + houseLines,
+            title: BuildTool.place(building.kind).displayName,
+            tier: tier,
+            residentsFill: residentsFill,
             // A rival's building is read-only.
             commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
             exportPicker: rival == nil ? exportPicker(for: building) : nil,
@@ -83,14 +103,21 @@ public struct InspectorView: View {
     let onCommission: () -> Void
     let onPickExport: (Good?) -> Void
     let onStartRoute: (EntityID) -> Void
+    /// The lines to list; nil lists every bullet.
+    let lines: [String]?
+    let isFramed: Bool
 
     public init(
         viewModel: InspectorViewModel,
+        lines: [String]? = nil,
+        isFramed: Bool = true,
         onCommission: @escaping () -> Void = {},
         onPickExport: @escaping (Good?) -> Void = { _ in },
         onStartRoute: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.viewModel = viewModel
+        self.lines = lines
+        self.isFramed = isFramed
         self.onCommission = onCommission
         self.onPickExport = onPickExport
         self.onStartRoute = onStartRoute
@@ -108,7 +135,7 @@ public struct InspectorView: View {
                         Circle().fill(Color(hex: rival.colour.hex)).frame(width: 10, height: 10)
                     }
                 }
-                ForEach(viewModel.bullets, id: \.self) { line in
+                ForEach(lines ?? viewModel.bullets, id: \.self) { line in
                     Text(line).font(.caption.monospaced())
                 }
                 if let commission = viewModel.commission {
@@ -127,7 +154,7 @@ public struct InspectorView: View {
                     .buttonStyle(.bordered)
                 }
                 if let picker = viewModel.exportPicker {
-                    Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {
+                    Picker("Export", selection: Binding(get: { picker.selected }, set: { onPickExport($0) })) {
                         ForEach(picker.options, id: \.self) { option in
                             Text(ExportPicker.title(of: option)).tag(option)
                         }
@@ -135,8 +162,11 @@ public struct InspectorView: View {
                     .font(.caption)
                 }
             }
-            .padding(12)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(isFramed ? 12 : 0)
+            .background(
+                isFramed ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.clear),
+                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            )
         }
     }
 
@@ -152,6 +182,14 @@ public struct InspectorView: View {
 }
 
 extension InspectorViewModel {
+    /// The lines the callout shows before Details: residents and needs for
+    /// a house, otherwise state and road. Spec: `platform-shells` /
+    /// Inspector callout.
+    public var keyLines: [String] {
+        let prefixes = tier == nil ? ["State:", "Road:"] : ["Residents:", "Needs:"]
+        return prefixes.compactMap { prefix in bullets.first { $0.hasPrefix(prefix) } }
+    }
+
     /// Up to three named residents with the house's wish. Spec:
     /// `platform-shells` / Inspector introduces residents.
     static func residentLines(house: EntityID, population: HousePopulation, culture: Culture) -> [String] {
