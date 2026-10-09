@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Testing
 @testable import CityUI
@@ -15,15 +16,14 @@ func scenarioUniversalPurchaseOneBuy() {
 
 @Test("scenario: iPad sidebar HUD")
 func scenarioIPadSidebarHUD() {
-    let decisions = LayoutDecisions.decisions(for: .regular)
-    #expect(decisions.palettePlacement == .sidebar)
+    #expect(HUDDock.placement(for: CGSize(width: 1180, height: 820)) == .leftRail)
+    #expect(BuildCategory.allCases.count == 3)
 }
 
 @Test("scenario: iPhone compact HUD")
 func scenarioIPhoneCompactHUD() {
-    let decisions = LayoutDecisions.decisions(for: .compact)
-    #expect(decisions.palettePlacement == .bottomSheet)
-    #expect(decisions.showsAdvancedControls == false)
+    #expect(HUDDock.placement(for: CGSize(width: 390, height: 844)) == .bottomDock)
+    #expect(BuildRailModel().openDrawer == nil)
 }
 
 @Test("scenario: Mac HUD with menu bar")

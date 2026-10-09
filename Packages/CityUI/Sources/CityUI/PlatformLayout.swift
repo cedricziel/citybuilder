@@ -8,40 +8,30 @@ public enum LayoutSizeClass: String, Sendable, Codable {
     case mac // explicit Mac variant for menu-bar handling
 }
 
-/// Layout decisions derived purely from size class. The HUD reads these
-/// values to decide between sidebar / sheet / bottom-bar etc.
+/// Layout decisions derived purely from size class. Where the build
+/// controls sit is `HUDDock`'s call, by orientation.
 public struct LayoutDecisions: Equatable, Sendable {
-    public let palettePlacement: PalettePlacement
     public let defaultCameraZoom: Double
     public let showsAdvancedControls: Bool
     public let showsMenuBar: Bool
     public var labels: HUDLabelConfig = .singleLine
 
-    public enum PalettePlacement: String, Sendable {
-        case sidebar
-        case bottomSheet
-        case topBar
-    }
-
     public static func decisions(for sizeClass: LayoutSizeClass) -> LayoutDecisions {
         switch sizeClass {
         case .compact:
             return LayoutDecisions(
-                palettePlacement: .bottomSheet,
                 defaultCameraZoom: 1.5,
                 showsAdvancedControls: false,
                 showsMenuBar: false
             )
         case .regular:
             return LayoutDecisions(
-                palettePlacement: .sidebar,
                 defaultCameraZoom: 1.0,
                 showsAdvancedControls: true,
                 showsMenuBar: false
             )
         case .mac:
             return LayoutDecisions(
-                palettePlacement: .topBar,
                 defaultCameraZoom: 1.0,
                 showsAdvancedControls: true,
                 showsMenuBar: true
