@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Base content every culture shares. (Excerpt — the real pack has all
+# ten base goods, eighteen buildings and six techs.)
+defaults:
+  workshop: &workshop
+    footprint: [2, 2]
+    upkeep: 2
+    buildTicks: 35
+    storage: 16
+
+items:
+  # --- Goods ---------------------------------------------------------
+  # Order is Good.allCases order, which caravans, supply and the rival
+  # market iterate. The full pack keeps today's order: wood, planks, food,
+  # bread, grain, flour, ore, charcoal, iron, tools.
+  - { kind: Good, id: wood,   name: Wood,   unit: logs,    basePrice: 4 }
+  - { kind: Good, id: planks, name: Planks, unit: bundles, basePrice: 8 }
+  - { kind: Good, id: grain,  name: Grain,  unit: sheaves, basePrice: 3 }
+  - { kind: Good, id: flour,  name: Flour,  unit: sacks,   basePrice: 6 }
+  - { kind: Good, id: ore,    name: Ore,    unit: loads,   basePrice: 5 }
+  - { kind: Good, id: iron,   name: Iron,   unit: bars,    basePrice: 14 }
+  - { kind: Good, id: tools,  name: Tools,  unit: sets,    basePrice: 30 }
+
+  # --- Buildings -----------------------------------------------------
+  - kind: Building
+    id: house
+    effect: code                     # holds residents; Spec: population-and-needs
+    footprint: [2, 2]
+    cost: 50
+    buildTicks: 20
+    storage: 8
+    materials: { planks: 4 }
+
+  - kind: Building
+    id: road
+    effect: code
+    footprint: [1, 1]
+    cost: 5
+    buildTicks: 1
+
+  # Spec: goods-and-production / Producer behavior
+  - kind: Building
+    id: lumberjack-hut
+    name: Lumberjack                 # short palette label
+    legacyIds: [lumberjack_hut]      # saves written before the rename
+    footprint: [2, 2]
+    cost: 80
+    buildTicks: 25
+    storage: 16
+    materials: { wood: 2 }
+    recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
+
+  # Antiquity hand mill. Spec: historical-ages / Obsolete buildings
+  - kind: Building
+    id: quern-house
+    footprint: [2, 2]
+    cost: 60
+    upkeep: 1
+    buildTicks: 25
+    materials: { wood: 2, planks: 2 }
+    storage: 16
+    obsoletedBy: milling
+    recipe: { inputs: { grain: 2 }, outputs: { flour: 1 }, cycleTicks: 80 }
+
+  - kind: Building
+    id: windmill
+    footprint: [2, 2]
+    cost: 110
+    upkeep: 1
+    buildTicks: 35
+    materials: { wood: 3, planks: 3 }
+    storage: 16
+    unlockedBy: milling
+    recipe: { inputs: { grain: 2 }, outputs: { flour: 1 }, cycleTicks: 40 }
+
+  # Spec: buildings-and-construction / Terrain requirement for placement
+  - kind: Building
+    id: mine
+    <<: *workshop
+    cost: 120
+    buildTicks: 40
+    materials: { wood: 4, planks: 2 }
+    placement: { terrain: { type: mountain, minTiles: 2 } }
+    unlockedBy: mining
+    recipe: { outputs: { ore: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: toolsmith
+    <<: *workshop
+    cost: 140
+    materials: { wood: 2, planks: 4 }
+    unlockedBy: metallurgy
+    recipe: { inputs: { iron: 1, planks: 1 }, outputs: { tools: 1 }, cycleTicks: 60 }
+
+  # Spec: port-and-shipyard
+  - kind: Building
+    id: port
+    effect: code
+    footprint: [2, 3]
+    cost: 250
+    upkeep: 1
+    buildTicks: 35
+    storage: 200
+    materials: { wood: 8, planks: 6 }
+    placement: { shore: { minLand: 1, minWater: 1 } }
+    unlockedBy: seafaring
+
+  # --- Techs ---------------------------------------------------------
+  - { kind: Tech, id: scholarship, cost: 30, age: antiquity }
+  - { kind: Tech, id: milling,     cost: 40, age: medieval }
+  - { kind: Tech, id: mining,      cost: 40, age: medieval }
+  - kind: Tech
+    id: metallurgy
+    cost: 80
+    age: medieval
+    prerequisites: [mining]
+  - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
+  # Unlocks every culture's luxury chain. Spec: culture-content
+  - { kind: Tech, id: cultivation, cost: 50, age: medieval }

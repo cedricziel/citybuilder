@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/pack.schema.json
+# Spec: cultures, culture-content, culture-signatures
+defaults:
+  garden: &garden
+    footprint: [2, 2]
+    cost: 60
+    buildTicks: 25
+    storage: 16
+    materials: { wood: 2 }
+    unlockedBy: cultivation
+  producer: &producer
+    footprint: [2, 2]
+    cost: 120
+    upkeep: 1
+    buildTicks: 30
+    storage: 16
+    materials: { wood: 3, planks: 3 }
+    unlockedBy: cultivation
+
+items:
+  - kind: Culture
+    id: northern-european
+    name: Northern European
+    blurb: Half-timbered towns under steep tiled roofs.
+    tiers: { peasants: Peasants, citizens: Citizens, merchants: Merchants }
+    luxury: { raw: hops, good: beer, garden: hop-garden, producer: brewery }
+    signature: mead-hall
+    residentNames: [Astrid, Bjorn, Greta, Hans, Ingrid, Jakob, Karin, Lars, Magda, Nils, Olga, Per,
+                    Ragna, Sven, Tilda, Ulf, Vera, Wim, Elsa, Frode, Hilde, Ivar, Liv, Otto]
+
+  - { kind: Good, id: hops, name: Hops, unit: bales, basePrice: 3 }
+  - { kind: Good, id: beer, name: Beer, unit: casks, basePrice: 16 }
+
+  - kind: Building
+    id: hop-garden
+    <<: *garden
+    culture: northern-european
+    recipe: { outputs: { hops: 1 }, cycleTicks: 40 }
+
+  - kind: Building
+    id: brewery
+    <<: *producer
+    culture: northern-european
+    recipe: { inputs: { hops: 2 }, outputs: { beer: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: mead-hall
+    effect: code
+    culture: northern-european
+    footprint: [3, 3]
+    cost: 180
+    upkeep: 1
+    buildTicks: 35
+    storage: 16
+    materials: { wood: 6, planks: 2 }
