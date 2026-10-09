@@ -187,6 +187,7 @@ func scenarioForestTileArmsNoAction() {
     #expect(SpriteAnimation.entry(for: .terrain(.forest)) == nil)
 }
 
+@MainActor
 @Test("scenario: off-screen water stops animating")
 func scenarioOffScreenWaterStopsAnimating() {
     // The existing snapshot reconciler removes off-screen sprites by

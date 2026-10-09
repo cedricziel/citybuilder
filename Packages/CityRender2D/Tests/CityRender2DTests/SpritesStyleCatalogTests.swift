@@ -147,6 +147,7 @@ func scenarioPipelinePinsARecognisedOpenaiImageModel() throws {
 /// The set of catalog IDs the project's sprite kinds require, derived
 /// directly from the code-side enums. Used as the source of truth for
 /// "every code-declared sprite kind has a catalog entry".
+@MainActor
 private func expectedCatalogIds() -> Set<String> {
     var ids: Set<String> = []
     for terrain in TerrainType.allCases {
@@ -263,6 +264,7 @@ private func parseAnimationSequences(in body: String) -> [[(Int, Int)]] {
 
 // MARK: - Requirement: Per-sprite catalog covers every sprite kind
 
+@MainActor
 @Test("scenario: every code-declared sprite kind has a catalog entry")
 func scenarioEveryCodeDeclaredSpriteKindHasACatalogEntry() {
     let dir = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
@@ -277,6 +279,7 @@ func scenarioEveryCodeDeclaredSpriteKindHasACatalogEntry() {
     #expect(missing.isEmpty, "missing catalog entries: \(missing.joined(separator: ", "))")
 }
 
+@MainActor
 @Test("scenario: no orphan catalog entries")
 func scenarioNoOrphanCatalogEntries() throws {
     let files = try catalogFiles()
