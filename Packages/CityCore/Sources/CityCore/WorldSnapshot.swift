@@ -160,14 +160,26 @@ public struct RivalSummary: Hashable, Sendable {
     public let culture: Culture
     public let age: Age
     public let islandID: IslandID
+    /// Goods across the rival's buffers, which its market offers come
+    /// from (`add-rival-trade` D5).
+    public let stock: [Good: Int]
 
-    public init(_ rival: RivalTown) {
+    public init(_ rival: RivalTown, stock: [Good: Int] = [:]) {
         id = rival.id
         name = rival.name
         colour = rival.colour
         culture = rival.culture
         age = rival.age
         islandID = rival.islandID
+        self.stock = stock
+    }
+
+    public var sellOffers: [RivalOffer] {
+        RivalMarket.sellOffers(stock: stock)
+    }
+
+    public var buyOffers: [RivalOffer] {
+        RivalMarket.buyOffers(stock: stock)
     }
 }
 
@@ -200,7 +212,7 @@ public extension World {
             culture: culture,
             age: age,
             houseModifiers: snapshotHouseModifiers(),
-            rivals: rivals.map(RivalSummary.init)
+            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id)) }
         )
     }
 

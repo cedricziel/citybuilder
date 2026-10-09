@@ -12,17 +12,21 @@ public struct InspectorViewModel: Sendable {
     public let exportPicker: ExportPicker?
     /// The rival owning the building, nil for the player's.
     public let rival: RivalSummary?
+    /// A rival port's market, nil elsewhere.
+    public let market: RivalMarketSection?
 
     public init(
         bullets: [String],
         commission: CommissionButton? = nil,
         exportPicker: ExportPicker? = nil,
-        rival: RivalSummary? = nil
+        rival: RivalSummary? = nil,
+        market: RivalMarketSection? = nil
     ) {
         self.bullets = bullets
         self.commission = commission
         self.exportPicker = exportPicker
         self.rival = rival
+        self.market = market
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -62,7 +66,8 @@ public struct InspectorViewModel: Sendable {
             // A rival's building is read-only.
             commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
             exportPicker: rival == nil ? exportPicker(for: building) : nil,
-            rival: rival
+            rival: rival,
+            market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil
         )
     }
 }
@@ -103,6 +108,9 @@ public struct InspectorView: View {
                         .font(.caption)
                         .disabled(!commission.isEnabled)
                 }
+                if let market = viewModel.market {
+                    marketSection(market)
+                }
                 if let picker = viewModel.exportPicker {
                     Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {
                         ForEach(picker.options, id: \.self) { option in
@@ -114,6 +122,16 @@ public struct InspectorView: View {
             }
             .padding(12)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+    }
+
+    private func marketSection(_ market: RivalMarketSection) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Market").font(.caption.bold())
+            Text("Sells").font(.caption2.bold())
+            ForEach(market.sells, id: \.self) { Text($0).font(.caption.monospaced()) }
+            Text("Buys").font(.caption2.bold())
+            ForEach(market.buys, id: \.self) { Text($0).font(.caption.monospaced()) }
         }
     }
 }

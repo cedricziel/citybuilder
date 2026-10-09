@@ -11,8 +11,8 @@
 
 ## 3. M3 — UI
 
-- [ ] 3.1 Tests-first: translate the platform-shells scenarios into failing `CityUITests`. Confirm red.
-- [ ] 3.2 Implement to green: inspector Market section, manifest editor Buy/Sell labels with prices and offers, rival ports as route-authoring targets (D5).
+- [x] 3.1 Tests-first: translate the platform-shells scenarios into failing `CityUITests`. Confirm red.
+- [x] 3.2 Implement to green: inspector Market section, manifest editor Buy/Sell labels with prices and offers, rival ports as route-authoring targets (D5).
 
 ## 4. M4 — Verification
 
