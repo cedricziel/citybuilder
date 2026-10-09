@@ -1,0 +1,12 @@
+.cb-inspector {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.cb-inspector__line {
+  font-family: var(--cb-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+}

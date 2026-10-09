@@ -1,0 +1,21 @@
+.cb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cb-stat__label {
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--cb-secondary-label);
+  white-space: nowrap;
+}
+
+.cb-stat__value {
+  font-family: var(--cb-font-mono);
+  font-size: 20px;
+  line-height: 25px;
+  font-weight: 600;
+  white-space: nowrap;
+}

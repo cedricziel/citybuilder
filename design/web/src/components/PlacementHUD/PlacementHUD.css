@@ -1,0 +1,48 @@
+.cb-placement {
+  position: relative;
+  width: 260px;
+  height: 250px;
+  flex: none;
+}
+
+.cb-placement__ghost {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.cb-placement__tile {
+  position: absolute;
+  left: -32px;
+  top: -16px;
+  width: 64px;
+  height: 32px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: color-mix(in srgb, var(--cb-green) 45%, transparent);
+}
+
+.cb-placement__tile--invalid {
+  background: color-mix(in srgb, var(--cb-red) 45%, transparent);
+}
+
+.cb-placement__button {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 2px solid;
+  border-radius: 50%;
+  background: var(--cb-material);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  cursor: pointer;
+}
+
+.cb-placement__button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

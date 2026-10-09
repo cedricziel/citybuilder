@@ -1,0 +1,28 @@
+.cb-hud-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--cb-label);
+}
+
+.cb-hud-button__disc {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cb-hud-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+}
+
+.cb-hud-cluster__row {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}

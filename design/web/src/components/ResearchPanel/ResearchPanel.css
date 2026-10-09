@@ -1,0 +1,49 @@
+.cb-tech {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cb-tech__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cb-tech__name {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.cb-tech__state {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cb-secondary-label);
+}
+
+.cb-tech__unlocks {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.cb-tech__requires {
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--cb-secondary-label);
+}
+
+.cb-progress {
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--cb-fill);
+  overflow: hidden;
+}
+
+.cb-progress__fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--cb-accent);
+}

@@ -1,0 +1,84 @@
+.cb-game {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.cb-game > * {
+  pointer-events: auto;
+}
+
+.cb-game__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+}
+
+.cb-game > .cb-palette {
+  align-self: stretch;
+}
+
+.cb-game__spacer {
+  flex: 1 1 auto;
+  pointer-events: none;
+}
+
+.cb-game__bottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  align-self: stretch;
+}
+
+.cb-game__placing {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-130px, -104px);
+}
+
+.cb-game__coachmark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.cb-game__scrim {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-top: 24px;
+  background: var(--cb-scrim);
+}
+
+.cb-game__scrim--centered {
+  align-items: center;
+  padding: 40px;
+}
+
+.cb-game__scrim--centered .cb-sheet {
+  border-radius: var(--cb-radius-sheet);
+}
+
+.cb-game__sheet {
+  display: flex;
+  justify-content: center;
+  max-height: 100%;
+  width: 100%;
+}
+
+.cb-game__sheet > .cb-sheet {
+  max-height: 100%;
+  width: min(540px, 100%);
+}

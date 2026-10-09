@@ -1,0 +1,33 @@
+.cb-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cb-hud__date {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--cb-secondary-label);
+}
+
+.cb-hud__stats {
+  display: flex;
+  gap: 16px;
+}
+
+.cb-hud__stocks {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cb-hud__stocks::-webkit-scrollbar {
+  display: none;
+}

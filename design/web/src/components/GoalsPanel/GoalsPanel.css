@@ -1,0 +1,14 @@
+.cb-goal {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cb-goal svg {
+  color: var(--cb-accent);
+}
+
+.cb-goal--met,
+.cb-goal--met svg {
+  color: var(--cb-green);
+}

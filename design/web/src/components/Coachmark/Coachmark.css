@@ -1,0 +1,11 @@
+.cb-coachmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 16px !important;
+}
+
+.cb-coachmark__text {
+  font-size: 16px;
+  line-height: 21px;
+}
