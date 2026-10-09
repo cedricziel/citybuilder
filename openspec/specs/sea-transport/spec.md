@@ -2,7 +2,6 @@
 
 ## Purpose
 TBD - created by archiving change add-archipelago-and-sea. Update Purpose after archive.
-
 ## Requirements
 ### Requirement: Ship entity
 The simulation SHALL represent each ship as an `EntityID` with associated components: `Fixed2D` position, `Fixed` heading (in radians), an optional `RouteID`, a current `waypointIdx` integer, a cargo dictionary `[Good: Int]`, and a `ShipState` enum value. The position MUST live in fixed-point coordinates anchored to the same grid as terrain tiles (1.0 unit = 1 tile).
@@ -165,3 +164,17 @@ The `Ship` and `Route` entities (with all components) SHALL be included in `Worl
 #### Scenario: Docked ship resumes manifest progress after load
 - **WHEN** a snapshot taken while a ship is `.docked` mid-manifest (e.g. after applying action 0 of 3) is loaded
 - **THEN** the ship resumes from action 1 of 3 on the next tick at that port
+
+### Requirement: Ships have an owner
+
+Every ship SHALL have an owner. A ship emitted by a shipyard SHALL have the shipyard's owner. A ship decoded without an owner SHALL be the player's.
+
+#### Scenario: Ship inherits the shipyard's owner
+
+- **WHEN** a player-owned shipyard emits a ship
+- **THEN** the ship's owner is the player
+
+#### Scenario: Old ship decodes as the player's
+
+- **WHEN** a ship encoded without an `owner` key is decoded
+- **THEN** its owner is the player
