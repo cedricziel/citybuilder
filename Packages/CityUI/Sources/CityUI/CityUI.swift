@@ -114,6 +114,8 @@ public final class GameSession {
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
+    /// Ticks per timer firing. Session state, never saved.
+    public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
     public var routeAuthoring: RouteAuthoringViewModel?
     /// The route list; its selection drives the map's route overlay.
@@ -131,7 +133,7 @@ public final class GameSession {
         routeList.commandSink = { [weak self] in self?.world.enqueue($0) }
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.step()
+                self?.timerFired()
             }
         }
     }
@@ -160,6 +162,13 @@ public final class GameSession {
         // building positions, not the prior tick's.
         audioSnapshotConsumer?(snapshot)
         audioEventConsumer?(result.events)
+    }
+
+    /// One firing of the 10 Hz timer: `speed` ticks.
+    public func timerFired() {
+        for _ in 0 ..< speed.rawValue {
+            step()
+        }
     }
 
     /// The build tool currently armed for placement / demolition. When
