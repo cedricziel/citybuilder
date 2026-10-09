@@ -24,7 +24,7 @@ struct CitybuilderMacApp: App {
         self.audio = audio
         self.fullscreenTracker = MacFullscreenTracker()
         SnapshotRendererRegistry.shared
-            .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider in
+            .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
                     IsoWorldView(
                         snapshotProvider: provider,
@@ -44,6 +44,11 @@ struct CitybuilderMacApp: App {
                             return IsoWorldScene.GhostState(kind: state.kind, tile: state.tile, valid: state.valid)
                         },
                         selectionProvider: selectionProvider,
+                        routeOverlayProvider: {
+                            routeProvider().map {
+                                IsoWorldScene.RouteOverlay(waypoints: $0.waypoints, redSegments: $0.redSegments, flash: $0.flash)
+                            }
+                        },
                         cameraListener: { tile in audio.setListenerPosition(tile) }
                     )
                 )

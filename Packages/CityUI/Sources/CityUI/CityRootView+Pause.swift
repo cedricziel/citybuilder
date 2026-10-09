@@ -7,7 +7,8 @@ import SwiftUI
 extension CityRootView {
     /// Round HUD buttons in a grid so the stats panel keeps its width on
     /// a phone: pause and settings on top, research and goals below, then
-    /// standings when the world has rivals.
+    /// standings when the world has rivals and routes once the player
+    /// has a port, ship or route.
     var hudButtons: some View {
         VStack(spacing: 6) {
             HStack(spacing: 6) {
@@ -20,7 +21,10 @@ extension CityRootView {
                 researchButton
                 goalsButton
             }
-            standingsButton
+            HStack(spacing: 6) {
+                standingsButton
+                routesButton
+            }
         }
     }
 

@@ -154,6 +154,16 @@ extension World {
         ships[shipID]?.state = .sailing
     }
 
+    /// Active ↔ paused; a broken route stays broken. Spec:
+    /// `sea-transport` / Pausing a route.
+    mutating func applySetRoutePaused(id: RouteID, paused: Bool) {
+        switch (routes[id]?.state, paused) {
+        case (.active, true): routes[id]?.state = .paused
+        case (.paused, false): routes[id]?.state = .active
+        default: return
+        }
+    }
+
     mutating func applyUnassignShip(shipID: EntityID) {
         guard ships[shipID] != nil else { return }
         ships[shipID]?.routeID = nil

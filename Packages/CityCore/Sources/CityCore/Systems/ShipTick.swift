@@ -36,11 +36,17 @@ public extension World {
     }
 
     private mutating func tickShip(_ ship: inout Ship, events: inout [WorldEvent]) {
-        // Route-broken detection: a `.sailing` ship whose route is no
-        // longer `.active` transitions to `.returning`.
-        if ship.state == .sailing, let routeID = ship.routeID {
-            if let route = routes[routeID], case .broken = route.state {
+        // A broken route sends a sailing ship home; a paused one holds
+        // sailing and docked ships in place (spec `sea-transport` /
+        // Pausing a route).
+        if let routeID = ship.routeID {
+            switch routes[routeID]?.state {
+            case .broken? where ship.state == .sailing:
                 ship.state = .returning
+            case .paused? where ship.state == .sailing || ship.state == .docked:
+                return
+            default:
+                break
             }
         }
 

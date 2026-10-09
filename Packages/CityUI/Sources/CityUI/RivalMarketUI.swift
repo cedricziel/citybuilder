@@ -67,8 +67,12 @@ public struct ManifestEditorModel: Sendable {
                 ? RivalMarket.sellQuantity(of: good, stock: rival.stock)
                 : RivalMarket.buyQuantity(of: good, stock: rival.stock)
             guard quantity > 0 else { return ManifestGoodRow(good: good, price: nil, offer: "no offer") }
-            let price = good.rivalPrice(verb == .load ? .bought : .sold)
-            return ManifestGoodRow(good: good, price: "$\(price)", offer: "\(quantity)")
+            return ManifestGoodRow(good: good, price: Self.price(of: good, verb), offer: "\(quantity)")
         }
+    }
+
+    /// A rival's price for the player's verb: a load buys, an unload sells.
+    static func price(of good: Good, _ verb: ManifestVerb) -> String {
+        "$\(good.rivalPrice(verb == .load ? .bought : .sold))"
     }
 }

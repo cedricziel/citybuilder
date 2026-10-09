@@ -56,6 +56,11 @@ public final class IsoWorldScene: SKScene {
     /// Range rings and highlights, keyed by the source they show.
     let signatureRingLayer = SKNode()
     var signatureRingSource: SignatureRingSource?
+    /// The route to draw, polled every frame. Spec: `rendering-2_5d` /
+    /// Route overlay from the session.
+    public var routeOverlayProvider: (() -> RouteOverlay?)?
+    let routeLayer = RouteLayerNode()
+    let shipLayer = ShipLayerNode()
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -223,6 +228,8 @@ public final class IsoWorldScene: SKScene {
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
         reconcileCarriers(with: snapshot)
+        reconcileRoutes(with: snapshot)
+        reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
         reconcileGhost()
         reconcileSignatureRings(with: snapshot)
@@ -421,6 +428,7 @@ public struct IsoWorldView: View {
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
+        routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
         cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
     ) {
         let prepared = IsoWorldScene()
@@ -438,6 +446,9 @@ public struct IsoWorldView: View {
         }
         if let selectionProvider {
             prepared.selectionProvider = { selectionProvider() }
+        }
+        if let routeOverlayProvider {
+            prepared.routeOverlayProvider = { routeOverlayProvider() }
         }
         if let cameraListener {
             prepared.cameraListener = { tile in cameraListener(tile) }
