@@ -109,12 +109,19 @@ public enum IslandNameTable {
 
     /// Picks a name index deterministically from a seed, the island's
     /// bounding-box center, and the island ID. Same inputs → same name.
-    public static func pick(seed: UInt64, bounds: TileBoundingBox, id: IslandID) -> String {
+    /// A name already in `taken` steps to the next free entry, so the
+    /// islands of one world never share a name.
+    public static func pick(
+        seed: UInt64, bounds: TileBoundingBox, id: IslandID, taken: Set<String> = []
+    ) -> String {
         let centerX = (bounds.minX + bounds.maxX) / 2
         let centerY = (bounds.minY + bounds.maxY) / 2
         let hashValue = hash(seed: seed, centerX: centerX, centerY: centerY, id: id)
-        let index = Int(hashValue % UInt64(entries.count))
-        return entries[index]
+        let start = Int(hashValue % UInt64(entries.count))
+        let free = (0 ..< entries.count).lazy
+            .map { entries[(start + $0) % entries.count] }
+            .first { !taken.contains($0) }
+        return free ?? entries[start]
     }
 
     /// SplitMix-style mixer over the inputs. Integer-only, byte-stable
@@ -279,7 +286,8 @@ enum IslandDetector {
                     id: id,
                     stats: stats,
                     mapHeightForClimate: mapHeightForClimate,
-                    seed: seed
+                    seed: seed,
+                    taken: Set(islands.map(\.name))
                 ))
             }
         }
@@ -332,7 +340,8 @@ enum IslandDetector {
         id: IslandID,
         stats: ComponentStats,
         mapHeightForClimate: Int,
-        seed: UInt64
+        seed: UInt64,
+        taken: Set<String>
     ) -> Island {
         let climate: Climate = (stats.minY + stats.maxY) / 2 < mapHeightForClimate / 2
             ? .temperate : .tropical
@@ -347,7 +356,7 @@ enum IslandDetector {
             tileCount: stats.tileCount,
             bounds: bounds,
             climate: climate,
-            name: IslandNameTable.pick(seed: seed, bounds: bounds, id: id)
+            name: IslandNameTable.pick(seed: seed, bounds: bounds, id: id, taken: taken)
         )
     }
 

@@ -56,3 +56,11 @@ func scenarioNameTableCoversExactly64Entries() {
     // Every entry non-empty and unique.
     #expect(Set(IslandNameTable.entries).count == 64)
 }
+
+@Test("islands in one world never share a name")
+func islandsInOneWorldNeverShareAName() {
+    for seed: UInt64 in [0, 7, 11, 12, 42, 99] {
+        let names = World.newGame(layout: .archipelago, seed: seed, rivals: false).islands.map(\.name)
+        #expect(Set(names).count == names.count, "seed \(seed): \(names)")
+    }
+}
