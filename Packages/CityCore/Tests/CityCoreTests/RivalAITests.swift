@@ -9,35 +9,6 @@ private func normalWorld() -> World {
     World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
 }
 
-private extension World {
-    mutating func setRival(_ id: RivalID, _ change: (inout RivalTown) -> Void) {
-        guard let index = rivalIndex(id) else { return }
-        change(&rivals[index])
-    }
-
-    /// Replaces the rival town center's stock.
-    mutating func setRivalStock(_ id: RivalID, _ stock: [Good: Int]) {
-        guard let rival = rival(id) else { return }
-        var pile = Stockpile(capacity: World.stockpileCapacity(for: .townCenter) ?? 0)
-        for good in Good.allCases {
-            if let amount = stock[good] { pile.deposit(good, amount: amount) }
-        }
-        stockpiles[rival.townCenterID] = pile
-    }
-
-    /// Takes one turn for the rival and returns what it enqueued.
-    mutating func takeTurn(_ id: RivalID) -> [Command] {
-        let before = pendingCommands.count
-        var events: [WorldEvent] = []
-        runRivalTurn(id, events: &events)
-        return Array(pendingCommands[before...])
-    }
-}
-
-private func placedKind(_ command: Command?) -> BuildingKind? {
-    if case let .rivalPlace(_, kind, _) = command { kind } else { nil }
-}
-
 private func anchor(_ command: Command) -> TileCoordinate? {
     if case let .rivalPlace(_, _, anchor) = command { anchor } else { nil }
 }
@@ -183,6 +154,8 @@ func scenarioHouseCap() {
     for _ in 0 ..< 4 {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
+    // A port already stands, so the port rule (add-rival-trade) is quiet.
+    world.testAddBuilding(.port, owner: .rival(1))
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .sawmill)
     #expect(world.rival(1)?.ai.scriptIndex == 12)
@@ -241,7 +214,8 @@ func scenarioRivalBuildingsTouchARoad() throws {
     let centerFootprint = BuildingCatalog.spec(for: .townCenter).footprint
     let rivalBuildings = world.buildings.values.filter { $0.owner == .rival(1) && $0.kind != .road }
     #expect(rivalBuildings.count > 10)
-    for building in rivalBuildings where building.id != center.id {
+    // The port needs no road (add-rival-trade D1).
+    for building in rivalBuildings where building.id != center.id && building.kind != .port {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         #expect(
             world.sharesRoadNetwork(building.anchor, footprint, with: center.anchor, centerFootprint),

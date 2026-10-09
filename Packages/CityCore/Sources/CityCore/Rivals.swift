@@ -66,10 +66,25 @@ public struct RivalAIState: Hashable, Codable, Sendable {
     public internal(set) var scriptIndex: Int = 0
     /// Turns spent waiting on the current script step.
     public internal(set) var waitTurns: Int = 0
+    /// Turns spent waiting on the port rule (`add-rival-trade` D1).
+    public internal(set) var portWaitTurns: Int = 0
+    /// The tick before which the port rule stays suspended.
+    public internal(set) var portRetryTick: UInt64 = 0
 
-    public init(scriptIndex: Int = 0, waitTurns: Int = 0) {
+    public init(scriptIndex: Int = 0, waitTurns: Int = 0, portWaitTurns: Int = 0, portRetryTick: UInt64 = 0) {
         self.scriptIndex = scriptIndex
         self.waitTurns = waitTurns
+        self.portWaitTurns = portWaitTurns
+        self.portRetryTick = portRetryTick
+    }
+
+    /// Reads missing port counters (saves before rival trade) as 0.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scriptIndex = try container.decode(Int.self, forKey: .scriptIndex)
+        waitTurns = try container.decode(Int.self, forKey: .waitTurns)
+        portWaitTurns = try container.decodeIfPresent(Int.self, forKey: .portWaitTurns) ?? 0
+        portRetryTick = try container.decodeIfPresent(UInt64.self, forKey: .portRetryTick) ?? 0
     }
 }
 

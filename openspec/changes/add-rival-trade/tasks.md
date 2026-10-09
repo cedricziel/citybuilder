@@ -1,7 +1,7 @@
 ## 1. M1 — Prices, offers and the rival port
 
-- [ ] 1.1 Tests-first: translate the rival-trade scenarios "Rivals build a port", "Base prices" and "Rival offers" into failing `CityCoreTests`. Confirm red.
-- [ ] 1.2 Implement to green: `Good.basePrice`, sell and buy prices, `sellOffers` / `buyOffers`, the AI port rule with the spiral shore search, `RivalAIState.portWaitTurns` and `portRetryTick` with tolerant decoding (design D1–D3).
+- [x] 1.1 Tests-first: translate the rival-trade scenarios "Rivals build a port", "Base prices" and "Rival offers" into failing `CityCoreTests`. Confirm red.
+- [x] 1.2 Implement to green: `Good.basePrice`, sell and buy prices, `sellOffers` / `buyOffers`, the AI port rule with the spiral shore search, `RivalAIState.portWaitTurns` and `portRetryTick` with tolerant decoding (design D1–D3).
 
 ## 2. M2 — Trading
 
