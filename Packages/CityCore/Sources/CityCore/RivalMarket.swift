@@ -74,11 +74,14 @@ public enum RivalMarket {
 
 public extension World {
     /// Goods across the rival's goods buffers: its town center,
-    /// warehouses and port.
+    /// warehouses and port. Unlike an island summary it counts by owner,
+    /// which is what trades draw on. A sum, so building order doesn't
+    /// matter.
     func rivalStock(_ id: RivalID) -> [Good: Int] {
         var totals: [Good: Int] = [:]
-        for buffer in goodsBuffers(of: .rival(id)) {
-            for (good, amount) in stockpiles[buffer.id]?.contents ?? [:] {
+        let owner = Owner.rival(id)
+        for building in buildings.values where building.owner == owner && Self.logisticsBufferKinds.contains(building.kind) {
+            for (good, amount) in stockpiles[building.id]?.contents ?? [:] {
                 totals[good, default: 0] += amount
             }
         }
