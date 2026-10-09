@@ -2,18 +2,18 @@ import CityCore
 import SwiftUI
 
 /// The map-first HUD layer: status pill and menus on top, build rail or
-/// dock, tool strip, and the inspector callout. Split out of
-/// `CityRootView` to keep the main file under SwiftLint's 500-line
-/// ceiling. Spec: `platform-shells` / Adaptive HUD per idiom.
+/// dock, tool strip with the rejection banner, and the inspector callout.
+/// Split out of `CityRootView` to keep the main file under SwiftLint's
+/// 500-line ceiling. Spec: `platform-shells` / Adaptive HUD per idiom.
 extension CityRootView {
-    func hudLayer(dock: HUDDock) -> some View {
-        let railInset = dock == .leftRail ? HUDMetrics.railWidth + 8 : 0
+    func hudLayer(layout: HUDLayout) -> some View {
+        let railInset = layout.placement == .leftRail ? layout.railWidth + 8 : 0
         return ZStack {
             VStack(spacing: 8) {
-                topBar(dock: dock)
-                StocksTrayView(hud: session.hud)
-                PlacementRejectionBanner(hud: session.hud)
+                topBar(layout: layout)
+                StocksTrayView(hud: session.hud, layout: layout)
                 SessionBannerView(banner: session.banner)
+                    .padding(.top, 4)
                 Spacer(minLength: 0)
             }
             .padding(.leading, railInset)
@@ -23,19 +23,20 @@ extension CityRootView {
                     RouteAuthoringOverlay(session: session, authoring: authoring)
                 }
             } else {
-                buildControls(dock: dock, railInset: railInset)
+                buildControls(layout: layout, railInset: railInset)
             }
         }
     }
 
     @ViewBuilder
-    private func topBar(dock: HUDDock) -> some View {
-        let pill = StatusPillView(hud: session.hud, session: session) { session.isPaused.toggle() }
+    private func topBar(layout: HUDLayout) -> some View {
+        let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.isPaused.toggle() }
             .fixedSize()
-        if HUDMetrics.isPhone, dock == .bottomDock {
-            VStack(alignment: .trailing, spacing: 8) {
-                pill.frame(maxWidth: .infinity)
-                menuButtons
+        if layout.foldsMenus {
+            HStack(alignment: .top, spacing: 8) {
+                pill
+                Spacer(minLength: 0)
+                moreMenu
             }
         } else {
             HStack(alignment: .top, spacing: 8) {
@@ -46,32 +47,38 @@ extension CityRootView {
         }
     }
 
+    /// The rejection banner sits directly above the tool strip.
+    private func bottomStack(layout: HUDLayout) -> some View {
+        let hidesStrip = buildRail.openDrawer != nil || (layout.isPhone && session.pendingPlacement != nil)
+        return VStack(spacing: 8) {
+            PlacementRejectionBanner(hud: session.hud)
+            if !hidesStrip {
+                ToolStripView(session: session)
+            }
+        }
+    }
+
     @ViewBuilder
-    private func buildControls(dock: HUDDock, railInset: CGFloat) -> some View {
-        let hidesStrip = buildRail.openDrawer != nil || (HUDMetrics.isPhone && session.pendingPlacement != nil)
-        switch dock {
+    private func buildControls(layout: HUDLayout, railInset: CGFloat) -> some View {
+        switch layout.placement {
         case .leftRail:
             HStack(alignment: .center, spacing: 8) {
-                BuildRailView(session: session, rail: $buildRail, isVertical: true)
-                BuildDrawerView(session: session, rail: $buildRail, isPortrait: false)
+                BuildRailView(session: session, rail: $buildRail, layout: layout)
+                BuildDrawerView(session: session, rail: $buildRail, layout: layout)
                 Spacer(minLength: 0)
             }
             .frame(maxHeight: .infinity)
-            if !hidesStrip {
-                VStack {
-                    Spacer()
-                    ToolStripView(session: session)
-                }
-                .padding(.leading, railInset)
+            VStack {
+                Spacer()
+                bottomStack(layout: layout)
             }
+            .padding(.leading, railInset)
         case .bottomDock:
             VStack(spacing: 8) {
                 Spacer()
-                BuildDrawerView(session: session, rail: $buildRail, isPortrait: true)
-                if !hidesStrip {
-                    ToolStripView(session: session)
-                }
-                BuildRailView(session: session, rail: $buildRail, isVertical: false)
+                BuildDrawerView(session: session, rail: $buildRail, layout: layout)
+                bottomStack(layout: layout)
+                BuildRailView(session: session, rail: $buildRail, layout: layout)
             }
         }
     }
@@ -87,7 +94,8 @@ extension CityRootView {
                         session: session,
                         viewModel: inspector,
                         tile: tile,
-                        placement: HUDDock.placement(for: proxy.size)
+                        layout: HUDMetrics.layout(for: proxy.size),
+                        isExpanded: $inspectorExpanded
                     ) {
                         inspectorActionsButton
                     }

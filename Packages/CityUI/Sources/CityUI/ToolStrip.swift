@@ -70,7 +70,7 @@ struct ToolStripView: View {
             }
             .padding(.leading, 10)
             .padding([.trailing, .vertical], 6)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
         }
     }
 

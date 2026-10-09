@@ -16,6 +16,7 @@ public struct CityRootView: View {
     @State var routesPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
     @State var buildRail = BuildRailModel()
+    @State var inspectorExpanded = false
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
 
@@ -51,12 +52,17 @@ public struct CityRootView: View {
                 // touchesEnded / mouseUp handlers.
                 .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
                 .simultaneousGesture(zoomGesture)
-            touchPlacementHUD
             inspectorCallout
             GeometryReader { proxy in
-                hudLayer(dock: HUDDock.placement(for: proxy.size))
+                let layout = HUDMetrics.layout(for: proxy.size)
+                hudLayer(layout: layout)
+                    .padding(layout.margin)
             }
-            .padding(8)
+            touchPlacementHUD
+                .zIndex(1)
+        }
+        .onChange(of: isAnySheetPresented) { _, presented in
+            if presented { buildRail.close() }
         }
         .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
@@ -65,14 +71,19 @@ public struct CityRootView: View {
         .routesSheet(session: session, isPresented: $routesPresented)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
-                content()
+                content().hudSheetDetents()
             }
         }
         .sheet(
             isPresented: isPausedBinding,
             onDismiss: dismissPause,
-            content: pauseMenuContent
+            content: { pauseMenuContent().hudSheetDetents() }
         )
+    }
+
+    private var isAnySheetPresented: Bool {
+        settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
+            || session.isPaused
     }
 }
 

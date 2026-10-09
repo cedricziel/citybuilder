@@ -7,13 +7,17 @@ import SwiftUI
 struct BuildRailView: View {
     let session: GameSession
     @Binding var rail: BuildRailModel
-    let isVertical: Bool
+    let layout: HUDLayout
+
+    private var isVertical: Bool {
+        layout.placement == .leftRail
+    }
 
     var body: some View {
-        let layout = isVertical
+        let stack = isVertical
             ? AnyLayout(VStackLayout(spacing: 2))
             : AnyLayout(HStackLayout(spacing: 2))
-        layout {
+        stack {
             ForEach(BuildCategory.allCases, id: \.self) { category in
                 item(
                     label: category.label,
@@ -38,8 +42,8 @@ struct BuildRailView: View {
             ) { arm(.demolish) }
         }
         .padding(4)
-        .frame(width: isVertical ? HUDMetrics.railWidth : nil)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+        .frame(width: isVertical ? layout.railWidth : nil)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
     }
 
     private func arm(_ tool: BuildTool) {
@@ -68,7 +72,7 @@ struct BuildRailView: View {
         isOn: Bool,
         action: @escaping () -> Void
     ) -> some View {
-        let showsLabel = !(HUDMetrics.isPhone && isVertical)
+        let showsLabel = !isVertical || layout.railShowsLabels
         return Button(action: action) {
             VStack(spacing: 2) {
                 artView(art).frame(height: 30)
@@ -80,9 +84,9 @@ struct BuildRailView: View {
                 }
             }
             .frame(maxWidth: isVertical ? .infinity : nil)
-            .frame(width: isVertical ? nil : (HUDMetrics.isPhone ? 64 : 76), height: showsLabel ? 58 : 44)
+            .frame(width: isVertical ? nil : (layout.isPhone ? 64 : 76), height: showsLabel ? 58 : 44)
             .overlay(alignment: .topTrailing) {
-                if !ToolStripText.isTouch {
+                if !layout.isTouch {
                     Text(String(hotkey).uppercased())
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.tertiary)
@@ -128,13 +132,13 @@ struct BuildRailView: View {
 struct BuildDrawerView: View {
     let session: GameSession
     @Binding var rail: BuildRailModel
-    let isPortrait: Bool
+    let layout: HUDLayout
 
     var body: some View {
         if let category = rail.openDrawer {
             let kinds = BuildCategory.kinds(in: category, isHidden: session.isHidden)
-            let tileWidth: CGFloat = HUDMetrics.isPhone ? 78 : 92
-            let columnCount = HUDMetrics.isPhone || isPortrait ? 4 : 3
+            let tileWidth: CGFloat = layout.isPhone ? 78 : 92
+            let columnCount = layout.drawerColumns
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(category.label).font(.headline)
@@ -165,7 +169,7 @@ struct BuildDrawerView: View {
             }
             .padding(10)
             .fixedSize(horizontal: true, vertical: false)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
         }
     }
 
@@ -181,7 +185,7 @@ struct BuildDrawerView: View {
                     .resizable()
                     .interpolation(GoodIconLoader.pixelArtInterpolation)
                     .scaledToFit()
-                    .frame(height: 46)
+                    .frame(height: 46, alignment: .bottom)
                 HStack(spacing: 3) {
                     if locked {
                         Image(systemName: "lock.fill").font(.system(size: 9))
@@ -196,7 +200,7 @@ struct BuildDrawerView: View {
             .padding(.vertical, 6)
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
-            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(HUDMetrics.fill.opacity(0.6), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay {
                 if isArmed {
                     RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.accentColor, lineWidth: 1.5)
@@ -206,6 +210,7 @@ struct BuildDrawerView: View {
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+        .disabled(locked)
         .accessibilityLabel(locked ? "\(name), locked" : name)
         .accessibilityValue("$\(BuildingCatalog.spec(for: kind).cost)")
     }

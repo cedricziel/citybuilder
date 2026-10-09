@@ -5,7 +5,7 @@ import SwiftUI
 import UIKit
 #endif
 
-/// Sizes shared by the map-first HUD pieces.
+/// The running device's idiom, for `HUDLayout`.
 @MainActor
 enum HUDMetrics {
     static var isPhone: Bool {
@@ -16,15 +16,24 @@ enum HUDMetrics {
         #endif
     }
 
-    static var controlHeight: CGFloat {
-        ToolStripText.isTouch ? 50 : 40
-    }
-
-    static var railWidth: CGFloat {
-        isPhone ? 56 : 76
+    static func layout(for size: CGSize) -> HUDLayout {
+        HUDLayout.make(size: size, isPhone: isPhone, isTouch: ToolStripText.isTouch)
     }
 
     static let cornerRadius: CGFloat = 12
+    /// The handoff's `fill` token: rgba(120,120,128,.2) light, .36 dark.
+    static let fill = Color(red: 120 / 255, green: 120 / 255, blue: 128 / 255).opacity(0.28)
+}
+
+extension View {
+    /// Phone sheets open at 62% height. Spec: the HUD handoff, Sheets.
+    func hudSheetDetents() -> some View {
+        #if os(iOS)
+        presentationDetents(HUDMetrics.isPhone ? [.fraction(0.62), .large] : [.large])
+        #else
+        self
+        #endif
+    }
 }
 
 /// Date, money, population, island and speed in one capsule. Spec:
@@ -32,38 +41,46 @@ enum HUDMetrics {
 struct StatusPillView: View {
     let hud: HUDViewModel
     let session: GameSession
+    let layout: HUDLayout
     let onTogglePause: () -> Void
     private let labels = LayoutDecisions.decisions(for: .compact).labels
 
     var body: some View {
-        HStack(spacing: HUDMetrics.isPhone ? 12 : 18) {
-            if !HUDMetrics.isPhone, !hud.dateText.isEmpty {
-                Label(hud.dateText, systemImage: hud.timeOfDaySymbol)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .accessibilityLabel("Date: \(hud.dateText)")
+        HStack(spacing: layout.isPhone ? 12 : 18) {
+            if layout.showsDate, !hud.dateText.isEmpty {
+                Label {
+                    Text(hud.dateText).font(.system(size: 12, weight: .semibold))
+                } icon: {
+                    Image(systemName: hud.timeOfDaySymbol).font(.system(size: 14))
+                }
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .accessibilityLabel("Date: \(hud.dateText)")
             }
-            stat("Money", hud.formattedMoney)
-            stat("Pop.", "\(hud.population)")
+            stat("Money", Text(hud.formattedMoney).monospaced())
+            stat("Pop.", Text("\(hud.population)").monospaced())
             if let name = hud.currentIslandName {
                 islandButton(name)
             }
-            SpeedControlView(session: session, onTogglePause: onTogglePause)
+            SpeedControlView(session: session, layout: layout, onTogglePause: onTogglePause)
         }
         .padding(.leading, 16)
         .padding([.trailing, .vertical], 3)
-        .frame(height: HUDMetrics.controlHeight)
-        .background(.regularMaterial, in: Capsule())
+        .frame(height: layout.controlHeight)
+        .background(.thinMaterial, in: Capsule())
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
+    private static func caption(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(size: 10))
+            .tracking(0.3)
+            .foregroundStyle(.secondary)
+    }
+
+    private func stat(_ label: String, _ value: Text) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(label.uppercased())
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(size: 15, weight: .semibold, design: .monospaced))
+            Self.caption(label)
+            value.font(.system(size: 15, weight: .semibold))
         }
         .lineLimit(labels.statValueLineLimit)
         .minimumScaleFactor(labels.minimumScaleFactor)
@@ -73,15 +90,8 @@ struct StatusPillView: View {
     private func islandButton(_ name: String) -> some View {
         Button(action: hud.toggleStocksTray) {
             HStack(spacing: 6) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("ISLAND")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                    Text(name)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
-                }
-                .lineLimit(1)
+                stat("Island", Text(name))
+                    .foregroundStyle(.primary)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
@@ -89,7 +99,7 @@ struct StatusPillView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .contentShape(Rectangle())
+            .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, -8)
@@ -98,50 +108,61 @@ struct StatusPillView: View {
     }
 }
 
-/// Pause plus 1×, 2× and 3×; a single cycling button on a phone. Spec:
-/// `platform-shells` / Game speed.
+/// Pause plus 1×, 2× and 3×; a single cycling button on a phone. Choosing
+/// a speed resumes. Spec: `platform-shells` / Game speed.
 struct SpeedControlView: View {
     let session: GameSession
+    let layout: HUDLayout
     let onTogglePause: () -> Void
+
+    private var height: CGFloat {
+        layout.controlHeight - 6
+    }
+
+    private var buttonSize: CGFloat {
+        height - 6
+    }
 
     var body: some View {
         HStack(spacing: 2) {
             Button(action: onTogglePause) {
                 Image(systemName: pauseButtonSymbolName(isPaused: session.isPaused))
                     .font(.system(size: 15, weight: .semibold))
-                    .frame(minWidth: segmentHeight, minHeight: segmentHeight)
+                    .foregroundStyle(session.isPaused ? Color.white : Color.primary)
+                    .frame(minWidth: buttonSize, minHeight: buttonSize)
+                    .background(session.isPaused ? Color.accentColor : Color.clear, in: Capsule())
+                    .contentShape(Capsule())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(session.isPaused ? "Resume" : "Pause")
             .keyboardShortcut(.escape, modifiers: [])
             .keyboardShortcut(".", modifiers: .command)
-            if HUDMetrics.isPhone {
-                segment(session.speed.label, isOn: false) { session.speed = session.speed.next }
+            if layout.usesSpeedCycleButton {
+                segment(session.speed.label, isOn: false, action: session.stepSpeed)
                     .accessibilityLabel("Speed \(session.speed.label)")
             } else {
                 ForEach(GameSpeed.allCases, id: \.self) { speed in
-                    segment(speed.label, isOn: session.speed == speed) { session.speed = speed }
-                        .accessibilityLabel("Speed \(speed.label)")
+                    segment(speed.label, isOn: !session.isPaused && session.speed == speed) {
+                        session.choose(speed: speed)
+                    }
+                    .accessibilityLabel("Speed \(speed.label)")
+                    .accessibilityAddTraits(session.speed == speed ? .isSelected : [])
                 }
             }
         }
         .padding(3)
-        .frame(height: HUDMetrics.controlHeight - 6)
+        .frame(height: height)
         .background(.thinMaterial, in: Capsule())
-    }
-
-    private var segmentHeight: CGFloat {
-        HUDMetrics.controlHeight - 12
     }
 
     private func segment(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(.system(size: 13, weight: isOn ? .bold : .semibold, design: .monospaced))
+                .foregroundStyle(isOn || layout.usesSpeedCycleButton ? Color.primary : Color.secondary)
                 .padding(.horizontal, 8)
-                .frame(minWidth: segmentHeight, minHeight: segmentHeight)
-                .foregroundStyle(isOn ? Color.accentColor : Color.primary)
-                .background(isOn ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear), in: Capsule())
+                .frame(minWidth: buttonSize, minHeight: buttonSize)
+                .background(isOn ? HUDMetrics.fill : Color.clear, in: Capsule())
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -152,13 +173,14 @@ struct SpeedControlView: View {
 /// Status pill and stocks tray.
 struct StocksTrayView: View {
     let hud: HUDViewModel
+    let layout: HUDLayout
 
     var body: some View {
         let chips = hud.stocksTray
         if !chips.isEmpty {
             let columns = Array(
                 repeating: GridItem(.flexible(minimum: 52), spacing: 14, alignment: .leading),
-                count: min(HUDMetrics.isPhone ? 4 : 6, chips.count)
+                count: min(layout.isPhone ? 4 : 6, chips.count)
             )
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(hud.currentIslandName ?? "Island") stocks · \(chips.count) goods".uppercased())
@@ -174,7 +196,7 @@ struct StocksTrayView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .fixedSize()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Island stocks")
         }
