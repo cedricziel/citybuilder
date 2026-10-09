@@ -52,7 +52,53 @@ enum WorldEventJSON {
             return ["case": "bankruptcyResolved"]
         case .gameOver:
             return ["case": "gameOver"]
+        default:
+            return laterDictionary(for: event)
         }
+    }
+
+    /// Events added after the original wire format: construction materials,
+    /// the calendar and ages, culture signatures and rival trade.
+    private static func laterDictionary(for event: WorldEvent) -> [String: Any] { // swiftlint:disable:this cyclomatic_complexity
+        switch event {
+        case let .materialsDeducted(building, cost):
+            return ["case": "materialsDeducted", "entity": building.raw, "goods": goods(cost)]
+        case let .constructionWaitingForMaterials(building, missing):
+            return ["case": "constructionWaitingForMaterials", "entity": building.raw, "goods": goods(missing)]
+        case let .constructionStarted(building):
+            return ["case": "constructionStarted", "entity": building.raw]
+        case let .seasonChanged(season):
+            return ["case": "seasonChanged", "season": String(describing: season)]
+        case let .historyEvent(history):
+            return ["case": "historyEvent", "event": String(describing: history)]
+        case let .ageAdvanced(age):
+            return ["case": "ageAdvanced", "age": age.rawValue]
+        case .scenarioWon:
+            return ["case": "scenarioWon"]
+        case let .fuelRanOut(building, kind):
+            return ["case": "fuelRanOut", "entity": building.raw, "kind": kind.rawValue]
+        case let .monumentCompleted(building):
+            return ["case": "monumentCompleted", "entity": building.raw]
+        case let .commissionStarted(building):
+            return ["case": "commissionStarted", "entity": building.raw]
+        case let .commissionEnded(building):
+            return ["case": "commissionEnded", "entity": building.raw]
+        case let .caravanSold(building, sold, revenue):
+            return ["case": "caravanSold", "entity": building.raw, "goods": goods(sold), "revenue": revenue]
+        case let .rivalAgeAdvanced(rival, age):
+            return ["case": "rivalAgeAdvanced", "rival": rival, "age": age.rawValue]
+        case let .tradeCompleted(rival, good, quantity, total, direction):
+            return [
+                "case": "tradeCompleted", "rival": rival, "good": good.rawValue, "quantity": quantity,
+                "total": total, "direction": String(describing: direction)
+            ]
+        default:
+            return ["case": String(describing: event)]
+        }
+    }
+
+    private static func goods(_ amounts: [Good: Int]) -> [String: Int] {
+        Dictionary(uniqueKeysWithValues: amounts.map { ($0.key.rawValue, $0.value) })
     }
 
     private static func base(
