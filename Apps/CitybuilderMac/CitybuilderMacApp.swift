@@ -81,7 +81,7 @@ struct CitybuilderMacApp: App {
                         onSaveGame: { [saveStore, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
                         },
-                        onQuit: { NSApplication.shared.terminate(nil) }
+                        onQuit: { MacAppTerminator.terminate() }
                     )
                 },
                 titleSettings: { TitleSettingsSheet(audio: audio) }
@@ -89,6 +89,12 @@ struct CitybuilderMacApp: App {
             .frame(minWidth: 900, minHeight: 600)
             .onAppear {
                 fullscreenTracker.applyLaunchFullscreenIfNeeded()
+            }
+        }
+        .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Quit Citybuilder") { MacAppTerminator.terminate() }
+                    .keyboardShortcut("q")
             }
         }
         Settings {
