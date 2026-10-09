@@ -81,13 +81,13 @@ public struct InspectorViewModel: Sendable {
 public struct InspectorView: View {
     public let viewModel: InspectorViewModel
     let onCommission: () -> Void
-    let onPickExport: @MainActor (Good?) -> Void
+    let onPickExport: (Good?) -> Void
     let onStartRoute: (EntityID) -> Void
 
     public init(
         viewModel: InspectorViewModel,
         onCommission: @escaping () -> Void = {},
-        onPickExport: @escaping @MainActor (Good?) -> Void = { _ in },
+        onPickExport: @escaping (Good?) -> Void = { _ in },
         onStartRoute: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.viewModel = viewModel
