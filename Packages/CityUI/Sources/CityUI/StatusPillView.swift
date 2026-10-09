@@ -27,11 +27,13 @@ enum HUDMetrics {
 
 extension View {
     /// Phone sheets open at 62% height. Spec: the HUD handoff, Sheets.
+    /// Mac sheets size to their content, and a `List` has none, so they
+    /// get a floor.
     func hudSheetDetents() -> some View {
         #if os(iOS)
         presentationDetents(HUDMetrics.isPhone ? [.fraction(0.62), .large] : [.large])
         #else
-        self
+        frame(minWidth: 420, idealWidth: 480, minHeight: 360, idealHeight: 520)
         #endif
     }
 }
