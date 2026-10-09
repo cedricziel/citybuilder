@@ -51,7 +51,7 @@ repos:
         description: |
           Calls the Homebrew-installed swiftlint binary directly. Same
           rationale as swiftformat above.
-        entry: swiftlint --strict --quiet
+        entry: swiftlint --strict --quiet --force-exclude
         language: system
         types_or: [swift]
         require_serial: false
@@ -72,7 +72,7 @@ repos:
 
       - id: check-audio-manifest
         name: every bundled audio file has a manifest entry (spec audio-playback)
-        entry: swift ./scripts/check-audio-manifest.swift
+        entry: xcrun swift ./scripts/check-audio-manifest.swift
         language: system
         files: ^Resources/Audio/.*$
         pass_filenames: false
