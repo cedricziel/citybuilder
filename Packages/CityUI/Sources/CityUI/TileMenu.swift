@@ -57,7 +57,7 @@ public struct TileMenuViewModel: Equatable, Sendable {
         isHidden: (BuildingKind) -> Bool = { _ in false }
     ) {
         self.tile = tile
-        var items = BuildPaletteView.visibleKinds(isHidden: isHidden).map { kind in
+        var items = BuildPalette.visibleKinds(isHidden: isHidden).map { kind in
             Self.buildItem(kind, at: tile, world: world, money: money)
         }
         // The player can't demolish a rival's building (design D3).
