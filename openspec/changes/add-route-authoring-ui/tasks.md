@@ -12,8 +12,8 @@
 
 ## 3. M3 — Scene overlay and ships (CityRender2D, apps)
 
-- [ ] 3.1 Tests-first: translate the rendering-2_5d scenarios "Red leg in the scene" and "Rejected land tap flashes", plus the existing "Unselected route does not render polyline" and "Ship zRotation always zero", into failing `CityRender2DTests`. Confirm red.
-- [ ] 3.2 Implement to green: `IsoWorldScene.RouteOverlay`, the routes layer with legs, stop dots and flash, and the ships layer (sprites by facing, culling, move actions) (design D6).
+- [x] 3.1 Tests-first: translate the rendering-2_5d scenarios "Red leg in the scene" and "Rejected land tap flashes", plus the existing "Unselected route does not render polyline" and "Ship zRotation always zero", into failing `CityRender2DTests`. Confirm red.
+- [x] 3.2 Implement to green: `IsoWorldScene.RouteOverlay`, the routes layer with legs, stop dots and flash, and the ships layer (sprites by facing, culling, move actions) (design D6).
 - [ ] 3.3 Wire the route overlay provider through `SnapshotRendererRegistry`, `IsoWorldView` and both app shells.
 
 ## 4. M4 — SwiftUI views (CityUI)
