@@ -64,6 +64,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
         # Spec: `add-fullscreen-launch` — iPad locks fullscreen so the
         # system never offers Split View, Slide Over, or Stage Manager.
         # iPhone ignores this key (always fullscreen).
@@ -138,6 +139,8 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        LSApplicationCategoryType: public.app-category.simulation-games
+        ITSAppUsesNonExemptEncryption: false
         NSHumanReadableCopyright: "Copyright © 2026 Cedric Ziel. All rights reserved."
     entitlements:
       path: Apps/CitybuilderMac/Citybuilder.entitlements
