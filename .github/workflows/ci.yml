@@ -113,6 +113,10 @@ jobs:
 
       - name: DeterminismFixture (macOS) — produce post-tick JSON
         if: matrix.package == 'CityCore'
+        env:
+          # The fixture dumps Dictionary-backed state, whose iteration
+          # order is seeded per process unless hashing is pinned.
+          SWIFT_DETERMINISTIC_HASHING: "1"
         run: |
           mkdir -p determinism
           swift run --package-path Packages/CityCore DeterminismFixture > determinism/macos.json
@@ -227,6 +231,10 @@ jobs:
         run: swift test --package-path Packages/CityCore
 
       - name: DeterminismFixture (Linux) — produce post-tick JSON
+        env:
+          # The fixture dumps Dictionary-backed state, whose iteration
+          # order is seeded per process unless hashing is pinned.
+          SWIFT_DETERMINISTIC_HASHING: "1"
         run: |
           mkdir -p determinism
           swift run --package-path Packages/CityCore DeterminismFixture > determinism/linux.json
