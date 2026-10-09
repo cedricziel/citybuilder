@@ -5,7 +5,7 @@ Declares the game's content (goods, buildings, production recipes, cultures, tec
 ## ADDED Requirements
 
 ### Requirement: Content declared in packs
-The system SHALL declare goods, buildings (including production recipes, storage capacity and signature buildings), cultures (including resident names), techs and ages (including rival advancement thresholds) as typed items in YAML pack files. A manifest SHALL list the packs in load order. Each item MUST carry a `kind` (one of `Good`, `Building`, `Culture`, `Tech`, `Age`) and an `id`. The packs MUST be the single source of truth for these values, and they MUST NOT be hand-written in Swift outside the generated output.
+The system SHALL declare goods, buildings (including production recipes, storage capacity, build-menu category and signature buildings), cultures (including resident names), techs and ages (including rival advancement thresholds) as typed items in YAML pack files. A manifest SHALL list the packs in load order. Each item MUST carry a `kind` (one of `Good`, `Building`, `Culture`, `Tech`, `Age`) and an `id`. The packs MUST be the single source of truth for these values, and they MUST NOT be hand-written in Swift outside the generated output.
 
 #### Scenario: Every catalog entry comes from the packs
 - **WHEN** the generator reads the committed manifest and packs
