@@ -41,7 +41,7 @@ export function PlacementHUD({ valid = true, disabled = [], building, children, 
         {children ?? (
           <>
             <div className={`cb-placement__tile ${valid ? "" : "cb-placement__tile--invalid"}`} />
-            {building ? <BuildingSprite building={building} style={{ position: "absolute", left: -64, bottom: -16, opacity: 0.75 }} /> : null}
+            {building ? <BuildingSprite building={building} style={{ position: "absolute", left: -64, bottom: -48, opacity: 0.7 }} /> : null}
           </>
         )}
       </div>

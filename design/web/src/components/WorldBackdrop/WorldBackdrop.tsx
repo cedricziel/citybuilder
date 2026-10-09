@@ -32,6 +32,8 @@ export interface WorldBackdropProps {
   center?: { x: number; y: number };
   /** Seasonal grass and forest. Default `summer`. */
   season?: "summer" | "autumn" | "winter";
+  /** Where `center` lands vertically, as a fraction of the viewport height. Default 0.5. */
+  focusY?: number;
   /** Highlight one tile with the selection diamond. */
   selected?: { x: number; y: number };
   /** HUD and overlays drawn above the map. */
@@ -113,6 +115,7 @@ export function WorldBackdrop({
   zoom = 1.5,
   center,
   season = "summer",
+  focusY = 0.5,
   selected,
   children,
   style,
@@ -161,7 +164,7 @@ export function WorldBackdrop({
 
   return (
     <div className="cb-world" style={{ width, height, ...style }}>
-      <div className="cb-world__plane" style={{ transform: `scale(${zoom})` }}>
+      <div className="cb-world__plane" style={{ top: `${focusY * 100}%`, transform: `scale(${zoom})` }}>
         {tiles}
         {selection ? <div className="cb-world__selection" style={{ left: selection.left - HALF_W, top: selection.top - HALF_H }} /> : null}
         {sprites}

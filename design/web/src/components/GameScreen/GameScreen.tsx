@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { WorldBackdrop, type PlacedBuilding, type WorldBackdropProps } from "../WorldBackdrop/WorldBackdrop";
+import { WorldBackdrop, defaultTown, type PlacedBuilding, type WorldBackdropProps } from "../WorldBackdrop/WorldBackdrop";
 import { HUDFrame, type HUDFrameProps } from "../HUDFrame/HUDFrame";
 import { HUDButtonCluster } from "../HUDButton/HUDButton";
 import { BuildPalette, defaultPaletteTools, type PaletteTool } from "../BuildPalette/BuildPalette";
@@ -37,7 +37,7 @@ export interface GameScreenProps {
   inspector?: InspectorProps;
   /** Show the iOS first-run "Long-press a tile to build" hint. */
   coachmark?: boolean;
-  /** A pending touch placement: the ghost building and whether it is valid, drawn mid-screen with the nudge HUD. */
+  /** A pending touch placement: a ghost of `art` on an empty tile, centered low on screen under the nudge HUD. */
   placing?: { art: PlacedBuilding["art"]; valid?: boolean };
   /** Map props passed to `WorldBackdrop` (map, buildings, zoom, season, selected). */
   world?: Omit<WorldBackdropProps, "width" | "height" | "children">;
@@ -88,8 +88,18 @@ export function GameScreen({
   children,
 }: GameScreenProps) {
   const touch = device === "touch";
+  const focusY = 0.62;
+  const worldProps: Omit<WorldBackdropProps, "width" | "height" | "children"> =
+    touch && placing
+      ? {
+          ...world,
+          buildings: [...(world?.buildings ?? defaultTown), { art: placing.art, x: 4, y: 4, ghost: true }],
+          center: { x: 4.5, y: 4.5 },
+          focusY,
+        }
+      : { ...world };
   return (
-    <WorldBackdrop width={width} height={height} {...world}>
+    <WorldBackdrop width={width} height={height} {...worldProps}>
       <div className="cb-game">
         <div className="cb-game__top">
           <HUDFrame {...hud} />
@@ -114,7 +124,9 @@ export function GameScreen({
       </div>
       {touch && placing ? (
         <div className="cb-game__placing">
-          <PlacementHUD valid={placing.valid ?? true} building={placing.art} />
+          <PlacementHUD valid={placing.valid ?? true}>
+            <span />
+          </PlacementHUD>
         </div>
       ) : null}
       {touch && coachmark && !placing ? (

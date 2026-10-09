@@ -78,8 +78,8 @@ const glyphs: Record<IconName, ReactElement> = {
   ),
   "book.fill": (
     <g fill="currentColor">
-      <path d="M2.5 5.2c2.9-1.3 6-1.2 8.7.6v14.1c-2.7-1.6-5.8-1.8-8.7-.6Z" />
-      <path d="M21.5 5.2c-2.9-1.3-6-1.2-8.7.6v14.1c2.7-1.6 5.8-1.8 8.7-.6Z" />
+      <path d="M11.2 6.3C9 4.6 6 4.1 2.6 4.6c-.4.1-.6.4-.6.8v12.9c0 .5.4.8.9.7 3-.5 5.7 0 8.3 1.6Z" />
+      <path d="M12.8 6.3c2.2-1.7 5.2-2.2 8.6-1.7.4.1.6.4.6.8v12.9c0 .5-.4.8-.9.7-3-.5-5.7 0-8.3 1.6Z" />
     </g>
   ),
   "flag.checkered": (
@@ -133,14 +133,19 @@ const glyphs: Record<IconName, ReactElement> = {
   ),
   "laurel.leading": (
     <g>
-      <path d="M15 21c-5-1.5-8-5.5-8-10.5 0-2.5.8-4.8 2.2-6.7" {...stroke} strokeWidth={1.6} />
+      <path d="M16.5 21.5C10 19.5 6.3 14.6 6.3 9.2c0-2.6.9-5 2.4-6.9" {...stroke} strokeWidth={1.4} />
       <g fill="currentColor">
-        <ellipse cx="7.2" cy="15.6" rx="1.6" ry="3" transform="rotate(-50 7.2 15.6)" />
-        <ellipse cx="5.6" cy="11.4" rx="1.5" ry="2.8" transform="rotate(-80 5.6 11.4)" />
-        <ellipse cx="6.3" cy="7.2" rx="1.4" ry="2.6" transform="rotate(-115 6.3 7.2)" />
-        <ellipse cx="10.4" cy="17.6" rx="1.4" ry="2.6" transform="rotate(20 10.4 17.6)" />
-        <ellipse cx="9.4" cy="12.8" rx="1.3" ry="2.4" transform="rotate(10 9.4 12.8)" />
-        <ellipse cx="9.8" cy="8.4" rx="1.2" ry="2.2" transform="rotate(-10 9.8 8.4)" />
+        <ellipse cx="13.2" cy="19.6" rx="1.25" ry="2.5" transform="rotate(-35 13.2 19.6)" />
+        <ellipse cx="10.4" cy="17.6" rx="1.25" ry="2.5" transform="rotate(-55 10.4 17.6)" />
+        <ellipse cx="8.4" cy="14.8" rx="1.25" ry="2.5" transform="rotate(-70 8.4 14.8)" />
+        <ellipse cx="7.4" cy="11.6" rx="1.25" ry="2.5" transform="rotate(-85 7.4 11.6)" />
+        <ellipse cx="7.4" cy="8.4" rx="1.25" ry="2.5" transform="rotate(-100 7.4 8.4)" />
+        <ellipse cx="8.4" cy="5.4" rx="1.25" ry="2.5" transform="rotate(-120 8.4 5.4)" />
+        <ellipse cx="10.2" cy="3.0" rx="1.25" ry="2.5" transform="rotate(-140 10.2 3.0)" />
+        <ellipse cx="12.6" cy="16.2" rx="1.25" ry="2.5" transform="rotate(20 12.6 16.2)" />
+        <ellipse cx="10.8" cy="13.4" rx="1.25" ry="2.5" transform="rotate(10 10.8 13.4)" />
+        <ellipse cx="10.0" cy="10.2" rx="1.25" ry="2.5" transform="rotate(0 10.0 10.2)" />
+        <ellipse cx="10.3" cy="7.0" rx="1.25" ry="2.5" transform="rotate(-15 10.3 7.0)" />
       </g>
     </g>
   ),
