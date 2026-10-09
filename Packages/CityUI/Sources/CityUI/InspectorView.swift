@@ -154,7 +154,7 @@ public struct InspectorView: View {
                     .buttonStyle(.bordered)
                 }
                 if let picker = viewModel.exportPicker {
-                    Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {
+                    Picker("Export", selection: Binding(get: { picker.selected }, set: { onPickExport($0) })) {
                         ForEach(picker.options, id: \.self) { option in
                             Text(ExportPicker.title(of: option)).tag(option)
                         }
