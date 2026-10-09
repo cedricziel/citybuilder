@@ -20,9 +20,9 @@
 
 ## 3. M3 — Handoff refinements
 
-- [ ] 3.1 Tests-first: translate the new and changed scenarios (phone portrait menus, choosing a speed resumes, locked drawer tile, arming clears the selection, tool strip hint, callout key lines, flip and bounds) into failing `CityUITests`. Confirm red.
-- [ ] 3.2 Implement to green: `HUDLayout`; speed choice resumes; locked tiles and selection clearing; hint text; callout tier, residents fill, key lines and flip-and-clamp placement (design D1a, D3, D4, D6).
-- [ ] 3.3 Apply the handoff's view details: `.thinMaterial`, margins, pause accent fill, More menu, rejection banner above the tool strip, placement buttons above the HUD, drawer closes on sheets, phone sheet detents.
+- [x] 3.1 Tests-first: translate the new and changed scenarios (phone portrait menus, choosing a speed resumes, locked drawer tile, arming clears the selection, tool strip hint, callout key lines, flip and bounds) into failing `CityUITests`. Confirm red.
+- [x] 3.2 Implement to green: `HUDLayout`; speed choice resumes; locked tiles and selection clearing; hint text; callout tier, residents fill, key lines and flip-and-clamp placement (design D1a, D3, D4, D6).
+- [x] 3.3 Apply the handoff's view details: `.thinMaterial`, margins, pause accent fill, More menu, rejection banner above the tool strip, placement buttons above the HUD, drawer closes on sheets, phone sheet detents.
 
 ## 4. M4 — Verification
 
