@@ -2,7 +2,7 @@
 
 ### Requirement: Rivals build a port
 
-A rival with no port and at least 6 houses SHALL, before its script step, place a port at the first anchor in a square spiral around its town center anchor (out to radius 40) where the port can be placed for that rival, when its treasury is at least $300 and its island stock holds 8 wood and 6 planks. The port SHALL NOT need a road. The rule SHALL NOT advance the script. After 10 turns waiting on it, the rule SHALL be suspended for 100 turns.
+A rival with no port and at least 6 houses SHALL, before its script step, place a port at the first anchor in a square spiral around its town center anchor (out to radius 40) where the port can be placed for that rival, when its treasury is at least $300. A rival's port SHALL cost $250 and no materials. The port SHALL NOT need a road. The rule SHALL NOT advance the script. After 10 turns waiting on it, the rule SHALL be suspended for 100 turns.
 
 #### Scenario: Rival places its port
 
