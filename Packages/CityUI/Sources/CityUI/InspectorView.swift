@@ -6,6 +6,8 @@ import SwiftUI
 /// SwiftUI inspector renders.
 public struct InspectorViewModel: Sendable {
     public let bullets: [String]
+    /// The building's name, such as "House"; nil for an empty tile.
+    public let title: String?
     /// The gallery's commission button, nil for other buildings.
     public let commission: CommissionButton?
     /// The caravanserai's export picker, nil for other buildings.
@@ -19,6 +21,7 @@ public struct InspectorViewModel: Sendable {
 
     public init(
         bullets: [String],
+        title: String? = nil,
         commission: CommissionButton? = nil,
         exportPicker: ExportPicker? = nil,
         rival: RivalSummary? = nil,
@@ -26,6 +29,7 @@ public struct InspectorViewModel: Sendable {
         routeStartPort: EntityID? = nil
     ) {
         self.bullets = bullets
+        self.title = title
         self.commission = commission
         self.exportPicker = exportPicker
         self.rival = rival
@@ -67,6 +71,7 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + signatureLines(for: building, in: snapshot) + houseLines,
+            title: BuildTool.place(building.kind).displayName,
             // A rival's building is read-only.
             commission: rival == nil ? commissionButton(for: building, balance: snapshot.economy.balance) : nil,
             exportPicker: rival == nil ? exportPicker(for: building) : nil,
@@ -152,6 +157,14 @@ public struct InspectorView: View {
 }
 
 extension InspectorViewModel {
+    private static let keyLinePrefixes = ["State:", "Road:", "Tier:", "Residents:", "Needs:"]
+
+    /// The lines the callout shows before Details. Spec: `platform-shells`
+    /// / Inspector callout.
+    public var keyLines: [String] {
+        bullets.filter { line in Self.keyLinePrefixes.contains { line.hasPrefix($0) } }
+    }
+
     /// Up to three named residents with the house's wish. Spec:
     /// `platform-shells` / Inspector introduces residents.
     static func residentLines(house: EntityID, population: HousePopulation, culture: Culture) -> [String] {
