@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./schema/index.schema.json
+# Load order is case order: packs top to bottom, then items top to bottom.
+# Good, Culture, Tech and Age order feed the simulation — reorder only on purpose.
+schemaVersion: 1
+packs:
+  - core
+  - cultures/northern-european
+  - cultures/mediterranean
+  - cultures/east-asian
+  - cultures/middle-eastern
+  - ages

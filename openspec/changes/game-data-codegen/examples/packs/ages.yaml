@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Spec: historical-ages, research (era techs), age-signatures
+defaults:
+  hall: &hall
+    footprint: [3, 3]
+    buildTicks: 40
+
+items:
+  # --- Ages (order is the age order) ----------------------------------
+  - kind: Age
+    id: antiquity
+    startYear: -499          # astronomical year: −499 is 500 BC
+    blurb: Stone towns, hand mills and the first libraries.
+    signature: monument
+    rivalResidents: 0
+  - { kind: Age, id: medieval,    startYear: 1200, blurb: "Timber and tile, windmills and guilds.",   signature: guild-hall, rivalResidents: 24 }
+  - { kind: Age, id: renaissance, startYear: 1450, blurb: "Printing, trade and tall stuccoed fronts.", signature: gallery, rivalResidents: 60 }
+  - { kind: Age, id: industrial,  startYear: 1780, blurb: "Steam, brick and smoking chimneys.",        signature: steam-engine, rivalResidents: 108 }
+  - { kind: Age, id: modern,      startYear: 1910, blurb: "Electricity and concrete.",                 signature: power-plant, rivalResidents: 150 }
+
+  # --- Era techs: each opens the next age -----------------------------
+  - kind: Tech
+    id: feudal-order
+    name: Feudal Order
+    cost: 150
+    age: antiquity
+    era: medieval
+    eraGate: { tier: citizens, residents: 20 }
+  - kind: Tech
+    id: printing-press
+    name: Printing Press
+    cost: 250
+    age: medieval
+    era: renaissance
+    prerequisites: [feudal-order]
+    eraGate: { tier: merchants, residents: 20 }
+
+  # --- Age signature buildings ----------------------------------------
+  # One project stage per cycle; see World.monumentStages.
+  - kind: Building
+    id: monument
+    <<: *hall
+    cost: 300
+    buildTicks: 60
+    materials: { wood: 6, planks: 6 }
+    storage: 16
+    effect: code                     # advances project stages
+    recipe: { inputs: { wood: 2, planks: 2, bread: 1 }, cycleTicks: 60 }
+
+  - kind: Building
+    id: guild-hall
+    <<: *hall
+    effect: code
+    cost: 250
+    upkeep: 3
+    materials: { wood: 4, planks: 6 }
+    unlockedBy: feudal-order
