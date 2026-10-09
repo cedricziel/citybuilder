@@ -17,16 +17,15 @@ extension CityRootView {
         #endif
     }
 
-    /// "Actions" next to the inspector: the same menu as a long-press, for
+    /// "Actions" in the inspector callout: the same menu as a long-press, for
     /// players who never find the gesture.
     @ViewBuilder
     var inspectorActionsButton: some View {
         #if os(iOS)
         if let tile = session.selectedTile {
-            Button("Actions", systemImage: "ellipsis.circle") {
+            Button("Actions") {
                 session.tileMenuRequest = TileMenuRequest(tile: tile)
             }
-            .buttonStyle(.bordered)
         }
         #else
         EmptyView()

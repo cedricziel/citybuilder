@@ -5,25 +5,16 @@ import SwiftUI
 /// file stays under SwiftLint's 500-line ceiling. Spec:
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
-    /// Round HUD buttons in a grid so the stats panel keeps its width on
-    /// a phone: pause and settings on top, research and goals below, then
-    /// standings when the world has rivals and routes once the player
-    /// has a port, ship or route.
-    var hudButtons: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                pauseButton
-                if settingsContent != nil {
-                    settingsButton
-                }
-            }
-            HStack(spacing: 6) {
-                researchButton
-                goalsButton
-            }
-            HStack(spacing: 6) {
-                standingsButton
-                routesButton
+    /// The menu buttons in one row at the top right: goals, research,
+    /// standings and routes when they apply, then settings.
+    var menuButtons: some View {
+        HStack(spacing: 6) {
+            goalsButton
+            researchButton
+            standingsButton
+            routesButton
+            if settingsContent != nil {
+                settingsButton
             }
         }
     }
@@ -52,23 +43,6 @@ extension CityRootView {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Settings")
-    }
-
-    /// Pause button shown in the HUD top-right cluster. Glyph swaps
-    /// with `session.isPaused`; ESC and Cmd-. mirror the tap.
-    var pauseButton: some View {
-        Button {
-            session.isPaused.toggle()
-        } label: {
-            Image(systemName: pauseButtonSymbolName(isPaused: session.isPaused))
-                .imageScale(.large)
-                .padding(8)
-                .background(.thinMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(session.isPaused ? "Resume" : "Pause")
-        .keyboardShortcut(.escape, modifiers: [])
-        .keyboardShortcut(".", modifiers: .command)
     }
 
     @ViewBuilder

@@ -15,6 +15,7 @@ public struct CityRootView: View {
     @State var standingsPresented: Bool = false
     @State var routesPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
+    @State var buildRail = BuildRailModel()
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
 
@@ -51,26 +52,11 @@ public struct CityRootView: View {
                 .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
                 .simultaneousGesture(zoomGesture)
             touchPlacementHUD
-            VStack {
-                HStack(alignment: .top) {
-                    HUDFrameView(viewModel: session.hud)
-                    hudButtons
-                }
-                if session.routeAuthoring == nil {
-                    BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isHidden) { tool in
-                        session.selectTool(tool)
-                    }
-                }
-                PlacementRejectionBanner(hud: session.hud)
-                SessionBannerView(banner: session.banner)
-                if let authoring = session.routeAuthoring {
-                    Spacer()
-                    RouteAuthoringOverlay(session: session, authoring: authoring)
-                } else {
-                    buildControls
-                }
+            inspectorCallout
+            GeometryReader { proxy in
+                hudLayer(dock: HUDDock.placement(for: proxy.size))
             }
-            .padding()
+            .padding(8)
         }
         .touchPlacementDialogs(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
