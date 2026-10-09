@@ -48,7 +48,7 @@ test:
 	$(SWIFT) test --package-path Packages/CityRender3D --enable-code-coverage
 	$(SWIFT) test --package-path Packages/CityAudio --enable-code-coverage
 
-test-coverage: test
+test-coverage:
 	./scripts/check-coverage.sh
 
 test-scenarios:
