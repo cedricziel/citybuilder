@@ -18,7 +18,13 @@
 - [x] 2.6 Re-lay out `CityRootView` around the new pieces; delete `HUDFrameView` and `BuildPaletteView`.
 - [x] 2.7 Refactor under a green bar.
 
-## 3. M3 — Verification
+## 3. M3 — Handoff refinements
 
-- [ ] 3.1 Runtime check (portrait done on iPhone 17 Pro Max: Town drawer, house armed with tool strip "House · $50", "Tap or drag to place", planks 5/4 before any tap; stocks tray open and closed; town center callout under the building with Details, Actions and Demolish. Landscape not driven: no Simulator.app to rotate)  on the iOS simulator in landscape and portrait: open each drawer, arm a house and read the tool strip chips, place it, select it and read the callout, Demolish from the callout, open and close the stocks tray, switch speeds.
-- [ ] 3.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate redesign-hud-map-first --strict` and the iOS simulator `xcodebuild`.
+- [ ] 3.1 Tests-first: translate the new and changed scenarios (phone portrait menus, choosing a speed resumes, locked drawer tile, arming clears the selection, tool strip hint, callout key lines, flip and bounds) into failing `CityUITests`. Confirm red.
+- [ ] 3.2 Implement to green: `HUDLayout`; speed choice resumes; locked tiles and selection clearing; hint text; callout tier, residents fill, key lines and flip-and-clamp placement (design D1a, D3, D4, D6).
+- [ ] 3.3 Apply the handoff's view details: `.thinMaterial`, margins, pause accent fill, More menu, rejection banner above the tool strip, placement buttons above the HUD, drawer closes on sheets, phone sheet detents.
+
+## 4. M4 — Verification
+
+- [ ] 4.1 Runtime check (portrait done on iPhone 17 Pro Max: Town drawer, house armed with tool strip "House · $50", "Tap or drag to place", planks 5/4 before any tap; stocks tray open and closed; town center callout under the building with Details, Actions and Demolish. Landscape not driven: no Simulator.app to rotate)  on the iOS simulator in landscape and portrait: open each drawer, arm a house and read the tool strip chips, place it, select it and read the callout, Demolish from the callout, open and close the stocks tray, switch speeds.
+- [ ] 4.2 Run lint, format, `make test`, `make test-scenarios`, `openspec validate redesign-hud-map-first --strict` and the iOS simulator `xcodebuild`.
