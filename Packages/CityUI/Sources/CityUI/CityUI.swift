@@ -170,6 +170,9 @@ public final class GameSession {
             selectedTool = .inspect
         } else {
             selectedTool = tool
+            if tool != .inspect {
+                selectedTile = nil
+            }
         }
     }
 

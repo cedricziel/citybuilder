@@ -45,3 +45,24 @@ func scenarioRailHotkeys() {
     #expect(BuildRailModel.roadHotkey == "r")
     #expect(BuildRailModel.demolishHotkey == "x")
 }
+
+@MainActor
+@Test("scenario: locked drawer tile does nothing")
+func scenarioLockedDrawerTileDoesNothing() {
+    let session = GameSession()
+    #expect(session.isLocked(.mine))
+    var rail = BuildRailModel()
+    rail.toggle(.gather)
+    rail.arm(.mine, in: session)
+    #expect(session.selectedTool == .inspect)
+    #expect(rail.openDrawer == .gather)
+}
+
+@MainActor
+@Test("scenario: arming clears the selection")
+func scenarioArmingClearsTheSelection() {
+    let session = GameSession()
+    session.selectedTile = TileCoordinate(x: 4, y: 4)
+    session.selectTool(.place(.road))
+    #expect(session.selectedTile == nil)
+}
