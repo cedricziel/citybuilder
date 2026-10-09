@@ -1,0 +1,44 @@
+.cb-inset-section {
+  margin: 0 16px 24px;
+}
+
+.cb-inset-section__header {
+  padding: 0 16px 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--cb-secondary-label);
+}
+
+.cb-inset-list {
+  border-radius: var(--cb-radius-md);
+  background: var(--cb-bg-elevated);
+  overflow: hidden;
+}
+
+.cb-list-row {
+  position: relative;
+  min-height: 44px;
+  padding: 11px 16px;
+  font-size: 17px;
+  line-height: 22px;
+}
+
+.cb-list-row + .cb-list-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 0.5px;
+  background: var(--cb-separator);
+}
+
+.cb-list-row--button {
+  color: var(--cb-accent);
+  cursor: pointer;
+}
+
+.cb-list-row--disabled {
+  color: var(--cb-secondary-label);
+  cursor: default;
+}

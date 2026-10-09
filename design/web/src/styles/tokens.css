@@ -1,0 +1,68 @@
+/* Citybuilder runs on stock SwiftUI: system colors, SF type, thin material
+   panels over the world, plus one parchment card for announcements. These
+   tokens mirror those system values for light and dark appearance. */
+.cb-root,
+.cb-theme-light {
+  --cb-font: -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", Arial, sans-serif;
+  --cb-font-mono: ui-monospace, Menlo, Monaco, "Courier New", monospace;
+  --cb-font-serif: ui-serif, Georgia, "Times New Roman", serif;
+
+  --cb-accent: #007aff;
+  --cb-on-accent: #ffffff;
+  --cb-red: #ff3b30;
+  --cb-orange: #ff9500;
+  --cb-green: #34c759;
+
+  --cb-label: #000000;
+  --cb-secondary-label: rgba(60, 60, 67, 0.6);
+  --cb-tertiary-label: rgba(60, 60, 67, 0.3);
+  --cb-separator: rgba(60, 60, 67, 0.29);
+  --cb-fill: rgba(120, 120, 128, 0.2);
+  --cb-fill-secondary: rgba(120, 120, 128, 0.12);
+
+  --cb-bg: #ffffff;
+  --cb-bg-grouped: #f2f2f7;
+  --cb-bg-elevated: #ffffff;
+  --cb-material: rgba(250, 250, 252, 0.72);
+  --cb-material-border: rgba(255, 255, 255, 0.5);
+  --cb-scrim: rgba(0, 0, 0, 0.2);
+  --cb-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+
+  --cb-parchment: #edddb3;
+  --cb-parchment-ink: #3d2914;
+  --cb-parchment-edge: #6b4a29;
+  --cb-world: #4f7d3a;
+
+  --cb-radius-xs: 6px;
+  --cb-radius-sm: 8px;
+  --cb-radius-md: 10px;
+  --cb-radius-lg: 12px;
+  --cb-radius-sheet: 14px;
+  --cb-radius-pill: 999px;
+
+  color-scheme: light;
+}
+
+.cb-theme-dark {
+  --cb-accent: #0a84ff;
+  --cb-red: #ff453a;
+  --cb-orange: #ff9f0a;
+  --cb-green: #30d158;
+
+  --cb-label: #ffffff;
+  --cb-secondary-label: rgba(235, 235, 245, 0.6);
+  --cb-tertiary-label: rgba(235, 235, 245, 0.3);
+  --cb-separator: rgba(84, 84, 88, 0.65);
+  --cb-fill: rgba(120, 120, 128, 0.36);
+  --cb-fill-secondary: rgba(120, 120, 128, 0.24);
+
+  --cb-bg: #000000;
+  --cb-bg-grouped: #000000;
+  --cb-bg-elevated: #1c1c1e;
+  --cb-material: rgba(37, 37, 40, 0.72);
+  --cb-material-border: rgba(255, 255, 255, 0.08);
+  --cb-scrim: rgba(0, 0, 0, 0.45);
+  --cb-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}

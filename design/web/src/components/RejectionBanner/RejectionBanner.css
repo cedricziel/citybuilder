@@ -1,0 +1,10 @@
+.cb-rejection {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: var(--cb-radius-pill);
+  background: color-mix(in srgb, var(--cb-red) 85%, transparent);
+  color: #fff;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}

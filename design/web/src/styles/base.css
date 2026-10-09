@@ -1,0 +1,47 @@
+.cb-root {
+  font-family: var(--cb-font);
+  font-size: 17px;
+  line-height: 1.29;
+  color: var(--cb-label);
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+.cb-root *,
+.cb-root *::before,
+.cb-root *::after {
+  box-sizing: inherit;
+}
+
+.cb-root--fill {
+  min-height: 100%;
+  background: var(--cb-bg);
+}
+
+.cb-root--grouped {
+  background: var(--cb-bg-grouped);
+}
+
+/* The iOS type ramp at the default Dynamic Type size. */
+.cb-large-title { font-size: 34px; line-height: 41px; font-weight: 400; }
+.cb-title { font-size: 28px; line-height: 34px; font-weight: 400; }
+.cb-title2 { font-size: 22px; line-height: 28px; font-weight: 400; }
+.cb-title3 { font-size: 20px; line-height: 25px; font-weight: 400; }
+.cb-headline { font-size: 17px; line-height: 22px; font-weight: 600; }
+.cb-body { font-size: 17px; line-height: 22px; font-weight: 400; }
+.cb-callout { font-size: 16px; line-height: 21px; font-weight: 400; }
+.cb-subheadline { font-size: 15px; line-height: 20px; font-weight: 400; }
+.cb-footnote { font-size: 13px; line-height: 18px; font-weight: 400; }
+.cb-caption { font-size: 12px; line-height: 16px; font-weight: 400; }
+.cb-caption2 { font-size: 11px; line-height: 13px; font-weight: 400; }
+
+.cb-mono { font-family: var(--cb-font-mono); }
+.cb-serif { font-family: var(--cb-font-serif); }
+.cb-semibold { font-weight: 600; }
+.cb-bold { font-weight: 700; }
+.cb-secondary { color: var(--cb-secondary-label); }
+
+.cb-pixel {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

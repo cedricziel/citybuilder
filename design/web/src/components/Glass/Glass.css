@@ -1,0 +1,15 @@
+.cb-glass {
+  background: var(--cb-material);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 0 0 0.5px var(--cb-material-border), 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--cb-label);
+}
+
+.cb-glass--capsule {
+  border-radius: var(--cb-radius-pill);
+}
+
+.cb-glass--circle {
+  border-radius: 50%;
+}

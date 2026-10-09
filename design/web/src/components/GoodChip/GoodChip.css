@@ -1,0 +1,27 @@
+.cb-good-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  white-space: nowrap;
+}
+
+.cb-good-chip__count {
+  font-family: var(--cb-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+.cb-good-chip--cost .cb-good-chip__count {
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.cb-good-chip--queueable .cb-good-chip__count {
+  color: var(--cb-orange);
+}
+
+.cb-good-chip--blocked .cb-good-chip__count {
+  color: var(--cb-red);
+}

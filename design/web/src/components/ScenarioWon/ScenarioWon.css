@@ -1,0 +1,18 @@
+.cb-won {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 32px 12px;
+  text-align: center;
+}
+
+.cb-won__title {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+}
+
+.cb-won__text {
+  color: var(--cb-secondary-label);
+}

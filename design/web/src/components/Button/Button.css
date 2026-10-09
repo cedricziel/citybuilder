@@ -1,0 +1,74 @@
+.cb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  margin: 0;
+  font-family: var(--cb-font);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: var(--cb-radius-md);
+  padding: 7px 14px;
+  background: none;
+  color: var(--cb-accent);
+}
+
+.cb-button--small {
+  font-size: 12px;
+  line-height: 16px;
+  padding: 4px 10px;
+  border-radius: var(--cb-radius-sm);
+}
+
+.cb-button--large {
+  font-size: 17px;
+  padding: 14px 20px;
+  border-radius: var(--cb-radius-lg);
+}
+
+.cb-button--full {
+  width: 100%;
+}
+
+.cb-button--borderedProminent {
+  background: var(--cb-accent);
+  color: var(--cb-on-accent);
+  font-weight: 600;
+}
+
+.cb-button--bordered {
+  background: var(--cb-fill-secondary);
+  color: var(--cb-accent);
+}
+
+.cb-button--borderless {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.cb-button--plain {
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--cb-label);
+}
+
+.cb-button--destructive {
+  color: var(--cb-red);
+}
+
+.cb-button--borderedProminent.cb-button--destructive {
+  background: var(--cb-red);
+  color: #fff;
+}
+
+.cb-button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.cb-button:not(:disabled):active {
+  opacity: 0.6;
+}
