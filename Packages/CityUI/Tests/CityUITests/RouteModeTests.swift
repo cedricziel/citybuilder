@@ -231,8 +231,10 @@ func scenarioCommitMessageForALonePort() throws {
     let fixture = try RouteFixture()
     fixture.session.beginRouteAuthoring(from: fixture.playerPort)
     #expect(fixture.authoring?.message == "Tap ports and water to add stops.")
+    #expect(fixture.authoring?.isWarning == false)
     fixture.session.commitRouteAuthoring()
     #expect(fixture.authoring?.message == "A route needs at least two ports.")
+    #expect(fixture.authoring?.isWarning == true)
     #expect(fixture.session.world.pendingCommands.isEmpty)
 }
 
@@ -338,9 +340,10 @@ func scenarioDraftAddsAndRemovesActions() {
     draft.add(.unload, good: .wood, quantity: 10)
     draft.remove(at: 0)
     #expect(draft.actions == [.unloadUpTo(good: .wood, qty: 10)])
-    #expect(ManifestDraft.quantities.first == 5)
-    #expect(ManifestDraft.quantities.last == 100)
-    #expect(ManifestDraft.quantities.contains(ManifestDraft.defaultQuantity))
+    #expect(ManifestDraft.quantityRange == 5 ... 100)
+    #expect(ManifestDraft.quantityStep == 5)
+    #expect(ManifestDraft.quantityRange.contains(ManifestDraft.defaultQuantity))
+    #expect(ManifestDraft.defaultQuantity.isMultiple(of: ManifestDraft.quantityStep))
 }
 
 @MainActor

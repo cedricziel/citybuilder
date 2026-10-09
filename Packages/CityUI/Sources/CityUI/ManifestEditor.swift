@@ -7,7 +7,8 @@ public struct ManifestDraft: Equatable, Sendable {
     public private(set) var actions: [ManifestAction]
 
     /// 5 to 100 in steps of 5; 100 is a ship's default capacity.
-    public static let quantities = Array(stride(from: 5, through: ShipClass.default.capacity, by: 5))
+    public static let quantityRange = 5 ... ShipClass.default.capacity
+    public static let quantityStep = 5
     public static let defaultQuantity = 20
 
     public init(actions: [ManifestAction]) {

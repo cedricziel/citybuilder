@@ -82,15 +82,18 @@ public struct InspectorView: View {
     public let viewModel: InspectorViewModel
     let onCommission: () -> Void
     let onPickExport: (Good?) -> Void
+    let onStartRoute: (EntityID) -> Void
 
     public init(
         viewModel: InspectorViewModel,
         onCommission: @escaping () -> Void = {},
-        onPickExport: @escaping (Good?) -> Void = { _ in }
+        onPickExport: @escaping (Good?) -> Void = { _ in },
+        onStartRoute: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.viewModel = viewModel
         self.onCommission = onCommission
         self.onPickExport = onPickExport
+        self.onStartRoute = onStartRoute
     }
 
     public var body: some View {
@@ -115,6 +118,13 @@ public struct InspectorView: View {
                 }
                 if let market = viewModel.market {
                     marketSection(market)
+                }
+                if let port = viewModel.routeStartPort {
+                    Button("Route from here", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
+                        onStartRoute(port)
+                    }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
                 }
                 if let picker = viewModel.exportPicker {
                     Picker("Export", selection: Binding(get: { picker.selected }, set: onPickExport)) {

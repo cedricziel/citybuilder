@@ -13,6 +13,7 @@ public struct CityRootView: View {
     @State var researchPresented: Bool = false
     @State var goalsPresented: Bool = false
     @State var standingsPresented: Bool = false
+    @State var routesPresented: Bool = false
     @State var pauseMenuViewModel: PauseMenuViewModel?
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
@@ -55,26 +56,18 @@ public struct CityRootView: View {
                     HUDFrameView(viewModel: session.hud)
                     hudButtons
                 }
-                BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isHidden) { tool in
-                    session.selectTool(tool)
+                if session.routeAuthoring == nil {
+                    BuildPaletteView(armed: session.selectedTool, isLocked: session.isLocked, isHidden: session.isHidden) { tool in
+                        session.selectTool(tool)
+                    }
                 }
                 PlacementRejectionBanner(hud: session.hud)
                 SessionBannerView(banner: session.banner)
-                if session.selectedTool != .inspect {
-                    Text(armedCaption)
-                        .font(.caption2)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.thinMaterial, in: Capsule())
-                }
-                Spacer()
-                let inspector = session.inspector
-                if session.selectedTool == .inspect, !inspector.bullets.isEmpty {
-                    HStack {
-                        InspectorView(viewModel: inspector, onCommission: session.commissionArt, onPickExport: session.pickExport)
-                        inspectorActionsButton
-                        Spacer()
-                    }
+                if let authoring = session.routeAuthoring {
+                    Spacer()
+                    RouteAuthoringOverlay(session: session, authoring: authoring)
+                } else {
+                    buildControls
                 }
             }
             .padding()
@@ -83,6 +76,7 @@ public struct CityRootView: View {
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
+        .routesSheet(session: session, isPresented: $routesPresented)
         .sheet(isPresented: $settingsPresented) {
             if let content = settingsContent {
                 content()
@@ -93,19 +87,6 @@ public struct CityRootView: View {
             onDismiss: dismissPause,
             content: pauseMenuContent
         )
-    }
-
-    /// Caption under the build palette while a tool is armed.
-    private var armedCaption: String {
-        let name = session.selectedTool.displayName
-        let cost = session.armedToolCost
-        if cost > 0 {
-            return "Tap or drag to place \(name.lowercased()) — $\(cost)"
-        }
-        if session.selectedTool == .demolish {
-            return "Tap or drag to demolish"
-        }
-        return "Tap a tile to \(name.lowercased())"
     }
 }
 

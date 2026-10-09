@@ -18,9 +18,9 @@
 
 ## 4. M4 — SwiftUI views (CityUI)
 
-- [ ] 4.1 Add the HUD Routes button and the route list sheet (medium detent, rows with Show, Pause/Resume, Assign ship, Delete, New Route).
-- [ ] 4.2 Add the route-mode overlay (message, stop chips, Undo, Cancel, Commit) and hide the palette, caption and inspector while it is on.
-- [ ] 4.3 Add the manifest editor sheet opened from a port chip, and Route from here on the port inspector.
+- [x] 4.1 Add the HUD Routes button and the route list sheet (medium detent, rows with Show, Pause/Resume, Assign ship, Delete, New Route).
+- [x] 4.2 Add the route-mode overlay (message, stop chips, Undo, Cancel, Commit) and hide the palette, caption and inspector while it is on.
+- [x] 4.3 Add the manifest editor sheet opened from a port chip, and Route from here on the port inspector.
 
 ## 5. M5 — Verification
 

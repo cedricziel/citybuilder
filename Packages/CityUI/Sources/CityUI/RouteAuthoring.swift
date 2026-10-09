@@ -164,6 +164,11 @@ public final class RouteAuthoringViewModel {
         recomputeRedSegments()
     }
 
+    /// True when `message` explains a rejection rather than the hint.
+    public var isWarning: Bool {
+        commitRejectionReason != nil || lastTapWasLand
+    }
+
     /// The overlay's one-line message. Spec: `platform-shells` / Route
     /// mode.
     public var message: String {
