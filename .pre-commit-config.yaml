@@ -70,6 +70,13 @@ repos:
         files: ^CLI/citybuilder-cli/.*\.swift$
         pass_filenames: false
 
+      - id: check-ios-icon-opaque
+        name: iOS app icon has no alpha channel (App Store Connect 90717)
+        entry: ./scripts/check-ios-icon-opaque.sh
+        language: system
+        files: ^Apps/CitybuilderiOS/Assets\.xcassets/AppIcon\.appiconset/.*$
+        pass_filenames: false
+
       - id: check-audio-manifest
         name: every bundled audio file has a manifest entry (spec audio-playback)
         entry: xcrun swift ./scripts/check-audio-manifest.swift
