@@ -7,6 +7,7 @@ import Foundation
 public protocol CloudKitClient: Sendable {
     func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord
     func fetchLatest(gameID: UUID) async throws -> CloudRecord?
+    /// Every save record in the user's private database, sorted by game ID.
     func listGames() async throws -> [CloudRecordSummary]
     func isAccountAvailable() async -> Bool
 }
@@ -34,6 +35,12 @@ public struct CloudRecordSummary: Hashable, Sendable {
         self.gameID = gameID
         self.modificationDate = modificationDate
         self.currentDevice = currentDevice
+    }
+}
+
+extension [CloudRecordSummary] {
+    func sortedByGameID() -> [CloudRecordSummary] {
+        sorted { $0.gameID.uuidString < $1.gameID.uuidString }
     }
 }
 
@@ -109,7 +116,7 @@ public actor InMemoryCloudKitClient: CloudKitClient {
                     currentDevice: $0.currentDevice
                 )
             }
-            .sorted { $0.gameID.uuidString < $1.gameID.uuidString }
+            .sortedByGameID()
     }
 
     public func isAccountAvailable() async -> Bool {

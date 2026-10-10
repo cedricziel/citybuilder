@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import os
 
 /// `CloudKitClient` backed by the private database of the app's iCloud
 /// container. Schema: `Packages/CityPersistence/CloudKitSchema.md`.
@@ -12,6 +13,8 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         static let body = "body"
         static let currentDevice = "currentDevice"
     }
+
+    private static let logger = Logger(subsystem: "com.cedricziel.citybuilder", category: "CloudKit")
 
     private let container: CKContainer
 
@@ -66,16 +69,17 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         let desiredKeys = [Field.gameID, Field.currentDevice]
         let query = CKQuery(recordType: Field.recordType, predicate: NSPredicate(value: true))
         do {
-            var summaries: [CloudRecordSummary] = []
+            var results: [Result<CKRecord, Error>] = []
             var page = try await database.records(matching: query, desiredKeys: desiredKeys)
             while true {
-                for (_, result) in page.matchResults {
-                    try summaries.append(Self.summary(from: result.get()))
-                }
+                results += page.matchResults.map(\.1)
                 guard let cursor = page.queryCursor else { break }
                 page = try await database.records(continuingMatchFrom: cursor, desiredKeys: desiredKeys)
             }
-            return summaries
+            return Self.summaries(from: results)
+        } catch let error as CKError where error.code == .unknownItem {
+            // CloudKit has no CitySave record type until the first upload creates it.
+            return []
         } catch {
             throw Self.syncError(from: error)
         }
@@ -126,6 +130,22 @@ public struct CloudKitDatabaseClient: CloudKitClient {
             modificationDate: modificationDate,
             currentDevice: currentDevice
         )
+    }
+
+    static func summaries(
+        from results: [Result<CKRecord, Error>],
+        summarize: (CKRecord) throws -> CloudRecordSummary = summary(from:)
+    ) -> [CloudRecordSummary] {
+        results
+            .compactMap { result in
+                do {
+                    return try summarize(result.get())
+                } catch {
+                    logger.error("Skipping unreadable CitySave record: \(error.localizedDescription)")
+                    return nil
+                }
+            }
+            .sortedByGameID()
     }
 
     static func cloudRecord(from record: CKRecord) throws -> CloudRecord {

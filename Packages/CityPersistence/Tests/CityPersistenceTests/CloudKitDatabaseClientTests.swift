@@ -67,3 +67,25 @@ func recordWithMalformedGameIDIsRejected() {
         _ = try CloudKitDatabaseClient.summary(from: record)
     }
 }
+
+@Test("listing skips records that fail and sorts the rest by game ID")
+func listingSkipsFailedRecordsAndSorts() throws {
+    let first = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+    let second = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
+    let date = Date(timeIntervalSince1970: 1000)
+    let results: [Result<CKRecord, Error>] = [
+        .success(CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: second))),
+        .failure(CKError(.permissionFailure)),
+        .success(CKRecord(recordType: "CitySave", recordID: CKRecord.ID(recordName: "broken"))),
+        .success(CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: first)))
+    ]
+
+    let summaries = CloudKitDatabaseClient.summaries(from: results) { record in
+        guard let gameID = UUID(uuidString: record.recordID.recordName) else {
+            throw SyncError.failed("broken")
+        }
+        return CloudRecordSummary(gameID: gameID, modificationDate: date, currentDevice: "Mac")
+    }
+
+    #expect(summaries.map(\.gameID) == [first, second])
+}
