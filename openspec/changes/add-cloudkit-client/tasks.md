@@ -8,7 +8,7 @@
 
 ## 2. M2 — Production client
 
-- [ ] 2.1 Write `Packages/CityPersistence/CloudKitSchema.md`: record type `CitySave`, its fields, and `recordName` marked queryable (design D1, D2)
+- [x] 2.1 Write `Packages/CityPersistence/CloudKitSchema.md`: record type `CitySave`, its fields, and `recordName` marked queryable (design D1, D2)
 - [ ] 2.2 Implement the production client's upload (record name = game ID, `CKAsset` body, `currentDevice`, upsert save policy) and fetch-latest, with error mapping to `SyncError` plus its new `.failed` case (design D1, D4)
 - [ ] 2.3 Implement the production client's `listGames()` (metadata-only query with cursor paging) and account status (design D2)
 - [ ] 2.4 Add gated live tests behind `CITYBUILDER_CLOUDKIT_TESTS=1` for upload, fetch, list and replace, which clean up their records (design D5)
