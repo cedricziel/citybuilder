@@ -59,3 +59,4 @@ CloudKit is imported only in CityPersistence. CityCore is untouched and stays fr
 - [The schema must be deployed to production before any TestFlight build can sync] → Record the schema in `CityPersistence/CloudKitSchema.md`, and add a deferred task to deploy it in the CloudKit console.
 - [Default zone now, custom zone later for push sync] → Records are keyed by game ID, so a later migration can copy them zone to zone. The protocol hides the zone from callers.
 - [Live CloudKit behaviour, such as eventual consistency after a write, differs from the fake] → The gated live tests cover upload, fetch and list. List-after-upload in live tests retries briefly before failing.
+- [A plain `swift test` binary carries no iCloud entitlement, so the gated live tests cannot reach CloudKit from the package alone] → Running them (task 2.6) needs an entitled, app-hosted test target and a signed-in iCloud account. Adding that host is part of the deferred live run.

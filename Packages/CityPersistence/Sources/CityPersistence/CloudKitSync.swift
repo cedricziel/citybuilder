@@ -7,6 +7,8 @@ import Foundation
 public protocol CloudKitClient: Sendable {
     func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord
     func fetchLatest(gameID: UUID) async throws -> CloudRecord?
+    /// Every save record in the user's private database, sorted by game ID.
+    func listGames() async throws -> [CloudRecordSummary]
     func isAccountAvailable() async -> Bool
 }
 
@@ -24,10 +26,29 @@ public struct CloudRecord: Hashable, Sendable {
     }
 }
 
+public struct CloudRecordSummary: Hashable, Sendable {
+    public let gameID: UUID
+    public let modificationDate: Date
+    public let currentDevice: String
+
+    public init(gameID: UUID, modificationDate: Date, currentDevice: String) {
+        self.gameID = gameID
+        self.modificationDate = modificationDate
+        self.currentDevice = currentDevice
+    }
+}
+
+extension [CloudRecordSummary] {
+    func sortedByGameID() -> [CloudRecordSummary] {
+        sorted { $0.gameID.uuidString < $1.gameID.uuidString }
+    }
+}
+
 public enum SyncError: Error, Equatable, Sendable {
     case notSignedIn
     case offline
     case conflict(remote: Date, local: Date)
+    case failed(String)
 }
 
 public enum SyncDecision: Equatable, Sendable {
@@ -83,6 +104,19 @@ public actor InMemoryCloudKitClient: CloudKitClient {
     public func fetchLatest(gameID: UUID) async throws -> CloudRecord? {
         guard accountAvailable else { throw SyncError.notSignedIn }
         return records[gameID]
+    }
+
+    public func listGames() async throws -> [CloudRecordSummary] {
+        guard accountAvailable else { throw SyncError.notSignedIn }
+        return records.values
+            .map {
+                CloudRecordSummary(
+                    gameID: $0.gameID,
+                    modificationDate: $0.modificationDate,
+                    currentDevice: $0.currentDevice
+                )
+            }
+            .sortedByGameID()
     }
 
     public func isAccountAvailable() async -> Bool {
