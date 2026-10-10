@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.1](https://github.com/cedricziel/citybuilder/compare/v0.2.0...v0.2.1) (2026-10-10)
+
+
+### Features
+
+* **persistence:** add a CloudKit private-database client ([27c3c01](https://github.com/cedricziel/citybuilder/commit/27c3c01a1ad91f08aab441988121b8458cc4fce3))
+* **persistence:** add a production CloudKit client ([187dbe0](https://github.com/cedricziel/citybuilder/commit/187dbe048aa77a365bf2caf0708f231688aa1a47))
+* **persistence:** list save records through CloudKitClient ([897566b](https://github.com/cedricziel/citybuilder/commit/897566bfc7b0ce3837af05808acb55d491db7873))
+
+
+### Bug Fixes
+
+* **persistence:** fail the listing when CloudKit cannot fetch a record ([68924f2](https://github.com/cedricziel/citybuilder/commit/68924f2571d7623716f3673d9510b9c398c935aa))
+* **persistence:** keep listing saves when CloudKit records are missing or unreadable ([90b2f99](https://github.com/cedricziel/citybuilder/commit/90b2f99fd4a20f5b9295fdef8148901ebffa3668))
+* **persistence:** reject CitySave records whose gameID differs from their name ([ad01064](https://github.com/cedricziel/citybuilder/commit/ad0106488cdb908ebc48b32ac6eb7ff723b15e57))
+* **persistence:** treat a temporarily unavailable iCloud account as signed out ([343fc89](https://github.com/cedricziel/citybuilder/commit/343fc89ea469c550fd63a687739dc64a1c971c84))
+
 ## [0.2.0](https://github.com/cedricziel/citybuilder/compare/v0.1.0...v0.2.0) (2026-10-10)
 
 
