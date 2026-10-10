@@ -41,6 +41,7 @@ public enum SyncError: Error, Equatable, Sendable {
     case notSignedIn
     case offline
     case conflict(remote: Date, local: Date)
+    case failed(String)
 }
 
 public enum SyncDecision: Equatable, Sendable {
