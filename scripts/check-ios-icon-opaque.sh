@@ -7,7 +7,7 @@
 #
 # Exit codes:
 #   0 — the icon has no alpha channel
-#   1 — the icon is missing, not a 1024px image, or has an alpha channel
+#   1 — the icon is missing, not a 1024x1024 image, or has an alpha channel
 
 set -euo pipefail
 
@@ -19,11 +19,11 @@ if [[ ! -f "$ICON" ]]; then
 fi
 
 # sips exits 0 and reports "hasAlpha: no" for a file it cannot decode, so
-# an unreadable icon shows up only as a missing pixel width.
-info=$(sips -g pixelWidth -g hasAlpha "$ICON")
+# an unreadable icon shows up only as a missing pixel size.
+info=$(sips -g pixelWidth -g pixelHeight -g hasAlpha "$ICON")
 
-if ! grep -q "pixelWidth: 1024" <<< "$info"; then
-    echo "check-ios-icon-opaque: $ICON is not a readable 1024px image" >&2
+if ! grep -qx "  pixelWidth: 1024" <<< "$info" || ! grep -qx "  pixelHeight: 1024" <<< "$info"; then
+    echo "check-ios-icon-opaque: $ICON is not a readable 1024x1024 image" >&2
     exit 1
 fi
 
