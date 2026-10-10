@@ -148,7 +148,7 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         if let syncError = error as? SyncError { return syncError }
         guard let ckError = error as? CKError else { return .failed(error.localizedDescription) }
         switch ckError.code {
-        case .notAuthenticated:
+        case .notAuthenticated, .accountTemporarilyUnavailable:
             return .notSignedIn
         case .networkUnavailable, .networkFailure, .serviceUnavailable:
             return .offline

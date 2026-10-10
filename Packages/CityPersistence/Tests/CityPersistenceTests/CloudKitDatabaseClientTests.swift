@@ -3,10 +3,12 @@ import Foundation
 import Testing
 @testable import CityPersistence
 
-@Test("not authenticated maps to not signed in")
-func notAuthenticatedMapsToNotSignedIn() {
-    let error = CKError(.notAuthenticated)
-    #expect(CloudKitDatabaseClient.syncError(from: error) == .notSignedIn)
+@Test(
+    "account errors map to not signed in",
+    arguments: [CKError.Code.notAuthenticated, .accountTemporarilyUnavailable]
+)
+func accountErrorsMapToNotSignedIn(code: CKError.Code) {
+    #expect(CloudKitDatabaseClient.syncError(from: CKError(code)) == .notSignedIn)
 }
 
 @Test(
