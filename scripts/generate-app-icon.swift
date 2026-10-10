@@ -68,7 +68,9 @@ final class Pixmap {
         }
     }
 
-    func savePNG(to path: String) {
+    /// `opaque` drops the alpha channel: App Store Connect rejects an iOS
+    /// marketing icon that has one, even when every pixel is opaque.
+    func savePNG(to path: String, opaque: Bool = false) {
         var raw = [UInt8](repeating: 0, count: width * height * 4)
         for i in 0 ..< (width * height) {
             raw[i * 4 + 0] = pixels[i].r
@@ -79,7 +81,8 @@ final class Pixmap {
         let data = Data(raw)
         let provider = CGDataProvider(data: data as CFData)!
         let cs = CGColorSpaceCreateDeviceRGB()
-        let bitmap = CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue)
+        let alpha: CGImageAlphaInfo = opaque ? .noneSkipLast : .last
+        let bitmap = CGBitmapInfo(rawValue: alpha.rawValue)
         guard let img = CGImage(
             width: width, height: height,
             bitsPerComponent: 8, bitsPerPixel: 32,
@@ -361,7 +364,7 @@ func smoothResize(_ src: Pixmap, to size: Int) -> Pixmap {
 let iOSIcon = upscaled
 let macSource = macInset(upscaled, insetFraction: 0.10)
 
-iOSIcon.savePNG(to: "\(repoRoot)/Apps/CitybuilderiOS/Assets.xcassets/AppIcon.appiconset/icon-1024.png")
+iOSIcon.savePNG(to: "\(repoRoot)/Apps/CitybuilderiOS/Assets.xcassets/AppIcon.appiconset/icon-1024.png", opaque: true)
 
 // Emit the canonical macOS AppIcon size matrix. macOS does not support
 // the single-source-image fallback that iOS 17+ does, so we provide

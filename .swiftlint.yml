@@ -11,6 +11,10 @@ excluded:
   - Citybuilder.xcworkspace
   - scripts
 
+# The pre-commit hook passes staged files; when all of them are excluded
+# (e.g. only scripts/), SwiftLint would otherwise fail the commit.
+allow_zero_lintable_files: true
+
 opt_in_rules:
   - empty_count
   - explicit_init

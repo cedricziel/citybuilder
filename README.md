@@ -390,6 +390,26 @@ result.
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
 
+## Releasing
+
+release-please cuts releases (`.github/workflows/release-please.yml`, `release-please-config.json`, `.release-please-manifest.json`). Conventional Commits on `main` keep a release PR open. Merging it tags `vX.Y.Z`, creates a GitHub release, updates `CHANGELOG.md`, and bumps `MARKETING_VERSION` in `project.yml` (the line marked `# x-release-please-version`).
+
+The `testflight` job then builds that tag on a `macos-26` runner, iOS (IPA, iPhone + iPad) and macOS (PKG) in parallel. It signs with fastlane match, using App Store profiles from the private `cedricziel/certificates` repo, and uploads to the internal TestFlight group "Internal". There is no external beta. The build number is `git rev-list --count HEAD`.
+
+To re-upload an existing tag, run the release-please workflow manually and set the `tag` input (e.g. `v0.2.0`).
+
+The workflow needs these repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_CONTENT`, `MATCH_PASSWORD`, `MATCH_KEYCHAIN_PASSWORD`, `MATCH_DEPLOY_KEY` (read-only deploy key on `cedricziel/certificates`), and `RELEASE_PLEASE_TOKEN` (a PAT, so the release PR triggers CI).
+
+To run the lanes locally, use the Ruby version in `.ruby-version`, run `bundle install`, and copy `fastlane/.env.default` to `fastlane/.env` with the App Store Connect API key and match password filled in.
+
+```sh
+bundle exec fastlane ios build          # signed build, no upload (same for mac)
+bundle exec fastlane ios release        # build + upload to TestFlight (same for mac)
+bundle exec fastlane bootstrap_signing  # create/refresh match certs and profiles for iOS, tvOS, macOS
+```
+
+`bootstrap_signing` writes to the certificates repo; pass `force:true` to regenerate. tvOS has a match profile and an App Store Connect platform, but no app target yet.
+
 ## License
 
 TBD.
