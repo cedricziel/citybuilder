@@ -12,6 +12,6 @@
 - [x] 2.2 Implement the production client's upload (record name = game ID, `CKAsset` body, `currentDevice`, upsert save policy) and fetch-latest, with error mapping to `SyncError` plus its new `.failed` case (design D1, D4)
 - [x] 2.3 Implement the production client's `listGames()` (metadata-only query with cursor paging) and account status (design D2)
 - [x] 2.4 Add gated live tests behind `CITYBUILDER_CLOUDKIT_TESTS=1` for upload, fetch, list and replace, which clean up their records (design D5)
-- [ ] 2.5 Document the schema and the live-test switch in the README
+- [x] 2.5 Document the schema and the live-test switch in the README
 - [ ] 2.6 Run the gated live tests against the development environment — DEFERRED (requires iCloud account and Apple Developer account)
 - [ ] 2.7 Deploy the schema to the production environment in the CloudKit console — DEFERRED (requires Apple Developer account)

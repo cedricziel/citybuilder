@@ -386,6 +386,18 @@ The HUD's top-right cluster shows a pause/play button next to the
 gear; its glyph swaps with `session.isPaused`. Tap or ESC — same
 result.
 
+## iCloud sync
+
+Saves sync through the CloudKit private database of container `iCloud.com.cedricziel.citybuilder`. The production client is `CloudKitDatabaseClient` (`Packages/CityPersistence/Sources/CityPersistence/CloudKitDatabaseClient.swift`). Nothing in the apps calls it yet; turning sync on is a later change.
+
+Each game is one `CitySave` record named after its game ID, with fields `gameID` (String), `body` (Asset), and `currentDevice` (String). `recordName` must be queryable. The full schema and deploy steps are in [`Packages/CityPersistence/CloudKitSchema.md`](Packages/CityPersistence/CloudKitSchema.md). Deploy the schema to the production environment in the CloudKit console before TestFlight or App Store builds can sync.
+
+Unit tests use the in-memory fake `InMemoryCloudKitClient` and need no iCloud account.
+
+The live tests in `Packages/CityPersistence/Tests/CityPersistenceTests/CloudKitLiveTests.swift` talk to the container's development environment. They are skipped unless `CITYBUILDER_CLOUDKIT_TESTS=1` is set, and CI never sets it. Each test uses a fresh game ID and deletes its record afterwards.
+
+The live tests need a test host signed with the iCloud entitlement and a signed-in iCloud account. A plain `swift test` binary has no entitlement, so `CITYBUILDER_CLOUDKIT_TESTS=1 xcrun swift test --package-path Packages/CityPersistence` does not reach CloudKit. The repo has no entitled test host yet, so there is currently no command that runs them.
+
 ## CI
 
 The CI workflow runs `pre-commit run --all-files`, `make generate`, builds all targets, runs every `swift-testing` suite, and enforces `make test-coverage` (CityCore line ≥ 80% / branch ≥ 70%, diff-cover green) plus `make test-scenarios` (every spec `#### Scenario:` maps to a test).
