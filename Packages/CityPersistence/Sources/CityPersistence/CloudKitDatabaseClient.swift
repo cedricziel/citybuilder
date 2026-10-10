@@ -85,6 +85,16 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         await (try? container.accountStatus()) == .available
     }
 
+    func delete(gameID: UUID) async throws {
+        do {
+            _ = try await database.deleteRecord(withID: Self.recordID(for: gameID))
+        } catch let error as CKError where error.code == .unknownItem {
+            return
+        } catch {
+            throw Self.syncError(from: error)
+        }
+    }
+
     static func recordID(for gameID: UUID) -> CKRecord.ID {
         CKRecord.ID(recordName: gameID.uuidString, zoneID: CKRecordZone.default().zoneID)
     }
