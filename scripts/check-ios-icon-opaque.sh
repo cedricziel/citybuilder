@@ -7,7 +7,7 @@
 #
 # Exit codes:
 #   0 — the icon has no alpha channel
-#   1 — the icon is missing or has an alpha channel
+#   1 — the icon is missing, not a 1024px image, or has an alpha channel
 
 set -euo pipefail
 
@@ -18,7 +18,16 @@ if [[ ! -f "$ICON" ]]; then
     exit 1
 fi
 
-if sips -g hasAlpha "$ICON" | grep -q "hasAlpha: yes"; then
+# sips exits 0 and reports "hasAlpha: no" for a file it cannot decode, so
+# an unreadable icon shows up only as a missing pixel width.
+info=$(sips -g pixelWidth -g hasAlpha "$ICON")
+
+if ! grep -q "pixelWidth: 1024" <<< "$info"; then
+    echo "check-ios-icon-opaque: $ICON is not a readable 1024px image" >&2
+    exit 1
+fi
+
+if grep -q "hasAlpha: yes" <<< "$info"; then
     echo "ERROR: $ICON has an alpha channel; App Store Connect rejects it." >&2
     echo "       Regenerate it with 'xcrun swift scripts/generate-app-icon.swift'." >&2
     exit 1
