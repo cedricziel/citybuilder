@@ -37,7 +37,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v5
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -72,18 +72,18 @@ jobs:
       TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
     steps:
       # fetch-depth: 0 so the commit-count build number is the real one.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: latest-stable
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83 # v1.328.0
         with:
           bundler-cache: true
 
@@ -129,7 +129,7 @@ jobs:
           FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "5"
         run: bundle exec fastlane ${{ matrix.lane_platform }} release version:"${TAG#v}"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: citybuilder-${{ matrix.platform }}-${{ env.TAG }}
