@@ -66,6 +66,18 @@ func recordWithMalformedGameIDIsRejected() {
     }
 }
 
+@Test("record whose gameID differs from its record name is rejected")
+func recordWithMismatchedGameIDIsRejected() {
+    let recordID = CloudKitDatabaseClient.recordID(for: UUID())
+    let otherGameID = UUID().uuidString
+    let record = CKRecord(recordType: "CitySave", recordID: recordID)
+    record["gameID"] = otherGameID
+    record["currentDevice"] = "Mac"
+    #expect(throws: SyncError.failed("CitySave record \(recordID.recordName) has gameID \(otherGameID)")) {
+        _ = try CloudKitDatabaseClient.summary(from: record)
+    }
+}
+
 @Test("listing skips records that fail and sorts the rest by game ID")
 func listingSkipsFailedRecordsAndSorts() throws {
     let first = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))

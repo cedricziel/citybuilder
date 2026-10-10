@@ -119,6 +119,9 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         else {
             throw SyncError.failed("CitySave record \(name) has no valid gameID")
         }
+        guard gameID.uuidString == name else {
+            throw SyncError.failed("CitySave record \(name) has gameID \(idString)")
+        }
         guard let currentDevice = record[Field.currentDevice] as? String else {
             throw SyncError.failed("CitySave record \(name) has no currentDevice")
         }
