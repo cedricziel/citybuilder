@@ -48,12 +48,10 @@ func uploadRecordIsKeyedByGameID() throws {
 @Test("record without a modification date is rejected")
 func recordWithoutModificationDateIsRejected() {
     let gameID = UUID()
-    let record = CloudKitDatabaseClient.makeRecord(
-        gameID: gameID,
-        bodyURL: FileManager.default.temporaryDirectory,
-        deviceID: "Mac"
-    )
-    #expect(throws: SyncError.self) {
+    let record = CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: gameID))
+    record["gameID"] = gameID.uuidString
+    record["currentDevice"] = "Mac"
+    #expect(throws: SyncError.failed("CitySave record \(gameID.uuidString) has no modification date")) {
         _ = try CloudKitDatabaseClient.summary(from: record)
     }
 }
