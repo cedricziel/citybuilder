@@ -7,6 +7,7 @@ import Foundation
 public protocol CloudKitClient: Sendable {
     func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord
     func fetchLatest(gameID: UUID) async throws -> CloudRecord?
+    func listGames() async throws -> [CloudRecordSummary]
     func isAccountAvailable() async -> Bool
 }
 
@@ -19,6 +20,18 @@ public struct CloudRecord: Hashable, Sendable {
     public init(gameID: UUID, body: Data, modificationDate: Date, currentDevice: String) {
         self.gameID = gameID
         self.body = body
+        self.modificationDate = modificationDate
+        self.currentDevice = currentDevice
+    }
+}
+
+public struct CloudRecordSummary: Hashable, Sendable {
+    public let gameID: UUID
+    public let modificationDate: Date
+    public let currentDevice: String
+
+    public init(gameID: UUID, modificationDate: Date, currentDevice: String) {
+        self.gameID = gameID
         self.modificationDate = modificationDate
         self.currentDevice = currentDevice
     }
@@ -83,6 +96,19 @@ public actor InMemoryCloudKitClient: CloudKitClient {
     public func fetchLatest(gameID: UUID) async throws -> CloudRecord? {
         guard accountAvailable else { throw SyncError.notSignedIn }
         return records[gameID]
+    }
+
+    public func listGames() async throws -> [CloudRecordSummary] {
+        guard accountAvailable else { throw SyncError.notSignedIn }
+        return records.values
+            .map {
+                CloudRecordSummary(
+                    gameID: $0.gameID,
+                    modificationDate: $0.modificationDate,
+                    currentDevice: $0.currentDevice
+                )
+            }
+            .sorted { $0.gameID.uuidString < $1.gameID.uuidString }
     }
 
     public func isAccountAvailable() async -> Bool {

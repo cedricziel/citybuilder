@@ -1,10 +1,10 @@
 ## 1. M1 — Listing and round-trip against the fake
 
-- [ ] 1.1 Tests-first: translate every scenario in `specs/icloud-sync/spec.md` into failing CityPersistence tests against `InMemoryCloudKitClient`, and confirm red
-- [ ] 1.2 Implement to green: `icloud-sync` / List the user's save records — add `listGames()` (game ID, modification date, current device) to `CloudKitClient` and `InMemoryCloudKitClient`
-- [ ] 1.3 Implement to green: `icloud-sync` / Save records round-trip through the private database — the fake keeps one record per game, replaces it on upload and records the uploading device
-- [ ] 1.4 Refactor under a green bar
-- [ ] 1.5 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm that no `icloud-sync` scenario is uncovered
+- [x] 1.1 Tests-first: translate every scenario in `specs/icloud-sync/spec.md` into failing CityPersistence tests against `InMemoryCloudKitClient`, and confirm red
+- [x] 1.2 Implement to green: `icloud-sync` / List the user's save records — add `listGames()` (game ID, modification date, current device) to `CloudKitClient` and `InMemoryCloudKitClient`
+- [x] 1.3 Implement to green: `icloud-sync` / Save records round-trip through the private database — the fake keeps one record per game, replaces it on upload and records the uploading device
+- [x] 1.4 Refactor under a green bar
+- [x] 1.5 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm that no `icloud-sync` scenario is uncovered
 
 ## 2. M2 — Production client
 
