@@ -76,7 +76,7 @@ public struct CloudKitDatabaseClient: CloudKitClient {
                 guard let cursor = page.queryCursor else { break }
                 page = try await database.records(continuingMatchFrom: cursor, desiredKeys: desiredKeys)
             }
-            return Self.summaries(from: results)
+            return try Self.summaries(from: results)
         } catch let error as CKError where error.code == .unknownItem {
             // CloudKit has no CitySave record type until the first upload creates it.
             return []
@@ -138,11 +138,12 @@ public struct CloudKitDatabaseClient: CloudKitClient {
     static func summaries(
         from results: [Result<CKRecord, Error>],
         summarize: (CKRecord) throws -> CloudRecordSummary = summary(from:)
-    ) -> [CloudRecordSummary] {
-        results
+    ) throws -> [CloudRecordSummary] {
+        try results
             .compactMap { result in
+                let record = try result.get()
                 do {
-                    return try summarize(result.get())
+                    return try summarize(record)
                 } catch {
                     logger.error("Skipping unreadable CitySave record: \(error.localizedDescription)")
                     return nil

@@ -78,24 +78,35 @@ func recordWithMismatchedGameIDIsRejected() {
     }
 }
 
-@Test("listing skips records that fail and sorts the rest by game ID")
-func listingSkipsFailedRecordsAndSorts() throws {
+private func stubSummary(_ record: CKRecord) throws -> CloudRecordSummary {
+    guard let gameID = UUID(uuidString: record.recordID.recordName) else {
+        throw SyncError.failed("broken")
+    }
+    return CloudRecordSummary(gameID: gameID, modificationDate: Date(timeIntervalSince1970: 1000), currentDevice: "Mac")
+}
+
+@Test("listing skips invalid records and sorts the rest by game ID")
+func listingSkipsInvalidRecordsAndSorts() throws {
     let first = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
     let second = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
-    let date = Date(timeIntervalSince1970: 1000)
     let results: [Result<CKRecord, Error>] = [
         .success(CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: second))),
-        .failure(CKError(.permissionFailure)),
         .success(CKRecord(recordType: "CitySave", recordID: CKRecord.ID(recordName: "broken"))),
         .success(CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: first)))
     ]
 
-    let summaries = CloudKitDatabaseClient.summaries(from: results) { record in
-        guard let gameID = UUID(uuidString: record.recordID.recordName) else {
-            throw SyncError.failed("broken")
-        }
-        return CloudRecordSummary(gameID: gameID, modificationDate: date, currentDevice: "Mac")
-    }
+    let summaries = try CloudKitDatabaseClient.summaries(from: results, summarize: stubSummary)
 
     #expect(summaries.map(\.gameID) == [first, second])
+}
+
+@Test("listing fails when CloudKit cannot fetch a record")
+func listingFailsWhenARecordCannotBeFetched() {
+    let results: [Result<CKRecord, Error>] = [
+        .success(CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: UUID()))),
+        .failure(CKError(.networkFailure))
+    ]
+    #expect(throws: CKError.self) {
+        _ = try CloudKitDatabaseClient.summaries(from: results, summarize: stubSummary)
+    }
 }
