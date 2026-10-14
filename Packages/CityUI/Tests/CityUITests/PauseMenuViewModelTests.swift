@@ -197,3 +197,9 @@ func settingsFromPauseOpensOverTheMenu() {
     #expect(!CityRootView.presentsSettings(fromPauseSheet: false, settingsPresented: true, isPaused: true))
     #expect(CityRootView.presentsSettings(fromPauseSheet: false, settingsPresented: true, isPaused: false))
 }
+
+@Test("Pause-menu Settings opens the Settings scene when the game has no in-game Settings view")
+func pauseSettingsWithoutInGameViewOpensTheSettingsScene() {
+    #expect(CityRootView.settingsDestination(hasInGameSettings: false) == .settingsScene)
+    #expect(CityRootView.settingsDestination(hasInGameSettings: true) == .sheet)
+}

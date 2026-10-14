@@ -19,6 +19,9 @@ public struct CityRootView: View {
     @State var inspectorExpanded = false
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
+    #if os(macOS)
+    @Environment(\.openSettings) var openSettingsScene
+    #endif
 
     public init(
         session: GameSession = GameSession(),
