@@ -112,6 +112,9 @@ if command -v diff-cover >/dev/null 2>&1; then
             echo "FAIL: changed lines in CityCore not covered by tests" >&2
             fail=1
         fi
+    elif [ "$STRICT" = "1" ]; then
+        echo "FAIL: diff-cover base ref '$BASE_REF' not found" >&2
+        fail=1
     else
         echo "==> diff-cover: base ref '$BASE_REF' not found, skipping"
     fi
