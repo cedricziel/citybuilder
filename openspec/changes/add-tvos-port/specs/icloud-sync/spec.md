@@ -21,7 +21,7 @@ When local and remote save records for the same game ID differ, the system SHALL
 #### Scenario: Newer local overwrites older remote
 
 - **WHEN** a sync occurs and the local save was modified after the remote record
-- **THEN** the local save is uploaded and replaces the remote record, after user confirmation
+- **THEN** the local save is uploaded and replaces the remote record without a prompt, because only the older remote copy is overwritten
 
 #### Scenario: Newer remote presented to user
 
@@ -37,7 +37,7 @@ When local and remote save records for the same game ID differ, the system SHALL
 
 ### Requirement: Apple TV keeps saves in iCloud
 
-On Apple TV, every save the game writes, manual or autosave, SHALL be uploaded through iCloud sync as soon as it is written and iCloud is reachable. A save that could not be uploaded MUST be retried at the next save, at launch, and when the app becomes active. At launch, before the title screen lists saved games, the Apple TV app SHALL list the user's save records and download every game that has no local copy. For a game with both copies, the last-write-wins policy applies.
+On Apple TV, every save the game writes, manual or autosave, SHALL be uploaded through iCloud sync as soon as it is written and iCloud is reachable. A save that could not be uploaded MUST be retried at the next save, at launch, and when the app becomes active. At launch, before the title screen lists saved games, the Apple TV app SHALL list the user's save records, download every game that has no local copy, and upload every game that has no remote copy. For a game with both copies, the last-write-wins policy applies. Every Apple TV on an account shares one game ID, so before a pending upload the app SHALL compare it with the remote record: a pending upload older than the remote record MUST NOT be uploaded, and the game is reported as a conflict instead. The title screen MUST NOT start or continue a game until the launch sync has finished.
 
 #### Scenario: Autosave on Apple TV is uploaded
 
@@ -53,3 +53,8 @@ On Apple TV, every save the game writes, manual or autosave, SHALL be uploaded t
 
 - **WHEN** the Apple TV app launches with no local saves and iCloud holds a save record for game G
 - **THEN** game G is downloaded and is listed among the saved games before the title screen shows them
+
+#### Scenario: Stale pending upload does not overwrite a newer iCloud save
+
+- **WHEN** an Apple TV holds a pending upload of game G and another Apple TV has since uploaded a newer save of G
+- **THEN** the pending save is not uploaded, the newer iCloud save is kept, and game G is reported as a conflict
