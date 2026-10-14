@@ -8,14 +8,14 @@
 
 ## 2. M2 — Trading in the simulation
 
-- [ ] 2.1 Tests-first: translate every remaining scenario in `specs/town-market` and `specs/economy` into failing swift-testing tests in `CityCoreTests`, including a save/load round trip and a decode of a save without `market`. Confirm red.
-- [ ] 2.2 Implement to green: `town-market` / Market prices. Add the market spreads next to the rival spreads (design D2) and a test-only check that walks every good and channel for the no-loop rule.
-- [ ] 2.3 Implement to green: `town-market` / Buying at the town center and Selling at the town center. Add the `marketBuy` and `marketSell` commands, buffer order by entity ID, and partial fills (design D1, D5).
-- [ ] 2.4 Implement to green: `town-market` / Seasonal limits reset and persist. Add `World.market` with `Codable` decoding as empty when missing, and reset it on the season-change tick (design D4).
-- [ ] 2.5 Implement to green: `town-market` / Market trades are reported, and Rivals stay off the market. Add `marketTraded` (with the CLI `WorldEventJSON` case), `WorldSnapshot.market`, and the game-over guard.
-- [ ] 2.6 Implement to green: `economy` / Market money is not tax or upkeep.
-- [ ] 2.7 Refactor under a green bar: put the market in `World+Market.swift` and keep `World.apply` within SwiftLint's complexity limit.
-- [ ] 2.8 Run `make test-scenarios` and confirm no uncovered scenario in `town-market` or `economy` from this change. Run `scripts/check-no-apple-ui-imports.sh`. Confirm the macOS and Linux `DeterminismFixture` outputs still match in CI.
+- [x] 2.1 Tests-first: translate every remaining scenario in `specs/town-market` and `specs/economy` into failing swift-testing tests in `CityCoreTests`, including a save/load round trip and a decode of a save without `market`. Confirm red.
+- [x] 2.2 Implement to green: `town-market` / Market prices. Add the market spreads next to the rival spreads (design D2) and a test-only check that walks every good and channel for the no-loop rule.
+- [x] 2.3 Implement to green: `town-market` / Buying at the town center and Selling at the town center. Add the `marketBuy` and `marketSell` commands, buffer order by entity ID, and partial fills (design D1, D5).
+- [x] 2.4 Implement to green: `town-market` / Seasonal limits reset and persist. Add `World.market` with `Codable` decoding as empty when missing, and reset it on the season-change tick (design D4).
+- [x] 2.5 Implement to green: `town-market` / Market trades are reported, and Rivals stay off the market. Add `marketTraded` (with the CLI `WorldEventJSON` case), `WorldSnapshot.market`, and the game-over guard.
+- [x] 2.6 Implement to green: `economy` / Market money is not tax or upkeep.
+- [x] 2.7 Refactor under a green bar: put the market in `World+Market.swift` and keep `World.apply` within SwiftLint's complexity limit.
+- [x] 2.8 Run `make test-scenarios` and confirm no uncovered scenario in `town-market` or `economy` from this change. Run `scripts/check-no-apple-ui-imports.sh`. Confirm the macOS and Linux `DeterminismFixture` outputs still match in CI.
 
 ## 3. M3 — Market panel
 
