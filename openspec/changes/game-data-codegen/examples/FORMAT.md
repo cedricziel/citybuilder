@@ -6,7 +6,7 @@ A pack is one YAML document: optional `defaults` (anchors only, ignored except w
 
 | Kind | Required | Optional |
 |---|---|---|
-| `Good` | `id`, `name`, `unit` (plural stack noun), `basePrice` (int > 0) | |
+| `Good` | `id`, `name`, `unit` (plural stack noun), `basePrice` (int > 0) | `market` `{buy: int ≥ 0, sell: int ≥ 0}` (town market units per season the player can buy and sell; each defaults to 0) |
 | `Building` | `id`, `footprint` `[w, h]`, `cost` (int ≥ 0) | `name` (palette label, default: id title-cased), `storage` (stockpile capacity; omit for none), `plantTicks` (int > 0: ticks per forest tile a planting building such as the forester plants), `category` (`town`, `gather` or `craft`: the build drawer; omit for no drawer), `upkeep` (int, default 0), `buildTicks` (int > 0, default 30), `materials` `{good: int}`, `recipe`, `effect` (`code`), `unlockedBy` (tech), `obsoletedBy` (tech), `culture` (culture id: only that culture may build it), `placement`, `legacyIds` [string] |
 | `Culture` | `id`, `name`, `blurb`, `tiers` `{peasants, citizens, merchants}` (display names), `luxury` `{raw, good, garden, producer}`, `signature` (building), `residentNames` [string] | |
 | `Tech` | `id`, `cost` (knowledge, int > 0), `age` (age from which it can be researched) | `name` (default: id title-cased), `prerequisites` [tech], `era` (age this tech opens), `eraGate` `{tier, residents}` (required when `era` is set) |

@@ -77,7 +77,16 @@
               "id": { "$ref": "#/$defs/id" },
               "name": { "type": "string" },
               "unit": { "description": "Plural stack noun, e.g. logs.", "type": "string" },
-              "basePrice": { "$ref": "#/$defs/positive" }
+              "basePrice": { "$ref": "#/$defs/positive" },
+              "market": {
+                "description": "Seasonal town market limits: units the market sells to the player (buy) and buys from the player (sell). Each defaults to 0.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "buy": { "$ref": "#/$defs/nonNegative" },
+                  "sell": { "$ref": "#/$defs/nonNegative" }
+                }
+              }
             }
           }
         },

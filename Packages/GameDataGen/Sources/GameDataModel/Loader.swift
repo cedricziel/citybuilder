@@ -98,8 +98,15 @@ private struct ItemReader {
 
     private func good(_ id: String) -> Good? {
         let name = fields.string("name"), unit = fields.string("unit"), price = fields.int("basePrice")
+        let market = fields.mapping("market", required: false).map { market in
+            market.finish(allowed: ["buy", "sell"])
+            return MarketLimits(buy: market.int("buy", required: false) ?? 0, sell: market.int("sell", required: false) ?? 0)
+        }
         guard let name, let unit, let price else { return nil }
-        return Good(id: id, name: name, unit: unit, basePrice: price, origin: fields.origin)
+        return Good(
+            id: id, name: name, unit: unit, basePrice: price,
+            market: market ?? MarketLimits(), origin: fields.origin
+        )
     }
 
     private func building(_ id: String) -> Building? {

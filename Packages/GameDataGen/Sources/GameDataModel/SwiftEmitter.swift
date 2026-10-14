@@ -88,7 +88,10 @@ private struct Types {
     var goods: String {
         let all = data.goods
         return enumDecl("Good", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
-            property("basePrice", "Int64", all.map { ($0.id, "\($0.basePrice)") })
+            property("basePrice", "Int64", all.map { ($0.id, "\($0.basePrice)") }),
+            property("marketTerms", "MarketTerms", all.map { good in
+                (good.id, "MarketTerms(buyLimit: \(good.market.buy), sellLimit: \(good.market.sell))")
+            })
         ])
     }
 

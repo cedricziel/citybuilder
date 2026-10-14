@@ -119,3 +119,11 @@ func addingCulturePack() throws {
     #expect(source.contains("case .groveKeeper: 40"))
     #expect(source.contains("case .sawmill: nil"))
 }
+
+@Test func emitsMarketTerms() throws {
+    let core = Fixtures.core.replacingOccurrences(of: "basePrice: 4 }", with: "basePrice: 4, market: { buy: 10, sell: 20 } }")
+    let source = try emitted("Good+Generated.swift", from: Fixtures.source([("core", core), ("ages", Fixtures.ages)]))
+    #expect(source.contains("public var marketTerms: MarketTerms {"))
+    #expect(source.contains("case .wood: MarketTerms(buyLimit: 10, sellLimit: 20)"))
+    #expect(source.contains("case .planks: MarketTerms(buyLimit: 0, sellLimit: 0)"))
+}
