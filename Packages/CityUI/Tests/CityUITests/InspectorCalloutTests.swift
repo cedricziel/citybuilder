@@ -37,6 +37,7 @@ func scenarioCalloutTitleAndKeyLines() throws {
 @Test("scenario: callout key lines for other buildings")
 func scenarioCalloutKeyLinesForOtherBuildings() throws {
     let inspector = try inspector(for: .lumberjackHut)
+    #expect(inspector.keyLines.count == 4)
     #expect(inspector.keyLines.first?.hasPrefix("State:") == true)
     #expect(inspector.keyLines.dropFirst().first?.hasPrefix("Road:") == true)
     #expect(inspector.tier == nil)
