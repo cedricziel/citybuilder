@@ -185,10 +185,7 @@ extension World {
     ) {
         guard var site = buildings[delivery.building] else { return }
         site.materialsDelivered[delivery.good, default: 0] += delivery.amount
-        let cost = BuildingCatalog.spec(for: site.kind).materialCost
-        let satisfied = cost.allSatisfy {
-            (site.materialsDelivered[$0.key] ?? 0) >= $0.value
-        }
+        let satisfied = site.hasAllMaterials
         let wasWaiting = site.constructionState == .waitingForMaterials
         if wasWaiting, satisfied {
             site.constructionState = .actively

@@ -173,7 +173,9 @@ func scenarioStarterGoodsAffordALumberjackAFarmAndAHouse() throws {
         world.tick()
     }
     let center = try townCenterID(in: world)
-    #expect(world.stockpiles[center]?.quantity(of: .wood) == 2)
+    // The hut costs no materials: only the farm's 2 wood and the
+    // house's 4 planks leave the town center.
+    #expect(world.stockpiles[center]?.quantity(of: .wood) == 4)
     #expect(world.stockpiles[center]?.quantity(of: .planks) == 1)
 }
 

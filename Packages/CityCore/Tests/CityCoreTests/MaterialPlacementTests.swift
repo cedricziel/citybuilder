@@ -170,9 +170,9 @@ func scenarioDeductionOrderIsShortestRoadDistanceFirst() throws {
         at: TileCoordinate(x: placementAnchor.x + 8, y: placementAnchor.y),
         contents: [.wood: 5]
     )
-    world.pendingCommands.append(.place(.lumberjackHut, at: placementAnchor))
+    world.pendingCommands.append(.place(.farm, at: placementAnchor))
     _ = world.tick()
-    // Lumberjack hut costs 2 wood — exhaust closer warehouse first.
+    // A farm costs 2 wood — exhaust closer warehouse first.
     #expect(world.stockpiles[warehouseA]?.quantity(of: .wood) == 3)
     #expect(world.stockpiles[warehouseB]?.quantity(of: .wood) == 5)
 }
@@ -188,9 +188,9 @@ func scenarioDeductionDrawsFromSingleWarehouseWhenSufficient() throws {
         at: warehouseAnchor,
         contents: [.wood: 5]
     )
-    world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
+    world.pendingCommands.append(.place(.farm, at: anchor))
     _ = world.tick()
-    // Lumberjack costs 2 wood; warehouse should now hold 3.
+    // A farm costs 2 wood; warehouse should now hold 3.
     #expect(world.stockpiles[warehouseID]?.quantity(of: .wood) == 3)
 }
 
@@ -254,17 +254,17 @@ func scenarioDeductionIsDeterministicAcrossReplays() {
     #expect(run() == run())
 }
 
-@Test("scenario: first lumberjack placement consumes starter wood")
-func scenarioFirstLumberjackPlacementConsumesStarterWood() throws {
+@Test("scenario: first lumberjack placement keeps the starter goods")
+func scenarioFirstLumberjackPlacementKeepsTheStarterGoods() throws {
     var world = freshSingleIsland()
     let anchor = try #require(firstFreeGrassAnchor2x2(in: world))
     world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
     _ = world.tick()
-    // Town center (the only goods-buffer on a fresh world) goes
-    // from 6 wood → 4 wood; planks and food unchanged.
+    #expect(world.occupiedTiles[anchor].flatMap { world.buildings[$0]?.kind } == .lumberjackHut)
+    // The hut costs no materials, so the town center keeps its 6 wood.
     let townCenter = try #require(world.buildings.values.first { $0.kind == .townCenter })
     let stockpile = try #require(world.stockpiles[townCenter.id])
-    #expect(stockpile.quantity(of: .wood) == 4)
+    #expect(stockpile.quantity(of: .wood) == 6)
     #expect(stockpile.quantity(of: .planks) == 5)
     #expect(stockpile.quantity(of: .food) == 2)
 }

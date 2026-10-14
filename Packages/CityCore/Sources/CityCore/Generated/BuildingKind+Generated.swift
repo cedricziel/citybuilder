@@ -315,7 +315,7 @@ public enum BuildingCatalog {
         case .house: BuildingSpec(kind: .house, footprint: Footprint(width: 2, height: 2), cost: 50, upkeep: 0, buildDurationTicks: 20, shorePlacement: nil, materialCost: [.planks: 4], requiredTerrain: nil)
         case .warehouse: BuildingSpec(kind: .warehouse, footprint: Footprint(width: 3, height: 3), cost: 200, upkeep: 1, buildDurationTicks: 40, shorePlacement: nil, materialCost: [.planks: 6, .wood: 2], requiredTerrain: nil)
         case .road: BuildingSpec(kind: .road, footprint: Footprint(width: 1, height: 1), cost: 5, upkeep: 0, buildDurationTicks: 1, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
-        case .lumberjackHut: BuildingSpec(kind: .lumberjackHut, footprint: Footprint(width: 2, height: 2), cost: 80, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.wood: 2], requiredTerrain: nil)
+        case .lumberjackHut: BuildingSpec(kind: .lumberjackHut, footprint: Footprint(width: 2, height: 2), cost: 80, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .sawmill: BuildingSpec(kind: .sawmill, footprint: Footprint(width: 2, height: 2), cost: 120, upkeep: 2, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 1, .wood: 4], requiredTerrain: nil)
         case .farm: BuildingSpec(kind: .farm, footprint: Footprint(width: 2, height: 2), cost: 60, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.wood: 2], requiredTerrain: nil)
         case .bakery: BuildingSpec(kind: .bakery, footprint: Footprint(width: 2, height: 2), cost: 90, upkeep: 1, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 2, .wood: 2], requiredTerrain: nil)

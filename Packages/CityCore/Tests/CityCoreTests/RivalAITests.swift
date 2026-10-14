@@ -113,7 +113,7 @@ func rivalHutCostsNoWood() throws {
     let anchor = try #require(commands.last.flatMap(anchor))
     let hut = try #require(world.occupiedTiles[anchor].flatMap { world.buildings[$0] })
     #expect(hut.constructionState == .actively)
-    #expect(world.materialCost(of: .lumberjackHut, for: .player) == [.wood: 2])
+    #expect(world.materialCost(of: .lumberjackHut, for: .player).isEmpty)
 }
 
 @Test("scenario: waiting for money")

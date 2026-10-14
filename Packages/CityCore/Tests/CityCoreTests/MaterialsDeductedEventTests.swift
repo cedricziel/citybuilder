@@ -9,13 +9,13 @@ import Testing
 func scenarioSuccessfulPlacementEmitsMaterialsDeducted() {
     var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
     world.economy.credit(10000)
-    world.pendingCommands.append(.place(.lumberjackHut, at: TileCoordinate(x: 1, y: 1)))
+    world.pendingCommands.append(.place(.farm, at: TileCoordinate(x: 1, y: 1)))
     let result = world.tick()
     let materialEvents = result.events.filter {
         if case .materialsDeducted = $0 { return true }
         return false
     }
-    #expect(!materialEvents.isEmpty, "expected materialsDeducted event after lumberjack placement")
+    #expect(!materialEvents.isEmpty, "expected materialsDeducted event after farm placement")
 }
 
 @Test("scenario: materialsdeducted carries the per-good amounts")

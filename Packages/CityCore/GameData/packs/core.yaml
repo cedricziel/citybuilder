@@ -59,9 +59,8 @@ items:
     name: Lumberjack                 # short palette label
     legacyIds: [lumberjack_hut]      # saves written before the rename
     category: gather
-    cost: 80
+    cost: 80                         # money only, so wood can always restart
     buildTicks: 25
-    materials: { wood: 2 }
     recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
 
   - kind: Building
