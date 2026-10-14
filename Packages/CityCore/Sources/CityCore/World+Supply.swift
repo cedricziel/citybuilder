@@ -159,6 +159,17 @@ extension World {
         return amount - remaining
     }
 
+    /// Takes up to `amount` of `good` from `buffers`, in the given order.
+    /// Returns the units taken.
+    @discardableResult
+    mutating func drain(_ good: Good, upTo amount: Int, from buffers: [Building]) -> Int {
+        var left = amount
+        for buffer in buffers where left > 0 {
+            left -= stockpiles[buffer.id]?.withdraw(good, amount: left) ?? 0
+        }
+        return amount - left
+    }
+
     /// Road path between two road tiles. Roads never cross water, so
     /// tiles on different islands are answered without a search.
     func roadPath(from start: TileCoordinate, to goal: TileCoordinate) -> [TileCoordinate]? {
