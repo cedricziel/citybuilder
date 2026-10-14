@@ -133,8 +133,12 @@ public extension GameSession {
         isObsolete(kind) || !kind.isBuildable(in: world.culture)
     }
 
+    var isResearchAvailable: Bool {
+        !isGameOver
+    }
+
     func chooseResearch(_ tech: Tech) {
-        world.enqueue(.chooseResearch(tech))
+        enqueue(.chooseResearch(tech))
     }
 }
 

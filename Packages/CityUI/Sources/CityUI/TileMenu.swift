@@ -85,10 +85,14 @@ public extension GameSession {
         TileMenuViewModel(tile: tile, world: world, money: world.economy.balance, isHidden: isObsolete)
     }
 
+    var offersTileMenu: Bool {
+        selectedTile != nil && !isGameOver
+    }
+
     /// Long-press on a tile: select it for the inspector and ask for the
     /// menu. Ignored while a placement is pending, like taps.
     func handleLongPress(at tile: TileCoordinate) {
-        guard pendingPlacement == nil, routeAuthoring == nil else { return }
+        guard pendingPlacement == nil, routeAuthoring == nil, !isGameOver else { return }
         selectedTile = tile
         tileMenuRequest = TileMenuRequest(tile: tile)
     }
@@ -97,13 +101,14 @@ public extension GameSession {
     /// road arms the road tool, demolish acts at once.
     func applyMenuChoice(_ choice: TileMenuChoice, at tile: TileCoordinate) {
         tileMenuRequest = nil
+        guard !isGameOver else { return }
         switch choice {
         case .build(.road):
             selectedTool = .place(.road)
         case let .build(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case .demolish:
-            world.enqueue(.demolish(at: tile))
+            enqueue(.demolish(at: tile))
         case .dismiss:
             break
         }
