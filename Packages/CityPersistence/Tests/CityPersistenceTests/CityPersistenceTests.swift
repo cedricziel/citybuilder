@@ -76,11 +76,18 @@ func scenarioCrashMidSavePreservesPreviousSave() throws {
 
 @Test("scenario: save path resolution")
 func scenarioSavePathResolution() throws {
-    let store = SaveStore(baseDirectory: URL(fileURLWithPath: "/tmp/Citybuilder/saves"))
     let id = try #require(UUID(uuidString: "11111111-2222-3333-4444-555555555555"))
-    let url = store.url(for: id)
-    #expect(url.lastPathComponent.hasSuffix(".json"))
-    #expect(url.lastPathComponent.contains(id.uuidString))
+    let appSupport = try #require(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first)
+    let expected = appSupport.appendingPathComponent("Citybuilder/saves/\(id.uuidString).json")
+    #expect(SaveStore(platform: .standard).url(for: id) == expected)
+}
+
+@Test("scenario: Apple TV save path resolution")
+func scenarioAppleTVSavePathResolution() throws {
+    let id = try #require(UUID(uuidString: "11111111-2222-3333-4444-555555555555"))
+    let caches = try #require(FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first)
+    let expected = caches.appendingPathComponent("Citybuilder/saves/\(id.uuidString).json")
+    #expect(SaveStore(platform: .appleTV).url(for: id) == expected)
 }
 
 @Test("scenario: autosave on backgrounding")
