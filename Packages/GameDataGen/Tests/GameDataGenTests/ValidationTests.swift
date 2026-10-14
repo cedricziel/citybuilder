@@ -135,3 +135,8 @@ func forwardReference() throws {
     let errors = Fixtures.errors(Fixtures.source([("core", core), ("ages", Fixtures.ages)]))
     #expect(errors.contains { $0.hasPrefix("packs/core.yaml:") && $0.contains("ash") })
 }
+
+@Test func nonPositivePlantTicksAreRejected() {
+    let extra = "items:\n  - { kind: Building, id: grove-keeper, effect: code, footprint: [2, 2], cost: 60, plantTicks: 0 }\n"
+    #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("grove-keeper") && $0.contains("plantTicks") })
+}

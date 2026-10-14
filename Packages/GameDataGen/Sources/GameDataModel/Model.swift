@@ -63,6 +63,8 @@ public struct Building: Equatable, Sendable {
     public var upkeep: Int
     public var buildTicks: Int
     public var storage: Int?
+    /// Ticks per planted forest tile, for buildings that plant.
+    public var plantTicks: Int?
     public var category: String?
     public var materials: GoodAmounts
     public var recipe: Recipe?

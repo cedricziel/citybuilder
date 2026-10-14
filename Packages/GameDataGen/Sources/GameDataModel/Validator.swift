@@ -105,6 +105,7 @@ struct Validator {
         if building.cost < 0 || building.upkeep < 0 { report("`cost` and `upkeep` must not be negative") }
         if building.buildTicks <= 0 { report("`buildTicks` must be positive") }
         if let storage = building.storage, storage <= 0 { report("`storage` must be positive; omit it for none") }
+        if let ticks = building.plantTicks, ticks <= 0 { report("`plantTicks` must be positive") }
         if let ticks = building.recipe?.cycleTicks, ticks <= 0 { report("`recipe.cycleTicks` must be positive") }
         switch building.placement {
         case let .shore(land, water)? where land <= 0 || water <= 0:

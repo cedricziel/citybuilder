@@ -118,6 +118,7 @@ private struct ItemReader {
             upkeep: fields.int("upkeep", required: false) ?? 0,
             buildTicks: fields.int("buildTicks", required: false) ?? 30,
             storage: fields.int("storage", required: false),
+            plantTicks: fields.int("plantTicks", required: false),
             category: fields.string("category", required: false),
             materials: fields.amounts("materials", required: false) ?? [],
             recipe: recipe,

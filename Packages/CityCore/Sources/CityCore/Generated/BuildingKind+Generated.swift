@@ -141,6 +141,46 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         }
     }
 
+    public var plantTicks: UInt64? {
+        switch self {
+        case .house: nil
+        case .warehouse: nil
+        case .road: nil
+        case .lumberjackHut: nil
+        case .sawmill: nil
+        case .farm: nil
+        case .bakery: nil
+        case .grainFarm: nil
+        case .windmill: nil
+        case .quernHouse: nil
+        case .mine: nil
+        case .charcoalBurner: nil
+        case .smelter: nil
+        case .toolsmith: nil
+        case .library: nil
+        case .townCenter: nil
+        case .port: nil
+        case .shipyard: nil
+        case .hopGarden: nil
+        case .brewery: nil
+        case .meadHall: nil
+        case .vineyard: nil
+        case .winery: nil
+        case .forum: nil
+        case .teaGarden: nil
+        case .teaHouse: nil
+        case .templeGarden: nil
+        case .coffeeGrove: nil
+        case .roastery: nil
+        case .caravanserai: nil
+        case .monument: nil
+        case .guildHall: nil
+        case .gallery: nil
+        case .steamEngine: nil
+        case .powerPlant: nil
+        }
+    }
+
     public var category: String? {
         switch self {
         case .house: "town"

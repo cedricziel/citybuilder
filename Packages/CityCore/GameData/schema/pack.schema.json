@@ -102,6 +102,7 @@
               "upkeep": { "$ref": "#/$defs/nonNegative" },
               "buildTicks": { "$ref": "#/$defs/positive" },
               "storage": { "description": "Stockpile capacity. Omit for none.", "$ref": "#/$defs/positive" },
+              "plantTicks": { "description": "Ticks per forest tile planted; only planting buildings set it.", "$ref": "#/$defs/positive" },
               "category": { "description": "Build drawer. Omit for none.", "enum": ["town", "gather", "craft"] },
               "materials": { "$ref": "#/$defs/amounts" },
               "recipe": { "$ref": "#/$defs/recipe" },
