@@ -50,3 +50,12 @@ func generateWritesEveryEmittedFile(namespace: String?) throws {
     #expect(throws: GameDataErrors.self) { try result.get() }
     #expect(try contents(of: out).isEmpty)
 }
+
+@Test func generateRemovesStaleGeneratedFilesOnly() throws {
+    let data = try scratch(), out = try scratch()
+    try write(Fixtures.source(), to: data)
+    try (SwiftEmitter.banner + "enum Gone {}\n").write(to: out.appendingPathComponent("Gone.swift"), atomically: true, encoding: .utf8)
+    try "enum Mine {}\n".write(to: out.appendingPathComponent("Mine.swift"), atomically: true, encoding: .utf8)
+    let written = try Generator.generate(dataDirectory: data, outputDirectory: out).get()
+    #expect(try contents(of: out).keys.sorted() == (written + ["Mine.swift"]).sorted())
+}
