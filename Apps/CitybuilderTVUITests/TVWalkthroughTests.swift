@@ -29,16 +29,111 @@ final class TVWalkthroughTests: XCTestCase {
 
     func testTitleSettingsOpenAndBackCloses() {
         launch()
-        openAndGoBack(app.buttons["title.settings"], snapshot: "title-settings")
+        let settings = app.buttons["title.settings"]
+        focus(settings)
+        remote.press(.select)
+        XCTAssertTrue(app.buttons["Audio"].waitForExistence(timeout: 5), "Settings did not open")
+        snapshot("title-settings")
+        let credits = app.buttons["Credits"]
+        focus(credits)
+        remote.press(.select)
+        snapshot("title-settings-credits")
+        goBack(to: settings, name: "Settings")
     }
 
+    func testScenarioShowsGoalsPanel() {
+        startGame {
+            // Start, Cancel, Sandbox, then Scenario: a segment is selected
+            // as focus lands on it.
+            for direction in [XCUIRemote.Button.left, .down, .right] {
+                self.remote.press(direction)
+            }
+            self.snapshot("new-game-scenario")
+            XCTAssertTrue(self.app.buttons["Scenario"].isSelected, "Scenario should be selected")
+        }
+        snapshot("in-game-scenario")
+        openAndGoBack(app.buttons["Goals"], snapshot: "panel-goals")
+    }
+
+    func testRivalTownsShowStandingsPanel() {
+        startGame { self.choose(self.app.buttons["Archipelago"]) }
+        openAndGoBack(app.buttons["Standings"], snapshot: "panel-standings")
+    }
+
+    func testInGamePanelsOpenAndBackCloses() {
+        startGame()
+        snapshot("in-game")
+        XCTAssertTrue(app.buttons["Town"].exists, "the build rail should show")
+        XCTAssertFalse(app.buttons["title.newGame"].exists, "the title screen should be gone")
+        for label in ["Research", "Settings"] {
+            openAndGoBack(app.buttons[label], snapshot: "panel-\(label.lowercased())")
+        }
+    }
+
+    func testPauseMenuSettingsBackReturnsToMenu() {
+        startGame()
+        let pause = app.buttons["Pause"]
+        focus(pause)
+        remote.press(.select)
+        let resume = app.buttons["pause.resume"]
+        XCTAssertTrue(resume.waitForExistence(timeout: 5))
+        XCTAssertTrue(resume.hasFocus, "Resume should hold the initial focus")
+        let settings = app.buttons["pause.settings"]
+        focus(settings)
+        remote.press(.select)
+        XCTAssertTrue(waitUntil(settings, isHittable: false), "pause Settings did not open")
+        snapshot("pause-settings")
+        goBack(to: settings, name: "pause Settings")
+        snapshot("pause-after-settings")
+        goBack(to: pause, name: "pause menu")
+    }
+
+    func testSavedGameContinuesFromTheTitle() {
+        startGame()
+        focus(app.buttons["Pause"])
+        remote.press(.select)
+        let save = app.buttons["pause.saveGame"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        choose(save)
+        app.terminate()
+
+        app.launchArguments = []
+        app.launch()
+        let continueGame = app.buttons["title.continue"]
+        XCTAssertTrue(continueGame.waitForExistence(timeout: 10))
+        waitForFocus(continueGame)
+        snapshot("title-continue")
+        remote.press(.select)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10), "Continue should open the saved game")
+    }
+
+    /// Launches with an empty save folder, so New Game is the primary
+    /// button.
     private func launch() {
         continueAfterFailure = true
+        app.launchArguments = ["-uiTestResetSaves"]
         app.launch()
         let newGame = app.buttons["title.newGame"]
         XCTAssertTrue(newGame.waitForExistence(timeout: 10))
-        // New Game enables, and takes focus, once the iCloud check ends.
-        wait(for: [expectation(for: NSPredicate(format: "hasFocus == true"), evaluatedWith: newGame)], timeout: 10)
+        waitForFocus(newGame)
+    }
+
+    /// The title's buttons enable, and take focus, once the iCloud check
+    /// ends.
+    private func waitForFocus(_ element: XCUIElement) {
+        wait(for: [expectation(for: NSPredicate(format: "hasFocus == true"), evaluatedWith: element)], timeout: 20)
+    }
+
+    /// Starts a game from New Game; `configure` runs with the dialog open.
+    private func startGame(configure: () -> Void = {}) {
+        launch()
+        remote.press(.select)
+        let start = app.buttons["newGame.start"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        configure()
+        focus(start)
+        remote.press(.select)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
     }
 
     /// Opens the screen behind `button`, snapshots it, and checks that Back
@@ -49,31 +144,64 @@ final class TVWalkthroughTests: XCTestCase {
         remote.press(.select)
         XCTAssertTrue(waitUntil(button, isHittable: false), "\(name) did not open")
         snapshot(name)
+        goBack(to: button, name: name)
+    }
+
+    /// Presses Back until `button` is hittable again, and fails when that
+    /// takes more than one press.
+    private func goBack(to button: XCUIElement, name: String) {
         remote.press(.menu)
-        XCTAssertTrue(waitUntil(button, isHittable: true), "Back should close \(name)")
+        if waitUntil(button, isHittable: true) { return }
+        remote.press(.menu)
+        XCTAssertTrue(waitUntil(button, isHittable: true), "Back twice did not close \(name)")
+        XCTFail("\(name) needed two Back presses")
+    }
+
+    /// Selects `element`. A segment of a segmented picker is selected as
+    /// soon as focus passes over it, without a press.
+    private func choose(_ element: XCUIElement) {
+        focus(element, stopWhenSelected: true)
+        if !element.isSelected {
+            remote.press(.select)
+        }
     }
 
     /// Presses toward `element` from whatever has focus until it does.
-    private func focus(_ element: XCUIElement) {
+    /// When a press along the main axis brings focus no closer, as at the
+    /// edge of a focus section or between two buttons in a row, the next
+    /// press tries the other axis.
+    private func focus(_ element: XCUIElement, stopWhenSelected: Bool = false) {
         let focused = app.descendants(matching: .any).matching(NSPredicate(format: "hasFocus == true")).firstMatch
         let target = element.frame
+        func distance(_ frame: CGRect) -> CGFloat {
+            hypot(target.midX - frame.midX, target.midY - frame.midY)
+        }
         var presses = 0
-        while !element.hasFocus, presses < 40 {
+        var stuck = false
+        var last: CGRect? = focused.exists ? focused.frame : nil
+        while !element.hasFocus, !(stopWhenSelected && element.isSelected), presses < 40 {
             presses += 1
-            guard focused.exists else {
+            guard let from = last else {
                 remote.press(.down)
+                last = focused.exists ? focused.frame : nil
                 continue
             }
-            let from = focused.frame
             let dx = target.midX - from.midX
             let dy = target.midY - from.midY
-            if abs(dx) > abs(dy) {
+            let horizontal = (abs(dx) > abs(dy)) != stuck
+            if horizontal, dx != 0 {
                 remote.press(dx > 0 ? .right : .left)
             } else {
                 remote.press(dy > 0 ? .down : .up)
             }
+            let now = focused.exists ? focused.frame : nil
+            stuck = now.map { distance($0) >= distance(from) } ?? false
+            last = now
         }
-        XCTAssertTrue(element.hasFocus, "could not focus \(element.identifier) \(element.label)")
+        XCTAssertTrue(
+            element.hasFocus || (stopWhenSelected && element.isSelected),
+            "could not focus \(element.identifier) \(element.label)"
+        )
     }
 
     private func waitUntil(_ element: XCUIElement, isHittable: Bool) -> Bool {
@@ -93,7 +221,13 @@ final class TVWalkthroughTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
         if let dir = ProcessInfo.processInfo.environment["WALKTHROUGH_DIR"] {
-            try? screenshot.pngRepresentation.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name).png"))
+            let folder = URL(fileURLWithPath: dir)
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try screenshot.pngRepresentation.write(to: folder.appendingPathComponent("\(name).png"))
+            } catch {
+                XCTFail("could not write \(name).png to \(dir): \(error)")
+            }
         }
     }
 }

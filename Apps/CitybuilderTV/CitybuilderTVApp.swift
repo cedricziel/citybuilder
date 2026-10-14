@@ -15,6 +15,12 @@ struct CitybuilderTVApp: App {
 
     init() {
         let saveStore = SaveStore()
+        #if DEBUG
+        // The walk-through UI tests start from an empty save folder.
+        if ProcessInfo.processInfo.arguments.contains("-uiTestResetSaves") {
+            try? FileManager.default.removeItem(at: saveStore.baseDirectory)
+        }
+        #endif
         self.saveStore = saveStore
         saveSync = TVSaveSync(store: saveStore, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
