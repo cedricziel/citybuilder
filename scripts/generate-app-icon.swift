@@ -14,6 +14,8 @@
 //   Apps/CitybuilderiOS/Assets.xcassets/AppIcon.appiconset/icon-1024.png
 //   Apps/CitybuilderMac/Assets.xcassets/AppIcon.appiconset/icon-1024.png
 //                                       (with ~10% transparent inset)
+//   Apps/CitybuilderTV/Assets.xcassets/App Icon & Top Shelf Image.brandassets
+//                                       (layered app icons + Top Shelf)
 //
 // Run from repo root:
 //   swift scripts/generate-app-icon.swift
@@ -223,9 +225,15 @@ let house = sprite("Resources/Buildings.atlas/building-house.png")
 let sawmill = sprite("Resources/Buildings.atlas/building-sawmill.png")
 let lumberjack = sprite("Resources/Buildings.atlas/building-lumberjack-hut.png")
 
+// Terrain and buildings are drawn on separate transparent layers so the
+// tvOS icon can stack them for parallax; the flat icons composite both
+// onto the navy canvas.
+let terrainLayer = Pixmap(width: 256, height: 256)
+let buildingsLayer = Pixmap(width: 256, height: 256)
+
 func place(_ s: Pixmap, col: Int, row: Int) {
     let (x, y) = tileOrigin(col: col, row: row, cx: 1, cy: 1)
-    canvas.blit(s, atX: x, atY: y)
+    terrainLayer.blit(s, atX: x, atY: y)
 }
 
 func placeBuilding(_ s: Pixmap, anchorCol col: Int, anchorRow row: Int, footprintW fw: Int, footprintH fh: Int) {
@@ -247,7 +255,7 @@ func placeBuilding(_ s: Pixmap, anchorCol col: Int, anchorRow row: Int, footprin
     let offsetY = -tileH / 2 * (2 * fh - 1)
     let topLeftX = anchorScreenX + offsetX - s.width / 2
     let topLeftY = anchorScreenY + offsetY - (s.height - tileH)
-    canvas.blit(s, atX: topLeftX, atY: topLeftY)
+    buildingsLayer.blit(s, atX: topLeftX, atY: topLeftY)
 }
 
 // Water ring (back to front so closer tiles overpaint farther ones).
@@ -284,6 +292,9 @@ place(forest, col: -1, row: 1)
 placeBuilding(lumberjack, anchorCol: 0, anchorRow: 0, footprintW: 1, footprintH: 1)
 placeBuilding(sawmill, anchorCol: 1, anchorRow: 0, footprintW: 1, footprintH: 1)
 placeBuilding(house, anchorCol: 1, anchorRow: 1, footprintW: 1, footprintH: 1)
+
+canvas.blit(terrainLayer, atX: 0, atY: 0)
+canvas.blit(buildingsLayer, atX: 0, atY: 0)
 
 // MARK: - Upscale to 1024x1024 with nearest-neighbor
 
@@ -384,7 +395,7 @@ func writeJSON(_ json: String, to path: String) {
         atPath: (path as NSString).deletingLastPathComponent,
         withIntermediateDirectories: true
     )
-    try? json.write(toFile: path, atomically: true, encoding: .utf8)
+    try? (json + "\n").write(toFile: path, atomically: true, encoding: .utf8)
     print("  wrote \(path)")
 }
 
@@ -436,5 +447,125 @@ writeJSON(iOSContents, to: "\(repoRoot)/Apps/CitybuilderiOS/Assets.xcassets/AppI
 writeJSON(macContents, to: "\(repoRoot)/Apps/CitybuilderMac/Assets.xcassets/AppIcon.appiconset/Contents.json")
 writeJSON(rootContents, to: "\(repoRoot)/Apps/CitybuilderiOS/Assets.xcassets/Contents.json")
 writeJSON(rootContents, to: "\(repoRoot)/Apps/CitybuilderMac/Assets.xcassets/Contents.json")
+
+// MARK: - tvOS brand assets: layered app icons and Top Shelf images
+
+/// The bounding box of every non-transparent pixel across `layers`.
+func contentBounds(_ layers: [Pixmap]) -> (x: Int, y: Int, w: Int, h: Int) {
+    var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
+    for layer in layers {
+        for y in 0 ..< layer.height {
+            for x in 0 ..< layer.width where layer.get(x, y).a != 0 {
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+    }
+    return (minX, minY, maxX - minX + 1, maxY - minY + 1)
+}
+
+let islandBounds = contentBounds([terrainLayer, buildingsLayer])
+
+func cropped(_ src: Pixmap, to bounds: (x: Int, y: Int, w: Int, h: Int)) -> Pixmap {
+    let out = Pixmap(width: bounds.w, height: bounds.h)
+    for y in 0 ..< bounds.h {
+        for x in 0 ..< bounds.w {
+            out.set(x, y, src.get(bounds.x + x, bounds.y + y))
+        }
+    }
+    return out
+}
+
+/// Centers `island` on a `width`×`height` canvas, scaled by the largest
+/// whole factor that keeps it inside 80% of the canvas height so the
+/// pixel art stays crisp. `fill` makes the canvas opaque; a nil island
+/// leaves just the fill.
+func tvLayer(_ island: Pixmap?, width: Int, height: Int, fill: PColor = .clear) -> Pixmap {
+    let out = Pixmap(width: width, height: height, fill: fill)
+    guard let island else { return out }
+    let factor = max(1, min(width, height * 8 / 10) / max(island.width, island.height))
+    let scaled = upscale(island, factor: factor)
+    out.blit(scaled, atX: (width - scaled.width) / 2, atY: (height - scaled.height) / 2)
+    return out
+}
+
+let tvRoot = "\(repoRoot)/Apps/CitybuilderTV/Assets.xcassets"
+let brandAssets = "\(tvRoot)/App Icon & Top Shelf Image.brandassets"
+
+/// One layer per entry, front first. Only the back layer is opaque;
+/// the front layers keep their transparency for the parallax effect.
+let tvIconLayers: [(name: String, island: Pixmap?, fill: PColor)] = [
+    ("Front", cropped(buildingsLayer, to: islandBounds), .clear),
+    ("Middle", cropped(terrainLayer, to: islandBounds), .clear),
+    ("Back", nil, navy)
+]
+let topShelfIsland = cropped(canvas, to: islandBounds)
+
+func imagesetContents(scales: [Int], filename: (Int) -> String) -> String {
+    let images = scales.map {
+        "    { \"filename\" : \"\(filename($0))\", \"idiom\" : \"tv\", \"scale\" : \"\($0)x\" }"
+    }
+    return """
+    {
+      "images" : [
+    \(images.joined(separator: ",\n"))
+      ],
+      "info" : { "author" : "xcode", "version" : 1 }
+    }
+    """
+}
+
+func writeImageStack(named stack: String, width: Int, height: Int, scales: [Int]) {
+    let stackDir = "\(brandAssets)/\(stack).imagestack"
+    let layerList = tvIconLayers.map { "    { \"filename\" : \"\($0.name).imagestacklayer\" }" }
+    writeJSON("""
+    {
+      "info" : { "author" : "xcode", "version" : 1 },
+      "layers" : [
+    \(layerList.joined(separator: ",\n"))
+      ]
+    }
+    """, to: "\(stackDir)/Contents.json")
+    for layer in tvIconLayers {
+        let layerDir = "\(stackDir)/\(layer.name).imagestacklayer"
+        writeJSON(rootContents, to: "\(layerDir)/Contents.json")
+        let filename = { (scale: Int) in "\(layer.name.lowercased())-\(width)x\(height)@\(scale)x.png" }
+        for scale in scales {
+            tvLayer(layer.island, width: width * scale, height: height * scale, fill: layer.fill)
+                .savePNG(to: "\(layerDir)/Content.imageset/\(filename(scale))", opaque: layer.fill.a == 255)
+        }
+        writeJSON(imagesetContents(scales: scales, filename: filename), to: "\(layerDir)/Content.imageset/Contents.json")
+    }
+}
+
+func writeTopShelf(named name: String, width: Int, height: Int) {
+    let setDir = "\(brandAssets)/\(name).imageset"
+    let filename = { (scale: Int) in "top-shelf-\(width)x\(height)@\(scale)x.png" }
+    for scale in [1, 2] {
+        tvLayer(topShelfIsland, width: width * scale, height: height * scale, fill: navy)
+            .savePNG(to: "\(setDir)/\(filename(scale))", opaque: true)
+    }
+    writeJSON(imagesetContents(scales: [1, 2], filename: filename), to: "\(setDir)/Contents.json")
+}
+
+writeImageStack(named: "App Icon", width: 400, height: 240, scales: [1, 2])
+writeImageStack(named: "App Icon - App Store", width: 1280, height: 768, scales: [1])
+writeTopShelf(named: "Top Shelf Image", width: 1920, height: 720)
+writeTopShelf(named: "Top Shelf Image Wide", width: 2320, height: 720)
+
+writeJSON("""
+{
+  "assets" : [
+    { "filename" : "App Icon - App Store.imagestack", "idiom" : "tv", "role" : "primary-app-icon", "size" : "1280x768" },
+    { "filename" : "App Icon.imagestack", "idiom" : "tv", "role" : "primary-app-icon", "size" : "400x240" },
+    { "filename" : "Top Shelf Image Wide.imageset", "idiom" : "tv", "role" : "top-shelf-image-wide", "size" : "2320x720" },
+    { "filename" : "Top Shelf Image.imageset", "idiom" : "tv", "role" : "top-shelf-image", "size" : "1920x720" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}
+""", to: "\(brandAssets)/Contents.json")
+writeJSON(rootContents, to: "\(tvRoot)/Contents.json")
 
 print("done.")
