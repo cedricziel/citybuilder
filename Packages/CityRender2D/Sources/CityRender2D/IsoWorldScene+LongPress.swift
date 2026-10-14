@@ -1,6 +1,6 @@
 import SpriteKit
 
-#if canImport(UIKit)
+#if os(iOS)
 import UIKit
 
 /// iOS-only long-press wiring. Mac has no long-press equivalent: the

@@ -100,7 +100,7 @@ public final class IsoWorldScene: SKScene {
         addChild(cameraNode)
         camera = cameraNode
         installNightOverlay()
-        #if canImport(UIKit)
+        #if os(iOS)
         installLongPressRecognizer(on: view)
         #elseif canImport(AppKit)
         // mouseMoved only fires when the host window allows it; opt in here
@@ -116,7 +116,7 @@ public final class IsoWorldScene: SKScene {
         #endif
     }
 
-    #if canImport(UIKit)
+    #if os(iOS)
     override public func touchesEnded(_ touches: Set<UITouch>, with _: UIEvent?) {
         guard let touch = touches.first else { return }
         handlePointerReleased(at: touch.location(in: self))
