@@ -30,8 +30,8 @@ items:
     residentNames: [Aurelia, Bruno, Chiara, Dario, Elena, Fabio, Giulia, Iacopo, Livia, Marco, Nerina, Ottavio,
                     Paola, Quinto, Rosa, Sandro, Tullia, Ugo, Valeria, Zeno, Flavia, Lucio, Marta, Silvio]
 
-  - { kind: Good, id: grapes, name: Grapes, unit: baskets, basePrice: 3 }
-  - { kind: Good, id: wine, name: Wine, unit: amphorae, basePrice: 16 }
+  - { kind: Good, id: grapes, name: Grapes, unit: baskets, basePrice: 3, market: { sell: 20 } }
+  - { kind: Good, id: wine, name: Wine, unit: amphorae, basePrice: 16, market: { sell: 20 } }
 
   - kind: Building
     id: vineyard

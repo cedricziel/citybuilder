@@ -40,7 +40,20 @@ public struct Good: Equatable, Sendable {
     public var name: String
     public var unit: String
     public var basePrice: Int
+    public var market: MarketLimits
     public var origin: Origin
+}
+
+/// Units per season the town market sells to (`buy`) and buys from
+/// (`sell`) the player; 0 when the pack leaves one out.
+public struct MarketLimits: Equatable, Sendable {
+    public var buy: Int
+    public var sell: Int
+
+    public init(buy: Int = 0, sell: Int = 0) {
+        self.buy = buy
+        self.sell = sell
+    }
 }
 
 public struct Recipe: Equatable, Sendable {

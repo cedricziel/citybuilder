@@ -72,7 +72,9 @@ struct Validator {
     // MARK: - Items
 
     private func check(_ good: Good) {
-        if good.basePrice <= 0 { reporter("Good", good.id, good.origin)("`basePrice` must be positive") }
+        let report = reporter("Good", good.id, good.origin)
+        if good.basePrice <= 0 { report("`basePrice` must be positive") }
+        if good.market.buy < 0 || good.market.sell < 0 { report("`market` limits must not be negative") }
     }
 
     private func check(_ building: Building, _ refs: References) {

@@ -46,6 +46,29 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .coffee: 16
         }
     }
+
+    public var marketTerms: MarketTerms {
+        switch self {
+        case .wood: MarketTerms(buyLimit: 10, sellLimit: 20)
+        case .planks: MarketTerms(buyLimit: 10, sellLimit: 20)
+        case .food: MarketTerms(buyLimit: 10, sellLimit: 20)
+        case .bread: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .grain: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .flour: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .ore: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .charcoal: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .iron: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .tools: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .hops: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .beer: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .grapes: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .wine: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .teaLeaves: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .tea: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .coffeeCherries: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .coffee: MarketTerms(buyLimit: 0, sellLimit: 20)
+        }
+    }
 }
 
 public enum GoodsCatalog {

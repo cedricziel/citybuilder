@@ -140,3 +140,19 @@ func forwardReference() throws {
     let extra = "items:\n  - { kind: Building, id: grove-keeper, effect: code, footprint: [2, 2], cost: 60, plantTicks: 0 }\n"
     #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("grove-keeper") && $0.contains("plantTicks") })
 }
+
+@Test func marketLimitsDefaultToZero() throws {
+    let core = Fixtures.core.replacingOccurrences(of: "basePrice: 4 }", with: "basePrice: 4, market: { sell: 20 } }")
+    let data = try Fixtures.load(Fixtures.source([("core", core), ("ages", Fixtures.ages)])).get()
+    #expect(data.goods.map(\.market) == [MarketLimits(buy: 0, sell: 20), MarketLimits(buy: 0, sell: 0)])
+}
+
+@Test func negativeMarketLimitIsRejected() {
+    let extra = "items:\n  - { kind: Good, id: salt, name: Salt, unit: sacks, basePrice: 3, market: { buy: -1, sell: 2 } }\n"
+    #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("Good salt") && $0.contains("market") })
+}
+
+@Test func unknownMarketFieldIsRejected() {
+    let extra = "items:\n  - { kind: Good, id: salt, name: Salt, unit: sacks, basePrice: 3, market: { rent: 1 } }\n"
+    #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("Good salt") && $0.contains("rent") })
+}

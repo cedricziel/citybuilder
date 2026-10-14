@@ -1,10 +1,10 @@
 ## 1. M1 — Market terms as content
 
-- [ ] 1.1 Tests-first: add failing `GameDataGen` tests for an optional `market: { buy, sell }` on `Good` items: both default to 0, negative values and unknown keys are rejected, and the emitter writes `Good.marketTerms`. Add failing CityCore tests for the `town-market` scenarios "Basic goods can be bought" and "Chain goods cannot be bought". Confirm red.
-- [ ] 1.2 Extend `pack.schema.json`, the GameDataGen model, validator and Swift emitter for `market`; keep the emitted output deterministic.
-- [ ] 1.3 Content: set `market: { buy: 10, sell: 20 }` on wood, planks and food and `market: { sell: 20 }` on every other good in `core.yaml` and the four culture packs. Run `make gamedata` and commit the regenerated Swift. Confirm `make gamedata-check` is clean.
-- [ ] 1.4 Refactor under a green bar.
-- [ ] 1.5 Run `make test-scenarios` and confirm no uncovered scenario in `town-market` / Market terms are content.
+- [x] 1.1 Tests-first: add failing `GameDataGen` tests for an optional `market: { buy, sell }` on `Good` items: both default to 0, negative values and unknown keys are rejected, and the emitter writes `Good.marketTerms`. Add failing CityCore tests for the `town-market` scenarios "Basic goods can be bought" and "Chain goods cannot be bought". Confirm red.
+- [x] 1.2 Extend `pack.schema.json`, the GameDataGen model, validator and Swift emitter for `market`; keep the emitted output deterministic.
+- [x] 1.3 Content: set `market: { buy: 10, sell: 20 }` on wood, planks and food and `market: { sell: 20 }` on every other good in `core.yaml` and the four culture packs. Run `make gamedata` and commit the regenerated Swift. Confirm `make gamedata-check` is clean.
+- [x] 1.4 Refactor under a green bar.
+- [x] 1.5 Run `make test-scenarios` and confirm no uncovered scenario in `town-market` / Market terms are content.
 
 ## 2. M2 — Trading in the simulation
 
