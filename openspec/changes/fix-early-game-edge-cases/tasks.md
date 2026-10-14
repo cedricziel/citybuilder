@@ -6,3 +6,12 @@
 - [x] 1.4 Run the determinism fixture twice and confirm identical output
 - [x] 1.5 Refactor under a green bar
 - [x] 1.6 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `economy` or `calendar-and-events` from this change
+
+## 2. M2 — Game-over feedback and the rats threshold
+
+- [ ] 2.1 Tests-first: translate the `platform-shells` scenarios "Bankruptcy banner stays up", "Build tools stay off after game over", "Game over disarms the armed tool" and "Research is off after game over", and the `calendar-and-events` scenario "Rats skip a single food", into failing swift-testing tests in CityUITests and CityCoreTests; confirm red
+- [ ] 2.2 Implement to green: `calendar-and-events` / History events at the turn of the year — rats needs at least 2 food in one operational player store (design D8)
+- [ ] 2.3 Implement to green: `platform-shells` / Game-over banner and tools — the persistent banner in `GameSession.banner` (design D6) and the session gating of tools, tile menu, pending placement and research (design D7)
+- [ ] 2.4 Disable and dim the build rail, its drawer and the research button while the game is over
+- [ ] 2.5 Refactor under a green bar
+- [ ] 2.6 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `platform-shells` or `calendar-and-events` from this change
