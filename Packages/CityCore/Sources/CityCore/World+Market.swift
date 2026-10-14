@@ -26,7 +26,7 @@ extension World {
         at townCenter: EntityID,
         events: inout [WorldEvent]
     ) {
-        guard let center = buildings[townCenter], center.kind == .townCenter, center.owner == .player,
+        guard quantity > 0, let center = buildings[townCenter], center.kind == .townCenter, center.owner == .player,
               center.state == .operational
         else { return }
         let price = good.marketPrice(direction)
