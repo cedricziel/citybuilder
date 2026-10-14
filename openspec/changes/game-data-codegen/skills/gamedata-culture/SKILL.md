@@ -10,7 +10,7 @@ Copy the structure of an existing culture pack (`packs/cultures/northern-europea
 ## Checklist
 
 1. **Culture item**: `name`, one-sentence `blurb` in the house style ("Sandstone, flat roofs and domes."), `tiers` for all three tiers, `luxury` chain, `signature`, at least 24 `residentNames`.
-2. **Goods**: one raw (`basePrice` 3–5) and one luxury (`basePrice` 16). Ids must not collide with existing goods.
+2. **Goods**: one raw (`basePrice` 3–5) and one luxury (`basePrice` 16), each with `market: { sell: 20 }` (sellable at the town market, never buyable). Ids must not collide with existing goods.
 3. **Garden and producer** through the pack's own `garden` and `producer` anchors, both `culture:` set and `unlockedBy: cultivation`. Garden outputs the raw; producer turns 2 raw into 1 luxury.
 4. **Signature building**: 3×3, cost 160–220, `effect: code`. Its bonus is Swift work: name the file (`CultureSignatures.swift` and the inspector lines) and either write it in the same change or list it as open work. Placement rules must be satisfiable on every generated island; avoid terrain counts above the mine's.
 5. **Manifest**: append the pack after the last culture and before `ages`. Never reorder existing packs.

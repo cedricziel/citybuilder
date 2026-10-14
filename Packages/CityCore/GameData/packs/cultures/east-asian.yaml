@@ -30,8 +30,8 @@ items:
     residentNames: [Akiko, Bao, Chen, Daisuke, Emi, Fang, Hana, Hiro, Jun, Kenji, Lan, Mei,
                     Min, Natsu, Ping, Ren, Sakura, Tao, Wen, Xiu, Yuki, Yong, Zhen, Kaito]
 
-  - { kind: Good, id: tea-leaves, name: Tea Leaves, unit: baskets, basePrice: 3 }
-  - { kind: Good, id: tea, name: Tea, unit: chests, basePrice: 16 }
+  - { kind: Good, id: tea-leaves, name: Tea Leaves, unit: baskets, basePrice: 3, market: { sell: 20 } }
+  - { kind: Good, id: tea, name: Tea, unit: chests, basePrice: 16, market: { sell: 20 } }
 
   - kind: Building
     id: tea-garden
