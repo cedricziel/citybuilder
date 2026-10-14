@@ -28,8 +28,8 @@ extension View {
     }
 
     /// Gives `value` the initial focus on Apple TV. A disabled control
-    /// cannot take focus, so when `enabled` turns true later the focus
-    /// moves to `value` then.
+    /// cannot take focus, so when `enabled` turns true later, or `value`
+    /// changes while enabled, the focus moves to `value` then.
     @ViewBuilder
     func tvDefaultFocus<Value: Hashable>(
         _ binding: FocusState<Value>.Binding,
@@ -41,6 +41,11 @@ extension View {
             .onChange(of: enabled) { _, isEnabled in
                 if isEnabled {
                     binding.wrappedValue = value
+                }
+            }
+            .onChange(of: value) { _, newValue in
+                if enabled {
+                    binding.wrappedValue = newValue
                 }
             }
         #else
