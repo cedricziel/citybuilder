@@ -145,6 +145,15 @@ The title-screen notice reads account status through a `TitleScreenModel` seam i
 - _Alternative: iCloud Drive documents._ Not available on tvOS. Rejected.
 - _Alternative: block play without iCloud._ Hostile. Rejected.
 
+Decided during M4:
+
+- **No existing prompt.** `ConflictPolicy` existed, but no prompt did. `TVSaveSync.launch()` therefore never overwrites a local save that is older than its remote copy; it reports that game as a conflict. The title screen then asks "A newer save is in iCloud", offering Load iCloud Save or Keep This Save, and `resolveConflict` replaces the other copy.
+- **A newer local save is uploaded at launch** without a prompt. It is this device's own unsent save, which is what `ConflictPolicy` already decides.
+- **Comparing local and remote saves.** The local save's date is its file modification date. After every upload or download, `TVSaveSync` sets that date to the record's `modificationDate`. Dates within one second count as equal, since file timestamps do not round-trip a `Date` exactly. Without this, every launch would report the device's own upload as a newer remote save.
+- **Corrupt remote saves.** A downloaded save is decoded first and is skipped if it fails.
+- **Seam name.** The seam is `TitleScreenCloudSync`, passed into the existing `TitleScreenViewModel`; there is no separate `TitleScreenModel`. The restore runs in a `.task` on the title view, and the Continue row is re-read after it.
+- **Pending list storage.** `TVSaveSync` takes a `UserDefaults` suite name rather than an instance, because `UserDefaults` is not `Sendable`.
+
 ### D12. Release pipeline additions
 
 - **Fastfile:** a `tv` entry in `TARGETS`:

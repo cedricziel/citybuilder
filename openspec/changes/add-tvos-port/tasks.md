@@ -46,13 +46,13 @@
 
 ## 4. M4 — tvOS saves in iCloud (requires `add-cloudkit-client`)
 
-- [ ] 4.1 Tests-first: translate every `icloud-sync` scenario in this change into failing tests — `TVSaveSync` scenarios in CityPersistence against `InMemoryCloudKitClient`, and the title-screen notice against `TitleScreenModel` in CityUI; confirm red
-- [ ] 4.2 Implement to green: `icloud-sync` / Apple TV keeps saves in iCloud — upload after every save, a pending-upload list in `UserDefaults`, retries at the next save, at launch and on becoming active (design D11)
-- [ ] 4.3 Implement to green: `icloud-sync` / Last-write-wins conflict policy v0 — restore at launch downloads games with no local copy without a prompt; games with both copies go through the existing policy
-- [ ] 4.4 Implement to green: `icloud-sync` / iCloud account not signed in — the Apple TV title-screen notice through `TitleScreenModel`
-- [ ] 4.5 Wire `TVSaveSync` into the tvOS app with the production CloudKit client
-- [ ] 4.6 Refactor under a green bar
-- [ ] 4.7 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `icloud-sync` from this change
+- [x] 4.1 Tests-first: translate every `icloud-sync` scenario in this change into failing tests — `TVSaveSync` scenarios in CityPersistence against `InMemoryCloudKitClient`, and the title-screen notice against `TitleScreenModel` in CityUI; confirm red
+- [x] 4.2 Implement to green: `icloud-sync` / Apple TV keeps saves in iCloud — upload after every save, a pending-upload list in `UserDefaults`, retries at the next save, at launch and on becoming active (design D11)
+- [x] 4.3 Implement to green: `icloud-sync` / Last-write-wins conflict policy v0 — restore at launch downloads games with no local copy without a prompt; games with both copies go through the existing policy
+- [x] 4.4 Implement to green: `icloud-sync` / iCloud account not signed in — the Apple TV title-screen notice through `TitleScreenModel`
+- [x] 4.5 Wire `TVSaveSync` into the tvOS app with the production CloudKit client
+- [x] 4.6 Refactor under a green bar
+- [x] 4.7 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `icloud-sync` from this change
 
 ## 5. M5 — TestFlight
 
