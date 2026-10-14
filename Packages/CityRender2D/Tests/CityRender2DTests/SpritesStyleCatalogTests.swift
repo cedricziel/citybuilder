@@ -391,9 +391,9 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
         contentsOf: worktreeRoot().appendingPathComponent("Makefile"),
         encoding: .utf8
     )
-    /// Find the recipe under target `sprites-reference:` and confirm it
-    /// invokes the pipeline with --regenerate-reference. Other targets
-    /// MUST NOT mention --regenerate-reference.
+    // Find the recipe under target `sprites-reference:` and confirm it
+    // invokes the pipeline with --regenerate-reference. Other targets
+    // MUST NOT mention --regenerate-reference.
     func recipeFor(target: String) -> String {
         let lines = makefile.split(separator: "\n", omittingEmptySubsequences: false)
             .map(String.init)
