@@ -97,6 +97,13 @@ repos:
         files: ^Resources/Sprites\.style/(catalog/.*\.md|_sheets/.*\.png)$
         pass_filenames: false
 
+      - id: gamedata-check
+        name: generated catalogs match the game-data packs (game-data-codegen)
+        entry: make gamedata-check
+        language: system
+        files: ^Packages/CityCore/(GameData/|Sources/CityCore/Generated/)
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |
