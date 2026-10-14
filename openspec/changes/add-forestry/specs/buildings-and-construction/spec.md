@@ -12,9 +12,7 @@ The lumberjack hut and the forester SHALL have an empty material cost for every 
 - **WHEN** the player's island holds 0 wood and 0 planks, the balance is $500, and the player places a lumberjack hut beside forest
 - **THEN** the placement is allowed, $80 is deducted, and the hut starts construction without waiting for materials
 
-## MODIFIED Requirements
-
-### Requirement: Town center starter inventory
+### Requirement: Town center starter goods
 
 World-gen SHALL seed each island's initial town center `Stockpile` with **6 wood + 5 planks + 2 food**. The starter inventory MUST contribute to the island's aggregate stockpile and MUST be available for deduction on the first placements.
 
@@ -28,7 +26,7 @@ World-gen SHALL seed each island's initial town center `Stockpile` with **6 wood
 - **WHEN** the island's `IslandSummary.stockpile` is queried on a fresh world
 - **THEN** it reflects the town center's 6 wood + 5 planks + 2 food (plus any other goods-buffers on the island)
 
-#### Scenario: First lumberjack placement consumes starter wood
+#### Scenario: First lumberjack placement keeps the starter goods
 
 - **WHEN** the player places a lumberjack hut on a fresh world
 - **THEN** placement succeeds and consumes no starter wood: the town center stockpile still reads 6 wood + 5 planks + 2 food, because the hut has no material cost
@@ -42,3 +40,9 @@ World-gen SHALL seed each island's initial town center `Stockpile` with **6 wood
 
 - **WHEN** on a fresh world the player places a house and a lumberjack hut, and then tries to place a sawmill
 - **THEN** the sawmill placement is allowed, because the town center still holds the one plank it needs
+
+## REMOVED Requirements
+
+### Requirement: Town center starter inventory
+**Reason**: Its scenario "First lumberjack placement consumes starter wood" no longer describes the outcome once the lumberjack hut costs no materials, and a modified requirement cannot drop or rename a scenario. "Town center starter goods" replaces it with the same rules and a renamed scenario.
+**Migration**: None. The starter goods and every other scenario are unchanged; only the lumberjack scenario now states that no wood is consumed.

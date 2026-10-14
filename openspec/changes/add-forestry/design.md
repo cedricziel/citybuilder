@@ -35,7 +35,7 @@ A counterfactual run emulated this change inside the harness. Each hut got one f
 
 ### D1 — A forester building, not natural regrowth
 
-The forester is a 2×2 building that turns one open grass tile in its catchment into forest every 40 ticks. A hut cuts one tree every 30 ticks, so one forester covers three quarters of a hut's harvest. Two foresters per three huts, or one per hut in a forest that is already there, keeps the wood supply level. The numbers are content values in the pack and are tuned there. The planting rule itself is code.
+The forester is a 2×2 building that turns one open grass tile in its catchment into forest every 40 ticks. A hut cuts one tree every 30 ticks, so one forester covers three quarters of a hut's harvest. Two foresters per three huts, or one per hut in a forest that is already there, keeps the wood supply level. The numbers are content values in the pack and are tuned there: the forester's `plantTicks` field, a building field added to the pack format for this change, holds the 40-tick cycle. The planting rule itself is code.
 
 - **Alternative — forest regrows on its own** (a cleared tile turns back after N ticks, or grass beside forest spreads at random). Rejected: the player makes no decision, it eats building land in places the player did not pick, and random spread needs an RNG stream and is hard to reason about. Anno solved the same problem with a forester, and players expect it.
 - **Alternative — huts never deplete.** Rejected: it removes the placement puzzle and makes the existing "no trees in reach" issue meaningless.
@@ -80,10 +80,10 @@ The forestry system visits foresters sorted by `EntityID.raw`, like `operational
 
 - [Foresters plant over grass the player wanted for houses] → It only plants within 2 tiles of its own footprint, the inspector shows open grass in reach, and demolishing the forester stops it. Building on forest stays allowed, so planted land is not lost.
 - [Free huts make early wood too easy] → The money cost ($80) still applies, and the hut still needs trees in reach. Watch the first-year balance in the playtest numbers after M1 and tune the cost in the pack if needed.
-- [40-tick planting is too fast or too slow] → It is one pack value. The M1 acceptance test checks that a hut with one forester never reaches zero trees over 2,400 ticks, and the M2 playtest re-run checks a full game.
+- [40-tick planting is too fast or too slow] → It is one pack value. The M1 acceptance test checks that a hut with one forester keeps producing over 2,400 ticks. Because the hut cuts faster (30 ticks) than one forester plants (40), its catchment does run bare for moments, so the scenario bounds that: after the first harvest it is never without forest for longer than one planting cycle. The M2 playtest re-run checks a full game.
 - [Rival foresters change the archipelago fixture and rival pacing] → This is expected. The "Rival buildings touch a road" scenario still holds because foresters go through the same slot and ring-road logic.
 - [Touching CityUI views that `add-tvos-port` also edits] → Changes are limited to `InspectorViewModel` lines, `problemText`, and the tool strip hint string. The tvOS change modifies the "Tool strip" requirement, so this change adds a separate requirement and does not modify that one.
-- [The `lumberjack-hut` scenario title "First lumberjack placement consumes starter wood" no longer describes the outcome] → OpenSpec refuses to drop a scenario in a MODIFIED block, so the title stays and its THEN states that no wood is consumed. The test keeps its name and asserts the new behaviour.
+- [The `lumberjack-hut` scenario title "First lumberjack placement consumes starter wood" no longer describes the outcome] → OpenSpec refuses to drop or rename a scenario in a MODIFIED block, so the delta removes "Town center starter inventory" and adds the same rules as "Town center starter goods", where the scenario is "First lumberjack placement keeps the starter goods". Until the change is archived, the main spec still lists the old title, which `make test-scenarios` reports as unmapped.
 
 ## Migration Plan
 
