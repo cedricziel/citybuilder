@@ -44,6 +44,8 @@ A second, independent scratch harness written for this proposal (not committed) 
 
 The single-island "before" figures match exactly. The two harnesses differ in their hut site definition and search order, so the absolute counts differ (the first counted islands per difficulty differently and found fewer trees per site), but both reach the same conclusions: the site rule alone fixes the single island and leaves most archipelago starts short of trees; the grove makes every start fair; no fallback and no grove failure occurred in 150 runs. The M1 acceptance test (D7) fixes the definitions in code, so the numbers in its output become the reference.
 
+**Reference numbers (M1 acceptance test, `FairStartSiteTests`).** Archipelago seeds 0–49 at Easy, Normal and Hard plus the single island: 751 of 751 town centers fair (750 archipelago, 1 single island), no fallback placement, terrain identical across the three difficulties of every seed. Every start's best hut site reaches 32 trees, the grove's clearing. The single-island town center stands at (39,60) with 169 grass and 90 of 361 mountain tiles in its start area.
+
 ## Goals / Non-Goals
 
 **Goals:**
