@@ -64,7 +64,7 @@ The lumberjack hut's `materials` become empty for every owner, and the forester 
 
 `World.catchmentCount(kind:anchor:owner:)` counts unoccupied forest for a hut and open grass for a forester, for built and unbuilt sites alike. It shares `visitCatchmentForest` with the hut and gets a sibling visitor for grass. `WorldSnapshot.catchments: [EntityID: Int]` holds the count for each player hut and forester. `BuildingIssue` gains `noRoomToPlant`. In `buildingIssues()` a forester is checked first and skips the road and storage checks (spec `warehouses-and-logistics`). The inspector's `problemText` gets the new wording. The hut's existing issue keeps its case and gains the forester hint in its text only.
 
-The tool strip hint reads the count for the pending or hovered anchor from `GameSession`, calling the same world query on the session's current world. That runs only while one of the two kinds is armed, and it costs at most 36 tile reads per frame.
+The tool strip hint reads the count for the pending or hovered anchor from `GameSession`, calling the same world query on the session's current world. On touch, without either, it uses the camera-center tile, as the material chips do, because iPhone hides the strip while a placement is pending and a tap sets no hover. The count is hidden where the building can't go or the player can't pay. On Apple TV the count leads the hint, because the TV instruction ends in a full sentence. That runs only while one of the two kinds is armed, and it costs at most 36 tile reads per frame.
 
 ### D6 — Rivals replant
 
