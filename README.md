@@ -16,8 +16,9 @@ brew install xcodegen pre-commit swiftlint swiftformat libimagequant jpeg-turbo
 Xcode 26 or newer (Swift 6.3+) is required.
 
 CI pins the tools whose versions change results: SwiftFormat and
-SwiftLint (releases disagree on rules), pre-commit, and libimagequant
-(it decides the atlas PNG bytes that `make sprites-verify` compares):
+SwiftLint (releases disagree on rules), pre-commit, libimagequant (it
+decides the atlas PNG bytes that `make sprites-verify` compares),
+jpeg-turbo and XcodeGen:
 
 | Tool          | Pinned version |
 | ------------- | -------------- |
@@ -25,14 +26,33 @@ SwiftLint (releases disagree on rules), pre-commit, and libimagequant
 | SwiftLint     | 0.65.1         |
 | pre-commit    | 4.6.2          |
 | libimagequant | 4.4.1          |
+| jpeg-turbo    | 3.2.0          |
+| XcodeGen      | 2.46.0         |
 
 `scripts/ci/install-pinned-tools.sh` holds the pins; when you change
-one there, update this table too. If `brew install` gave you other
-versions, install the pinned ones:
+one there, update this table too.
+
+Two limits:
+
+- The Homebrew pins (libimagequant, jpeg-turbo, XcodeGen) check a
+  digest; they can't install an older version. When a runner image's
+  Homebrew moves a formula on, CI fails at the install step instead of
+  quietly using the new version. Bump the version and digests in the
+  script and here. For libimagequant, also regenerate the atlases
+  (`make sprites-offline`) in the same PR.
+- zlib is not pinned. Pillow links the zlib that the runner image (or
+  your macOS) ships, and zlib decides the compressed PNG bytes. A new
+  runner image can therefore change the atlas bytes while every pinned
+  version stays the same. When the CityRender2D job fails the byte
+  check, it uploads a `regenerated-atlases` artifact holding the bytes
+  CI produces.
+
+If `brew install` gave you other versions, install the pinned ones:
 
 ```sh
 scripts/ci/install-pinned-tools.sh lint      # then put the bin directory it prints first on PATH
 scripts/ci/install-pinned-tools.sh sprites   # libimagequant and jpeg-turbo via Homebrew
+scripts/ci/install-pinned-tools.sh xcodegen  # XcodeGen via Homebrew
 rm -rf .venv/sprites && make sprites-venv    # Pillow links libimagequant when it is built
 ```
 
