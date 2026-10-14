@@ -17,6 +17,40 @@ permissions:
 # rest. `ci-ok` is the single required check: add or rename jobs freely,
 # as long as they stay in its `needs`.
 jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Specs, agent config and top-level docs need lint only; anything
+      # else runs the full matrix. Pushes to main always do.
+      - name: Decide whether code changed
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA" HEAD)
+          echo "$changed"
+          code_files=$(echo "$changed" | grep -vE '^openspec/|^\.claude/|^[^/]+\.md$' || true)
+          if [ -n "$changed" ] && [ -z "$code_files" ]; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
     name: lint
     runs-on: macos-26
@@ -54,6 +88,8 @@ jobs:
 
   test:
     name: test (${{ matrix.package }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
@@ -144,6 +180,8 @@ jobs:
 
   sprites:
     name: sprite pipeline pytest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     timeout-minutes: 15
 
@@ -173,6 +211,8 @@ jobs:
 
   build:
     name: build (${{ matrix.scheme }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
@@ -225,6 +265,8 @@ jobs:
 
   gamedata-fixture:
     name: gamedata — a fixture pack builds without Swift edits
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     timeout-minutes: 30
 
@@ -246,6 +288,8 @@ jobs:
 
   determinism-linux:
     name: determinism — Linux toolchain build + fixture
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     container: swift:6.0-jammy
     timeout-minutes: 30
@@ -315,7 +359,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [lint, test, sprites, build, gamedata-fixture, determinism-linux, determinism-compare]
+    needs: [changes, lint, test, sprites, build, gamedata-fixture, determinism-linux, determinism-compare]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -323,8 +367,11 @@ jobs:
       - name: Require every job to succeed
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
+          CODE: ${{ needs.changes.outputs.code }}
         run: |
-          echo "job results: $RESULTS"
+          echo "job results: $RESULTS (code changed: $CODE)"
           for result in $RESULTS; do
-            [ "$result" = "success" ] || exit 1
+            [ "$result" = "success" ] && continue
+            [ "$result" = "skipped" ] && [ "$CODE" = "false" ] && continue
+            exit 1
           done
