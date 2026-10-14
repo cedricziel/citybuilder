@@ -129,14 +129,14 @@ jobs:
 
       - name: Upload macOS determinism JSON
         if: matrix.package == 'CityCore'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
         if: always() && matrix.package == 'CityCore'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage
           path: coverage/
@@ -281,7 +281,7 @@ jobs:
           sha256sum determinism/linux.json determinism/linux-36k.json
 
       - name: Upload Linux determinism JSON
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: determinism-linux
           path: determinism/linux*.json
@@ -294,13 +294,13 @@ jobs:
 
     steps:
       - name: Download macOS artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: determinism-macos
           path: determinism
 
       - name: Download Linux artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: determinism-linux
           path: determinism
