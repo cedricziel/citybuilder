@@ -27,6 +27,7 @@ extension CityRootView {
                 Button("Goals", systemImage: "flag.checkered") { goalsPresented = true }
             }
             Button("Research", systemImage: "book.fill") { researchPresented = true }
+                .disabled(!session.isResearchAvailable)
             if StandingsPanelModel.isAvailable(in: session.world) {
                 Button("Standings", systemImage: "trophy.fill") { standingsPresented = true }
             }
@@ -56,6 +57,8 @@ extension CityRootView {
                 .background(.thinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
+        .disabled(!session.isResearchAvailable)
+        .opacity(session.isResearchAvailable ? 1 : 0.4)
         .accessibilityLabel("Research")
     }
 

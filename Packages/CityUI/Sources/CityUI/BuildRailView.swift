@@ -42,6 +42,8 @@ struct BuildRailView: View {
             ) { arm(.demolish) }
         }
         .padding(4)
+        .disabled(session.isGameOver)
+        .opacity(session.isGameOver ? 0.4 : 1)
         .frame(width: isVertical ? layout.railWidth : nil)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
     }
@@ -135,7 +137,7 @@ struct BuildDrawerView: View {
     let layout: HUDLayout
 
     var body: some View {
-        if let category = rail.openDrawer {
+        if let category = rail.openDrawer, !session.isGameOver {
             let kinds = BuildCategory.kinds(in: category, isHidden: session.isHidden)
             let tileWidth: CGFloat = layout.isPhone ? 78 : 92
             let columnCount = layout.drawerColumns

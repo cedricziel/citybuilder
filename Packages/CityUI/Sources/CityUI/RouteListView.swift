@@ -21,6 +21,7 @@ struct RouteListView: View {
                         done()
                         session.beginRouteAuthoring()
                     }
+                    .disabled(session.isGameOver)
                 } footer: {
                     Text("Idle ships: \(idleShips). Or tap a port and choose Route from here.")
                 }
@@ -30,6 +31,7 @@ struct RouteListView: View {
                     }
                     ForEach(rows) { row in
                         RouteRowView(row: row, list: list, isSelected: list.selectedRouteID == row.id, canAssignShip: idleShips > 0)
+                            .disabled(session.isGameOver)
                     }
                 }
             }
