@@ -363,26 +363,31 @@ func scenarioMasterReferenceExistsAndIsAPng() {
 @Test("scenario: make sprites does not regenerate master reference")
 // swiftlint:disable:next inclusive_language
 func scenarioMakeSpritesDoesNotRegenerateMasterReference() throws {
-    let url = worktreeRoot().appendingPathComponent(
-        "Resources/Sprites.style/master-reference.png"
+    // Checked statically: running `make sprites-offline` here would
+    // rewrite every committed atlas PNG in the working tree while other
+    // tests read them. The pipeline writes the reference only in
+    // `_cmd_regenerate_reference`, which only `--regenerate-reference`
+    // reaches, and only the `sprites-reference` target passes that flag
+    // (next scenario).
+    let main = try readFile("scripts/generate_sprites_ai/__main__.py")
+    let referenceCommand = try #require(
+        main.range(of: "def _cmd_regenerate_reference(").map { main[$0.lowerBound...] }
     )
-    guard FileManager.default.fileExists(atPath: url.path) else {
-        Issue.record("master-reference.png is absent; skipping mtime check")
-        return
+    let referenceBody = referenceCommand.split(separator: "\ndef ", maxSplits: 1).first ?? ""
+    let pipelineDir = worktreeRoot().appendingPathComponent("scripts/generate_sprites_ai")
+    let sources = try FileManager.default.contentsOfDirectory(atPath: pipelineDir.path)
+        .filter { $0.hasSuffix(".py") }
+    var writers: [String] = []
+    for source in sources {
+        let text = try readFile("scripts/generate_sprites_ai/\(source)")
+        for line in text.split(separator: "\n") where line.contains("MASTER_REFERENCE") {
+            let writes = ["_save_indexed(", ".save(", "write_bytes(", "open("].contains { line.contains($0) }
+            let inReferenceCommand = source == "__main__.py" && referenceBody.contains(line)
+            if writes, !inReferenceCommand { writers.append("\(source): \(line)") }
+        }
     }
-    let attrsBefore = (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:]
-    let before = attrsBefore[.modificationDate] as? Date
-    let process = Process()
-    process.currentDirectoryURL = worktreeRoot()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["make", "sprites-offline"]
-    process.standardOutput = Pipe()
-    process.standardError = Pipe()
-    try process.run()
-    process.waitUntilExit()
-    let attrsAfter = (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:]
-    let after = attrsAfter[.modificationDate] as? Date
-    #expect(before == after, "make sprites must not modify master-reference.png")
+    #expect(writers.isEmpty, "only _cmd_regenerate_reference may write master-reference.png: \(writers)")
+    #expect(referenceBody.contains("MASTER_REFERENCE"), "_cmd_regenerate_reference must write the reference")
 }
 
 @Test("scenario: make sprites-reference is the only path to regenerate")
@@ -421,7 +426,7 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
     )
     // No other target references --regenerate-reference.
     let lines = makefile.split(separator: "\n").map(String.init)
-    let otherTargets = ["sprites:", "sprites-offline:", "sprites-verify:"]
+    let otherTargets = ["sprites:", "sprites-offline:", "sprites-verify:", "sprites-regen-check:"]
     var violations: [String] = []
     for target in otherTargets {
         var collecting = false
