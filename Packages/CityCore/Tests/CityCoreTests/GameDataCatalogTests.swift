@@ -23,3 +23,20 @@ func scenarioEveryGoodHasAConsumer() {
     let unused = Good.allCases.filter { !consumed.contains($0) }
     #expect(unused.isEmpty, "goods nothing consumes: \(unused)")
 }
+
+@Test func everyContentCaseHasItsDisplayValues() {
+    for kind in BuildingKind.allCases {
+        #expect(!kind.displayName.isEmpty, "\(kind)")
+        #expect((kind.category == nil) == [.road, .townCenter].contains(kind), "\(kind)")
+    }
+    for culture in Culture.allCases {
+        #expect(!culture.displayName.isEmpty && !culture.blurb.isEmpty, "\(culture)")
+    }
+    for tech in Tech.allCases {
+        #expect(!tech.displayName.isEmpty, "\(tech)")
+    }
+    for age in Age.allCases {
+        #expect(!age.displayName.isEmpty && !age.blurb.isEmpty, "\(age)")
+    }
+    #expect(BuildingKind.signatures == [.monument, .guildHall, .gallery, .steamEngine, .powerPlant])
+}
