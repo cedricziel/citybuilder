@@ -3,10 +3,12 @@ import Foundation
 public enum Generator {
     /// Loads and validates the game data, then writes the generated Swift
     /// and returns the written file names. Writes nothing when validation
-    /// fails.
-    public static func generate(dataDirectory: URL, outputDirectory: URL) -> Result<[String], GameDataErrors> {
+    /// fails. A `namespace` is passed on to `SwiftEmitter.emit`.
+    public static func generate(
+        dataDirectory: URL, outputDirectory: URL, namespace: String? = nil
+    ) -> Result<[String], GameDataErrors> {
         GameDataLoader.load(from: DirectorySource(root: dataDirectory)).flatMap { data in
-            let files = SwiftEmitter.emit(data)
+            let files = SwiftEmitter.emit(data, namespace: namespace)
             do {
                 try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
                 for (name, text) in files {
