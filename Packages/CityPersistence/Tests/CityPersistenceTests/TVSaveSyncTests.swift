@@ -6,105 +6,6 @@ import Testing
 // Tests for spec `icloud-sync` — "Apple TV keeps saves in iCloud" and
 // "Last-write-wins conflict policy v0", against the in-memory client.
 
-private struct Harness {
-    let store: SaveStore
-    let client: InMemoryCloudKitClient
-    let defaultsSuite = "citybuilder-tvsync-\(UUID().uuidString)"
-
-    /// Pass `client` to put a second Apple TV on the same iCloud account.
-    init(accountAvailable: Bool = true, client: InMemoryCloudKitClient? = nil) {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("citybuilder-tvsync-\(UUID().uuidString)")
-        store = SaveStore(baseDirectory: directory)
-        self.client = client ?? InMemoryCloudKitClient(accountAvailable: accountAvailable)
-    }
-
-    /// A fresh coordinator over the same disk, cloud and defaults, as on
-    /// a relaunch.
-    func launchSync(client: (any CloudKitClient)? = nil) -> TVSaveSync {
-        TVSaveSync(store: store, client: client ?? self.client, deviceID: "Apple TV", defaultsSuite: defaultsSuite)
-    }
-
-    func bytes(of gameID: UUID) throws -> Data {
-        try store.writer.read(from: store.url(for: gameID))
-    }
-
-    func localWriteDate(of gameID: UUID) throws -> Date {
-        try #require(store.writeDate(gameID: gameID))
-    }
-}
-
-/// Holds the first upload until the test releases it, so a test can act
-/// while that upload is in flight.
-private actor HeldUploadClient: CloudKitClient {
-    let inner: InMemoryCloudKitClient
-    private(set) var uploadCalls = 0
-    private var held: CheckedContinuation<Void, Never>?
-    private var heldArrival: CheckedContinuation<Void, Never>?
-    private var isHolding = true
-
-    init(inner: InMemoryCloudKitClient) {
-        self.inner = inner
-    }
-
-    func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
-        uploadCalls += 1
-        if isHolding {
-            isHolding = false
-            await withCheckedContinuation { continuation in
-                held = continuation
-                heldArrival?.resume()
-                heldArrival = nil
-            }
-        }
-        return try await inner.upload(gameID: gameID, body: body, deviceID: deviceID)
-    }
-
-    /// Returns once the first upload is being held.
-    func waitForHeldUpload() async {
-        guard held == nil else { return }
-        await withCheckedContinuation { heldArrival = $0 }
-    }
-
-    func release() {
-        held?.resume()
-        held = nil
-    }
-
-    func fetchLatest(gameID: UUID) async throws -> CloudRecord? {
-        try await inner.fetchLatest(gameID: gameID)
-    }
-
-    func listGames() async throws -> [CloudRecordSummary] {
-        try await inner.listGames()
-    }
-
-    func isAccountAvailable() async -> Bool {
-        await inner.isAccountAvailable()
-    }
-}
-
-private func world(seed: UInt64 = 1) -> World {
-    World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: seed)
-}
-
-private func saveBytes(_ world: World) throws -> Data {
-    let scratch = SaveStore(baseDirectory: FileManager.default.temporaryDirectory
-        .appendingPathComponent("citybuilder-tvsync-scratch-\(UUID().uuidString)"))
-    let id = UUID()
-    try scratch.save(world, gameID: id)
-    return try scratch.writer.read(from: scratch.url(for: id))
-}
-
-/// Dates the local save of `gameID` `offset` seconds from its remote record.
-private func setLocalWriteDate(_ harness: Harness, gameID: UUID, offset: TimeInterval) async throws {
-    let remote = try #require(await harness.client.records[gameID]).modificationDate
-    try FileManager.default.setAttributes(
-        [.modificationDate: remote.addingTimeInterval(offset)],
-        ofItemAtPath: harness.store.url(for: gameID).path
-    )
-}
-
 @Test("scenario: autosave on Apple TV is uploaded")
 func scenarioAutosaveOnAppleTVIsUploaded() async throws {
     let harness = Harness()
@@ -131,6 +32,7 @@ func scenarioFailedUploadIsRetriedAtLaunch() async throws {
     let relaunched = harness.launchSync()
     #expect(await relaunched.pendingUploads == [id])
     _ = await relaunched.launch()
+    await relaunched.settle()
 
     #expect(await harness.client.records[id] != nil)
     #expect(await relaunched.pendingUploads.isEmpty)
@@ -202,8 +104,10 @@ func launchUploadsANewerLocalSave() async throws {
     _ = try await harness.client.upload(gameID: id, body: saveBytes(world(seed: 2)), deviceID: "iPad")
     try harness.store.save(world(seed: 1), gameID: id)
     try await setLocalWriteDate(harness, gameID: id, offset: 60)
+    let sync = harness.launchSync()
 
-    let result = await harness.launchSync().launch()
+    let result = await sync.launch()
+    await sync.settle()
 
     #expect(result.conflicts.isEmpty)
     let uploaded = await harness.client.records[id]?.body
@@ -242,8 +146,9 @@ func resolvingAConflictForICloudReplacesTheLocalSave() async throws {
     try harness.store.save(world(seed: 1), gameID: id)
     _ = try await harness.client.upload(gameID: id, body: saveBytes(remoteWorld), deviceID: "iPad")
 
-    await harness.launchSync().resolveConflict(gameID: id, keepICloud: true)
+    let resolved = await harness.launchSync().resolveConflict(gameID: id, keepICloud: true)
 
+    #expect(resolved == .resolved)
     #expect(try harness.store.load(gameID: id) == remoteWorld)
 }
 
@@ -255,9 +160,12 @@ func resolvingAConflictForTheLocalSaveReplacesTheICloudCopy() async throws {
     _ = try await harness.client.upload(gameID: id, body: saveBytes(world(seed: 2)), deviceID: "iPad")
     try await setLocalWriteDate(harness, gameID: id, offset: -60)
 
-    let resolved = await harness.launchSync().resolveConflict(gameID: id, keepICloud: false)
+    let sync = harness.launchSync()
+    #expect(await sync.launch().conflicts == [id])
 
-    #expect(resolved)
+    let resolved = await sync.resolveConflict(gameID: id, keepICloud: false)
+
+    #expect(resolved == .resolved)
     let uploaded = await harness.client.records[id]?.body
     #expect(try uploaded == harness.bytes(of: id))
 }
@@ -319,8 +227,10 @@ func launchUploadsALocalSaveThatNeverReachedThePendingList() async throws {
     let harness = Harness()
     let id = UUID()
     try harness.store.save(world(), gameID: id)
+    let sync = harness.launchSync()
 
-    _ = await harness.launchSync().launch()
+    _ = await sync.launch()
+    await sync.settle()
 
     #expect(try await harness.client.records[id]?.body == harness.bytes(of: id))
 }
@@ -335,5 +245,5 @@ func resolvingAConflictForICloudReportsAFailedDownload() async throws {
 
     let resolved = await harness.launchSync().resolveConflict(gameID: id, keepICloud: true)
 
-    #expect(!resolved)
+    #expect(resolved == .unreachable)
 }

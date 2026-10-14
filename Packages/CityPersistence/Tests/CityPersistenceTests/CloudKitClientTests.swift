@@ -20,12 +20,14 @@ func scenarioListingReturnsEveryUploadedGame() async throws {
     #expect(byID[gameA] == CloudRecordSummary(
         gameID: gameA,
         modificationDate: recordA.modificationDate,
-        currentDevice: "iPad"
+        currentDevice: "iPad",
+        changeTag: recordA.changeTag
     ))
     #expect(byID[gameB] == CloudRecordSummary(
         gameID: gameB,
         modificationDate: recordB.modificationDate,
-        currentDevice: "Mac"
+        currentDevice: "Mac",
+        changeTag: recordB.changeTag
     ))
 }
 
@@ -69,6 +71,7 @@ func scenarioSecondUploadReplacesTheRecord() async throws {
     #expect(listed == [CloudRecordSummary(
         gameID: gameID,
         modificationDate: second.modificationDate,
-        currentDevice: "Mac"
+        currentDevice: "Mac",
+        changeTag: second.changeTag
     )])
 }

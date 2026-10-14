@@ -91,9 +91,9 @@ func savesRestoredAtLaunchShowInTheContinueRow() async {
 private actor ResolutionLog {
     var calls: [(gameID: UUID, keepICloud: Bool)] = []
 
-    func record(_ gameID: UUID, _ keepICloud: Bool) -> Bool {
+    func record(_ gameID: UUID, _ keepICloud: Bool) -> SaveConflictResolution {
         calls.append((gameID, keepICloud))
-        return true
+        return .resolved
     }
 }
 
@@ -187,7 +187,7 @@ func aConflictWhoseResolutionFailsStaysAndShowsAnError() async {
     let model = viewModel(cloudSync: TitleScreenCloudSync(
         restoreSaves: { [conflicted] },
         isAccountAvailable: { true },
-        resolveConflict: { _, _ in false }
+        resolveConflict: { _, _ in .unreachable }
     ))
     await model.prepareCloudSaves()
 
@@ -195,4 +195,21 @@ func aConflictWhoseResolutionFailsStaysAndShowsAnError() async {
 
     #expect(model.saveConflicts == [conflicted])
     #expect(model.saveConflictFailure != nil)
+}
+
+@MainActor
+@Test("A conflict whose iCloud copy changed meanwhile asks again")
+func aConflictWhoseICloudCopyChangedMeanwhileAsksAgain() async {
+    let conflicted = UUID()
+    let model = viewModel(cloudSync: TitleScreenCloudSync(
+        restoreSaves: { [conflicted] },
+        isAccountAvailable: { true },
+        resolveConflict: { _, _ in .superseded }
+    ))
+    await model.prepareCloudSaves()
+
+    await model.resolveSaveConflict(keepICloud: false)
+
+    #expect(model.saveConflicts == [conflicted])
+    #expect(model.saveConflictFailure == TitleScreenViewModel.saveConflictSupersededText)
 }
