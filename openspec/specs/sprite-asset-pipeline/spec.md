@@ -303,7 +303,7 @@ Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHA
 
 ### Requirement: Content gate runs in sprite verification
 
-`make sprites-verify` and the CI sprite job SHALL run the content gate after the byte-identical regen check. The job MUST exit non-zero if any content-gate rule fails, and it MUST print every failing sprite with its reason code, one per line.
+`make sprites-verify` SHALL run the content gate (`make sprites-content`) after the byte-identical regen check (`make sprites-regen-check`). In CI, the CityRender2D job SHALL run the regen check inside `swift test` and the content gate once as its own step after it, outside `swift test`. The job MUST exit non-zero if any content-gate rule fails, and it MUST print every failing sprite with its reason code, one per line.
 
 #### Scenario: Verification fails on a content defect even when bytes reproduce
 
