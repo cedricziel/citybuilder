@@ -121,7 +121,7 @@ sprites-regen-check:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
 
 sprites-content:
-	$(SWIFT) run -q --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources
+	$(SWIFT) run -q --package-path Packages/CityRender2D sprite-content-gate Resources
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)
