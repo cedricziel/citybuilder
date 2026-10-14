@@ -85,3 +85,11 @@ func aPendingPlacementIsTheCandidateSite() throws {
     session.pendingPlacement = PendingPlacement(kind: .lumberjackHut, anchor: site, origin: site)
     #expect(session.armedInReachCount == 9)
 }
+
+@Test("the forester sits in the gather drawer after the lumberjack hut")
+func theForesterSitsInTheGatherDrawerAfterTheLumberjackHut() {
+    let gather = BuildCategory.kinds(in: .gather, isHidden: { _ in false })
+    let hut = gather.firstIndex(of: .lumberjackHut)
+    #expect(hut.map { gather.index(after: $0) }.map { gather[$0] } == .forester)
+    #expect(BuildTool.place(.forester).displayName == "Forester")
+}
