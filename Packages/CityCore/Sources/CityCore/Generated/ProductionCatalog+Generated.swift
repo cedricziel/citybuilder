@@ -11,6 +11,7 @@ public enum ProductionCatalog {
         case .warehouse: nil
         case .road: nil
         case .lumberjackHut: ProductionRecipe(inputs: [:], outputs: [.wood: 1], cycleTicks: 30)
+        case .forester: nil
         case .sawmill: ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1], cycleTicks: 25)
         case .farm: ProductionRecipe(inputs: [:], outputs: [.food: 1], cycleTicks: 40)
         case .bakery: ProductionRecipe(inputs: [.flour: 1], outputs: [.bread: 1], cycleTicks: 50)

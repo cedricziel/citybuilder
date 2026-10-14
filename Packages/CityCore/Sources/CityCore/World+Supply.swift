@@ -11,8 +11,16 @@ extension World {
     /// First forest tile within the catchment, scanning row-major from
     /// the top-left corner, or nil when the catchment is cleared.
     func firstForestInCatchment(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
+        firstInCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest)
+    }
+
+    /// First catchment tile matching `isTarget`, row-major from the
+    /// top-left corner.
+    func firstInCatchment(
+        anchor: TileCoordinate, footprint: Footprint, where isTarget: (TileCoordinate) -> Bool
+    ) -> TileCoordinate? {
         var first: TileCoordinate?
-        visitCatchmentForest(anchor: anchor, footprint: footprint) { tile in
+        visitCatchment(anchor: anchor, footprint: footprint, where: isTarget) { tile in
             first = tile
             return false
         }
@@ -22,24 +30,30 @@ extension World {
     /// Unoccupied forest tiles within the catchment.
     func forestTiles(inCatchmentOf anchor: TileCoordinate, footprint: Footprint) -> Int {
         var count = 0
-        visitCatchmentForest(anchor: anchor, footprint: footprint) { _ in
+        visitCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest) { _ in
             count += 1
             return true
         }
         return count
     }
 
-    /// Visits the catchment's unoccupied forest tiles row-major from the
-    /// top-left corner while `visit` returns true. Runs per lumberjack
-    /// per tick, so it allocates nothing.
-    private func visitCatchmentForest(
-        anchor: TileCoordinate, footprint: Footprint, _ visit: (TileCoordinate) -> Bool
+    func isUnoccupiedForest(_ tile: TileCoordinate) -> Bool {
+        terrain(at: tile) == .forest && occupiedTiles[tile] == nil
+    }
+
+    /// Visits the catchment's tiles matching `isTarget` row-major from
+    /// the top-left corner while `visit` returns true. Lumberjacks and
+    /// foresters share it and it runs per building per tick, so it
+    /// allocates nothing.
+    func visitCatchment(
+        anchor: TileCoordinate, footprint: Footprint,
+        where isTarget: (TileCoordinate) -> Bool, _ visit: (TileCoordinate) -> Bool
     ) {
         let radius = Self.lumberjackCatchmentRadius
         for y in anchor.y - radius ... anchor.y + footprint.height - 1 + radius {
             for x in anchor.x - radius ... anchor.x + footprint.width - 1 + radius {
                 let tile = TileCoordinate(x: x, y: y)
-                if terrain(at: tile) == .forest, occupiedTiles[tile] == nil, !visit(tile) { return }
+                if isTarget(tile), !visit(tile) { return }
             }
         }
     }

@@ -226,6 +226,7 @@ public struct World: Codable, Sendable, Equatable {
         // system, so production and population share one source list.
         let signatureSources = activeSignatureSources()
         runProductionSystem(signatureSources: signatureSources, events: &events)
+        runForestrySystem(events: &events)
         runCarrierSystem(events: &events)
         runShipSystem(events: &events)
         runPopulationSystem(signatureSources: signatureSources)

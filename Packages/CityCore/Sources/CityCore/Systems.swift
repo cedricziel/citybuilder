@@ -4,7 +4,7 @@ import Foundation
 /// economy. Each is a pure function of `(inout World) -> Void` so future
 /// changes (parallelization, ordering tweaks) are easy.
 extension World {
-    static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
+    static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm, .forester]
 
     /// Operational producers by entity ID. They share forests, buffers and
     /// new entity IDs, so they run in this order and replays don't depend

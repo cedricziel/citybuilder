@@ -62,6 +62,10 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Why idle player buildings are idle. Spec:
     /// `warehouses-and-logistics` / Buildings report why they are idle.
     public let buildingIssues: [EntityID: BuildingIssue]
+    /// Trees in reach of each player lumberjack hut and open grass in
+    /// reach of each player forester. Spec: `forestry` / Trees and open
+    /// ground in reach.
+    public let catchments: [EntityID: Int]
     /// Population state of every house, keyed by building. Spec:
     /// `rendering-2_5d` / Houses render their tier.
     public let housePopulations: [EntityID: HousePopulation]
@@ -96,6 +100,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         tileToIsland: [TileCoordinate: IslandID] = [:],
         roadDisconnectedBuildings: Set<EntityID> = [],
         buildingIssues: [EntityID: BuildingIssue] = [:],
+        catchments: [EntityID: Int] = [:],
         housePopulations: [EntityID: HousePopulation] = [:],
         date: GameDate = GameDate(year: 1200, season: .spring),
         culture: Culture = .northernEuropean,
@@ -120,6 +125,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.tileToIsland = tileToIsland
         self.roadDisconnectedBuildings = roadDisconnectedBuildings
         self.buildingIssues = buildingIssues
+        self.catchments = catchments
         self.housePopulations = housePopulations
         self.date = date
         self.culture = culture
@@ -212,7 +218,8 @@ public extension World {
             islandSummaries: summaries,
             tileToIsland: tileToIsland,
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
-            buildingIssues: buildingIssues(),
+            buildingIssues: buildingIssues(tileToIsland: tileToIsland),
+            catchments: catchmentCounts(tileToIsland: tileToIsland),
             housePopulations: populations,
             date: date,
             culture: culture,

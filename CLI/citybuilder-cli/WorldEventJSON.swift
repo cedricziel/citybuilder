@@ -30,6 +30,8 @@ enum WorldEventJSON {
             return base("constructionCompleted", entity: building, kind: kind, anchor: anchor)
         case let .forestHarvested(at):
             return ["case": "forestHarvested", "x": at.x, "y": at.y]
+        case let .forestPlanted(at, forester):
+            return ["case": "forestPlanted", "forester": forester.raw, "x": at.x, "y": at.y]
         case let .placementRejected(kind, anchor):
             return ["case": "placementRejected", "kind": kind.rawValue, "x": anchor.x, "y": anchor.y]
         case let .carrierDeparted(carrier, from, good):
