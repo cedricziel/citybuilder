@@ -100,6 +100,10 @@ jobs:
           OPENAI_API_KEY: ""
         run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
 
+      - name: gamedata-check (committed catalogs match the packs)
+        if: matrix.package == 'GameDataGen'
+        run: make gamedata-check SWIFT=swift
+
       - name: Coverage gate (CityCore floors + diff-cover vs main)
         if: matrix.package == 'CityCore'
         env:
@@ -219,6 +223,27 @@ jobs:
             COMPILER_INDEX_STORE_ENABLE=NO \
             build | xcbeautify --renderer github-actions
 
+  gamedata-fixture:
+    name: gamedata — a fixture pack builds without Swift edits
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Generate with the fixture pack and build CityCore, CityUI and CityRender2D
+        env:
+          SWIFT: swift
+        run: ./scripts/check-gamedata-fixture-build.sh
+
   determinism-linux:
     name: determinism — Linux toolchain build + fixture
     runs-on: ubuntu-latest
@@ -239,6 +264,10 @@ jobs:
 
       - name: swift test GameDataGen
         run: swift test --package-path Packages/GameDataGen
+
+      # Same command as `make gamedata-check`; the container has no make.
+      - name: gamedata-check (committed catalogs match the packs)
+        run: swift run -q --package-path Packages/GameDataGen gamedata-gen generate --check
 
       - name: DeterminismFixture (Linux) — produce post-tick JSON
         env:
@@ -286,7 +315,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [lint, test, sprites, build, determinism-linux, determinism-compare]
+    needs: [lint, test, sprites, build, gamedata-fixture, determinism-linux, determinism-compare]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

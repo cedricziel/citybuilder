@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../../CityCore/GameData/schema/pack.schema.json
+# Content that does not exist in the game: a culture with its luxury
+# chain and signature, a shared building and an age. CI generates
+# CityCore with this pack added and builds the packages that read the
+# catalogs, so a pack must never need a Swift edit to compile.
+# Run it locally with scripts/check-gamedata-fixture-build.sh.
+items:
+  - kind: Culture
+    id: andean
+    name: Andean
+    blurb: Stone terraces on steep mountain slopes.
+    tiers: { peasants: Herders, citizens: Weavers, merchants: Traders }
+    luxury: { raw: cocoa-beans, good: chocolate, garden: cocoa-grove, producer: chocolatier }
+    signature: terrace-temple
+    residentNames: [Amaru, Killa, Inti, Nina]
+
+  - { kind: Good, id: cocoa-beans, name: Cocoa Beans, unit: sacks, basePrice: 3 }
+  - { kind: Good, id: chocolate, name: Chocolate, unit: bars, basePrice: 16 }
+
+  - kind: Building
+    id: cocoa-grove
+    culture: andean
+    category: gather
+    footprint: [2, 2]
+    cost: 60
+    storage: 16
+    unlockedBy: cultivation
+    recipe: { outputs: { cocoa-beans: 1 }, cycleTicks: 40 }
+
+  - kind: Building
+    id: chocolatier
+    culture: andean
+    category: craft
+    footprint: [2, 2]
+    cost: 120
+    storage: 16
+    unlockedBy: cultivation
+    recipe: { inputs: { cocoa-beans: 2 }, outputs: { chocolate: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: terrace-temple
+    effect: code
+    culture: andean
+    category: town
+    footprint: [3, 3]
+    cost: 200
+    materials: { wood: 4, planks: 4 }
+
+  - kind: Building
+    id: salt-works
+    category: gather
+    footprint: [2, 2]
+    cost: 90
+    storage: 16
+    placement: { terrain: { type: beach, minTiles: 2 } }
+    recipe: { outputs: { food: 1 }, cycleTicks: 60 }
+
+  - { kind: Age, id: space, startYear: 1969, signature: launch-pad, rivalResidents: 200, blurb: "Rockets and satellites." }
+
+  - kind: Building
+    id: launch-pad
+    effect: code
+    category: town
+    footprint: [3, 3]
+    cost: 500
+    materials: { planks: 8, iron: 8 }
