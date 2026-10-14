@@ -7,6 +7,7 @@ import Foundation
 public enum PauseMenuPlatform: Sendable {
     case mac
     case iOS
+    case tvOS
 }
 
 /// SF Symbol name shown on the HUD pause button for the given pause

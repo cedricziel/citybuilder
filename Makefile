@@ -38,9 +38,9 @@ generate:
 	xcodegen generate
 
 build: generate
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME_IOS) -destination '$(DESTINATION_IOS)' build | xcbeautify || true
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME_MAC) -destination '$(DESTINATION_MAC)' build | xcbeautify || true
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME_TV) -destination '$(DESTINATION_TV)' build | xcbeautify || true
+	set -o pipefail; xcodebuild -project $(PROJECT) -scheme $(SCHEME_IOS) -destination '$(DESTINATION_IOS)' build | xcbeautify
+	set -o pipefail; xcodebuild -project $(PROJECT) -scheme $(SCHEME_MAC) -destination '$(DESTINATION_MAC)' build | xcbeautify
+	set -o pipefail; xcodebuild -project $(PROJECT) -scheme $(SCHEME_TV) -destination '$(DESTINATION_TV)' build | xcbeautify
 	$(SWIFT) build --package-path $(CITYCORE)
 
 test:
