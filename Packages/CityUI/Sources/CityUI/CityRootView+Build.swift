@@ -53,7 +53,7 @@ extension CityRootView {
         return VStack(spacing: 8) {
             PlacementRejectionBanner(hud: session.hud)
             if !hidesStrip {
-                ToolStripView(session: session)
+                ToolStripView(session: session, idiom: layout.idiom)
             }
         }
     }

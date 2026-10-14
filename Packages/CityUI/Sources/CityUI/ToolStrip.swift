@@ -4,20 +4,18 @@ import SwiftUI
 
 /// Text on the tool strip. Spec: `platform-shells` / Tool strip.
 public enum ToolStripText {
-    public static func hint(for tool: BuildTool, touch: Bool) -> String {
-        switch tool {
-        case .inspect: ""
-        case .demolish: touch ? "Tap a building to demolish" : "Click a building to demolish"
-        case .place: "\(touch ? "Tap" : "Click") or drag to place \(tool.displayName.lowercased())"
+    /// `paintingRoad` only matters on Apple TV, where select toggles road
+    /// painting.
+    public static func hint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false) -> String {
+        let name = tool.displayName.lowercased()
+        let touch = idiom.isTouch
+        switch (tool, idiom) {
+        case (.inspect, _): return ""
+        case (.demolish, _): return touch ? "Tap a building to demolish" : "Click a building to demolish"
+        case (.place(.road), .tv): return paintingRoad ? "Click to stop painting road" : "Click to start painting road"
+        case (.place, .tv): return "Move, then click to place \(name). Back to cancel."
+        case (.place, _): return "\(touch ? "Tap" : "Click") or drag to place \(name)"
         }
-    }
-
-    public static var isTouch: Bool {
-        #if os(iOS)
-        true
-        #else
-        false
-        #endif
     }
 }
 
@@ -36,6 +34,7 @@ public extension GameSession {
 /// The armed tool's sprite, name, cost, hint, material chips and cancel.
 struct ToolStripView: View {
     let session: GameSession
+    let idiom: HUDIdiom
 
     var body: some View {
         let tool = session.selectedTool
@@ -44,7 +43,7 @@ struct ToolStripView: View {
                 art(tool)
                 VStack(alignment: .leading, spacing: 0) {
                     title(tool)
-                    Text(ToolStripText.hint(for: tool, touch: ToolStripText.isTouch))
+                    Text(ToolStripText.hint(for: tool, idiom: idiom))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
