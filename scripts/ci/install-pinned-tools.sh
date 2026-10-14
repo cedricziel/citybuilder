@@ -25,10 +25,9 @@ LIBIMAGEQUANT_VERSION=4.4.1
 work="${RUNNER_TEMP:-$(mktemp -d)}/pinned-tools"
 bin="$work/bin"
 
-fetch() { # url sha256 dest [curl args...]
+fetch() { # url sha256 dest
     local url="$1" sha="$2" dest="$3"
-    shift 3
-    curl --fail --silent --show-error --location --retry 3 "$@" "$url" -o "$dest"
+    curl --fail --silent --show-error --location --retry 3 "$url" -o "$dest"
     echo "$sha  $dest" | shasum -a 256 -c -
 }
 
@@ -64,27 +63,29 @@ install_lint() {
 }
 
 install_sprites() {
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install jpeg-turbo
-    local installed
-    installed="$(brew list --versions libimagequant 2>/dev/null || true)"
-    if [[ "$installed" != "libimagequant $LIBIMAGEQUANT_VERSION" ]]; then
-        local tag sha
-        case "$(uname -m)_$(sw_vers -productVersion | cut -d. -f1)" in
-            arm64_26) tag=arm64_tahoe sha=9fe68c59c0500f834deced30fcd58c965148988f238d51791d39c6c284d71684 ;;
-            arm64_15) tag=arm64_sequoia sha=35636b9bf13cd99e77dec879e87736122925c790fec18da07dbcbea76083bdc6 ;;
-            *)
-                echo "No pinned libimagequant bottle for this macOS; add its digest from" >&2
-                echo "https://formulae.brew.sh/api/formula/libimagequant.json" >&2
-                exit 1
-                ;;
-        esac
-        mkdir -p "$work"
-        local bottle="$work/libimagequant--$LIBIMAGEQUANT_VERSION.$tag.bottle.tar.gz"
-        # ghcr.io serves public Homebrew bottles to this anonymous token.
-        fetch "https://ghcr.io/v2/homebrew/core/libimagequant/blobs/sha256:$sha" "$sha" "$bottle" \
-            -H "Authorization: Bearer QQ=="
-        brew uninstall --ignore-dependencies libimagequant 2>/dev/null || true
-        HOMEBREW_NO_AUTO_UPDATE=1 brew install "$bottle"
+    export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+    brew install jpeg-turbo
+    local sha
+    case "$(uname -m)_$(sw_vers -productVersion | cut -d. -f1)" in
+        arm64_27) sha=bc199055cc07090e3b88a54d48ae3d04502ff16dacb5c851846dc2719985cb09 ;;
+        arm64_26) sha=9fe68c59c0500f834deced30fcd58c965148988f238d51791d39c6c284d71684 ;;
+        arm64_15) sha=35636b9bf13cd99e77dec879e87736122925c790fec18da07dbcbea76083bdc6 ;;
+        *)
+            echo "No pinned libimagequant bottle for this macOS; add its digest from" >&2
+            echo "https://formulae.brew.sh/api/formula/libimagequant.json" >&2
+            exit 1
+            ;;
+    esac
+    # Homebrew no longer installs a bottle from a local file, so let it
+    # fetch the bottle its formula names, check that bottle against the
+    # pinned digest, and install from that cached file. A formula that
+    # has moved to another version or bottle fails the digest check.
+    brew fetch --force libimagequant
+    echo "$sha  $(brew --cache libimagequant)" | shasum -a 256 -c -
+    if brew list libimagequant >/dev/null 2>&1; then
+        brew reinstall libimagequant
+    else
+        brew install libimagequant
     fi
     expect_version libimagequant "libimagequant $LIBIMAGEQUANT_VERSION" "$(brew list --versions libimagequant)"
 }
