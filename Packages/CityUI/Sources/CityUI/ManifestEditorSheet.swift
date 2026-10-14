@@ -51,12 +51,21 @@ struct ManifestEditorSheet: View {
                             Text(row.title).tag(row.good)
                         }
                     }
+                    #if os(tvOS)
+                    SteppedValueControl(
+                        "Up to",
+                        value: $quantity,
+                        step: ManifestDraft.quantityStep,
+                        range: ManifestDraft.quantityRange
+                    )
+                    #else
                     Stepper(
                         "Up to \(quantity)",
                         value: $quantity,
                         in: ManifestDraft.quantityRange,
                         step: ManifestDraft.quantityStep
                     )
+                    #endif
                     Button("Add \(model.label(for: verb))") {
                         draft.add(verb, good: good, quantity: quantity)
                     }
