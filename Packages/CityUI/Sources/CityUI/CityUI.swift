@@ -43,15 +43,7 @@ public struct CityRootView: View {
 
     private func rootContent(isPaused isPausedBinding: Binding<Bool>) -> some View {
         ZStack(alignment: .top) {
-            session.worldView
-                .ignoresSafeArea()
-                // simultaneousGesture (vs .gesture) so the underlying
-                // SpriteKit scene still receives touch / mouse events for
-                // tap-tile selection. A bare .gesture(DragGesture(...))
-                // claims the touch sequence and starves the scene's
-                // touchesEnded / mouseUp handlers.
-                .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
-                .simultaneousGesture(zoomGesture)
+            withMapGestures(session.worldView.ignoresSafeArea())
             inspectorCallout
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)

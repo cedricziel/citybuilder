@@ -69,9 +69,7 @@ public struct PauseMenuView: View {
         }
         .buttonStyle(.plain)
         if action.kind == .resume {
-            button
-                .keyboardShortcut(.escape, modifiers: [])
-                .keyboardShortcut(".", modifiers: .command)
+            button.pauseHotkeys()
         } else {
             button
         }
