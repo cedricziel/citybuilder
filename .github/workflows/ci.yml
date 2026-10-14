@@ -265,6 +265,7 @@ jobs:
       - name: swift test GameDataGen
         run: swift test --package-path Packages/GameDataGen
 
+      # Same command as `make gamedata-check`; the container has no make.
       - name: gamedata-check (committed catalogs match the packs)
         run: swift run -q --package-path Packages/GameDataGen gamedata-gen generate --check
 

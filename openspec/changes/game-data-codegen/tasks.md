@@ -41,8 +41,8 @@
 - [x] 4.5 In `.github/workflows/ci.yml`: add `GameDataGen` to the macOS `test` job's package matrix and to the Linux job (the `gamedata-check` step moved to 4.3). Add a `swift` ecosystem entry for `Packages/GameDataGen` in `.github/dependabot.yml`.
 - [x] 4.6 Add a macOS CI step that generates with a fixture pack (a culture, a building and an age that do not exist in the game, placed under `Packages/GameDataGen/Tests/Fixtures/`) into a scratch copy and builds CityCore, CityUI and CityRender2D, proving that a pack needs no Swift edits to compile.
 - [x] 4.7 Document the workflow (add or edit a pack → `make gamedata` → commit both; how the manifest orders cases; `effect: code`; editor schema setup; regenerating determinism baselines when content changes) in the README's contributor section through the technical-writer agent.
-- [ ] 4.8 Refactor under a green bar.
-- [ ] 4.9 Verify `make test-scenarios` is clean for all `game-data-catalog` scenarios, and run `openspec validate game-data-codegen --strict`.
+- [x] 4.8 Refactor under a green bar.
+- [x] 4.9 Verify `make test-scenarios` is clean for all `game-data-catalog` scenarios, and run `openspec validate game-data-codegen --strict`. (Done for every M1–M4 scenario; the five M5 scenarios stay unmapped until M5.)
 
 ## 5. M5 — Agent tooling: semantic diff, hooks and vetted skills
 
