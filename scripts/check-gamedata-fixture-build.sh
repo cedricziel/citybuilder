@@ -3,8 +3,8 @@
 # (game-data-codegen design D11). Copies the packages to a scratch
 # directory, adds Packages/GameDataGen/Tests/Fixtures/fixture-pack.yaml
 # to the manifest, regenerates CityCore's catalogs there and builds the
-# packages that read them; CityCore builds as their dependency. The
-# working tree is never written to.
+# packages that read them; CityCore builds as their dependency. Only
+# the generator's own build directory in the working tree is written to.
 #
 # Usage: scripts/check-gamedata-fixture-build.sh
 # Env:   SWIFT (default `xcrun swift`), KEEP_SCRATCH=1 to keep the copy.
