@@ -4,7 +4,7 @@ import Foundation
 /// economy. Each is a pure function of `(inout World) -> Void` so future
 /// changes (parallelization, ordering tweaks) are easy.
 extension World {
-    static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm]
+    static let seasonalCrops: Set<BuildingKind> = [.farm, .grainFarm, .forester]
 
     /// Operational producers by entity ID. They share forests, buffers and
     /// new entity IDs, so they run in this order and replays don't depend
@@ -185,10 +185,7 @@ extension World {
     ) {
         guard var site = buildings[delivery.building] else { return }
         site.materialsDelivered[delivery.good, default: 0] += delivery.amount
-        let cost = BuildingCatalog.spec(for: site.kind).materialCost
-        let satisfied = cost.allSatisfy {
-            (site.materialsDelivered[$0.key] ?? 0) >= $0.value
-        }
+        let satisfied = site.hasAllMaterials
         let wasWaiting = site.constructionState == .waitingForMaterials
         if wasWaiting, satisfied {
             site.constructionState = .actively

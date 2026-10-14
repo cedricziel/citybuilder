@@ -48,9 +48,9 @@ private func session(
 @MainActor
 @Test("scenario: cost status is ok when have >= need")
 func scenarioCostStatusIsOkWhenHaveGreaterEqualNeed() throws {
-    // Fresh world: town center has 4 wood + 2 planks. Lumberjack hut
-    // needs 2 wood. Status for wood = .ok.
-    let session = session(armed: .lumberjackHut)
+    // Fresh world: the town center holds starter wood and a farm needs
+    // 2 wood. Status for wood = .ok.
+    let session = session(armed: .farm)
     let ghost = try #require(session.ghostState())
     let breakdown = try #require(ghost.costBreakdown)
     #expect(breakdown[.wood]?.status == .ok)

@@ -36,7 +36,7 @@ func scenarioEveryNonFreeBuildingDeclaresPositiveAmounts() {
     // The catalog spans the design D2 recipe table — every paid
     // building lists strictly positive per-good amounts. (No
     // accidental zero entries.)
-    let nonFree: [BuildingKind] = [.lumberjackHut, .sawmill, .warehouse, .house, .port, .shipyard]
+    let nonFree: [BuildingKind] = [.farm, .sawmill, .warehouse, .house, .port, .shipyard]
     for kind in nonFree {
         let cost = BuildingCatalog.spec(for: kind).materialCost
         #expect(!cost.isEmpty, "\(kind) must have a material cost")

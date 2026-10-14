@@ -7,6 +7,8 @@ public enum BuildingIssue: Hashable, Sendable {
     /// Its road doesn't reach a warehouse, port or town center.
     case noRouteToStorage
     case noTreesInReach
+    /// A forester's catchment holds no open grass.
+    case noRoomToPlant
     case missingInputs([Good])
     case storageFull
 }
@@ -16,6 +18,10 @@ public extension World {
     /// the order a player has to fix them. A read-only query: it never
     /// touches simulation state.
     func buildingIssues() -> [EntityID: BuildingIssue] {
+        buildingIssues(tileToIsland: tileToIslandMap())
+    }
+
+    internal func buildingIssues(tileToIsland: [TileCoordinate: IslandID]) -> [EntityID: BuildingIssue] {
         let components = roadComponents()
         let storageComponents = Set(goodsBuffers(of: .player).compactMap { buffer -> Int? in
             guard buffer.state == .operational else { return nil }
@@ -24,6 +30,15 @@ public extension World {
         })
         var issues: [EntityID: BuildingIssue] = [:]
         for building in buildings.values where building.owner == .player && building.state == .operational {
+            // A forester needs no road and no route to storage.
+            if Self.isPlanter(building.kind) {
+                let footprint = BuildingCatalog.spec(for: building.kind).footprint
+                let isOpen = openGrass(for: building.owner, tileToIsland: tileToIsland)
+                if firstInCatchment(anchor: building.anchor, footprint: footprint, where: isOpen) == nil {
+                    issues[building.id] = .noRoomToPlant
+                }
+                continue
+            }
             let recipe = Self.activeRecipe(of: building)
             guard building.kind == .house || recipe != nil else { continue }
             let footprint = BuildingCatalog.spec(for: building.kind).footprint

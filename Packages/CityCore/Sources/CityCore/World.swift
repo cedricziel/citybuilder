@@ -226,6 +226,7 @@ public struct World: Codable, Sendable, Equatable {
         // system, so production and population share one source list.
         let signatureSources = activeSignatureSources()
         runProductionSystem(signatureSources: signatureSources, events: &events)
+        runForestrySystem(events: &events)
         runCarrierSystem(events: &events)
         runShipSystem(events: &events)
         runPopulationSystem(signatureSources: signatureSources)
@@ -247,11 +248,17 @@ public struct World: Codable, Sendable, Equatable {
 
     private mutating func advanceBuildings(events: inout [WorldEvent]) {
         for (id, building) in buildings where building.state == .constructing {
+            var updated = building
+            // A save can hold a site waiting for materials its kind no
+            // longer costs (`add-forestry` Migration Plan).
+            if building.constructionState == .waitingForMaterials, building.hasAllMaterials {
+                updated.constructionState = .actively
+                events.append(.constructionStarted(building: id))
+            }
             // Spec `add-construction-stalls` / "Waiting building does
             // not advance ticksSincePlacement". Construction time only
             // accrues while the substate is `.actively`.
-            guard building.constructionState == .actively else { continue }
-            var updated = building
+            guard updated.constructionState == .actively else { continue }
             updated.ticksSincePlacement &+= 1
             let spec = BuildingCatalog.spec(for: building.kind)
             if updated.ticksSincePlacement >= spec.buildDurationTicks {

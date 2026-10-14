@@ -38,7 +38,7 @@ An operational forester SHALL plant one forest tile every 40 ticks. Planting SHA
 
 #### Scenario: Forester and lumberjack hut sustain each other
 - **WHEN** a lumberjack hut and a forester with overlapping catchments run for 2400 ticks on grass with no forest at the start, with the calendar inactive
-- **THEN** the hut has produced wood, and the forest tiles in the hut's catchment never reach zero after the hut's first harvest
+- **THEN** the hut has completed at least 50 cycles, and after its first harvest its catchment is never without forest for longer than 40 ticks
 
 #### Scenario: Forester never plants on a rival island
 - **WHEN** a player forester's catchment reaches grass on a rival's island

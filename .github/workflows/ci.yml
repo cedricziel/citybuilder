@@ -100,6 +100,20 @@ jobs:
           OPENAI_API_KEY: ""
         run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
 
+      # PNG bytes depend on the encoder's zlib, so a sprite made on another
+      # OS can fail the byte-exact gate. Regenerate here and upload the
+      # atlases, so they can be committed as CI encodes them.
+      - name: Regenerate atlases after a sprite gate failure
+        if: failure() && matrix.package == 'CityRender2D'
+        run: make sprites-offline
+
+      - name: Upload regenerated atlases
+        if: failure() && matrix.package == 'CityRender2D'
+        uses: actions/upload-artifact@v6
+        with:
+          name: regenerated-atlases
+          path: Resources/*.atlas/
+
       - name: gamedata-check (committed catalogs match the packs)
         if: matrix.package == 'GameDataGen'
         run: make gamedata-check SWIFT=swift

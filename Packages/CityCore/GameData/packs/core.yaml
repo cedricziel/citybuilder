@@ -59,10 +59,20 @@ items:
     name: Lumberjack                 # short palette label
     legacyIds: [lumberjack_hut]      # saves written before the rename
     category: gather
-    cost: 80
+    cost: 80                         # money only, so wood can always restart
     buildTicks: 25
-    materials: { wood: 2 }
     recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
+
+  # Plants one forest tile on open grass within 2 tiles every cycle;
+  # planting is Swift (Systems/ForestrySystem.swift). Spec: forestry
+  - kind: Building
+    id: forester
+    effect: code
+    category: gather
+    footprint: [2, 2]
+    cost: 60
+    buildTicks: 20
+    plantTicks: 40                   # a hut cuts a tree every 30 ticks
 
   - kind: Building
     id: sawmill

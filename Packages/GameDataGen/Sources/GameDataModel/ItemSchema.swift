@@ -15,7 +15,7 @@ public enum ItemSchema {
         "Building": Fields(
             required: ["id", "footprint", "cost"],
             optional: [
-                "name", "legacyIds", "upkeep", "buildTicks", "storage", "category", "materials", "recipe",
+                "name", "legacyIds", "upkeep", "buildTicks", "storage", "plantTicks", "category", "materials", "recipe",
                 "unlockedBy", "obsoletedBy", "culture", "placement", "effect"
             ]
         ),

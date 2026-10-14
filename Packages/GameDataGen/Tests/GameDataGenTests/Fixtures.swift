@@ -162,7 +162,7 @@ enum Fixtures {
     static let optionalFields: [String: [String: String]] = [
         "Good": [:],
         "Building": [
-            "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16",
+            "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16", "plantTicks": "40",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
             "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code"

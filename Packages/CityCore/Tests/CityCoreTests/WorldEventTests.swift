@@ -17,6 +17,7 @@ private let eventSamples: [WorldEvent] = [
     .constructionWaitingForMaterials(building: EntityID(raw: 1), missing: [.wood: 1]),
     .constructionStarted(building: EntityID(raw: 1)),
     .forestHarvested(at: TileCoordinate(x: 0, y: 0)),
+    .forestPlanted(at: TileCoordinate(x: 0, y: 0), forester: EntityID(raw: 1)),
     .carrierDeparted(carrier: EntityID(raw: 1), from: TileCoordinate(x: 0, y: 0), good: .wood),
     .carrierArrived(carrier: EntityID(raw: 1), at: TileCoordinate(x: 0, y: 0), good: .wood, amount: 1),
     .productionCycleCompleted(producer: EntityID(raw: 1), kind: .sawmill),
@@ -46,7 +47,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
     // Construct one event of every case. Exhaustiveness is enforced by the
     // case-less switch below: removing a case breaks the construction;
     // adding a case without updating the test makes the compiler warn.
-    #expect(eventSamples.count == 29)
+    #expect(eventSamples.count == 30)
     for event in eventSamples {
         switch event {
         case .buildingPlaced,
@@ -56,6 +57,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .constructionWaitingForMaterials,
              .constructionStarted,
              .forestHarvested,
+             .forestPlanted,
              .carrierDeparted,
              .carrierArrived,
              .productionCycleCompleted,

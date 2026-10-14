@@ -230,3 +230,10 @@ public extension BuildingKind {
         self.culture.map { $0 == culture } ?? true
     }
 }
+
+extension Building {
+    /// The materials delivered so far cover its kind's material cost.
+    var hasAllMaterials: Bool {
+        BuildingCatalog.spec(for: kind).materialCost.allSatisfy { (materialsDelivered[$0.key] ?? 0) >= $0.value }
+    }
+}

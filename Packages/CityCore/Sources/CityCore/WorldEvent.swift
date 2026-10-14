@@ -34,6 +34,8 @@ public enum WorldEvent: Sendable {
     case constructionStarted(building: EntityID)
     /// A forest tile was cleared (harvested by the player or consumed by a lumberjack).
     case forestHarvested(at: TileCoordinate)
+    /// A forester turned an open grass tile into forest. Spec: `forestry`.
+    case forestPlanted(at: TileCoordinate, forester: EntityID)
     /// A placement command was rejected. Emitted only if the command is dispatched
     /// without prior `canPlace` validation; the UI normally pre-filters these.
     case placementRejected(kind: BuildingKind, anchor: TileCoordinate)
@@ -132,6 +134,8 @@ extension WorldEvent: Equatable {
             .constructionWaitingForMaterials(rBuilding, rMissing)
         ):
             return lBuilding == rBuilding && lMissing == rMissing
+        case let (.forestPlanted(lAt, lForester), .forestPlanted(rAt, rForester)):
+            return lAt == rAt && lForester == rForester
         case let (.forestHarvested(lAt), .forestHarvested(rAt)):
             return lAt == rAt
         case let (.placementRejected(lKind, lAnchor), .placementRejected(rKind, rAnchor)):
@@ -201,7 +205,8 @@ public extension WorldEvent {
              let .productionStalled(producer, _),
              let .productionResumed(producer, _):
             return producer
-        case let .fuelRanOut(building, _),
+        case let .forestPlanted(_, building),
+             let .fuelRanOut(building, _),
              let .monumentCompleted(building),
              let .commissionStarted(building),
              let .commissionEnded(building),
@@ -244,6 +249,7 @@ public extension WorldEvent {
              .constructionWaitingForMaterials,
              .constructionStarted,
              .forestHarvested,
+             .forestPlanted,
              .carrierDeparted,
              .carrierArrived,
              .taxesCollected,
@@ -300,6 +306,7 @@ public extension WorldEvent {
         case .caravanSold: return 26
         case .rivalAgeAdvanced: return 27
         case .tradeCompleted: return 28
+        case .forestPlanted: return 29
         }
     }
 }

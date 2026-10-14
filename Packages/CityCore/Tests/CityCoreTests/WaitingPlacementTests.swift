@@ -94,14 +94,14 @@ func scenarioApplyPlaceMarksBuildingWaitingForMaterialsWhenPartiallySupplied() t
 func scenarioApplyPlaceMarksBuildingActivelyWhenFullySupplied() throws {
     var world = World.newGame()
     world.economy.credit(100_000)
-    // Town center starter is 6 wood + 4 planks; lumberjack costs 2 wood.
+    // Town center starter is 6 wood + 5 planks; a farm costs 2 wood.
     let anchor = try #require(firstFreeGrassAnchor2x2(in: world))
-    world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
+    world.pendingCommands.append(.place(.farm, at: anchor))
     _ = world.tick()
-    let placed = world.buildings.values.first { $0.kind == .lumberjackHut && $0.anchor == anchor }
-    let lumberjack = try #require(placed)
-    #expect(lumberjack.constructionState == .actively)
-    #expect(lumberjack.materialsDelivered[.wood] == 2)
+    let placed = world.buildings.values.first { $0.kind == .farm && $0.anchor == anchor }
+    let farm = try #require(placed)
+    #expect(farm.constructionState == .actively)
+    #expect(farm.materialsDelivered[.wood] == 2)
 }
 
 @Test("scenario: applyplace emits constructionwaitingformaterials when partial")
@@ -148,7 +148,7 @@ func scenarioNeitherEventEmittedForInstantDeductPlacement() throws {
     var world = World.newGame()
     world.economy.credit(100_000)
     let anchor = try #require(firstFreeGrassAnchor2x2(in: world))
-    world.pendingCommands.append(.place(.lumberjackHut, at: anchor))
+    world.pendingCommands.append(.place(.farm, at: anchor))
     let result = world.tick()
     let hasWaiting = result.events.contains { event in
         if case .constructionWaitingForMaterials = event { return true }
