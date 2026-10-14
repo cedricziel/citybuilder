@@ -189,6 +189,8 @@ Migration happens in two steps (see Migration Plan). First, the generator emits 
 
 The parity test is a migration gate, not a lasting spec requirement. It is deleted together with the legacy tables in M3. From then on, every value change is visible as a diff of the committed `Generated/` files, which `gamedata-check` keeps in sync with the packs. A separate snapshot file would duplicate that.
 
+How the parity step is built (M2): `gamedata-gen generate --namespace GameDataParity` writes one file, `Generated/GameDataParity.swift`, that nests every generated type in an internal `enum GameDataParity`. The generated types declare their values inside the enum body, so the same emitter code serves both modes; only the access level and the wrapping differ. The catalog value types (`GoodSpec`, `BuildingSpec`, `ProductionRecipe`, `LuxuryChain`) refer to the content enums, so the namespace gets hand-written copies of them in `GameDataParitySpecs.swift`. The building labels and drawers live in CityUI (`BuildTool.displayName`, `BuildCategory.of`), so that part of the parity test is in `CityUITests`. A `GameDataGenTests` test regenerates the namespace from the committed packs and compares it with the committed file until `gamedata-check` lands in M4.
+
 Values alone do not prove unchanged behaviour, so M2 also records a **determinism baseline**: the output of `DeterminismFixture` at its default length and at 36000 ticks, run on unchanged `main` with `SWIFT_DETERMINISTIC_HASHING=1` as CI does. CI today only compares macOS with Linux on the same commit, which cannot catch a behaviour change between commits. After M3, the fixture output must equal the recorded baseline byte for byte. The baseline lives in the change folder (`openspec/changes/game-data-codegen/baseline/`) and is archived with the change; turning it into a standing CI gate is out of scope.
 
 ### D9. `effect: code` marks buildings whose behaviour is in Swift
@@ -281,7 +283,7 @@ Generated files import only `Foundation` (and need even less). `check-no-apple-u
 - [Xcode has no YAML schema support] → VS Code and other LSP editors get schema validation; everyone gets the generator's error messages, which name the file and entry.
 - [The generator's own tests never run in CI, because the package list in `ci.yml` is hard-coded] → M4 adds `GameDataGen` to the macOS test matrix and the Linux job.
 - [The generator becomes a second codebase to maintain] → Keep it small: a decoder, a validator and a string emitter, with no templating engine. Covered by its own tests.
-- [SwiftLint or SwiftFormat flag generated code] → `Generated/` is excluded from SwiftFormat and from SwiftLint's `cyclomatic_complexity`, `file_length` and `line_length` rules. Writing format-clean output by hand is fragile, and SwiftFormat is not installed in the Linux container, so `gamedata-check` cannot depend on it.
+- [SwiftLint or SwiftFormat flag generated code] → `Generated/` is excluded from SwiftFormat and from SwiftLint's `cyclomatic_complexity`, `file_length`, `line_length` and `type_body_length` rules. SwiftLint (0.65) cannot exclude a path from single rules in `.swiftlint.yml`, so each generated file opens with `// swiftlint:disable` for those rules and closes with the matching `enable`; every other rule still applies. Both exclusions landed in M2, with the first generated file. Writing format-clean output by hand is fragile, and SwiftFormat is not installed in the Linux container, so `gamedata-check` cannot depend on it.
 
 ## Migration Plan
 

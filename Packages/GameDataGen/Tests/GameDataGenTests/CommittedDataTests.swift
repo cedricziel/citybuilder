@@ -52,3 +52,10 @@ func schemaAndDecoderAgree() throws {
     #expect(Set(properties.keys) == ["schemaVersion", "packs"])
     #expect(Set(index["required"] as? [String] ?? []) == ["schemaVersion", "packs"])
 }
+
+@Test func committedParityCatalogsMatchThePacks() throws {
+    let data = try GameDataLoader.load(from: DirectorySource(root: committedData)).get()
+    let generated = committedData.deletingLastPathComponent().appendingPathComponent("Sources/CityCore/Generated/GameDataParity.swift")
+    let committed = try String(contentsOf: generated, encoding: .utf8)
+    #expect(SwiftEmitter.emit(data, namespace: "GameDataParity")["GameDataParity.swift"] == committed)
+}

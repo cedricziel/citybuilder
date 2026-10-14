@@ -11,14 +11,14 @@
 ## 2. M2 — Baseline, packs and parity
 
 - [x] 2.1 Record the determinism baseline on unchanged `main`: run `DeterminismFixture` at its default length and at 36000 ticks, with `SWIFT_DETERMINISTIC_HASHING=1` (as CI does), and commit both outputs under `openspec/changes/game-data-codegen/baseline/`.
-- [ ] 2.2 Tests-first: add the scenario "Schema and decoder agree" in `GameDataGenTests`, and a migration-only parity test in `CityCoreTests` (not a spec scenario; it is deleted in 3.3). The parity test compares a `GameDataParity` namespace field by field against today's `GoodsCatalog`, `Good.basePrice`, `BuildingCatalog` (including the signature specs), `ProductionCatalog`, `Culture`, `Tech`, `Age`, `World.stockpileCapacity`, `ResidentNames`, `Age.rivalResidentThreshold`, `BuildingKind.signatureCulture`, `BuildingKind.signatures` (the stand-in for the new `Age.signature`), the `BuildTool` building labels and `BuildCategory.of`. It checks case order for `Good`, `Culture`, `Tech` and `Age` and compares `BuildingKind` as a set. Confirm red.
+- [x] 2.2 Tests-first: add the scenario "Schema and decoder agree" in `GameDataGenTests`, and a migration-only parity test in `CityCoreTests` (not a spec scenario; it is deleted in 3.3). The parity test compares a `GameDataParity` namespace field by field against today's `GoodsCatalog`, `Good.basePrice`, `BuildingCatalog` (including the signature specs), `ProductionCatalog`, `Culture`, `Tech`, `Age`, `World.stockpileCapacity`, `ResidentNames`, `Age.rivalResidentThreshold`, `BuildingKind.signatureCulture`, `BuildingKind.signatures` (the stand-in for the new `Age.signature`), the `BuildTool` building labels and `BuildCategory.of`. It checks case order for `Good`, `Culture`, `Tech` and `Age` and compares `BuildingKind` as a set. Confirm red.
 - [x] 2.3 Write `GameData/index.yaml` with the pack order from design D2, and `packs/core.yaml` with the ten base goods in today's order, the base buildings (house through shipyard, with `legacyIds` for `lumberjack-hut` and `town-center`, placement rules, recipes, `storage`, `obsoletedBy`, `unlockedBy`, `name` from today's `BuildTool` labels, `category` from `BuildCategory.of`, and `effect: code` on house, warehouse, road, town center, library, port and shipyard) and the six regular techs.
 - [x] 2.4 Write the four `packs/cultures/*.yaml`: culture (name, blurb, tier names, luxury chain, signature, resident names), raw and luxury good, garden and producer through the pack's `defaults` anchors, and the signature building (`effect: code`), each with its `category`. Carry today's doc comments over as YAML comments.
 - [x] 2.5 Write `packs/ages.yaml`: the five ages (start year, blurb, signature, rival residents), the four era techs (cost, prerequisites, era, era gate) and the five age signature buildings (`effect: code`, with `category`; the monument keeps its stage recipe without outputs).
 - [x] 2.6 Write `index.schema.json` and `pack.schema.json` (one `if kind … then` branch per kind) under `GameData/schema/`, and make "Schema and decoder agree" pass.
-- [ ] 2.7 Implement to green: add an emitter mode that writes into a `GameDataParity` namespace, generate it into CityCore, and make the parity test pass.
-- [ ] 2.8 Refactor under a green bar.
-- [ ] 2.9 Verify `make test-scenarios` is clean for this milestone's scenarios.
+- [x] 2.7 Implement to green: add an emitter mode that writes into a `GameDataParity` namespace, generate it into CityCore, and make the parity test pass.
+- [x] 2.8 Refactor under a green bar.
+- [x] 2.9 Verify `make test-scenarios` is clean for this milestone's scenarios.
 
 ## 3. M3 — Switch CityCore to generated catalogs
 
