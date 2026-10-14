@@ -179,6 +179,8 @@ jobs:
             destination: generic/platform=iOS Simulator
           - scheme: CitybuilderMac
             destination: platform=macOS
+          - scheme: CitybuilderTV
+            destination: generic/platform=tvOS Simulator
           - scheme: citybuilder-cli
             destination: platform=macOS
 
@@ -192,6 +194,11 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
+
+      - name: Install the tvOS simulator runtime when missing
+        if: matrix.scheme == 'CitybuilderTV'
+        run: |
+          xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
 
       - name: Install XcodeGen
         run: brew install xcodegen
