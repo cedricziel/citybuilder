@@ -34,6 +34,11 @@ On each tick that starts a year after the first, with the calendar active, the w
 - **WHEN** a year starts whose decided event is rats in the granary and the only operational player goods buffer holds 1 food
 - **THEN** that tick emits no `historyEvent` world event and the buffer still holds 1 food
 
+#### Scenario: Rats fire with two food
+
+- **WHEN** a year starts whose decided event is rats in the granary and the only operational player goods buffer holds 2 food
+- **THEN** that tick emits the rats `historyEvent` and the buffer holds 1 food
+
 #### Scenario: Bountiful harvest fills the stores
 
 - **WHEN** a bountiful harvest applies with an operational town center that has free space
