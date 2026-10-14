@@ -57,7 +57,7 @@ The tvOS simulator runtime is a separate download of several GB. Check `xcrun si
    ```
 
    - Add a test for each new flow. Its `focus(_:)` helper presses toward an element until it holds focus.
-   - Each test launches with `-uiTestResetSaves`, which the Debug app honours by deleting its save folder, so saves from manual runs (step 6) do not move the title's focus to Continue.
+   - Each test launches with `-uiTestResetSaves`, which the Debug app honours by deleting its save folder and swapping in an empty pending-upload list and a signed-out, in-memory iCloud, so saves from manual runs (step 6) or from iCloud do not move the title's focus to Continue.
    - The test creates the screenshot folder and fails when it cannot write a screenshot.
    - Routes and the manifest editor need a player port. Until remote placement works (M2), no test reaches them.
    - The test class is `@MainActor` and has no `setUp`, because Swift 6 isolation rejects an override there.

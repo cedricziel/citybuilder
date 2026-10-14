@@ -37,6 +37,10 @@ final class TVWalkthroughTests: XCTestCase {
         let credits = app.buttons["Credits"]
         focus(credits)
         remote.press(.select)
+        XCTAssertTrue(
+            app.staticTexts["Audio assets used in this app:"].waitForExistence(timeout: 5),
+            "Credits did not show"
+        )
         snapshot("title-settings-credits")
         goBack(to: settings, name: "Settings")
     }
@@ -52,12 +56,12 @@ final class TVWalkthroughTests: XCTestCase {
             XCTAssertTrue(self.app.buttons["Scenario"].isSelected, "Scenario should be selected")
         }
         snapshot("in-game-scenario")
-        openAndGoBack(app.buttons["Goals"], snapshot: "panel-goals")
+        openAndGoBack(app.buttons["Goals"], expecting: app.buttons["Done"].firstMatch, snapshot: "panel-goals")
     }
 
     func testRivalTownsShowStandingsPanel() {
         startGame { self.choose(self.app.buttons["Archipelago"]) }
-        openAndGoBack(app.buttons["Standings"], snapshot: "panel-standings")
+        openAndGoBack(app.buttons["Standings"], expecting: app.buttons["Done"].firstMatch, snapshot: "panel-standings")
     }
 
     func testInGamePanelsOpenAndBackCloses() {
@@ -65,9 +69,8 @@ final class TVWalkthroughTests: XCTestCase {
         snapshot("in-game")
         XCTAssertTrue(app.buttons["Town"].exists, "the build rail should show")
         XCTAssertFalse(app.buttons["title.newGame"].exists, "the title screen should be gone")
-        for label in ["Research", "Settings"] {
-            openAndGoBack(app.buttons[label], snapshot: "panel-\(label.lowercased())")
-        }
+        openAndGoBack(app.buttons["Research"], expecting: app.buttons["Done"].firstMatch, snapshot: "panel-research")
+        openAndGoBack(app.buttons["Settings"], expecting: app.buttons["Audio"].firstMatch, snapshot: "panel-settings")
     }
 
     func testPauseMenuSettingsBackReturnsToMenu() {
@@ -81,7 +84,8 @@ final class TVWalkthroughTests: XCTestCase {
         let settings = app.buttons["pause.settings"]
         focus(settings)
         remote.press(.select)
-        XCTAssertTrue(waitUntil(settings, isHittable: false), "pause Settings did not open")
+        XCTAssertTrue(app.buttons["Audio"].waitForExistence(timeout: 5), "pause Settings did not open")
+        XCTAssertFalse(app.buttons["Pause"].exists, "the game should stay paused under Settings")
         snapshot("pause-settings")
         goBack(to: settings, name: "pause Settings")
         snapshot("pause-after-settings")
@@ -95,6 +99,7 @@ final class TVWalkthroughTests: XCTestCase {
         let save = app.buttons["pause.saveGame"]
         XCTAssertTrue(save.waitForExistence(timeout: 5))
         choose(save)
+        XCTAssertTrue(app.staticTexts["Saved"].waitForExistence(timeout: 5), "Save Game did not report Saved")
         app.terminate()
 
         app.launchArguments = []
@@ -130,19 +135,20 @@ final class TVWalkthroughTests: XCTestCase {
         remote.press(.select)
         let start = app.buttons["newGame.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 5))
+        waitForFocus(start)
         configure()
         focus(start)
         remote.press(.select)
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
     }
 
-    /// Opens the screen behind `button`, snapshots it, and checks that Back
-    /// returns to `button`.
-    private func openAndGoBack(_ button: XCUIElement, snapshot name: String) {
+    /// Opens the screen behind `button`, checks that `content` shows,
+    /// and that one Back returns to `button`.
+    private func openAndGoBack(_ button: XCUIElement, expecting content: XCUIElement, snapshot name: String) {
         XCTAssertTrue(button.exists, "\(button.label) button missing")
         focus(button)
         remote.press(.select)
-        XCTAssertTrue(waitUntil(button, isHittable: false), "\(name) did not open")
+        XCTAssertTrue(content.waitForExistence(timeout: 5), "\(name) did not open")
         snapshot(name)
         goBack(to: button, name: name)
     }
