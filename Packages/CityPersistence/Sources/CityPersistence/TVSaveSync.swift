@@ -1,5 +1,4 @@
 import Foundation
-import Synchronization
 
 /// How settling a conflict ended. `superseded` means the iCloud copy
 /// changed after the player was asked, so the player must choose again.
@@ -116,8 +115,10 @@ public actor TVSaveSync {
             }
             sync.conflictVersions[gameID] = nil
             sync.addPendingUploads([gameID])
-            await sync.uploadPending(remote: remote)
-            return .resolved
+            guard await sync.uploadPending(remote: remote).contains(gameID) else { return .resolved }
+            // iCloud changed between the listing and the upload.
+            sync.conflictVersions[gameID] = try? await sync.remoteRecords()[gameID]
+            return .superseded
         }
     }
 
@@ -157,8 +158,10 @@ public actor TVSaveSync {
                     result.restored.append(gameID)
                 }
             case .acceptRemote(askUser: true):
-                conflictVersions[gameID] = remote[gameID]
-                result.conflicts.append(gameID)
+                if await !adoptIfIdentical(gameID: gameID) {
+                    conflictVersions[gameID] = remote[gameID]
+                    result.conflicts.append(gameID)
+                }
             case .uploadLocal:
                 newerLocal.append(gameID)
             case .noOp:
@@ -176,35 +179,79 @@ public actor TVSaveSync {
 
     /// One upload pass against the iCloud records listed for it. Only
     /// games that were settled leave the pending list, so a save added
-    /// meanwhile stays on it.
-    private func uploadPending(remote: [UUID: CloudRecordSummary]) async {
+    /// meanwhile stays on it. Returns the games whose upload iCloud refused
+    /// because their record changed after the listing.
+    @discardableResult
+    private func uploadPending(remote: [UUID: CloudRecordSummary]) async -> Set<UUID> {
         var settled = Set<UUID>()
-        for gameID in pendingUploads.sorted() where await upload(gameID: gameID, remote: remote[gameID]) {
-            settled.insert(gameID)
+        var refused = Set<UUID>()
+        for gameID in pendingUploads.sorted() {
+            switch await upload(gameID: gameID, remote: remote[gameID]) {
+            case .settled: settled.insert(gameID)
+            case .refused: refused.insert(gameID)
+            case .pending: break
+            }
         }
         setPendingUploads(pendingUploads.subtracting(settled))
+        return refused
     }
 
-    /// Returns true when the game no longer needs an upload. A newer
-    /// iCloud copy, a failed upload and a save written during the upload
-    /// all leave it pending.
-    private func upload(gameID: UUID, remote: CloudRecordSummary?) async -> Bool {
+    private enum UploadOutcome {
+        /// Uploaded, or no longer needs an upload.
+        case settled
+        /// Still needs an upload: a newer iCloud copy, a failure, or a save
+        /// written during the upload.
+        case pending
+        /// iCloud refused it because the record changed after the listing.
+        case refused
+    }
+
+    /// Uploads only over the listed record, so a record saved after the
+    /// listing is never replaced.
+    private func upload(gameID: UUID, remote: CloudRecordSummary?) async -> UploadOutcome {
         // The local file is gone, so there is nothing left to upload.
-        guard let local = store.writeDate(gameID: gameID) else { return true }
+        guard let local = store.writeDate(gameID: gameID) else { return .settled }
         switch decide(local: local, remote: remote, isPending: true) {
         case .acceptRemote:
+            if await adoptIfIdentical(gameID: gameID) { return .settled }
             conflictVersions[gameID] = remote
-            return false
-        case .noOp: return true
+            return .pending
+        case .noOp: return .settled
         case .uploadLocal: break
         }
+        guard let body = try? store.writer.read(from: store.url(for: gameID)) else { return .pending }
         let deviceID = deviceID
-        guard let body = try? store.writer.read(from: store.url(for: gameID)),
-              let record = try? await call({ try await $0.upload(gameID: gameID, body: body, deviceID: deviceID) })
+        let expecting = Self.expectation(replacing: remote)
+        let record: CloudRecord
+        do {
+            record = try await call { try await $0.upload(gameID: gameID, body: body, deviceID: deviceID, expecting: expecting) }
+        } catch SyncError.recordChanged {
+            return .refused
+        } catch {
+            return .pending
+        }
+        setSynced(record.modificationDate, changeTag: record.changeTag, for: gameID)
+        guard store.writeDate(gameID: gameID) == local else { return .pending }
+        markSynced(gameID: gameID, at: record.modificationDate)
+        return .settled
+    }
+
+    private static func expectation(replacing remote: CloudRecordSummary?) -> UploadExpectation {
+        guard let remote else { return .noRecord }
+        return remote.changeTag.map(UploadExpectation.changeTag) ?? .anyRecord
+    }
+
+    /// An iCloud copy that looks newer may be this device's own upload
+    /// that timed out but still committed. If its bytes equal the local
+    /// save, takes it as synced and returns true.
+    private func adoptIfIdentical(gameID: UUID) async -> Bool {
+        guard let local = try? store.writer.read(from: store.url(for: gameID)),
+              let record = try? await call({ try await $0.fetchLatest(gameID: gameID) }),
+              record.body == local
         else { return false }
         setSynced(record.modificationDate, changeTag: record.changeTag, for: gameID)
-        guard store.writeDate(gameID: gameID) == local else { return false }
         markSynced(gameID: gameID, at: record.modificationDate)
+        setPendingUploads(pendingUploads.subtracting([gameID]))
         return true
     }
 
@@ -266,27 +313,10 @@ public actor TVSaveSync {
         }
     }
 
-    /// Runs one CloudKit call, giving up with `SyncError.offline` after
-    /// `callTimeout`, and cancels it. A call that ignores cancellation is
-    /// left to finish on its own.
+    /// Runs one CloudKit call with `callTimeout`.
     private func call<T: Sendable>(_ operation: @escaping @Sendable (CloudKitClient) async throws -> T) async throws -> T {
         let client = client
-        let timeout = callTimeout
-        return try await withCheckedThrowingContinuation { continuation in
-            let resumer = ResumeOnce(continuation)
-            let work = Task {
-                do {
-                    try await resumer.resume(with: .success(operation(client)))
-                } catch {
-                    resumer.resume(with: .failure(error))
-                }
-            }
-            Task {
-                try? await Task.sleep(for: timeout)
-                resumer.resume(with: .failure(SyncError.offline))
-                work.cancel()
-            }
-        }
+        return try await withTimeout(callTimeout) { try await operation(client) }
     }
 
     /// A synced local file carries its record's modification date, so the
@@ -327,18 +357,5 @@ public actor TVSaveSync {
 
     private func setPendingUploads(_ ids: Set<UUID>) {
         defaults.set(ids.map(\.uuidString).sorted(), forKey: Self.pendingUploadsKey)
-    }
-}
-
-/// Resumes a continuation once; later results are dropped.
-private final class ResumeOnce<T: Sendable>: Sendable {
-    private let continuation: Mutex<CheckedContinuation<T, Error>?>
-
-    init(_ continuation: CheckedContinuation<T, Error>) {
-        self.continuation = Mutex(continuation)
-    }
-
-    func resume(with result: Result<T, Error>) {
-        continuation.withLock { $0.take() }?.resume(with: result)
     }
 }
