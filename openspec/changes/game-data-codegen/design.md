@@ -9,12 +9,12 @@ See proposal.md for why. Today's catalogs sit mostly in six files in `Packages/C
 - `Research.swift`: ten techs with cost, prerequisites, unlocks, age, era, era gate and display name.
 - `Age.swift`: five ages with start year and blurb.
 - `AgeSignatures.swift` and `CultureSignatures.swift`: the nine signature buildings' catalog specs, `Culture.signature` and the age-ordered `BuildingKind.signatures` list. Their behaviour (ranges, bonuses, served luxuries) stays in Swift, but their specs have to become data because the generated `BuildingKind` must contain them.
-- Value tables elsewhere that switch exhaustively over a content enum, so a new case breaks the build: `World.stockpileCapacity(for:)` (World.swift), `ResidentNames.list(for:)` (CityLife.swift), `Age.rivalResidentThreshold` (RivalSystem.swift), `BuildingKind.signatureCulture` (CultureSignatures.swift), `BuildTool.displayName` (CityUI) and `SpriteAnimation.operationalEntry` (CityRender2D). Behaviour switches such as the inspector's signature lines, `fuel` and `signatureReaches` already end in `default:`.
+- Value tables elsewhere that switch exhaustively over a content enum, so a new case breaks the build: `World.stockpileCapacity(for:)` (World.swift), `ResidentNames.list(for:)` (CityLife.swift), `Age.rivalResidentThreshold` (RivalSystem.swift), `BuildingKind.signatureCulture` (CultureSignatures.swift), `BuildTool.displayName` and `BuildCategory.of(_:)` (CityUI) and `SpriteAnimation.operationalEntry` (CityRender2D). Behaviour switches such as the inspector's signature lines, `fuel` and `signatureReaches` already end in `default:`.
 
 Constraints that shape the design:
 
 - CityCore uses only Foundation and builds on Linux (`swift:6.0-jammy` in CI). The generated output must too, and the generator must build there as well.
-- The simulation is deterministic and checked across platforms by `DeterminismFixture`. `Good.allCases` order drives caravans, supply, material cost and the rival market. `Culture.allCases` order drives rival setup. `Tech.allCases` and `Age.allCases` order drive research and age comparison. `BuildingKind.allCases` is iterated only by the sprite atlas preload, a set-building helper, the build palette (`BuildPaletteView.kinds`, which sets the palette button order) and the sprite catalog test. None of these affect simulation state.
+- The simulation is deterministic and checked across platforms by `DeterminismFixture`. `Good.allCases` order drives caravans, supply, material cost and the rival market. `Culture.allCases` order drives rival setup. `Tech.allCases` and `Age.allCases` order drive research and age comparison. `BuildingKind.allCases` is iterated only by the sprite atlas preload, a set-building helper, the build palette (`BuildPalette.kinds`, which sets the drawer order) and the sprite catalog test. None of these affect simulation state.
 - No new Homebrew tools. No third-party runtime dependencies; a build-time-only package is acceptable (D2).
 - Every spec scenario needs a swift-testing test under `Packages/*/Tests`.
 
@@ -126,7 +126,7 @@ The parser is **Yams**, pinned to an exact version in `GameDataGen/Package.swift
 
 YAML quirks are contained by the decoder: every field decodes into a concrete Swift type, so a value such as `no` or `1.10` cannot silently become a bool or a float in a string field. The decoder rejects such mismatches, and the schema marks ids and names as `type: string`. Duplicate keys in one mapping are a parse error.
 
-Merge keys: Yams' `YAMLDecoder` resolves aliases. Whether it also applies `<<:` when decoding into `Decodable` types is checked by the first spike test (task 1.2). If it does not, the generator parses to a `Yams.Node` tree, applies merge keys itself (keys written on the item win over merged ones, as in the YAML 1.1 merge spec), and decodes the resolved tree. Either way, the spec scenario "Shared defaults through anchors and merge keys" pins the behaviour.
+Merge keys: Yams' `YAMLDecoder` resolves aliases. Whether it also applies `<<:` when decoding into `Decodable` types was checked by a spike (task 1.2). **Result (Yams 6.2.2):** `YAMLDecoder` does apply `<<:`, and keys written on the item win. `Yams.compose` does not: the composed `Node` tree keeps `<<` as an ordinary key, and Yams' own merge helper (`Node.Mapping.flatten()`) is internal. The generator reads the `Node` tree rather than decoding through `YAMLDecoder` (see D7), so it applies merge keys itself before reading an item: keys written on the item win over merged ones, and among several merge sources the first wins, as in the YAML 1.1 merge spec. The spec scenario "Shared defaults through anchors and merge keys" pins the behaviour.
 
 Editor schema: one `pack.schema.json` with a `oneOf` over the five kinds, discriminated by `kind` through `if`/`then`. Errors in editors are a little vaguer than with one schema per file, but the generator's own messages name the pack, the item and the field.
 
@@ -181,7 +181,7 @@ Today `cultureSpecs` builds eight garden and producer specs from two templates, 
 
 ### D7. Validation lives in the generator, not in a test
 
-`GameDataModel.validate()` checks every rule in the spec ("Generator validates cross-references") and collects all errors before failing, so one run reports everything. JSON Schema covers structure in the editor. The generator re-checks structure itself, so it does not need a JSON Schema runtime. Swift's `Decodable` ignores unknown keys, so each item decoder compares `container.allKeys` with its `CodingKeys` and fails on anything extra. The merge key `<<` is resolved and removed before that comparison, and each pack's top-level `defaults` block is skipped. A test keeps schema and decoder in step by checking that each kind's required and allowed schema properties equal the decoder's keys.
+`GameDataModel.validate()` checks every rule in the spec ("Generator validates cross-references") and collects all errors before failing, so one run reports everything. JSON Schema covers structure in the editor. The generator re-checks structure itself, so it does not need a JSON Schema runtime. Items are read from the composed `Yams.Node` tree by a small strict reader rather than through `Decodable` (implementation decision, M1): `Decodable` would ignore unknown keys, lose line numbers for error messages, and accept a plain `no` or `1.10` in a string field without saying so. The reader looks each field up with its expected type, reports a missing required field, a mistyped value (a plain scalar that YAML resolves to a bool, number or null in a string field must be quoted), and every key the kind's field list (`ItemSchema`) does not allow. The merge key `<<` is resolved and removed before that comparison, and each pack's top-level `defaults` block is skipped. Tests keep schema and reader in step: each kind's required fields are exactly the ones whose absence the reader reports, every optional field is accepted, and (M2) the published JSON Schema lists the same fields.
 
 ### D8. Parity before deletion, against a recorded baseline
 
@@ -189,7 +189,7 @@ Migration happens in two steps (see Migration Plan). First, the generator emits 
 
 The parity test is a migration gate, not a lasting spec requirement. It is deleted together with the legacy tables in M3. From then on, every value change is visible as a diff of the committed `Generated/` files, which `gamedata-check` keeps in sync with the packs. A separate snapshot file would duplicate that.
 
-Values alone do not prove unchanged behaviour, so M2 also records a **determinism baseline**: the output of `DeterminismFixture` at its default length and at 36000 ticks, run on unchanged `main`. CI today only compares macOS with Linux on the same commit, which cannot catch a behaviour change between commits. After M3, the fixture output must equal the recorded baseline byte for byte. The baseline lives in the change folder (`openspec/changes/game-data-codegen/baseline/`) and is archived with the change; turning it into a standing CI gate is out of scope.
+Values alone do not prove unchanged behaviour, so M2 also records a **determinism baseline**: the output of `DeterminismFixture` at its default length and at 36000 ticks, run on unchanged `main` with `SWIFT_DETERMINISTIC_HASHING=1` as CI does. CI today only compares macOS with Linux on the same commit, which cannot catch a behaviour change between commits. After M3, the fixture output must equal the recorded baseline byte for byte. The baseline lives in the change folder (`openspec/changes/game-data-codegen/baseline/`) and is archived with the change; turning it into a standing CI gate is out of scope.
 
 ### D9. `effect: code` marks buildings whose behaviour is in Swift
 
@@ -219,6 +219,7 @@ A pack can only add an item without Swift edits if no hand-written code keeps it
 | `Age.rivalResidentThreshold` | `rivalResidents` on each age |
 | `BuildingKind.signatureCulture` | derived from the generated `Culture.signature` |
 | `BuildTool.displayName` building labels | `name` on each building (D10) |
+| `BuildCategory.of(_:)` drawer assignment | `category` on each building (`town`, `gather` or `craft`; omitted for road and town center, which have no drawer) |
 | `SpriteAnimation.operationalEntry` | stays in CityRender2D (animation timing is art, not content) but gains a `default:` that gives the two-frame idle loop most buildings use today |
 
 Behaviour switches that already end in `default:` stay as they are. A new signature building therefore compiles and has no bonus until someone writes one. The inert check (D9) does not catch this, because the building declares `effect: code` on purpose. M4 adds a CI step that generates with a fixture pack (a culture, a building and an age that do not exist in the game) and builds CityCore, CityUI and CityRender2D, so the "no Swift edits" claim stays true.
@@ -278,7 +279,7 @@ Generated files import only `Foundation` (and need even less). `check-no-apple-u
 - [Merge-key overrides are easy to misread: which value wins?] → Keys written in the entry always win over merged ones. Generated Swift shows the resolved values, so the review diff shows the effect.
 - [First third-party package; supply-chain and toolchain risk] → Build-time only, exact version pin, `Package.resolved` committed, Dependabot watches it. If Yams ever blocks a toolchain upgrade, the model layer is format-independent and JSON input can be swapped in.
 - [Xcode has no YAML schema support] → VS Code and other LSP editors get schema validation; everyone gets the generator's error messages, which name the file and entry.
-- [The generator's own tests never run in CI, because the package list in `ci.yml` is hard-coded] → M4 adds `GameDataGen` to the macOS package loop and the Linux job.
+- [The generator's own tests never run in CI, because the package list in `ci.yml` is hard-coded] → M4 adds `GameDataGen` to the macOS test matrix and the Linux job.
 - [The generator becomes a second codebase to maintain] → Keep it small: a decoder, a validator and a string emitter, with no templating engine. Covered by its own tests.
 - [SwiftLint or SwiftFormat flag generated code] → `Generated/` is excluded from SwiftFormat and from SwiftLint's `cyclomatic_complexity`, `file_length` and `line_length` rules. Writing format-clean output by hand is fragile, and SwiftFormat is not installed in the Linux container, so `gamedata-check` cannot depend on it.
 
