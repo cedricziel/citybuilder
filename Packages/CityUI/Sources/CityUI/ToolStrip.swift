@@ -44,11 +44,23 @@ public extension GameSession {
     }
 
     /// Trees or open grass the armed hut or forester would reach at its
-    /// candidate site, the ghost's tile. Nil for other tools or without a
-    /// candidate site (`add-forestry` D5).
-    var armedInReachCount: Int? {
-        guard let ghost = ghostState(), ToolStripText.inReachNoun(ghost.kind) != nil else { return nil }
-        return world.catchmentCount(kind: ghost.kind, anchor: ghost.tile, owner: .player)
+    /// candidate site: the pending placement, else the hovered tile, else
+    /// on touch the camera-center tile, as for the material chips. Nil for
+    /// other tools, without a candidate site, or where the building can't
+    /// go (`add-forestry` D5).
+    func armedInReachCount(idiom: HUDIdiom) -> Int? {
+        let fallback = idiom.isTouch ? world.camera.centerTile() : nil
+        let kind: BuildingKind
+        let anchor: TileCoordinate
+        if let pending = pendingPlacement {
+            (kind, anchor) = (pending.kind, pending.anchor)
+        } else if case let .place(armed) = selectedTool, let tile = hoveredTile ?? fallback {
+            (kind, anchor) = (armed, tile)
+        } else {
+            return nil
+        }
+        guard ToolStripText.inReachNoun(kind) != nil, isValidPlacement(kind, at: anchor) else { return nil }
+        return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
     }
 }
 
@@ -64,7 +76,7 @@ struct ToolStripView: View {
                 art(tool)
                 VStack(alignment: .leading, spacing: 0) {
                     title(tool)
-                    Text(ToolStripText.hint(for: tool, idiom: idiom, inReach: session.armedInReachCount))
+                    Text(ToolStripText.hint(for: tool, idiom: idiom, inReach: session.armedInReachCount(idiom: idiom)))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

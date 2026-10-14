@@ -19,11 +19,23 @@ private func inspector(for kind: BuildingKind, inReach: Int) throws -> Inspector
     return InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings)
 }
 
-/// The first anchor on the new-game map where an unbuilt `kind` would
-/// reach exactly `count` tiles.
+/// The first anchor on the new-game map where the player may place
+/// `kind` and it would reach exactly `count` tiles.
 private func anchor(for kind: BuildingKind, reaching count: Int, in world: World) throws -> TileCoordinate {
     let tiles = (0 ..< world.mapHeight).lazy.flatMap { y in (0 ..< world.mapWidth).lazy.map { TileCoordinate(x: $0, y: y) } }
-    return try #require(tiles.first { world.catchmentCount(kind: kind, anchor: $0, owner: .player) == count })
+    return try #require(tiles.first { tile in
+        guard case .allowed = world.canPlace(kind, at: tile) else { return false }
+        return world.catchmentCount(kind: kind, anchor: tile, owner: .player) == count
+    })
+}
+
+/// A tile where the player may not place `kind`.
+private func blockedAnchor(for kind: BuildingKind, in world: World) throws -> TileCoordinate {
+    let tiles = (0 ..< world.mapHeight).lazy.flatMap { y in (0 ..< world.mapWidth).lazy.map { TileCoordinate(x: $0, y: y) } }
+    return try #require(tiles.first { tile in
+        if case .allowed = world.canPlace(kind, at: tile) { return false }
+        return true
+    })
 }
 
 @Test("scenario: hut key lines show trees in reach")
@@ -54,8 +66,8 @@ func scenarioToolStripHintShowsTreesAtTheCandidateSite() throws {
     let session = GameSession()
     session.selectTool(.place(.lumberjackHut))
     try session.handleHover(at: anchor(for: .lumberjackHut, reaching: 9, in: session.world))
-    #expect(session.armedInReachCount == 9)
-    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .phone, inReach: session.armedInReachCount)
+    #expect(session.armedInReachCount(idiom: .phone) == 9)
+    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .phone, inReach: session.armedInReachCount(idiom: .phone))
     #expect(hint == "Tap or drag to place lumberjack · 9 trees in reach")
 }
 
@@ -64,8 +76,8 @@ func scenarioToolStripHintShowsTreesAtTheCandidateSite() throws {
 func scenarioToolStripHintWithoutACandidateSite() {
     let session = GameSession()
     session.selectTool(.place(.forester))
-    #expect(session.armedInReachCount == nil)
-    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .mac, inReach: session.armedInReachCount)
+    #expect(session.armedInReachCount(idiom: .mac) == nil)
+    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .mac, inReach: session.armedInReachCount(idiom: .mac))
     #expect(hint == "Click or drag to place forester")
 }
 
@@ -83,7 +95,29 @@ func aPendingPlacementIsTheCandidateSite() throws {
     let site = try anchor(for: .lumberjackHut, reaching: 9, in: session.world)
     session.selectTool(.place(.lumberjackHut))
     session.pendingPlacement = PendingPlacement(kind: .lumberjackHut, anchor: site, origin: site)
-    #expect(session.armedInReachCount == 9)
+    #expect(session.armedInReachCount(idiom: .phone) == 9)
+}
+
+@MainActor
+@Test("a phone without a candidate site counts at the camera center")
+func aPhoneWithoutACandidateSiteCountsAtTheCameraCenter() throws {
+    let session = GameSession()
+    let site = try anchor(for: .lumberjackHut, reaching: 9, in: session.world)
+    session.world.camera.centerX = Double(site.x) + 0.5
+    session.world.camera.centerY = Double(site.y) + 0.5
+    session.selectTool(.place(.lumberjackHut))
+    #expect(session.hoveredTile == nil)
+    #expect(session.armedInReachCount(idiom: .phone) == 9)
+    #expect(session.armedInReachCount(idiom: .mac) == nil)
+}
+
+@MainActor
+@Test("no count where the armed building cannot go")
+func noCountWhereTheArmedBuildingCannotGo() throws {
+    let session = GameSession()
+    session.selectTool(.place(.forester))
+    try session.handleHover(at: blockedAnchor(for: .forester, in: session.world))
+    #expect(session.armedInReachCount(idiom: .mac) == nil)
 }
 
 @Test("the forester sits in the gather drawer after the lumberjack hut")
