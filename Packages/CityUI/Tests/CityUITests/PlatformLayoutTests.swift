@@ -96,23 +96,50 @@ func scenarioIPhoneCompactHUD() {
 
 @Test("scenario: phone portrait folds the menus")
 func scenarioPhonePortraitFoldsTheMenus() {
-    let portrait = HUDLayout.make(size: CGSize(width: 390, height: 844), isPhone: true, isTouch: true)
-    let landscape = HUDLayout.make(size: CGSize(width: 844, height: 390), isPhone: true, isTouch: true)
+    let portrait = HUDLayout.make(size: CGSize(width: 390, height: 844), idiom: .phone)
+    let landscape = HUDLayout.make(size: CGSize(width: 844, height: 390), idiom: .phone)
     #expect(portrait.foldsMenus)
     #expect(!landscape.foldsMenus)
-    #expect(!HUDLayout.make(size: CGSize(width: 820, height: 1180), isPhone: false, isTouch: true).foldsMenus)
+    #expect(!HUDLayout.make(size: CGSize(width: 820, height: 1180), idiom: .pad).foldsMenus)
 }
 
 @Test("HUD layout follows the handoff's idiom rules")
 func hudLayoutFollowsIdiomRules() {
-    let phone = HUDLayout.make(size: CGSize(width: 844, height: 390), isPhone: true, isTouch: true)
+    let phone = HUDLayout.make(size: CGSize(width: 844, height: 390), idiom: .phone)
     #expect(phone.placement == .leftRail)
     #expect(!phone.showsDate && phone.usesSpeedCycleButton && !phone.railShowsLabels)
     #expect(phone.margin == 8 && phone.railWidth == 56 && phone.controlHeight == 50)
-    let mac = HUDLayout.make(size: CGSize(width: 1280, height: 800), isPhone: false, isTouch: false)
+    let mac = HUDLayout.make(size: CGSize(width: 1280, height: 800), idiom: .mac)
     #expect(mac.showsDate && !mac.usesSpeedCycleButton && mac.railShowsLabels)
     #expect(mac.margin == 16 && mac.railWidth == 76 && mac.controlHeight == 40 && mac.drawerColumns == 3)
-    #expect(HUDLayout.make(size: CGSize(width: 820, height: 1180), isPhone: false, isTouch: true).drawerColumns == 4)
+    #expect(HUDLayout.make(size: CGSize(width: 820, height: 1180), idiom: .pad).drawerColumns == 4)
+}
+
+@Test("scenario: Apple TV HUD")
+func scenarioAppleTVHUD() {
+    let tv = HUDLayout.make(size: CGSize(width: 1920, height: 1080), idiom: .tv)
+    #expect(tv.placement == .leftRail)
+    #expect(tv.railShowsLabels)
+    #expect(!tv.foldsMenus)
+    #expect(tv.showsDate)
+    #expect(tv.margin == 0)
+    #expect(tv.controlHeight == 66)
+}
+
+@Test("Apple TV raises focusable controls to the minimum height")
+func appleTVRaisesFocusableControls() {
+    let size = CGSize(width: 1920, height: 1080)
+    #expect(HUDLayout.make(size: size, idiom: .tv).focusableHeight(44) == 66)
+    #expect(HUDLayout.make(size: size, idiom: .tv).focusableHeight(80) == 80)
+    #expect(HUDLayout.make(size: size, idiom: .mac).focusableHeight(44) == 44)
+}
+
+@Test("Only the Mac HUD shows keyboard hotkeys")
+func onlyTheMacHUDShowsHotkeys() {
+    let size = CGSize(width: 1920, height: 1080)
+    #expect(HUDLayout.make(size: size, idiom: .mac).showsHotkeys)
+    #expect(!HUDLayout.make(size: size, idiom: .pad).showsHotkeys)
+    #expect(!HUDLayout.make(size: size, idiom: .tv).showsHotkeys)
 }
 
 @Test("scenario: Mac HUD with menu bar")

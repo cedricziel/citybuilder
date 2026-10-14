@@ -12,15 +12,36 @@ public enum HUDDock: Equatable, Sendable {
     }
 }
 
+/// The device family the HUD lays out for. Passed in rather than read
+/// from the screen size, so a large Mac window never gets the TV layout.
+public enum HUDIdiom: Equatable, Sendable {
+    case phone
+    case pad
+    case mac
+    case tv
+
+    public var isTouch: Bool {
+        self == .phone || self == .pad
+    }
+}
+
 /// The HUD's idiom rules in one value. Spec: `platform-shells` / Adaptive
 /// HUD per idiom.
 public struct HUDLayout: Equatable, Sendable {
     public let placement: HUDDock
-    public let isPhone: Bool
-    public let isTouch: Bool
+    public let idiom: HUDIdiom
 
-    public static func make(size: CGSize, isPhone: Bool, isTouch: Bool) -> HUDLayout {
-        HUDLayout(placement: HUDDock.placement(for: size), isPhone: isPhone, isTouch: isTouch)
+    public static func make(size: CGSize, idiom: HUDIdiom) -> HUDLayout {
+        HUDLayout(placement: HUDDock.placement(for: size), idiom: idiom)
+    }
+
+    public var isPhone: Bool {
+        idiom == .phone
+    }
+
+    /// Hotkey letters only make sense with a keyboard.
+    public var showsHotkeys: Bool {
+        idiom == .mac
     }
 
     public var showsDate: Bool {
@@ -40,16 +61,32 @@ public struct HUDLayout: Equatable, Sendable {
         isPhone && placement == .bottomDock
     }
 
+    /// Apple TV's safe area already insets the screen edges.
     public var margin: CGFloat {
-        isPhone ? 8 : 16
+        switch idiom {
+        case .phone: 8
+        case .tv: 0
+        case .pad, .mac: 16
+        }
     }
 
     public var railWidth: CGFloat {
         isPhone ? 56 : 76
     }
 
+    /// Raises a control's height to `controlHeight` on Apple TV, so every
+    /// focusable control has room for its focus highlight.
+    public func focusableHeight(_ height: CGFloat) -> CGFloat {
+        idiom == .tv ? max(height, controlHeight) : height
+    }
+
+    /// On Apple TV the extra height leaves room for the focus highlight.
     public var controlHeight: CGFloat {
-        isTouch ? 50 : 40
+        switch idiom {
+        case .phone, .pad: 50
+        case .mac: 40
+        case .tv: 66
+        }
     }
 
     public var drawerColumns: Int {

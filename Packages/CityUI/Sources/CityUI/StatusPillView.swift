@@ -8,16 +8,18 @@ import UIKit
 /// The running device's idiom, for `HUDLayout`.
 @MainActor
 enum HUDMetrics {
-    static var isPhone: Bool {
+    static var idiom: HUDIdiom {
         #if os(iOS)
-        UIDevice.current.userInterfaceIdiom == .phone
+        UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
+        #elseif os(tvOS)
+        .tv
         #else
-        false
+        .mac
         #endif
     }
 
     static func layout(for size: CGSize) -> HUDLayout {
-        HUDLayout.make(size: size, isPhone: isPhone, isTouch: ToolStripText.isTouch)
+        HUDLayout.make(size: size, idiom: idiom)
     }
 
     static let cornerRadius: CGFloat = 12
@@ -31,7 +33,7 @@ extension View {
     /// get a floor.
     func hudSheetDetents() -> some View {
         #if os(iOS)
-        presentationDetents(HUDMetrics.isPhone ? [.fraction(0.62), .large] : [.large])
+        presentationDetents(HUDMetrics.idiom == .phone ? [.fraction(0.62), .large] : [.large])
         #else
         frame(minWidth: 420, idealWidth: 480, minHeight: 360, idealHeight: 520)
         #endif

@@ -84,9 +84,9 @@ struct BuildRailView: View {
                 }
             }
             .frame(maxWidth: isVertical ? .infinity : nil)
-            .frame(width: isVertical ? nil : (layout.isPhone ? 64 : 76), height: showsLabel ? 58 : 44)
+            .frame(width: isVertical ? nil : (layout.isPhone ? 64 : 76), height: layout.focusableHeight(showsLabel ? 58 : 44))
             .overlay(alignment: .topTrailing) {
-                if !layout.isTouch {
+                if layout.showsHotkeys {
                     Text(String(hotkey).uppercased())
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.tertiary)
