@@ -42,7 +42,7 @@ jobs:
             echo "code=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          changed=$(git diff --name-only "$BASE_SHA" HEAD)
+          changed=$(git diff --no-renames --name-only "$BASE_SHA" HEAD)
           echo "$changed"
           code_files=$(echo "$changed" | grep -vE '^openspec/|^\.claude/|^[^/]+\.md$' || true)
           if [ -n "$changed" ] && [ -z "$code_files" ]; then
