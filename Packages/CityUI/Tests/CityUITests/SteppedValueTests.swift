@@ -21,6 +21,17 @@ func steppedValueClampsAtTheBottom() {
     #expect(quantity.incremented().text == "15")
 }
 
+@Test("Stepped value snaps an off-grid value onto its step grid")
+func steppedValueSnapsOffGridValues() {
+    let synced = SteppedValue(value: 0.05, step: 0.1, range: 0 ... 1, format: .percent)
+    #expect(abs(synced.incremented().value - 0.2) < 1e-9)
+    #expect(synced.decremented().value == 0)
+    let quantity = SteppedValue(value: 12, step: 5, range: 5 ... 50, format: .integer)
+    #expect(quantity.incremented().value == 15)
+    #expect(quantity.text == "10")
+    #expect(quantity.decremented().value == 5)
+}
+
 @Test("Stepped value reports when a step can move it")
 func steppedValueReportsItsBounds() {
     let top = SteppedValue(value: 1, step: 0.1, range: 0 ... 1, format: .percent)

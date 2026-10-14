@@ -1,8 +1,8 @@
 import Foundation
 
-/// A value changed only by fixed steps and clamped to its range: the model
-/// behind the −/+ control that replaces `Slider` and `Stepper` on Apple TV.
-/// Spec: `platform-shells` / Settings exposes audio sliders.
+/// A value snapped to a grid of fixed steps and clamped to its range: the
+/// model behind the −/+ control that replaces `Slider` and `Stepper` on
+/// Apple TV. Spec: `platform-shells` / Settings exposes audio sliders.
 public struct SteppedValue: Equatable, Sendable {
     public enum Format: Equatable, Sendable {
         case percent
@@ -15,7 +15,8 @@ public struct SteppedValue: Equatable, Sendable {
     public let format: Format
 
     public init(value: Double, step: Double, range: ClosedRange<Double>, format: Format) {
-        self.value = min(max(value, range.lowerBound), range.upperBound)
+        let snapped = range.lowerBound + ((value - range.lowerBound) / step).rounded() * step
+        self.value = min(max(snapped, range.lowerBound), range.upperBound)
         self.step = step
         self.range = range
         self.format = format
