@@ -56,6 +56,8 @@ func scenarioAppTargetsLinkAudio() throws {
     let macBlock = sliceBlock(of: projectYML, startingFrom: "CitybuilderMac:")
     #expect(iosBlock.contains("- package: CityAudio"), "CitybuilderiOS must depend on CityAudio")
     #expect(macBlock.contains("- package: CityAudio"), "CitybuilderMac must depend on CityAudio")
+    let tvBlock = sliceBlock(of: projectYML, startingFrom: "CitybuilderTV:")
+    #expect(tvBlock.contains("- package: CityAudio"), "CitybuilderTV must depend on CityAudio")
 }
 
 /// Returns the substring from the line containing `header` up to the next

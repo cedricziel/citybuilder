@@ -4,14 +4,82 @@ import Testing
 @testable import CityUI
 
 // Tests for spec platform-shells (the subset that's headless-testable).
-// Universal Purchase, Handoff, and actual hardware key/pointer plumbing
-// live in app integration verification.
+// Handoff and actual hardware key/pointer plumbing live in app
+// integration verification.
+
+private struct AppTarget {
+    let name: String
+    let platform: String
+    let bundleIdentifier: String?
+}
+
+/// Reads the application targets out of `project.yml` with a line scan:
+/// the file's two-space indentation is regular enough that a YAML parser
+/// would only add a test dependency.
+private func appTargets() throws -> [AppTarget] {
+    let repoRoot = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let yaml = try String(contentsOf: repoRoot.appendingPathComponent("project.yml"), encoding: .utf8)
+    var targets: [AppTarget] = []
+    var inTargets = false
+    var name: String?
+    var type: String?
+    var platform = ""
+    var bundleIdentifier: String?
+
+    func value(of trimmed: String, key: String) -> String {
+        trimmed.dropFirst(key.count + 1).trimmingCharacters(in: .whitespaces)
+    }
+
+    func flush() {
+        if let name, type == "application" {
+            targets.append(AppTarget(name: name, platform: platform, bundleIdentifier: bundleIdentifier))
+        }
+        name = nil
+    }
+
+    for line in yaml.components(separatedBy: .newlines) {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !trimmed.hasPrefix("#") else { continue }
+        let indent = line.prefix { $0 == " " }.count
+        if indent == 0 {
+            flush()
+            inTargets = trimmed == "targets:"
+        } else if inTargets, indent == 2 {
+            flush()
+            name = String(trimmed.dropLast())
+            type = nil
+            platform = ""
+            bundleIdentifier = nil
+        } else if inTargets, indent == 4, trimmed.hasPrefix("type:") {
+            type = value(of: trimmed, key: "type")
+        } else if inTargets, indent == 4, trimmed.hasPrefix("platform:") {
+            platform = value(of: trimmed, key: "platform")
+        } else if inTargets, trimmed.hasPrefix("PRODUCT_BUNDLE_IDENTIFIER:") {
+            bundleIdentifier = value(of: trimmed, key: "PRODUCT_BUNDLE_IDENTIFIER")
+        }
+    }
+    flush()
+    return targets
+}
 
 @Test("scenario: universal purchase one buy")
-func scenarioUniversalPurchaseOneBuy() {
-    // The actual entitlement is in project.yml. This test asserts the
-    // documented invariant: both bundle IDs are equal.
-    #expect(true, "Universal Purchase wired via project.yml — bundle id com.cedricziel.citybuilder shared")
+func scenarioUniversalPurchaseOneBuy() throws {
+    #expect(try Set(appTargets().map(\.platform)) == ["iOS", "macOS", "tvOS"])
+}
+
+@Test("scenario: app targets share one bundle identifier")
+func scenarioAppTargetsShareOneBundleIdentifier() throws {
+    let identifiers = try Dictionary(uniqueKeysWithValues: appTargets().map { ($0.name, $0.bundleIdentifier) })
+    #expect(identifiers == [
+        "CitybuilderiOS": "com.cedricziel.citybuilder",
+        "CitybuilderMac": "com.cedricziel.citybuilder",
+        "CitybuilderTV": "com.cedricziel.citybuilder"
+    ])
 }
 
 @Test("scenario: iPad sidebar HUD")

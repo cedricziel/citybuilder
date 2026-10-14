@@ -6,6 +6,7 @@ options:
   deploymentTarget:
     iOS: "18.0"
     macOS: "15.0"
+    tvOS: "18.0"
   groupSortPosition: top
   generateEmptyDirectories: true
   createIntermediateGroups: true
@@ -170,6 +171,64 @@ targets:
       - package: CityRender3D
       - package: CityAudio
 
+  # Apple TV app --------------------------------------------------------
+  CitybuilderTV:
+    type: application
+    platform: tvOS
+    sources:
+      - path: Apps/CitybuilderTV
+      - path: Resources/Terrain.atlas
+        buildPhase: resources
+      - path: Resources/Buildings.atlas
+        buildPhase: resources
+      - path: Resources/Units.atlas
+        buildPhase: resources
+      - path: Resources/Icons.atlas
+        buildPhase: resources
+        excludes:
+          - "_candidates"
+          - "_candidates/**"
+      - path: Resources/Audio
+        buildPhase: resources
+        excludes:
+          - "_candidates"
+          - "_candidates/**"
+    info:
+      path: Apps/CitybuilderTV/Info.plist
+      properties:
+        CFBundleDisplayName: Citybuilder
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        GCSupportsControllerUserInteraction: true
+        GCSupportedGameControllers:
+          - ProfileName: ExtendedGamepad
+          - ProfileName: MicroGamepad
+          - ProfileName: DirectionalGamepad
+    # No iCloud Documents (ubiquity containers): tvOS has no iCloud Drive.
+    entitlements:
+      path: Apps/CitybuilderTV/Citybuilder.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.cedricziel.citybuilder
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)com.cedricziel.citybuilder
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder
+        PRODUCT_NAME: Citybuilder
+        TARGETED_DEVICE_FAMILY: "3"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
+    dependencies:
+      - package: CityCore
+      - package: CityPersistence
+      - package: CityUI
+      - package: CityRender2D
+      - package: CityRender3D
+      - package: CityAudio
+
   # Headless simulation runner ------------------------------------------
   citybuilder-cli:
     type: tool
@@ -199,6 +258,16 @@ schemes:
     build:
       targets:
         CitybuilderMac: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+
+  CitybuilderTV:
+    build:
+      targets:
+        CitybuilderTV: all
     run:
       config: Debug
     test:
