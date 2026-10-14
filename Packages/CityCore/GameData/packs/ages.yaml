@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Spec: historical-ages, research (era techs), age-signatures
+items:
+  # --- Ages (order is the age order) ----------------------------------
+  # startYear is astronomical: 0 is 1 BC, so -499 is 500 BC.
+  # rivalResidents: residents a rival needs to enter the age (add-rival-towns D8).
+  - { kind: Age, id: antiquity,   startYear: -499, signature: monument,     rivalResidents: 0,
+      blurb: "Stone towns, hand mills and the first libraries." }
+  - { kind: Age, id: medieval,    startYear: 1200, signature: guild-hall,   rivalResidents: 24,
+      blurb: "Timber and tile, windmills and guilds." }
+  - { kind: Age, id: renaissance, startYear: 1450, signature: gallery,      rivalResidents: 60,
+      blurb: "Printing, trade and tall stuccoed fronts." }
+  - { kind: Age, id: industrial,  startYear: 1780, signature: steam-engine, rivalResidents: 108,
+      blurb: "Steam, brick and smoking chimneys." }
+  - { kind: Age, id: modern,      startYear: 1910, signature: power-plant,  rivalResidents: 150,
+      blurb: "Electricity and concrete." }
+
+  # --- Era techs: each opens the next age -----------------------------
+  # Spec: research / Era techs need a thriving city
+  - kind: Tech
+    id: feudal-order
+    cost: 150
+    age: antiquity
+    era: medieval
+    eraGate: { tier: citizens, residents: 20 }
+  - kind: Tech
+    id: printing-press
+    cost: 250
+    age: medieval
+    prerequisites: [feudal-order]
+    era: renaissance
+    eraGate: { tier: merchants, residents: 20 }
+  - kind: Tech
+    id: steam-power
+    cost: 400
+    age: renaissance
+    prerequisites: [printing-press]
+    era: industrial
+    eraGate: { tier: merchants, residents: 40 }
+  - kind: Tech
+    id: electricity
+    cost: 600
+    age: industrial
+    prerequisites: [steam-power]
+    era: modern
+    eraGate: { tier: merchants, residents: 60 }
+
+  # --- Age signature buildings (Spec: age-signatures) -----------------
+  # A project: each cycle completes one stage; see World.monumentStages.
+  - kind: Building
+    id: monument
+    effect: code
+    category: town
+    footprint: [3, 3]
+    cost: 300
+    buildTicks: 60
+    storage: 16
+    materials: { wood: 6, planks: 6 }
+    recipe: { inputs: { wood: 2, planks: 2, bread: 1 }, cycleTicks: 60 }
+
+  # Speeds up nearby workshops.
+  - kind: Building
+    id: guild-hall
+    effect: code
+    category: town
+    footprint: [3, 3]
+    cost: 250
+    upkeep: 3
+    buildTicks: 40
+    materials: { wood: 4, planks: 6 }
+    unlockedBy: feudal-order
+
+  # Inspires nearby houses while a commission runs.
+  - kind: Building
+    id: gallery
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 180
+    upkeep: 2
+    buildTicks: 35
+    materials: { wood: 2, planks: 4 }
+    unlockedBy: printing-press
+
+  # Burns charcoal; speeds up workshops and smokes out nearby houses.
+  - kind: Building
+    id: steam-engine
+    effect: code
+    category: craft
+    footprint: [2, 2]
+    cost: 220
+    upkeep: 3
+    buildTicks: 40
+    storage: 16
+    materials: { wood: 2, planks: 4, iron: 2 }
+    unlockedBy: steam-power
+
+  # Burns charcoal; speeds up workshops and powers nearby houses.
+  - kind: Building
+    id: power-plant
+    effect: code
+    category: craft
+    footprint: [3, 3]
+    cost: 400
+    upkeep: 6
+    buildTicks: 60
+    storage: 16
+    materials: { planks: 6, iron: 4 }
+    unlockedBy: electricity

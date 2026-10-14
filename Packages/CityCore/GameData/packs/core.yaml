@@ -1,0 +1,242 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Base content every culture shares.
+defaults:
+  workshop: &workshop
+    footprint: [2, 2]
+    storage: 16
+
+items:
+  # --- Goods ---------------------------------------------------------
+  # Order is Good.allCases order, which caravans, supply, material cost
+  # and the rival market iterate.
+  # basePrice: what a caravan pays per unit, and the base of rival trade
+  # prices (add-rival-trade D1).
+  - { kind: Good, id: wood,     name: Wood,     unit: logs,    basePrice: 4 }
+  - { kind: Good, id: planks,   name: Planks,   unit: bundles, basePrice: 8 }
+  - { kind: Good, id: food,     name: Food,     unit: rations, basePrice: 4 }
+  - { kind: Good, id: bread,    name: Bread,    unit: loaves,  basePrice: 12 }
+  - { kind: Good, id: grain,    name: Grain,    unit: sheaves, basePrice: 3 }
+  - { kind: Good, id: flour,    name: Flour,    unit: sacks,   basePrice: 6 }
+  - { kind: Good, id: ore,      name: Ore,      unit: loads,   basePrice: 5 }
+  - { kind: Good, id: charcoal, name: Charcoal, unit: baskets, basePrice: 5 }
+  - { kind: Good, id: iron,     name: Iron,     unit: bars,    basePrice: 14 }
+  - { kind: Good, id: tools,    name: Tools,    unit: sets,    basePrice: 30 }
+
+  # --- Buildings -----------------------------------------------------
+  # Holds residents. Spec: population-and-needs
+  - kind: Building
+    id: house
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 50
+    buildTicks: 20
+    storage: 8
+    materials: { planks: 4 }
+
+  - kind: Building
+    id: warehouse
+    effect: code
+    category: town
+    footprint: [3, 3]
+    cost: 200
+    upkeep: 1
+    buildTicks: 40
+    storage: 200
+    materials: { wood: 2, planks: 6 }
+
+  - kind: Building
+    id: road
+    effect: code
+    footprint: [1, 1]
+    cost: 5
+    buildTicks: 1
+
+  # Spec: goods-and-production / Producer behavior
+  - kind: Building
+    id: lumberjack-hut
+    <<: *workshop
+    name: Lumberjack                 # short palette label
+    legacyIds: [lumberjack_hut]      # saves written before the rename
+    category: gather
+    cost: 80
+    buildTicks: 25
+    materials: { wood: 2 }
+    recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
+
+  - kind: Building
+    id: sawmill
+    <<: *workshop
+    category: craft
+    cost: 120
+    upkeep: 2
+    buildTicks: 30
+    materials: { wood: 4, planks: 1 }
+    recipe: { inputs: { wood: 1 }, outputs: { planks: 1 }, cycleTicks: 25 }
+
+  # Food producer with no inputs. Spec: goods-and-production
+  - kind: Building
+    id: farm
+    <<: *workshop
+    category: gather
+    cost: 60
+    buildTicks: 25
+    materials: { wood: 2 }
+    recipe: { outputs: { food: 1 }, cycleTicks: 40 }
+
+  # Bakes bread from flour. Spec: goods-and-production
+  - kind: Building
+    id: bakery
+    <<: *workshop
+    category: craft
+    cost: 90
+    upkeep: 1
+    buildTicks: 30
+    materials: { wood: 2, planks: 2 }
+    recipe: { inputs: { flour: 1 }, outputs: { bread: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: grain-farm
+    <<: *workshop
+    category: gather
+    cost: 60
+    buildTicks: 25
+    materials: { wood: 2 }
+    recipe: { outputs: { grain: 1 }, cycleTicks: 40 }
+
+  - kind: Building
+    id: windmill
+    <<: *workshop
+    category: craft
+    cost: 110
+    upkeep: 1
+    buildTicks: 35
+    materials: { wood: 3, planks: 3 }
+    unlockedBy: milling
+    recipe: { inputs: { grain: 2 }, outputs: { flour: 1 }, cycleTicks: 40 }
+
+  # Antiquity hand mill, replaced by the windmill. Spec: historical-ages /
+  # Obsolete buildings
+  - kind: Building
+    id: quern-house
+    <<: *workshop
+    category: craft
+    cost: 60
+    upkeep: 1
+    buildTicks: 25
+    materials: { wood: 2, planks: 2 }
+    obsoletedBy: milling
+    recipe: { inputs: { grain: 2 }, outputs: { flour: 1 }, cycleTicks: 80 }
+
+  # Must stand on mountain ground. Spec: buildings-and-construction /
+  # Terrain requirement for placement
+  - kind: Building
+    id: mine
+    <<: *workshop
+    category: gather
+    cost: 120
+    upkeep: 2
+    buildTicks: 40
+    materials: { wood: 4, planks: 2 }
+    placement: { terrain: { type: mountain, minTiles: 2 } }
+    unlockedBy: mining
+    recipe: { outputs: { ore: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: charcoal-burner
+    <<: *workshop
+    name: Charcoal
+    category: craft
+    cost: 70
+    upkeep: 1
+    buildTicks: 25
+    materials: { wood: 3 }
+    unlockedBy: mining
+    recipe: { inputs: { wood: 2 }, outputs: { charcoal: 1 }, cycleTicks: 40 }
+
+  - kind: Building
+    id: smelter
+    <<: *workshop
+    category: craft
+    cost: 150
+    upkeep: 2
+    buildTicks: 40
+    materials: { wood: 4, planks: 4 }
+    unlockedBy: metallurgy
+    recipe: { inputs: { ore: 1, charcoal: 1 }, outputs: { iron: 1 }, cycleTicks: 50 }
+
+  - kind: Building
+    id: toolsmith
+    <<: *workshop
+    category: craft
+    cost: 140
+    upkeep: 2
+    buildTicks: 35
+    materials: { wood: 2, planks: 4 }
+    unlockedBy: metallurgy
+    recipe: { inputs: { iron: 1, planks: 1 }, outputs: { tools: 1 }, cycleTicks: 60 }
+
+  # Produces knowledge. Spec: research
+  - kind: Building
+    id: library
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 100
+    upkeep: 2
+    buildTicks: 35
+    materials: { wood: 2, planks: 4 }
+    unlockedBy: scholarship
+
+  # Seeded by world generation, never offered in the palette.
+  - kind: Building
+    id: town-center
+    effect: code
+    name: Town Ctr.
+    legacyIds: [town_center]         # saves written before the rename
+    footprint: [3, 3]
+    cost: 0
+    buildTicks: 1
+    storage: 40
+
+  # Shore building; carriers use the land side, ships the sea side.
+  # Spec: port-and-shipyard
+  - kind: Building
+    id: port
+    effect: code
+    category: town
+    footprint: [2, 3]
+    cost: 250
+    upkeep: 1
+    buildTicks: 35
+    storage: 200
+    materials: { wood: 8, planks: 6 }
+    placement: { shore: { minLand: 1, minWater: 1 } }
+    unlockedBy: seafaring
+
+  # Shore producer that launches a ship per hull: 20 wood and 10 planks.
+  # The ship spawn is Swift, not a recipe output. Spec: port-and-shipyard
+  - kind: Building
+    id: shipyard
+    effect: code
+    category: town
+    footprint: [2, 3]
+    cost: 350
+    upkeep: 2
+    buildTicks: 45
+    storage: 64
+    materials: { wood: 12, planks: 8 }
+    placement: { shore: { minLand: 1, minWater: 1 } }
+    unlockedBy: seafaring
+    recipe: { inputs: { wood: 20, planks: 10 }, cycleTicks: 200 }
+
+  # --- Techs ---------------------------------------------------------
+  # Spec: research / Tech tree
+  - { kind: Tech, id: scholarship, cost: 30, age: antiquity }
+  - { kind: Tech, id: milling,     cost: 40, age: medieval }
+  - { kind: Tech, id: mining,      cost: 40, age: medieval }
+  - { kind: Tech, id: metallurgy,  cost: 80, age: medieval, prerequisites: [mining] }
+  - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
+  # Unlocks every culture's luxury chain. Spec: culture-content /
+  # Cultivation unlocks the luxury chain
+  - { kind: Tech, id: cultivation, cost: 50, age: medieval }

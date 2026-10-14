@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=../../schema/pack.schema.json
+# Spec: cultures, culture-content, culture-signatures
+defaults:
+  garden: &garden
+    category: gather
+    footprint: [2, 2]
+    cost: 60
+    buildTicks: 25
+    storage: 16
+    materials: { wood: 2 }
+    unlockedBy: cultivation
+  producer: &producer
+    category: craft
+    footprint: [2, 2]
+    cost: 120
+    upkeep: 1
+    buildTicks: 30
+    storage: 16
+    materials: { wood: 3, planks: 3 }
+    unlockedBy: cultivation
+
+items:
+  - kind: Culture
+    id: east-asian
+    name: East Asian
+    blurb: Timber halls under dark, wide-eaved roofs.
+    tiers: { peasants: Farmers, citizens: Artisans, merchants: Scholars }
+    luxury: { raw: tea-leaves, good: tea, garden: tea-garden, producer: tea-house }
+    signature: temple-garden
+    residentNames: [Akiko, Bao, Chen, Daisuke, Emi, Fang, Hana, Hiro, Jun, Kenji, Lan, Mei,
+                    Min, Natsu, Ping, Ren, Sakura, Tao, Wen, Xiu, Yuki, Yong, Zhen, Kaito]
+
+  - { kind: Good, id: tea-leaves, name: Tea Leaves, unit: baskets, basePrice: 3 }
+  - { kind: Good, id: tea, name: Tea, unit: chests, basePrice: 16 }
+
+  - kind: Building
+    id: tea-garden
+    <<: *garden
+    culture: east-asian
+    recipe: { outputs: { tea-leaves: 1 }, cycleTicks: 40 }
+
+  # The tea house sits in the town drawer, unlike the other producers.
+  - kind: Building
+    id: tea-house
+    <<: *producer
+    culture: east-asian
+    category: town
+    recipe: { inputs: { tea-leaves: 2 }, outputs: { tea: 1 }, cycleTicks: 50 }
+
+  # Citizens and above near a temple garden add knowledge, more while it
+  # is served.
+  - kind: Building
+    id: temple-garden
+    effect: code
+    culture: east-asian
+    category: town
+    footprint: [3, 3]
+    cost: 160
+    upkeep: 1
+    buildTicks: 35
+    storage: 16
+    materials: { wood: 2, planks: 4 }
