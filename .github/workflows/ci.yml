@@ -3,8 +3,8 @@ name: ci
 on:
   push:
     branches: [main]
+  # Every PR, including one stacked on another PR's branch.
   pull_request:
-    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -104,10 +104,10 @@ jobs:
         if: matrix.package == 'GameDataGen'
         run: make gamedata-check SWIFT=swift
 
-      - name: Coverage gate (CityCore floors + diff-cover vs main)
+      - name: Coverage gate (CityCore floors + diff-cover vs the base branch)
         if: matrix.package == 'CityCore'
         env:
-          COVERAGE_BASE_REF: origin/main
+          COVERAGE_BASE_REF: origin/${{ github.base_ref || 'main' }}
           COVERAGE_STRICT: "1"
           COVERAGE_REUSE: "1"
         run: |
