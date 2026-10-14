@@ -363,31 +363,20 @@ func scenarioMasterReferenceExistsAndIsAPng() {
 @Test("scenario: make sprites does not regenerate master reference")
 // swiftlint:disable:next inclusive_language
 func scenarioMakeSpritesDoesNotRegenerateMasterReference() throws {
-    // Checked statically: running `make sprites-offline` here would
-    // rewrite every committed atlas PNG in the working tree while other
-    // tests read them. The pipeline writes the reference only in
-    // `_cmd_regenerate_reference`, which only `--regenerate-reference`
-    // reaches, and only the `sprites-reference` target passes that flag
-    // (next scenario).
-    let main = try readFile("scripts/generate_sprites_ai/__main__.py")
-    let referenceCommand = try #require(
-        main.range(of: "def _cmd_regenerate_reference(").map { main[$0.lowerBound...] }
-    )
-    let referenceBody = referenceCommand.split(separator: "\ndef ", maxSplits: 1).first ?? ""
-    let pipelineDir = worktreeRoot().appendingPathComponent("scripts/generate_sprites_ai")
-    let sources = try FileManager.default.contentsOfDirectory(atPath: pipelineDir.path)
-        .filter { $0.hasSuffix(".py") }
-    var writers: [String] = []
-    for source in sources {
-        let text = try readFile("scripts/generate_sprites_ai/\(source)")
-        for line in text.split(separator: "\n") where line.contains("MASTER_REFERENCE") {
-            let writes = ["_save_indexed(", ".save(", "write_bytes(", "open("].contains { line.contains($0) }
-            let inReferenceCommand = source == "__main__.py" && referenceBody.contains(line)
-            if writes, !inReferenceCommand { writers.append("\(source): \(line)") }
-        }
-    }
-    #expect(writers.isEmpty, "only _cmd_regenerate_reference may write master-reference.png: \(writers)")
-    #expect(referenceBody.contains("MASTER_REFERENCE"), "_cmd_regenerate_reference must write the reference")
+    // The pytest runs the offline regen with every output redirected
+    // into a tempdir; running `make sprites-offline` here would rewrite
+    // the committed atlas PNGs while other tests read them.
+    let process = Process()
+    process.currentDirectoryURL = worktreeRoot().appendingPathComponent("scripts")
+    process.executableURL = worktreeRoot().appendingPathComponent(".venv/sprites/bin/python")
+    process.arguments = ["-m", "pytest", "-q", "tests/test_master_reference.py"]
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = pipe
+    try process.run()
+    process.waitUntilExit()
+    let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    #expect(process.terminationStatus == 0, "test_master_reference.py failed:\n\(output)")
 }
 
 @Test("scenario: make sprites-reference is the only path to regenerate")
