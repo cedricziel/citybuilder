@@ -34,11 +34,12 @@ func twoRunsProduceIdenticalOutput() throws {
     #expect(try firstFiles == contents(of: second))
 }
 
-@Test func generateWritesEveryEmittedFile() throws {
+@Test(arguments: [nil, "GameDataParity"])
+func generateWritesEveryEmittedFile(namespace: String?) throws {
     let data = try scratch(), out = try scratch()
     try write(Fixtures.source(), to: data)
-    let written = try Generator.generate(dataDirectory: data, outputDirectory: out).get()
-    #expect(try written == SwiftEmitter.emit(Fixtures.load().get()).keys.sorted())
+    let written = try Generator.generate(dataDirectory: data, outputDirectory: out, namespace: namespace).get()
+    #expect(try written == SwiftEmitter.emit(Fixtures.load().get(), namespace: namespace).keys.sorted())
     #expect(try contents(of: out).keys.sorted() == written)
 }
 

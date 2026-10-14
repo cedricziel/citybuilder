@@ -2,11 +2,13 @@ import Foundation
 import GameDataModel
 
 let usage = """
-usage: gamedata-gen generate [--data <dir>] [--out <dir>]
+usage: gamedata-gen generate [--data <dir>] [--out <dir>] [--namespace <name>]
 
 Defaults, relative to the repository root:
   --data Packages/CityCore/GameData
   --out  Packages/CityCore/Sources/CityCore/Generated
+
+--namespace nests every generated type in `enum <name>`, in one file.
 """
 
 func fail(_ message: String, status: Int32) -> Never {
@@ -19,13 +21,13 @@ guard arguments.first == "generate", !arguments.count.isMultiple(of: 2) else { f
 
 var options = ["--data": "Packages/CityCore/GameData", "--out": "Packages/CityCore/Sources/CityCore/Generated"]
 for index in stride(from: 1, to: arguments.count, by: 2) {
-    guard options[arguments[index]] != nil else { fail(usage, status: 64) }
+    guard ["--data", "--out", "--namespace"].contains(arguments[index]) else { fail(usage, status: 64) }
     options[arguments[index]] = arguments[index + 1]
 }
 
 let data = URL(fileURLWithPath: options["--data"]!)
 let out = URL(fileURLWithPath: options["--out"]!)
-switch Generator.generate(dataDirectory: data, outputDirectory: out) {
+switch Generator.generate(dataDirectory: data, outputDirectory: out, namespace: options["--namespace"]) {
 case let .success(files):
     print("wrote \(files.count) files to \(out.path)")
 case let .failure(errors):

@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pack.schema.json",
+  "title": "Game data pack",
+  "description": "One feature's goods, buildings, cultures, techs and ages. References may point into any pack.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "defaults": {
+      "description": "Anchored mappings that items merge with <<. Ignored otherwise.",
+      "type": "object"
+    },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
+    "ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+    "positive": { "type": "integer", "minimum": 1 },
+    "nonNegative": { "type": "integer", "minimum": 0 },
+    "tier": { "enum": ["peasants", "citizens", "merchants"] },
+    "amounts": {
+      "description": "Amount per good id.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/positive" }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cycleTicks"],
+      "properties": {
+        "inputs": { "$ref": "#/$defs/amounts" },
+        "outputs": { "$ref": "#/$defs/amounts" },
+        "cycleTicks": { "$ref": "#/$defs/positive" }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "shore": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["minLand", "minWater"],
+          "properties": {
+            "minLand": { "$ref": "#/$defs/positive" },
+            "minWater": { "$ref": "#/$defs/positive" }
+          }
+        },
+        "terrain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "minTiles"],
+          "properties": {
+            "type": { "enum": ["grass", "forest", "beach", "water", "mountain"] },
+            "minTiles": { "$ref": "#/$defs/positive" }
+          }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "Good" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "name", "unit", "basePrice"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "type": "string" },
+              "unit": { "description": "Plural stack noun, e.g. logs.", "type": "string" },
+              "basePrice": { "$ref": "#/$defs/positive" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Building" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "footprint", "cost"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "description": "Palette label. Defaults to the id, title-cased.", "type": "string" },
+              "legacyIds": { "description": "Old ids that saves may still store.", "type": "array", "items": { "type": "string" } },
+              "footprint": {
+                "description": "[width, height] in tiles.",
+                "type": "array",
+                "items": { "$ref": "#/$defs/positive" },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "cost": { "$ref": "#/$defs/nonNegative" },
+              "upkeep": { "$ref": "#/$defs/nonNegative" },
+              "buildTicks": { "$ref": "#/$defs/positive" },
+              "storage": { "description": "Stockpile capacity. Omit for none.", "$ref": "#/$defs/positive" },
+              "category": { "description": "Build drawer. Omit for none.", "enum": ["town", "gather", "craft"] },
+              "materials": { "$ref": "#/$defs/amounts" },
+              "recipe": { "$ref": "#/$defs/recipe" },
+              "unlockedBy": { "$ref": "#/$defs/id" },
+              "obsoletedBy": { "$ref": "#/$defs/id" },
+              "culture": { "description": "Only this culture may build it.", "$ref": "#/$defs/id" },
+              "placement": { "$ref": "#/$defs/placement" },
+              "effect": { "description": "The behaviour is written in Swift.", "const": "code" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Culture" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "name", "blurb", "tiers", "luxury", "signature", "residentNames"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "type": "string" },
+              "blurb": { "type": "string" },
+              "tiers": {
+                "description": "The culture's name for each house tier.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["peasants", "citizens", "merchants"],
+                "properties": {
+                  "peasants": { "type": "string" },
+                  "citizens": { "type": "string" },
+                  "merchants": { "type": "string" }
+                }
+              },
+              "luxury": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["raw", "good", "garden", "producer"],
+                "properties": {
+                  "raw": { "$ref": "#/$defs/id" },
+                  "good": { "$ref": "#/$defs/id" },
+                  "garden": { "$ref": "#/$defs/id" },
+                  "producer": { "$ref": "#/$defs/id" }
+                }
+              },
+              "signature": { "$ref": "#/$defs/id" },
+              "residentNames": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Tech" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "cost", "age"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "description": "Defaults to the id, title-cased.", "type": "string" },
+              "cost": { "description": "Knowledge.", "$ref": "#/$defs/positive" },
+              "age": { "description": "The age from which it can be researched.", "$ref": "#/$defs/id" },
+              "prerequisites": { "$ref": "#/$defs/ids" },
+              "era": { "description": "The age this tech opens.", "$ref": "#/$defs/id" },
+              "eraGate": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["tier", "residents"],
+                "properties": {
+                  "tier": { "$ref": "#/$defs/tier" },
+                  "residents": { "$ref": "#/$defs/positive" }
+                }
+              }
+            },
+            "dependentRequired": { "era": ["eraGate"], "eraGate": ["era"] }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Age" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "startYear", "blurb", "signature", "rivalResidents"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "description": "Defaults to the id, title-cased.", "type": "string" },
+              "startYear": { "description": "Astronomical year: -499 is 500 BC.", "type": "integer" },
+              "blurb": { "type": "string" },
+              "signature": { "$ref": "#/$defs/id" },
+              "rivalResidents": { "description": "Residents a rival needs to enter this age.", "$ref": "#/$defs/nonNegative" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
