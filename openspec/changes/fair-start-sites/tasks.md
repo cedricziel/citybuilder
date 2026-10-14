@@ -1,0 +1,18 @@
+## 1. M1 — Fair town center sites and the starter grove
+
+- [ ] 1.1 Tests-first: translate every `world-terrain` scenario in this change ("Fair start sites", "Starter grove", "Start placement independent of difficulty") and the `buildings-and-construction` scenario "Starter road ring is complete on every fair start" into failing swift-testing tests in CityCoreTests. Build the nearest-site, tie, fallback and no-room scenarios on small hand-made terrain grids run through the same generation path `World.newGame` uses (expose an internal entry point that takes a grid); confirm red
+- [ ] 1.2 Add the fairness measure as an internal, test-visible query on `World` (start area, grass, mountain, best hut site trees, `isFair`) exactly as in design "The fairness measure"; integer arithmetic only
+- [ ] 1.3 Implement to green: `world-terrain` / Fair start sites — replace `findFootprint` for town centers with the D2 candidate order and the D1 qualification; keep the old 3×3 rule only as the last fallback (design D4)
+- [ ] 1.4 Implement to green: `world-terrain` / Starter grove — stamp the grove after each town center is placed and before `seedRivals` and `seedStarterRoads` (design D3, D5); assert in debug builds that the island list is unchanged
+- [ ] 1.5 Implement to green: `world-terrain` / Start placement independent of difficulty, and `buildings-and-construction` / Town center starter road — the complete 16-tile ring on fair starts
+- [ ] 1.6 Add the seed-sweep acceptance test (design D7): single island plus archipelago seeds 0–49 × Easy, Normal, Hard; every start fair, no fallback used, terrain identical across difficulties; print fair counts and the hut-site tree median and range, and record the printed numbers in design "Evidence"
+- [ ] 1.7 Update tests that pin the old start: `WaitingBadgeTests` (45,46), rival grid and first-build tests in `RivalAITests` that derive tiles from the town center anchor, starter inventory and starter road tests, and any CLI or render test that assumes the mountain start; run `make test` for every package
+- [ ] 1.8 Run `DeterminismFixture` at its default length and at 36000 ticks with `SWIFT_DETERMINISTIC_HASHING=1`; confirm two runs are byte-identical, and confirm CI's macOS and Linux outputs match each other
+- [ ] 1.9 Regenerate `openspec/changes/game-data-codegen/baseline/determinism.json` and `determinism-36k.json` from the new fixture output with `SWIFT_DETERMINISTIC_HASHING=1`, and state in the PR description that the baseline changes on purpose because world generation changed (design D6)
+- [ ] 1.10 Refactor under a green bar
+- [ ] 1.11 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `world-terrain` or `buildings-and-construction` from this change
+
+## 2. M2 — Playtest check
+
+- [ ] 2.1 Start a new single-island game and a new archipelago game with the verify skill; screenshot the start, check the grove reads as forest beside the ringed town center, and place a lumberjack hut on the clearing to confirm the placement hint shows 32 trees in reach (needs `add-forestry` M3 for the hint)
+- [ ] 2.2 Re-run the `add-forestry` headless playtest bot on seed 0 single island and archipelago seed 7, and record in design "Evidence" how the first in-game year changes against the numbers in `add-forestry` design
