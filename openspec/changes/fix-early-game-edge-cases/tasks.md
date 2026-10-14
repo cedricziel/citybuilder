@@ -18,8 +18,8 @@
 
 ## 3. M3 — Close the remaining game-over controls
 
-- [ ] 3.1 Tests-first: translate the `platform-shells` scenarios "Tile menu stays shut after game over", "Inspector and route actions are off after game over" and "Game over ends route mode", and the `calendar-and-events` scenario "Rats fire with two food", into swift-testing tests; confirm red where behaviour changes
-- [ ] 3.2 Implement to green: route every session command through `GameSession.enqueue`, stop route mode and the tile menu after game over, and clear route mode on `gameOver` (design D7)
-- [ ] 3.3 Disable or hide the Actions button, the inspector's Demolish and action controls, and the route list's New Route and row actions while the game is over
-- [ ] 3.4 Refactor under a green bar
-- [ ] 3.5 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
+- [x] 3.1 Tests-first: translate the `platform-shells` scenarios "Tile menu stays shut after game over", "Inspector and route actions are off after game over" and "Game over ends route mode", and the `calendar-and-events` scenario "Rats fire with two food", into swift-testing tests; confirm red where behaviour changes
+- [x] 3.2 Implement to green: route every session command through `GameSession.enqueue`, stop route mode and the tile menu after game over, and clear route mode on `gameOver` (design D7)
+- [x] 3.3 Disable or hide the Actions button, the inspector's Demolish and action controls, and the route list's New Route and row actions while the game is over
+- [x] 3.4 Refactor under a green bar
+- [x] 3.5 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
