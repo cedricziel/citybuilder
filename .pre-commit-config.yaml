@@ -101,7 +101,7 @@ repos:
         name: generated catalogs match the game-data packs (game-data-codegen)
         entry: make gamedata-check
         language: system
-        files: ^Packages/CityCore/(GameData/|Sources/CityCore/Generated/)
+        files: ^Packages/(CityCore/(GameData/|Sources/CityCore/Generated/)|GameDataGen/Sources/)
         pass_filenames: false
 
       - id: forbid-xcodeproj
