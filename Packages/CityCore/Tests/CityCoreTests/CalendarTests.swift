@@ -150,6 +150,22 @@ func scenarioRatsHalveStoredFood() throws {
     #expect(world.stockpiles[center.id]?.quantity(of: .food) == 5)
 }
 
+@Test("scenario: rats skip an empty granary")
+func scenarioRatsSkipAnEmptyGranary() throws {
+    let seed = try #require((UInt64(0) ..< 500).first {
+        activeFixture(seed: $0).historyEvent(forYear: 1201) == .ratsInTheGranary
+    })
+    var world = World.newGame(layout: .singleIsland, seed: seed, rivals: false)
+    _ = run(&world, untilTick: 2399)
+    for buffer in world.goodsBuffers(of: .player) {
+        let food = world.stockpiles[buffer.id]?.quantity(of: .food) ?? 0
+        world.stockpiles[buffer.id]?.withdraw(.food, amount: food)
+    }
+    let events = world.tick().events
+    #expect(!events.contains { if case .historyEvent = $0 { true } else { false } })
+    #expect(world.storedQuantity(of: .food) == 0)
+}
+
 @Test("scenario: bountiful harvest fills the stores")
 func scenarioBountifulHarvestFillsTheStores() throws {
     var world = World.newGame()

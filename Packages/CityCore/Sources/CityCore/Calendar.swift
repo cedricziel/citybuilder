@@ -119,9 +119,8 @@ extension World {
         case .travellingScholar:
             research.knowledge += Self.scholarKnowledge
         case .ratsInTheGranary:
-            for buffer in goodsBuffers(of: .player) where buffer.state == .operational {
-                let food = stockpiles[buffer.id]?.quantity(of: .food) ?? 0
-                stockpiles[buffer.id]?.withdraw(.food, amount: food / 2)
+            for store in playerFoodStores {
+                stockpiles[store.id]?.withdraw(.food, amount: store.food / 2)
             }
         }
     }
@@ -131,9 +130,16 @@ extension World {
         let today = date
         events.append(.seasonChanged(today.season))
         guard calendar.isActive, tickCount.isMultiple(of: CalendarState.ticksPerYear),
-              let event = historyEvent(forYear: today.year)
+              let event = historyEvent(forYear: today.year),
+              event != .ratsInTheGranary || playerFoodStores.contains(where: { $0.food > 0 })
         else { return }
         applyHistoryEvent(event)
         events.append(.historyEvent(event))
+    }
+
+    private var playerFoodStores: [(id: EntityID, food: Int)] {
+        goodsBuffers(of: .player).filter { $0.state == .operational }.map {
+            ($0.id, stockpiles[$0.id]?.quantity(of: .food) ?? 0)
+        }
     }
 }

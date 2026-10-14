@@ -215,7 +215,7 @@ public struct World: Codable, Sendable, Equatable {
 
         let drained = pendingCommands
         pendingCommands.removeAll(keepingCapacity: true)
-        for command in drained {
+        for command in drained where !economy.gameOver || command.isRivalTurn {
             apply(command, events: &events)
         }
         tickCount &+= 1
@@ -450,5 +450,11 @@ public struct World: Codable, Sendable, Equatable {
             }
         }
         events.append(.buildingDemolished(building: id, kind: building.kind, anchor: building.anchor))
+    }
+}
+
+private extension Command {
+    var isRivalTurn: Bool {
+        if case .rivalPlace = self { true } else { false }
     }
 }
