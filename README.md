@@ -17,9 +17,18 @@ Xcode 26 or newer (Swift 6.3+) is required.
 
 CI pins the tools whose versions change results: SwiftFormat and
 SwiftLint (releases disagree on rules), pre-commit, and libimagequant
-(it decides the atlas PNG bytes that `make sprites-verify` compares).
-`scripts/ci/install-pinned-tools.sh versions` prints the pinned
-versions. If `brew install` gave you others, install the pinned ones:
+(it decides the atlas PNG bytes that `make sprites-verify` compares):
+
+| Tool          | Pinned version |
+| ------------- | -------------- |
+| SwiftFormat   | 0.63.1         |
+| SwiftLint     | 0.65.1         |
+| pre-commit    | 4.6.2          |
+| libimagequant | 4.4.1          |
+
+`scripts/ci/install-pinned-tools.sh` holds the pins; when you change
+one there, update this table too. If `brew install` gave you other
+versions, install the pinned ones:
 
 ```sh
 scripts/ci/install-pinned-tools.sh lint      # then put the bin directory it prints first on PATH
