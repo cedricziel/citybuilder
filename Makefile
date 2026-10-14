@@ -1,4 +1,4 @@
-.PHONY: help generate build test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-content sprites-procedural
+.PHONY: help generate build gamedata test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-content sprites-procedural
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -26,6 +26,7 @@ help:
 	@echo "Targets:"
 	@echo "  generate         Run xcodegen to regenerate the Xcode project"
 	@echo "  build            Build all schemes (iOS, macOS, tvOS, CLI)"
+	@echo "  gamedata         Regenerate CityCore's catalogs from the game-data packs"
 	@echo "  test             Run all swift-testing suites across packages"
 	@echo "  test-coverage    Enforce CityCore coverage floors + diff-cover"
 	@echo "  test-scenarios   Verify every spec scenario maps to a test"
@@ -43,8 +44,12 @@ build: generate
 	set -o pipefail; xcodebuild -project $(PROJECT) -scheme $(SCHEME_TV) -destination '$(DESTINATION_TV)' build | xcbeautify
 	$(SWIFT) build --package-path $(CITYCORE)
 
+gamedata:
+	$(SWIFT) run -q --package-path Packages/GameDataGen gamedata-gen generate
+
 test:
 	$(SWIFT) test --package-path $(CITYCORE) --enable-code-coverage
+	$(SWIFT) test --package-path Packages/GameDataGen
 	$(SWIFT) test --package-path Packages/CityPersistence --enable-code-coverage
 	$(SWIFT) test --package-path Packages/CityUI --enable-code-coverage
 	$(SWIFT) test --package-path Packages/CityRender2D --enable-code-coverage
