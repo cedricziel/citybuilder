@@ -12,12 +12,13 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../CityCore"),
-        .package(path: "../CityPersistence")
+        .package(path: "../CityPersistence"),
+        .package(path: "../CityUI")
     ],
     targets: [
         .target(
             name: "CityAudio",
-            dependencies: ["CityCore", "CityPersistence"],
+            dependencies: ["CityCore", "CityPersistence", "CityUI"],
             path: "Sources/CityAudio"
         ),
         .testTarget(

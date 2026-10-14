@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CityUI
 import SwiftUI
 
 /// SwiftUI view that binds an `AudioSettings` model to user-facing sliders
@@ -51,18 +52,14 @@ public struct AudioSettingsView: View {
                     }
             }
             Section("Volume") {
-                LabeledContent("Music") {
-                    Slider(value: $musicVolume, in: 0 ... 1)
-                        .onChange(of: musicVolume) { _, newValue in
-                            settings.musicVolume = newValue
-                        }
-                }
-                LabeledContent("SFX") {
-                    Slider(value: $sfxVolume, in: 0 ... 1)
-                        .onChange(of: sfxVolume) { _, newValue in
-                            settings.sfxVolume = newValue
-                        }
-                }
+                valueControl("Music", value: $musicVolume, range: 0 ... 1, step: 0.1, format: .percent)
+                    .onChange(of: musicVolume) { _, newValue in
+                        settings.musicVolume = newValue
+                    }
+                valueControl("SFX", value: $sfxVolume, range: 0 ... 1, step: 0.1, format: .percent)
+                    .onChange(of: sfxVolume) { _, newValue in
+                        settings.sfxVolume = newValue
+                    }
             }
             Section("Spatial audio") {
                 Toggle("Spatial audio", isOn: $spatialEnabled)
@@ -70,25 +67,55 @@ public struct AudioSettingsView: View {
                         settings.spatialAudioEnabled = newValue
                         onSpatialEnabledChange?(newValue)
                     }
+                #if os(tvOS)
+                spatialDistanceControls
+                    .disabled(!spatialEnabled)
+                #else
                 DisclosureGroup("Advanced", isExpanded: $advancedExpanded) {
-                    LabeledContent("Reference distance") {
-                        Slider(value: $spatialReference, in: 1 ... 16)
-                            .onChange(of: spatialReference) { _, newValue in
-                                settings.spatialReferenceDistance = newValue
-                                onSpatialDistancesChange?(newValue, spatialMax)
-                            }
-                    }
-                    LabeledContent("Max distance") {
-                        Slider(value: $spatialMax, in: 8 ... 64)
-                            .onChange(of: spatialMax) { _, newValue in
-                                settings.spatialMaxDistance = newValue
-                                onSpatialDistancesChange?(spatialReference, newValue)
-                            }
-                    }
+                    spatialDistanceControls
                 }
                 .disabled(!spatialEnabled)
+                #endif
             }
         }
+    }
+
+    @ViewBuilder
+    private var spatialDistanceControls: some View {
+        valueControl("Reference distance", value: $spatialReference, range: 1 ... 16, step: 1, format: .integer)
+            .onChange(of: spatialReference) { _, newValue in
+                settings.spatialReferenceDistance = newValue
+                onSpatialDistancesChange?(newValue, spatialMax)
+            }
+        valueControl("Max distance", value: $spatialMax, range: 8 ... 64, step: 4, format: .integer)
+            .onChange(of: spatialMax) { _, newValue in
+                settings.spatialMaxDistance = newValue
+                onSpatialDistancesChange?(spatialReference, newValue)
+            }
+    }
+
+    /// A slider on iOS and Mac; a −/+ pair on Apple TV, which has no slider.
+    @ViewBuilder
+    private func valueControl(
+        _ title: String,
+        value: Binding<Float>,
+        range: ClosedRange<Float>,
+        step: Double,
+        format: SteppedValue.Format
+    ) -> some View {
+        #if os(tvOS)
+        SteppedValueControl(
+            title,
+            value: value,
+            step: step,
+            range: Double(range.lowerBound) ... Double(range.upperBound),
+            format: format
+        )
+        #else
+        LabeledContent(title) {
+            Slider(value: value, in: range)
+        }
+        #endif
     }
 }
 #endif
