@@ -40,17 +40,31 @@ public enum SwiftEmitter {
 
 // MARK: - Names
 
+/// Swift's reserved words plus its contextual keywords. Back-quoting a
+/// word that needs no quotes is still valid Swift, so the list errs on
+/// the side of quoting.
 private let keywords: Set<String> = [
-    "as", "case", "class", "default", "do", "else", "enum", "extension", "false", "for", "func", "if", "import",
-    "in", "init", "inout", "internal", "is", "let", "nil", "operator", "private", "protocol", "public", "repeat", "return", "self",
-    "static", "struct", "super", "switch", "throw", "true", "try", "var", "where", "while"
+    "actor", "any", "as", "associatedtype", "async", "await", "borrowing", "break", "case", "catch", "class",
+    "consume", "consuming", "continue", "convenience", "copy", "default", "defer", "deinit", "didSet", "discard",
+    "do", "dynamic", "each", "else", "enum", "extension", "fallthrough", "false", "fileprivate", "final", "for",
+    "func", "get", "guard", "if", "import", "in", "indirect", "infix", "init", "inout", "internal", "is", "isolated",
+    "lazy", "let", "macro", "mutating", "nil", "nonisolated", "nonmutating", "open", "operator", "optional",
+    "override", "package", "postfix", "precedencegroup", "prefix", "private", "protocol", "public", "repeat",
+    "required", "rethrows", "return", "self", "set", "some", "static", "struct", "subscript", "super", "switch",
+    "throw", "throws", "true", "try", "typealias", "unowned", "var", "weak", "where", "while", "willSet"
 ]
 
-/// `lumberjack-hut` → `lumberjackHut`; keywords are back-quoted.
-private func caseName(_ id: String) -> String {
-    let words = id.split(separator: "-")
-    let name = (words.first.map(String.init) ?? "") + words.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
+/// The Swift case for an id; keywords are back-quoted.
+func caseName(_ id: String) -> String {
+    let name = unquotedCaseName(id)
     return keywords.contains(name) ? "`\(name)`" : name
+}
+
+/// `lumberjack-hut` → `lumberjackHut`. Distinct ids can share one, e.g.
+/// `salt-1` and `salt1`, which the validator rejects.
+func unquotedCaseName(_ id: String) -> String {
+    let words = id.split(separator: "-")
+    return (words.first.map(String.init) ?? "") + words.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
 }
 
 /// `grain-farm` → `Grain Farm`.
@@ -193,8 +207,7 @@ private struct Types {
     /// An enum with one case per id, followed by its members.
     private func enumDecl(_ name: String, _ conformances: String, _ ids: [String], _ members: [String]) -> String {
         let cases = ids.map { id in
-            let name = caseName(id)
-            return name == id ? "    case \(name)\n" : "    case \(name) = \(literal(id))\n"
+            unquotedCaseName(id) == id ? "    case \(caseName(id))\n" : "    case \(caseName(id)) = \(literal(id))\n"
         }
         let body = members.filter { !$0.isEmpty }.map { "\n" + $0 }.joined()
         return "\n\(access)enum \(name): \(conformances) {\n\(cases.joined())\(body)}\n"
