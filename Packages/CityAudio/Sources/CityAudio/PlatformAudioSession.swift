@@ -69,7 +69,15 @@ public final class PlatformAudioSession {
     ///
     /// On macOS this is a no-op (no session to configure).
     public static func configureSessionEarly() {
-        try? applySessionSettings()
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        guard let configuration = sessionConfiguration() else { return }
+        try? AVAudioSession.sharedInstance().setCategory(
+            configuration.category,
+            mode: .default,
+            options: configuration.options
+        )
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
     }
 
     /// The session each platform configures; nil where there is no
@@ -82,20 +90,18 @@ public final class PlatformAudioSession {
         }
     }
 
-    private static func applySessionSettings() throws {
-        #if os(iOS) || os(tvOS) || os(visionOS)
-        guard let settings = sessionSettings(for: .current) else { return }
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    typealias SessionConfiguration = (category: AVAudioSession.Category, options: AVAudioSession.CategoryOptions)
+
+    /// This platform's `sessionSettings` as `AVAudioSession` values.
+    nonisolated static func sessionConfiguration() -> SessionConfiguration? {
+        guard let settings = sessionSettings(for: .current) else { return nil }
         let category: AVAudioSession.Category = switch settings.category {
         case .playback: .playback
         }
-        try AVAudioSession.sharedInstance().setCategory(
-            category,
-            mode: .default,
-            options: settings.mixesWithOthers ? [.mixWithOthers] : []
-        )
-        try AVAudioSession.sharedInstance().setActive(true)
-        #endif
+        return (category, settings.mixesWithOthers ? [.mixWithOthers] : [])
     }
+    #endif
 
     /// True once `activate()` has been called and (on iOS) the audio
     /// session has been configured.
@@ -108,8 +114,15 @@ public final class PlatformAudioSession {
     /// not interfere with the user's existing audio.
     public func activate() throws {
         guard !activated else { return }
-        try Self.applySessionSettings()
         #if os(iOS) || os(tvOS) || os(visionOS)
+        if let configuration = Self.sessionConfiguration() {
+            try AVAudioSession.sharedInstance().setCategory(
+                configuration.category,
+                mode: .default,
+                options: configuration.options
+            )
+            try AVAudioSession.sharedInstance().setActive(true)
+        }
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleInterruption(_:)),

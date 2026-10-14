@@ -1,3 +1,6 @@
+#if os(iOS) || os(tvOS)
+import AVFoundation
+#endif
 import Foundation
 import Testing
 @testable import CityAudio
@@ -54,6 +57,17 @@ func scenarioMacBuildLinksWithoutAudiosession() {
     Issue.record("this scenario asserts macOS-only behavior; run on macOS")
     #endif
 }
+
+#if os(iOS) || os(tvOS)
+/// Runs only in an iOS or tvOS test run; the macOS host has no
+/// `AVAudioSession`.
+@Test("The session settings map to the playback category with mixWithOthers")
+func sessionSettingsMapToAVAudioSession() throws {
+    let configuration = try #require(PlatformAudioSession.sessionConfiguration())
+    #expect(configuration.category == .playback)
+    #expect(configuration.options == [.mixWithOthers])
+}
+#endif
 
 @Test("tvOS configures a mixing playback session; macOS configures none")
 func tvOSConfiguresAMixingPlaybackSession() {
