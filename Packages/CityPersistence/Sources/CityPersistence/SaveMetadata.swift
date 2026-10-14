@@ -21,6 +21,12 @@ public extension SaveStore {
     /// (newest first). Pure file-system scan — no JSON decoding, so a
     /// corrupt save still appears here and surfaces failure only at
     /// load time.
+    /// The write date of `gameID`'s save, or nil when it has none. The
+    /// same date `listSaves` reports.
+    func writeDate(gameID: UUID) -> Date? {
+        try? url(for: gameID).resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+    }
+
     func listSaves() throws -> [SaveMetadata] {
         let fm = FileManager.default
         guard fm.fileExists(atPath: baseDirectory.path) else { return [] }

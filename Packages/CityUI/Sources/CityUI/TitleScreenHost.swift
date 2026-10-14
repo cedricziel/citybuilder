@@ -43,16 +43,22 @@ public struct TitleScreenHost: View {
         self.titleSettingsContent = { AnyView(titleSettings()) }
     }
 
-    /// Both surfaces — the iOS path.
+    /// Both surfaces — the iOS and Apple TV path. Apple TV also passes
+    /// `cloudSync`, since its saves need iCloud to survive.
     public init(
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
         pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
+        cloudSync: TitleScreenCloudSync? = nil,
         @ViewBuilder inGameSettings: @escaping () -> some View,
         @ViewBuilder titleSettings: @escaping () -> some View
     ) {
         _viewModel = State(
-            initialValue: TitleScreenViewModel(saveStore: saveStore, sessionFactory: sessionFactory)
+            initialValue: TitleScreenViewModel(
+                saveStore: saveStore,
+                sessionFactory: sessionFactory,
+                cloudSync: cloudSync
+            )
         )
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = { AnyView(inGameSettings()) }
@@ -67,15 +73,17 @@ public struct TitleScreenHost: View {
         }
     }
 
-    @ViewBuilder
     private var titleView: some View {
-        if let titleSettings = titleSettingsContent {
-            TitleScreenView(viewModel: viewModel) {
-                titleSettings()
+        Group {
+            if let titleSettings = titleSettingsContent {
+                TitleScreenView(viewModel: viewModel) {
+                    titleSettings()
+                }
+            } else {
+                TitleScreenView(viewModel: viewModel)
             }
-        } else {
-            TitleScreenView(viewModel: viewModel)
         }
+        .task { await viewModel.prepareCloudSaves() }
     }
 
     @ViewBuilder

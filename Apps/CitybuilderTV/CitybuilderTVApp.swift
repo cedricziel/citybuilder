@@ -8,10 +8,15 @@ import SwiftUI
 @main
 struct CitybuilderTVApp: App {
     private let audio: AudioStack
-    private let saveStore = SaveStore()
+    private let saveStore: SaveStore
+    private let saveSync: TVSaveSync
+    @Environment(\.scenePhase) private var scenePhase
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
+        let saveStore = SaveStore()
+        self.saveStore = saveStore
+        saveSync = TVSaveSync(store: saveStore, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         SnapshotRendererRegistry.shared
@@ -58,17 +63,29 @@ struct CitybuilderTVApp: App {
                         }
                     )
                 },
-                pauseMenuFactory: { [saveStore] session in
+                pauseMenuFactory: { [saveStore, saveSync] session in
                     PauseMenuConfig(
                         platform: .tvOS,
-                        onSaveGame: { [saveStore, session] in
+                        onSaveGame: { [saveStore, saveSync, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
+                            Task { await saveSync.didSave(gameID: Self.defaultGameID) }
                         }
                     )
                 },
+                cloudSync: TitleScreenCloudSync(
+                    restoreSaves: { [saveSync] in await saveSync.launch().conflicts },
+                    isAccountAvailable: { [saveSync] in await saveSync.isAccountAvailable() },
+                    resolveConflict: { [saveSync] gameID, keepICloud in
+                        await saveSync.resolveConflict(gameID: gameID, keepICloud: keepICloud)
+                    }
+                ),
                 inGameSettings: { SettingsSheet(audio: audio) },
                 titleSettings: { SettingsSheet(audio: audio) }
             )
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task { [saveSync] in await saveSync.retryPendingUploads() }
+            }
         }
     }
 }
