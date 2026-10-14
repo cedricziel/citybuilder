@@ -54,3 +54,11 @@ func scenarioMacBuildLinksWithoutAudiosession() {
     Issue.record("this scenario asserts macOS-only behavior; run on macOS")
     #endif
 }
+
+@Test("tvOS configures a mixing playback session; macOS configures none")
+func tvOSConfiguresAMixingPlaybackSession() {
+    let game = AudioSessionSettings(category: .playback, mixesWithOthers: true)
+    #expect(PlatformAudioSession.sessionSettings(for: .tvOS) == game)
+    #expect(PlatformAudioSession.sessionSettings(for: .iOS) == game)
+    #expect(PlatformAudioSession.sessionSettings(for: .macOS) == nil)
+}
