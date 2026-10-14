@@ -65,3 +65,11 @@ Town center positions, starter groves and the resulting terrain SHALL depend onl
 #### Scenario: Rivals get the same start rule as the player
 - **WHEN** an archipelago game with rivals and one without rivals are created with the same seed
 - **THEN** every rival town center in the first stands on the anchor of the town center on the same island in the second, and its start is fair
+
+### Requirement: New game camera starts on the home town center
+
+A new game's camera SHALL be centred on the middle of the player's home town center footprint: the player town center on the island under the map's centre tile, or the player town center with the lowest entity ID when that island has none. Without a player town center the camera SHALL stay at the map's centre.
+
+#### Scenario: Camera starts on the player's town center
+- **WHEN** a new single-island game or a new archipelago game is created
+- **THEN** the camera's centre tile lies on the player's home town center footprint
