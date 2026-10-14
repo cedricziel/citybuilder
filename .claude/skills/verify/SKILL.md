@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Build, launch, and drive Citybuilder in the iOS Simulator to observe a change at runtime.
+description: Build, launch, and drive Citybuilder in the iOS or tvOS Simulator to observe a change at runtime.
 ---
 
 # Verify Citybuilder at runtime
@@ -33,6 +33,23 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
   - Locked buildings show a lock and are rejected with "Needs <Tech> research".
 - **Camera:** Pinch with two fingers (`touch2_path`) to zoom out and read the whole island.
 - **Pause:** The pause button opens the menu. Tap Save Game ("Saved" appears), then Quit to Title. The title screen should now offer Continue, which restores money, buildings, and camera.
+
+## Apple TV
+
+The tvOS simulator runtime is a separate download of several GB. Check `xcrun simctl list runtimes | grep tvOS` first, and run `xcodebuild -downloadPlatform tvOS` only with enough free disk. Building for `generic/platform=tvOS Simulator` works without the runtime; launching does not.
+
+1. Pick an Apple TV simulator: `xcrun simctl list devices available | grep 'Apple TV'`.
+2. Build:
+
+   ```bash
+   xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderTV \
+     -destination 'platform=tvOS Simulator,id=<UDID>' -derivedDataPath <scratch>/dd-tv build
+   ```
+
+3. The app lands at `<scratch>/dd-tv/Build/Products/Debug-appletvsimulator/Citybuilder.app`. Install and launch it with `xcrun simctl boot <UDID>`, `xcrun simctl install <UDID> <app>`, then `xcrun simctl launch <UDID> com.cedricziel.citybuilder`.
+4. Screenshots: `xcrun simctl io <UDID> screenshot <file>.png`.
+5. Remote presses: open Simulator.app (`open -a Simulator`), then choose I/O > Show Apple TV Remote, or use the keyboard with the simulator window focused (arrow keys move, Return selects, Escape is Back, Space is Play/Pause).
+6. Saves live in Caches on Apple TV: `xcrun simctl get_app_container <UDID> com.cedricziel.citybuilder data` then `Library/Caches/Citybuilder/saves/`.
 
 ## Gotchas
 
