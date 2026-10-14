@@ -282,10 +282,10 @@ struct RivalTownPlan {
         }
         guard !hutGrass.isEmpty else { return nil }
         return bestSlot(for: .forester, homeOpen: homeOpen) { anchor in
-            let site = footprint.tiles(anchor: anchor)
+            let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
             var shared = 0
-            world.visitCatchment(anchor: anchor, footprint: footprint, where: isOpen) { tile in
-                if hutGrass.contains(tile), !site.contains(tile) { shared += 1 }
+            world.visitCatchment(anchor: anchor, footprint: footprint, where: hutGrass.contains) { tile in
+                if !(columns.contains(tile.x) && rows.contains(tile.y)) { shared += 1 }
                 return true
             }
             return shared >= RivalAI.foresterMinSharedGrass ? shared : nil
