@@ -265,30 +265,37 @@ struct RivalTownPlan {
     }
 
     /// A forester goes where its catchment shares the most open grass
-    /// with the catchments of the rival's huts, at least
+    /// with the catchment of one of the rival's huts, at least
     /// `RivalAI.foresterMinSharedGrass`, searched like a hut's slot
     /// (`add-forestry` D6).
     private mutating func foresterSlot(homeOpen: Bool) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
         let footprint = BuildingCatalog.spec(for: .forester).footprint
         let world = world
         let isOpen = world.openGrass(for: owner, tileToIsland: tileToIsland)
-        var hutGrass = Set<TileCoordinate>()
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
+        var hutGrass: [Set<TileCoordinate>] = []
         for hut in world.buildings.values where hut.owner == owner && hut.kind == .lumberjackHut {
+            var grass = Set<TileCoordinate>()
             world.visitCatchment(anchor: hut.anchor, footprint: hutFootprint, where: isOpen) { tile in
-                hutGrass.insert(tile)
+                grass.insert(tile)
                 return true
             }
+            if grass.count >= RivalAI.foresterMinSharedGrass { hutGrass.append(grass) }
         }
-        guard !hutGrass.isEmpty else { return nil }
+        let anyHutGrass = hutGrass.reduce(into: Set<TileCoordinate>()) { $0.formUnion($1) }
+        guard !anyHutGrass.isEmpty else { return nil }
         return bestSlot(for: .forester, homeOpen: homeOpen) { anchor in
             let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
-            var shared = 0
-            world.visitCatchment(anchor: anchor, footprint: footprint, where: hutGrass.contains) { tile in
-                if !(columns.contains(tile.x) && rows.contains(tile.y)) { shared += 1 }
+            var shared = [Int](repeating: 0, count: hutGrass.count)
+            world.visitCatchment(anchor: anchor, footprint: footprint, where: anyHutGrass.contains) { tile in
+                guard !(columns.contains(tile.x) && rows.contains(tile.y)) else { return true }
+                for (index, grass) in hutGrass.enumerated() where grass.contains(tile) {
+                    shared[index] += 1
+                }
                 return true
             }
-            return shared >= RivalAI.foresterMinSharedGrass ? shared : nil
+            let best = shared.max() ?? 0
+            return best >= RivalAI.foresterMinSharedGrass ? best : nil
         }
     }
 
