@@ -47,6 +47,6 @@ func scenarioDeterminismGatePassesWhenMathIsPlatformAgnostic() throws {
     #expect(yml.contains("DeterminismFixture 36000 > determinism/linux-36k.json"))
     #expect(yml.contains("diff -q determinism/macos-36k.json determinism/linux-36k.json"))
     // The compare job is wired as a dependency of both producers so
-    // it cannot run before they finish.
-    #expect(yml.contains("needs: [test, determinism-linux]"))
+    // it cannot run before they finish; `changes` decides whether it runs.
+    #expect(yml.contains("needs: [changes, test, determinism-linux]"))
 }
