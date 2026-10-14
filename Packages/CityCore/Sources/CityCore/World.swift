@@ -406,20 +406,10 @@ public struct World: Codable, Sendable, Equatable {
         return result
     }
 
-    /// Default stockpile capacity per building kind. nil means "this kind
-    /// has no stockpile" — e.g. roads.
+    /// Stockpile capacity per building kind, the pack's `storage`. nil
+    /// means "this kind has no stockpile", e.g. roads.
     static func stockpileCapacity(for kind: BuildingKind) -> Int? {
-        switch kind {
-        case .warehouse: 200
-        case .lumberjackHut, .sawmill, .farm, .bakery, .grainFarm, .windmill, .quernHouse, .mine, .charcoalBurner, .smelter,
-             .toolsmith, .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery,
-             .monument, .steamEngine, .powerPlant, .meadHall, .forum, .templeGarden, .caravanserai: 16
-        case .house: 8
-        case .townCenter: 40
-        case .road, .library, .guildHall, .gallery: nil
-        case .port: 200
-        case .shipyard: 64
-        }
+        kind.storage
     }
 
     private mutating func applyDemolish(anchor: TileCoordinate, events: inout [WorldEvent]) {

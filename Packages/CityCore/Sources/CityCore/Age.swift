@@ -1,38 +1,8 @@
 import Foundation
 
-/// The historical age the city lives in. Spec: `historical-ages`.
-public enum Age: String, CaseIterable, Codable, Hashable, Sendable, Comparable {
-    case antiquity
-    case medieval
-    case renaissance
-    case industrial
-    case modern
-
-    public var displayName: String {
-        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
-    }
-
-    /// Astronomical year: 0 is 1 BC, so −499 is 500 BC.
-    public var startYear: Int {
-        switch self {
-        case .antiquity: -499
-        case .medieval: 1200
-        case .renaissance: 1450
-        case .industrial: 1780
-        case .modern: 1910
-        }
-    }
-
-    public var blurb: String {
-        switch self {
-        case .antiquity: "Stone towns, hand mills and the first libraries."
-        case .medieval: "Timber and tile, windmills and guilds."
-        case .renaissance: "Printing, trade and tall stuccoed fronts."
-        case .industrial: "Steam, brick and smoking chimneys."
-        case .modern: "Electricity and concrete."
-        }
-    }
-
+/// The historical age the city lives in. Spec: `historical-ages`. Cases
+/// and values are generated from the packs.
+extension Age: Comparable {
     public var next: Age? {
         Age.allCases.first { $0 > self }
     }

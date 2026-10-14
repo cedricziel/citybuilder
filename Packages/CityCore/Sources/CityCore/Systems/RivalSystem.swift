@@ -42,19 +42,6 @@ extension RivalAIState {
     }
 }
 
-extension Age {
-    /// Residents a rival needs to enter this age (design D8).
-    var rivalResidentThreshold: Int {
-        switch self {
-        case .antiquity: 0
-        case .medieval: 24
-        case .renaissance: 60
-        case .industrial: 108
-        case .modern: 150
-        }
-    }
-}
-
 /// What a rival has on its island when its turn starts (design D5).
 private struct RivalTurn {
     let rival: RivalTown
@@ -115,7 +102,7 @@ extension World {
         guard let index = rivalIndex(id) else { return }
         takeRivalStep(index)
         let rival = rivals[index]
-        if let next = rival.age.next, population(of: rival.owner) >= next.rivalResidentThreshold {
+        if let next = rival.age.next, population(of: rival.owner) >= next.rivalResidents {
             rivals[index].age = next
             events.append(.rivalAgeAdvanced(id, next))
         }

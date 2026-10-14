@@ -1,30 +1,7 @@
 import Foundation
 
-/// Goods catalog. Identifiers stay stable across milestones; the full
-/// catalog grows in M4 when production chains land.
-public enum Good: String, CaseIterable, Codable, Sendable {
-    case wood
-    case planks
-    case food
-    case bread
-    case grain
-    case flour
-    case ore
-    case charcoal
-    case iron
-    case tools
-    case hops
-    case beer
-    case grapes
-    case wine
-    case teaLeaves = "tea-leaves"
-    case tea
-    case coffeeCherries = "coffee-cherries"
-    case coffee
-}
-
-/// Goods catalog metadata. Unit / display name. Lightweight today; expands
-/// when the M4 production system needs it.
+/// A good's display name and stack unit. `GoodsCatalog` is generated from
+/// the game-data packs.
 public struct GoodSpec: Hashable, Sendable {
     public let good: Good
     public let displayName: String
@@ -34,58 +11,6 @@ public struct GoodSpec: Hashable, Sendable {
         self.good = good
         self.displayName = displayName
         self.stackUnit = stackUnit
-    }
-}
-
-public enum GoodsCatalog {
-    private static let specs: [Good: GoodSpec] = [
-        .wood: GoodSpec(good: .wood, displayName: "Wood", stackUnit: "logs"),
-        .planks: GoodSpec(good: .planks, displayName: "Planks", stackUnit: "bundles"),
-        .food: GoodSpec(good: .food, displayName: "Food", stackUnit: "rations"),
-        .bread: GoodSpec(good: .bread, displayName: "Bread", stackUnit: "loaves"),
-        .grain: GoodSpec(good: .grain, displayName: "Grain", stackUnit: "sheaves"),
-        .flour: GoodSpec(good: .flour, displayName: "Flour", stackUnit: "sacks"),
-        .ore: GoodSpec(good: .ore, displayName: "Ore", stackUnit: "loads"),
-        .charcoal: GoodSpec(good: .charcoal, displayName: "Charcoal", stackUnit: "baskets"),
-        .iron: GoodSpec(good: .iron, displayName: "Iron", stackUnit: "bars"),
-        .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets"),
-        .hops: GoodSpec(good: .hops, displayName: "Hops", stackUnit: "bales"),
-        .beer: GoodSpec(good: .beer, displayName: "Beer", stackUnit: "casks"),
-        .grapes: GoodSpec(good: .grapes, displayName: "Grapes", stackUnit: "baskets"),
-        .wine: GoodSpec(good: .wine, displayName: "Wine", stackUnit: "amphorae"),
-        .teaLeaves: GoodSpec(good: .teaLeaves, displayName: "Tea Leaves", stackUnit: "baskets"),
-        .tea: GoodSpec(good: .tea, displayName: "Tea", stackUnit: "chests"),
-        .coffeeCherries: GoodSpec(good: .coffeeCherries, displayName: "Coffee Cherries", stackUnit: "sacks"),
-        .coffee: GoodSpec(good: .coffee, displayName: "Coffee", stackUnit: "sacks")
-    ]
-
-    public static var all: [GoodSpec] {
-        Array(specs.values)
-    }
-
-    public static func spec(for good: Good) -> GoodSpec {
-        guard let result = specs[good] else {
-            preconditionFailure("Good \(good) missing from catalog")
-        }
-        return result
-    }
-}
-
-public extension Good {
-    /// What a caravan pays per unit, and the base of rival trade prices
-    /// (`add-rival-trade` D1). Design D8.
-    var basePrice: Int64 {
-        switch self {
-        case .wood, .food: 4
-        case .planks: 8
-        case .bread: 12
-        case .grain, .hops, .grapes, .teaLeaves, .coffeeCherries: 3
-        case .flour: 6
-        case .ore, .charcoal: 5
-        case .iron: 14
-        case .tools: 30
-        case .beer, .wine, .tea, .coffee: 16
-        }
     }
 }
 

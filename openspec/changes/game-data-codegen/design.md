@@ -165,6 +165,8 @@ Generated lookups are exhaustive `switch` statements, not dictionaries. That kee
 
 Generated files use the same type names, so the hand-written parts sit in extensions in the existing files.
 
+As built (M3): the generated enums declare their values in the enum body, and `Tech` and `Age` gain `Comparable` in a hand-written extension. Three hand-written lookups stay as one-line forwards, so their many callers and tests do not change: `World.stockpileCapacity(for:)` returns `kind.storage`, `ResidentNames.list(for:)` returns `culture.residentNames`, and `HouseTier.displayName(in:)` returns `culture.tierName(self)`. `BuildingKind.category` is a `String?` because `BuildCategory` lives in CityUI, which maps it with `BuildCategory(rawValue:)`. `GoodsCatalog.all` and `BuildingCatalog.all` now list specs in case order instead of dictionary order; only tests read them, as sets.
+
 ### D5. Manifest order, then item order, is case order
 
 Each enum's cases are emitted in load order: packs in manifest order, then items in file order. Keys inside a value are emitted sorted, for example the goods in `materials`. `Tech.unlocks` lists buildings in `BuildingKind` case order.

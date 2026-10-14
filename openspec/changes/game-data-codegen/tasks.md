@@ -22,15 +22,15 @@
 
 ## 3. M3 — Switch CityCore to generated catalogs
 
-- [ ] 3.1 Tests-first: add the scenarios "Every catalog entry comes from the packs" (a `GameDataGenTests` test that generates from the committed packs and checks that no Swift file outside `Generated/` declares `Good`, `BuildingKind`, `Culture`, `Tech` or `Age` cases), "Legacy building identifiers still decode" and "Every good has a consumer" (both in `CityCoreTests`, over the generated types). Confirm red.
-- [ ] 3.2 Implement to green: emit the real type names (`Good`, `BuildingKind`, `Culture`, `Tech`, `Age`, `GoodsCatalog`, `BuildingCatalog`, `ProductionCatalog`) into `Sources/CityCore/Generated/`, using exhaustive `switch` lookups.
-- [ ] 3.3 Delete the hand-written tables (`signatureSpecs`, `cultureSignatureSpecs`, `Culture.signature`, `BuildingKind.signatures`, `World.stockpileCapacity`'s switch, `ResidentNames`' lists, `Age.rivalResidentThreshold`'s switch) and point their callers at the generated values. Derive `signatureCulture` from `Culture.signature`. Move the remaining behaviour into extensions. Remove the `GameDataParity` namespace and the parity test.
+- [x] 3.1 Tests-first: add the scenarios "Every catalog entry comes from the packs" (a `GameDataGenTests` test that generates from the committed packs and checks that no Swift file outside `Generated/` declares `Good`, `BuildingKind`, `Culture`, `Tech` or `Age` cases), "Legacy building identifiers still decode" and "Every good has a consumer" (both in `CityCoreTests`, over the generated types). Confirm red.
+- [x] 3.2 Implement to green: emit the real type names (`Good`, `BuildingKind`, `Culture`, `Tech`, `Age`, `GoodsCatalog`, `BuildingCatalog`, `ProductionCatalog`) into `Sources/CityCore/Generated/`, using exhaustive `switch` lookups.
+- [x] 3.3 Delete the hand-written tables (`signatureSpecs`, `cultureSignatureSpecs`, `Culture.signature`, `BuildingKind.signatures`, `World.stockpileCapacity`'s switch, `ResidentNames`' lists, `Age.rivalResidentThreshold`'s switch) and point their callers at the generated values. Derive `signatureCulture` from `Culture.signature`. Move the remaining behaviour into extensions. Remove the `GameDataParity` namespace and the parity test.
 - [ ] 3.4 Give `SpriteAnimation.operationalEntry` (CityRender2D) a `default:` branch with today's two-frame idle loop, keeping the explicit `nil` cases. Replace the building-name `switch` in `CityUI/BuildTool.swift` with `BuildingKind.displayName`, and `BuildCategory.of(_:)` with a lookup of the generated `BuildingKind.category`.
-- [ ] 3.5 Implement to green: the good-consumer test over recipes, materials, luxuries and `HouseTier.needs`.
-- [ ] 3.6 Audit every `BuildingKind.allCases` use (sprite atlas preload, `workshops`, `BuildPalette.kinds`, `SpritesStyleCatalogTests`) to confirm none affects simulation state. Run every package's tests (`make test`), including `HUDFeedbackTests` and `BuildRailTests` for the new drawer order and the CityPersistence save fixtures. Run `DeterminismFixture` at both lengths and confirm the output equals the M2 baseline byte for byte.
-- [ ] 3.7 Exclude `Generated/` from SwiftFormat and from SwiftLint's `cyclomatic_complexity`, `file_length` and `line_length` rules (done in M2: `.swiftformat` excludes the folder, and the generated files carry `swiftlint:disable` directives, see Risks). Confirm `make lint` and `make test-citycore-framework-free` pass.
-- [ ] 3.8 Refactor under a green bar.
-- [ ] 3.9 Verify `make test-scenarios` is clean for this milestone's scenarios.
+- [x] 3.5 Implement to green: the good-consumer test over recipes, materials, luxuries and `HouseTier.needs`.
+- [x] 3.6 Audit every `BuildingKind.allCases` use (sprite atlas preload, `workshops`, `BuildPalette.kinds`, `SpritesStyleCatalogTests`) to confirm none affects simulation state. Run every package's tests (`make test`), including `HUDFeedbackTests` and `BuildRailTests` for the new drawer order and the CityPersistence save fixtures. Run `DeterminismFixture` at both lengths and confirm the output equals the M2 baseline byte for byte.
+- [x] 3.7 Exclude `Generated/` from SwiftFormat and from SwiftLint's `cyclomatic_complexity`, `file_length` and `line_length` rules (done in M2: `.swiftformat` excludes the folder, and the generated files carry `swiftlint:disable` directives, see Risks). Confirm `make lint` and `make test-citycore-framework-free` pass.
+- [x] 3.8 Refactor under a green bar.
+- [x] 3.9 Verify `make test-scenarios` is clean for this milestone's scenarios.
 
 ## 4. M4 — Drift check in tooling and CI
 
