@@ -67,8 +67,10 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Install Homebrew tools
-        run: brew install swiftlint swiftformat pre-commit
+      # Pinned and checksummed: runner images carry different SwiftFormat
+      # releases, which disagree on rules such as docComments.
+      - name: Install pinned lint tools
+        run: scripts/ci/install-pinned-tools.sh lint
 
       - name: Cache pre-commit
         uses: actions/cache@v6
@@ -118,7 +120,8 @@ jobs:
       # hermetic regen gate, so it needs the sprite pipeline's venv.
       - name: Install sprite pipeline libraries
         if: matrix.package == 'CityRender2D'
-        run: brew install libimagequant jpeg-turbo
+        # libimagequant decides the atlas PNG bytes, so it is pinned.
+        run: scripts/ci/install-pinned-tools.sh sprites
 
       - name: Set up Python for sprite pipeline
         if: matrix.package == 'CityRender2D'
@@ -206,7 +209,8 @@ jobs:
           persist-credentials: false
 
       - name: Install sprite pipeline libraries
-        run: brew install libimagequant jpeg-turbo
+        # libimagequant decides the atlas PNG bytes, so it is pinned.
+        run: scripts/ci/install-pinned-tools.sh sprites
 
       - name: Set up Python for sprite pipeline
         uses: actions/setup-python@v7
