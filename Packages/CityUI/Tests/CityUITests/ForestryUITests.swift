@@ -19,6 +19,13 @@ private func inspector(for kind: BuildingKind, inReach: Int) throws -> Inspector
     return InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings)
 }
 
+/// The first anchor on the new-game map where an unbuilt `kind` would
+/// reach exactly `count` tiles.
+private func anchor(for kind: BuildingKind, reaching count: Int, in world: World) throws -> TileCoordinate {
+    let tiles = (0 ..< world.mapHeight).lazy.flatMap { y in (0 ..< world.mapWidth).lazy.map { TileCoordinate(x: $0, y: y) } }
+    return try #require(tiles.first { world.catchmentCount(kind: kind, anchor: $0, owner: .player) == count })
+}
+
 @Test("scenario: hut key lines show trees in reach")
 func scenarioHutKeyLinesShowTreesInReach() throws {
     let inspector = try inspector(for: .lumberjackHut, inReach: 7)
@@ -39,4 +46,42 @@ func scenarioForesterKeyLinesShowOpenGrass() throws {
 func otherBuildingsShowNothingInReach() throws {
     let inspector = try inspector(for: .farm, inReach: 5)
     #expect(!inspector.bullets.contains { $0.contains("in reach") })
+}
+
+@MainActor
+@Test("scenario: tool strip hint shows trees at the candidate site")
+func scenarioToolStripHintShowsTreesAtTheCandidateSite() throws {
+    let session = GameSession()
+    session.selectTool(.place(.lumberjackHut))
+    try session.handleHover(at: anchor(for: .lumberjackHut, reaching: 9, in: session.world))
+    #expect(session.armedInReachCount == 9)
+    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .phone, inReach: session.armedInReachCount)
+    #expect(hint == "Tap or drag to place lumberjack · 9 trees in reach")
+}
+
+@MainActor
+@Test("scenario: tool strip hint without a candidate site")
+func scenarioToolStripHintWithoutACandidateSite() {
+    let session = GameSession()
+    session.selectTool(.place(.forester))
+    #expect(session.armedInReachCount == nil)
+    let hint = ToolStripText.hint(for: session.selectedTool, idiom: .mac, inReach: session.armedInReachCount)
+    #expect(hint == "Click or drag to place forester")
+}
+
+@Test("forester tool strip hint counts open grass")
+func foresterToolStripHintCountsOpenGrass() {
+    #expect(ToolStripText.hint(for: .place(.forester), idiom: .mac, inReach: 12)
+        == "Click or drag to place forester · 12 open grass in reach")
+    #expect(ToolStripText.hint(for: .place(.house), idiom: .mac, inReach: 12) == "Click or drag to place house")
+}
+
+@MainActor
+@Test("a pending placement is the candidate site")
+func aPendingPlacementIsTheCandidateSite() throws {
+    let session = GameSession()
+    let site = try anchor(for: .lumberjackHut, reaching: 9, in: session.world)
+    session.selectTool(.place(.lumberjackHut))
+    session.pendingPlacement = PendingPlacement(kind: .lumberjackHut, anchor: site, origin: site)
+    #expect(session.armedInReachCount == 9)
 }

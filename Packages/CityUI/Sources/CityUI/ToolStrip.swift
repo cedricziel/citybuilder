@@ -5,16 +5,29 @@ import SwiftUI
 /// Text on the tool strip. Spec: `platform-shells` / Tool strip.
 public enum ToolStripText {
     /// `paintingRoad` only matters on Apple TV, where select toggles road
-    /// painting.
-    public static func hint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false) -> String {
+    /// painting. `inReach` is the armed hut's trees or forester's open
+    /// grass at its candidate site (`GameSession.armedInReachCount`).
+    public static func hint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false, inReach: Int? = nil) -> String {
         let name = tool.displayName.lowercased()
         let touch = idiom.isTouch
-        switch (tool, idiom) {
-        case (.inspect, _): return ""
-        case (.demolish, _): return touch ? "Tap a building to demolish" : "Click a building to demolish"
-        case (.place(.road), .tv): return paintingRoad ? "Click to stop painting road" : "Click to start painting road"
-        case (.place, .tv): return "Move, then click to place \(name). Back to cancel."
-        case (.place, _): return "\(touch ? "Tap" : "Click") or drag to place \(name)"
+        let base = switch (tool, idiom) {
+        case (.inspect, _): ""
+        case (.demolish, _): touch ? "Tap a building to demolish" : "Click a building to demolish"
+        case (.place(.road), .tv): paintingRoad ? "Click to stop painting road" : "Click to start painting road"
+        case (.place, .tv): "Move, then click to place \(name). Back to cancel."
+        case (.place, _): "\(touch ? "Tap" : "Click") or drag to place \(name)"
+        }
+        guard case let .place(kind) = tool, let noun = inReachNoun(kind), let inReach else { return base }
+        return "\(base) · \(inReach) \(noun) in reach"
+    }
+
+    /// What a building of `kind` counts in its catchment, nil when it
+    /// counts nothing.
+    static func inReachNoun(_ kind: BuildingKind) -> String? {
+        switch kind {
+        case .lumberjackHut: "trees"
+        case .forester: "open grass"
+        default: nil
         }
     }
 }
@@ -28,6 +41,16 @@ public extension GameSession {
         if let ghost = ghostState() { return ghost.costBreakdown }
         guard case let .place(kind) = selectedTool else { return nil }
         return costBreakdown(for: kind, anchor: world.camera.centerTile())
+    }
+
+    /// Trees or open grass the armed hut or forester would reach at its
+    /// candidate site: the pending placement, else the hovered tile. Nil
+    /// for other tools or without a candidate site (`add-forestry` D5).
+    var armedInReachCount: Int? {
+        guard case let .place(kind) = selectedTool, ToolStripText.inReachNoun(kind) != nil,
+              let anchor = pendingPlacement?.anchor ?? hoveredTile
+        else { return nil }
+        return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
     }
 }
 
@@ -43,7 +66,7 @@ struct ToolStripView: View {
                 art(tool)
                 VStack(alignment: .leading, spacing: 0) {
                     title(tool)
-                    Text(ToolStripText.hint(for: tool, idiom: idiom))
+                    Text(ToolStripText.hint(for: tool, idiom: idiom, inReach: session.armedInReachCount))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
