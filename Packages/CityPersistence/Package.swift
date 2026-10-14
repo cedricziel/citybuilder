@@ -5,7 +5,8 @@ let package = Package(
     name: "CityPersistence",
     platforms: [
         .iOS(.v18),
-        .macOS(.v15)
+        .macOS(.v15),
+        .tvOS(.v18)
     ],
     products: [
         .library(name: "CityPersistence", targets: ["CityPersistence"])
