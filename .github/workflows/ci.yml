@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [CityCore, CityPersistence, CityUI, CityRender2D, CityRender3D, CityAudio]
+        package: [CityCore, CityPersistence, CityUI, CityRender2D, CityRender3D, CityAudio, GameDataGen]
 
     steps:
       - name: Checkout (with full history for diff-cover)
@@ -236,6 +236,9 @@ jobs:
 
       - name: swift test CityCore
         run: swift test --package-path Packages/CityCore
+
+      - name: swift test GameDataGen
+        run: swift test --package-path Packages/GameDataGen
 
       - name: DeterminismFixture (Linux) — produce post-tick JSON
         env:
