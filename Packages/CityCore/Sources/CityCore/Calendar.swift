@@ -129,6 +129,7 @@ extension World {
         guard tickCount > 0, tickCount.isMultiple(of: CalendarState.ticksPerSeason) else { return }
         let today = date
         events.append(.seasonChanged(today.season))
+        market = MarketLedger()
         guard calendar.isActive, tickCount.isMultiple(of: CalendarState.ticksPerYear),
               let event = historyEvent(forYear: today.year),
               event != .ratsInTheGranary || playerFoodStores.contains(where: { $0.food >= 2 })
