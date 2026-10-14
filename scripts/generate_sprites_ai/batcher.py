@@ -115,29 +115,6 @@ def _target_size(sprite_name: str) -> tuple[int, int]:
     return (128, 128)
 
 
-def _save_indexed_png(image: Image.Image, dest: Path) -> None:
-    """Save a Pillow image as an optimized indexed-mode PNG with
-    alpha preserved. Per `sprite-asset-pipeline` § "Committed PNGs
-    are indexed-mode and optimized": output footprint stays bounded;
-    aesthetic fidelity is unaffected because pixel art has ≤32
-    distinct colours.
-
-    Uses libimagequant's RGBA-aware quantizer, which produces a
-    P-mode image with a tRNS chunk encoding per-palette-index alpha.
-    Pillow's other quantize chains (e.g., split alpha → RGB →
-    quantize → re-paste) silently drop the per-pixel alpha at the
-    final RGBA-to-P conversion.
-    """
-    rgba = image.convert("RGBA")
-    indexed = rgba.quantize(
-        colors=256,
-        method=Image.Quantize.LIBIMAGEQUANT,
-        dither=Image.Dither.NONE,
-    )
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    indexed.save(dest, format="PNG", optimize=True)
-
-
 def _process_and_write_cell(
     sprite_name: str,
     tile: Image.Image,
@@ -160,7 +137,7 @@ def _process_and_write_cell(
         quantized = diamond_fit(quantized)
     resolver = output_dir_resolver or paths.atlas_dir_for
     out_path = resolver(sprite_name) / f"{sprite_name}.png"
-    _save_indexed_png(quantized, out_path)
+    _cache_mod._save_indexed(quantized, out_path)
     return out_path
 
 

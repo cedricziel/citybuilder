@@ -363,26 +363,20 @@ func scenarioMasterReferenceExistsAndIsAPng() {
 @Test("scenario: make sprites does not regenerate master reference")
 // swiftlint:disable:next inclusive_language
 func scenarioMakeSpritesDoesNotRegenerateMasterReference() throws {
-    let url = worktreeRoot().appendingPathComponent(
-        "Resources/Sprites.style/master-reference.png"
-    )
-    guard FileManager.default.fileExists(atPath: url.path) else {
-        Issue.record("master-reference.png is absent; skipping mtime check")
-        return
-    }
-    let attrsBefore = (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:]
-    let before = attrsBefore[.modificationDate] as? Date
+    // The pytest runs the offline regen with every output redirected
+    // into a tempdir; running `make sprites-offline` here would rewrite
+    // the committed atlas PNGs while other tests read them.
     let process = Process()
-    process.currentDirectoryURL = worktreeRoot()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["make", "sprites-offline"]
-    process.standardOutput = Pipe()
-    process.standardError = Pipe()
+    process.currentDirectoryURL = worktreeRoot().appendingPathComponent("scripts")
+    process.executableURL = worktreeRoot().appendingPathComponent(".venv/sprites/bin/python")
+    process.arguments = ["-m", "pytest", "-q", "tests/test_master_reference.py"]
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = pipe
     try process.run()
     process.waitUntilExit()
-    let attrsAfter = (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:]
-    let after = attrsAfter[.modificationDate] as? Date
-    #expect(before == after, "make sprites must not modify master-reference.png")
+    let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    #expect(process.terminationStatus == 0, "test_master_reference.py failed:\n\(output)")
 }
 
 @Test("scenario: make sprites-reference is the only path to regenerate")
@@ -421,7 +415,7 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
     )
     // No other target references --regenerate-reference.
     let lines = makefile.split(separator: "\n").map(String.init)
-    let otherTargets = ["sprites:", "sprites-offline:", "sprites-verify:"]
+    let otherTargets = ["sprites:", "sprites-offline:", "sprites-verify:", "sprites-regen-check:"]
     var violations: [String] = []
     for target in otherTargets {
         var collecting = false

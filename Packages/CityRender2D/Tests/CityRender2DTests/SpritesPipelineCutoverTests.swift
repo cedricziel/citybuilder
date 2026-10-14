@@ -119,14 +119,16 @@ func scenarioReadmeReferencesNoProceduralWorkflow() throws {
 
 @Test("scenario: offline regen reproduces committed pngs")
 func scenarioOfflineRegenReproducesCommittedPngs() throws {
-    // Drives `make sprites-verify`, which redirects pipeline writes to
-    // a tempdir, runs the pipeline offline against the committed
-    // `_sheets/`, and exits non-zero on any byte mismatch against the
-    // committed atlas PNGs.
+    // Drives `make sprites-regen-check`, the byte half of
+    // `make sprites-verify`: it redirects pipeline writes to a tempdir,
+    // runs the pipeline offline against the committed `_sheets/`, and
+    // exits non-zero on any byte mismatch against the committed atlas
+    // PNGs. CI runs the other half, `make sprites-content`, as its own
+    // step, so this test doesn't build the content gate inside `swift test`.
     let process = Process()
     process.currentDirectoryURL = worktreeRoot()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["make", "sprites-verify"]
+    process.arguments = ["make", "sprites-regen-check"]
     let pipe = Pipe()
     process.standardOutput = pipe
     process.standardError = pipe
@@ -143,7 +145,7 @@ func scenarioOfflineRegenReproducesCommittedPngs() throws {
     ) ?? ""
     #expect(
         process.terminationStatus == 0,
-        "make sprites-verify exited \(process.terminationStatus):\n\(output)"
+        "make sprites-regen-check exited \(process.terminationStatus):\n\(output)"
     )
 }
 

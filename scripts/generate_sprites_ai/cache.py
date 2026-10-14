@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import tempfile
 from io import BytesIO
 from pathlib import Path
 
@@ -74,9 +76,15 @@ def _save_indexed(image: Image.Image, dest: Path) -> None:
 
     Per `sprite-asset-pipeline` § "Committed PNGs are indexed-mode and
     optimized": every committed binary stays well under 1 MB and the
-    repo clone footprint stays bounded. Used by both `write_cache`
-    (local convenience) and `write_sheet` (committed source-of-truth)
-    so both round-trip the same pixel set, transparency included."""
+    repo clone footprint stays bounded. Every PNG the pipeline writes
+    goes through here: `write_cache` (local convenience), `write_sheet`
+    (committed source-of-truth), the atlas cells in `batcher` and the
+    master reference, so all round-trip the same pixel set,
+    transparency included.
+
+    libimagequant's RGBA-aware quantizer keeps per-pixel alpha as a
+    tRNS chunk; Pillow's other quantize chains drop it at the final
+    RGBA-to-P conversion."""
     rgba = image.convert("RGBA")
     indexed = rgba.quantize(
         colors=256,
@@ -84,7 +92,20 @@ def _save_indexed(image: Image.Image, dest: Path) -> None:
         dither=Image.Dither.NONE,
     )
     dest.parent.mkdir(parents=True, exist_ok=True)
-    indexed.save(dest, format="PNG", optimize=True)
+    # Write beside the destination, then rename over it: a process
+    # reading `dest` meanwhile (`make sprites-verify` comparing the
+    # committed atlas PNGs) sees the old file or the new one, never a
+    # truncated mix.
+    with tempfile.NamedTemporaryFile(dir=dest.parent, prefix=f".{dest.name}.", delete=False) as tmp:
+        tmp_path = Path(tmp.name)
+    try:
+        indexed.save(tmp_path, format="PNG", optimize=True)
+        # NamedTemporaryFile creates the file owner-only.
+        tmp_path.chmod(0o644)
+        os.replace(tmp_path, dest)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def write_cache(

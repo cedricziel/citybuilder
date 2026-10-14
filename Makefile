@@ -1,4 +1,4 @@
-.PHONY: help generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-content sprites-procedural
+.PHONY: help generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -114,12 +114,14 @@ sprites-procedural:
 sprites-reference:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
 
-sprites-verify:
+# The byte-identical regen check, then the content gate.
+sprites-verify: sprites-regen-check sprites-content
+
+sprites-regen-check:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
-	$(MAKE) sprites-content
 
 sprites-content:
-	$(SWIFT) run -q --package-path Packages/CityRender2D --scratch-path .build/sprite-content-gate sprite-content-gate Resources
+	$(SWIFT) run -q --package-path Packages/CityRender2D sprite-content-gate Resources
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)

@@ -116,8 +116,9 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # CityRender2D's cutover test drives `make sprites-verify`, the
-      # hermetic regen gate, so it needs the sprite pipeline's venv.
+      # CityRender2D's cutover test drives the byte half of
+      # `make sprites-verify`, the hermetic regen gate, so it needs the
+      # sprite pipeline's venv.
       - name: Install sprite pipeline libraries
         if: matrix.package == 'CityRender2D'
         # libimagequant decides the atlas PNG bytes, so it is pinned.
@@ -156,6 +157,13 @@ jobs:
       - name: gamedata-check (committed catalogs match the packs)
         if: matrix.package == 'GameDataGen'
         run: make gamedata-check SWIFT=swift
+
+      # Second half of `make sprites-verify`: the CityRender2D tests run
+      # the byte check (`make sprites-regen-check`), this runs the content
+      # gate once, outside `swift test`.
+      - name: Sprite content gate
+        if: matrix.package == 'CityRender2D'
+        run: make sprites-content
 
       - name: Coverage gate (CityCore floors + diff-cover vs the base branch)
         if: matrix.package == 'CityCore'
