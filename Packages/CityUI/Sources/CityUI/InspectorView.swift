@@ -206,19 +206,20 @@ extension InspectorViewModel {
     /// a house, otherwise state and road. Spec: `platform-shells` /
     /// Inspector callout.
     public var keyLines: [String] {
-        let prefixes = (tier == nil ? ["State:", "Road:"] + Self.inReachPrefixes : ["Residents:", "Needs:"]) + ["Problem:"]
-        return prefixes.compactMap { prefix in bullets.first { $0.hasPrefix(prefix) } }
+        let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:"]
+        return (head + ["Problem:"]).compactMap { marker in
+            bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
+        }
     }
 
-    private static let inReachLabels: [BuildingKind: String] = [.lumberjackHut: "Trees in reach", .forester: "Open grass in reach"]
-    private static let inReachPrefixes = inReachLabels.values.sorted().map { "\($0):" }
+    private static let inReachMarker = " in reach: "
 
     /// Trees in reach of a hut, or open grass in reach of a forester.
     /// Spec: `platform-shells` / Forestry in the inspector and while
     /// placing.
     static func inReachLine(for kind: BuildingKind, count: Int?) -> [String] {
-        guard let label = inReachLabels[kind], let count else { return [] }
-        return ["\(label): \(count)"]
+        guard let noun = ToolStripText.inReachNoun(kind), let count else { return [] }
+        return [noun.prefix(1).uppercased() + noun.dropFirst() + inReachMarker + "\(count)"]
     }
 
     /// Up to three named residents with the house's wish. Spec:

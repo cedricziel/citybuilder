@@ -44,13 +44,11 @@ public extension GameSession {
     }
 
     /// Trees or open grass the armed hut or forester would reach at its
-    /// candidate site: the pending placement, else the hovered tile. Nil
-    /// for other tools or without a candidate site (`add-forestry` D5).
+    /// candidate site, the ghost's tile. Nil for other tools or without a
+    /// candidate site (`add-forestry` D5).
     var armedInReachCount: Int? {
-        guard case let .place(kind) = selectedTool, ToolStripText.inReachNoun(kind) != nil,
-              let anchor = pendingPlacement?.anchor ?? hoveredTile
-        else { return nil }
-        return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
+        guard let ghost = ghostState(), ToolStripText.inReachNoun(ghost.kind) != nil else { return nil }
+        return world.catchmentCount(kind: ghost.kind, anchor: ghost.tile, owner: .player)
     }
 }
 
