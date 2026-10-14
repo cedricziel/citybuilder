@@ -140,6 +140,7 @@ func onlyTheMacHUDShowsHotkeys() {
     #expect(HUDLayout.make(size: size, idiom: .mac).showsHotkeys)
     #expect(!HUDLayout.make(size: size, idiom: .pad).showsHotkeys)
     #expect(!HUDLayout.make(size: size, idiom: .tv).showsHotkeys)
+    #expect(!HUDLayout.make(size: size, idiom: .phone).showsHotkeys)
 }
 
 @Test("scenario: Mac HUD with menu bar")
