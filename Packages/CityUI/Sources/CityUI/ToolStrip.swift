@@ -18,7 +18,9 @@ public enum ToolStripText {
         case (.place, _): "\(touch ? "Tap" : "Click") or drag to place \(name)"
         }
         guard case let .place(kind) = tool, let noun = inReachNoun(kind), let inReach else { return base }
-        return "\(base) · \(inReach) \(noun) in reach"
+        let count = "\(inReach) \(noun) in reach"
+        // The Apple TV instruction ends in a sentence, so the count leads.
+        return idiom == .tv ? "\(count) · \(base)" : "\(base) · \(count)"
     }
 
     /// What a building of `kind` counts in its catchment, nil when it

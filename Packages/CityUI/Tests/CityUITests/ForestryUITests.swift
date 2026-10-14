@@ -120,6 +120,12 @@ func noCountWhereTheArmedBuildingCannotGo() throws {
     #expect(session.armedInReachCount(idiom: .mac) == nil)
 }
 
+@Test("Apple TV hint puts the count first")
+func appleTVHintPutsTheCountFirst() {
+    #expect(ToolStripText.hint(for: .place(.lumberjackHut), idiom: .tv, inReach: 9)
+        == "9 trees in reach · Move, then click to place lumberjack. Back to cancel.")
+}
+
 @Test("the forester sits in the gather drawer after the lumberjack hut")
 func theForesterSitsInTheGatherDrawerAfterTheLumberjackHut() {
     let gather = BuildCategory.kinds(in: .gather, isHidden: { _ in false })
