@@ -198,10 +198,36 @@ func goodsOnAnotherIslandAreNotSold() {
 func newSeasonResetsTheLimits() {
     var market = MarketFixture()
     market.buy(.wood, 10)
-    _ = market.world.testRun(ticks: Int(CalendarState.ticksPerSeason) - 1)
+    _ = market.world.testRun(ticks: Int(CalendarState.ticksPerSeason) - 2)
+    #expect(market.world.tickCount == CalendarState.ticksPerSeason - 1)
+    #expect(market.world.market.traded(.wood, .bought) == 10)
+    market.world.tick()
     #expect(market.world.market == MarketLedger())
     market.buy(.wood, 10)
     #expect(market.stock(.wood) == 20)
+}
+
+@Test func tradeInTheSeasonChangeTickCountsForTheOldSeason() {
+    var market = MarketFixture()
+    _ = market.world.testRun(ticks: Int(CalendarState.ticksPerSeason) - 1)
+    let events = market.buy(.wood, 10)
+    #expect(market.world.tickCount == CalendarState.ticksPerSeason)
+    #expect(trades(events) == [.marketTraded(good: .wood, quantity: 10, total: 60, direction: .bought)])
+    #expect(market.world.market == MarketLedger())
+    market.buy(.wood, 10)
+    #expect(market.stock(.wood) == 20)
+}
+
+@Test(arguments: [0, -3])
+func nonPositiveQuantityTradesNothing(quantity: Int) {
+    var market = MarketFixture()
+    market.world.testSetStock([.wood: 5], in: market.townCenter)
+    let before = market.world
+    let events = market.buy(.wood, quantity) + market.sell(.wood, quantity)
+    #expect(market.world.stockpiles == before.stockpiles)
+    #expect(market.world.economy == before.economy)
+    #expect(market.world.market == before.market)
+    #expect(trades(events).isEmpty)
 }
 
 @Test("scenario: Two town centers share the limit")
