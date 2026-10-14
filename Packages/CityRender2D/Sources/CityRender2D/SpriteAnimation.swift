@@ -60,12 +60,8 @@ public enum SpriteAnimation {
         case .farm: Entry(frameCount: 2, timePerFrame: 0.50, loop: .forever)
         case .bakery: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         case .windmill: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
-        case .grainFarm, .quernHouse, .mine, .charcoalBurner, .smelter, .toolsmith, .library, .townCenter,
-             .hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery,
-             .monument, .guildHall, .gallery, .steamEngine, .powerPlant,
-             .meadHall, .forum, .templeGarden, .caravanserai:
-            Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         case .house, .warehouse, .road, .port, .shipyard: nil
+        default: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         }
     }
 
