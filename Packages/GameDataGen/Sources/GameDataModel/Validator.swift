@@ -39,6 +39,7 @@ struct Validator {
     /// naming the first.
     private func unique<T>(_ items: [T], kind: String, id: KeyPath<T, String>, origin: KeyPath<T, Origin>) -> [String: T] {
         var byID: [String: T] = [:]
+        var byCaseName: [String: T] = [:]
         for item in items {
             let key = item[keyPath: id], report = reporter(kind, key, item[keyPath: origin])
             if key.wholeMatch(of: /[a-z][a-z0-9]*(-[a-z0-9]+)*/) == nil {
@@ -46,8 +47,14 @@ struct Validator {
             }
             if let first = byID[key] {
                 report("duplicate \(kind) id, first declared at \(first[keyPath: origin])")
+                continue
+            }
+            byID[key] = item
+            let name = unquotedCaseName(key)
+            if let first = byCaseName[name] {
+                report("id gives the Swift case `\(name)`, like `\(first[keyPath: id])` at \(first[keyPath: origin])")
             } else {
-                byID[key] = item
+                byCaseName[name] = item
             }
         }
         return byID

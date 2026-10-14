@@ -51,7 +51,9 @@ public enum GameDataLoader {
                 log.error("file is empty", at: Origin(file: file))
                 return nil
             }
-            return resolvingMerges(node)
+            return resolvingMerges(node) { source in
+                log.error("`<<` must merge a mapping or a list of mappings", at: Origin(file: file, line: source.mark?.line))
+            }
         } catch {
             log.error("not valid YAML: \(error)", at: Origin(file: file))
             return nil

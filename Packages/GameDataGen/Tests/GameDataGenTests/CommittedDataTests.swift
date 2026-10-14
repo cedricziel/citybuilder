@@ -53,9 +53,26 @@ func schemaAndDecoderAgree() throws {
     #expect(Set(index["required"] as? [String] ?? []) == ["schemaVersion", "packs"])
 }
 
-@Test func committedParityCatalogsMatchThePacks() throws {
+/// `Packages/CityCore/Sources/CityCore`.
+private let cityCoreSources = committedData.deletingLastPathComponent().appendingPathComponent("Sources/CityCore")
+
+@Test("scenario: every catalog entry comes from the packs")
+func everyCatalogEntryComesFromThePacks() throws {
     let data = try GameDataLoader.load(from: DirectorySource(root: committedData)).get()
-    let generated = committedData.deletingLastPathComponent().appendingPathComponent("Sources/CityCore/Generated/GameDataParity.swift")
-    let committed = try String(contentsOf: generated, encoding: .utf8)
-    #expect(SwiftEmitter.emit(data, namespace: "GameDataParity")["GameDataParity.swift"] == committed)
+    let generated = cityCoreSources.appendingPathComponent("Generated")
+    let committed = try FileManager.default.contentsOfDirectory(atPath: generated.path).filter { $0.hasSuffix(".swift") }
+    let emitted = SwiftEmitter.emit(data)
+    #expect(committed.sorted() == emitted.keys.sorted())
+    for (name, source) in emitted {
+        #expect(try String(contentsOf: generated.appendingPathComponent(name), encoding: .utf8) == source, "\(name)")
+    }
+
+    let files = FileManager.default.enumerator(atPath: cityCoreSources.path)?.compactMap { $0 as? String } ?? []
+    let handWritten = files.filter { $0.hasSuffix(".swift") && !$0.hasPrefix("Generated/") }
+    #expect(!handWritten.isEmpty)
+    for file in handWritten {
+        let source = try String(contentsOf: cityCoreSources.appendingPathComponent(file), encoding: .utf8)
+        let declaration = source.firstMatch(of: /\benum\s+(Good|BuildingKind|Culture|Tech|Age)\b/)
+        #expect(declaration == nil, "\(file) declares a content enum")
+    }
 }

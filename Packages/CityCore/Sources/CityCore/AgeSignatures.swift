@@ -1,33 +1,5 @@
 import Foundation
 
-/// Catalog entries, ranges and placement rules of the age signature
-/// buildings. Spec: `age-signatures`.
-extension BuildingCatalog {
-    /// Design D2.
-    static let signatureSpecs: [BuildingKind: BuildingSpec] = [
-        .monument: BuildingSpec(
-            kind: .monument, footprint: Footprint(width: 3, height: 3),
-            cost: 300, upkeep: 0, buildDurationTicks: 60, materialCost: [.wood: 6, .planks: 6]
-        ),
-        .guildHall: BuildingSpec(
-            kind: .guildHall, footprint: Footprint(width: 3, height: 3),
-            cost: 250, upkeep: 3, buildDurationTicks: 40, materialCost: [.wood: 4, .planks: 6]
-        ),
-        .gallery: BuildingSpec(
-            kind: .gallery, footprint: Footprint(width: 2, height: 2),
-            cost: 180, upkeep: 2, buildDurationTicks: 35, materialCost: [.wood: 2, .planks: 4]
-        ),
-        .steamEngine: BuildingSpec(
-            kind: .steamEngine, footprint: Footprint(width: 2, height: 2),
-            cost: 220, upkeep: 3, buildDurationTicks: 40, materialCost: [.wood: 2, .planks: 4, .iron: 2]
-        ),
-        .powerPlant: BuildingSpec(
-            kind: .powerPlant, footprint: Footprint(width: 3, height: 3),
-            cost: 400, upkeep: 6, buildDurationTicks: 60, materialCost: [.planks: 6, .iron: 4]
-        )
-    ]
-}
-
 /// Fuel a building burns on a fixed interval. Supply carriers keep twice
 /// `amount` on hand; the building only works while its last burn
 /// succeeded. Spec: `age-signatures` / Fuelled buildings burn fuel on an
@@ -90,7 +62,7 @@ public struct SignatureReach: Hashable, Sendable {
 
 public extension BuildingKind {
     /// The five age signature buildings, in age order.
-    static let signatures: [BuildingKind] = [.monument, .guildHall, .gallery, .steamEngine, .powerPlant]
+    static let signatures: [BuildingKind] = Age.allCases.map(\.signature)
 
     /// A building whose recipe turns inputs into outputs. Only workshops
     /// gain signature speed bonuses. Spec: `age-signatures` / Workshops.
@@ -107,8 +79,7 @@ public extension BuildingKind {
         switch self {
         case .steamEngine: FuelSpec(good: .charcoal, amount: 1, intervalTicks: 50)
         case .powerPlant: FuelSpec(good: .charcoal, amount: 2, intervalTicks: 50)
-        case .meadHall, .forum, .templeGarden, .caravanserai: servedLuxury
-        default: nil
+        default: servedLuxury
         }
     }
 

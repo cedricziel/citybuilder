@@ -1,29 +1,7 @@
 import Foundation
 
-/// Catalog entries and served luxuries of the culture signature
-/// buildings. Spec: `culture-signatures`.
-extension BuildingCatalog {
-    /// Design D2.
-    static let cultureSignatureSpecs: [BuildingKind: BuildingSpec] = [
-        .meadHall: BuildingSpec(
-            kind: .meadHall, footprint: Footprint(width: 3, height: 3),
-            cost: 180, upkeep: 1, buildDurationTicks: 35, materialCost: [.wood: 6, .planks: 2]
-        ),
-        .forum: BuildingSpec(
-            kind: .forum, footprint: Footprint(width: 3, height: 3),
-            cost: 220, upkeep: 2, buildDurationTicks: 40, materialCost: [.wood: 2, .planks: 6]
-        ),
-        .templeGarden: BuildingSpec(
-            kind: .templeGarden, footprint: Footprint(width: 3, height: 3),
-            cost: 160, upkeep: 1, buildDurationTicks: 35, materialCost: [.wood: 2, .planks: 4]
-        ),
-        .caravanserai: BuildingSpec(
-            kind: .caravanserai, footprint: Footprint(width: 3, height: 3),
-            cost: 200, upkeep: 2, buildDurationTicks: 40, materialCost: [.wood: 4, .planks: 4]
-        )
-    ]
-}
-
+/// Served luxuries of the culture signature buildings. Spec:
+/// `culture-signatures`.
 public extension BuildingKind {
     /// The four culture signature buildings, in culture order.
     static let cultureSignatures: [BuildingKind] = Culture.allCases.map(\.signature)
@@ -33,29 +11,13 @@ public extension BuildingKind {
     }
 }
 
-public extension Culture {
-    /// The building only this culture has (design D2).
-    var signature: BuildingKind {
-        switch self {
-        case .northernEuropean: .meadHall
-        case .mediterranean: .forum
-        case .eastAsian: .templeGarden
-        case .middleEastern: .caravanserai
-        }
-    }
-}
-
 extension BuildingKind {
     /// The culture whose signature this kind is, nil for other kinds.
     var signatureCulture: Culture? {
-        switch self {
-        case .meadHall: .northernEuropean
-        case .forum: .mediterranean
-        case .templeGarden: .eastAsian
-        case .caravanserai: .middleEastern
-        default: nil
-        }
+        Self.signatureCultures[self]
     }
+
+    private static let signatureCultures = Dictionary(uniqueKeysWithValues: Culture.allCases.map { ($0.signature, $0) })
 
     /// 1 of the culture's luxury every 100 ticks (design D3).
     var servedLuxury: FuelSpec? {

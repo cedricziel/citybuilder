@@ -44,25 +44,8 @@ public struct TimeOfDay: Hashable, Sendable {
 /// Given names per culture. Spec: `city-life` / Residents have names.
 public enum ResidentNames {
     public static func list(for culture: Culture) -> [String] {
-        switch culture {
-        case .northernEuropean: northernEuropean
-        case .mediterranean: mediterranean
-        case .eastAsian: eastAsian
-        case .middleEastern: middleEastern
-        }
+        culture.residentNames
     }
-
-    private static let northernEuropean = ("Astrid Bjorn Greta Hans Ingrid Jakob Karin Lars Magda Nils Olga Per "
-        + "Ragna Sven Tilda Ulf Vera Wim Elsa Frode Hilde Ivar Liv Otto").split(separator: " ").map(String.init)
-
-    private static let mediterranean = ("Aurelia Bruno Chiara Dario Elena Fabio Giulia Iacopo Livia Marco Nerina Ottavio "
-        + "Paola Quinto Rosa Sandro Tullia Ugo Valeria Zeno Flavia Lucio Marta Silvio").split(separator: " ").map(String.init)
-
-    private static let eastAsian = ("Akiko Bao Chen Daisuke Emi Fang Hana Hiro Jun Kenji Lan Mei "
-        + "Min Natsu Ping Ren Sakura Tao Wen Xiu Yuki Yong Zhen Kaito").split(separator: " ").map(String.init)
-
-    private static let middleEastern = ("Amira Bashir Dalia Farid Ghada Hadi Imran Jamila Karim Layla Malik Nadia "
-        + "Omar Rania Samir Tariq Yasmin Zayd Hala Idris Leena Nabil Salma Yusuf").split(separator: " ").map(String.init)
 }
 
 public extension ResidentNames {
