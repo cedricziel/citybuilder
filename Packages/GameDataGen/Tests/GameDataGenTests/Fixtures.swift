@@ -1,0 +1,177 @@
+import GameDataModel
+
+/// A small, valid world split into packs the way the real game data is.
+enum Fixtures {
+    static let core = """
+    defaults:
+      producer: &producer
+        footprint: [2, 2]
+        cost: 120
+        upkeep: 1
+        buildTicks: 30
+    items:
+      - { kind: Good, id: wood, name: Wood, unit: logs, basePrice: 4 }
+      - { kind: Good, id: planks, name: Planks, unit: bundles, basePrice: 8 }
+      - kind: Building
+        id: house
+        effect: code
+        footprint: [2, 2]
+        cost: 50
+        storage: 8
+        category: town
+        materials: { planks: 4 }
+      - kind: Building
+        id: lumberjack-hut
+        name: Lumberjack
+        legacyIds: [lumberjack_hut]
+        footprint: [2, 2]
+        cost: 80
+        storage: 16
+        category: gather
+        recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
+      - kind: Building
+        id: sawmill
+        <<: *producer
+        upkeep: 2
+        materials: { wood: 4, planks: 1 }
+        recipe: { inputs: { wood: 1 }, outputs: { planks: 1 }, cycleTicks: 25 }
+      - kind: Building
+        id: port
+        effect: code
+        footprint: [2, 3]
+        cost: 250
+        placement: { shore: { minLand: 1, minWater: 1 } }
+        unlockedBy: seafaring
+      - { kind: Tech, id: scholarship, cost: 30, age: antiquity }
+      - { kind: Tech, id: seafaring, cost: 60, age: medieval }
+      - { kind: Tech, id: cultivation, cost: 50, age: medieval }
+    """
+
+    static let ages = """
+    items:
+      - kind: Age
+        id: antiquity
+        startYear: -499
+        blurb: Stone towns.
+        signature: monument
+        rivalResidents: 0
+      - { kind: Age, id: medieval, startYear: 1200, blurb: Timber and tile., signature: monument, rivalResidents: 24 }
+      - kind: Tech
+        id: feudal-order
+        name: Feudal Order
+        cost: 150
+        age: antiquity
+        era: medieval
+        eraGate: { tier: citizens, residents: 20 }
+      - kind: Building
+        id: monument
+        effect: code
+        footprint: [3, 3]
+        cost: 300
+        recipe: { inputs: { wood: 2 }, cycleTicks: 60 }
+    """
+
+    static let culture = """
+    defaults:
+      garden: &garden
+        footprint: [2, 2]
+        cost: 60
+        unlockedBy: cultivation
+    items:
+      - kind: Culture
+        id: northern-european
+        name: Northern European
+        blurb: Half-timbered towns.
+        tiers: { peasants: Peasants, citizens: Citizens, merchants: Merchants }
+        luxury: { raw: hops, good: beer, garden: hop-garden, producer: brewery }
+        signature: mead-hall
+        residentNames: [Astrid, Bjorn]
+      - { kind: Good, id: hops, name: Hops, unit: bales, basePrice: 3 }
+      - { kind: Good, id: beer, name: Beer, unit: casks, basePrice: 16 }
+      - kind: Building
+        id: hop-garden
+        <<: *garden
+        culture: northern-european
+        recipe: { outputs: { hops: 1 }, cycleTicks: 40 }
+      - kind: Building
+        id: brewery
+        culture: northern-european
+        unlockedBy: cultivation
+        footprint: [2, 2]
+        cost: 120
+        recipe: { inputs: { hops: 2 }, outputs: { beer: 1 }, cycleTicks: 50 }
+      - kind: Building
+        id: mead-hall
+        culture: northern-european
+        effect: code
+        footprint: [3, 3]
+        cost: 180
+    """
+
+    /// The default packs, in manifest order.
+    static let packs = [("core", core), ("cultures/northern-european", culture), ("ages", ages)]
+
+    /// Packs keyed by manifest name, in manifest order.
+    static func source(_ packs: [(String, String)] = packs, extraFiles: [String: String] = [:]) -> InMemorySource {
+        var files = extraFiles
+        files["index.yaml"] = "schemaVersion: 1\npacks:\n" + packs.map { "  - \($0.0)\n" }.joined()
+        for (name, body) in packs {
+            files["packs/\(name).yaml"] = body
+        }
+        return InMemorySource(files: files)
+    }
+
+    /// The default packs followed by `packs/extra.yaml`.
+    static func withExtraPack(_ extra: String) -> InMemorySource {
+        source(packs + [("extra", extra)])
+    }
+
+    static func load(_ source: InMemorySource = source()) -> Result<GameData, GameDataErrors> {
+        GameDataLoader.load(from: source)
+    }
+
+    static func errors(_ source: InMemorySource) -> [String] {
+        switch load(source) {
+        case .success: []
+        case let .failure(failure): failure.diagnostics.map(\.description)
+        }
+    }
+
+    /// A pack whose items are written as flow mappings of raw YAML values.
+    static func pack(_ items: [[String: String]]) -> String {
+        "items:\n" + items.map { item in
+            "  - { " + item.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: ", ") + " }\n"
+        }.joined()
+    }
+
+    /// Exactly the required fields of each kind, as raw YAML values.
+    static let minimalItems: [String: [String: String]] = [
+        "Good": ["id": "salt", "name": "Salt", "unit": "sacks", "basePrice": "3"],
+        "Building": ["id": "salt-pan", "footprint": "[1, 1]", "cost": "10"],
+        "Culture": [
+            "id": "nordic", "name": "Nordic", "blurb": "Cold.",
+            "tiers": "{ peasants: P, citizens: C, merchants: M }",
+            "luxury": "{ raw: hops, good: beer, garden: hop-garden, producer: brewery }",
+            "signature": "mead-hall", "residentNames": "[Ada]"
+        ],
+        "Tech": ["id": "salting", "cost": "10", "age": "antiquity"],
+        "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"]
+    ]
+
+    /// Every optional field of each kind, as raw YAML values.
+    static let optionalFields: [String: [String: String]] = [
+        "Good": [:],
+        "Building": [
+            "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16",
+            "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
+            "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
+            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code"
+        ],
+        "Culture": [:],
+        "Tech": [
+            "name": "Salting", "prerequisites": "[scholarship]", "era": "medieval",
+            "eraGate": "{ tier: citizens, residents: 1 }"
+        ],
+        "Age": ["name": "Bronze"]
+    ]
+}
