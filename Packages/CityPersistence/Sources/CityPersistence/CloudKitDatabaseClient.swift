@@ -47,7 +47,8 @@ public struct CloudKitDatabaseClient: CloudKitClient {
                 gameID: summary.gameID,
                 body: body,
                 modificationDate: summary.modificationDate,
-                currentDevice: summary.currentDevice
+                currentDevice: summary.currentDevice,
+                changeTag: summary.changeTag
             )
         } catch {
             throw Self.syncError(from: error)
@@ -131,7 +132,8 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         return CloudRecordSummary(
             gameID: gameID,
             modificationDate: modificationDate,
-            currentDevice: currentDevice
+            currentDevice: currentDevice,
+            changeTag: record.recordChangeTag
         )
     }
 
@@ -164,7 +166,8 @@ public struct CloudKitDatabaseClient: CloudKitClient {
             gameID: summary.gameID,
             body: Data(contentsOf: fileURL),
             modificationDate: summary.modificationDate,
-            currentDevice: summary.currentDevice
+            currentDevice: summary.currentDevice,
+            changeTag: summary.changeTag
         )
     }
 

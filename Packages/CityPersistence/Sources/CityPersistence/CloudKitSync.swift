@@ -12,17 +12,21 @@ public protocol CloudKitClient: Sendable {
     func isAccountAvailable() async -> Bool
 }
 
+/// `changeTag` identifies one version of a record: it changes on every
+/// save, so two records with equal tags are the same upload.
 public struct CloudRecord: Hashable, Sendable {
     public let gameID: UUID
     public let body: Data
     public let modificationDate: Date
     public let currentDevice: String
+    public let changeTag: String?
 
-    public init(gameID: UUID, body: Data, modificationDate: Date, currentDevice: String) {
+    public init(gameID: UUID, body: Data, modificationDate: Date, currentDevice: String, changeTag: String? = nil) {
         self.gameID = gameID
         self.body = body
         self.modificationDate = modificationDate
         self.currentDevice = currentDevice
+        self.changeTag = changeTag
     }
 }
 
@@ -30,11 +34,13 @@ public struct CloudRecordSummary: Hashable, Sendable {
     public let gameID: UUID
     public let modificationDate: Date
     public let currentDevice: String
+    public let changeTag: String?
 
-    public init(gameID: UUID, modificationDate: Date, currentDevice: String) {
+    public init(gameID: UUID, modificationDate: Date, currentDevice: String, changeTag: String? = nil) {
         self.gameID = gameID
         self.modificationDate = modificationDate
         self.currentDevice = currentDevice
+        self.changeTag = changeTag
     }
 }
 
@@ -95,7 +101,8 @@ public actor InMemoryCloudKitClient: CloudKitClient {
             gameID: gameID,
             body: body,
             modificationDate: Date(),
-            currentDevice: deviceID
+            currentDevice: deviceID,
+            changeTag: UUID().uuidString
         )
         records[gameID] = record
         return record
@@ -113,7 +120,8 @@ public actor InMemoryCloudKitClient: CloudKitClient {
                 CloudRecordSummary(
                     gameID: $0.gameID,
                     modificationDate: $0.modificationDate,
-                    currentDevice: $0.currentDevice
+                    currentDevice: $0.currentDevice,
+                    changeTag: $0.changeTag
                 )
             }
             .sortedByGameID()
