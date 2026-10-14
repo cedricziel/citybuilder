@@ -12,6 +12,11 @@ import AppKit
 public struct TitleScreenView: View {
     @Bindable private var viewModel: TitleScreenViewModel
     private let settingsContent: (() -> AnyView)?
+    @FocusState private var focusedButton: TitleButton?
+
+    private enum TitleButton: Hashable {
+        case continueGame, newGame
+    }
 
     public init(
         viewModel: TitleScreenViewModel,
@@ -24,6 +29,10 @@ public struct TitleScreenView: View {
     public init(viewModel: TitleScreenViewModel) {
         self.viewModel = viewModel
         self.settingsContent = nil
+    }
+
+    private var primaryButton: TitleButton {
+        viewModel.mostRecentSave == nil ? .newGame : .continueGame
     }
 
     public var body: some View {
@@ -48,6 +57,7 @@ public struct TitleScreenView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isPreparingCloudSaves)
+                    .focused($focusedButton, equals: .continueGame)
                     .accessibilityIdentifier("title.continue")
                 }
                 Button("New Game…") {
@@ -57,6 +67,7 @@ public struct TitleScreenView: View {
                 .padding(.vertical, 8)
                 .buttonStyle(.bordered)
                 .disabled(viewModel.isPreparingCloudSaves)
+                .focused($focusedButton, equals: .newGame)
                 .accessibilityIdentifier("title.newGame")
 
                 Button("Settings") {
@@ -92,6 +103,8 @@ public struct TitleScreenView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Continue and New Game are disabled while iCloud is checked.
+        .tvDefaultFocus($focusedButton, primaryButton, enabled: !viewModel.isPreparingCloudSaves)
         .sheet(isPresented: $viewModel.presentingNewGameDialog) {
             NewGameDialogView(
                 viewModel: NewGameDialogViewModel(),

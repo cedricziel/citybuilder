@@ -229,6 +229,20 @@ targets:
       - package: CityRender3D
       - package: CityAudio
 
+  # Drives the Apple TV app with the simulator's Siri Remote for the
+  # verify skill's focus walk-throughs. Not part of CI.
+  CitybuilderTVUITests:
+    type: bundle.ui-testing
+    platform: tvOS
+    sources:
+      - path: Apps/CitybuilderTVUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cedricziel.citybuilder.tvuitests
+        GENERATE_INFOPLIST_FILE: "YES"
+    dependencies:
+      - target: CitybuilderTV
+
   # Headless simulation runner ------------------------------------------
   citybuilder-cli:
     type: tool
@@ -272,7 +286,8 @@ schemes:
       config: Debug
     test:
       config: Debug
-      gatherCoverageData: true
+      targets:
+        - CitybuilderTVUITests
 
   citybuilder-cli:
     build:

@@ -10,6 +10,7 @@ public struct NewGameDialogView: View {
     private let onStart: (World) -> Void
     private let onCancel: () -> Void
     @State private var customSeedText: String = ""
+    @FocusState private var startFocused: Bool
 
     public init(
         viewModel: NewGameDialogViewModel,
@@ -25,12 +26,18 @@ public struct NewGameDialogView: View {
         ScrollView {
             content
         }
+        .tvDefaultFocus($startFocused, true)
     }
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("New Game")
                 .font(.title.bold())
+            // A remote cannot reach a Start button below the long form,
+            // so Apple TV shows the buttons under the title.
+            #if os(tvOS)
+            actionButtons
+            #endif
 
             modeSection
             layoutSection
@@ -43,26 +50,33 @@ public struct NewGameDialogView: View {
                 scenarioSection
             }
 
-            HStack {
-                Button("Cancel") {
-                    viewModel.cancel()
-                    onCancel()
-                }
-                .cancelActionHotkey()
-                Spacer()
-                Button("Start") {
-                    if let world = viewModel.commit() {
-                        onStart(world)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .defaultActionHotkey()
-                .disabled(!viewModel.isStartEnabled)
-                .accessibilityIdentifier("newGame.start")
-            }
+            #if !os(tvOS)
+            actionButtons
+            #endif
         }
         .padding(24)
         .frame(minWidth: 360, idealWidth: 440)
+    }
+
+    private var actionButtons: some View {
+        HStack {
+            Button("Cancel") {
+                viewModel.cancel()
+                onCancel()
+            }
+            .cancelActionHotkey()
+            Spacer()
+            Button("Start") {
+                if let world = viewModel.commit() {
+                    onStart(world)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .defaultActionHotkey()
+            .disabled(!viewModel.isStartEnabled)
+            .focused($startFocused)
+            .accessibilityIdentifier("newGame.start")
+        }
     }
 
     private var modeSection: some View {

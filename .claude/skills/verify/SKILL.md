@@ -48,7 +48,17 @@ The tvOS simulator runtime is a separate download of several GB. Check `xcrun si
 
 3. The app lands at `<scratch>/dd-tv/Build/Products/Debug-appletvsimulator/Citybuilder.app`. Install and launch it with `xcrun simctl boot <UDID>`, `xcrun simctl install <UDID> <app>`, then `xcrun simctl launch <UDID> com.cedricziel.citybuilder`.
 4. Screenshots: `xcrun simctl io <UDID> screenshot <file>.png`.
-5. Remote presses: open Simulator.app (`open -a Simulator`), then choose I/O > Show Apple TV Remote, or use the keyboard with the simulator window focused (arrow keys move, Return selects, Escape is Back, Space is Play/Pause).
+5. Remote presses: Xcode 27 ships no Simulator.app, so drive the remote from the `CitybuilderTVUITests` UI-test target (`Apps/CitybuilderTVUITests/TVWalkthroughTests.swift`). It presses `XCUIRemote` buttons, asserts focus, and saves a screenshot per step:
+
+   ```bash
+   TEST_RUNNER_WALKTHROUGH_DIR=<scratch>/walk xcodebuild test -project Citybuilder.xcodeproj \
+     -scheme CitybuilderTV -destination 'platform=tvOS Simulator,id=<UDID>' \
+     -derivedDataPath <scratch>/dd-tv [-only-testing:CitybuilderTVUITests/TVWalkthroughTests/<test>]
+   ```
+
+   - Add a test for each new flow. Its `focus(_:)` helper presses toward an element until it holds focus.
+   - The test class is `@MainActor` and has no `setUp`, because Swift 6 isolation rejects an override there.
+   - With an older Xcode that still has Simulator.app, choose I/O > Show Apple TV Remote, or use the keyboard with the simulator window focused (arrow keys move, Return selects, Escape is Back, Space is Play/Pause).
 6. Saves live in Caches on Apple TV: `xcrun simctl get_app_container <UDID> com.cedricziel.citybuilder data` then `Library/Caches/Citybuilder/saves/`.
 
 ## Gotchas
