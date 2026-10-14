@@ -57,6 +57,7 @@ public extension GameSession {
     }
 
     func beginPendingPlacement(kind: BuildingKind, at tile: TileCoordinate) {
+        guard !isGameOver else { return }
         pendingPlacement = PendingPlacement(kind: kind, anchor: tile, origin: tile)
     }
 

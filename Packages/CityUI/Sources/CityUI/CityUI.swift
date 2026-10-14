@@ -167,8 +167,14 @@ public final class GameSession {
     /// in a row without re-arming.
     public var selectedTool: BuildTool = .inspect
 
+    /// The tool taps and drags act with: inspect once the game is over.
+    var activeTool: BuildTool {
+        isGameOver ? .inspect : selectedTool
+    }
+
     /// Toggle a tool: tap the same palette button twice to disarm.
     public func selectTool(_ tool: BuildTool) {
+        guard !isGameOver || tool == .inspect else { return }
         if selectedTool == tool {
             selectedTool = .inspect
         } else {
@@ -251,7 +257,7 @@ public final class GameSession {
     public func handleTap(at tile: TileCoordinate) {
         guard pendingPlacement == nil else { return }
         if routeAuthoring != nil { return handleRouteTap(at: tile) }
-        switch selectedTool {
+        switch activeTool {
         case .inspect:
             selectedTile = tile
         case let .place(kind) where needsConfirmation(kind):
@@ -304,7 +310,7 @@ public final class GameSession {
     /// camera handles the gesture instead).
     public func handleDrag(at tile: TileCoordinate) {
         guard pendingPlacement == nil else { return }
-        switch selectedTool {
+        switch activeTool {
         case .inspect:
             return
         case let .place(kind) where needsConfirmation(kind):
