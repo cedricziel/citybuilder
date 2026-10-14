@@ -138,8 +138,7 @@ public extension GameSession {
     }
 
     func chooseResearch(_ tech: Tech) {
-        guard isResearchAvailable else { return }
-        world.enqueue(.chooseResearch(tech))
+        enqueue(.chooseResearch(tech))
     }
 }
 

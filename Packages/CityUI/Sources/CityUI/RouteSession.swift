@@ -31,11 +31,12 @@ public extension GameSession {
 
     /// Enters route mode, optionally starting at `port`.
     func beginRouteAuthoring(from port: EntityID? = nil) {
+        guard !isGameOver else { return }
         pendingPlacement = nil
         tileMenuRequest = nil
         selectedTool = .inspect
         routeList.select(nil)
-        let authoring = RouteAuthoringViewModel { [weak self] in self?.world.enqueue($0) }
+        let authoring = RouteAuthoringViewModel { [weak self] in self?.enqueue($0) }
         authoring.snapshot = world.snapshot()
         if let port {
             authoring.tapHandler(target: .port(id: port))

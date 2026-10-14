@@ -81,7 +81,7 @@ public extension GameSession {
             hud.showRejection(reason, in: world, now: Date())
             return
         }
-        world.enqueue(.place(pending.kind, at: pending.anchor))
+        enqueue(.place(pending.kind, at: pending.anchor))
         pendingPlacement = nil
     }
 

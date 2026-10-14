@@ -22,7 +22,7 @@ extension CityRootView {
     @ViewBuilder
     var inspectorActionsButton: some View {
         #if os(iOS)
-        if let tile = session.selectedTile {
+        if session.offersTileMenu, let tile = session.selectedTile {
             Button("Actions") {
                 session.tileMenuRequest = TileMenuRequest(tile: tile)
             }

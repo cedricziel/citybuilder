@@ -119,7 +119,7 @@ public final class GameSession {
         self.hud = HUDViewModel(money: 0, population: 0)
         self.audioEventConsumer = audioEventConsumer
         self.audioSnapshotConsumer = audioSnapshotConsumer
-        routeList.commandSink = { [weak self] in self?.world.enqueue($0) }
+        routeList.commandSink = { [weak self] in self?.enqueue($0) }
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -172,6 +172,13 @@ public final class GameSession {
         isGameOver ? .inspect : selectedTool
     }
 
+    /// Queues a player command, or drops it once the game is over. Spec:
+    /// `platform-shells` / Game-over banner and tools.
+    func enqueue(_ command: Command) {
+        guard !isGameOver else { return }
+        world.enqueue(command)
+    }
+
     /// Toggle a tool: tap the same palette button twice to disarm.
     public func selectTool(_ tool: BuildTool) {
         guard !isGameOver || tool == .inspect else { return }
@@ -197,7 +204,7 @@ public final class GameSession {
             x: Int(world.camera.centerX.rounded()),
             y: Int(world.camera.centerY.rounded())
         )
-        world.enqueue(.place(kind, at: coord))
+        enqueue(.place(kind, at: coord))
     }
 
     // Gesture state. SwiftUI's DragGesture reports cumulative translation;
@@ -267,9 +274,9 @@ public final class GameSession {
                 hud.showRejection(reason, in: world, now: Date())
                 return
             }
-            world.enqueue(.place(kind, at: tile))
+            enqueue(.place(kind, at: tile))
         case .demolish:
-            world.enqueue(.demolish(at: tile))
+            enqueue(.demolish(at: tile))
         }
     }
 
@@ -316,9 +323,9 @@ public final class GameSession {
         case let .place(kind) where needsConfirmation(kind):
             return
         case let .place(kind):
-            world.enqueue(.place(kind, at: tile))
+            enqueue(.place(kind, at: tile))
         case .demolish:
-            world.enqueue(.demolish(at: tile))
+            enqueue(.demolish(at: tile))
         }
     }
 

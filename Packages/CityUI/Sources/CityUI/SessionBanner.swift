@@ -39,6 +39,7 @@ extension GameSession {
                 clearTool()
                 cancelPendingPlacement()
                 tileMenuRequest = nil
+                routeAuthoring = nil
             case .scenarioWon:
                 show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
                 isWinSheetPresented = true
@@ -76,7 +77,7 @@ extension GameSession {
     /// / Signature inspector.
     public func commissionArt() {
         guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .gallery else { return }
-        world.enqueue(.commission(id))
+        enqueue(.commission(id))
     }
 
     /// Set or clear the selected caravanserai's export good. Spec:
@@ -84,7 +85,7 @@ extension GameSession {
     public func pickExport(_ good: Good?) {
         guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .caravanserai
         else { return }
-        world.enqueue(.setExport(id, good))
+        enqueue(.setExport(id, good))
     }
 
     private func show(_ banner: SessionBanner) {

@@ -63,7 +63,7 @@ public extension GameSession {
     /// the selection.
     func demolishSelection() {
         guard let tile = selectedTile else { return }
-        world.enqueue(.demolish(at: tile))
+        enqueue(.demolish(at: tile))
         selectedTile = nil
     }
 }
@@ -159,6 +159,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 onPickExport: session.pickExport,
                 onStartRoute: { session.beginRouteAuthoring(from: $0) }
             )
+            .disabled(session.isGameOver)
             .foregroundStyle(.primary.opacity(0.75))
             HStack(spacing: 8) {
                 Button(isExpanded ? "Less" : "Details") { isExpanded.toggle() }
@@ -167,6 +168,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 if viewModel.rival == nil {
                     Button("Demolish", role: .destructive, action: session.demolishSelection)
                         .foregroundStyle(.red)
+                        .disabled(session.isGameOver)
                 }
             }
             .font(.caption.weight(.semibold))
