@@ -19,7 +19,7 @@ Out of scope: changing the island generators themselves (silhouettes, mountain c
 - (none)
 
 ### Modified Capabilities
-- `world-terrain`: a new requirement "Fair start sites" covering town center site choice, the fallback, and the fairness measure; a new requirement "Starter grove"; and an added scenario under "World layout" that terrain does not depend on difficulty or rivals.
+- `world-terrain`: a new requirement "Fair start sites" covering town center site choice, the fallback, and the fairness measure; a new requirement "Starter grove"; and a new requirement "Start placement independent of difficulty", so rivals get the same rule and terrain does not depend on difficulty or the rival toggle.
 - `buildings-and-construction`: "Town center starter road" gains a scenario that the full 16-tile ring is laid on every new game, because the site rule guarantees grass under it.
 
 ## Impact
