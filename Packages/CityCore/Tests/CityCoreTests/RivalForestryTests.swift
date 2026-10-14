@@ -4,10 +4,6 @@ import Testing
 
 // Scenarios from openspec/changes/add-forestry: rival-towns.
 
-private func anchor(_ command: Command?) -> TileCoordinate? {
-    if case let .rivalPlace(_, _, anchor) = command { anchor } else { nil }
-}
-
 /// An archipelago whose rival 1 has placed its opening lumberjack hut,
 /// is past its opening and holds enough food, wood and planks that no
 /// other threshold rule applies.
@@ -15,7 +11,7 @@ private func rivalWithOneHut() throws -> (world: World, hut: TileCoordinate) {
     var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .lumberjackHut)
-    let hut = try #require(anchor(commands.last))
+    let hut = try #require(placedAnchor(commands.last))
     world.tick()
     #expect(world.occupiedTiles[hut].flatMap { world.buildings[$0]?.kind } == .lumberjackHut)
     world.setRival(1) { $0.ai.scriptIndex = 12 }
@@ -70,7 +66,7 @@ func scenarioRivalForesterOverlapsAHut() throws {
     var (world, hut) = try rivalWithOneHut()
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .forester)
-    let forester = try #require(anchor(commands.last))
+    let forester = try #require(placedAnchor(commands.last))
     #expect(sharedOpenGrass(forester: forester, hut: hut, in: world) >= 4)
 }
 
@@ -90,12 +86,7 @@ func scenarioRivalForesterOverlapsAHut() throws {
 
 @Test func foresterMidCycleSurvivesASaveRoundTrip() throws {
     var world = World.fixtureWithTerrain(width: 12, height: 12, fill: .grass, seed: 1)
-    let id = EntityID(raw: world.nextEntityRaw)
-    world.nextEntityRaw &+= 1
-    world.buildings[id] = Building(id: id, kind: .forester, anchor: TileCoordinate(x: 4, y: 4), state: .operational)
-    for tile in Footprint(width: 2, height: 2).tiles(anchor: TileCoordinate(x: 4, y: 4)) {
-        world.occupiedTiles[tile] = id
-    }
+    let id = world.testPlace(.forester, at: TileCoordinate(x: 4, y: 4), owner: .player)
     _ = world.testRun(ticks: 25)
     #expect(world.productions[id]?.ticksThisCycle == 25)
     var loaded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
