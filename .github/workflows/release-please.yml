@@ -89,7 +89,7 @@ jobs:
           bundler-cache: true
 
       - name: Install XcodeGen
-        run: brew install xcodegen
+        run: scripts/ci/install-pinned-tools.sh xcodegen
 
       - name: Fetch release notes
         id: notes

@@ -271,7 +271,7 @@ jobs:
           xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
 
       - name: Install XcodeGen
-        run: brew install xcodegen
+        run: scripts/ci/install-pinned-tools.sh xcodegen
 
       - name: make generate
         run: make generate
