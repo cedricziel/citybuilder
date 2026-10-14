@@ -5,19 +5,21 @@ let package = Package(
     name: "CityAudio",
     platforms: [
         .iOS(.v18),
-        .macOS(.v15)
+        .macOS(.v15),
+        .tvOS(.v18)
     ],
     products: [
         .library(name: "CityAudio", targets: ["CityAudio"])
     ],
     dependencies: [
         .package(path: "../CityCore"),
-        .package(path: "../CityPersistence")
+        .package(path: "../CityPersistence"),
+        .package(path: "../CityUI")
     ],
     targets: [
         .target(
             name: "CityAudio",
-            dependencies: ["CityCore", "CityPersistence"],
+            dependencies: ["CityCore", "CityPersistence", "CityUI"],
             path: "Sources/CityAudio"
         ),
         .testTarget(

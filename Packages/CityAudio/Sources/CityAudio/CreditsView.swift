@@ -49,7 +49,11 @@ private struct CreditsRow: View {
                 Text(attribution).font(.caption).italic()
             }
             if let url = URL(string: entry.source) {
+                #if os(tvOS)
+                Text(url.absoluteString).font(.caption).foregroundStyle(.secondary)
+                #else
                 Link("Source", destination: url).font(.caption)
+                #endif
             }
         }
         .padding(.vertical, 4)

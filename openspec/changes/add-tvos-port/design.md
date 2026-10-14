@@ -122,6 +122,13 @@ The order is fixed in `tv-remote-controls`, and the mapper walks it. The pause m
 
 A shared −/+ control with a tested `SteppedValue` type (value, step, range, label) replaces every `Slider` and `Stepper` on tvOS. Holding + or − repeats. iOS and Mac keep their native controls. It lands in M1, in place of throwaway placeholders.
 
+Decided during M1:
+
+- `SteppedValue` and `SteppedValueControl` live in CityUI, which the manifest editor already belongs to. CityAudio, which owns `AudioSettingsView`, now depends on CityUI so both screens share one control. CityUI does not depend on CityAudio, so there is no cycle.
+- Hold-to-repeat uses SwiftUI's `buttonRepeatBehavior(.enabled)`, not a custom timer.
+- The spatial distances step by 1 (reference, 1–16) and by 4 (max, 8–64).
+- `DisclosureGroup` is unavailable on tvOS, so the two spatial distance controls show inline there instead of under "Advanced".
+
 ### D11. tvOS saves on top of `add-cloudkit-client`
 
 `SaveStore`'s default directory is Caches on tvOS. A `TVSaveSync` coordinator in CityPersistence:
@@ -155,6 +162,9 @@ The title-screen notice reads account status through a `TitleScreenModel` seam i
   - App Icon 400×240 at @1x and @2x
   - App Store icon 1280×768
   - Top Shelf 1920×720 and Top Shelf Wide 2320×720, at @1x and @2x
+
+  M1 uses three layers: buildings in front, terrain in the middle, and an opaque navy back. Each layer is the icon's island scaled by a whole factor, so the pixel art stays crisp.
+- **CI runtime:** building for `generic/platform=tvOS Simulator` needs the tvOS SDK but not the simulator runtime (confirmed locally with Xcode 27). The CI step still installs the runtime when it is missing, as a guard for Xcode versions that require it.
 
 ### Determinism
 

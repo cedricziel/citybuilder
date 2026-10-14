@@ -48,7 +48,7 @@ public struct NewGameDialogView: View {
                     viewModel.cancel()
                     onCancel()
                 }
-                .keyboardShortcut(.cancelAction)
+                .cancelActionHotkey()
                 Spacer()
                 Button("Start") {
                     if let world = viewModel.commit() {
@@ -56,7 +56,7 @@ public struct NewGameDialogView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
+                .defaultActionHotkey()
                 .disabled(!viewModel.isStartEnabled)
                 .accessibilityIdentifier("newGame.start")
             }
@@ -190,7 +190,9 @@ public struct NewGameDialogView: View {
             }
         case .custom:
             TextField("Decimal seed (UInt64)", text: customSeedBinding)
+                #if !os(tvOS)
                 .textFieldStyle(.roundedBorder)
+                #endif
                 .accessibilityIdentifier("newGame.customSeed")
         }
     }

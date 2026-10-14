@@ -98,7 +98,7 @@ struct BuildRailView: View {
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
-        .keyboardShortcut(KeyEquivalent(hotkey), modifiers: [])
+        .hotkey(KeyEquivalent(hotkey))
         .accessibilityLabel(label)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }

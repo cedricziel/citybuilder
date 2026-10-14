@@ -4,6 +4,7 @@ WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
 SCHEME_IOS := CitybuilderiOS
 SCHEME_MAC := CitybuilderMac
+SCHEME_TV := CitybuilderTV
 SCHEME_CLI := citybuilder-cli
 # First available iPhone simulator; override with `make build IOS_SIM="iPhone 17"`.
 IOS_SIM ?= $(shell xcrun simctl list devices available 2>/dev/null | grep -m1 'iPhone' | sed -E 's/^ +//; s/ [(][0-9A-F-]+[)].*//')
@@ -12,6 +13,7 @@ DESTINATION_IOS := platform=iOS Simulator,name=$(IOS_SIM)
 # bare `swift` on PATH may be a different toolchain that fails to build.
 SWIFT ?= xcrun swift
 DESTINATION_MAC := platform=macOS
+DESTINATION_TV := generic/platform=tvOS Simulator
 CITYCORE := Packages/CityCore
 
 # AI sprite pipeline targets (see Resources/Sprites.style/world.md and
@@ -23,7 +25,7 @@ SPRITES_PIPELINE_DIR := scripts
 help:
 	@echo "Targets:"
 	@echo "  generate         Run xcodegen to regenerate the Xcode project"
-	@echo "  build            Build all schemes (iOS, macOS, CLI)"
+	@echo "  build            Build all schemes (iOS, macOS, tvOS, CLI)"
 	@echo "  test             Run all swift-testing suites across packages"
 	@echo "  test-coverage    Enforce CityCore coverage floors + diff-cover"
 	@echo "  test-scenarios   Verify every spec scenario maps to a test"
@@ -38,6 +40,7 @@ generate:
 build: generate
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_IOS) -destination '$(DESTINATION_IOS)' build | xcbeautify || true
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_MAC) -destination '$(DESTINATION_MAC)' build | xcbeautify || true
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME_TV) -destination '$(DESTINATION_TV)' build | xcbeautify || true
 	$(SWIFT) build --package-path $(CITYCORE)
 
 test:

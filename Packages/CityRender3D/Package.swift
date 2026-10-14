@@ -5,7 +5,8 @@ let package = Package(
     name: "CityRender3D",
     platforms: [
         .iOS(.v18),
-        .macOS(.v15)
+        .macOS(.v15),
+        .tvOS(.v18)
     ],
     products: [
         .library(name: "CityRender3D", targets: ["CityRender3D"])

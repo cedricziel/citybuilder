@@ -12,6 +12,25 @@ extension CityRootView {
         allowsPan ? .all : .subviews
     }
 
+    /// Apple TV has neither drag nor pinch; its remote input arrives
+    /// separately.
+    ///
+    /// simultaneousGesture (vs .gesture) so the underlying SpriteKit scene
+    /// still receives touch / mouse events for tap-tile selection. A bare
+    /// .gesture(DragGesture(...)) claims the touch sequence and starves the
+    /// scene's touchesEnded / mouseUp handlers.
+    @ViewBuilder
+    func withMapGestures(_ content: some View) -> some View {
+        #if os(tvOS)
+        content
+        #else
+        content
+            .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
+            .simultaneousGesture(zoomGesture)
+        #endif
+    }
+
+    #if !os(tvOS)
     /// One-finger drag (iOS) / left-mouse drag (Mac) pans the camera.
     /// Deltas are kept in screen pixels; the GameSession translates to
     /// tile-space via CityRender2D.InputTranslator.
@@ -49,4 +68,5 @@ extension CityRootView {
                 session.lastMagnification = 1.0
             }
     }
+    #endif
 }

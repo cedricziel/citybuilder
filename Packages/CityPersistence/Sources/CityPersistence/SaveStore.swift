@@ -1,25 +1,51 @@
 import CityCore
 import Foundation
 
-/// Save/load store. Resolves paths under Application Support, writes
-/// atomically, validates integrity on load, and applies forward migrations.
+/// Which platform's save location applies. Apple TV has no persistent
+/// local storage, so its saves live in Caches with iCloud as the durable
+/// copy.
+public enum SavePlatform: Sendable {
+    case standard
+    case appleTV
+
+    public static var current: SavePlatform {
+        #if os(tvOS)
+        .appleTV
+        #else
+        .standard
+        #endif
+    }
+
+    var searchPathDirectory: FileManager.SearchPathDirectory {
+        switch self {
+        case .standard: .applicationSupportDirectory
+        case .appleTV: .cachesDirectory
+        }
+    }
+}
+
+/// Save/load store. Resolves paths under the platform's save directory,
+/// writes atomically, validates integrity on load, and applies forward
+/// migrations.
 public final class SaveStore: @unchecked Sendable {
     public let baseDirectory: URL
     public let writer: FileWriter
 
-    public init(baseDirectory: URL? = nil, writer: FileWriter = AtomicDiskWriter()) {
-        if let baseDirectory {
-            self.baseDirectory = baseDirectory
-        } else {
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask
-            ).first ?? URL(fileURLWithPath: NSTemporaryDirectory())
-            self.baseDirectory = appSupport
-                .appendingPathComponent("Citybuilder", isDirectory: true)
-                .appendingPathComponent("saves", isDirectory: true)
-        }
+    public init(
+        baseDirectory: URL? = nil,
+        platform: SavePlatform = .current,
+        writer: FileWriter = AtomicDiskWriter()
+    ) {
+        self.baseDirectory = baseDirectory ?? Self.defaultDirectory(for: platform)
         self.writer = writer
+    }
+
+    public static func defaultDirectory(for platform: SavePlatform) -> URL {
+        let root = FileManager.default.urls(for: platform.searchPathDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory())
+        return root
+            .appendingPathComponent("Citybuilder", isDirectory: true)
+            .appendingPathComponent("saves", isDirectory: true)
     }
 
     public func url(for gameID: UUID) -> URL {

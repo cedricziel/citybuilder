@@ -137,8 +137,7 @@ struct SpeedControlView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(session.isPaused ? "Resume" : "Pause")
-            .keyboardShortcut(.escape, modifiers: [])
-            .keyboardShortcut(".", modifiers: .command)
+            .pauseHotkeys()
             if layout.usesSpeedCycleButton {
                 segment(session.speed.label, isOn: false, action: session.stepSpeed)
                     .accessibilityLabel("Speed \(session.speed.label)")
