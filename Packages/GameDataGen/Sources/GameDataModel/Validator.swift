@@ -1,0 +1,215 @@
+/// Checks references across all packs and the invariants the generated
+/// Swift relies on. Runs only once every pack decoded cleanly.
+struct Validator {
+    let data: GameData
+    let log: DiagnosticLog
+
+    func validate() {
+        let refs = References(
+            goods: unique(data.goods, kind: "Good", id: \.id, origin: \.origin),
+            buildings: unique(data.buildings, kind: "Building", id: \.id, origin: \.origin),
+            cultures: unique(data.cultures, kind: "Culture", id: \.id, origin: \.origin),
+            techs: unique(data.techs, kind: "Tech", id: \.id, origin: \.origin),
+            ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin)
+        )
+        data.goods.forEach(check)
+        data.buildings.forEach { check($0, refs) }
+        data.cultures.forEach { check($0, refs) }
+        data.techs.forEach { check($0, refs) }
+        data.ages.forEach { check($0, refs) }
+        checkLegacyIds()
+        checkPrerequisiteCycles(refs.techs)
+    }
+
+    private struct References {
+        let goods: [String: Good]
+        let buildings: [String: Building]
+        let cultures: [String: Culture]
+        let techs: [String: Tech]
+        let ages: [String: Age]
+    }
+
+    private func reporter(_ kind: String, _ id: String, _ origin: Origin) -> (String) -> Void {
+        { log.error($0, at: origin, item: "\(kind) \(id)") }
+    }
+
+    // MARK: - Identifiers
+
+    /// Items by id. A repeated id is reported at its second declaration,
+    /// naming the first.
+    private func unique<T>(_ items: [T], kind: String, id: KeyPath<T, String>, origin: KeyPath<T, Origin>) -> [String: T] {
+        var byID: [String: T] = [:]
+        for item in items {
+            let key = item[keyPath: id], report = reporter(kind, key, item[keyPath: origin])
+            if key.wholeMatch(of: /[a-z][a-z0-9]*(-[a-z0-9]+)*/) == nil {
+                report("id must be lower-case words joined by hyphens")
+            }
+            if let first = byID[key] {
+                report("duplicate \(kind) id, first declared at \(first[keyPath: origin])")
+            } else {
+                byID[key] = item
+            }
+        }
+        return byID
+    }
+
+    private func checkLegacyIds() {
+        var taken = Set(data.buildings.map(\.id))
+        for building in data.buildings {
+            for legacy in building.legacyIds where !taken.insert(legacy).inserted {
+                reporter("Building", building.id, building.origin)("legacy id `\(legacy)` is already used")
+            }
+        }
+    }
+
+    // MARK: - Items
+
+    private func check(_ good: Good) {
+        if good.basePrice <= 0 { reporter("Good", good.id, good.origin)("`basePrice` must be positive") }
+    }
+
+    private func check(_ building: Building, _ refs: References) {
+        let report = reporter("Building", building.id, building.origin)
+        checkNumbers(building, report)
+        if let category = building.category, !ItemSchema.buildingCategories.contains(category) {
+            report("unknown category `\(category)`; expected one of \(ItemSchema.buildingCategories.sorted().joined(separator: ", "))")
+        }
+        checkGoods(building.materials, field: "materials", refs, report)
+        if let recipe = building.recipe {
+            checkGoods(recipe.inputs, field: "recipe.inputs", refs, report)
+            checkGoods(recipe.outputs, field: "recipe.outputs", refs, report)
+        }
+        if !building.hasCodeEffect, building.recipe?.outputs.isEmpty ?? true {
+            report("inert building: no recipe that produces goods and no `effect: code`")
+        }
+        for (field, tech) in [("unlockedBy", building.unlockedBy), ("obsoletedBy", building.obsoletedBy)] {
+            if let tech, refs.techs[tech] == nil { report("`\(field)` names unknown tech `\(tech)`") }
+        }
+        if let culture = building.culture, refs.cultures[culture] == nil {
+            report("`culture` names unknown culture `\(culture)`")
+        }
+        if case let .terrain(type, _)? = building.placement, !ItemSchema.terrainTypes.contains(type) {
+            report("unknown terrain `\(type)`; expected one of \(ItemSchema.terrainTypes.sorted().joined(separator: ", "))")
+        }
+    }
+
+    private func checkNumbers(_ building: Building, _ report: (String) -> Void) {
+        if building.footprint.width <= 0 || building.footprint.height <= 0 { report("`footprint` must be positive") }
+        if building.cost < 0 || building.upkeep < 0 { report("`cost` and `upkeep` must not be negative") }
+        if building.buildTicks <= 0 { report("`buildTicks` must be positive") }
+        if let storage = building.storage, storage <= 0 { report("`storage` must be positive; omit it for none") }
+        if let ticks = building.recipe?.cycleTicks, ticks <= 0 { report("`recipe.cycleTicks` must be positive") }
+        switch building.placement {
+        case let .shore(land, water)? where land <= 0 || water <= 0:
+            report("`placement.shore` minima must be positive")
+        case let .terrain(_, tiles)? where tiles <= 0:
+            report("`placement.terrain.minTiles` must be positive")
+        default:
+            break
+        }
+    }
+
+    private func checkGoods(_ amounts: GoodAmounts, field: String, _ refs: References, _ report: (String) -> Void) {
+        for entry in amounts {
+            if refs.goods[entry.good] == nil { report("`\(field)` names unknown good `\(entry.good)`") }
+            if entry.amount <= 0 { report("`\(field).\(entry.good)` must be positive") }
+        }
+    }
+
+    private func check(_ culture: Culture, _ refs: References) {
+        let report = reporter("Culture", culture.id, culture.origin)
+        for tier in culture.tiers.keys.sorted() where !houseTiers.contains(tier) {
+            report("`tiers` names unknown house tier `\(tier)`; expected one of \(houseTiers.joined(separator: ", "))")
+        }
+        for tier in houseTiers where culture.tiers[tier] == nil {
+            report("`tiers` is missing `\(tier)`")
+        }
+        if culture.residentNames.isEmpty { report("`residentNames` must not be empty") }
+        checkOwnBuilding(culture.signature, field: "signature", of: culture, refs, report)
+        checkLuxury(culture, refs, report)
+    }
+
+    private func checkLuxury(_ culture: Culture, _ refs: References, _ report: (String) -> Void) {
+        let chain = culture.luxury
+        for (role, good) in [("raw", chain.raw), ("good", chain.good)] where refs.goods[good] == nil {
+            report("`luxury.\(role)` names unknown good `\(good)`")
+        }
+        checkOwnBuilding(chain.garden, field: "luxury.garden", of: culture, refs, report)
+        checkOwnBuilding(chain.producer, field: "luxury.producer", of: culture, refs, report)
+        if let garden = refs.buildings[chain.garden], !(garden.recipe?.outputs.contains { $0.good == chain.raw } ?? false) {
+            report("`luxury.garden` building `\(chain.garden)` must produce `\(chain.raw)`")
+        }
+        if let producer = refs.buildings[chain.producer] {
+            let usesRaw = producer.recipe?.inputs.contains { $0.good == chain.raw } ?? false
+            let makesGood = producer.recipe?.outputs.contains { $0.good == chain.good } ?? false
+            if !usesRaw || !makesGood {
+                report("`luxury.producer` building `\(chain.producer)` must turn `\(chain.raw)` into `\(chain.good)`")
+            }
+        }
+    }
+
+    /// A culture's signature, garden and producer must exist and set
+    /// `culture:` to that culture, so no other culture can build them.
+    private func checkOwnBuilding(_ id: String, field: String, of culture: Culture, _ refs: References, _ report: (String) -> Void) {
+        guard let building = refs.buildings[id] else {
+            report("`\(field)` names unknown building `\(id)`")
+            return
+        }
+        if building.culture != culture.id {
+            report("`\(field)` building `\(id)` must set `culture: \(culture.id)`")
+        }
+    }
+
+    private func check(_ tech: Tech, _ refs: References) {
+        let report = reporter("Tech", tech.id, tech.origin)
+        if tech.cost <= 0 { report("`cost` must be positive") }
+        if refs.ages[tech.age] == nil { report("`age` names unknown age `\(tech.age)`") }
+        if let era = tech.era, refs.ages[era] == nil { report("`era` names unknown age `\(era)`") }
+        for prerequisite in tech.prerequisites where refs.techs[prerequisite] == nil {
+            report("`prerequisites` names unknown tech `\(prerequisite)`")
+        }
+        switch (tech.era, tech.eraGate) {
+        case (.some, nil): report("an era tech needs an `eraGate`")
+        case (nil, .some): report("`eraGate` is only for era techs; add `era` or remove it")
+        default: break
+        }
+        if let gate = tech.eraGate {
+            if !houseTiers.contains(gate.tier) {
+                report("`eraGate.tier` names unknown house tier `\(gate.tier)`; expected one of \(houseTiers.joined(separator: ", "))")
+            }
+            if gate.residents <= 0 { report("`eraGate.residents` must be positive") }
+        }
+    }
+
+    private func check(_ age: Age, _ refs: References) {
+        let report = reporter("Age", age.id, age.origin)
+        if refs.buildings[age.signature] == nil { report("`signature` names unknown building `\(age.signature)`") }
+        if age.rivalResidents < 0 { report("`rivalResidents` must not be negative") }
+    }
+
+    // MARK: - Cycles
+
+    /// Reports each prerequisite cycle once, at the tech that closes it.
+    private func checkPrerequisiteCycles(_ techs: [String: Tech]) {
+        var done = Set<String>()
+        var reported = Set<Set<String>>()
+
+        func visit(_ id: String, path: [String]) {
+            if let start = path.firstIndex(of: id) {
+                let cycle = Array(path[start...])
+                if reported.insert(Set(cycle)).inserted, let tech = techs[id] {
+                    reporter("Tech", id, tech.origin)("tech prerequisite cycle: \((cycle + [id]).joined(separator: " → "))")
+                }
+                return
+            }
+            guard !done.contains(id), let tech = techs[id] else { return }
+            for prerequisite in tech.prerequisites {
+                visit(prerequisite, path: path + [id])
+            }
+            done.insert(id)
+        }
+        for tech in data.techs {
+            visit(tech.id, path: [])
+        }
+    }
+}

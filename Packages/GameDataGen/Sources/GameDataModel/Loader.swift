@@ -1,13 +1,17 @@
 import Yams
 
 public enum GameDataLoader {
-    /// Reads the manifest and every pack it lists. Fails with every problem found, never just the first.
+    /// Reads the manifest and every pack it lists, then validates the
+    /// result. Fails with every problem found, never just the first.
     public static func load(from source: PackSource) -> Result<GameData, GameDataErrors> {
         let log = DiagnosticLog()
         var data = GameData()
         for file in packFiles(source, log: log) {
             guard let text = source.read(file) else { continue }
             readPack(text, file: file, into: &data, log: log)
+        }
+        if log.diagnostics.isEmpty {
+            Validator(data: data, log: log).validate()
         }
         return log.diagnostics.isEmpty ? .success(data) : .failure(GameDataErrors(diagnostics: log.diagnostics))
     }
