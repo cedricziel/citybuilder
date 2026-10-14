@@ -11,6 +11,7 @@ extension CityRootView {
         return ZStack {
             VStack(spacing: 8) {
                 topBar(layout: layout)
+                    .tvFocusSection()
                 StocksTrayView(hud: session.hud, layout: layout)
                 SessionBannerView(banner: session.banner)
                     .padding(.top, 4)
@@ -21,6 +22,7 @@ extension CityRootView {
                 VStack {
                     Spacer()
                     RouteAuthoringOverlay(session: session, authoring: authoring)
+                        .tvFocusSection()
                 }
             } else {
                 buildControls(layout: layout, railInset: railInset)
@@ -53,7 +55,7 @@ extension CityRootView {
         return VStack(spacing: 8) {
             PlacementRejectionBanner(hud: session.hud)
             if !hidesStrip {
-                ToolStripView(session: session)
+                ToolStripView(session: session, idiom: layout.idiom)
             }
         }
     }
@@ -67,6 +69,7 @@ extension CityRootView {
                 BuildDrawerView(session: session, rail: $buildRail, layout: layout)
                 Spacer(minLength: 0)
             }
+            .tvFocusSection()
             .frame(maxHeight: .infinity)
             VStack {
                 Spacer()
@@ -79,6 +82,7 @@ extension CityRootView {
                 BuildDrawerView(session: session, rail: $buildRail, layout: layout)
                 bottomStack(layout: layout)
                 BuildRailView(session: session, rail: $buildRail, layout: layout)
+                    .tvFocusSection()
             }
         }
     }
@@ -99,6 +103,7 @@ extension CityRootView {
                     ) {
                         inspectorActionsButton
                     }
+                    .tvFocusSection()
                 }
             }
         }

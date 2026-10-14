@@ -17,6 +17,39 @@ import Foundation
 ///
 /// Per spec `platform-shells` "iOS audio session category" + "iOS
 /// interruption handling" + "macOS audio session no-op".
+public enum AudioSessionPlatform: Sendable {
+    case iOS
+    case tvOS
+    case visionOS
+    case macOS
+
+    public static var current: AudioSessionPlatform {
+        #if os(iOS)
+        .iOS
+        #elseif os(tvOS)
+        .tvOS
+        #elseif os(visionOS)
+        .visionOS
+        #else
+        .macOS
+        #endif
+    }
+}
+
+public struct AudioSessionSettings: Equatable, Sendable {
+    public enum Category: Equatable, Sendable {
+        case playback
+    }
+
+    public let category: Category
+    public let mixesWithOthers: Bool
+
+    public init(category: Category, mixesWithOthers: Bool) {
+        self.category = category
+        self.mixesWithOthers = mixesWithOthers
+    }
+}
+
 @MainActor
 public final class PlatformAudioSession {
     private weak var engine: AudioEngine?
@@ -36,13 +69,31 @@ public final class PlatformAudioSession {
     ///
     /// On macOS this is a no-op (no session to configure).
     public static func configureSessionEarly() {
+        try? applySessionSettings()
+    }
+
+    /// The session each platform configures; nil where there is no
+    /// `AVAudioSession`. Spec: `platform-shells` / iOS audio session
+    /// category, which covers tvOS too.
+    public nonisolated static func sessionSettings(for platform: AudioSessionPlatform) -> AudioSessionSettings? {
+        switch platform {
+        case .iOS, .tvOS, .visionOS: AudioSessionSettings(category: .playback, mixesWithOthers: true)
+        case .macOS: nil
+        }
+    }
+
+    private static func applySessionSettings() throws {
         #if os(iOS) || os(tvOS) || os(visionOS)
-        try? AVAudioSession.sharedInstance().setCategory(
-            .playback,
+        guard let settings = sessionSettings(for: .current) else { return }
+        let category: AVAudioSession.Category = switch settings.category {
+        case .playback: .playback
+        }
+        try AVAudioSession.sharedInstance().setCategory(
+            category,
             mode: .default,
-            options: [.mixWithOthers]
+            options: settings.mixesWithOthers ? [.mixWithOthers] : []
         )
-        try? AVAudioSession.sharedInstance().setActive(true)
+        try AVAudioSession.sharedInstance().setActive(true)
         #endif
     }
 
@@ -57,13 +108,8 @@ public final class PlatformAudioSession {
     /// not interfere with the user's existing audio.
     public func activate() throws {
         guard !activated else { return }
+        try Self.applySessionSettings()
         #if os(iOS) || os(tvOS) || os(visionOS)
-        try AVAudioSession.sharedInstance().setCategory(
-            .playback,
-            mode: .default,
-            options: [.mixWithOthers]
-        )
-        try AVAudioSession.sharedInstance().setActive(true)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleInterruption(_:)),
