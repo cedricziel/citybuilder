@@ -34,15 +34,15 @@
 
 ## 3. M3 — TV HUD and focus
 
-- [ ] 3.1 Tests-first: translate the `platform-shells` scenarios "Apple TV HUD" and "Apple TV tool strip hints" into failing CityUI tests; confirm red
-- [ ] 3.2 Implement to green: `platform-shells` / Adaptive HUD per idiom — an idiom parameter on `HUDLayout.make` replacing `isPhone`/`isTouch`, with the TV case (design D9)
-- [ ] 3.3 Implement to green: `platform-shells` / Tool strip — Apple TV hints
-- [ ] 3.4 Add focus sections and focus guides linking the build rail, top bar, inspector callout and route overlay (design D7)
-- [ ] 3.5 Default focus and Back exit for the Goals, Research, Standings and Routes panels; walk through each in the tvOS simulator with the verify skill
-- [ ] 3.6 Default focus and Back exit for the manifest editor, New Game (city name prefilled), pause menu, Settings and Credits; walk through each in the tvOS simulator with the verify skill
-- [ ] 3.7 Add a test that the tvOS audio session path configures `.playback` with `.mixWithOthers` before engine construction, using the existing `PlatformAudioSession` seam (the guard already covers tvOS)
-- [ ] 3.8 Refactor under a green bar
-- [ ] 3.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change
+- [x] 3.1 Tests-first: translate the `platform-shells` scenarios "Apple TV HUD" and "Apple TV tool strip hints" into failing CityUI tests; confirm red
+- [x] 3.2 Implement to green: `platform-shells` / Adaptive HUD per idiom — an idiom parameter on `HUDLayout.make` replacing `isPhone`/`isTouch`, with the TV case (design D9)
+- [x] 3.3 Implement to green: `platform-shells` / Tool strip — Apple TV hints
+- [x] 3.4 Add focus sections and focus guides linking the build rail, top bar, inspector callout and route overlay (design D7)
+- [ ] 3.5 Default focus and Back exit for the Goals, Research, Standings and Routes panels; walk through each in the tvOS simulator with the verify skill — PENDING: needs the tvOS simulator, which is not installed on the dev machine
+- [ ] 3.6 Default focus and Back exit for the manifest editor, New Game (city name prefilled), pause menu, Settings and Credits; walk through each in the tvOS simulator with the verify skill — PENDING: needs the tvOS simulator, which is not installed on the dev machine
+- [x] 3.7 Add a test that the tvOS audio session path configures `.playback` with `.mixWithOthers` before engine construction, using the existing `PlatformAudioSession` seam (the guard already covers tvOS) — the test asserts the settings `PlatformAudioSession.sessionSettings(for: .tvOS)` returns, which the real session code applies; the order (configured before `AVAudioEngine()`) comes from `AudioStack.init` and is not asserted
+- [x] 3.8 Refactor under a green bar
+- [ ] 3.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change — PARTIAL: "Apple TV HUD" and "Apple TV tool strip hints" are covered; the four audio session and interruption scenarios, uncovered on main too, need iOS or tvOS hardware
 
 ## 4. M4 — tvOS saves in iCloud (requires `add-cloudkit-client`)
 

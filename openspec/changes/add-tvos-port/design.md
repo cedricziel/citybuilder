@@ -118,6 +118,14 @@ The order is fixed in `tv-remote-controls`, and the mapper walks it. The pause m
 
 - _Alternative: derive TV from a 1920-pt-wide view._ A large Mac window would get it. Rejected.
 
+Decided during M3:
+
+- **Idiom-derived properties.** `HUDLayout` keeps `isPhone`, derived from the idiom, because the views read it. `isTouch` moves to `HUDIdiom`. The rail's hotkey letters now depend on a new `showsHotkeys` (Mac only), so they do not appear on Apple TV. iOS and Mac values are unchanged.
+- **Tool strip hints.** `ToolStripText.hint` takes the idiom and a `paintingRoad` flag. The flag only matters on Apple TV, and the painting state it reads arrives with M2.
+- **Rail buttons.** The 66 pt minimum applies to the rail buttons through `HUDLayout.focusableHeight`. Other HUD controls already take `controlHeight`, which is 66 on TV.
+- **Focus sections.** The top bar, the rail (or dock), the inspector callout and the route overlay each become one SwiftUI `focusSection()` on tvOS only. That stands in for UIKit focus guides.
+- **Audio session test.** The platform-neutral test seam is `PlatformAudioSession.sessionSettings(for:)`, and the real session code applies those settings.
+
 ### D10. `SteppedValueControl` on tvOS only
 
 A shared −/+ control with a tested `SteppedValue` type (value, step, range, label) replaces every `Slider` and `Stepper` on tvOS. Holding + or − repeats. iOS and Mac keep their native controls. It lands in M1, in place of throwaway placeholders.
