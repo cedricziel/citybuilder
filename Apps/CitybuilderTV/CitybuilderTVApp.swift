@@ -76,7 +76,11 @@ struct CitybuilderTVApp: App {
                     restoreSaves: { [saveSync] in await saveSync.launch().conflicts },
                     isAccountAvailable: { [saveSync] in await saveSync.isAccountAvailable() },
                     resolveConflict: { [saveSync] gameID, keepICloud in
-                        await saveSync.resolveConflict(gameID: gameID, keepICloud: keepICloud)
+                        switch await saveSync.resolveConflict(gameID: gameID, keepICloud: keepICloud) {
+                        case .resolved: .resolved
+                        case .unreachable: .unreachable
+                        case .superseded: .superseded
+                        }
                     }
                 ),
                 inGameSettings: { SettingsSheet(audio: audio) },

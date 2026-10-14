@@ -42,21 +42,29 @@ public protocol SaveStoreFacade: Sendable {
     func load(gameID: UUID) throws -> World
 }
 
+/// How settling a save conflict ended. `superseded`: the iCloud copy
+/// changed after the player was asked, so the player chooses again.
+public enum SaveConflictResolution: Equatable, Sendable {
+    case resolved
+    case unreachable
+    case superseded
+}
+
 /// iCloud hooks for a title screen whose saves need iCloud to survive,
 /// as on Apple TV. `restoreSaves` downloads saves missing locally, runs
 /// before the Continue row is read, and returns the games whose iCloud
 /// copy is newer than the local one. `resolveConflict` keeps the iCloud
-/// copy (true) or the local one (false), and returns false when it could
-/// not. Spec: `icloud-sync`.
+/// copy (true) or the local one (false), and says how that ended.
+/// Spec: `icloud-sync`.
 public struct TitleScreenCloudSync: Sendable {
     public let restoreSaves: @Sendable () async -> [UUID]
     public let isAccountAvailable: @Sendable () async -> Bool
-    public let resolveConflict: @Sendable (UUID, Bool) async -> Bool
+    public let resolveConflict: @Sendable (UUID, Bool) async -> SaveConflictResolution
 
     public init(
         restoreSaves: @escaping @Sendable () async -> [UUID],
         isAccountAvailable: @escaping @Sendable () async -> Bool,
-        resolveConflict: @escaping @Sendable (UUID, Bool) async -> Bool = { _, _ in true }
+        resolveConflict: @escaping @Sendable (UUID, Bool) async -> SaveConflictResolution = { _, _ in .resolved }
     ) {
         self.restoreSaves = restoreSaves
         self.isAccountAvailable = isAccountAvailable
@@ -97,6 +105,9 @@ public final class TitleScreenViewModel {
     public private(set) var saveConflictFailure: String?
     /// True while a conflict is being settled.
     public private(set) var isResolvingSaveConflict = false
+
+    public static let saveConflictSupersededText =
+        "A newer save arrived in iCloud while you were choosing. Choose again."
 
     public static let saveConflictFailureText =
         "iCloud could not be reached. Check your connection and try again."
@@ -140,8 +151,9 @@ public final class TitleScreenViewModel {
         guard let cloudSync, let gameID = saveConflicts.first, !isResolvingSaveConflict else { return }
         isResolvingSaveConflict = true
         defer { isResolvingSaveConflict = false }
-        guard await cloudSync.resolveConflict(gameID, keepICloud) else {
-            saveConflictFailure = Self.saveConflictFailureText
+        let resolution = await cloudSync.resolveConflict(gameID, keepICloud)
+        guard resolution == .resolved else {
+            saveConflictFailure = resolution == .superseded ? Self.saveConflictSupersededText : Self.saveConflictFailureText
             return
         }
         saveConflictFailure = nil
