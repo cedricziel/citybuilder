@@ -241,3 +241,14 @@ func scenarioAForesterWithoutARoadReportsNoIssue() {
     let forester = inject(.forester, at: TileCoordinate(x: 4, y: 4), in: &world)
     #expect(world.buildingIssues()[forester] == nil)
 }
+
+@Test func onlyHutsAndForestersHaveACatchment() {
+    let world = grassWorld()
+    #expect(world.catchmentCount(kind: .house, anchor: TileCoordinate(x: 4, y: 4), owner: .player) == 0)
+}
+
+@Test func forestPlantedNamesItsForesterButNoKind() {
+    let event = WorldEvent.forestPlanted(at: TileCoordinate(x: 1, y: 2), forester: EntityID(raw: 7))
+    #expect(event.primaryEntityID == EntityID(raw: 7))
+    #expect(event.buildingKind == nil)
+}
