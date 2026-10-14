@@ -15,6 +15,18 @@ brew install xcodegen pre-commit swiftlint swiftformat libimagequant jpeg-turbo
 
 Xcode 26 or newer (Swift 6.3+) is required.
 
+CI pins the tools whose versions change results: SwiftFormat and
+SwiftLint (releases disagree on rules), pre-commit, and libimagequant
+(it decides the atlas PNG bytes that `make sprites-verify` compares).
+`scripts/ci/install-pinned-tools.sh versions` prints the pinned
+versions. If `brew install` gave you others, install the pinned ones:
+
+```sh
+scripts/ci/install-pinned-tools.sh lint      # then put the bin directory it prints first on PATH
+scripts/ci/install-pinned-tools.sh sprites   # libimagequant and jpeg-turbo via Homebrew
+rm -rf .venv/sprites && make sprites-venv    # Pillow links libimagequant when it is built
+```
+
 ## Quick start
 
 ```sh
