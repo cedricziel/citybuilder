@@ -90,6 +90,9 @@ public final class TitleScreenViewModel {
     /// Games whose iCloud save is newer than the local one, waiting for
     /// the player to pick which copy to keep.
     public private(set) var saveConflicts: [UUID] = []
+    /// True while iCloud saves are being restored; Continue and New Game
+    /// wait for it, so neither acts on a save the restore is replacing.
+    public private(set) var isPreparingCloudSaves: Bool
     /// Why the last attempt to settle the first conflict failed.
     public private(set) var saveConflictFailure: String?
     /// True while a conflict is being settled.
@@ -115,6 +118,7 @@ public final class TitleScreenViewModel {
         self.saveStore = saveStore
         self.sessionFactory = sessionFactory
         self.cloudSync = cloudSync
+        self.isPreparingCloudSaves = cloudSync != nil
         self.mostRecentSave = (try? saveStore.mostRecentSave()) ?? nil
     }
 
@@ -122,8 +126,10 @@ public final class TitleScreenViewModel {
     /// account notice. Does nothing without cloud sync.
     public func prepareCloudSaves() async {
         guard let cloudSync else { return }
+        isPreparingCloudSaves = true
         saveConflicts = await cloudSync.restoreSaves()
         refreshMostRecentSave()
+        isPreparingCloudSaves = false
         iCloudNotice = await cloudSync.isAccountAvailable() ? nil : Self.iCloudNoticeText
     }
 
@@ -150,7 +156,7 @@ public final class TitleScreenViewModel {
     }
 
     public func continueRequested() {
-        guard let summary = mostRecentSave else { return }
+        guard !isPreparingCloudSaves, let summary = mostRecentSave else { return }
         let world: World
         do {
             world = try saveStore.load(gameID: summary.gameID)
@@ -170,6 +176,7 @@ public final class TitleScreenViewModel {
     }
 
     public func newGameRequested() {
+        guard !isPreparingCloudSaves else { return }
         loadFailure = nil
         presentingNewGameDialog = true
     }

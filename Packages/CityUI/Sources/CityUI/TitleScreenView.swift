@@ -47,6 +47,7 @@ public struct TitleScreenView: View {
                         .padding(.vertical, 10)
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(viewModel.isPreparingCloudSaves)
                     .accessibilityIdentifier("title.continue")
                 }
                 Button("New Game…") {
@@ -55,6 +56,7 @@ public struct TitleScreenView: View {
                 .frame(maxWidth: 280)
                 .padding(.vertical, 8)
                 .buttonStyle(.bordered)
+                .disabled(viewModel.isPreparingCloudSaves)
                 .accessibilityIdentifier("title.newGame")
 
                 Button("Settings") {
@@ -76,6 +78,10 @@ public struct TitleScreenView: View {
                 #endif
             }
             Spacer()
+            if viewModel.isPreparingCloudSaves {
+                ProgressView("Checking iCloud for saves…")
+                    .accessibilityIdentifier("title.preparingCloudSaves")
+            }
             if let notice = viewModel.iCloudNotice {
                 Label(notice, systemImage: "icloud.slash")
                     .font(.callout)

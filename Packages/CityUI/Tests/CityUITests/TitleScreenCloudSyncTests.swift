@@ -121,6 +121,65 @@ func newerICloudSavePromptsBeforeOverwriting() async {
     #expect(calls.map(\.keepICloud) == [true])
 }
 
+/// Holds `restoreSaves` until the test releases it.
+private actor HeldRestore {
+    private var held: CheckedContinuation<Void, Never>?
+    private var arrival: CheckedContinuation<Void, Never>?
+
+    func restore() async -> [UUID] {
+        await withCheckedContinuation { continuation in
+            held = continuation
+            arrival?.resume()
+            arrival = nil
+        }
+        return []
+    }
+
+    func waitUntilHeld() async {
+        guard held == nil else { return }
+        await withCheckedContinuation { arrival = $0 }
+    }
+
+    func release() {
+        held?.resume()
+        held = nil
+    }
+}
+
+@MainActor
+@Test("Continue and New Game wait for the iCloud restore")
+func continueAndNewGameWaitForTheICloudRestore() async {
+    let facade = RestoringSaveFacade()
+    facade.stored = SaveSummary(gameID: UUID(), writeDate: Date(), displayName: "Stale")
+    let restore = HeldRestore()
+    let model = viewModel(
+        saveStore: facade,
+        cloudSync: TitleScreenCloudSync(restoreSaves: { await restore.restore() }, isAccountAvailable: { true })
+    )
+    #expect(model.isPreparingCloudSaves)
+
+    let preparing = Task { await model.prepareCloudSaves() }
+    await restore.waitUntilHeld()
+    model.continueRequested()
+    model.newGameRequested()
+    #expect(model.committedSession == nil)
+    #expect(!model.presentingNewGameDialog)
+
+    await restore.release()
+    await preparing.value
+    #expect(!model.isPreparingCloudSaves)
+    model.continueRequested()
+    #expect(model.committedSession != nil)
+}
+
+@MainActor
+@Test("Title screen without cloud sync is never preparing")
+func titleScreenWithoutCloudSyncIsNeverPreparing() {
+    let model = TitleScreenViewModel(saveStore: RestoringSaveFacade(), sessionFactory: { GameSession(world: $0) })
+
+    #expect(!model.isPreparingCloudSaves)
+}
+
 @MainActor
 @Test("A conflict whose resolution fails stays and shows an error")
 func aConflictWhoseResolutionFailsStaysAndShowsAnError() async {
