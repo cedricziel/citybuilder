@@ -299,3 +299,16 @@ func scenarioStarterRoadRingIsCompleteOnEveryFairStart(seed: UInt64) {
         }
     }
 }
+
+// MARK: - Camera
+
+@Test("scenario: camera starts on the player's town center")
+func scenarioCameraStartsOnThePlayersTownCenter() throws {
+    for world in [World.newGame(), World.newGame(layout: .archipelago, seed: 7)] {
+        let map = world.tileToIslandMap()
+        let home = map[TileCoordinate(x: world.mapWidth / 2, y: world.mapHeight / 2)]
+        let center = try #require(townCenters(in: world).first { $0.owner == .player && map[$0.anchor] == home })
+        let footprint = BuildingCatalog.spec(for: .townCenter).footprint
+        #expect(footprint.tiles(anchor: center.anchor).contains(world.camera.centerTile()))
+    }
+}

@@ -11,6 +11,7 @@
 - [ ] 1.9 Regenerate `openspec/changes/game-data-codegen/baseline/determinism.json` and `determinism-36k.json` from the new fixture output with `SWIFT_DETERMINISTIC_HASHING=1`, and state in the PR description that the baseline changes on purpose because world generation changed (design D6)
 - [x] 1.10 Refactor under a green bar
 - [x] 1.11 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `world-terrain` or `buildings-and-construction` from this change
+- [x] 1.12 Implement to green: `world-terrain` / New game camera starts on the home town center. The M2 simulator check found this: the single-island start had moved out of the mountain core, but the camera still opened on the map centre, so a new game showed only mountains. The determinism baseline is regenerated again, because the camera is part of the saved world
 
 ## 2. M2 — Playtest check
 

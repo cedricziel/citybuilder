@@ -158,6 +158,23 @@ extension World {
         }
     }
 
+    /// Points the camera at the middle of the player's home town center:
+    /// the one on the island under the map's centre tile, else the
+    /// lowest-ID one. Spec: `world-terrain` / New game camera starts on
+    /// the home town center.
+    mutating func centerCameraOnHomeTownCenter() {
+        let tileToIsland = tileToIslandMap()
+        let home = tileToIsland[TileCoordinate(x: mapWidth / 2, y: mapHeight / 2)]
+        let centers = buildings.values
+            .filter { $0.kind == .townCenter && $0.owner == .player }
+            .sorted { $0.id.raw < $1.id.raw }
+        guard let center = centers.first(where: { home != nil && tileToIsland[$0.anchor] == home }) ?? centers.first
+        else { return }
+        let footprint = BuildingCatalog.spec(for: .townCenter).footprint
+        camera.centerX = Double(center.anchor.x) + Double(footprint.width) / 2
+        camera.centerY = Double(center.anchor.y) + Double(footprint.height) / 2
+    }
+
     /// Anchors in the ranges, nearest `target` first by squared distance,
     /// then by row, then by column.
     private static func candidates(around target: TileCoordinate, xs: ClosedRange<Int>, ys: ClosedRange<Int>) -> [TileCoordinate] {

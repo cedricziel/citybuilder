@@ -84,6 +84,7 @@ public extension World {
             world.seedRivals()
         }
         world.seedStarterRoads()
+        world.centerCameraOnHomeTownCenter()
         return world
     }
 
