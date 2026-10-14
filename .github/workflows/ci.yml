@@ -38,20 +38,37 @@ jobs:
 
       # Docs need lint only. A change inside Packages/ runs that package
       # and its dependents, read from the Package.swift graph; anything
-      # else runs everything, and so does every push to main.
+      # else runs everything (see scripts/select_ci_jobs.py). Pushes to
+      # main, and PRs that edit the selector, its tests or this workflow,
+      # select everything here in shell, so a broken selector can't
+      # deselect the jobs that would test it.
       - name: Select jobs from the changed files
         id: select
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          select_all() {
+            for manifest in Packages/*/Package.swift; do basename "$(dirname "$manifest")"; done > "$RUNNER_TEMP/packages"
+            echo "packages=$(jq -Rsc 'split("\n")[:-1]' "$RUNNER_TEMP/packages")"
+            echo "apps=true"
+            echo "sprites=true"
+            echo "gamedata_fixture=true"
+            echo "determinism_linux=true"
+            echo "determinism_compare=true"
+          }
+          selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
-            python3 scripts/select_ci_jobs.py --all > "$RUNNER_TEMP/selection"
+            select_all > "$selection"
           else
             git diff --no-renames --name-only "$BASE_SHA" HEAD | tee "$RUNNER_TEMP/changed-files"
-            python3 scripts/select_ci_jobs.py < "$RUNNER_TEMP/changed-files" > "$RUNNER_TEMP/selection"
+            if grep -qxE 'scripts/select_ci_jobs\.py|scripts/tests/test_select_ci_jobs\.py|\.github/workflows/ci\.yml' "$RUNNER_TEMP/changed-files"; then
+              select_all > "$selection"
+            else
+              python3 scripts/select_ci_jobs.py < "$RUNNER_TEMP/changed-files" > "$selection"
+            fi
           fi
-          cat "$RUNNER_TEMP/selection"
-          cat "$RUNNER_TEMP/selection" >> "$GITHUB_OUTPUT"
+          cat "$selection"
+          cat "$selection" >> "$GITHUB_OUTPUT"
 
   lint:
     name: lint
