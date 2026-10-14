@@ -30,10 +30,12 @@ enum HUDMetrics {
 extension View {
     /// Phone sheets open at 62% height. Spec: the HUD handoff, Sheets.
     /// Mac sheets size to their content, and a `List` has none, so they
-    /// get a floor.
+    /// get a floor. Apple TV sheets get the TV width.
     func hudSheetDetents() -> some View {
         #if os(iOS)
         presentationDetents(HUDMetrics.idiom == .phone ? [.fraction(0.62), .large] : [.large])
+        #elseif os(tvOS)
+        tvSheetWidth()
         #else
         frame(minWidth: 420, idealWidth: 480, minHeight: 360, idealHeight: 520)
         #endif

@@ -86,6 +86,7 @@ extension View {
     func standingsSheet(session: GameSession, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {
             StandingsPanelView(model: StandingsPanelModel(world: session.world)) { isPresented.wrappedValue = false }
+                .tvSheetWidth()
         }
     }
 }
