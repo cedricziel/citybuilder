@@ -42,6 +42,27 @@ public protocol SaveStoreFacade: Sendable {
     func load(gameID: UUID) throws -> World
 }
 
+/// iCloud hooks for a title screen whose saves need iCloud to survive,
+/// as on Apple TV. `restoreSaves` downloads saves missing locally, runs
+/// before the Continue row is read, and returns the games whose iCloud
+/// copy is newer than the local one. `resolveConflict` keeps the iCloud
+/// copy (true) or the local one (false). Spec: `icloud-sync`.
+public struct TitleScreenCloudSync: Sendable {
+    public let restoreSaves: @Sendable () async -> [UUID]
+    public let isAccountAvailable: @Sendable () async -> Bool
+    public let resolveConflict: @Sendable (UUID, Bool) async -> Void
+
+    public init(
+        restoreSaves: @escaping @Sendable () async -> [UUID],
+        isAccountAvailable: @escaping @Sendable () async -> Bool,
+        resolveConflict: @escaping @Sendable (UUID, Bool) async -> Void = { _, _ in }
+    ) {
+        self.restoreSaves = restoreSaves
+        self.isAccountAvailable = isAccountAvailable
+        self.resolveConflict = resolveConflict
+    }
+}
+
 /// Closure that builds a `GameSession` from a committed world. The
 /// title screen calls this when the player picks New Game or Continue,
 /// so `GameSession` construction is deferred until commit (no eager
@@ -62,16 +83,49 @@ public final class TitleScreenViewModel {
     /// transition from the title screen to `CityRootView`.
     public private(set) var committedSession: GameSession?
     public private(set) var loadFailure: SaveLoadFailure?
+    /// Shown, and never dismissible, while no iCloud account is signed in
+    /// on a title screen with cloud sync.
+    public private(set) var iCloudNotice: String?
+    /// Games whose iCloud save is newer than the local one, waiting for
+    /// the player to pick which copy to keep.
+    public private(set) var saveConflicts: [UUID] = []
+
+    public static let iCloudNoticeText =
+        "Sign in to iCloud to keep your cities. Without it, Apple TV may delete your progress."
 
     private static let logger = Logger(subsystem: "com.cedricziel.citybuilder", category: "TitleScreen")
 
     private let saveStore: SaveStoreFacade
     private let sessionFactory: GameSessionFactory
+    private let cloudSync: TitleScreenCloudSync?
 
-    public init(saveStore: SaveStoreFacade, sessionFactory: @escaping GameSessionFactory) {
+    public init(
+        saveStore: SaveStoreFacade,
+        sessionFactory: @escaping GameSessionFactory,
+        cloudSync: TitleScreenCloudSync? = nil
+    ) {
         self.saveStore = saveStore
         self.sessionFactory = sessionFactory
+        self.cloudSync = cloudSync
         self.mostRecentSave = (try? saveStore.mostRecentSave()) ?? nil
+    }
+
+    /// Restores saves from iCloud, then re-reads the Continue row and the
+    /// account notice. Does nothing without cloud sync.
+    public func prepareCloudSaves() async {
+        guard let cloudSync else { return }
+        saveConflicts = await cloudSync.restoreSaves()
+        refreshMostRecentSave()
+        iCloudNotice = await cloudSync.isAccountAvailable() ? nil : Self.iCloudNoticeText
+    }
+
+    /// Settles the first pending conflict by keeping the iCloud copy or
+    /// the local one, which then replaces the other.
+    public func resolveSaveConflict(keepICloud: Bool) async {
+        guard let cloudSync, let gameID = saveConflicts.first else { return }
+        saveConflicts.removeFirst()
+        await cloudSync.resolveConflict(gameID, keepICloud)
+        refreshMostRecentSave()
     }
 
     /// Re-query the facade — useful after returning from the game to

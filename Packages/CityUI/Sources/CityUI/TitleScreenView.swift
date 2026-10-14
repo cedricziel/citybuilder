@@ -76,6 +76,13 @@ public struct TitleScreenView: View {
                 #endif
             }
             Spacer()
+            if let notice = viewModel.iCloudNotice {
+                Label(notice, systemImage: "icloud.slash")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("title.iCloudNotice")
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -100,6 +107,22 @@ public struct TitleScreenView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("The file may be damaged or from an older version of the game. You can still start a new game.")
+        }
+        .alert(
+            "A newer save is in iCloud",
+            isPresented: Binding(
+                get: { !viewModel.saveConflicts.isEmpty },
+                set: { _ in }
+            )
+        ) {
+            Button("Load iCloud Save") {
+                Task { await viewModel.resolveSaveConflict(keepICloud: true) }
+            }
+            Button("Keep This Save") {
+                Task { await viewModel.resolveSaveConflict(keepICloud: false) }
+            }
+        } message: {
+            Text("Load the newer save from iCloud, or keep the save on this device and replace the iCloud copy.")
         }
         .sheet(isPresented: $viewModel.presentingSettings) {
             if let content = settingsContent {
