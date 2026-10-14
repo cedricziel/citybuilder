@@ -106,7 +106,7 @@ public actor TVSaveSync {
             }
             guard let remote = try? await sync.remoteRecords() else { return .unreachable }
             if let current = remote[gameID] {
-                guard let seen = sync.conflictVersions[gameID], Self.isSameRecord(seen, current) else {
+                guard sync.isKnownConflict(gameID: gameID, remote: current) else {
                     sync.conflictVersions[gameID] = current
                     return .superseded
                 }
@@ -158,7 +158,7 @@ public actor TVSaveSync {
                     result.restored.append(gameID)
                 }
             case .acceptRemote(askUser: true):
-                if await !adoptIfIdentical(gameID: gameID) {
+                if await adoptIfIdentical(gameID: gameID) == .notOurs {
                     conflictVersions[gameID] = remote[gameID]
                     result.conflicts.append(gameID)
                 }
@@ -213,7 +213,13 @@ public actor TVSaveSync {
         guard let local = store.writeDate(gameID: gameID) else { return .settled }
         switch decide(local: local, remote: remote, isPending: true) {
         case .acceptRemote:
-            if await adoptIfIdentical(gameID: gameID) { return .settled }
+            if !isKnownConflict(gameID: gameID, remote: remote) {
+                switch await adoptIfIdentical(gameID: gameID) {
+                case .synced: return .settled
+                case .savedSince: return .pending
+                case .notOurs: break
+                }
+            }
             conflictVersions[gameID] = remote
             return .pending
         case .noOp: return .settled
@@ -241,18 +247,42 @@ public actor TVSaveSync {
         return remote.changeTag.map(UploadExpectation.changeTag) ?? .anyRecord
     }
 
+    /// Whether a conflict was already reported against `remote`, so its
+    /// copy was already compared with the local save.
+    private func isKnownConflict(gameID: UUID, remote: CloudRecordSummary?) -> Bool {
+        guard let seen = conflictVersions[gameID], let remote else { return false }
+        return Self.isSameRecord(seen, remote)
+    }
+
+    private enum Adoption {
+        /// The iCloud copy is not this device's save: a real conflict.
+        case notOurs
+        /// The iCloud copy is this device's save; the game is synced.
+        case synced
+        /// The iCloud copy is this device's save, but a newer save was
+        /// written during the download and still needs an upload.
+        case savedSince
+    }
+
     /// An iCloud copy that looks newer may be this device's own upload
     /// that timed out but still committed. If its bytes equal the local
-    /// save, takes it as synced and returns true.
-    private func adoptIfIdentical(gameID: UUID) async -> Bool {
-        guard let local = try? store.writer.read(from: store.url(for: gameID)),
+    /// save, takes that record as the last synced one.
+    private func adoptIfIdentical(gameID: UUID) async -> Adoption {
+        guard let writeDate = store.writeDate(gameID: gameID),
+              let local = try? store.writer.read(from: store.url(for: gameID)),
               let record = try? await call({ try await $0.fetchLatest(gameID: gameID) }),
               record.body == local
-        else { return false }
+        else { return .notOurs }
         setSynced(record.modificationDate, changeTag: record.changeTag, for: gameID)
+        // Saves are written outside this actor, so one may have landed
+        // during the download; it stays pending and keeps its own date.
+        guard store.writeDate(gameID: gameID) == writeDate else {
+            addPendingUploads([gameID])
+            return .savedSince
+        }
         markSynced(gameID: gameID, at: record.modificationDate)
         setPendingUploads(pendingUploads.subtracting([gameID]))
-        return true
+        return .synced
     }
 
     /// Downloads the iCloud copy over the local save. With

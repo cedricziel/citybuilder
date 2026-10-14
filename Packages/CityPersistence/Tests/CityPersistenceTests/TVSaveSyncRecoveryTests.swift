@@ -30,6 +30,51 @@ func anUploadThatCommittedAfterTimingOutIsNotAConflict() async throws {
     #expect(try abs(harness.localWriteDate(of: id).timeIntervalSince(remote.modificationDate)) < 1)
 }
 
+@Test("A save written while an identical iCloud copy downloads is still uploaded")
+func aSaveWrittenWhileAnIdenticalICloudCopyDownloadsIsStillUploaded() async throws {
+    let harness = Harness()
+    let client = ScriptedClient(inner: harness.client)
+    await client.configure(hangsAfterUpload: true)
+    let id = UUID()
+    try harness.store.save(world(seed: 1), gameID: id)
+    try backdateLocalSave(harness, gameID: id)
+    await harness.launchSync(client: client, callTimeout: .milliseconds(200)).didSave(gameID: id)
+    await client.release()
+    let store = harness.store
+    await client.configure(beforeFetch: { try? store.save(world(seed: 9), gameID: id) })
+
+    let relaunched = harness.launchSync(client: client)
+    let result = await relaunched.launch()
+    await relaunched.settle()
+
+    #expect(result.conflicts.isEmpty)
+    let remote = try #require(await harness.client.records[id])
+    #expect(try harness.store.decode(remote.body) == world(seed: 9))
+    #expect(await relaunched.pendingUploads.isEmpty)
+}
+
+@Test("A known conflict is not downloaded again on every pass")
+func aKnownConflictIsNotDownloadedAgainOnEveryPass() async throws {
+    let harness = Harness()
+    let client = ScriptedClient(inner: harness.client)
+    let id = UUID()
+    try harness.store.save(world(seed: 1), gameID: id)
+    try backdateLocalSave(harness, gameID: id)
+    await harness.client.setAccountAvailable(false)
+    await harness.launchSync().didSave(gameID: id)
+    await harness.client.setAccountAvailable(true)
+    _ = try await harness.client.upload(gameID: id, body: saveBytes(world(seed: 2)), deviceID: "Mac")
+    let sync = harness.launchSync(client: client)
+    #expect(await sync.launch().conflicts == [id])
+    await sync.settle()
+    let fetchesAfterLaunch = await client.fetchCalls
+
+    await sync.retryPendingUploads()
+
+    #expect(fetchesAfterLaunch == 1)
+    #expect(await client.fetchCalls == 1)
+}
+
 @Test("An upload does not replace a record another device saved after the listing")
 func anUploadDoesNotReplaceARecordAnotherDeviceSavedAfterTheListing() async throws {
     let harness = Harness()

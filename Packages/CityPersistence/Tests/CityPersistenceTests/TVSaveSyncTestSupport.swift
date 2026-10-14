@@ -118,6 +118,7 @@ actor ScriptedClient: CloudKitClient {
     var hangsUploads = false
     var beforeFetch: (@Sendable () -> Void)?
     var hangsAfterUpload = false
+    private(set) var fetchCalls = 0
     var beforeUpload: (@Sendable () async -> Void)?
     private let hung = Hang()
 
@@ -160,6 +161,7 @@ actor ScriptedClient: CloudKitClient {
     }
 
     func fetchLatest(gameID: UUID) async throws -> CloudRecord? {
+        fetchCalls += 1
         beforeFetch?()
         return try await inner.fetchLatest(gameID: gameID)
     }
