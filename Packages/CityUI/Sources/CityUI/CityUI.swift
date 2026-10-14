@@ -61,15 +61,25 @@ public struct CityRootView: View {
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
         .routesSheet(session: session, isPresented: $routesPresented)
-        .sheet(isPresented: $settingsPresented) {
-            if let content = settingsContent {
-                content().hudSheetDetents()
-            }
-        }
+        .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
             isPresented: isPausedBinding,
             onDismiss: dismissPause,
-            content: { pauseMenuContent().hudSheetDetents() }
+            content: {
+                // Settings chosen in the pause menu opens over it, so
+                // closing Settings returns to the menu.
+                pauseMenuContent().hudSheetDetents()
+                    .settingsSheet(isPresented: settingsBinding(whilePaused: true), content: settingsContent)
+            }
+        )
+    }
+
+    /// Settings opens from the root, or from the pause sheet while the
+    /// game is paused; a view presents one sheet at a time.
+    private func settingsBinding(whilePaused: Bool) -> Binding<Bool> {
+        Binding(
+            get: { settingsPresented && session.isPaused == whilePaused },
+            set: { settingsPresented = $0 }
         )
     }
 

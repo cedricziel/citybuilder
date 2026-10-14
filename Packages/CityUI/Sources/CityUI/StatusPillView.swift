@@ -28,6 +28,14 @@ enum HUDMetrics {
 }
 
 extension View {
+    func settingsSheet(isPresented: Binding<Bool>, content: (() -> AnyView)?) -> some View {
+        sheet(isPresented: isPresented) {
+            if let content {
+                content().hudSheetDetents()
+            }
+        }
+    }
+
     /// Phone sheets open at 62% height. Spec: the HUD handoff, Sheets.
     /// Mac sheets size to their content, and a `List` has none, so they
     /// get a floor. Apple TV sheets get the TV width.
