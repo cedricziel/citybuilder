@@ -184,6 +184,14 @@ func scenarioRatsSkipASingleFood() throws {
     #expect(world.stockpiles[center]?.quantity(of: .food) == 1)
 }
 
+@Test("scenario: rats fire with two food")
+func scenarioRatsFireWithTwoFood() throws {
+    var (world, center) = try ratsEveWorld(food: 2)
+    let events = world.tick().events
+    #expect(events.contains(.historyEvent(.ratsInTheGranary)))
+    #expect(world.stockpiles[center]?.quantity(of: .food) == 1)
+}
+
 @Test("scenario: bountiful harvest fills the stores")
 func scenarioBountifulHarvestFillsTheStores() throws {
     var world = World.newGame()
