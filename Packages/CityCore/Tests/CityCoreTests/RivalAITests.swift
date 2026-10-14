@@ -9,10 +9,6 @@ private func normalWorld() -> World {
     World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
 }
 
-private func anchor(_ command: Command) -> TileCoordinate? {
-    if case let .rivalPlace(_, _, anchor) = command { anchor } else { nil }
-}
-
 // MARK: - Rival turns go through the command queue
 
 @Test("scenario: commands apply on the next tick")
@@ -24,7 +20,7 @@ func scenarioCommandsApplyOnTheNextTick() throws {
     let commands = world.pendingCommands
     #expect(commands.allSatisfy { if case .rivalPlace(1, _, _) = $0 { true } else { false } })
     #expect(placedKind(commands.last) == .lumberjackHut)
-    let hutAnchor = try #require(commands.last.flatMap(anchor))
+    let hutAnchor = try #require(placedAnchor(commands.last))
     world.tick()
     let hut = try #require(world.occupiedTiles[hutAnchor].flatMap { world.buildings[$0] })
     #expect(hut.kind == .lumberjackHut)
@@ -110,7 +106,7 @@ func rivalHutCostsNoWood() throws {
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .lumberjackHut)
     world.tick()
-    let anchor = try #require(commands.last.flatMap(anchor))
+    let anchor = try #require(placedAnchor(commands.last))
     let hut = try #require(world.occupiedTiles[anchor].flatMap { world.buildings[$0] })
     #expect(hut.constructionState == .actively)
     #expect(world.materialCost(of: .lumberjackHut, for: .player).isEmpty)
@@ -187,9 +183,9 @@ func scenarioFirstBuildingOpensTheHomeBlock() throws {
         }
     }
     #expect(ring.count == 20)
-    #expect(commands.prefix(20).map { anchor($0) } == ring)
+    #expect(commands.prefix(20).map { placedAnchor($0) } == ring)
     #expect(commands.prefix(20).allSatisfy { placedKind($0) == .road })
-    let building = try #require(commands.last.flatMap(anchor))
+    let building = try #require(placedAnchor(commands.last))
     let blockX = (building.x - center.x).floorDiv(5)
     let blockY = (building.y - center.y).floorDiv(5)
     #expect(max(abs(blockX), abs(blockY)) == 1)

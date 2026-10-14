@@ -108,3 +108,7 @@ extension World {
 func placedKind(_ command: Command?) -> BuildingKind? {
     if case let .rivalPlace(_, kind, _) = command { kind } else { nil }
 }
+
+func placedAnchor(_ command: Command?) -> TileCoordinate? {
+    if case let .rivalPlace(_, _, anchor) = command { anchor } else { nil }
+}

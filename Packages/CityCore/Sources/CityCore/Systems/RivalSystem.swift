@@ -22,6 +22,9 @@ enum RivalAI {
     /// forest tiles each must add to be worth its roads.
     static let hutReach = 1
     static let forestPerOpenedBlock = 8
+    /// Open grass a forester slot must share with a rival hut's
+    /// catchment (`add-forestry` D6).
+    static let foresterMinSharedGrass = 4
 
     static func scriptKind(at index: Int) -> BuildingKind {
         index < opening.count ? opening[index] : growthLoop[(index - opening.count) % growthLoop.count]
@@ -53,6 +56,8 @@ private struct RivalTurn {
     /// Forest left in the catchments of the rival's huts: the wood they
     /// can still cut.
     var forestLeft = 0
+    /// Every lumberjack hut, thinned ones included.
+    var allHuts = 0
     let stock: [Good: Int]
 
     /// The threshold rules that apply, in order (design D5). The planks
@@ -69,6 +74,8 @@ private struct RivalTurn {
         if stock[.wood, default: 0] < 4, huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest {
             kinds.append(.lumberjackHut)
         }
+        // A thinned hut needs a forester most, so every hut counts.
+        if counts[.forester, default: 0] < allHuts { kinds.append(.forester) }
         return kinds
     }
 
@@ -167,6 +174,7 @@ extension World {
                 turn.waiting.insert(building.kind)
             }
             if building.kind == .lumberjackHut {
+                turn.allHuts += 1
                 let forest = forestTiles(inCatchmentOf: building.anchor, footprint: hutFootprint)
                 turn.forestLeft += forest
                 guard forest >= RivalAI.hutLowForest else { continue }
@@ -236,6 +244,7 @@ struct RivalTownPlan {
         let homeOpen = isOpened(Self.home)
         guard homeOpen || canOpen(Self.home) else { return nil }
         if kind == .lumberjackHut { return hutSlot(homeOpen: homeOpen) }
+        if kind == .forester { return foresterSlot(homeOpen: homeOpen) }
         for block in Self.searchOrder where isOpened(block) || (touchesOpened(block) && canOpen(block)) {
             if let anchor = candidateAnchors(for: kind, in: block).first(where: { isFree(kind, at: $0) }) {
                 return (roads(opening: [block], homeOpen: homeOpen), anchor)
@@ -244,14 +253,60 @@ struct RivalTownPlan {
         return nil
     }
 
-    /// A hut goes where its catchment holds the most forest, among the
-    /// blocks reachable through at most `RivalAI.hutReach` unopened
-    /// blocks, opening the blocks on the way; each opened block must pay
-    /// for its roads with `RivalAI.forestPerOpenedBlock` more forest.
-    /// Earlier in breadth-first order wins a tie. Visits each block of
-    /// the plan at most once.
+    /// A hut goes where its catchment holds the most forest, at least
+    /// `RivalAI.hutMinForest` tiles.
     private mutating func hutSlot(homeOpen: Bool) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
         let footprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
+        let world = world
+        return bestSlot(for: .lumberjackHut, homeOpen: homeOpen) { anchor in
+            let forest = world.forestTiles(inCatchmentOf: anchor, footprint: footprint)
+            return forest >= RivalAI.hutMinForest ? forest : nil
+        }
+    }
+
+    /// A forester goes where its catchment shares the most open grass
+    /// with the catchment of one of the rival's huts, at least
+    /// `RivalAI.foresterMinSharedGrass`, searched like a hut's slot
+    /// (`add-forestry` D6).
+    private mutating func foresterSlot(homeOpen: Bool) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
+        let footprint = BuildingCatalog.spec(for: .forester).footprint
+        let world = world
+        let isOpen = world.openGrass(for: owner, tileToIsland: tileToIsland)
+        let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
+        var hutGrass: [Set<TileCoordinate>] = []
+        for hut in world.buildings.values where hut.owner == owner && hut.kind == .lumberjackHut {
+            var grass = Set<TileCoordinate>()
+            world.visitCatchment(anchor: hut.anchor, footprint: hutFootprint, where: isOpen) { tile in
+                grass.insert(tile)
+                return true
+            }
+            if grass.count >= RivalAI.foresterMinSharedGrass { hutGrass.append(grass) }
+        }
+        let anyHutGrass = hutGrass.reduce(into: Set<TileCoordinate>()) { $0.formUnion($1) }
+        guard !anyHutGrass.isEmpty else { return nil }
+        return bestSlot(for: .forester, homeOpen: homeOpen) { anchor in
+            let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
+            var shared = [Int](repeating: 0, count: hutGrass.count)
+            world.visitCatchment(anchor: anchor, footprint: footprint, where: anyHutGrass.contains) { tile in
+                guard !(columns.contains(tile.x) && rows.contains(tile.y)) else { return true }
+                for (index, grass) in hutGrass.enumerated() where grass.contains(tile) {
+                    shared[index] += 1
+                }
+                return true
+            }
+            let best = shared.max() ?? 0
+            return best >= RivalAI.foresterMinSharedGrass ? best : nil
+        }
+    }
+
+    /// The free slot with the best `value` (nil when unfit), among the
+    /// blocks reachable through at most `RivalAI.hutReach` unopened
+    /// blocks, opening the blocks on the way; each opened block costs
+    /// `RivalAI.forestPerOpenedBlock` of value. Earlier in breadth-first
+    /// order wins a tie. Visits each block of the plan at most once.
+    private mutating func bestSlot(
+        for kind: BuildingKind, homeOpen: Bool, value: (TileCoordinate) -> Int?
+    ) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
         var depth: [Block: Int] = [Self.home: 0]
         var parent: [Block: Block] = [:]
         var queue = [Self.home]
@@ -262,10 +317,10 @@ struct RivalTownPlan {
             let block = queue[cursor]
             cursor += 1
             let blockDepth = depth[block] ?? 0
-            for anchor in candidateAnchors(for: .lumberjackHut, in: block) where isFree(.lumberjackHut, at: anchor) {
-                let forest = world.forestTiles(inCatchmentOf: anchor, footprint: footprint)
-                let score = forest - RivalAI.forestPerOpenedBlock * blockDepth
-                if forest >= RivalAI.hutMinForest, score > bestScore {
+            for anchor in candidateAnchors(for: kind, in: block) where isFree(kind, at: anchor) {
+                guard let value = value(anchor) else { continue }
+                let score = value - RivalAI.forestPerOpenedBlock * blockDepth
+                if score > bestScore {
                     best = (block, anchor)
                     bestScore = score
                 }

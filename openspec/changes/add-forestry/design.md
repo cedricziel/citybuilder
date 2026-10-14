@@ -18,6 +18,8 @@ A smarter bot built a new hut as soon as its huts held fewer than 10 + 2 × hous
 
 A counterfactual run emulated this change inside the harness. Each hut got one forester planting every 45 ticks (90 in winter), and the town got 2 wood whenever it had none and its huts held fewer than 6 trees. On the single island (seed 0) the same bot then reached 16 residents with 5 citizens by Spring 1202, and 27 residents with 18 citizens by Spring 1203. It had bread, iron and tools running by 1203 and entered the Renaissance in autumn of the fourth year, with 51 residents, 14 of them merchants. The run needed the free 2 wood 24 times, and at the end 17 huts still had no trees in reach. One forester per hut at 45 ticks was not enough to keep up, which is why D1 uses a 40-tick cycle and still expects more than one forester per hut over time. The default single-island start also places the town center inside a mountain massif (168 of the 169 tiles within 6 tiles are mountain), and the nearest site with 4 or more trees in reach is 11 tiles away. That matters for start-site quality, but it is a separate issue (see Open Questions).
 
+**Re-run after M2.** The same harness, now placing a forester after each hut, ran on single island seed 0, archipelago seed 7 and Guild Town (the same map as the single island). All three went bankrupt in 1202. Huts never ran bare: the forest in their reach stayed stocked. The wood stock still stayed at 0 because the sawmill consumes every log, and planks piled up to 40 because the bot cannot spend them. Without the forester step, single island seed 0 and Guild Town survived at 7 to 10 residents with $5,923 by 1215; archipelago seed 7 still went bankrupt. No run reached 20 citizens, and both archipelago rivals sat at 0 residents in 1215. Forests no longer run out, but money does, so the forester cycle was not retuned. The rival forester rule also applies during the opening, so a rival pays $60 per forester out of its starting treasury before its first houses earn anything. That is a likely early money drain and an input for `add-town-market` balancing. The money and food side belongs to `add-town-market`; the designer's emulation of forester plus market reached 70 residents.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -66,7 +68,7 @@ The tool strip hint reads the count for the pending or hovered anchor from `Game
 
 ### D6 — Rivals replant
 
-A fourth threshold rule, after the hut rule, places a forester while the rival has fewer foresters than huts. It counts every hut here, not only huts with 4 or more trees, because a thinned hut is the one that needs a forester most. Slot choice reuses `hutSlot`'s block search with a different score: the number of open grass tiles shared with any rival hut's catchment, minus 8 per block opened, with at least 4 shared tiles. The forester costs the rival no materials. The rule is a threshold rule, so it does not advance the script.
+A fourth threshold rule, after the hut rule, places a forester while the rival has fewer foresters than huts. It counts every hut here, not only huts with 4 or more trees, because a thinned hut is the one that needs a forester most. Slot choice reuses `hutSlot`'s block search with a different score: the most open grass tiles shared with any single rival hut's catchment, minus 8 per block opened, with at least 4 shared tiles. The forester costs the rival no materials. The rule is a threshold rule, so it does not advance the script.
 
 ### Framework-free invariant
 

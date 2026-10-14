@@ -16,12 +16,15 @@
 
 ## 2. M2 — Rivals replant
 
-- [ ] 2.1 Tests-first: translate the `rival-towns` scenarios "Rival replants beside its hut", "Rival forester needs open ground beside a hut" and "Rival forester overlaps a hut" into failing tests using `RivalTestSupport`. Re-run "Rival buildings touch a road" and the rival determinism tests. Confirm red.
-- [ ] 2.2 Implement to green: `rival-towns` / Rival build order. Add the forester threshold rule after the hut rule, count every hut for it, and make it cost no materials.
-- [ ] 2.3 Implement to green: `rival-towns` / Rival town plan. Add the forester slot score (open grass shared with a rival hut catchment, at least 4, the same block penalty as huts) on top of `hutSlot`'s block search (design D6).
-- [ ] 2.4 Re-run the headless playtest from design "Playtest evidence" (single island seed 0, archipelago seed 7, Guild Town; 36,000 ticks each) with a forester step after each hut. Record in this file the year each run first reaches 20 citizens, whether any run soft-locks or goes bankrupt, and both rivals' residents in 1215. If a run still runs out of wood, tune the forester cycle in the pack and re-run.
-- [ ] 2.5 Refactor under a green bar.
-- [ ] 2.6 Run `make test-scenarios` and confirm no uncovered scenario in `rival-towns` from this change. Confirm the macOS and Linux `DeterminismFixture` outputs still match in CI.
+- [x] 2.1 Tests-first: translate the `rival-towns` scenarios "Rival replants beside its hut", "Rival forester needs open ground beside a hut" and "Rival forester overlaps a hut" into failing tests using `RivalTestSupport`. Re-run "Rival buildings touch a road" and the rival determinism tests. Confirm red.
+- [x] 2.2 Implement to green: `rival-towns` / Rival build order. Add the forester threshold rule after the hut rule, count every hut for it, and make it cost no materials.
+- [x] 2.3 Implement to green: `rival-towns` / Rival town plan. Add the forester slot score (open grass shared with a rival hut catchment, at least 4, the same block penalty as huts) on top of `hutSlot`'s block search (design D6).
+- [x] 2.4 Re-run the headless playtest from design "Playtest evidence" (single island seed 0, archipelago seed 7, Guild Town; 36,000 ticks each) with a forester step after each hut. Record in this file the year each run first reaches 20 citizens, whether any run soft-locks or goes bankrupt, and both rivals' residents in 1215. If a run still runs out of wood, tune the forester cycle in the pack and re-run.
+  - Result (36,000 ticks each, harness not committed, re-run after the per-hut forester fix with the same numbers). With a forester after each hut, all three runs go bankrupt in 1202. Single island seed 0 and Guild Town (the same map) peak at 4 residents in 1201; archipelago seed 7 never houses anyone. No run reaches 20 citizens. Huts never run bare: the forest in their reach stays stocked. The wood stock still stays at 0, because the sawmill consumes every log, and planks pile up to 40 on the single island and 31 on the archipelago because the bot cannot spend them. Rivals on archipelago seed 7 in 1215: Lowtide 0 residents ($-12) and Stoneholm 0 residents ($11). Both were broke by 1201, so their foresters did not help them.
+  - Control run without the bot's forester step: single island seed 0 and Guild Town (the same map) survive at 7 to 10 residents with $5,923 by 1215, with every hut bare. Archipelago seed 7 still goes bankrupt in 1202.
+  - Forests in reach no longer run out, so the forester cycle was not retuned. Money is now the binding constraint. The likely cause is that $60 per forester comes out of a thin first-year treasury, but the harness does not isolate it. `add-town-market` (PR #36) addresses the money and food side; the designer's emulation of forester plus market reached 70 residents.
+- [x] 2.5 Refactor under a green bar.
+- [x] 2.6 Run `make test-scenarios` and confirm no uncovered scenario in `rival-towns` from this change. Confirm the macOS and Linux `DeterminismFixture` outputs still match in CI. The forester acceptance check is `determinismFixtureWorldPlantsForest` in `RivalForestryTests`: the fixture world (archipelago, seed `0xC17B`) holds at least one forester and plants at least one tree within 6,000 ticks, so the cross-platform comparison exercises forestry.
 
 ## 3. M3 — Show the player where wood comes from
 
