@@ -391,6 +391,7 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
         contentsOf: worktreeRoot().appendingPathComponent("Makefile"),
         encoding: .utf8
     )
+    // swiftformat:disable docComments
     // Find the recipe under target `sprites-reference:` and confirm it
     // invokes the pipeline with --regenerate-reference. Other targets
     // MUST NOT mention --regenerate-reference.
@@ -412,6 +413,7 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
         }
         return collected.joined(separator: "\n")
     }
+    // swiftformat:enable docComments
     let referenceRecipe = recipeFor(target: "sprites-reference")
     #expect(
         referenceRecipe.contains("--regenerate-reference"),
