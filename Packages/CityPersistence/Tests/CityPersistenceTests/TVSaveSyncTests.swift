@@ -176,10 +176,7 @@ func scenarioStalePendingUploadDoesNotOverwriteANewerICloudSave() async throws {
     let secondTV = Harness(client: firstTV.client)
     let id = UUID()
     try firstTV.store.save(world(seed: 1), gameID: id)
-    try FileManager.default.setAttributes(
-        [.modificationDate: Date(timeIntervalSinceNow: -60)],
-        ofItemAtPath: firstTV.store.url(for: id).path
-    )
+    try backdateLocalSave(firstTV, gameID: id)
     await firstTV.client.setAccountAvailable(false)
     await firstTV.launchSync().didSave(gameID: id)
 

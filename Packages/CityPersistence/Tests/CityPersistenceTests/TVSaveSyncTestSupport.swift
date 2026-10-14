@@ -52,7 +52,7 @@ actor HeldUploadClient: CloudKitClient {
         self.inner = inner
     }
 
-    func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
+    func upload(gameID: UUID, body: Data, deviceID: String, expecting: UploadExpectation) async throws -> CloudRecord {
         uploadCalls += 1
         if isHolding {
             isHolding = false
@@ -62,7 +62,7 @@ actor HeldUploadClient: CloudKitClient {
                 heldArrival = nil
             }
         }
-        return try await inner.upload(gameID: gameID, body: body, deviceID: deviceID)
+        return try await inner.upload(gameID: gameID, body: body, deviceID: deviceID, expecting: expecting)
     }
 
     /// Returns once the first upload is being held.
@@ -117,36 +117,51 @@ actor ScriptedClient: CloudKitClient {
     var hangsListing = false
     var hangsUploads = false
     var beforeFetch: (@Sendable () -> Void)?
-    private var hung: [CheckedContinuation<Void, Never>] = []
+    var hangsAfterUpload = false
+    private(set) var fetchCalls = 0
+    var beforeUpload: (@Sendable () async -> Void)?
+    private let hung = Hang()
 
     init(inner: InMemoryCloudKitClient) {
         self.inner = inner
     }
 
-    func configure(hangsListing: Bool = false, hangsUploads: Bool = false, beforeFetch: (@Sendable () -> Void)? = nil) {
+    func configure(
+        hangsListing: Bool = false,
+        hangsUploads: Bool = false,
+        hangsAfterUpload: Bool = false,
+        beforeFetch: (@Sendable () -> Void)? = nil,
+        beforeUpload: (@Sendable () async -> Void)? = nil
+    ) {
         self.hangsListing = hangsListing
         self.hangsUploads = hangsUploads
+        self.hangsAfterUpload = hangsAfterUpload
         self.beforeFetch = beforeFetch
+        self.beforeUpload = beforeUpload
     }
 
     /// Lets every hung call go on.
-    func release() {
+    func release() async {
         hangsListing = false
         hangsUploads = false
-        hung.forEach { $0.resume() }
-        hung.removeAll()
+        hangsAfterUpload = false
+        await hung.release()
     }
 
     private func hang() async {
-        await withCheckedContinuation { hung.append($0) }
+        await hung.wait()
     }
 
-    func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
+    func upload(gameID: UUID, body: Data, deviceID: String, expecting: UploadExpectation) async throws -> CloudRecord {
         if hangsUploads { await hang() }
-        return try await inner.upload(gameID: gameID, body: body, deviceID: deviceID)
+        await beforeUpload?()
+        let record = try await inner.upload(gameID: gameID, body: body, deviceID: deviceID, expecting: expecting)
+        if hangsAfterUpload { await hang() }
+        return record
     }
 
     func fetchLatest(gameID: UUID) async throws -> CloudRecord? {
+        fetchCalls += 1
         beforeFetch?()
         return try await inner.fetchLatest(gameID: gameID)
     }
@@ -183,4 +198,26 @@ func finishing<Value: Sendable>(
         try? await Task.sleep(for: .milliseconds(10))
     }
     return await outcome.value
+}
+
+/// Holds callers until released, ignoring cancellation.
+actor Hang {
+    private var held: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        await withCheckedContinuation { held.append($0) }
+    }
+
+    func release() {
+        held.forEach { $0.resume() }
+        held.removeAll()
+    }
+}
+
+/// Dates the local save of `gameID` `seconds` into the past.
+func backdateLocalSave(_ harness: Harness, gameID: UUID, by seconds: TimeInterval = 60) throws {
+    try FileManager.default.setAttributes(
+        [.modificationDate: Date(timeIntervalSinceNow: -seconds)],
+        ofItemAtPath: harness.store.url(for: gameID).path
+    )
 }

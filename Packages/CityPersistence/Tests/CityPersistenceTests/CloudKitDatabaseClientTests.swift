@@ -34,7 +34,8 @@ func syncErrorsPassThrough() {
 func uploadRecordIsKeyedByGameID() throws {
     let gameID = UUID()
     let bodyURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    let record = CloudKitDatabaseClient.makeRecord(gameID: gameID, bodyURL: bodyURL, deviceID: "iPad")
+    let record = CKRecord(recordType: "CitySave", recordID: CloudKitDatabaseClient.recordID(for: gameID))
+    CloudKitDatabaseClient.setFields(on: record, gameID: gameID, bodyURL: bodyURL, deviceID: "iPad")
 
     #expect(record.recordType == "CitySave")
     #expect(record.recordID.recordName == gameID.uuidString)
@@ -109,4 +110,9 @@ func listingFailsWhenARecordCannotBeFetched() {
     #expect(throws: CKError.self) {
         _ = try CloudKitDatabaseClient.summaries(from: results, summarize: stubSummary)
     }
+}
+
+@Test("a changed server record maps to recordChanged")
+func changedServerRecordMapsToRecordChanged() {
+    #expect(CloudKitDatabaseClient.syncError(from: CKError(.serverRecordChanged)) == .recordChanged)
 }

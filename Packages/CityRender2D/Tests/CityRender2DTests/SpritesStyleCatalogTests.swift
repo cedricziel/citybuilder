@@ -391,9 +391,10 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
         contentsOf: worktreeRoot().appendingPathComponent("Makefile"),
         encoding: .utf8
     )
-    /// Find the recipe under target `sprites-reference:` and confirm it
-    /// invokes the pipeline with --regenerate-reference. Other targets
-    /// MUST NOT mention --regenerate-reference.
+    // swiftformat:disable docComments
+    // Find the recipe under target `sprites-reference:` and confirm it
+    // invokes the pipeline with --regenerate-reference. Other targets
+    // MUST NOT mention --regenerate-reference.
     func recipeFor(target: String) -> String {
         let lines = makefile.split(separator: "\n", omittingEmptySubsequences: false)
             .map(String.init)
@@ -412,6 +413,7 @@ func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
         }
         return collected.joined(separator: "\n")
     }
+    // swiftformat:enable docComments
     let referenceRecipe = recipeFor(target: "sprites-reference")
     #expect(
         referenceRecipe.contains("--regenerate-reference"),

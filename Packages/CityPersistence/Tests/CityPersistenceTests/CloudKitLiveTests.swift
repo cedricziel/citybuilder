@@ -74,4 +74,49 @@ struct CloudKitLiveTests {
             #expect(fetched?.body == Data("two".utf8))
         }
     }
+
+    @Test("live: inserting a game that already has a record is refused")
+    func insertOverExistingRecordIsRefused() async throws {
+        try await withGame { gameID in
+            _ = try await client.upload(gameID: gameID, body: Data("one".utf8), deviceID: "live-a")
+            await #expect(throws: SyncError.recordChanged) {
+                _ = try await client.upload(gameID: gameID, body: Data("two".utf8), deviceID: "live-b", expecting: .noRecord)
+            }
+            #expect(try await client.fetchLatest(gameID: gameID)?.body == Data("one".utf8))
+        }
+    }
+
+    @Test("live: an upload over a stale change tag is refused")
+    func staleChangeTagIsRefused() async throws {
+        try await withGame { gameID in
+            let first = try await client.upload(gameID: gameID, body: Data("one".utf8), deviceID: "live-a")
+            let staleTag = try #require(first.changeTag)
+            _ = try await client.upload(gameID: gameID, body: Data("two".utf8), deviceID: "live-b")
+            await #expect(throws: SyncError.recordChanged) {
+                _ = try await client.upload(
+                    gameID: gameID,
+                    body: Data("three".utf8),
+                    deviceID: "live-a",
+                    expecting: .changeTag(staleTag)
+                )
+            }
+            #expect(try await client.fetchLatest(gameID: gameID)?.body == Data("two".utf8))
+        }
+    }
+
+    @Test("live: an upload over the current change tag is saved")
+    func currentChangeTagIsSaved() async throws {
+        try await withGame { gameID in
+            let first = try await client.upload(gameID: gameID, body: Data("one".utf8), deviceID: "live-a")
+            let tag = try #require(first.changeTag)
+            let second = try await client.upload(
+                gameID: gameID,
+                body: Data("two".utf8),
+                deviceID: "live-a",
+                expecting: .changeTag(tag)
+            )
+            #expect(second.changeTag != tag)
+            #expect(try await client.fetchLatest(gameID: gameID)?.body == Data("two".utf8))
+        }
+    }
 }

@@ -26,18 +26,26 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         container.privateCloudDatabase
     }
 
-    public func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
+    public func upload(
+        gameID: UUID,
+        body: Data,
+        deviceID: String,
+        expecting: UploadExpectation
+    ) async throws -> CloudRecord {
         let bodyURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("CitySave-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: bodyURL) }
 
         do {
             try body.write(to: bodyURL)
-            let record = Self.makeRecord(gameID: gameID, bodyURL: bodyURL, deviceID: deviceID)
+            let record = try await recordToSave(gameID: gameID, expecting: expecting)
+            Self.setFields(on: record, gameID: gameID, bodyURL: bodyURL, deviceID: deviceID)
+            // With an expectation, the server refuses the save if the record
+            // changed since it was read (serverRecordChanged).
             let (saveResults, _) = try await database.modifyRecords(
                 saving: [record],
                 deleting: [],
-                savePolicy: .allKeys
+                savePolicy: expecting == .anyRecord ? .allKeys : .ifServerRecordUnchanged
             )
             guard let result = saveResults[record.recordID] else {
                 throw SyncError.failed("CloudKit returned no result for \(record.recordID.recordName)")
@@ -52,6 +60,26 @@ public struct CloudKitDatabaseClient: CloudKitClient {
             )
         } catch {
             throw Self.syncError(from: error)
+        }
+    }
+
+    /// The record an upload saves into. For `.changeTag`, that is the
+    /// server's record, fetched without its fields, so the save carries the
+    /// change tag the server checks.
+    private func recordToSave(gameID: UUID, expecting: UploadExpectation) async throws -> CKRecord {
+        let recordID = Self.recordID(for: gameID)
+        guard case let .changeTag(tag) = expecting else {
+            return CKRecord(recordType: Field.recordType, recordID: recordID)
+        }
+        let fetched = try await database.records(for: [recordID], desiredKeys: [])
+        switch fetched[recordID] {
+        case let .success(server)? where server.recordChangeTag == tag:
+            return server
+        case let .failure(error)? where (error as? CKError)?.code != .unknownItem:
+            throw error
+        default:
+            // Changed, or deleted, since it was listed.
+            throw SyncError.recordChanged
         }
     }
 
@@ -104,12 +132,10 @@ public struct CloudKitDatabaseClient: CloudKitClient {
         CKRecord.ID(recordName: gameID.uuidString, zoneID: CKRecordZone.default().zoneID)
     }
 
-    static func makeRecord(gameID: UUID, bodyURL: URL, deviceID: String) -> CKRecord {
-        let record = CKRecord(recordType: Field.recordType, recordID: recordID(for: gameID))
+    static func setFields(on record: CKRecord, gameID: UUID, bodyURL: URL, deviceID: String) {
         record[Field.gameID] = gameID.uuidString
         record[Field.body] = CKAsset(fileURL: bodyURL)
         record[Field.currentDevice] = deviceID
-        return record
     }
 
     static func summary(from record: CKRecord) throws -> CloudRecordSummary {
@@ -179,6 +205,8 @@ public struct CloudKitDatabaseClient: CloudKitClient {
             return .notSignedIn
         case .networkUnavailable, .networkFailure, .serviceUnavailable:
             return .offline
+        case .serverRecordChanged:
+            return .recordChanged
         default:
             return .failed(ckError.localizedDescription)
         }
