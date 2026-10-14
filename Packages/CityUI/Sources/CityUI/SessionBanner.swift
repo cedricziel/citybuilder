@@ -9,10 +9,21 @@ public struct SessionBanner: Equatable, Sendable {
 
 extension GameSession {
     static let bannerTicks: UInt64 = 60
+    static let gameOverBanner = SessionBanner(
+        title: "Bankrupt",
+        description: "The treasury stayed in the red too long and the town is lost. "
+            + "You can still save from the pause menu, or quit to the title to load a save or start a new game."
+    )
+
+    public var isGameOver: Bool {
+        world.isBankrupt
+    }
 
     /// The banner showing now, if any. Spec: `platform-shells` / History
-    /// events show a banner, Age changes show a banner.
+    /// events show a banner, Age changes show a banner, Game-over banner
+    /// and tools.
     public var banner: SessionBanner? {
+        if isGameOver { return Self.gameOverBanner }
         guard let state = bannerState, world.tickCount < state.hidesAtTick else { return nil }
         return state.banner
     }
@@ -24,6 +35,11 @@ extension GameSession {
                 show(SessionBanner(title: history.title, description: history.description))
             case let .ageAdvanced(age):
                 show(SessionBanner(title: "The \(age.displayName) age begins", description: age.blurb))
+            case .gameOver:
+                clearTool()
+                cancelPendingPlacement()
+                tileMenuRequest = nil
+                routeAuthoring = nil
             case .scenarioWon:
                 show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
                 isWinSheetPresented = true
@@ -61,7 +77,7 @@ extension GameSession {
     /// / Signature inspector.
     public func commissionArt() {
         guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .gallery else { return }
-        world.enqueue(.commission(id))
+        enqueue(.commission(id))
     }
 
     /// Set or clear the selected caravanserai's export good. Spec:
@@ -69,7 +85,7 @@ extension GameSession {
     public func pickExport(_ good: Good?) {
         guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.buildings[id]?.kind == .caravanserai
         else { return }
-        world.enqueue(.setExport(id, good))
+        enqueue(.setExport(id, good))
     }
 
     private func show(_ banner: SessionBanner) {

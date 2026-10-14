@@ -41,12 +41,13 @@ Open `Citybuilder.xcodeproj` in Xcode and pick `CitybuilderiOS` or `CitybuilderM
 ├── CLI/
 │   └── citybuilder-cli/     # headless simulation runner
 ├── Packages/
-│   ├── CityCore/            # pure-Swift simulation (no Apple UI imports)
+│   ├── CityCore/            # pure-Swift simulation (no Apple UI imports); content packs in GameData/
 │   ├── CityPersistence/     # save/load + CloudKit sync
 │   ├── CityUI/              # shared SwiftUI views
 │   ├── CityRender2D/        # SpriteKit isometric renderer
 │   ├── CityRender3D/        # SceneKit building portraits
-│   └── CityAudio/           # AVFoundation engine, bindings, manifest, credits view
+│   ├── CityAudio/           # AVFoundation engine, bindings, manifest, credits view
+│   └── GameDataGen/         # build-time generator: YAML packs → CityCore Swift
 ├── scripts/
 │   ├── check-coverage.sh
 │   └── check-scenario-coverage.swift
@@ -63,6 +64,37 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 4. Refactor under a green bar.
 5. Run `make lint && make format` before committing.
 6. Use Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `perf:`, `build:`, `ci:`); the `commit-msg` hook enforces this.
+
+## Game data packs
+
+Goods, buildings (recipes, storage, placement), cultures, techs and ages live in YAML packs under `Packages/CityCore/GameData/packs/`. `Packages/CityCore/GameData/index.yaml` lists the packs in load order, as paths without `.yaml`. Each pack has an optional `defaults:` block of anchors, shared with YAML merge keys (`<<: *name`; keys written on the item win), and an ordered `items:` list. Every item has a `kind` (`Good`, `Building`, `Culture`, `Tech`, `Age`) and a kebab-case `id`. References may point into any pack: a building names the tech that unlocks it with `unlockedBy`, and the generator derives each tech's unlock list. Field tables per kind are in the format reference in the game-data-codegen change ([`FORMAT.md`](openspec/changes/game-data-codegen/examples/FORMAT.md)).
+
+`Packages/GameDataGen` (Swift, uses Yams, build-time only; CityCore never depends on it) validates every pack and writes Swift into `Packages/CityCore/Sources/CityCore/Generated/`. It rejects unknown fields, unknown references, duplicate ids, prerequisite cycles, inert buildings and pack files missing from the manifest. The generated files are committed; never edit them by hand.
+
+To change content:
+
+1. Edit a pack, or add one and list it in `index.yaml`.
+2. Run `make gamedata`.
+3. Commit the pack and the regenerated `Generated/` files together.
+
+`make gamedata-check` fails when the committed files differ from the packs. It runs in CI (macOS and Linux) and in the pre-commit hook when files under `GameData/` or `Generated/` are staged.
+
+**Order matters.** Enum case order is load order: packs in manifest order, then items in file order. The order of `Good`, `Culture`, `Tech` and `Age` feeds the simulation (caravans, rival setup, research, age comparison), so reorder only on purpose. `BuildingKind` order only sets the build palette order.
+
+**Code-backed buildings.** `effect: code` marks a building whose behaviour is written in Swift: houses, storage, roads, town center, port, shipyard, library, monument and signature buildings. A building with neither a recipe that produces goods nor `effect: code` is rejected as inert. A new `effect: code` building compiles but does nothing until its Swift behaviour exists.
+
+**Sprites.** A new building, culture or age also needs sprite catalog entries; `SpritesStyleCatalogTests` (CityRender2D) fails until they exist. CI also builds CityCore, CityUI and CityRender2D with `Packages/GameDataGen/Tests/Fixtures/fixture-pack.yaml` to prove a pack compiles without Swift edits. Run the same check locally with `scripts/check-gamedata-fixture-build.sh`.
+
+**Editor support.** Each YAML file starts with a `# yaml-language-server: $schema=...` comment pointing at `Packages/CityCore/GameData/schema/pack.schema.json` or `index.schema.json`. VS Code with the Red Hat YAML extension, or any editor using yaml-language-server, validates and autocompletes from it. Xcode has no YAML schema support; generator errors name the pack file, line and item.
+
+**Determinism.** Adding or reordering content changes simulation output. Regenerate the fixture output and mention the change in the PR:
+
+```sh
+SWIFT_DETERMINISTIC_HASHING=1 xcrun swift run --package-path Packages/CityCore DeterminismFixture
+SWIFT_DETERMINISTIC_HASHING=1 xcrun swift run --package-path Packages/CityCore DeterminismFixture 36000
+```
+
+A pure refactor must leave the output byte-identical. CI compares macOS and Linux output on the same commit.
 
 ## Adding a new animated sprite
 

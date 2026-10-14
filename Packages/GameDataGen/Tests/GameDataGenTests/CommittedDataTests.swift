@@ -76,3 +76,17 @@ func everyCatalogEntryComesFromThePacks() throws {
         #expect(declaration == nil, "\(file) declares a content enum")
     }
 }
+
+@Test func fixturePackValidatesWithTheCommittedPacks() throws {
+    let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/fixture-pack.yaml")
+    var files = try ["packs/fixture.yaml": String(contentsOf: fixture, encoding: .utf8)]
+    let source = DirectorySource(root: committedData)
+    files["index.yaml"] = try #require(source.read("index.yaml")) + "  - fixture\n"
+    for pack in source.packFiles() {
+        files[pack] = source.read(pack)
+    }
+    let data = try GameDataLoader.load(from: InMemorySource(files: files)).get()
+    #expect(data.cultures.last?.id == "andean")
+    #expect(data.ages.last?.id == "space")
+}

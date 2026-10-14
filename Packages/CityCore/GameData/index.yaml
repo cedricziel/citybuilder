@@ -1,6 +1,7 @@
 # yaml-language-server: $schema=./schema/index.schema.json
 # Load order is case order: packs top to bottom, then items top to bottom.
 # Good, Culture, Tech and Age order feed the simulation; reorder only on purpose.
+# Keep `packs` the last key: the fixture-pack check appends to this list.
 schemaVersion: 1
 packs:
   - core                          # base goods, buildings and regular techs

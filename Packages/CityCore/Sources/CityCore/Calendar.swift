@@ -131,7 +131,7 @@ extension World {
         events.append(.seasonChanged(today.season))
         guard calendar.isActive, tickCount.isMultiple(of: CalendarState.ticksPerYear),
               let event = historyEvent(forYear: today.year),
-              event != .ratsInTheGranary || playerFoodStores.contains(where: { $0.food > 0 })
+              event != .ratsInTheGranary || playerFoodStores.contains(where: { $0.food >= 2 })
         else { return }
         applyHistoryEvent(event)
         events.append(.historyEvent(event))

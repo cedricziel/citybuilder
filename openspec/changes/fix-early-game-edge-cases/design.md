@@ -19,7 +19,7 @@ History events are decided by `historyEvent(forYear:)` from the seed and year, t
 
 **D1 — Drop commands when applied, not when enqueued.** `World.tick` skips player commands while `economy.gameOver` is set. Alternative: refuse in `enqueue`. Rejected because a command enqueued just before the tick that ends the game would still apply on the next tick; checking at application covers every order and leaves `pendingCommands` unchanged.
 
-**D2 — Drop silently.** A dropped placement emits no `placementRejected`. Alternative: emit it so the UI can play the reject sound. Rejected because the game-over banner already explains why nothing happens, and one rule ("no world change, no events") is easier to test and to reason about under replay.
+**D2 — Drop silently.** A dropped placement emits no `placementRejected`. Alternative: emit it so the UI can play the reject sound. Rejected because the persistent game-over banner (D6) explains why nothing happens, and one rule ("no world change, no events") is easier to test and to reason about under replay.
 
 **D3 — Rival placements still apply.** `rivalPlace` is the AI's own turn; the bankruptcy is the player's. Alternative: freeze every command. Rejected as out of scope; rivals keep ticking like every other system.
 
@@ -27,9 +27,15 @@ History events are decided by `historyEvent(forYear:)` from the seed and year, t
 
 **D5 — The food check lives in the calendar system.** `applyHistoryEvent` stays an unconditional apply, which existing tests rely on; the calendar system checks whether rats would spoil anything before applying and emitting.
 
+**D6 — The game-over banner is derived from world state, not from the `gameOver` event.** `GameSession.banner` returns the bankruptcy banner whenever `economy.gameOver` is set, ahead of any timed banner, and it never expires. Alternative: show it on the `.gameOver` event like other banners. Rejected because that event fires once, so a lost game loaded from a save would show nothing, and a 60-tick timer would leave the player without an explanation afterwards. The banner reuses the existing parchment `SessionBannerView` so it matches the other announcements.
+
+**D7 — One session choke point for commands, and disabled controls in the views.** Every player command the session issues goes through `GameSession.enqueue`, which drops it while the game is over; that covers taps, drags, the tile menu, research, the inspector's Demolish, commissions, exports and route commands. On top of that, `selectTool` only accepts inspect, taps act as inspect, no tile menu or pending placement starts, and route mode does not start. The `.gameOver` event clears any armed tool, pending placement, tile menu request and route mode. The build rail, research button, inspector actions, the Actions button and the route list's actions are disabled or hidden so the player sees they are off. Alternative: rely on the core dropping commands (D1). Rejected because a control that looks live and then silently does nothing is the confusion this change is fixing.
+
+**D8 — Rats needs 2 food in one store.** Rats withdraws `food / 2` per store, so a store with 1 food loses nothing. The check is "some operational player store holds at least 2 food", which is exactly "rats would remove something".
+
 ### Framework-free invariant
 
-Both changes are plain Swift inside CityCore (`World.swift`, `Calendar.swift`) with no new imports. `scripts/check-no-apple-ui-imports.sh` is unaffected.
+The CityCore changes are plain Swift (`World.swift`, `Calendar.swift`) with no new imports; the banner and tool gating live in CityUI. `scripts/check-no-apple-ui-imports.sh` is unaffected.
 
 ### Determinism
 
@@ -37,5 +43,5 @@ Both checks read only deterministic `World` state (`economy.gameOver`, stockpile
 
 ## Risks / Trade-offs
 
-- [A UI that still lets the player issue commands after game over sees them vanish] → The game-over banner covers that state, and dropped commands emit nothing, so no misleading feedback appears.
+- [A future control that enqueues on `world` directly and skips `GameSession.enqueue`] → The core still drops it (D1), and the banner explains why nothing happens.
 - [Fixture output changes] → Expected; CI compares the two platforms with each other, not with a stored golden file.
