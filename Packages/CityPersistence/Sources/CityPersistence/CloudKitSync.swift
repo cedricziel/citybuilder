@@ -5,11 +5,41 @@ import Foundation
 /// production talks to the real CKContainer. Per design D13, real CloudKit
 /// tests are gated behind CITYBUILDER_CLOUDKIT_TESTS=1.
 public protocol CloudKitClient: Sendable {
-    func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord
+    /// Saves `body` as the record of `gameID`. Throws
+    /// `SyncError.recordChanged`, and saves nothing, when the record does
+    /// not meet `expecting`.
+    func upload(gameID: UUID, body: Data, deviceID: String, expecting: UploadExpectation) async throws -> CloudRecord
     func fetchLatest(gameID: UUID) async throws -> CloudRecord?
     /// Every save record in the user's private database, sorted by game ID.
     func listGames() async throws -> [CloudRecordSummary]
     func isAccountAvailable() async -> Bool
+}
+
+public extension CloudKitClient {
+    /// Saves `body` whatever record is there.
+    func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
+        try await upload(gameID: gameID, body: body, deviceID: deviceID, expecting: .anyRecord)
+    }
+}
+
+/// What an upload may replace.
+public enum UploadExpectation: Equatable, Sendable {
+    /// Any record, or none.
+    case anyRecord
+    /// Only a game with no record yet.
+    case noRecord
+    /// Only the record version with this change tag.
+    case changeTag(String)
+
+    /// Whether a record whose current change tag is `current` (nil: no
+    /// record) may be replaced.
+    func allows(_ current: String?) -> Bool {
+        switch self {
+        case .anyRecord: true
+        case .noRecord: current == nil
+        case let .changeTag(tag): current == tag
+        }
+    }
 }
 
 /// `changeTag` identifies one version of a record: it changes on every
@@ -54,6 +84,8 @@ public enum SyncError: Error, Equatable, Sendable {
     case notSignedIn
     case offline
     case conflict(remote: Date, local: Date)
+    /// The record changed since it was listed, so the upload was refused.
+    case recordChanged
     case failed(String)
 }
 
@@ -95,8 +127,14 @@ public actor InMemoryCloudKitClient: CloudKitClient {
         accountAvailable = available
     }
 
-    public func upload(gameID: UUID, body: Data, deviceID: String) async throws -> CloudRecord {
+    public func upload(
+        gameID: UUID,
+        body: Data,
+        deviceID: String,
+        expecting: UploadExpectation
+    ) async throws -> CloudRecord {
         guard accountAvailable else { throw SyncError.notSignedIn }
+        guard expecting.allows(records[gameID]?.changeTag) else { throw SyncError.recordChanged }
         let record = CloudRecord(
             gameID: gameID,
             body: body,
