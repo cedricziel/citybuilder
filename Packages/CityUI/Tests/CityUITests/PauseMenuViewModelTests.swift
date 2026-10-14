@@ -41,6 +41,20 @@ func scenarioPauseMenuHidesQuitOnIOS() {
 }
 
 @MainActor
+@Test("Pause menu on Apple TV offers no Quit even when one is wired")
+func pauseMenuOnAppleTVHasNoQuit() {
+    let viewModel = PauseMenuViewModel(
+        session: GameSession(),
+        platform: .tvOS,
+        onSaveGame: {},
+        onSettings: {},
+        onQuitToTitle: {},
+        onQuit: {}
+    )
+    #expect(viewModel.actions.map(\.kind) == [.resume, .saveGame, .settings, .quitToTitle])
+}
+
+@MainActor
 @Test("scenario: resume toggles ispaused off")
 func scenarioResumeTogglesIsPausedOff() {
     let session = GameSession()

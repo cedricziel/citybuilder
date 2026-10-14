@@ -60,7 +60,7 @@ struct CitybuilderTVApp: App {
                 },
                 pauseMenuFactory: { [saveStore] session in
                     PauseMenuConfig(
-                        platform: .iOS,
+                        platform: .tvOS,
                         onSaveGame: { [saveStore, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
                         }
