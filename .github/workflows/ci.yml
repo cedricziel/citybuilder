@@ -5,6 +5,8 @@ on:
     branches: [main]
   # Every PR, including one stacked on another PR's branch.
   pull_request:
+    # `edited` covers a stacked PR retargeted to a new base.
+    types: [opened, synchronize, reopened, edited]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
