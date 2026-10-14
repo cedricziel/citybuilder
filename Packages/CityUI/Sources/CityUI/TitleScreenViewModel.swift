@@ -46,16 +46,17 @@ public protocol SaveStoreFacade: Sendable {
 /// as on Apple TV. `restoreSaves` downloads saves missing locally, runs
 /// before the Continue row is read, and returns the games whose iCloud
 /// copy is newer than the local one. `resolveConflict` keeps the iCloud
-/// copy (true) or the local one (false). Spec: `icloud-sync`.
+/// copy (true) or the local one (false), and returns false when it could
+/// not. Spec: `icloud-sync`.
 public struct TitleScreenCloudSync: Sendable {
     public let restoreSaves: @Sendable () async -> [UUID]
     public let isAccountAvailable: @Sendable () async -> Bool
-    public let resolveConflict: @Sendable (UUID, Bool) async -> Void
+    public let resolveConflict: @Sendable (UUID, Bool) async -> Bool
 
     public init(
         restoreSaves: @escaping @Sendable () async -> [UUID],
         isAccountAvailable: @escaping @Sendable () async -> Bool,
-        resolveConflict: @escaping @Sendable (UUID, Bool) async -> Void = { _, _ in }
+        resolveConflict: @escaping @Sendable (UUID, Bool) async -> Bool = { _, _ in true }
     ) {
         self.restoreSaves = restoreSaves
         self.isAccountAvailable = isAccountAvailable
@@ -89,6 +90,13 @@ public final class TitleScreenViewModel {
     /// Games whose iCloud save is newer than the local one, waiting for
     /// the player to pick which copy to keep.
     public private(set) var saveConflicts: [UUID] = []
+    /// Why the last attempt to settle the first conflict failed.
+    public private(set) var saveConflictFailure: String?
+    /// True while a conflict is being settled.
+    public private(set) var isResolvingSaveConflict = false
+
+    public static let saveConflictFailureText =
+        "iCloud could not be reached. Check your connection and try again."
 
     public static let iCloudNoticeText =
         "Sign in to iCloud to keep your cities. Without it, Apple TV may delete your progress."
@@ -120,11 +128,18 @@ public final class TitleScreenViewModel {
     }
 
     /// Settles the first pending conflict by keeping the iCloud copy or
-    /// the local one, which then replaces the other.
+    /// the local one, which then replaces the other. A conflict that could
+    /// not be settled stays, with `saveConflictFailure` set.
     public func resolveSaveConflict(keepICloud: Bool) async {
-        guard let cloudSync, let gameID = saveConflicts.first else { return }
-        saveConflicts.removeFirst()
-        await cloudSync.resolveConflict(gameID, keepICloud)
+        guard let cloudSync, let gameID = saveConflicts.first, !isResolvingSaveConflict else { return }
+        isResolvingSaveConflict = true
+        defer { isResolvingSaveConflict = false }
+        guard await cloudSync.resolveConflict(gameID, keepICloud) else {
+            saveConflictFailure = Self.saveConflictFailureText
+            return
+        }
+        saveConflictFailure = nil
+        saveConflicts.removeAll { $0 == gameID }
         refreshMostRecentSave()
     }
 

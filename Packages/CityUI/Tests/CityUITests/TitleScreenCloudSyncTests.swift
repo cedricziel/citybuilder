@@ -91,8 +91,9 @@ func savesRestoredAtLaunchShowInTheContinueRow() async {
 private actor ResolutionLog {
     var calls: [(gameID: UUID, keepICloud: Bool)] = []
 
-    func record(_ gameID: UUID, _ keepICloud: Bool) {
+    func record(_ gameID: UUID, _ keepICloud: Bool) -> Bool {
         calls.append((gameID, keepICloud))
+        return true
     }
 }
 
@@ -114,7 +115,25 @@ func newerICloudSavePromptsBeforeOverwriting() async {
     await model.resolveSaveConflict(keepICloud: true)
 
     #expect(model.saveConflicts.isEmpty)
+    #expect(model.saveConflictFailure == nil)
     let calls = await log.calls
     #expect(calls.map(\.gameID) == [conflicted])
     #expect(calls.map(\.keepICloud) == [true])
+}
+
+@MainActor
+@Test("A conflict whose resolution fails stays and shows an error")
+func aConflictWhoseResolutionFailsStaysAndShowsAnError() async {
+    let conflicted = UUID()
+    let model = viewModel(cloudSync: TitleScreenCloudSync(
+        restoreSaves: { [conflicted] },
+        isAccountAvailable: { true },
+        resolveConflict: { _, _ in false }
+    ))
+    await model.prepareCloudSaves()
+
+    await model.resolveSaveConflict(keepICloud: true)
+
+    #expect(model.saveConflicts == [conflicted])
+    #expect(model.saveConflictFailure != nil)
 }

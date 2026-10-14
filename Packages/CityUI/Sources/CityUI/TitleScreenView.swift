@@ -111,7 +111,7 @@ public struct TitleScreenView: View {
         .alert(
             "A newer save is in iCloud",
             isPresented: Binding(
-                get: { !viewModel.saveConflicts.isEmpty },
+                get: { !viewModel.saveConflicts.isEmpty && !viewModel.isResolvingSaveConflict },
                 set: { _ in }
             )
         ) {
@@ -122,7 +122,8 @@ public struct TitleScreenView: View {
                 Task { await viewModel.resolveSaveConflict(keepICloud: false) }
             }
         } message: {
-            Text("Load the newer save from iCloud, or keep the save on this device and replace the iCloud copy.")
+            Text((viewModel.saveConflictFailure.map { $0 + "\n\n" } ?? "")
+                + "Load the newer save from iCloud, or keep the save on this device and replace the iCloud copy.")
         }
         .sheet(isPresented: $viewModel.presentingSettings) {
             if let content = settingsContent {
