@@ -112,3 +112,9 @@ func unlistedPackFileIsRejected() {
     source.files["index.yaml"] = source.files["index.yaml"]?.replacingOccurrences(of: "schemaVersion: 1", with: "schemaVersion: 2")
     #expect(Fixtures.errors(source).contains { $0.contains("schemaVersion") })
 }
+
+@Test func mergeSourceThatIsNotAMappingIsRejected() {
+    let core = Fixtures.core.replacingOccurrences(of: "    <<: *producer\n", with: "    <<: 5\n")
+    let errors = Fixtures.errors(Fixtures.source([("core", core), ("ages", Fixtures.ages)]))
+    #expect(errors.contains { $0.hasPrefix("packs/core.yaml") && $0.contains("<<") })
+}

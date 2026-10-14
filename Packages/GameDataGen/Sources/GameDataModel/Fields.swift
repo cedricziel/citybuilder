@@ -2,26 +2,34 @@ import Yams
 
 /// Resolves `<<` merge keys bottom-up. Keys written on the mapping win
 /// over merged ones; among several merge sources the first one wins.
-func resolvingMerges(_ node: Node) -> Node {
+/// A source that is not a mapping is reported through `invalid`.
+func resolvingMerges(_ node: Node, invalid: (Node) -> Void) -> Node {
+    func resolve(_ node: Node) -> Node {
+        resolvingMerges(node, invalid: invalid)
+    }
     switch node {
     case let .mapping(mapping):
         var merged: [(Node, Node)] = []
         var explicit: [(Node, Node)] = []
         for (key, value) in mapping {
             guard let scalar = key.scalar, scalar.string == "<<", scalar.style == .plain else {
-                explicit.append((key, resolvingMerges(value)))
+                explicit.append((key, resolve(value)))
                 continue
             }
             let sources = value.sequence.map(Array.init) ?? [value]
-            for case let .mapping(source) in sources.map(resolvingMerges) {
-                merged += source.map { ($0.key, $0.value) }
+            for source in sources.map(resolve) {
+                guard case let .mapping(mapping) = source else {
+                    invalid(source)
+                    continue
+                }
+                merged += mapping.map { ($0.key, $0.value) }
             }
         }
         var seen = Set(explicit.compactMap { $0.0.scalar?.string })
         let inherited = merged.filter { seen.insert($0.0.scalar?.string ?? "").inserted }
         return .mapping(Node.Mapping(inherited + explicit, mapping.tag, mapping.style, mapping.mark))
     case let .sequence(sequence):
-        return .sequence(Node.Sequence(sequence.map(resolvingMerges), sequence.tag, sequence.style, sequence.mark))
+        return .sequence(Node.Sequence(sequence.map(resolve), sequence.tag, sequence.style, sequence.mark))
     case .scalar, .alias:
         return node
     }
