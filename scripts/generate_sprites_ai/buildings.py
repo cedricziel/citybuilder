@@ -1412,6 +1412,27 @@ def _lumberjack(stage: str) -> Image.Image:
     return c.img
 
 
+def sapling(c: Canvas, u: float, v: float, height: int = 9) -> None:
+    """A young conifer, as the forester plants them."""
+    x, y = _px(c, u, v, 0)
+    c.draw.polygon([(x, y - height), (x - 3, y - 2), (x + 3, y - 2)], fill=(*SHADOW_GREEN, 255), outline=(*OUTLINE, 255))
+    c.draw.polygon([(x, y - height + 1), (x - 2, y - 3), (x, y - 3)], fill=(*LEAF, 255))
+    c.line([(x, y - 2), (x, y)], DARK_TIMBER)
+
+
+def _forester(stage: str) -> Image.Image:
+    c = Canvas(2, 2, 36)
+    yard(c)
+    b = Block(0.2, 0.2, 1.05, 1.0, 10, TIMBER_WALL, THATCH_ROOF, "gable_v", 10)
+    draw_block(c, b, stage)
+    if stage in ("walls", "done"):
+        door(c, 0.55, 1.0, height=6)
+    if stage == "done":
+        for u, v in ((1.4, 0.35), (1.75, 0.6), (1.4, 0.85), (1.75, 1.1), (1.4, 1.4), (1.75, 1.7), (0.5, 1.5), (0.95, 1.75)):
+            sapling(c, u, v)
+    return c.img
+
+
 def _sawmill(stage: str) -> Image.Image:
     c = Canvas(2, 2, 52)
     yard(c)
@@ -3823,7 +3844,7 @@ def draw_signature_frame(kind: str, frame: int) -> Image.Image:
 
 
 FOOTPRINTS: dict[str, tuple[int, int]] = {
-    "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "sawmill": (2, 2),
+    "house": (2, 2), "warehouse": (3, 3), "lumberjack-hut": (2, 2), "forester": (2, 2), "sawmill": (2, 2),
     "town-center": (3, 3), "bakery": (2, 2), "grain-farm": (2, 2), "windmill": (2, 2), "mine": (2, 2),
     "charcoal-burner": (2, 2), "smelter": (2, 2), "toolsmith": (2, 2), "library": (2, 2), "quern-house": (2, 2),
     **{f"port-{o}": (2, 3) for o in "nesw"}, **{f"shipyard-{o}": (2, 3) for o in "nesw"},
@@ -3836,6 +3857,7 @@ _DRAWERS: dict[str, Callable[..., Image.Image]] = {
     "house": _house,
     "warehouse": _warehouse,
     "lumberjack-hut": _lumberjack,
+    "forester": _forester,
     "sawmill": _sawmill,
     "town-center": _town_center,
     "bakery": _bakery,
@@ -3854,7 +3876,7 @@ _DRAWERS: dict[str, Callable[..., Image.Image]] = {
 }
 
 OPERATIONAL_FRAMES: dict[str, int] = {
-    "lumberjack-hut": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
+    "lumberjack-hut": 2, "forester": 2, "sawmill": 4, "town-center": 2, "bakery": 2, "grain-farm": 2, "windmill": 4,
     "mine": 2, "charcoal-burner": 2, "smelter": 2, "toolsmith": 2, "library": 2,
     "quern-house": 2, **{f"port-{o}": 2 for o in "nesw"}, **{f"shipyard-{o}": 2 for o in "nesw"},
     **{kind: 2 for kind in _LUXURY_DRAWERS},
