@@ -1,10 +1,12 @@
 """Select the CI jobs a pull request's changed files need.
 
 Reads changed paths (one per line, from `git diff --no-renames
---name-only`) on stdin and prints GitHub step outputs. With `--all`
-(pushes to main), selects everything.
+--name-only`) on stdin and prints GitHub step outputs. ci.yml selects
+everything itself, without this script, for pushes to main and for
+changes to this script, its tests or the workflow.
 
-- Docs only (`openspec/`, `.claude/`, top-level `*.md`): no code jobs.
+- Docs only (`openspec/`, `.claude/`, top-level `*.md` but README.md):
+  no code jobs.
 - A file under `Packages/<P>/` affects P and every package that depends
   on P, directly or transitively, per the `.package(path:)` entries in
   each `Packages/*/Package.swift`. CityCore affects every package:
@@ -29,8 +31,10 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-DOCS_ONLY = re.compile(r"^(openspec/|\.claude/|[^/]+\.md$)")
-PACKAGE_DEPENDENCY = re.compile(r'\.package\(\s*path:\s*"\.\./([^"/]+)"')
+# README.md is not docs-only: SpritesPipelineCutoverTests reads it.
+DOCS_ONLY = re.compile(r"^(openspec/|\.claude/|(?!README\.md$)[^/]+\.md$)")
+PACKAGE_CALL = re.compile(r"\.package\(([^)]*)\)")
+LOCAL_DEPENDENCY = re.compile(r'\s*path:\s*"\.\./([^"/]+)"\s*')
 FIXTURE_PACKAGES = re.compile(r"^for package in ([^;]+); do$", re.M)
 
 
@@ -57,10 +61,29 @@ class Jobs:
         ]) + "\n"
 
 
+def _local_dependencies(manifest: Path) -> set[str]:
+    """The packages a manifest's `.package(path: "../X")` entries name.
+
+    Raises on any other form of a local dependency rather than dropping
+    an edge, which would deselect the dependent's tests."""
+    uses = set()
+    for args in PACKAGE_CALL.findall(manifest.read_text(encoding="utf-8")):
+        if "path:" not in args:
+            continue
+        match = LOCAL_DEPENDENCY.fullmatch(args)
+        if match is None:
+            raise ValueError(
+                f"{manifest.parent.name}: cannot read `.package({args})`; "
+                'write it as `.package(path: "../Name")`'
+            )
+        uses.add(match.group(1))
+    return uses
+
+
 def dependencies(root: Path) -> dict[str, set[str]]:
     """Each package's direct local dependencies."""
     graph = {
-        manifest.parent.name: set(PACKAGE_DEPENDENCY.findall(manifest.read_text(encoding="utf-8")))
+        manifest.parent.name: _local_dependencies(manifest)
         for manifest in (root / "Packages").glob("*/Package.swift")
     }
     for name, uses in graph.items():
@@ -129,13 +152,9 @@ def select(changed: list[str], root: Path) -> Jobs:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--all", action="store_true", help="select every job")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     args = parser.parse_args(argv)
-    if args.all:
-        jobs = everything(args.root)
-    else:
-        jobs = select([line for line in sys.stdin.read().splitlines() if line], args.root)
+    jobs = select([line for line in sys.stdin.read().splitlines() if line], args.root)
     sys.stdout.write(jobs.github_output())
     return 0
 

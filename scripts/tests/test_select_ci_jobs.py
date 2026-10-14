@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -85,7 +86,7 @@ def test_a_gamedatagen_change_skips_the_apps_and_the_macos_determinism(repo: Pat
 
 
 def test_a_docs_only_change_runs_no_code_jobs(repo: Path) -> None:
-    jobs = select(["README.md", "openspec/specs/x/spec.md", ".claude/notes.md"], repo)
+    jobs = select(["CHANGELOG.md", "openspec/specs/x/spec.md", ".claude/notes.md"], repo)
 
     assert jobs.packages == []
     assert not (jobs.apps or jobs.sprites or jobs.gamedata_fixture)
@@ -100,6 +101,8 @@ def test_a_docs_only_change_runs_no_code_jobs(repo: Path) -> None:
     "Makefile",
     ".github/workflows/ci.yml",
     "Packages/README.md",
+    # SpritesPipelineCutoverTests reads it.
+    "README.md",
 ])
 def test_a_change_outside_the_packages_runs_everything(repo: Path, path: str) -> None:
     jobs = select([path, "Packages/CityAudio/Sources/CityAudio/Mixer.swift"], repo)
@@ -133,6 +136,28 @@ def test_the_output_is_github_output_lines(repo: Path) -> None:
     assert json.loads(packages.removeprefix("packages=")) == ["CityAudio"]
 
 
+@pytest.mark.parametrize("declaration", [
+    '.package(name: "CityCore", path: "../CityCore")',
+    '.package(path: "../CityCore/")',
+    ".package(path: corePath)",
+])
+def test_a_local_dependency_the_parser_cannot_read_fails(repo: Path, declaration: str) -> None:
+    manifest = repo / "Packages" / "CityUI" / "Package.swift"
+    manifest.write_text(manifest.read_text().replace('.package(path: "../CityCore")', declaration))
+
+    with pytest.raises(ValueError, match="CityUI"):
+        select(["Packages/CityUI/Sources/CityUI/HUD.swift"], repo)
+
+
+def test_a_remote_dependency_is_not_a_local_edge(repo: Path) -> None:
+    manifest = repo / "Packages" / "GameDataGen" / "Package.swift"
+    manifest.write_text(manifest.read_text().replace(
+        "dependencies: [\n", 'dependencies: [\n        .package(url: "https://github.com/jpsim/Yams.git", exact: "6.2.2")\n'
+    ))
+
+    assert select(["Packages/GameDataGen/Package.swift"], repo).packages == ["GameDataGen"]
+
+
 def test_a_dependency_on_an_unknown_package_fails(repo: Path) -> None:
     manifest = repo / "Packages" / "CityUI" / "Package.swift"
     manifest.write_text(manifest.read_text().replace("../CityCore", "../Gone"))
@@ -150,3 +175,12 @@ def test_the_real_manifests_parse() -> None:
     assert select(["Packages/CityCore/Package.swift"], root).packages == sorted(
         p.parent.name for p in (root / "Packages").glob("*/Package.swift")
     )
+
+
+def test_the_workflow_selects_everything_with_the_same_outputs() -> None:
+    root = Path(__file__).resolve().parents[2]
+    workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    shell_keys = re.findall(r'^ +echo "([a-z_]+)=', workflow, re.M)
+    output = select_ci_jobs.everything(root).github_output()
+
+    assert shell_keys == [line.split("=", 1)[0] for line in output.splitlines()]
