@@ -150,20 +150,38 @@ func scenarioRatsHalveStoredFood() throws {
     #expect(world.stockpiles[center.id]?.quantity(of: .food) == 5)
 }
 
-@Test("scenario: rats skip an empty granary")
-func scenarioRatsSkipAnEmptyGranary() throws {
+/// A new game one tick before a year whose event is rats, with `food` in
+/// the town center and none in any other player store.
+private func ratsEveWorld(food: Int) throws -> (world: World, center: EntityID) {
     let seed = try #require((UInt64(0) ..< 500).first {
         activeFixture(seed: $0).historyEvent(forYear: 1201) == .ratsInTheGranary
     })
     var world = World.newGame(layout: .singleIsland, seed: seed, rivals: false)
+    #expect(world.historyEvent(forYear: 1201) == .ratsInTheGranary)
     _ = run(&world, untilTick: 2399)
     for buffer in world.goodsBuffers(of: .player) {
-        let food = world.stockpiles[buffer.id]?.quantity(of: .food) ?? 0
-        world.stockpiles[buffer.id]?.withdraw(.food, amount: food)
+        let held = world.stockpiles[buffer.id]?.quantity(of: .food) ?? 0
+        world.stockpiles[buffer.id]?.withdraw(.food, amount: held)
     }
+    let center = try #require(world.goodsBuffers(of: .player).first).id
+    world.stockpiles[center]?.deposit(.food, amount: food)
+    return (world, center)
+}
+
+@Test("scenario: rats skip an empty granary")
+func scenarioRatsSkipAnEmptyGranary() throws {
+    var (world, _) = try ratsEveWorld(food: 0)
     let events = world.tick().events
     #expect(!events.contains { if case .historyEvent = $0 { true } else { false } })
     #expect(world.storedQuantity(of: .food) == 0)
+}
+
+@Test("scenario: rats skip a single food")
+func scenarioRatsSkipASingleFood() throws {
+    var (world, center) = try ratsEveWorld(food: 1)
+    let events = world.tick().events
+    #expect(!events.contains { if case .historyEvent = $0 { true } else { false } })
+    #expect(world.stockpiles[center]?.quantity(of: .food) == 1)
 }
 
 @Test("scenario: bountiful harvest fills the stores")
