@@ -48,18 +48,7 @@ public enum BuildCategory: String, CaseIterable, Hashable, Sendable {
     /// Nil for the road, which has its own rail item, and the town center,
     /// which is never offered.
     public static func of(_ kind: BuildingKind) -> BuildCategory? {
-        switch kind {
-        case .road, .townCenter:
-            nil
-        case .lumberjackHut, .farm, .grainFarm, .mine, .hopGarden, .vineyard, .teaGarden, .coffeeGrove:
-            .gather
-        case .sawmill, .windmill, .quernHouse, .bakery, .charcoalBurner, .smelter, .toolsmith,
-             .brewery, .winery, .roastery, .steamEngine, .powerPlant:
-            .craft
-        case .house, .warehouse, .library, .port, .shipyard, .teaHouse, .monument, .guildHall,
-             .gallery, .meadHall, .forum, .templeGarden, .caravanserai:
-            .town
-        }
+        kind.category.flatMap(BuildCategory.init(rawValue:))
     }
 
     public static func kinds(in category: BuildCategory, isHidden: (BuildingKind) -> Bool) -> [BuildingKind] {
