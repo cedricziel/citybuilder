@@ -78,3 +78,29 @@ func scenarioRivalForesterOverlapsAHut() throws {
     let world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
     #expect(world.materialCost(of: .forester, for: .rival(1)).isEmpty)
 }
+
+@Test func determinismFixtureWorldPlantsForest() {
+    // The world DeterminismFixture compares across platforms must
+    // exercise forestry, or a platform difference in it would go unseen.
+    var world = World.newGame(layout: .archipelago, seed: 0xC17B)
+    let planted = world.testRun(ticks: 6000).count { if case .forestPlanted = $0 { true } else { false } }
+    #expect(world.buildings.values.contains { $0.kind == .forester })
+    #expect(planted > 0)
+}
+
+@Test func foresterMidCycleSurvivesASaveRoundTrip() throws {
+    var world = World.fixtureWithTerrain(width: 12, height: 12, fill: .grass, seed: 1)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw &+= 1
+    world.buildings[id] = Building(id: id, kind: .forester, anchor: TileCoordinate(x: 4, y: 4), state: .operational)
+    for tile in Footprint(width: 2, height: 2).tiles(anchor: TileCoordinate(x: 4, y: 4)) {
+        world.occupiedTiles[tile] = id
+    }
+    _ = world.testRun(ticks: 25)
+    #expect(world.productions[id]?.ticksThisCycle == 25)
+    var loaded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
+    #expect(loaded == world)
+    let before = loaded.testRun(ticks: 14)
+    #expect(!before.contains { if case .forestPlanted = $0 { true } else { false } })
+    #expect(loaded.tick().events.contains(.forestPlanted(at: TileCoordinate(x: 2, y: 2), forester: id)))
+}
