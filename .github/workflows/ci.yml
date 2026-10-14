@@ -100,6 +100,10 @@ jobs:
           OPENAI_API_KEY: ""
         run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
 
+      - name: gamedata-check (committed catalogs match the packs)
+        if: matrix.package == 'GameDataGen'
+        run: make gamedata-check SWIFT=swift
+
       - name: Coverage gate (CityCore floors + diff-cover vs main)
         if: matrix.package == 'CityCore'
         env:
@@ -239,6 +243,9 @@ jobs:
 
       - name: swift test GameDataGen
         run: swift test --package-path Packages/GameDataGen
+
+      - name: gamedata-check (committed catalogs match the packs)
+        run: swift run -q --package-path Packages/GameDataGen gamedata-gen generate --check
 
       - name: DeterminismFixture (Linux) — produce post-tick JSON
         env:

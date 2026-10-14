@@ -36,7 +36,7 @@
 
 - [x] 4.1 Tests-first: translate "Stale generated output fails the check" and "Up-to-date output passes the check" into failing tests for a `check` mode of `gamedata-gen` (regenerate into a temp directory and diff). Confirm red.
 - [x] 4.2 Implement to green: a `--check` flag that exits non-zero and names each file that differs, was added or was removed.
-- [ ] 4.3 Add Makefile targets `gamedata` (regenerate) and `gamedata-check`, and add them to `make help`. Add a `gamedata-check` step to the macOS `GameDataGen` test job and to the Linux job. (`make gamedata` landed with M3.)
+- [x] 4.3 Add Makefile targets `gamedata` (regenerate) and `gamedata-check`, and add them to `make help`. Add a `gamedata-check` step to the macOS `GameDataGen` test job and to the Linux job. (`make gamedata` landed with M3.)
 - [ ] 4.4 Add a pre-commit hook that runs `make gamedata-check` when files under `GameData/` or `Generated/` are staged.
 - [x] 4.5 In `.github/workflows/ci.yml`: add `GameDataGen` to the macOS `test` job's package matrix and to the Linux job (the `gamedata-check` step moved to 4.3). Add a `swift` ecosystem entry for `Packages/GameDataGen` in `.github/dependabot.yml`.
 - [ ] 4.6 Add a macOS CI step that generates with a fixture pack (a culture, a building and an age that do not exist in the game, placed under `Packages/GameDataGen/Tests/Fixtures/`) into a scratch copy and builds CityCore, CityUI and CityRender2D, proving that a pack needs no Swift edits to compile.
