@@ -40,6 +40,11 @@ public struct GateCatalog: Sendable {
         self.owners = owners
     }
 
+    /// Every sprite name a migrated brief lists in its Sheet section, sorted.
+    public var migratedSheetNames: [String] {
+        owners.filter { entries[$0.value]?.isMigrated == true }.keys.sorted()
+    }
+
     /// The catalog under `<resources>/Sprites.style/catalog`, or an empty one when there is none.
     public static func load(resourcesRoot: URL) throws -> GateCatalog {
         let directory = resourcesRoot.appendingPathComponent("Sprites.style/catalog")

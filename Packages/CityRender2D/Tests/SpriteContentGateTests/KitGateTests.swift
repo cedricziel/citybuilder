@@ -212,6 +212,16 @@ struct KitGateTests {
         #expect(catalog.entry(forSprite: "building-house-tier2.png")?.id == "building-house")
     }
 
+    @Test("a brief is migrated whatever its front-matter order and spacing, and lists its sheet names")
+    func migratedBriefsParseLoosely() {
+        let markdown = "---\nid = \"building-house\"\nsource=  \"isokit\"\n---\n## Sheet\n"
+            + "- (0, 0): `building-house`\n- (0, 1): `building-house-tier2`\n"
+        let entry = GateCatalog.parse(id: "building-house", markdown: markdown)
+        #expect(entry.isMigrated)
+        let catalog = GateCatalog(entries: [entry], sheetNames: ["building-house": GateCatalog.sheetNames(in: markdown)])
+        #expect(catalog.migratedSheetNames == ["building-house", "building-house-tier2"])
+    }
+
     @Test("@2x frames compare against their @2x base")
     func twoXFramesUseTwoXBase() {
         #expect(SpriteContentGate.coherenceBase(for: "building-sawmill-operational-1@2x.png") == "building-sawmill@2x.png")

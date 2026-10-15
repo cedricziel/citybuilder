@@ -32,7 +32,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CityRender2DTests",
-            dependencies: ["CityRender2D"],
+            dependencies: ["CityRender2D", "SpriteContentGate"],
             path: "Tests/CityRender2DTests"
         ),
         .testTarget(

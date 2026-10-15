@@ -1,4 +1,5 @@
 import Foundation
+import SpriteContentGate
 import SpriteKit
 import Testing
 @testable import CityRender2D
@@ -41,23 +42,16 @@ struct TextureFilteringTests {
         #expect(TextureFiltering.stem(of: "building-house-modern-east-asian") == "building-house-modern-east-asian")
     }
 
-    /// One source of truth: the shipped set is exactly the stems the migrated briefs list.
+    /// One source of truth: the shipped set is exactly the stems the briefs the content gate counts as
+    /// migrated list, parsed by the gate's own catalog reader.
     @Test("the linear-filter list matches the catalog's migrated briefs")
     func listMatchesCatalog() throws {
-        let catalog = URL(fileURLWithPath: #filePath)
+        let resources = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Resources/Sprites.style/catalog")
-        var expected: Set<String> = []
-        let files = try FileManager.default.contentsOfDirectory(at: catalog, includingPropertiesForKeys: nil)
-        for file in files where file.pathExtension == "md" {
-            let text = try String(contentsOf: file, encoding: .utf8)
-            guard text.hasPrefix("---\nsource = \"isokit\"\n") || text.hasPrefix("---\nsource = \"svg\"\n") else { continue }
-            for line in text.components(separatedBy: "\n") where line.hasPrefix("- (") {
-                let parts = line.components(separatedBy: "`")
-                if parts.count > 2 { expected.insert(TextureFiltering.stem(of: parts[1])) }
-            }
-        }
-        #expect(TextureFiltering.kitRenderedStems == expected)
+            .appendingPathComponent("Resources")
+        let catalog = try GateCatalog.load(resourcesRoot: resources)
+        #expect(!catalog.migratedSheetNames.isEmpty)
+        #expect(TextureFiltering.kitRenderedStems == Set(catalog.migratedSheetNames.map(TextureFiltering.stem)))
     }
 }
