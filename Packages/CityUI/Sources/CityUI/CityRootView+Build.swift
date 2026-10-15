@@ -29,10 +29,12 @@ extension CityRootView {
                     RouteAuthoringOverlay(session: session, authoring: authoring)
                         .tvFocusSection()
                 }
+                .panelTransition(.slide(.bottom))
             } else {
                 buildControls(layout: layout, railInset: railInset)
             }
         }
+        .panelAnimation(value: session.routeAuthoring != nil)
     }
 
     @ViewBuilder
@@ -74,6 +76,7 @@ extension CityRootView {
                 BuildDrawerView(session: session, rail: $buildRail, layout: layout)
                 Spacer(minLength: 0)
             }
+            .panelAnimation(value: buildRail.openDrawer)
             .tvFocusSection()
             .frame(maxHeight: .infinity)
             VStack {
@@ -89,12 +92,19 @@ extension CityRootView {
                 BuildRailView(session: session, rail: $buildRail, layout: layout)
                     .tvFocusSection()
             }
+            .panelAnimation(value: buildRail.openDrawer)
         }
     }
 
     /// The inspector callout for the selected building, while inspecting.
-    @ViewBuilder
+    /// It rises in, and glides when another tile is inspected.
     var inspectorCallout: some View {
+        ZStack { inspectorCalloutContent }
+            .panelAnimation(value: session.selectedTool == .inspect ? session.selectedTile : nil)
+    }
+
+    @ViewBuilder
+    private var inspectorCalloutContent: some View {
         if session.routeAuthoring == nil, session.selectedTool == .inspect, let tile = session.selectedTile {
             let inspector = session.inspector
             if !inspector.bullets.isEmpty {
@@ -110,6 +120,7 @@ extension CityRootView {
                     }
                     .tvFocusSection()
                 }
+                .panelTransition(.rise)
             }
         }
     }

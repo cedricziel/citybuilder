@@ -107,11 +107,13 @@ struct TownMarketView: View {
                 .buttonStyle(.borderless)
                 if showsOtherGoods {
                     rowViews(market.otherRows)
+                        .panelTransition(.fade)
                 }
             }
         } header: {
             Text("Market").font(.caption.bold())
         }
+        .panelAnimation(value: showsOtherGoods)
     }
 
     private func rowViews(_ rows: [TownMarketSection.Row]) -> some View {
