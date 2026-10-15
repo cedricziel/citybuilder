@@ -8,7 +8,7 @@ Sprite PNG filenames SHALL conform to one of the grammars below based on categor
 - Building (land-only): `building-<kind>[-v<variant>][-<state>][-<frame>].png` where `<kind>` is a value from `BuildingKind`, `<variant>` is a positive integer when the kind opts into per-tile art variants, `<state>` is one of `constructing` or `operational` (omitted for the idle baseline sprite), and `<frame>` is a non-negative integer when the sprite is animated.
 - Road connection: `building-road[-plaza]-c<mask>.png` where `<mask>` has an arm bit per paved edge neighbour (+x=1, +y=2, -x=4, -y=8) and a corner bit where two adjacent arms and the diagonal between them are paved ((+x,+y)=16, (-x,+y)=32, (-x,-y)=64, (+x,-y)=128); `plaza` marks the cobbled tiles touching the town center.
 - Building (shore): `building-<kind>-<orientation>[-<state>][-<frame>].png` where `<orientation>` is one of `n`, `s`, `e`, `w` denoting the cardinal direction of the building's water side, `<state>` and `<frame>` follow the same rules as the land-only building grammar. Shore buildings do NOT opt into the variant slot; orientation already provides the per-tile differentiation. The shore grammar applies exclusively to building kinds that opt into the `shorePlacement` rule (per `buildings-and-construction`).
-- Unit (walker): `walker-<facing>-<frame>.png` where `<facing>` is one of `ne`, `nw`, `se`, `sw` and `<frame>` is a non-negative integer. Walkers do NOT opt into the variant slot.
+- Unit (walker): `walker-[<variant>-]<facing>-<frame>.png` where `<facing>` is one of `ne`, `nw`, `se`, `sw` and `<frame>` is a non-negative integer; `realistic-walkers` defines the variants. Walkers do NOT opt into the `-vN` slot.
 - Unit (ship): `ship-<facing>-<frame>.png` where `<facing>` is one of `n`, `ne`, `e`, `se`, `s`, `sw`, `w`, `nw` and `<frame>` is a non-negative integer. Ships do NOT opt into the variant slot.
 
 The slot order for terrain and land-only buildings is fixed: `<kind>` → optional `<variant>` → optional `<state>` (buildings only) → optional `<frame>`. Variant slots SHALL never collide with frame digits because the variant slot is literally `v<digit>` whereas the frame slot is a bare digit. The transition slot is literally `t<digit>` and likewise never collides with a frame.
@@ -273,20 +273,6 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 - **WHEN** the content gate inspects a terrain tile with a transparent pixel on its diamond edge
 - **THEN** the gate fails and names the tile with reason `terrain_coverage_below_threshold`
-
-### Requirement: Walker sprites are 10×16 points
-
-Every `walker-*` sprite SHALL be 10×16 points (20×32 pixels @2×), with the walker's feet at bottom-centre. Each of the four facings SHALL have four gait frames.
-
-#### Scenario: Walker frames have the walker size
-
-- **WHEN** the content gate inspects `walker-se-0.png` and `walker-se-0@2x.png`
-- **THEN** they are 10×16 and 20×32 pixels
-
-#### Scenario: Every facing has four gait frames
-
-- **WHEN** the Units atlas is enumerated
-- **THEN** `walker-<facing>-0` … `-3` exist for `ne`, `nw`, `se` and `sw`
 
 ## REMOVED Requirements
 
