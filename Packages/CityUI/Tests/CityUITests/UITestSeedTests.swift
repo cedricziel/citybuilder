@@ -16,6 +16,18 @@ func portSeedHasAPlayerPortUnderTheCamera() throws {
     #expect(GameSession(world: world).showsRoutesButton)
 }
 
+@Test("The shore seed adds a finished shipyard and a ship beside the port")
+@MainActor
+func shoreSeedHasAShipyardAndAShip() throws {
+    let world = UITestSeed.shoreWorld()
+    let shore = world.buildings.values.filter { [.port, .shipyard].contains($0.kind) && $0.owner == .player }
+    #expect(Set(shore.map(\.kind)) == [.port, .shipyard])
+    #expect(shore.allSatisfy { $0.state == .operational })
+    #expect(world.ships.count == 1)
+    let port = try #require(shore.first { $0.kind == .port })
+    #expect(world.occupiedTiles[world.camera.centerTile()] == port.id)
+}
+
 @Test("The town seed has finished houses beside the town center under the default camera")
 @MainActor
 func townSeedHasFinishedHousesUnderTheDefaultCamera() {
