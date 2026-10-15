@@ -28,3 +28,7 @@ Grid: 3 cols × 1 rows. Cells 512×512 sheet pixels on a 1536×512 canvas.
 Foam line lap loop at ~0.45s per frame.
 
 - Foam lap: `(0, 1)` → `(0, 2)`. Adjacent on row 0.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

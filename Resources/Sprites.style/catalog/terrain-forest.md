@@ -26,3 +26,7 @@ pixels.
 ## Animation
 
 Static — no animation loop.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

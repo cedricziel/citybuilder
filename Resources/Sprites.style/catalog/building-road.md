@@ -45,3 +45,11 @@ Construction-stage progression — not a loop.
 Drawn locally by `scripts/generate_sprites_ai/procedural.py` as packed earth that fills the
 whole diamond, so neighbouring road tiles join into one path. The per-cell roles above
 describe the original AI sprites.
+
+## Recipe
+
+- Recipe: `building-road` (IsoKit), planned
+- Also renders: `building-road-v1`, `building-road-v2`, `building-road-v3`
+- Cell: set when the recipe lands
+- Construction stages: 3
+- Operational frames: 0

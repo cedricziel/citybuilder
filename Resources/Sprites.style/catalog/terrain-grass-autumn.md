@@ -26,3 +26,7 @@ Grid: 3 cols × 1 rows. Cells are 512×512 sheet pixels each on a
 Two-frame wind-blade flutter, same timing as `terrain-grass`.
 
 - Wind flutter: `(0, 1)` → `(0, 2)`.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

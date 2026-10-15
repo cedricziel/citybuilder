@@ -35,3 +35,10 @@ Two animation loops: construction (one-shot) and operational (forever).
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+
+## Recipe
+
+- Recipe: `building-farm` (IsoKit), planned
+- Cell: set when the recipe lands
+- Construction stages: 3
+- Operational frames: 2

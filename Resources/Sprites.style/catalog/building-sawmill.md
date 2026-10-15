@@ -48,3 +48,11 @@ Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`
 `units.py`) in the register pinned by `world.md` § Building register.
 Operational frames keep the finished building and add a rising smoke plume.
 The per-cell roles above describe the original AI sprites.
+
+## Recipe
+
+- Recipe: `building-sawmill` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
+- Construction stages: 3
+- Operational frames: 4
+- Moving part: sails, 4 frames, sweeps right

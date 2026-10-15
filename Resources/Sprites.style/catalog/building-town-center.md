@@ -48,3 +48,10 @@ Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`
 `units.py`) in the register pinned by `world.md` § Building register.
 Operational frames keep the finished building and add a rising smoke plume.
 The per-cell roles above describe the original AI sprites.
+
+## Recipe
+
+- Recipe: `building-town-center` (IsoKit)
+- Cell: 3×3 footprint, 192 pt tall
+- Construction stages: 3
+- Operational frames: 2

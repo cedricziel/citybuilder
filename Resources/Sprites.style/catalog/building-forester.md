@@ -43,3 +43,10 @@ Two animation loops: construction (one-shot) and operational (forever).
 Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
 `units.py`) in the register pinned by `world.md` § Building register.
 Operational frames keep the finished building and add a rising smoke plume.
+
+## Recipe
+
+- Recipe: `building-forester` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
+- Construction stages: 3
+- Operational frames: 2

@@ -62,3 +62,10 @@ Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`
 `units.py`) in the register pinned by `world.md` § Building register.
 Operational frames keep the finished building and add a rising smoke plume.
 The per-cell roles above describe the original AI sprites.
+
+## Recipe
+
+- Recipe: `ship` (IsoKit), planned
+- Cell: set when the recipe lands
+- Facings: e, n, ne, nw, s, se, sw, w
+- Frames per facing: 2

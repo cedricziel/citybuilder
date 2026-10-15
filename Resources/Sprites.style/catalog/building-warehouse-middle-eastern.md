@@ -30,3 +30,10 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 None. Construction uses the shared `building-warehouse-constructing-*`
 frames.
+
+## Recipe
+
+- Recipe: `building-warehouse-middle-eastern` (IsoKit), planned
+- Cell: set when the recipe lands
+- Construction stages: 0
+- Operational frames: 0

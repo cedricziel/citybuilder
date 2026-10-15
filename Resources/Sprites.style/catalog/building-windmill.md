@@ -27,3 +27,10 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)` → `(1, 2)` → `(1, 3)`. Adjacent on row 1.
+
+## Recipe
+
+- Recipe: `building-windmill` (IsoKit), planned
+- Cell: set when the recipe lands
+- Construction stages: 3
+- Operational frames: 4
