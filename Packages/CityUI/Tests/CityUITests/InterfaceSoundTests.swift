@@ -57,6 +57,15 @@ struct InterfaceSoundTests {
         #expect(heard == [.select, .toggle])
     }
 
+    @Test("scenario: a rejected placement knocks")
+    func rejectedPlacementKnocks() {
+        let session = GameSession(world: World.newGame())
+        session.selectTool(.place(.house))
+        let water = TileCoordinate(x: 0, y: 0)
+        let heard = recording { session.handleTap(at: water) }
+        #expect(heard == [.reject])
+    }
+
     @Test func noSinkIsSilent() {
         UISounds.sink = nil
         UISounds.play(.tap)

@@ -309,6 +309,7 @@ public final class GameSession {
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
                 hud.showRejection(reason, in: world, now: Date())
+                UISounds.play(.reject)
                 return
             }
             enqueue(.place(kind, at: tile))

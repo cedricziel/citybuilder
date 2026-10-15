@@ -16,6 +16,9 @@
     "ui.close": [
       { "file": "ui/close.caf", "bus": "sfx", "volume": 0.4 }
     ],
+    "ui.reject": [
+      { "file": "sfx/rejected.caf", "bus": "sfx", "volume": 0.7 }
+    ],
     "buildingDemolished": [
       { "file": "sfx/demolish.caf", "bus": "sfx", "volume": 0.8 }
     ],

@@ -13,7 +13,7 @@ func interfaceSoundsAreBound() throws {
     let manifest = try Manifest.load(from: Data(contentsOf: audio.appendingPathComponent("manifest.json")))
     let bindings = try Bindings.load(from: Data(contentsOf: audio.appendingPathComponent("bindings.json")), manifest: manifest)
     let generated = Set(manifest.entries.filter { $0.author == "Citybuilder sound generator" }.map(\.path))
-    for name in ["tap", "select", "toggle", "open", "close"] {
+    for name in ["tap", "select", "toggle", "open", "close", "reject"] {
         let cue = try #require(AudioStack.interfaceCue(name, in: bindings), "ui.\(name) is unbound")
         #expect(cue.bus == .sfx)
         #expect(generated.contains(cue.file))

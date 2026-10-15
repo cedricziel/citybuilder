@@ -1,7 +1,7 @@
 /// The interface's sounds, by the name `bindings.json` binds as `ui.<name>`.
 /// Spec: `platform-shells` / Interface actions make a sound.
 public enum UISound: String, CaseIterable, Sendable {
-    case tap, select, toggle, open, close
+    case tap, select, toggle, open, close, reject
 }
 
 /// Where interface sounds go. App shells set `sink` at launch to the audio
