@@ -46,10 +46,10 @@ build: generate
 	$(SWIFT) build --package-path $(CITYCORE)
 
 gamedata:
-	$(SWIFT) run -q --package-path Packages/GameDataGen gamedata-gen generate
+	SWIFT="$(SWIFT)" scripts/gamedata-gen.sh generate
 
 gamedata-check:
-	$(SWIFT) run -q --package-path Packages/GameDataGen gamedata-gen generate --check
+	SWIFT="$(SWIFT)" scripts/gamedata-gen.sh generate --check
 
 test:
 	$(SWIFT) test --package-path $(CITYCORE) --enable-code-coverage

@@ -197,3 +197,11 @@ func scenarioIPhoneShortSessionDefaults() {
     #expect(decisions.defaultCameraZoom > 1.0, "iPhone zooms further in by default")
     #expect(!decisions.showsAdvancedControls, "advanced controls hidden by default")
 }
+
+@Test("scenario: Inspector callout width per idiom")
+func inspectorCalloutWidthPerIdiom() {
+    #expect(InspectorCalloutLayout.width(for: .phone) == 220)
+    #expect(InspectorCalloutLayout.width(for: .pad) == 220)
+    #expect(InspectorCalloutLayout.width(for: .mac) == 220)
+    #expect(InspectorCalloutLayout.width(for: .tv) == 520)
+}

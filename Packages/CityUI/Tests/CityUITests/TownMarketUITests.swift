@@ -19,7 +19,7 @@ private func marketSession(_ change: (inout World, EntityID) -> Void = { _, _ in
 @MainActor
 private func row(_ good: Good, in session: GameSession) throws -> TownMarketSection.Row {
     let market = try #require(session.townMarket)
-    return try #require(market.rows.first { $0.good == good })
+    return try #require((market.rows + market.otherRows).first { $0.good == good })
 }
 
 @MainActor
@@ -29,7 +29,8 @@ func townMarketRows() throws {
     let market = try #require(session.townMarket)
     #expect(market.rows.first?.text == "Wood — buy $6 (10 left) · sell $2 (20 left)")
     #expect(try row(.tools, in: session).text == "Tools — sell $15 (20 left)")
-    #expect(market.rows.map(\.good) == session.world.marketQuotes.map(\.good))
+    #expect(Set((market.rows + market.otherRows).map(\.good)) == Set(session.world.marketQuotes.map(\.good)))
+    #expect(market.rows.count + market.otherRows.count == session.world.marketQuotes.count)
 }
 
 @MainActor
@@ -124,4 +125,64 @@ func noMarketAtARivalTownCenter() throws {
     let (session, _) = try marketSession()
     session.selectedTile = nil
     #expect(session.townMarket == nil)
+}
+
+@MainActor
+@Test("scenario: Goods the island cannot use are collapsed")
+func goodsTheIslandCannotUseAreCollapsed() throws {
+    let (session, _) = try marketSession()
+    let market = try #require(session.townMarket)
+    let shown = market.rows.map(\.good)
+    #expect(shown.contains(.wood), "goods the market sells are always shown")
+    #expect(shown.contains(.tools) == false, "tools are neither held nor produced at the start")
+    for good in [Good.wine, .tea, .coffee] {
+        #expect(!shown.contains(good), "\(good) belongs under Other goods")
+        #expect(market.otherRows.contains { $0.good == good })
+    }
+}
+
+@MainActor
+@Test("scenario: Goods the island holds are shown")
+func goodsTheIslandHoldsAreShown() throws {
+    let (session, _) = try marketSession { world, center in
+        var pile = world.stockpiles[center] ?? Stockpile(capacity: 200)
+        pile.deposit(.tools, amount: 3)
+        world.stockpiles[center] = pile
+    }
+    let market = try #require(session.townMarket)
+    #expect(market.rows.contains { $0.good == .tools })
+    #expect(!market.otherRows.contains { $0.good == .tools })
+}
+
+@MainActor
+@Test("The visible market rows keep catalog order")
+func visibleRowsKeepCatalogOrder() throws {
+    let (session, _) = try marketSession()
+    let market = try #require(session.townMarket)
+    let order = session.world.marketQuotes.map(\.good)
+    let indices = market.rows.map { good in order.firstIndex(of: good.good) ?? -1 }
+    #expect(indices == indices.sorted())
+}
+
+@MainActor
+@Test("scenario: A good sold out this season stays visible")
+func soldOutGoodStaysVisible() throws {
+    let (session, _) = try marketSession { world, _ in
+        world.market.record(3, of: .tools, .sold)
+    }
+    let market = try #require(session.townMarket)
+    #expect(market.rows.contains { $0.good == .tools }, "the row the player just sold from must not collapse")
+    #expect(!market.otherRows.contains { $0.good == .tools })
+}
+
+@MainActor
+@Test("scenario: Goods the island produces are shown")
+func goodsTheIslandProducesAreShown() throws {
+    let (session, _) = try marketSession()
+    let quotes = session.world.marketQuotes
+    let reach = try #require(session.selectedTile.flatMap { session.world.occupiedTiles[$0] }
+        .flatMap { session.world.marketReach(at: $0) })
+    let market = TownMarketSection(quotes: quotes, reach: reach, balance: 1000, isGameOver: false, produced: [.tools])
+    #expect(market.rows.contains { $0.good == .tools })
+    #expect(!market.otherRows.contains { $0.good == .tools })
 }

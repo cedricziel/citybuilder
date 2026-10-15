@@ -7,6 +7,13 @@ import SwiftUI
 /// `platform-shells` / Inspector callout.
 public enum InspectorCalloutLayout {
     public static let width: CGFloat = 220
+
+    /// A TV is read from across the room: at 220 points the market rows
+    /// wrap mid-word on a 1920-point screen.
+    public static func width(for idiom: HUDIdiom) -> CGFloat {
+        idiom == .tv ? 520 : width
+    }
+
     /// Gap from the building's edge: beside it in the rail layout, below it
     /// in the dock layout.
     public static let sideGap: CGFloat = 14
@@ -178,7 +185,7 @@ struct InspectorCalloutView<Actions: View>: View {
         }
         .padding(.horizontal, InspectorCalloutLayout.padding.width)
         .padding(.vertical, InspectorCalloutLayout.padding.height)
-        .frame(width: InspectorCalloutLayout.width, alignment: .leading)
+        .frame(width: InspectorCalloutLayout.width(for: layout.idiom), alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
     }
