@@ -147,11 +147,13 @@ enum Tex {
     static let rock = speckled(RGB(0.42, 0.43, 0.46), amount: 0.25, seed: 14)
     /// Ripe grain: the straw texture in a lighter, golden tone.
     static let wheat = thatch(RGB(0.72, 0.60, 0.36), seed: 15)
+    /// Weathered red brick for workshops, engine houses and halls.
+    static let brick = courses(RGB(0.58, 0.30, 0.22), rowHeight: 8, blockWidth: 16, joint: RGB(0.62, 0.56, 0.48), seed: 16)
 }
 
 /// A finish = texture + PBR response. `repeatU/V` = texture repeats across the face.
 public enum Finish {
-    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, thatchEave, tile, slate, cobbles, wood, yard, rock, wheat
+    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, thatchEave, tile, slate, cobbles, wood, yard, rock, wheat, brick
     case paint(NSColor), glass, litGlass
 
     var roughness: CGFloat {
@@ -180,6 +182,7 @@ public enum Finish {
         case .yard: Tex.yard
         case .rock: Tex.rock
         case .wheat: Tex.wheat
+        case .brick: Tex.brick
         case let .paint(colour): colour
         case .glass: NSColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1)
         case .litGlass: NSColor(red: 0.95, green: 0.62, blue: 0.25, alpha: 1)
