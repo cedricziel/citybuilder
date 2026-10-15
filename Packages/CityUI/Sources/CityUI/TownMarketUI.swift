@@ -22,8 +22,8 @@ public struct TownMarketSection: Equatable, Sendable {
         }
     }
 
-    /// The goods the market sells, and the goods the island holds or
-    /// produces, in catalog order.
+    /// The goods the market sells, the goods the island holds or
+    /// produces, and any good traded this season, in catalog order.
     public let rows: [Row]
     /// Goods the market only buys and the island can do nothing with,
     /// such as another culture's luxuries; collapsed under "Other goods".
@@ -46,8 +46,12 @@ public struct TownMarketSection: Equatable, Sendable {
                 canSell: !isGameOver && quote.sellLeft > 0 && reach.stock[quote.good, default: 0] > 0
             )
         }
+        let tradedThisSeason = Set(quotes.filter {
+            $0.buyLeft < $0.good.marketTerms.buyLimit || $0.sellLeft < $0.good.marketTerms.sellLimit
+        }.map(\.good))
         let isUsable = { (row: Row) in
             row.isBuyable || reach.stock[row.good, default: 0] > 0 || produced.contains(row.good)
+                || tradedThisSeason.contains(row.good)
         }
         rows = all.filter(isUsable)
         otherRows = all.filter { !isUsable($0) }
