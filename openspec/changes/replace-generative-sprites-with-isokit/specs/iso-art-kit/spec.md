@@ -2,14 +2,12 @@
 
 ### Requirement: IsoKit renders every building and unit sprite
 
-A Swift package at `Tools/IsoKit` SHALL provide an `isokit` executable. For every building kind and unit in the sprite catalog, it renders:
+A Swift package at `Tools/IsoKit` SHALL provide an `isokit` executable that renders sprites offline from recipes written in code:
 
-- the idle sprite
-- the construction frames
-- the operational frames
-- the facings
+- **Buildings:** for every building kind in the sprite catalog, the idle sprite, the construction frames and the operational frames (or the orientations, for shore buildings).
+- **Units:** the facing and frame set their grammar defines, with no construction or operational states. Walkers have 4 facings × 4 gait frames; ships have 8 facings × their frame count.
 
-It does this offline, from a recipe written in code. The package MUST NOT be linked into any app target, and MUST NOT make network requests.
+The package MUST NOT be linked into any app target, and MUST NOT make network requests.
 
 #### Scenario: Every catalogued building kind has a recipe
 
@@ -108,12 +106,19 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 
 ### Requirement: Offline render within a tolerance
 
-`make sprites` SHALL build IsoKit with `xcrun swift`, run it and the SVG generators, and write every atlas PNG. `make sprites-verify` SHALL re-render into a scratch directory and compare each PNG with the committed file. It fails when a PNG's mean absolute channel difference exceeds 0.1/255, or when more than 0.1% of its pixels differ by more than 8 in any channel.
+`make sprites` SHALL build IsoKit with `xcrun swift` and run it and the SVG generators. It writes the atlas PNGs of every catalog entry whose `source` is `isokit` or `svg`. Entries not yet migrated keep their committed PNGs, which makes rollout one family at a time possible. Once every family has migrated, this covers every atlas PNG.
+
+`make sprites-verify` SHALL re-render the same set of entries into a scratch directory and compare each PNG with the committed file. It fails when a PNG's mean absolute channel difference exceeds 0.1/255, or when more than 0.1% of its pixels differ by more than 8 in any channel.
 
 #### Scenario: Unchanged recipes pass verification
 
 - **WHEN** `make sprites-verify` runs on a clean checkout on a Mac with Metal
 - **THEN** it exits zero
+
+#### Scenario: Entries not yet migrated are left alone
+
+- **WHEN** `make sprites` runs while `catalog/building-bakery.md` still declares `source = "procedural"`
+- **THEN** the committed `building-bakery*.png` files are unchanged and `make sprites-verify` does not compare them
 
 #### Scenario: A changed recipe without re-rendered PNGs fails verification
 

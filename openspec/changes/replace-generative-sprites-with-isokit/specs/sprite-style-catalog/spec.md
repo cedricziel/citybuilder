@@ -27,7 +27,11 @@ Its camera, light and finish values MUST match the IsoKit source.
 
 ### Requirement: Catalog entry declares function, identity and recipe
 
-Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual identity` and `Recipe`. For a building or unit, `Recipe` names the IsoKit recipe, cell height, construction stage count and any moving part with its frame count. For terrain and icons, it names the SVG generator entry.
+Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual identity` and `Recipe`. What `Recipe` names depends on the entry:
+
+- **Building:** the IsoKit recipe, cell height, construction stage count, and any moving part with its frame count.
+- **Unit:** the IsoKit recipe, cell size, facings and frames per facing.
+- **Terrain and icons:** the SVG generator entry.
 
 #### Scenario: Catalog entry declares all required sections
 

@@ -2,7 +2,10 @@
 
 ### Requirement: Terrain transitions from corner terrain
 
-The renderer SHALL derive a terrain for every map vertex from the tiles that share it. Of `water`, `beach` and `grass`, the vertex takes the lowest-ranked present (water < beach < grass). Where a tile's corners include both `grass` and `water`, its `grass` corners SHALL be treated as `beach`.
+The renderer SHALL derive a terrain for every map vertex from the up to four tiles that share it, counting `forest` and `mountain` as `grass`:
+
+- When those tiles include both `grass` and `water`, the vertex SHALL be `beach`.
+- Otherwise the vertex takes the lowest-ranked terrain present (water < beach < grass).
 
 A tile whose corners hold exactly two terrains of a declared pair SHALL draw `terrain-<upper>-<lower>-t<mask>`, where the mask bits (N=1, E=2, S=4, W=8) mark the corners holding the upper terrain. All other tiles keep their existing sprite and variant selection.
 
@@ -16,7 +19,7 @@ The derivation is visual only. Simulation and placement rules MUST keep using ea
 #### Scenario: Grass beside water shows a beach edge
 
 - **WHEN** a grass tile borders a water tile directly
-- **THEN** its corners shared with the water tile are treated as beach, it draws a `grass-beach` transition, and the water tile draws a `beach-water` transition
+- **THEN** the two vertices the tiles share are beach, the grass tile draws a `grass-beach` transition with its two far corners as grass, and the water tile draws a `beach-water` transition with its two far corners as water
 
 #### Scenario: Transitions do not change gameplay
 

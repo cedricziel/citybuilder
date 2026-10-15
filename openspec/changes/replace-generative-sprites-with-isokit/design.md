@@ -79,7 +79,12 @@ Coplanar parts must sit at least 1 cm apart. An `ISOKIT_SSAO=0` switch exists fo
 
 ### D6. Terrain transitions by corner masks
 
-Each map vertex takes a terrain from its four adjacent tiles, by priority water < beach < grass: the vertex takes the lowest. Where a tile would have both grass and water corners, its grass corners are demoted to beach, so beach always separates grass from water.
+Each map vertex takes a terrain from its four adjacent tiles, with forest and mountain counting as grass:
+
+- If the tiles include both grass and water, the vertex is **beach**.
+- Otherwise it takes the lowest-ranked terrain present (water < beach < grass).
+
+A tile's own kind is always among its corners' neighbours, so a grass tile never gets a water corner and a water tile never gets a grass corner. At a direct grass–water edge, the two shared vertices become beach. The grass tile then draws a grass→beach transition, and the water tile draws a beach→water one, so beach always separates grass from water with no per-tile fix-up.
 
 A tile whose corners mix two terrains draws `terrain-<upper>-<lower>-t<mask>`. The mask bits are N=1, E=2, S=4, W=8, and a set bit means "upper". Uniform tiles keep their existing names and variants.
 
@@ -121,7 +126,7 @@ The 8×12 walker cannot show a hat, a load or a gait. Walkers become 10×16 poin
 - **[CI has no reliable Metal]** → The regen check runs locally and in the family PRs' test plans. CI keeps the content gate, which needs no GPU.
 - **[Atlas size and memory doubles with @2×]** → Indexed PNGs (D8), and atlas memory is checked on Apple TV in the houses-family PR. Falling back to @1× + linear for terrain only is the escape hatch.
 - **[Mixed looks during rollout]** Old procedural and new kit sprites coexist for a few PRs. → Families are chosen so related buildings flip together (all houses, then forestry, …), and each PR shows before/after.
-- **[Map generation puts grass next to water]** → D6 demotes those corners to beach visually. The simulation still sees the tile's own kind.
+- **[Map generation puts grass next to water]** → D6 makes the shared vertices beach visually. The simulation still sees the tile's own kind.
 - **[Linear filtering blurs icons and overlays]** → Icons and status badges keep `.nearest`, and the rendering spec states which textures are linear.
 
 ## Migration Plan

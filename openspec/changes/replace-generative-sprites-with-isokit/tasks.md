@@ -8,17 +8,21 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 - [ ] 1.2 Tests-first: write failing IsoKit tests for the `iso-art-kit` scenarios "Recipes cannot add lights", "Recipes use shared finishes", "A recipe taller than its cell is rejected", "A 2×2 house renders 128 points wide" and "Every catalogued building kind has a recipe" (the registry against the catalog). Confirm they are red
 - [ ] 1.3 Implement to green: recipe registry, cell-height check (design D2), finish-only materials (D3)
 - [ ] 1.4 Implement the CLI:
-  - `isokit render <Resources> [--family f]` writes `@1x` and `@2x` PNGs, quantized to indexed 256 colours (D8)
+  - `isokit render <Resources>` writes `@1x` and `@2x` PNGs for every catalog entry with `source = "isokit"`, quantized to indexed 256 colours (D8)
+  - `isokit render --all --out <dir>` renders every recipe to a scratch directory, whatever the catalog says
   - construction stages 0–2 (D4)
   - operational frames composited from moving parts (D4)
-- [ ] 1.5 Implement `isokit verify <Resources>`: re-render to a temp dir and apply the tolerance (D5), printing each failing PNG with its mean and outlier fraction
+- [ ] 1.5 Implement `isokit verify <Resources>`: re-render the `source = "isokit"` entries to a temp dir and apply the tolerance (D5), printing each failing PNG with its mean and outlier fraction. Add the scenario test "Entries not yet migrated are left alone". The SVG generator gets the same `verify` mode for `source = "svg"` entries
 - [ ] 1.6 Move the terrain and icon SVG generator to `scripts/art/` in the sprites venv, using the prototype `terrain/transitions.py`. Add a `pytest` for "Both transition sets are complete" and "Neighbouring transition tiles join without a seam"
 - [ ] 1.7 `Makefile`:
-  - `sprites` = IsoKit render + SVG generators
-  - `sprites-verify` = `isokit verify` + `sprites-content`
+  - `sprites` = `isokit render Resources` + the SVG generator's render, both limited to migrated entries
+  - `sprites-verify` = `isokit verify Resources` + the SVG generator's verify + `sprites-content`
   - add a `rsvg-convert` presence check with an install hint
   - keep the old targets until §5
-- [ ] 1.8 Run `make sprites-verify` on main's atlases with `--family none` to prove the tooling runs end to end without touching assets
+- [ ] 1.8 With no entry migrated yet:
+  - `make sprites` leaves every atlas PNG unchanged (`git status` is clean)
+  - `make sprites-verify` passes
+  - `isokit render --all --out <tmp>` renders every recipe, which proves the tooling end to end without touching assets
 
 ## 2. Content gate and naming for the new rules
 

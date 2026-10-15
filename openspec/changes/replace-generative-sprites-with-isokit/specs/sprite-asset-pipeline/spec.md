@@ -109,7 +109,7 @@ Every PNG has an `@1x` file and an `@2x` file with the same stem. No PNG may com
 
 ### Requirement: Offline regeneration via make sprites
 
-A `make sprites` target SHALL regenerate every atlas PNG from the IsoKit recipes and the SVG generators, with no network access and no API key. `make sprites-verify` SHALL run the IsoKit tolerance check, and then the content gate (`make sprites-content`). In CI, the CityRender2D job SHALL run the content gate on every PR. The job MUST exit non-zero if any content-gate rule fails, printing every failing sprite with its reason code, one per line.
+A `make sprites` target SHALL regenerate atlas PNGs from the IsoKit recipes and the SVG generators, with no network access and no API key. It covers every catalog entry whose `source` is `isokit` or `svg`, which after this change archives is every atlas PNG. `make sprites-verify` SHALL run the IsoKit tolerance check, and then the content gate (`make sprites-content`). In CI, the CityRender2D job SHALL run the content gate on every PR. The job MUST exit non-zero if any content-gate rule fails, printing every failing sprite with its reason code, one per line.
 
 #### Scenario: make sprites runs offline
 
