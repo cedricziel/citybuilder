@@ -63,8 +63,8 @@ extension World {
         let land = landCounts(xs: xs, ys: ys)
         let hut = BuildingCatalog.spec(for: .lumberjackHut).footprint
         var bestTrees = 0
-        for y in ys.lowerBound ... ys.upperBound - hut.height + 1 {
-            for x in xs.lowerBound ... xs.upperBound - hut.width + 1 {
+        for y in stride(from: ys.lowerBound, through: ys.upperBound - hut.height + 1, by: 1) {
+            for x in stride(from: xs.lowerBound, through: xs.upperBound - hut.width + 1, by: 1) {
                 let site = TileCoordinate(x: x, y: y)
                 let onFreeGrass = hut.tiles(anchor: site).allSatisfy {
                     terrain(at: $0) == .grass && occupiedTiles[$0] == nil
@@ -107,10 +107,11 @@ extension World {
     /// rule chose it (design D1, D2, D4). Nil when no 3×3 land fits.
     func townCenterSite(on island: Island, tileToIsland: [TileCoordinate: IslandID]) -> StartSite? {
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
+        let maxX = island.bounds.maxX - footprint.width + 1
+        let maxY = island.bounds.maxY - footprint.height + 1
+        guard island.bounds.minX <= maxX, island.bounds.minY <= maxY else { return nil }
         let candidates = Self.candidates(
-            around: Self.startTarget(of: island),
-            xs: island.bounds.minX ... island.bounds.maxX - footprint.width + 1,
-            ys: island.bounds.minY ... island.bounds.maxY - footprint.height + 1
+            around: Self.startTarget(of: island), xs: island.bounds.minX ... maxX, ys: island.bounds.minY ... maxY
         )
         var grassiest: (anchor: TileCoordinate, grass: Int)?
         for anchor in candidates where ringSquareIsFreeGrass(anchor, island: island.id, tileToIsland: tileToIsland) {

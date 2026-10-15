@@ -150,6 +150,13 @@ func scenarioFallbackWithoutAnyAllGrassSquareKeepsTheOldRule() throws {
     #expect(site.rule == .anyLand)
 }
 
+@Test("scenario: island too narrow for a town center gets none")
+func scenarioIslandTooNarrowForATownCenterGetsNone() {
+    let world = TerrainSketch(width: 4, height: 7, fill: .grass).world()
+    #expect(world.islands.count == 1)
+    #expect(townCenters(in: world).isEmpty)
+}
+
 // MARK: - Starter grove
 
 @Test("scenario: grove gives a hut site with 32 trees")
