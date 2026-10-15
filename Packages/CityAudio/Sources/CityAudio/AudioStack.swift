@@ -87,7 +87,9 @@ public final class AudioStack {
         } else {
             dispatcher = playDispatcher
         }
-        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher)
+        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher) { [weak player] entity in
+            player?.stopLoop(entity: entity)
+        }
 
         let playlist = MusicPlaylist(
             tracks: bindings.music?.tracks ?? [],
@@ -149,10 +151,12 @@ public final class AudioStack {
     }
 
     /// Write the listener's tile-space position to the environment node.
-    /// Called by the renderer at most once per second. No-op if spatial
-    /// audio is disabled (no environment node) or if `tile` is nil.
+    /// Called by the renderer at most once per second. Also re-chooses the
+    /// building loops nearest the listener. The environment node is left
+    /// alone if spatial audio is disabled or `tile` is nil.
     /// Per spec `audio-playback` "Listener position from camera".
     public func setListenerPosition(_ tile: TileCoordinate?) {
+        player.setListener(tile)
         guard let env = engine.environmentNode, let tile else { return }
         env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
     }
