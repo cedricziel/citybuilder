@@ -114,10 +114,13 @@ public enum SpriteAtlas {
         for kind: TerrainType,
         coord: TileCoordinate
     ) -> SKTexture {
+        textureOrPlaceholder(named: terrainAssetName(for: kind, coord: coord))
+    }
+
+    /// The per-tile terrain sprite name, variant included (`terrain-mountain-v2`).
+    static func terrainAssetName(for kind: TerrainType, coord: TileCoordinate) -> String {
         let count = terrainVariantCounts[kind] ?? 1
-        let variant = variantIndex(coord: coord, count: count)
-        let name = variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
-        return textureOrPlaceholder(named: name)
+        return variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variantIndex(coord: coord, count: count))
     }
 
     /// Variant-aware building texture lookup. Used for non-shore

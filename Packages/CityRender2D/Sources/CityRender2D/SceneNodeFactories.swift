@@ -58,8 +58,9 @@ extension IsoWorldScene {
         // kinds with multiple variants (mountain); falls through to the
         // canonical sprite for all others. Placeholder path satisfies the
         // rendering-2_5d `Missing-sprite fallback in release` requirement.
-        let texture = SpriteAtlas.terrainTextureOrPlaceholder(for: kind, coord: coord)
-        let node = SKSpriteNode(texture: texture)
+        let name = SpriteAtlas.terrainAssetName(for: kind, coord: coord)
+        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        node.userData = [Self.textureNameKey: name]
         node.zPosition = 0
         if let action = SpriteAnimation.loopingAction(for: .terrain(kind)) {
             node.run(action, withKey: "anim")

@@ -153,7 +153,7 @@ struct TerrainCornersTests {
         let transition = TerrainTransition(upper: .grass, lower: .beach, mask: 3)
         scene.hasSprite = { _ in false }
         let plain = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0), transition: transition)
-        #expect(plain.userData?[IsoWorldScene.textureNameKey] as? String != transition.assetName)
+        #expect(plain.userData?[IsoWorldScene.textureNameKey] as? String == "terrain-grass")
         scene.hasSprite = { $0 == transition.assetName }
         let blended = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0), transition: transition)
         #expect(blended.userData?[IsoWorldScene.textureNameKey] as? String == transition.assetName)
