@@ -176,6 +176,17 @@ extension World {
         return amount - left
     }
 
+    /// Puts up to `amount` of `good` into `buffers`, in the given order,
+    /// as far as they have room. Returns the units placed.
+    @discardableResult
+    mutating func fill(_ good: Good, upTo amount: Int, into buffers: [Building]) -> Int {
+        var placed = 0
+        for buffer in buffers where placed < amount {
+            placed += stockpiles[buffer.id]?.deposit(good, amount: amount - placed) ?? 0
+        }
+        return placed
+    }
+
     /// Road path between two road tiles. Roads never cross water, so
     /// tiles on different islands are answered without a search.
     func roadPath(from start: TileCoordinate, to goal: TileCoordinate) -> [TileCoordinate]? {

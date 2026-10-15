@@ -102,8 +102,39 @@ func seasonalBuyLimit() {
 func fullTownCenter() {
     var market = MarketFixture()
     market.world.testSetStock([.planks: 37], in: market.townCenter)
+    market.world.testSetStock([.planks: 200], in: market.warehouse)
     market.buy(.food, 10)
     #expect(market.stock(.food) == 3)
+    #expect(market.stock(.food, in: market.farWarehouse) == 0)
+}
+
+@Test("scenario: A full town center buys into a warehouse")
+func aFullTownCenterBuysIntoAWarehouse() {
+    var market = MarketFixture()
+    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    let events = market.buy(.food, 10)
+    #expect(market.stock(.food, in: market.warehouse) == 10)
+    #expect(trades(events) == [.marketTraded(good: .food, quantity: 10, total: 10 * Good.food.marketPrice(.bought), direction: .bought)])
+}
+
+@Test("scenario: The town center fills first")
+func theTownCenterFillsFirst() {
+    var market = MarketFixture()
+    market.world.testSetStock([.planks: 37], in: market.townCenter)
+    market.buy(.food, 10)
+    #expect(market.stock(.food) == 3)
+    #expect(market.stock(.food, in: market.warehouse) == 7)
+}
+
+@Test("scenario: Stores on another island stay out of a buy")
+func storesOnAnotherIslandStayOutOfABuy() {
+    var market = MarketFixture()
+    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.world.testSetStock([.planks: 200], in: market.warehouse)
+    let events = market.buy(.food, 10)
+    #expect(market.stock(.food, in: market.farWarehouse) == 0)
+    #expect(market.world.economy.balance == 1000)
+    #expect(trades(events).isEmpty)
 }
 
 @Test("scenario: Short of money")
@@ -364,13 +395,14 @@ func buyingNeverOverdraws() {
 
 // MARK: - Reach
 
-@Test func marketReachIsTheTownCenterSpaceAndTheIslandStock() {
+@Test func marketReachIsTheIslandSpaceAndStock() {
     var market = MarketFixture()
     market.world.testSetStock([.bread: 3, .wood: 4], in: market.townCenter)
     market.world.testSetStock([.bread: 5], in: market.warehouse)
     market.world.testSetStock([.iron: 9], in: market.farWarehouse)
     let reach = market.world.marketReach(at: market.townCenter)
-    #expect(reach == MarketReach(freeSpace: 33, stock: [.bread: 8, .wood: 4]))
+    // 33 free in the town center and 195 in the warehouse beside it.
+    #expect(reach == MarketReach(freeSpace: 228, stock: [.bread: 8, .wood: 4]))
 }
 
 @Test func marketReachLeavesOutBuffersUnderConstructionAndRivals() {
