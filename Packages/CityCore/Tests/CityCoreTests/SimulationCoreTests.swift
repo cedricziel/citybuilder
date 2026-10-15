@@ -144,10 +144,9 @@ func scenarioSaveLoadRoundTrip() throws {
 func scenarioTickTimeInstrumented() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
     let result = world.tick()
-    // wallClockNanoseconds is UInt64 — non-negative by type. Asserting
-    // that we got a value back is the contract: tick must surface
-    // measurable wall-clock cost via a metrics interface.
-    #expect(result.metrics.wallClockNanoseconds < 1_000_000_000, "stub tick must complete in under one second")
+    // The contract is that the tick measures its own duration, so the
+    // value is positive. An upper bound would fail on a loaded machine.
+    #expect(result.metrics.wallClockNanoseconds > 0, "tick must report its measured duration")
 }
 
 // MARK: - TickResult aggregate (add-audio-foundation M1)
@@ -167,7 +166,7 @@ func scenarioTickMetricsStillObservable() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
     let result = world.tick()
     // The exact accessor existing callers had — just nested one level deeper.
-    #expect(result.metrics.wallClockNanoseconds < 1_000_000_000)
+    #expect(result.metrics.wallClockNanoseconds > 0)
 }
 
 // MARK: - Headless CLI

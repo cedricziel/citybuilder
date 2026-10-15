@@ -104,7 +104,7 @@ func scenarioTickResultExposesMetrics() {
     let result = world.tick()
     // Equivalent semantics to the prior `TickMetrics` return value, just
     // nested one level deeper.
-    #expect(result.metrics.wallClockNanoseconds < 1_000_000_000)
+    #expect(result.metrics.wallClockNanoseconds > 0)
 }
 
 @Test("scenario: tickresult exposes events")
