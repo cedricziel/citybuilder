@@ -24,14 +24,16 @@ func terrainNamesRouteToTheKitAtlas() {
     }
 }
 
+/// Uses a name no family will ever migrate, so this holds whichever families are on the kit.
 @Test("scenario: building name routes to buildings atlas")
 func scenarioBuildingNameRoutesToBuildingsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "building-warehouse-constructing-0") == "Buildings")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-house-mediterranean") == "Buildings")
-    if let texture = SpriteAtlas.texture(named: "building-warehouse-constructing-0") {
-        #expect(texture.size().width > 0)
-    }
+    #expect(!TextureFiltering.kitRenderedStems.contains(legacyBuildingStem))
+    #expect(SpriteAtlasRouting.atlasName(for: "\(legacyBuildingStem)-constructing-0") == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: legacyBuildingStem) == "Buildings")
 }
+
+/// A building stem outside the art kit: routing sends it to the legacy Buildings atlas.
+private let legacyBuildingStem = "building-not-migrated"
 
 /// SpriteKit filters a whole atlas page with one mode (the last one set wins), so the linearly
 /// filtered art-kit renders cannot share a page with nearest-filtered pixel art (design D7).
@@ -130,7 +132,7 @@ struct LazyConstructionSuite {
         #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
         SpriteAtlas.resetForTesting()
-        _ = SpriteAtlas.texture(named: "building-warehouse")
+        _ = SpriteAtlas.texture(named: legacyBuildingStem)
         #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
 
         SpriteAtlas.resetForTesting()

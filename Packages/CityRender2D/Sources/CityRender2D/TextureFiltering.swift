@@ -35,7 +35,7 @@ public enum TextureFiltering {
     /// `building-sawmill-operational-2` → `building-sawmill`; `terrain-grass-beach-t3-1` and
     /// `terrain-grass-beach-t3-winter` → `terrain-grass-beach`; `terrain-mountain-v2` → `terrain-mountain`.
     /// A season ends a stem (`terrain-grass-autumn`) unless it follows a transition mask.
-    static func stem(of spriteName: String) -> String {
+    public static func stem(of spriteName: String) -> String {
         var parts = spriteName.split(separator: "-").map(String.init)
         if parts.count > 2, ["autumn", "winter"].contains(parts[parts.count - 1]), isMask(parts[parts.count - 2]) {
             parts.removeLast()

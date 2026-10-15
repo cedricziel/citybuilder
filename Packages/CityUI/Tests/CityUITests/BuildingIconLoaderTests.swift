@@ -1,4 +1,5 @@
 import CityCore
+import CityRender2D
 import Testing
 @testable import CityUI
 
@@ -14,13 +15,23 @@ func buildingIconsUseTheAtlasTextureNames() {
 func kitIconsScaleSmoothly() {
     #expect(BuildingIconLoader.interpolation(for: .house) == .high)
     #expect(BuildingIconLoader.interpolation(for: .townCenter) == .high)
-    #expect(BuildingIconLoader.interpolation(for: .warehouse) == GoodIconLoader.pixelArtInterpolation)
+    if let legacy = legacyKind {
+        #expect(BuildingIconLoader.interpolation(for: legacy) == GoodIconLoader.pixelArtInterpolation)
+    }
+}
+
+/// Any building kind still drawn as legacy pixel art, or nil once every family is on the kit; so the
+/// tests don't break each time a family migrates.
+private let legacyKind = BuildingKind.allCases.first {
+    !TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: BuildingIconLoader.textureName(for: $0)))
 }
 
 @Test("building icons come from the atlas their sprite routes to")
 func buildingIconsUseSpriteRouting() {
     #expect(BuildingIconLoader.atlasName(for: .house) == "Kit")
-    #expect(BuildingIconLoader.atlasName(for: .warehouse) == "Buildings")
+    if let legacy = legacyKind {
+        #expect(BuildingIconLoader.atlasName(for: legacy) == "Buildings")
+    }
 }
 
 @Test("building icons fall back to a symbol")
