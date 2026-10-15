@@ -18,6 +18,7 @@ struct CitybuilderiOSApp: App {
     init() {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
