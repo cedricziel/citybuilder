@@ -71,11 +71,34 @@ public enum UITestSeed {
 
     /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore` or
     /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in that order.
+    /// `-uiTestCamera x,y,zoom` then moves its camera.
     public static func world(fromArguments arguments: [String]) -> World? {
+        guard var world = seededWorld(fromArguments: arguments) else { return nil }
+        if let camera = camera(fromArguments: arguments) {
+            world.camera = camera
+        }
+        return world
+    }
+
+    private static func seededWorld(fromArguments arguments: [String]) -> World? {
         if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments))
+    }
+
+    /// `-uiTestStartGame`: skip the title and start a game at once, from the seed the other flags ask
+    /// for (or a regular new game), so in-game shots need no clicks.
+    public static func startsGame(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestStartGame")
+    }
+
+    /// The camera after `-uiTestCamera x,y,zoom` (tile coordinates and zoom), if any.
+    public static func camera(fromArguments arguments: [String]) -> Camera? {
+        guard let flag = arguments.firstIndex(of: "-uiTestCamera"), arguments.indices.contains(flag + 1) else { return nil }
+        let values = arguments[flag + 1].split(separator: ",").compactMap { Double($0) }
+        guard values.count == 3 else { return nil }
+        return Camera(centerX: values[0], centerY: values[1], zoom: values[2])
     }
 
     /// `-uiTestSeedLived`: the town seed with two farms and the fire trades, every free tile within
