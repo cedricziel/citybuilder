@@ -60,22 +60,24 @@ M1 also found and fixed a placement bug. `applyPlace` read a building's material
 
 ### M2 result
 
-The same sweep with rival market trades added on top of M1, with the M1 result in brackets:
+The same sweep with rival market trades on top of M1, M1 values in brackets:
 
-| | Easy | Normal | Hard |
-|---|---|---|---|
-| Rivals at 0 residents, year 15 | 0/10 (3/10) | 0/20 (1/20) | 0/30 (5/30) |
-| Rivals ever in debt | 0 (3) | 0 (1) | 0 (5) |
-| Residents year 3, median | 1 (9) | 26 (35.5) | 34 (21.5) |
-| Residents year 5, median | 2 (22.5) | 31.5 (35) | 31.5 (21.5) |
-| Residents year 15, median (range) | 29.5 (11–47) | 32.5 (20–50) | 31 (14–43) |
-| Citizens reached by year 15 | 10 (6) | 20 (19) | 30 (21) |
+|                                    | Easy         | Normal      | Hard        |
+| ---------------------------------- | ------------ | ----------- | ----------- |
+| Rivals at 0 residents, year 15     | 0/10 (3/10)  | 0/20 (1/20) | 0/30 (5/30) |
+| Rivals ever in debt                | 0 (3)        | 0 (1)       | 0 (5)       |
+| Residents year 3, median           | 13 (9)       | 36 (35.5)   | 33 (21.5)   |
+| Residents year 5, median (minimum) | 28 (15)      | 34 (23)     | 32 (21)     |
+| Residents year 15, median (range)  | 25.5 (18–38) | 35 (27–42)  | 33 (20–51)  |
+| Citizens reached by year 15        | 10 (6)       | 20 (19)     | 30 (21)     |
 
-Every rival now survives, none goes into debt, and all of them reach the citizen tier. The market sells the plank glut before it fills the town center, and buys food when houses go short.
+Every rival survives, none goes into debt, and all reach the citizen tier. D7's year-5 floors hold on Easy (8) and Normal (20). Hard's floor of 30 does not: the median is 32, but the weakest Hard rival has 21. That is M3's input.
 
-Easy now starts slowly. Its median is 1–2 residents through year 5, because its 80-tick turns are spent on small food purchases while the town is tiny. It catches up to a median of 29.5 by year 15. D7's Easy target of 8 residents by year 5 is not met, so it is an input for M3's tuning: for example, a feed threshold that scales with the town, or a lower purchase priority than the build step while no house is lived in.
+Three things M2 found and changed before this result:
 
-M2 also found that a purchase into a full town center fills nothing and, with no fill recorded, repeats every turn. That is the rival side of #70. Rivals now buy only what their town center has room for.
+- **Unblock purchases come with the step.** A purchase made on its own turn lost the race to the sawmill's supply carriers: a farm's 2 wood went into planks before the farm was placed, and the rival bought 2 wood again every turn for years. That gave Easy a median of 2 residents at year 5. The purchase now goes into the same command batch as the step's roads and building, ahead of them.
+- **A starving town clears a full store.** One Easy rival hit the building cap with its town center full of 40 planks. The farms then had nowhere to put food, and the town emptied. A rival whose town center has under 4 units of room and under 4 food now sells surplus as if in debt.
+- **No purchase without room.** A purchase into a full town center fills nothing and, with no fill recorded, repeats every turn. That is the rival side of #70. Rivals buy only what fits.
 
 ## Goals / Non-Goals
 
