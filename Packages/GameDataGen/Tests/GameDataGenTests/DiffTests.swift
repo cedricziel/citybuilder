@@ -85,6 +85,16 @@ func anchorChangeListsEveryAffectedItem() throws {
     ])
 }
 
+@Test func changesComeBeforeAdditions() throws {
+    let extra = "items:\n  - { kind: Good, id: salt, name: Salt, unit: sacks, basePrice: 3 }\n"
+    let ages = Fixtures.ages.replacingOccurrences(of: "rivalResidents: 24", with: "rivalResidents: 30")
+    let new = Fixtures.source([
+        ("core", Fixtures.core), ("extra", extra), ("cultures/northern-european", Fixtures.culture), ("ages", ages)
+    ])
+
+    #expect(try diff(Fixtures.source(), new) == ["Age medieval: rivalResidents 24 → 30", "added Good salt"])
+}
+
 @Test func nestedListAndMarketFieldsAreCompared() throws {
     let new = editingCore {
         $0.replacingOccurrences(of: "basePrice: 4 }", with: "basePrice: 4, market: { buy: 6 } }")
@@ -110,26 +120,58 @@ func anchorChangeListsEveryAffectedItem() throws {
     #expect(throws: GameDataErrors.self) { try ContentDiff.diff(old: Fixtures.source(), new: broken).get() }
 }
 
-@Test func gitRevisionIsReadThroughGitShow() throws {
+/// A git repository with the fixture packs committed under the real data
+/// path, then the planks' base price edited in the working tree.
+private func repositoryWithAnEditedPack() throws -> URL {
     let repo = try scratch()
-    let data = "Packages/CityCore/GameData"
-    try write(Fixtures.source(), to: repo.appendingPathComponent(data))
-    func git(_ arguments: String...) throws {
+    let data = repo.appendingPathComponent("Packages/CityCore/GameData")
+    try write(Fixtures.source(), to: data)
+    func run(_ arguments: String...) throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["git", "-C", repo.path, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"] + arguments
+        process.arguments = ["git", "-C", repo.path, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"]
+            + arguments
         try process.run()
         process.waitUntilExit()
         #expect(process.terminationStatus == 0)
     }
-    try git("init", "-q")
-    try git("add", ".")
-    try git("commit", "-q", "-m", "packs")
+    try run("init", "-q")
+    try run("add", ".")
+    try run("commit", "-q", "-m", "packs")
     let edited = Fixtures.core.replacingOccurrences(of: "basePrice: 8", with: "basePrice: 9")
-    try edited.write(to: repo.appendingPathComponent("\(data)/packs/core.yaml"), atomically: true, encoding: .utf8)
+    try edited.write(to: data.appendingPathComponent("packs/core.yaml"), atomically: true, encoding: .utf8)
+    return repo
+}
 
-    let old = GitSource(repository: repo, revision: "HEAD", dataDirectory: data)
-    let new = DirectorySource(root: repo.appendingPathComponent(data))
+@Test func gitRevisionIsReadThroughGitShow() throws {
+    let data = try repositoryWithAnEditedPack().appendingPathComponent("Packages/CityCore/GameData")
 
-    #expect(try ContentDiff.diff(old: old, new: new).get() == ["Good planks: basePrice 8 → 9"])
+    let old = GitSource(revision: "HEAD", dataDirectory: data)
+
+    #expect(try ContentDiff.diff(old: old, new: DirectorySource(root: data)).get() == ["Good planks: basePrice 8 → 9"])
+}
+
+@Test func theDiffCommandWorksFromAnyDirectoryOfTheCheckout() throws {
+    let repo = try repositoryWithAnEditedPack()
+    let packages = repo.appendingPathComponent("Packages")
+
+    let fromRoot = GameDataCommand.run(["diff", "HEAD"], standardInput: { Data() }, currentDirectory: repo)
+    let fromPackages = GameDataCommand.run(
+        ["diff", "HEAD", "--data", "CityCore/GameData"], standardInput: { Data() }, currentDirectory: packages
+    )
+
+    #expect(fromRoot == GameDataCommand.Outcome(status: 0, output: "Good planks: basePrice 8 → 9\n"))
+    #expect(fromPackages == fromRoot)
+}
+
+@Test func theDiffCommandReportsARevisionGitCannotRead() throws {
+    let repo = try repositoryWithAnEditedPack()
+
+    let result = GameDataCommand.run(["diff", "no-such-ref"], standardInput: { Data() }, currentDirectory: repo)
+
+    #expect(result.status == 1)
+    // Git's own message follows, in the user's locale.
+    let prefix = "cannot read no-such-ref: "
+    #expect(result.error.hasPrefix(prefix))
+    #expect(result.error.count > prefix.count + 1)
 }
