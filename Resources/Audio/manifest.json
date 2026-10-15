@@ -217,6 +217,34 @@
       "author": "Citybuilder sound generator",
       "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
+    },
+    {
+      "path": "ambient/summer-meadow.caf",
+      "title": "Summer: crickets, cicadas and a lazy breeze",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/autumn-wind.caf",
+      "title": "Autumn: gusts through dry leaves, a distant crow",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/winter-wind.caf",
+      "title": "Winter: a cold wind whistling",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/coast.caf",
+      "title": "Coast: waves on a beach and gulls",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
     }
   ]
 }

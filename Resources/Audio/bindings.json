@@ -123,8 +123,13 @@
     "gapSecondsBetweenTracks": 30.0
   },
   "ambient": {
-    "tracks": [
-      { "file": "ambient/forest-birds.caf" }
-    ]
+    "tracks": [],
+    "seasons": {
+      "spring": "ambient/forest-birds.caf",
+      "summer": "ambient/summer-meadow.caf",
+      "autumn": "ambient/autumn-wind.caf",
+      "winter": "ambient/winter-wind.caf"
+    },
+    "coast": "ambient/coast.caf"
   }
 }
