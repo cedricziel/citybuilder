@@ -280,6 +280,41 @@
       "author": "Citybuilder sound generator",
       "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
+    },
+    {
+      "path": "music/bridge-at-dawn.caf",
+      "title": "The Bridge at Dawn (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/hearth-and-harvest.caf",
+      "title": "Hearth and Harvest (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/market-day.caf",
+      "title": "Market Day (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/long-night.caf",
+      "title": "The Long Night (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/ships-on-the-sound.caf",
+      "title": "Ships on the Sound (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
     }
   ]
 }
