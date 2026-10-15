@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The Middle Eastern look of the research building. Shown in place of
 
 ## Visual identity
 
-Sandstone cube with a parapeted flat roof, tall arched windows framed in blue tile, and a white dome on a drum with a blue band.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `middle-eastern` in `STYLES`) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-library`.
+Rendered by IsoKit in the shared light rig. A sandstone cube with a parapet roof, two tall arched windows framed in blue tile, and a white dome on a blue drum.
 
 ## Sheet
 
@@ -28,13 +25,15 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+The operational frames repeat the finished building.
+
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Frames keep the
   finished building pixel-identical and add a rising smoke plume.
 - Construction uses the shared `building-library-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-library-middle-eastern` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-library-middle-eastern` (IsoKit)
+- Cell: 2×2 footprint, 160 pt tall
 - Construction stages: 0
 - Operational frames: 2

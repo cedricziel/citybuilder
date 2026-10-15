@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Middle Eastern culture signature. Every 100 ticks a caravan sells up to 4 goods 
 
 ## Visual identity
 
-A sandstone courtyard: two-storey arcaded wings with parapets on the back sides, a blue-tiled corner dome, a mashrabiya, a tall arched gate in the low front wall, a palm, sacks and a resting camel. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A sandstone courtyard: tall arcaded wings on the two back sides, a blue-tiled corner dome, a gate in the low front wall, a palm and a crate.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Played only while served.
 
 ## Recipe
 
-- Recipe: `building-caravanserai` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-caravanserai` (IsoKit)
+- Cell: 3×3 footprint, 176 pt tall
 - Construction stages: 3
 - Operational frames: 2

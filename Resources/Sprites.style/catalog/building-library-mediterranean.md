@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The Mediterranean look of the research building. Shown in place of
 
 ## Visual identity
 
-Whitewashed hall under a low terracotta gable roof with tall arched windows, an oculus in the east gable and a bell gable (espadaña) rising over it.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `mediterranean` in `STYLES`) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-library`.
+Rendered by IsoKit in the shared light rig. A whitewashed hall under a low tile gable roof with three tall arched lit windows and a bell gable rising over its east end.
 
 ## Sheet
 
@@ -28,13 +25,15 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+The operational frames repeat the finished building.
+
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Frames keep the
   finished building pixel-identical and add a rising smoke plume.
 - Construction uses the shared `building-library-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-library-mediterranean` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-library-mediterranean` (IsoKit)
+- Cell: 2×2 footprint, 160 pt tall
 - Construction stages: 0
 - Operational frames: 2

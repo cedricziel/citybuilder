@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Medieval age signature. Workshops within 8 tiles of an operational guild hall wo
 
 ## Visual identity
 
-A stone ground floor under two half-timbered plaster storeys and a steep terracotta gable roof with a bell turret on the ridge; a guild sign with a red key hangs from an iron arm. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A stone ground floor under two half-timbered plaster storeys and a steep tile gable roof with a bell turret on the ridge, and a guild sign with a red key on an iron arm.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-guild-hall` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-guild-hall` (IsoKit)
+- Cell: 3×3 footprint, 224 pt tall
 - Construction stages: 3
 - Operational frames: 2

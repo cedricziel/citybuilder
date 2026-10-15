@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Mediterranean culture signature. Houses within 8 tiles of an operational forum p
 
 ## Visual identity
 
-A paved square framed on its two back sides by white colonnades under terracotta tiles, a bronze statue on a plinth, a fountain, amphorae and a cypress. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A paved square framed on its two back sides by white colonnades under tile, a bronze statue on a plinth, a fountain basin and a cypress.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Played only while served.
 
 ## Recipe
 
-- Recipe: `building-forum` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-forum` (IsoKit)
+- Cell: 3×3 footprint, 160 pt tall
 - Construction stages: 3
 - Operational frames: 2

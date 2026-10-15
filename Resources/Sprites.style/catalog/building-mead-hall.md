@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Northern European culture signature. Other buildings within 8 tiles of an operat
 
 ## Visual identity
 
-A long log hall under a steep shingle roof whose carved gable boards cross above both ridge ends, a smoke hood on the ridge, red and gold carved door posts, a bench and two barrels. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A long plank hall under a steep shingle roof with crossed gable boards above both ridge ends, red carved door posts, a bench and two barrels.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Played only while served.
 
 ## Recipe
 
-- Recipe: `building-mead-hall` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-mead-hall` (IsoKit)
+- Cell: 3×3 footprint, 176 pt tall
 - Construction stages: 3
 - Operational frames: 2

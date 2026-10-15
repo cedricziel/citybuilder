@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Antiquity age signature. An operational monument works on a 25-stage project fed
 
 ## Visual identity
 
-A stepped stone podium carrying a travertine temple front of six columns under a terracotta pediment, with a bronze brazier on the steps. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A stepped travertine podium carrying a temple front of six columns under a tiled pediment, with a bronze brazier on the steps.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-monument` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-monument` (IsoKit)
+- Cell: 3×3 footprint, 192 pt tall
 - Construction stages: 3
 - Operational frames: 2
