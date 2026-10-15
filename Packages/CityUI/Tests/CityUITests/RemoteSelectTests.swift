@@ -227,3 +227,34 @@ func selectHoldDoesNotLeakIntoTheHUD() {
     #expect(session.tileMenuRequest == nil)
     #expect(session.selectedTile == nil)
 }
+
+@Test("Choosing a building clears the selection and does nothing after game over")
+@MainActor
+func chooseBuildingGoesThroughSelectTool() {
+    let session = makeSession()
+    session.selectedTile = tile(3, 3)
+    var mapper = RemoteInputMapper()
+    _ = mapper.chooseBuilding(.house, at: 0, session: session)
+    #expect(session.selectedTile == nil)
+    #expect(session.selectedTool == .place(.house))
+
+    let over = makeSession()
+    over.world.economy.gameOver = true
+    var overMapper = RemoteInputMapper()
+    _ = overMapper.handle(.focusChanged(.hud), at: 0, session: over)
+    let effects = overMapper.chooseBuilding(.house, at: 1, session: over)
+    #expect(over.selectedTool == .inspect)
+    #expect(over.pendingPlacement == nil)
+    #expect(effects.isEmpty)
+}
+
+@Test("Choosing the building the rail already armed keeps it armed")
+@MainActor
+func chooseAlreadyArmedBuilding() {
+    let session = makeSession()
+    session.selectTool(.place(.house))
+    var mapper = RemoteInputMapper()
+    _ = mapper.chooseBuilding(.house, at: 0, session: session)
+    #expect(session.selectedTool == .place(.house))
+    #expect(session.pendingPlacement?.kind == .house)
+}

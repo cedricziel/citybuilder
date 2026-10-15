@@ -19,8 +19,11 @@ extension RemoteInputMapper {
     /// map and starts its placement at the reticle; the road arms the
     /// road tool instead.
     public mutating func chooseBuilding(_ kind: BuildingKind, at _: TimeInterval, session: GameSession) -> [RemoteEffect] {
+        if session.selectedTool != .place(kind) {
+            session.selectTool(.place(kind))
+        }
+        guard session.selectedTool == .place(kind) else { return [] }
         session.tileMenuRequest = nil
-        session.selectedTool = .place(kind)
         if kind != .road {
             session.beginPendingPlacement(kind: kind, at: session.reticleTile)
         }
