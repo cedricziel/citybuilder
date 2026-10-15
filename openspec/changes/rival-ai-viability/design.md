@@ -58,6 +58,25 @@ Two dead ends were tried and rejected during M1:
 
 M1 also found and fixed a placement bug. `applyPlace` read a building's material cost after inserting it, so a rival's first sawmill was charged a plank it did not have, and the site waited forever.
 
+### M2 result
+
+The same sweep with rival market trades added on top of M1, with the M1 result in brackets:
+
+| | Easy | Normal | Hard |
+|---|---|---|---|
+| Rivals at 0 residents, year 15 | 0/10 (3/10) | 0/20 (1/20) | 0/30 (5/30) |
+| Rivals ever in debt | 0 (3) | 0 (1) | 0 (5) |
+| Residents year 3, median | 1 (9) | 26 (35.5) | 34 (21.5) |
+| Residents year 5, median | 2 (22.5) | 31 (35) | 31 (21.5) |
+| Residents year 15, median (range) | 29.5 (11–47) | 32.5 (20–50) | 31 (14–43) |
+| Citizens reached by year 15 | 10 (6) | 20 (19) | 30 (21) |
+
+Every rival now survives, none goes into debt, and all of them reach the citizen tier. The market sells the plank glut before it fills the town center, and buys food when houses go short.
+
+Easy now starts slowly. Its median is 1–2 residents through year 5, because its 80-tick turns are spent on small food purchases while the town is tiny. It catches up to a median of 29.5 by year 15. D7's Easy target of 8 residents by year 5 is not met, so it is an input for M3's tuning: for example, a feed threshold that scales with the town, or a lower purchase priority than the build step while no house is lived in.
+
+M2 also found that a purchase into a full town center fills nothing and, with no fill recorded, repeats every turn. That is the rival side of #70. Rivals now buy only what their town center has room for.
+
 ## Goals / Non-Goals
 
 **Goals:**

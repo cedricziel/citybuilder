@@ -13,14 +13,14 @@
 ## 2. M2 — Rivals at the market (requires `add-town-market` archived)
 
 - [x] 2.1 Archive `add-town-market` (or confirm it is archived) so `openspec/specs/town-market` exists. Then add a `town-market` delta to this change that replaces "Rivals stay off the market" with a requirement that player trades leave rivals alone, keeping the scenario "Market trade leaves rivals alone"; run `openspec validate rival-ai-viability --strict`
-- [ ] 2.2 Tests-first: translate every `rival-towns` / Rival market trades scenario into failing tests; confirm red
-- [ ] 2.3 Implement to green: per-rival seasonal market counts on the rival (Codable, optional on decode), reset with the season like the player's
-- [ ] 2.4 Implement to green: a rival market command applied at the tick boundary in queue order, reusing the market's price and fill rules, with no `marketTraded` event and no change to the player's counts
-- [ ] 2.5 Implement to green: the rival market step before the threshold rules — unblock, pay debts, feed, in that order (design D5)
-- [ ] 2.6 Add a save round-trip test for the rival counts and a CityPersistence load test for a save without them
-- [ ] 2.7 Re-run the rival sweep and record it in design "Evidence"; regenerate the determinism baseline as in 1.7
-- [ ] 2.8 Refactor under a green bar
-- [ ] 2.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `rival-towns` or `town-market` from this milestone
+- [x] 2.2 Tests-first: translate every `rival-towns` / Rival market trades scenario into failing tests; confirm red
+- [x] 2.3 Implement to green: per-rival seasonal market counts on the rival (Codable, optional on decode), reset with the season like the player's
+- [x] 2.4 Implement to green: a rival market command applied at the tick boundary in queue order, reusing the market's price and fill rules, with no `marketTraded` event and no change to the player's counts
+- [x] 2.5 Implement to green: the rival market step before the threshold rules — unblock, pay debts, feed, in that order (design D5)
+- [x] 2.6 Add a save round-trip test for the rival counts and a CityPersistence load test for a save without them
+- [x] 2.7 Re-run the rival sweep and record it in design "Evidence"; regenerate the determinism baseline as in 1.7
+- [x] 2.8 Refactor under a green bar
+- [x] 2.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `rival-towns` or `town-market` from this milestone
 
 ## 3. M3 — Caps by difficulty and the viability check
 
