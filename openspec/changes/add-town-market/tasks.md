@@ -19,11 +19,27 @@
 
 ## 3. M3 — Market panel
 
-- [ ] 3.0 Rebase on `main` after #30 (game-over banner and tool lock) and `add-forestry` M3 have landed, if they have; both edit the inspector.
-- [ ] 3.1 Tests-first: translate the `platform-shells` scenarios of "Town center market panel" into failing `CityUITests` against a `TownMarketSection` view model. Confirm red.
-- [ ] 3.2 Implement to green: `platform-shells` / Town center market panel. Add the row strings and button states from the snapshot, town center free space and island stock, plus the game-over lock, using the same game-over flag #30 uses for tools (design D6).
-- [ ] 3.3 Wire the section into the inspector details for player town centers, with buttons enqueueing commands through `GameSession`. Keep the controls focusable for `add-tvos-port`'s focus sections (plain `Button`s, no gestures).
+- [x] 3.0 Rebase on `main` after #30 (game-over banner and tool lock) and `add-forestry` M3 have landed, if they have; both edit the inspector.
+- [x] 3.1 Tests-first: translate the `platform-shells` scenarios of "Town center market panel" into failing `CityUITests` against a `TownMarketSection` view model. Confirm red.
+- [x] 3.2 Implement to green: `platform-shells` / Town center market panel. Add the row strings and button states from the snapshot, town center free space and island stock, plus the game-over lock, using the same game-over flag #30 uses for tools (design D6).
+- [x] 3.3 Wire the section into the inspector details for player town centers, with buttons enqueueing commands through `GameSession`. Keep the controls focusable for `add-tvos-port`'s focus sections (plain `Button`s, no gestures).
 - [ ] 3.4 Check in the iOS Simulator with the verify skill: buy wood and food, sell planks, watch the "left" counts fall and reset at the next season, and confirm the buttons lock after bankruptcy.
-- [ ] 3.5 Re-run the design's balance harness (configs B, D and F, 9,600 ticks) against the real implementation. Record the results here and tune the limits in the packs if a run differs materially from the design table.
-- [ ] 3.6 Refactor under a green bar.
-- [ ] 3.7 Run `make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change.
+- [x] 3.5 Re-run the design's balance harness (configs B, D and F, 9,600 ticks) against the real implementation. Record the results here and tune the limits in the packs if a run differs materially from the design table.
+  - The design's harness was never committed, so this run uses a new one (also not committed). The bot copies the rival AI's script and threshold rules for the player, takes one turn every 50 ticks, and trades with the design's policy: it keeps 2 wood, keeps food at 4 (C) or 1 (F), and sells anything above 30 when the balance is below $150. Runs are single island seed 0, Normal, 36,000 ticks. The bot never builds a bakery or a toolmaker, so its absolute numbers can't be compared with the design table. Only the differences between configs carry over.
+  - Old start (`main`): no run went bankrupt.
+
+    | Config | Spring 1204 | First 20 citizens | Market use |
+    |---|---|---|---|
+    | A, no forester, no market | 12 residents (0 citizens) | never | none |
+    | B, market only | 6 residents (0 citizens) | Spring 1210 | 591 wood, 383 food bought; buy limit hit 488 times |
+    | C, forester + market, food 4 | 38 residents (23 citizens) | Autumn 1203 | $420 spent, $192 earned |
+    | D, forester only | 29 residents (6 citizens) | never | none |
+    | F, forester + market, food when out | 19 residents (6 citizens) | Summer 1205 | 34 wood, 1 food bought |
+
+  - Fair starts (#42 merged locally, not on `main`): no run went bankrupt either. First 20 citizens: C in Summer 1201, B in Spring 1207; A, D and F never got there (F plateaued at 12 citizens).
+  - The conclusions match the design. The market does not replace the forester: B hits the limit constantly and stays small. Forester plus market (C) reaches citizens soonest on both starts. Overbuying never drained the treasury.
+  - I could not reproduce the fair-start note's single-island bankruptcy in 1203 with this bot, so the market's effect on that bankruptcy is unmeasured. The note came from a different bot, which built a forester after every hut and followed a longer script.
+  - F bought almost no food. At every year-end sample its island held 25 to 31 planks, which suggests a town center near its 40-unit capacity, but the harness did not count the failed buys. The bot only sells planks below $150. In play, a full town center blocks emergency buys until the player sells something. The panel already disables Buy when the town center is full.
+  - The limits were not retuned: no run differed from the design's intent.
+- [x] 3.6 Refactor under a green bar.
+- [x] 3.7 Run `make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change.
