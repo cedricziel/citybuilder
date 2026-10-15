@@ -1,0 +1,24 @@
+## 1. M1 — Tiers in the packs and the generator
+
+- [ ] 1.1 Record the determinism baseline on unchanged `main`: run `DeterminismFixture` at its default length and at 36000 ticks with `SWIFT_DETERMINISTIC_HASHING=1`, twice each, confirm the runs match, and commit the outputs under `openspec/changes/tier-needs-data/baseline/` (design D7).
+- [ ] 1.2 Add the characterisation test for "Shipped tiers keep their values" in `CityCoreTests` against today's hand-written `HouseTier`: case order and raw values, capacity, needs in order (`food`, `planks`, `bread`, `tools`), tax per resident, default display names and every culture's tier names. Confirm it is green before any change.
+- [ ] 1.3 Tests-first: in `GameDataGenTests`, translate "Tier order is case order", "Unknown house tier is rejected" (now against declared tiers), "Unknown tier in neededBy is rejected", "Need listed twice is rejected", "Culture name for an undeclared tier is rejected", "Every good has a consumer", "Good without a consumer is rejected", "A tier need is a consumer", "Pack adds a need to an existing tier", "Added needs follow load order", "Culture without tier names uses the tier's names" (model level: the culture's resolved tier names) and "Culture overrides one tier name" into failing tests. Give `Fixtures` the three tiers so existing tests stay valid. Confirm red.
+- [ ] 1.4 Implement to green: `game-data-catalog` / Content declared in packs. Add the `Tier` kind (`id`, `name`, `capacity`, `taxPerResident`, `needs`) and `neededBy` on `Good` to `ItemSchema`, the model and the strict reader; make `Culture.tiers` and its keys optional; extend `pack.schema.json` so "Schema and decoder agree" passes.
+- [ ] 1.5 Implement to green: `game-data-catalog` / Packs add needs to existing tiers and Tier names default per culture. Merge `neededBy` into tier needs in load order (design D2) and resolve each culture's tier names with the tier's name as fallback (design D4). Replace the hard-coded `houseTiers` list with the loaded tiers.
+- [ ] 1.6 Implement to green: `game-data-catalog` / Generator validates the packs and Every good has a consumer. Validate tier numbers, need goods, duplicate needs, `neededBy` and culture tier keys, and add the consumer check (design D5), each error naming the pack, item and reference.
+- [ ] 1.7 Content: add the three `Tier` items to `core.yaml` after the goods, with a comment that their order is save format. Run `make gamedata` and confirm the generated Swift is unchanged (`make gamedata-check`).
+- [ ] 1.8 Refactor under a green bar. Run `make lint && make format`.
+- [ ] 1.9 Run `make test-scenarios` and confirm no uncovered scenario in `game-data-catalog` from this milestone.
+
+## 2. M2 — Generated `HouseTier`
+
+- [ ] 2.1 Tests-first: translate "A need without its own rate is eaten one per eight residents" and "A good the tier does not need is not eaten" into failing `CityCoreTests`, and add failing `GameDataGenTests` emitter tests for the generated `HouseTier` (raw values, `capacity`, `needs`, `taxPerResident`, `displayName`) and for `Culture.tierName(_:)` falling back to the tier's name. Confirm red.
+- [ ] 2.2 Implement to green: emit `Generated/HouseTier+Generated.swift` (design D3) and the full `Culture.tierName(_:)` table with fallbacks (design D4).
+- [ ] 2.3 Implement to green: `population-and-needs` / Houses have a population tier. Delete `capacity`, `needs`, `taxPerResident` and `displayName` from `Population.swift`, keeping `Comparable`, `next` and `previous` in a hand-written extension. "Shipped tiers keep their values" must stay green.
+- [ ] 2.4 Implement to green: `population-and-needs` / Other needs are eaten at the luxury rate. Make the 1-per-8 rate the `default:` of `HousePopulation.consumption(of:in:)`, and update satisfaction for the union of every tier's needs instead of the merchants' list (design D6).
+- [ ] 2.5 Delete the CityCore "every good has a consumer" test; the scenario now runs in `GameDataGenTests` (design D5).
+- [ ] 2.6 Content: drop Northern European's `tiers` map, which equals the defaults. Run `make gamedata` and confirm `Culture+Generated.swift` is unchanged.
+- [ ] 2.7 Run CityCore, CityPersistence and CityUI tests. Run `DeterminismFixture` at both lengths twice with `SWIFT_DETERMINISTIC_HASHING=1` and confirm every run equals the M1 baseline byte for byte.
+- [ ] 2.8 Document the `Tier` kind, `neededBy`, optional culture tier names and the consumer check in the README contributor section and in `openspec/changes/game-data-codegen/examples/FORMAT.md`.
+- [ ] 2.9 Refactor under a green bar. Run `make lint && make format` and `scripts/check-no-apple-ui-imports.sh`.
+- [ ] 2.10 Run `make test-scenarios` and confirm no uncovered scenario in `game-data-catalog` or `population-and-needs` from this change. Run `openspec validate tier-needs-data --strict`.
