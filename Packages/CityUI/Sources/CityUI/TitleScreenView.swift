@@ -41,6 +41,8 @@ public struct TitleScreenView: View {
             TitleBackdrop(active: !viewModel.presentingNewGameDialog && !viewModel.presentingSettings)
             scrim
             menu
+                // The menu sits on a dark scrim in either appearance.
+                .environment(\.colorScheme, .dark)
         }
         .onAppear { entered = true }
         #if os(tvOS)
