@@ -353,16 +353,6 @@ public final class GameSession {
         return 0
     }
 
-    /// Inspector model derived from the current snapshot + selection.
-    public var inspector: InspectorViewModel {
-        guard let selectedTile else { return InspectorViewModel(bullets: []) }
-        return InspectorViewModel.make(
-            from: world.snapshot(),
-            tile: selectedTile,
-            buildings: world.buildings
-        )
-    }
-
     @MainActor
     public var worldView: some View {
         let provider: @MainActor @Sendable () -> WorldSnapshot? = { [weak self] in

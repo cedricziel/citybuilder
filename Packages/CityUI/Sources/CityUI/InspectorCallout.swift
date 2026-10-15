@@ -155,9 +155,11 @@ struct InspectorCalloutView<Actions: View>: View {
                 viewModel: viewModel,
                 lines: isExpanded ? rest : [],
                 isFramed: false,
+                showsDetails: isExpanded,
                 onCommission: session.commissionArt,
                 onPickExport: session.pickExport,
-                onStartRoute: { session.beginRouteAuthoring(from: $0) }
+                onStartRoute: { session.beginRouteAuthoring(from: $0) },
+                onMarketTrade: session.tradeAtMarket
             )
             .disabled(session.isGameOver)
             .foregroundStyle(.primary.opacity(0.75))
