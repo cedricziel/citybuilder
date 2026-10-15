@@ -214,6 +214,31 @@ func scenarioBuildingPlacementIsConfirmedByDefaultOnAppleTV() {
     #expect(session.clampsCameraToMap)
 }
 
+@Test("A select held for exactly the hold duration opens the tile menu; just under it taps")
+@MainActor
+func selectHoldBoundary() {
+    let held = makeSession()
+    var mapper = RemoteInputMapper()
+    _ = pressSelect(at: 0, for: 0.4, mapper: &mapper, session: held)
+    #expect(held.tileMenuRequest == TileMenuRequest(tile: tile(10, 10)))
+
+    let tapped = makeSession()
+    var tapMapper = RemoteInputMapper()
+    _ = pressSelect(at: 0, for: 0.39, mapper: &tapMapper, session: tapped)
+    #expect(tapped.tileMenuRequest == nil)
+    #expect(tapped.selectedTile == tile(10, 10))
+}
+
+@Test("A hold is recognised at release even when no tick arrived in between")
+@MainActor
+func holdRecognisedAtRelease() {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    _ = mapper.handle(.selectDown, at: 0, session: session)
+    _ = mapper.handle(.selectUp, at: 0.5, session: session)
+    #expect(session.tileMenuRequest == TileMenuRequest(tile: tile(10, 10)))
+}
+
 @Test("A select held while focus moves to the HUD neither holds nor taps")
 @MainActor
 func selectHoldDoesNotLeakIntoTheHUD() {
