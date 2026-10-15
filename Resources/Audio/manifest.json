@@ -45,30 +45,30 @@
     },
     {
       "path": "loop/sawmill.caf",
-      "title": "Sawmill Loop (placeholder)",
-      "author": "Citybuilder placeholder synth",
-      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "title": "Sawmill: frame saw",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
     },
     {
       "path": "loop/lumberjack.caf",
-      "title": "Lumberjack Chop Loop (placeholder)",
-      "author": "Citybuilder placeholder synth",
-      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
-      "license": "CC0"
-    },
-    {
-      "path": "ambient/forest-birds.caf",
-      "title": "Forest Birdsong Bed (placeholder)",
-      "author": "Citybuilder placeholder synth",
-      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "title": "Lumberjack: axe on timber",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
     },
     {
       "path": "sfx/carrier-clink.caf",
-      "title": "Carrier Arrival Clink (placeholder)",
-      "author": "Citybuilder placeholder synth",
-      "source": "ffmpeg lavfi synthesis — replace with curated CC0/CC-BY before ship",
+      "title": "Carrier sets goods down",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/forest-birds.caf",
+      "title": "Spring wood with birdsong",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
     }
   ]
