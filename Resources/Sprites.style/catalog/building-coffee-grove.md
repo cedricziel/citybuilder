@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grows coffee cherries for the roastery. Middle Eastern towns only.
 
 ## Visual identity
 
-Dark, glossy coffee shrubs studded with red cherries, behind a low fence; a small sandstone shed with a flat parapet roof, a date palm and a sack of cherries. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A sandstone shed with a parapet roof, dark glossy coffee shrubs with red cherries in rows, and a date palm.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-coffee-grove` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-coffee-grove` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

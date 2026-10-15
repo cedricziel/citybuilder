@@ -133,6 +133,33 @@ func everyRequestedTerrainSpriteIsOnDisk() {
     #expect(missing.isEmpty, "\(missing)")
 }
 
+/// Every sprite the renderer can request for a kit-rendered building stem: the base, its three
+/// construction stages and every operational frame. Stems without a building kind (house tiers,
+/// road connection sets) are covered by their own tests.
+@MainActor
+@Test("every building sprite the renderer can request is committed where it routes")
+func everyRequestedBuildingSpriteIsOnDisk() {
+    let resources = worktreeRoot().appendingPathComponent("Resources")
+    var names: [String] = []
+    for stem in TextureFiltering.kitRenderedStems where stem.hasPrefix("building-") {
+        guard let kind = BuildingKind(rawValue: String(stem.dropFirst("building-".count))) else { continue }
+        names.append(stem)
+        let stages = SpriteAnimation.entry(for: .buildingConstructing(kind))?.frameCount ?? 0
+        names += (0 ..< stages).map { SpriteAnimation.assetName(for: .buildingConstructing(kind), frame: $0) }
+        let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+        names += (0 ..< frames).map { SpriteAnimation.assetName(for: .buildingOperational(kind), frame: $0) }
+    }
+    #expect(names.count >= 60) // town center, peasant house and the nine gather kinds
+    let missing = names.sorted().flatMap { name -> [String] in
+        let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
+        return ["\(name).png", "\(name)@2x.png"].compactMap { file in
+            let path = resources.appendingPathComponent("\(atlas).atlas/\(file)").path
+            return FileManager.default.fileExists(atPath: path) ? nil : "\(atlas).atlas/\(file)"
+        }
+    }
+    #expect(missing.isEmpty, "\(missing)")
+}
+
 /// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
 /// Buildings, or a render written to Kit.atlas without its stem listed, would pass every other test
 /// and then draw the placeholder or never blend.

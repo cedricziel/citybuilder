@@ -26,6 +26,18 @@ func townSeedHasFinishedHousesUnderTheDefaultCamera() {
     #expect(world.camera == World.newGame(layout: .singleIsland, seed: 0).camera)
 }
 
+@Test("The town seed can show off a build category, for family art shots")
+@MainActor
+func townSeedShowsACategory() {
+    let gather = UITestSeed.showcase(fromArguments: ["app", "-uiTestShowcase", "gather"])
+    #expect(gather.contains(.farm) && gather.contains(.mine) && !gather.contains(.house))
+    let world = UITestSeed.townWorld(showcase: gather)
+    let shown = world.buildings.values.filter { gather.contains($0.kind) && $0.owner == .player }
+    #expect(shown.count >= 4, "most gather kinds find a site near the town center")
+    #expect(shown.allSatisfy { $0.state == .operational })
+    #expect(UITestSeed.showcase(fromArguments: ["app"]).isEmpty)
+}
+
 @Test("The town seed can start in a given season, for seasonal art shots")
 @MainActor
 func townSeedStartsInTheRequestedSeason() {

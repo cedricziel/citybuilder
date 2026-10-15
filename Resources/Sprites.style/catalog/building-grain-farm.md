@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grows grain for the windmill.
 
 ## Visual identity
 
-A thatched barn beside striped grain rows behind a low fence. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A plank barn under a thatch roof, standing grain in narrow drill rows of uneven height, sheaves on the cut headland, and a fence on the visible edges.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-grain-farm` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-grain-farm` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
 - Construction stages: 3
 - Operational frames: 2

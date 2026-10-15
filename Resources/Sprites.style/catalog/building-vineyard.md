@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grows grapes for the winery. Mediterranean towns only.
 
 ## Visual identity
 
-Rows of low trained vines on stakes with dark red grape clusters, behind a low fence; a small whitewashed hut under a terracotta hip roof, a cypress and amphorae. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A whitewashed hut under a hipped tile roof, low trained vines in rows with dark grapes, a cypress and a barrel.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-vineyard` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-vineyard` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

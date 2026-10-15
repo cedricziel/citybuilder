@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -10,13 +10,7 @@ from a distance.
 
 ## Visual identity
 
-Small one-room timber-frame shed with a thatch roof. Open south face
-(no door visible) revealing a chopping block. A leaning pile of split
-logs against the east wall. Smaller silhouette than house. Palette
-anchors: `#6E4A2A` timber frame, `#8B5A2B` thatch roof, `#A07C50` fresh
-pine plank stacked logs, `#D4A86A` interior wall planks. A small wisp
-of `#7A6B59` smoke from a south-side chimney lift in the second
-operational frame only.
+Rendered by IsoKit in the shared light rig. A plank hut under a steep thatch roof with a chimney, split logs stacked against its east wall and in the yard, stumps with an axe in one, and a fence on the east edge.
 
 ## Sheet
 

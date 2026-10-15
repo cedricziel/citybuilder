@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Extracts ore; needs at least 2 mountain tiles under it.
 
 ## Visual identity
 
-A stone adit with a timbered entrance, an ore heap and a cart track. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. An outcrop of tilted grey boulders with a timbered adit in its south face, a cart of ore on a track running out of it, and a dark ore heap.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-mine` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-mine` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
 - Construction stages: 3
 - Operational frames: 2

@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grows hops for the brewery. Northern European towns only.
 
 ## Visual identity
 
-Rows of tall hop poles strung with overhead wires, green bines climbing them with pale cones, behind a low fence; a small half-timbered shed under a terracotta gable roof and hop bales on the back edge. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A half-timbered shed under a tile roof, and tall hop poles in rows with green bines climbing them, pale cones and the overhead wires along each row.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-hop-garden` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-hop-garden` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2
