@@ -166,7 +166,7 @@ public final class IsoWorldScene: SKScene {
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
-        reconcileGhost()
+        reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
     }
@@ -180,18 +180,16 @@ public final class IsoWorldScene: SKScene {
         listener(camera.centerTile())
     }
 
-    private func reconcileGhost() {
+    private func reconcileGhost(with snapshot: WorldSnapshot) {
         guard let ghost = ghostProvider?() else {
             ghostNode?.removeFromParent()
             ghostNode = nil
             return
         }
-        // Variant-aware lookup so the ghost preview of a road tile shows
-        // the same variant the placed tile will use.
-        let texture = SpriteAtlas.buildingTextureOrPlaceholder(
-            for: ghost.kind,
-            coord: ghost.tile
-        )
+        // A shore building has no facing-free sprite: show the facing it would get there.
+        let shore = ShoreOrientationMath.ghostTextureName(kind: ghost.kind, anchor: ghost.tile, terrain: snapshot.terrain(at:))
+        let texture = shore.map(SpriteAtlas.textureOrPlaceholder(named:))
+            ?? SpriteAtlas.buildingTextureOrPlaceholder(for: ghost.kind, coord: ghost.tile)
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
         node.anchorPoint = CGPoint(x: 0.5, y: 0)

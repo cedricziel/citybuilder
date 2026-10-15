@@ -44,22 +44,39 @@ public enum Iso {
     static let up = SCNVector3(-0.5 * invRoot2, cos30, -0.5 * invRoot2)
 }
 
-/// One atlas cell: n x n footprint, 64n points wide, `heightPx` points tall.
-/// The footprint's bottom vertex sits at the cell's bottom-centre (SpriteKit anchor (0.5, 0)).
+/// One atlas cell: a `footprint` x `rows` footprint (columns along x, rows along z), 32 points
+/// wide per column and per row, `heightPx` points tall. The cell's bottom-centre (SpriteKit anchor
+/// (0.5, 0)) sits level with the footprint's bottom vertex, centred on the footprint's width; the
+/// renderer places non-square footprints the same way.
 public struct SpriteCell: Equatable {
     public let footprint: Int
+    public let rows: Int
     public let heightPx: Int
 
-    public init(footprint: Int, heightPx: Int) {
+    public init(footprint: Int, rows: Int? = nil, heightPx: Int) {
         self.footprint = footprint
+        self.rows = rows ?? footprint
         self.heightPx = heightPx
     }
 
     public var widthPx: Int {
-        64 * footprint
+        32 * (footprint + rows)
     }
 
+    /// Extent along x (columns).
     public var sizeMetres: CGFloat {
         CGFloat(footprint) * Iso.tileMetres
+    }
+
+    /// Extent along z (rows).
+    public var depthMetres: CGFloat {
+        CGFloat(rows) * Iso.tileMetres
+    }
+
+    /// The ground point under the cell's bottom-centre: the bottom vertex (x and z at their maximum)
+    /// moved across the screen to the footprint's horizontal centre, so x + z (screen height) stays.
+    var anchor: SCNVector3 {
+        let shift = (sizeMetres - depthMetres) / 4
+        return SCNVector3(sizeMetres - shift, 0, depthMetres + shift)
     }
 }
