@@ -18,7 +18,7 @@ PIPELINE_TOML = STYLE_DIR / "pipeline.toml"
 MASTER_REFERENCE = STYLE_DIR / "master-reference.png"
 
 ATLAS_DIRS = {
-    "terrain-": REPO_ROOT / "Resources" / "Terrain.atlas",
+    "terrain-": REPO_ROOT / "Resources" / "Kit.atlas",  # every terrain family has migrated to the art kit
     "building-": REPO_ROOT / "Resources" / "Buildings.atlas",
     "walker-": REPO_ROOT / "Resources" / "Units.atlas",
     "ship-": REPO_ROOT / "Resources" / "Units.atlas",
