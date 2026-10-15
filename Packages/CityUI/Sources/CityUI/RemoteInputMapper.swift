@@ -9,7 +9,7 @@ public enum RemoteFocus: Hashable, Sendable {
 
 /// One normalised event from the Siri Remote or a game controller.
 /// Design D4.
-public enum RemoteInput: Equatable, Sendable {
+public enum RemoteInput: Hashable, Sendable {
     /// Screen points the reticle should travel across the map.
     case swipe(dx: Double, dy: Double)
     case click(RemoteDirection)
