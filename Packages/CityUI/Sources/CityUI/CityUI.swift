@@ -77,24 +77,6 @@ public struct CityRootView: View {
         )
     }
 
-    private func settingsBinding(whilePaused: Bool) -> Binding<Bool> {
-        Binding(
-            get: {
-                Self.presentsSettings(
-                    fromPauseSheet: whilePaused, settingsPresented: settingsPresented, isPaused: session.isPaused
-                )
-            },
-            set: { settingsPresented = $0 }
-        )
-    }
-
-    /// Settings opens from the root, or from the pause sheet while the
-    /// game is paused, because a view presents one sheet at a time.
-    /// Closing it from the pause sheet leaves the pause menu open.
-    nonisolated static func presentsSettings(fromPauseSheet: Bool, settingsPresented: Bool, isPaused: Bool) -> Bool {
-        settingsPresented && isPaused == fromPauseSheet
-    }
-
     private var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
             || session.isPaused
