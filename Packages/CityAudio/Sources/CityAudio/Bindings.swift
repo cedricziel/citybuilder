@@ -89,22 +89,40 @@ public struct Bindings: Codable, Sendable, Equatable {
         /// because unknown values fall back to plain sequential playback.
         public let shuffle: String?
         public let gapSecondsBetweenTracks: Double?
+        /// The title screen's theme. Spec: `audio-playback` / Music follows
+        /// the title screen, the game and the season.
+        public let title: MusicTrack?
+        /// How long a context change crossfades, in seconds (default 3).
+        public let crossfadeSeconds: Double?
 
         public init(
             tracks: [MusicTrack] = [],
             shuffle: String? = nil,
-            gapSecondsBetweenTracks: Double? = nil
+            gapSecondsBetweenTracks: Double? = nil,
+            title: MusicTrack? = nil,
+            crossfadeSeconds: Double? = nil
         ) {
             self.tracks = tracks
             self.shuffle = shuffle
             self.gapSecondsBetweenTracks = gapSecondsBetweenTracks
+            self.title = title
+            self.crossfadeSeconds = crossfadeSeconds
         }
     }
 
     public struct MusicTrack: Codable, Sendable, Equatable {
         public let file: String
-        public init(file: String) {
+        /// Seasons whose mood the track suits (`"winter"`); nil suits any.
+        public let seasons: [String]?
+
+        public init(file: String, seasons: [String]? = nil) {
             self.file = file
+            self.seasons = seasons
+        }
+
+        public func suits(_ season: Season?) -> Bool {
+            guard let seasons, let season else { return true }
+            return seasons.contains("\(season)")
         }
     }
 
@@ -170,6 +188,7 @@ public struct Bindings: Codable, Sendable, Equatable {
         }
         if let music {
             paths.append(contentsOf: music.tracks.map(\.file))
+            if let title = music.title { paths.append(title.file) }
         }
         if let ambient {
             paths.append(contentsOf: ambient.tracks.map(\.file))
