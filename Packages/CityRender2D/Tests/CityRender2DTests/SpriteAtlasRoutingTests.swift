@@ -24,16 +24,28 @@ func terrainNamesRouteToTheKitAtlas() {
     }
 }
 
-/// Uses a name no family will ever migrate, so this holds whichever families are on the kit.
-@Test("scenario: building name routes to buildings atlas")
-func scenarioBuildingNameRoutesToBuildingsAtlas() {
-    #expect(!TextureFiltering.kitRenderedStems.contains(legacyBuildingStem))
-    #expect(SpriteAtlasRouting.atlasName(for: "\(legacyBuildingStem)-constructing-0") == "Buildings")
-    #expect(SpriteAtlasRouting.atlasName(for: legacyBuildingStem) == "Buildings")
+@Test(
+    "scenario: building name routes to buildings atlas",
+    .enabled(if: legacyBuildingStem != nil, "every building family is on the art kit; no legacy building is left")
+)
+func scenarioBuildingNameRoutesToBuildingsAtlas() throws {
+    let stem = try #require(legacyBuildingStem)
+    #expect(SpriteAtlasRouting.atlasName(for: stem) == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: "\(stem)-constructing-0") == "Buildings")
 }
 
-/// A building stem outside the art kit: routing sends it to the legacy Buildings atlas.
-private let legacyBuildingStem = "building-not-migrated"
+/// A building still drawn as legacy pixel art: the first kind whose stem is outside the art kit and
+/// whose base sprite is committed in Buildings.atlas. Found at runtime, so a family migration never
+/// breaks the tests that need one; nil once every family is on the kit.
+let legacyBuildingStem: String? = BuildingKind.allCases.lazy
+    .map { "building-\($0.rawValue)" }
+    .first { stem in
+        !TextureFiltering.kitRenderedStems.contains(stem) && FileManager.default.fileExists(
+            atPath: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+                .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("Resources/Buildings.atlas/\(stem).png").path
+        )
+    }
 
 /// SpriteKit filters a whole atlas page with one mode (the last one set wins), so the linearly
 /// filtered art-kit renders cannot share a page with nearest-filtered pixel art (design D7).
@@ -131,9 +143,11 @@ struct LazyConstructionSuite {
         _ = SpriteAtlas.texture(named: "terrain-grass")
         #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
-        SpriteAtlas.resetForTesting()
-        _ = SpriteAtlas.texture(named: legacyBuildingStem)
-        #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
+        if let legacyBuildingStem {
+            SpriteAtlas.resetForTesting()
+            _ = SpriteAtlas.texture(named: legacyBuildingStem)
+            #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
+        }
 
         SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "building-house")
