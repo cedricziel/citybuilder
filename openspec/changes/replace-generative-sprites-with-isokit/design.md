@@ -110,6 +110,8 @@ The 1-point tile bleed (2 px @2×) keeps linear sampling inside opaque texels at
 
 SpriteKit picks `@2x` atlas images on retina devices automatically. Sprite sizes stay in points, so `IsoMath` and the anchors do not change.
 
+**Kit renders get their own atlas.** SpriteKit applies one filtering mode to a whole atlas page: when a page mixes `.linear` and `.nearest` sub-textures, every texture on it uses whichever mode was set last. This was measured with the house render and a legacy building on one page. So art-kit renders live in `Resources/Kit.atlas`, which is linear, and the pixel art still in `Terrain`, `Buildings` and `Units` stays `.nearest`. Routing sends a sprite to `Kit` when its brief has migrated; each family PR moves its files there. Once every family has migrated, the legacy atlases hold only the `.nearest` goods icons and status badges. Because no atlas mixes kit and legacy art, legacy sprites need no nearest-neighbour `@2x` twins: SpriteKit only skips 1x-only sprites in an atlas that also has `@2x` art.
+
 ### D8. Indexed 256-colour PNGs stay
 
 Pillow FASTOCTREE quantization of a 3D render @2× was 5.4× smaller than RGBA (15 KB vs 84 KB) with no visible difference. The 256-colour indexed rule of `sprite-asset-pipeline` therefore stays. The render tool quantizes on write.

@@ -8,26 +8,14 @@ from pathlib import Path
 
 from PIL import Image
 
-# Mirrors `SpriteAtlasRouting.atlasName(for:)` in CityRender2D.
-PREFIXES = {
-    "terrain-": "Terrain",
-    "building-": "Buildings",
-    "overlay-": "Buildings",
-    "walker-": "Units",
-    "ship-": "Units",
-    "good-": "Icons",
-}
+# Mirrors `SpriteAtlasRouting.kitAtlasName` in CityRender2D. Every art-kit render lives here:
+# SpriteKit filters a whole atlas page with one mode, and kit art is linear while the legacy pixel
+# art in the other atlases stays nearest (design D7).
+KIT_ATLAS = "Kit"
 
 
-def atlas_name(file_name: str) -> str:
-    for prefix, atlas in PREFIXES.items():
-        if file_name.startswith(prefix):
-            return atlas
-    raise ValueError(f"no atlas for sprite file {file_name}")
-
-
-def atlas_path(resources: Path, file_name: str) -> Path:
-    return resources / f"{atlas_name(file_name)}.atlas" / file_name
+def kit_path(resources: Path, file_name: str) -> Path:
+    return resources / f"{KIT_ATLAS}.atlas" / file_name
 
 
 def save_indexed(image: Image.Image, dest: Path) -> None:

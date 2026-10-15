@@ -50,7 +50,7 @@ def compare_trees(raw_dir: Path, resources: Path) -> list[str]:
     """One message per raw render outside tolerance of its committed atlas PNG; empty when all pass."""
     failures = []
     for fresh_path in sorted(raw_dir.glob("*.png")):
-        committed_path = atlas.atlas_path(resources, fresh_path.name)
+        committed_path = atlas.kit_path(resources, fresh_path.name)
         rel = committed_path.relative_to(resources)
         if not committed_path.exists():
             failures.append(f"{rel}: rendered but not committed")

@@ -25,7 +25,7 @@ def _sprite(roof: tuple[int, int, int, int] = (170, 70, 45, 255)) -> Image.Image
 
 
 def _commit(resources: Path, name: str, image: Image.Image) -> None:
-    atlas.save_indexed(image, atlas.atlas_path(resources, name))
+    atlas.save_indexed(image, atlas.kit_path(resources, name))
 
 
 @pytest.mark.scenario("Unchanged recipes pass verification")
@@ -51,7 +51,7 @@ def test_changed_render_fails_and_names_the_png(tmp_path: Path) -> None:
     _sprite((60, 60, 70, 255)).save(raw / "building-house.png")  # roof finish changed to slate
     failures = compare.compare_trees(raw, resources)
     assert len(failures) == 1
-    assert "Buildings.atlas/building-house.png" in failures[0]
+    assert "Kit.atlas/building-house.png" in failures[0]
 
 
 def test_transparent_pixels_compare_equal_whatever_their_rgb(tmp_path: Path) -> None:

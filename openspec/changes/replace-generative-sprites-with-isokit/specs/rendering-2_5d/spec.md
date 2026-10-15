@@ -39,3 +39,8 @@ Terrain, building, unit and ship textures SHALL be loaded from atlases that incl
 
 - **WHEN** the HUD shows the wood icon
 - **THEN** its texture's `filteringMode` is `.nearest`
+
+#### Scenario: Linear and nearest textures never share an atlas
+
+- **WHEN** a sprite name is routed to its atlas
+- **THEN** it goes to the `Kit` atlas exactly when its texture filters linearly, because SpriteKit applies one filtering mode to a whole atlas page

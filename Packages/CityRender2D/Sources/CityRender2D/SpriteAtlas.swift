@@ -17,10 +17,14 @@ public enum SpriteAtlasRouting {
     public static let buildingsAtlasName = "Buildings"
     public static let unitsAtlasName = "Units"
     public static let iconsAtlasName = "Icons"
+    /// Art-kit renders, filtered linearly. SpriteKit applies one filtering mode to a whole atlas
+    /// page, so they cannot share a page with nearest-filtered pixel art (design D7).
+    public static let kitAtlasName = "Kit"
 
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
+        if TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: spriteName)) { return kitAtlasName }
         if spriteName.hasPrefix("terrain-") { return terrainAtlasName }
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         // Status badges drawn over buildings live in the Buildings atlas.
@@ -34,7 +38,7 @@ public enum SpriteAtlasRouting {
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        terrainAtlasName, buildingsAtlasName, unitsAtlasName, iconsAtlasName
+        terrainAtlasName, buildingsAtlasName, unitsAtlasName, iconsAtlasName, kitAtlasName
     ]
 }
 

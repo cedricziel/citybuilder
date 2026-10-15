@@ -26,9 +26,23 @@ func scenarioTerrainNameRoutesToTerrainAtlas() {
 @Test("scenario: building name routes to buildings atlas")
 func scenarioBuildingNameRoutesToBuildingsAtlas() {
     #expect(SpriteAtlasRouting.atlasName(for: "building-sawmill-operational-0") == "Buildings")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-house") == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-house-mediterranean") == "Buildings")
     if let texture = SpriteAtlas.texture(named: "building-sawmill-operational-0") {
         #expect(texture.size().width > 0)
+    }
+}
+
+/// SpriteKit filters a whole atlas page with one mode (the last one set wins), so the linearly
+/// filtered art-kit renders cannot share a page with nearest-filtered pixel art (design D7).
+@Test("scenario: Linear and nearest textures never share an atlas")
+func kitRendersRouteToTheKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "building-house") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-house-tier2") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-town-center-operational-1") == "Kit")
+    #expect(SpriteAtlasRouting.allAtlasNames.contains("Kit"))
+    for name in ["building-house", "building-sawmill", "good-wood", "terrain-grass", "walker-ne-0"] {
+        let linear = TextureFiltering.mode(for: name) == .linear
+        #expect(linear == (SpriteAtlasRouting.atlasName(for: name) == "Kit"), "\(name)")
     }
 }
 
@@ -111,8 +125,12 @@ struct LazyConstructionSuite {
         #expect(SpriteAtlas.isAtlasConstructed(named: "Terrain"))
 
         SpriteAtlas.resetForTesting()
-        _ = SpriteAtlas.texture(named: "building-house")
+        _ = SpriteAtlas.texture(named: "building-sawmill")
         #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
+
+        SpriteAtlas.resetForTesting()
+        _ = SpriteAtlas.texture(named: "building-house")
+        #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
         SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "walker-ne-0")
