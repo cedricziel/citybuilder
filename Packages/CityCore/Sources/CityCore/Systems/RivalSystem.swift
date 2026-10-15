@@ -61,7 +61,7 @@ struct RivalTurn {
     var counts: [BuildingKind: Int] = [:]
     /// Buildings that count toward the building cap: all but roads and
     /// foresters (`rival-ai-viability` D6).
-    var nonRoad = 0
+    var cappedBuildings = 0
     /// Kinds of the rival's sites waiting for materials.
     var waiting: Set<BuildingKind> = []
     /// Forest left in the catchments of the rival's huts: the wood they
@@ -159,7 +159,7 @@ extension World {
             pendingCommands += trades
             return
         }
-        guard turn.nonRoad < difficulty.rivalBuildingCap else { return }
+        guard turn.cappedBuildings < difficulty.rivalBuildingCap else { return }
         if let commands = thresholdCommands(turn: turn, plan: &plan) {
             pendingCommands += commands
             return
@@ -209,7 +209,7 @@ extension World {
         turn.centerFreeSpace = stockpiles[rival.townCenterID]?.freeSpace ?? 0
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
-            turn.nonRoad += building.kind == .road || building.kind == .forester ? 0 : 1
+            turn.cappedBuildings += building.kind == .road || building.kind == .forester ? 0 : 1
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
             }
