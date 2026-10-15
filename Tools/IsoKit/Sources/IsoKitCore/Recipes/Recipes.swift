@@ -45,7 +45,7 @@ public enum Recipes {
         Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
             forester(kit)
         }
-    ] + gather + craft
+    ] + gather + craft + civic
 
     /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {
