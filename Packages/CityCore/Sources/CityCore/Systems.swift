@@ -206,6 +206,12 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID],
         events: inout [WorldEvent]
     ) {
+        // Spawning carriers moves goods, not buildings, so list the
+        // candidate destinations once for every producer.
+        let buffers = goodsBuffers().filter { $0.state == .operational }
+        let waitingSites = buildings.values
+            .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
+            .sorted { $0.id.raw < $1.id.raw }
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
@@ -219,7 +225,7 @@ extension World {
 
             for (good, _) in recipe.outputs where producerStock.quantity(of: good) >= 1 {
                 if let (siteId, sitePath) = findWaitingSiteOnIsland(
-                    fromRoad: road, good: good, islandID: islandID, tileToIsland: tileToIsland
+                    fromRoad: road, good: good, islandID: islandID, tileToIsland: tileToIsland, among: waitingSites
                 ) {
                     spawnCarrier(
                         CarrierSpawn(
@@ -237,7 +243,7 @@ extension World {
                     break
                 }
                 guard let (warehouseId, path) = findRoadConnectedBuffer(
-                    fromRoad: road, good: good
+                    fromRoad: road, good: good, among: buffers
                 )
                 else { continue }
                 spawnCarrier(
@@ -282,7 +288,8 @@ extension World {
         ))
     }
 
-    /// Closest road-connected waiting construction site on `islandID`
+    /// Closest road-connected site among the `waiting` construction sites
+    /// (in entity order) on `islandID`
     /// that still needs `good` to complete its recipe. Returns nil if
     /// no such site is reachable. Spec: `add-construction-stalls` /
     /// `Producer prioritizes waiting construction sites`.
@@ -290,13 +297,12 @@ extension World {
         fromRoad start: TileCoordinate,
         good: Good,
         islandID: IslandID?,
-        tileToIsland: [TileCoordinate: IslandID]
+        tileToIsland: [TileCoordinate: IslandID],
+        among waiting: [Building]
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for site in buildings.values.sorted(by: { $0.id.raw < $1.id.raw }) {
+        for site in waiting {
             let id = site.id
-            guard site.state == .constructing else { continue }
-            guard site.constructionState == .waitingForMaterials else { continue }
             let cost = BuildingCatalog.spec(for: site.kind).materialCost
             let needed = (cost[good] ?? 0) - (site.materialsDelivered[good] ?? 0)
             guard needed > 0 else { continue }
@@ -350,12 +356,15 @@ extension World {
     /// Find the road-connected goods buffer with capacity for `good`.
     /// Returns (bufferId, road path) on the shortest path; nil if none
     /// reachable. Equal-length paths resolve to the lowest entity ID.
+    /// `buffers` are the operational goods buffers in entity order, when
+    /// the caller has already listed them.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
-        good: Good
+        good: Good,
+        among buffers: [Building]? = nil
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for building in goodsBuffers() where building.state == .operational {
+        for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
             let id = building.id
             guard let bufferRoad = anyAdjacentRoad(
                 anchor: building.anchor,
@@ -446,17 +455,38 @@ extension World {
         }
     }
 
-    /// True if any warehouse holding `good` is road-connected (any path)
-    /// from `anchor`. M4 simplified: we just check road-connected
-    /// warehouses, not a full path-finding query. Carriers do the rest.
-    func hasGoodInReach(_ good: Good, fromAnchor anchor: TileCoordinate, footprint: Footprint) -> Bool {
-        guard roadGraph.isAnchorRoadConnected(anchor, footprint: footprint) else { return false }
-        for building in goodsBuffers() where building.state == .operational {
+    /// What a pass over every house needs to answer `hasGoodInReach`:
+    /// the operational goods buffers and the road network's components.
+    /// Consumption changes stock, not buildings or roads, so one snapshot
+    /// serves the whole pass instead of a listing and a path search per
+    /// house, need and buffer.
+    struct SupplyReach {
+        let buffers: [Building]
+        let roadComponents: [TileCoordinate: Int]
+    }
+
+    func supplyReach() -> SupplyReach {
+        SupplyReach(
+            buffers: goodsBuffers().filter { $0.state == .operational },
+            roadComponents: roadGraph.componentLabels()
+        )
+    }
+
+    /// True if any operational buffer holding `good` is road-connected
+    /// (any path) from `anchor`. M4 simplified: we just check
+    /// road-connected warehouses, not a full path-finding query.
+    /// Carriers do the rest.
+    func hasGoodInReach(
+        _ good: Good, fromAnchor anchor: TileCoordinate, footprint: Footprint, reach: SupplyReach
+    ) -> Bool {
+        guard let from = anyAdjacentRoad(anchor: anchor, footprint: footprint),
+              let component = reach.roadComponents[from]
+        else { return false }
+        for building in reach.buffers {
             guard (stockpiles[building.id]?.quantity(of: good) ?? 0) > 0 else { continue }
             let bufferFootprint = BuildingCatalog.spec(for: building.kind).footprint
-            if sharesRoadNetwork(anchor, footprint, with: building.anchor, bufferFootprint) {
-                return true
-            }
+            let road = anyAdjacentRoad(anchor: building.anchor, footprint: bufferFootprint)
+            if let road, reach.roadComponents[road] == component { return true }
         }
         return false
     }

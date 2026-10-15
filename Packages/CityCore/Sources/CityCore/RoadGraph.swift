@@ -55,6 +55,27 @@ public struct RoadGraph: Codable, Sendable, Equatable {
         return false
     }
 
+    /// A label per road tile, equal for two tiles exactly when a road path
+    /// joins them. The label values carry no meaning beyond equality, so
+    /// the set's iteration order cannot leak into the simulation.
+    public func componentLabels() -> [TileCoordinate: Int] {
+        var labels: [TileCoordinate: Int] = [:]
+        labels.reserveCapacity(roadTiles.count)
+        var next = 0
+        for seed in roadTiles where labels[seed] == nil {
+            var stack = [seed]
+            labels[seed] = next
+            while let tile = stack.popLast() {
+                for neighbor in adjacency[tile] ?? [] where labels[neighbor] == nil {
+                    labels[neighbor] = next
+                    stack.append(neighbor)
+                }
+            }
+            next += 1
+        }
+        return labels
+    }
+
     private func neighbors(of coord: TileCoordinate) -> [TileCoordinate] {
         [
             TileCoordinate(x: coord.x + 1, y: coord.y),
