@@ -110,18 +110,16 @@ func scenarioAll16ShipSpritesDeclared() {
 
 // MARK: - Shore-building sprite inventory
 
-@Test("scenario: all 24 port sprites declared")
-func scenarioAll24PortSpritesDeclared() {
+@Test("scenario: all 20 port sprites declared")
+func scenarioAll20PortSpritesDeclared() {
     let names = Set(SpriteAtlas.catalogSpriteNames.filter { $0.hasPrefix("building-port-") })
-    #expect(names.count == 24)
+    #expect(names.count == 20)
     for orientation in SpriteName.shoreOrientations {
         #expect(names.contains("building-port-\(orientation)"))
         for frame in 0 ..< 3 {
             #expect(names.contains("building-port-\(orientation)-constructing-\(frame)"))
         }
-        for frame in 0 ..< 2 {
-            #expect(names.contains("building-port-\(orientation)-operational-\(frame)"))
-        }
+        #expect(names.contains("building-port-\(orientation)-operational-0"))
     }
 }
 
@@ -140,29 +138,18 @@ func scenarioAll24ShipyardSpritesDeclared() {
     }
 }
 
-// MARK: - Sprite catalog declares new content
+// MARK: - Catalog counts
 
-@Test("scenario: catalog count grows by exactly 64")
-func scenarioCatalogCountGrowsByExactly64() {
-    // Pre-M7.5 catalog count for the 6 non-shore building kinds was
-    // their static entries + constructing frames (no operational
-    // animations for some), plus terrain entries + walker entries.
-    // M7.5 ADDS 64 entries (16 ship + 24 port + 24 shipyard) and
-    // REMOVES the 2 stale `building-port` / `building-shipyard`
-    // entries that pre-M7.5 enumeration emitted under the non-shore
-    // grammar. The net delta on the catalog is therefore +64 - 2.
+@Test("the catalog declares 16 ships, 20 port sprites and 24 shipyard sprites")
+func catalogCountsShipsAndShoreSprites() {
     let names = Set(SpriteAtlas.catalogSpriteNames)
-    let shipCount = names.count(where: { $0.hasPrefix("ship-") })
-    let portCount = names.count(where: { $0.hasPrefix("building-port-") })
-    let shipyardCount = names.count(where: { $0.hasPrefix("building-shipyard-") })
-    #expect(shipCount == 16)
-    #expect(portCount == 24)
-    #expect(shipyardCount == 24)
-    #expect(shipCount + portCount + shipyardCount == 64)
+    #expect(names.count(where: { $0.hasPrefix("ship-") }) == 16)
+    #expect(names.count(where: { $0.hasPrefix("building-port-") }) == 20)
+    #expect(names.count(where: { $0.hasPrefix("building-shipyard-") }) == 24)
 }
 
-@Test("scenario: pre-existing catalog entries unchanged")
-func scenarioPreExistingCatalogEntriesUnchanged() {
+@Test("pre-existing catalog entries stay declared")
+func preExistingCatalogEntriesStayDeclared() {
     // Pre-M7.5 entries for non-shore building kinds, terrain, and
     // walkers must continue to appear with identical names. We snapshot
     // a representative set rather than the full list — the existing

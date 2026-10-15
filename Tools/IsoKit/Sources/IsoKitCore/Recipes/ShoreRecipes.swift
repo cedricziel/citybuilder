@@ -79,7 +79,7 @@ extension Recipes {
             Recipe(
                 id: "building-port-\(side.rawValue)",
                 cell: SpriteCell(footprint: 2, rows: 3, heightPx: 128),
-                operationalFrames: 2,
+                operationalFrames: 1,
                 customStages: true,
                 plot: nil
             ) { kit, stage in
