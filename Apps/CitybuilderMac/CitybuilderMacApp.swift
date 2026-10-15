@@ -55,6 +55,16 @@ struct CitybuilderMacApp: App {
             }
     }
 
+    /// Debug builds start a new game from a `UITestSeed` world when launched with its flag
+    /// (`-uiTestSeedTown`, `-uiTestSeedShore`, `-uiTestSeedPort`), for UI tests and art reviews.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        return UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) ?? world
+        #else
+        return world
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
@@ -64,7 +74,7 @@ struct CitybuilderMacApp: App {
                 ),
                 sessionFactory: { [audio] world in
                     GameSession(
-                        world: world,
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },

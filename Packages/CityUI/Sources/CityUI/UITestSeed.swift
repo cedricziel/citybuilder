@@ -102,6 +102,15 @@ public enum UITestSeed {
         return nil
     }
 
+    /// The seeded world the launch arguments ask for (`-uiTestSeedShore`, `-uiTestSeedPort`,
+    /// `-uiTestSeedTown` with its `-uiTestShowcase` and `-uiTestSeason`), or nil for a regular game.
+    public static func world(fromArguments arguments: [String]) -> World? {
+        if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
+        if arguments.contains("-uiTestSeedPort") { return portWorld() }
+        guard arguments.contains("-uiTestSeedTown") else { return nil }
+        return townWorld(showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments))
+    }
+
     /// The season after `-uiTestSeason` in the launch arguments, if any.
     public static func season(fromArguments arguments: [String]) -> Season? {
         guard let flag = arguments.firstIndex(of: "-uiTestSeason"), arguments.indices.contains(flag + 1) else { return nil }

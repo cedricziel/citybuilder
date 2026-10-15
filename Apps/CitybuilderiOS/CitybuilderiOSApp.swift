@@ -50,24 +50,14 @@ struct CitybuilderiOSApp: App {
             }
     }
 
-    /// With `-uiTestSeedTown` (Debug only) a new game starts from `UITestSeed.townWorld()`: the
-    /// default island with finished houses around the town center, for before/after art screenshots;
-    /// `-uiTestSeason winter` starts it in that season. `-uiTestSeedShore` starts from
-    /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
+    /// Debug builds start a new game from a `UITestSeed` world when launched with its flag
+    /// (`-uiTestSeedTown`, `-uiTestSeedShore`, `-uiTestSeedPort`), for UI tests and art reviews.
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-uiTestSeedShore") {
-            return UITestSeed.shoreWorld()
-        }
-        if arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld(
-                showcase: UITestSeed.showcase(fromArguments: arguments),
-                season: UITestSeed.season(fromArguments: arguments)
-            )
-        }
-        #endif
+        return UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) ?? world
+        #else
         return world
+        #endif
     }
 
     var body: some Scene {

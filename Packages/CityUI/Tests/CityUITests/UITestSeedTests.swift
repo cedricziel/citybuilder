@@ -68,3 +68,13 @@ func townSeedStaysSolvent() {
     }
     #expect(!world.economy.gameOver)
 }
+
+@Test("Launch arguments pick the seed world, and none means a regular game")
+@MainActor
+func launchArgumentsPickTheSeedWorld() throws {
+    #expect(UITestSeed.world(fromArguments: ["Citybuilder"]) == nil)
+    let port = try #require(UITestSeed.world(fromArguments: ["Citybuilder", "-uiTestSeedPort"]))
+    #expect(port.buildings.values.contains { $0.kind == .port && $0.owner == .player })
+    let town = try #require(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestSeason", "autumn"]))
+    #expect(town.date.season == .autumn)
+}
