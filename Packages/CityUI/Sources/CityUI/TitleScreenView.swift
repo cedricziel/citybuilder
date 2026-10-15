@@ -135,8 +135,8 @@ public struct TitleScreenView: View {
                                 .opacity(0.8)
                         }
                         #if os(tvOS)
-                        // The system style sizes to the label.
-                        .frame(maxWidth: 280)
+                        // The system style hugs the label; keep the date on one line.
+                        .frame(minWidth: 280)
                         .padding(.vertical, 10)
                         #endif
                     }
