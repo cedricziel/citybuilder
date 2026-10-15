@@ -12,7 +12,7 @@
 
 ## 2. M2 — Rivals at the market (requires `add-town-market` archived)
 
-- [ ] 2.1 Archive `add-town-market` (or confirm it is archived) so `openspec/specs/town-market` exists. Then add a `town-market` delta to this change that replaces "Rivals stay off the market" with a requirement that player trades leave rivals alone, keeping the scenario "Market trade leaves rivals alone"; run `openspec validate rival-ai-viability --strict`
+- [x] 2.1 Archive `add-town-market` (or confirm it is archived) so `openspec/specs/town-market` exists. Then add a `town-market` delta to this change that replaces "Rivals stay off the market" with a requirement that player trades leave rivals alone, keeping the scenario "Market trade leaves rivals alone"; run `openspec validate rival-ai-viability --strict`
 - [ ] 2.2 Tests-first: translate every `rival-towns` / Rival market trades scenario into failing tests; confirm red
 - [ ] 2.3 Implement to green: per-rival seasonal market counts on the rival (Codable, optional on decode), reset with the season like the player's
 - [ ] 2.4 Implement to green: a rival market command applied at the tick boundary in queue order, reusing the market's price and fill rules, with no `marketTraded` event and no change to the player's counts

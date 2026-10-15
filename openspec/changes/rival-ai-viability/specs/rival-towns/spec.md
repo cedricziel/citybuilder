@@ -107,8 +107,8 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 #### Scenario: Rival buys the planks it is missing
 
-- **WHEN** a rival with no planks, no sawmill and $400 takes a turn whose sawmill step waits only for 1 plank
-- **THEN** its commands buy 1 plank at the market price, and its treasury falls by that price when they apply
+- **WHEN** a rival with no lumberjack hut, no sawmill, no planks and $400 takes a turn whose house step waits only for 4 planks
+- **THEN** its commands buy 4 planks at the market price, and its treasury falls by 4 × that price when they apply
 
 #### Scenario: Rival in debt sells surplus planks
 
