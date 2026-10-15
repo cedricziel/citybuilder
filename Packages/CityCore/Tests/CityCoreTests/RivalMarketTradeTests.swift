@@ -39,6 +39,21 @@ func scenarioRivalBuysThePlanksItIsMissing() throws {
     #expect(house.constructionState != .waitingForMaterials)
 }
 
+@Test("a step the rival's own sawmill can supply waits for it instead of buying")
+func ownSawmillSuppliesTheStep() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 3
+        $0.treasury = 400
+    }
+    world.setRivalStock(1, [.wood: 10, .food: 10])
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(rivalTrades(commands).isEmpty)
+    #expect(placedKind(commands.last) == .house)
+}
+
 @Test("scenario: rival in debt sells surplus planks")
 func scenarioRivalInDebtSellsSurplusPlanks() {
     var world = normalWorld()
