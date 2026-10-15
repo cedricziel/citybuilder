@@ -1,0 +1,121 @@
+## ADDED Requirements
+
+### Requirement: IsoKit renders every building and unit sprite
+
+A Swift package at `Tools/IsoKit` SHALL provide an `isokit` executable. For every building kind and unit in the sprite catalog, it renders:
+
+- the idle sprite
+- the construction frames
+- the operational frames
+- the facings
+
+It does this offline, from a recipe written in code. The package MUST NOT be linked into any app target, and MUST NOT make network requests.
+
+#### Scenario: Every catalogued building kind has a recipe
+
+- **WHEN** the IsoKit recipe registry is compared with the building and unit entries of the sprite catalog
+- **THEN** every catalog entry names a registered recipe and every recipe has a catalog entry
+
+#### Scenario: Rendering needs no network
+
+- **WHEN** `isokit render` runs with networking disabled
+- **THEN** it writes every building and unit PNG and exits zero
+
+### Requirement: Fixed isometric camera and cell geometry
+
+IsoKit SHALL render through one orthographic camera with:
+
+- euler angles (−30°, 45°, 0) and vertical projection
+- a scale of 64 / (4·√2) points per metre, where one tile is 4 m
+
+An n×n footprint renders into a cell 64·n points wide. The footprint's bottom vertex MUST sit at the cell's bottom-centre. Each recipe declares its cell height, and no part of the building may be clipped by the cell's top edge.
+
+#### Scenario: A 2×2 house renders 128 points wide
+
+- **WHEN** the peasant house recipe (2×2 footprint) is rendered at @1×
+- **THEN** the PNG is 128 pixels wide and its lowest opaque pixel is in the bottom row at the horizontal centre ±2 pixels
+
+#### Scenario: A recipe taller than its cell is rejected
+
+- **WHEN** a recipe's tallest point projects above its declared cell height
+- **THEN** the IsoKit test suite fails and names the recipe
+
+### Requirement: One light rig and finish set
+
+Every IsoKit render SHALL use the same light rig:
+
+- one directional warm sun from screen upper-left, casting soft shadows
+- one ambient sky fill
+- the camera's screen-space ambient occlusion
+
+Every surface SHALL use a finish from the shared finish set. Recipes MUST NOT add lights or define materials of their own.
+
+#### Scenario: Recipes cannot add lights
+
+- **WHEN** a recipe's node tree is inspected after building
+- **THEN** it contains no node with an `SCNLight`
+
+#### Scenario: Recipes use shared finishes
+
+- **WHEN** every material in a built recipe is compared with the finish set
+- **THEN** each material was produced by a finish from the set
+
+### Requirement: Construction stages come from the recipe
+
+A building recipe SHALL be able to build itself at each construction stage. IsoKit SHALL render stages 0, 1 and 2 as `building-<kind>-constructing-0…2`:
+
+- stage 0: plinth and bare frame
+- stage 1: walls and roof boards
+- stage 2: near-finished, with scaffold
+
+#### Scenario: A house renders three construction frames
+
+- **WHEN** IsoKit renders the house family
+- **THEN** `building-house-constructing-0.png`, `-1.png` and `-2.png` are written and each passes the content gate
+
+### Requirement: Moving parts render as operational frames
+
+A recipe MAY declare a moving part (sails, saw, wheel) with a frame count. For each frame, IsoKit SHALL:
+
+1. render the part with the building drawn depth-only and no ground
+2. composite that overlay onto the idle sprite
+3. write it as `building-<kind>-operational-<n>`
+
+#### Scenario: Sawmill sails turn across operational frames
+
+- **WHEN** IsoKit renders the sawmill with a 4-frame sails part
+- **THEN** `building-sawmill-operational-0…3.png` are written, they differ only where the sails are, and the building pixels match the idle sprite within the regen tolerance
+
+### Requirement: Terrain and icon tiles come from SVG generators
+
+A generator under `scripts/art/` SHALL write the SVG sources for:
+
+- the terrain transition tiles
+- the full-tile variants
+- the goods icons
+
+It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner masks 1–14 for the pairs grass→beach and beach→water. Every boundary MUST cross a tile edge at the edge's midpoint. Texture patterns MUST repeat on a 32×16-point period.
+
+#### Scenario: Both transition sets are complete
+
+- **WHEN** the terrain generator runs
+- **THEN** it writes `terrain-grass-beach-t1` … `-t14` and `terrain-beach-water-t1` … `-t14`
+
+#### Scenario: Neighbouring transition tiles join without a seam
+
+- **WHEN** tiles for masks 3 and 6 are composited as east–west neighbours on the iso lattice
+- **THEN** no pixel along their shared edge is transparent and the boundary curve is continuous across the edge
+
+### Requirement: Offline render within a tolerance
+
+`make sprites` SHALL build IsoKit with `xcrun swift`, run it and the SVG generators, and write every atlas PNG. `make sprites-verify` SHALL re-render into a scratch directory and compare each PNG with the committed file. It fails when a PNG's mean absolute channel difference exceeds 0.1/255, or when more than 0.1% of its pixels differ by more than 8 in any channel.
+
+#### Scenario: Unchanged recipes pass verification
+
+- **WHEN** `make sprites-verify` runs on a clean checkout on a Mac with Metal
+- **THEN** it exits zero
+
+#### Scenario: A changed recipe without re-rendered PNGs fails verification
+
+- **WHEN** a recipe's roof finish is changed and the PNGs are not re-rendered
+- **THEN** `make sprites-verify` exits non-zero and names the affected PNGs
