@@ -1,0 +1,24 @@
+## ADDED Requirements
+
+### Requirement: Interface actions make a sound
+
+CityUI SHALL send each interface sound to `UISounds.sink`, which the app shell sets at launch:
+- `tap`: choosing Continue, New Game or Settings on the title screen, and inspecting a tile;
+- `select`: choosing a build tool;
+- `toggle`: pausing or resuming;
+- `open`: opening a build drawer;
+- `close`: closing a build drawer.
+
+With no sink set, nothing SHALL happen.
+
+#### Scenario: Title menu choices tap
+- **WHEN** the player chooses New Game, then Settings, on the title screen
+- **THEN** the sink receives `tap` twice
+
+#### Scenario: Build drawer opens and closes with a sound
+- **WHEN** the player opens the Gather drawer and then closes it
+- **THEN** the sink receives `open`, then `close`
+
+#### Scenario: Tools and pause make a sound
+- **WHEN** the player picks the road tool, then pauses
+- **THEN** the sink receives `select`, then `toggle`
