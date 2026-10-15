@@ -30,10 +30,7 @@ public enum UITestSeed {
         else { return world }
         world.enqueue(.place(.shipyard, at: site))
         _ = world.tick()
-        let pending = { world.buildings.values.contains { [.port, .shipyard].contains($0.kind) && $0.state != .operational } }
-        for _ in 0 ..< 2000 where pending() {
-            _ = world.tick()
-        }
+        settle(&world) { $0.buildings.values.contains { [.port, .shipyard].contains($0.kind) && $0.state != .operational } }
         if let yard = world.buildings.values.first(where: { $0.kind == .shipyard && $0.owner == .player }) {
             world.emitShip(fromShipyard: yard.id)
         }
@@ -61,10 +58,7 @@ public enum UITestSeed {
             placed.insert(site)
         }
         // Wait only on what the seed placed, so a starter building that never opens can't hold it up.
-        let pending = { world.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
-        for _ in 0 ..< 2000 where pending() {
-            _ = world.tick()
-        }
+        settle(&world) { $0.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
         if let season {
             for _ in 0 ..< CalendarState.ticksPerYear where world.date.season != season {
                 _ = world.tick()
@@ -78,6 +72,15 @@ public enum UITestSeed {
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         return BuildingKind.allCases.filter { $0.category == arguments[flag + 1] }
+    }
+
+    /// Ticks `world` while `pending` holds, for at most 2000 ticks.
+    private static func settle(_ world: inout World, while pending: (World) -> Bool) {
+        var ticks = 0
+        while pending(world), ticks < 2000 {
+            _ = world.tick()
+            ticks += 1
+        }
     }
 
     /// The closest tile to `center`, ring by ring from `radius`, where `kind` may be placed.
