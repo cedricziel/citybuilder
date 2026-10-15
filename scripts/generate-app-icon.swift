@@ -223,7 +223,7 @@ let beach = sprite("Resources/Kit.atlas/terrain-beach.png")
 let forest = sprite("Resources/Kit.atlas/terrain-forest.png")
 let house = sprite("Resources/Kit.atlas/building-house.png")
 let sawmill = sprite("Resources/Buildings.atlas/building-sawmill.png")
-let lumberjack = sprite("Resources/Buildings.atlas/building-lumberjack-hut.png")
+let lumberjack = sprite("Resources/Kit.atlas/building-lumberjack-hut.png")
 
 // Terrain and buildings are drawn on separate transparent layers so the
 // tvOS icon can stack them for parallax; the flat icons composite both
