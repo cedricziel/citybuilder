@@ -37,9 +37,12 @@ extension World {
     /// hold it back and the treasury covers the purchase and the step.
     private func unblockingBuys(turn: RivalTurn, plan: inout RivalTownPlan) -> [Command]? {
         let rival = turn.rival
-        guard turn.waiting.isEmpty else { return nil }
+        // At the building cap no step comes, and a house step at the house
+        // cap is skipped: buying for either would waste the money.
+        guard turn.waiting.isEmpty, turn.nonRoad < RivalAI.buildingCap else { return nil }
         let kind = turn.thresholdKinds(pastOpening: rival.ai.isPastOpening).first
             ?? RivalAI.scriptKind(at: rival.ai.scriptIndex)
+        guard kind != .house || turn.counts[.house, default: 0] < RivalAI.houseCap else { return nil }
         let cost = materialCost(of: kind, for: rival.owner)
         guard !turn.canSupply(cost) else { return nil }
         var buys: [(Good, Int)] = []

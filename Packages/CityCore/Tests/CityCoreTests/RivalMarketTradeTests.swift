@@ -46,6 +46,47 @@ func scenarioRivalInDebtSellsSurplusPlanks() {
     #expect(world.rivalStock(1)[.planks] == 20)
 }
 
+@Test("scenario: no purchase for a step the caps rule out")
+func noUnblockingBuyAtTheBuildingCap() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 3
+        $0.treasury = 400
+    }
+    world.setRivalStock(1, [.wood: 10, .food: 10])
+    for _ in 0 ..< RivalAI.buildingCap {
+        world.testAddBuilding(.farm, owner: .rival(1))
+    }
+    #expect(rivalTrades(world.takeTurn(1)).isEmpty)
+}
+
+@Test("no unblocking buy for a house step the house cap skips")
+func noUnblockingBuyAtTheHouseCap() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 3
+        $0.treasury = 400
+    }
+    world.setRivalStock(1, [.wood: 10, .food: 10])
+    // Below the building cap, so only the house cap stands in the way.
+    for _ in 0 ..< RivalAI.houseCap {
+        world.testAddBuilding(.house, owner: .rival(1))
+    }
+    #expect(!rivalTrades(world.takeTurn(1)).contains(.rivalMarketBuy(1, .planks, 4)))
+}
+
+@Test("a rival short of money but not in debt sells surplus")
+func rivalShortOfMoneySellsSurplus() {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 100 }
+    world.setRivalStock(1, [.planks: 30])
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 18)])
+    var comfortable = normalWorld()
+    comfortable.setRival(1) { $0.treasury = 150 }
+    comfortable.setRivalStock(1, [.planks: 30])
+    #expect(rivalTrades(comfortable.takeTurn(1)).isEmpty)
+}
+
 @Test("scenario: rival buys food for short houses")
 func scenarioRivalBuysFoodForShortHouses() {
     var world = normalWorld()
