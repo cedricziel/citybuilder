@@ -373,11 +373,24 @@ func buyingNeverOverdraws() {
     #expect(reach == MarketReach(freeSpace: 33, stock: [.bread: 8, .wood: 4]))
 }
 
+@Test func marketReachLeavesOutBuffersUnderConstructionAndRivals() {
+    var market = MarketFixture()
+    let rivalWarehouse = market.world.testPlace(.warehouse, at: TileCoordinate(x: 0, y: 3), owner: .rival(1))
+    market.world.testSetStock([.bread: 5], in: market.warehouse)
+    market.world.testSetStock([.iron: 7], in: rivalWarehouse)
+    market.world.buildings[market.warehouse]?.state = .constructing
+    #expect(market.world.marketReach(at: market.townCenter)?.stock == [:])
+}
+
 @Test func onlyOperationalPlayerTownCentersHaveAMarket() {
     var market = MarketFixture()
     let rival = market.world.testPlace(.townCenter, at: TileCoordinate(x: 14, y: 3), owner: .rival(1))
+    #expect(market.world.hasMarket(at: market.townCenter))
     #expect(market.world.marketReach(at: market.warehouse) == nil)
+    #expect(!market.world.hasMarket(at: market.warehouse))
     #expect(market.world.marketReach(at: rival) == nil)
+    #expect(!market.world.hasMarket(at: rival))
     market.world.buildings[market.townCenter]?.state = .constructing
     #expect(market.world.marketReach(at: market.townCenter) == nil)
+    #expect(!market.world.hasMarket(at: market.townCenter))
 }
