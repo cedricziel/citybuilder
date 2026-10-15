@@ -49,7 +49,7 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 - [ ] 4.1 Houses: every tier (peasant, citizen, merchant) for the default culture, with construction stages. Check Apple TV memory here. Houses and the town center shipped in #96, in their own `Kit` atlas; the Apple TV memory check is still open
 - [ ] 4.2 Forestry: lumberjack hut, forester and sawmill (sails moving part), charcoal burner
 - [ ] 4.3 Civic and storage: town center, warehouse, market, library, road variants. Roads shipped first, with the forest pass: connection tiles (`art.roads`, `RoadLinks`) replace the four road variants, and the town center's starter ring is a cobbled plaza
-- [ ] 4.4 Food and craft chains: farm, grain farm, windmill (sails), bakery, brewery, mine, smelter, toolsmith and the remaining production kinds
+- [ ] 4.4 Food and craft chains: farm, grain farm, windmill (sails), bakery, brewery, mine, smelter, toolsmith and the remaining production kinds. The gather category shipped first (lumberjack hut, forester, farm, grain farm, mine, hop garden, vineyard, tea garden, coffee grove); craft follows
 - [ ] 4.5 Culture and age variants: culture buildings, age houses and signature buildings (`sprite-style-catalog` culture and age requirements)
 - [ ] 4.6 Ships and shore buildings: port and shipyard in four orientations (resolve the open question in design.md), ship facings
 - [ ] 4.7 Walkers: kit figure recipe, 10×16, 4 facings × 4 gait frames, tunic colour by job. Update the walker node size in the renderer

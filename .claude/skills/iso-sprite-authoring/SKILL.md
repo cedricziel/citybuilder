@@ -153,7 +153,9 @@ Build the before app from main plus that seed and the after app from the family
 branch. Launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
 -uiTestSeedTown`, tap New Game, then Start, wait about 15 s, and take the shot
 with `simctl io screenshot`. Add `-uiTestSeason autumn` or `winter` to start
-the town in that season. Ask for the simulator slot first and shut the
+the town in that season, and `-uiTestShowcase <category>` (`gather`, `craft`,
+`town`) to also place one of each kind in that build category where the rules
+allow. Ask for the simulator slot first and shut the
 simulator down afterwards. The HUD's money and population come from the core
 simulation, so if they differ between the two shots, the builds sit on
 different main commits; the art didn't cause it.
