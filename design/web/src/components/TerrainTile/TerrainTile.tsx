@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { terrainSprites, type terrainSpritesKey } from "../../generated/terrain";
 
-/** A terrain tile from `Resources/Terrain.atlas`: `grass`, `water`, `forest` ... */
+/** A base terrain tile from `Resources/Kit.atlas`: `grass`, `water`, `forest` ... */
 export type TerrainArt = terrainSpritesKey;
 
 export interface TerrainTileProps {
