@@ -215,11 +215,56 @@ final class TVWalkthroughTests: XCTestCase {
         snapshot("map-after-hud-playpause")
     }
 
+    func testRoutesAndTheManifestEditorWithTheRemote() {
+        startGame(seed: ["-uiTestSeedPort"])
+        let routes = app.buttons["Routes"]
+        XCTAssertTrue(routes.waitForExistence(timeout: 5), "a player port should show the Routes button")
+        openAndGoBack(routes, expecting: app.buttons["New Route"].firstMatch, snapshot: "panel-routes")
+
+        focus(routes)
+        remote.press(.select)
+        let newRoute = app.buttons["New Route"].firstMatch
+        XCTAssertTrue(newRoute.waitForExistence(timeout: 5))
+        snapshot("routes-new-route-focus")
+        remote.press(.select)
+        let commit = app.buttons["Commit"]
+        XCTAssertTrue(commit.waitForExistence(timeout: 5), "New Route should start route mode")
+
+        // The seed puts the reticle on the port: Play/Pause to the map,
+        // select adds it as the first stop.
+        remote.press(.playPause)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        remote.press(.select)
+        let stop = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '1. '")).firstMatch
+        XCTAssertTrue(stop.waitForExistence(timeout: 5), "select on the port should add it as a stop")
+        snapshot("route-mode-stop")
+        let stopChip = app.buttons[stop.label]
+
+        remote.press(.playPause)
+        focus(stop)
+        remote.press(.select)
+        let manifestDone = app.buttons["Done"].firstMatch
+        XCTAssertTrue(manifestDone.waitForExistence(timeout: 5), "the stop should open the manifest editor")
+        snapshot("manifest-editor")
+        goBack(to: stop, name: "manifest editor")
+
+        // Back on the map removes the stop, then leaves route mode.
+        remote.press(.playPause)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        remote.press(.menu)
+        let removed = waitUntilGone(stopChip)
+        snapshot("route-mode-after-back")
+        XCTAssertTrue(removed, "Back in route mode should remove the last stop")
+        remote.press(.menu)
+        XCTAssertTrue(waitUntilGone(commit), "Back with no stops should leave route mode")
+        XCTAssertFalse(app.buttons["pause.resume"].exists, "leaving route mode must not pause")
+    }
+
     /// Launches with an empty save folder, so New Game is the primary
     /// button.
-    private func launch() {
+    private func launch(seed: [String] = []) {
         continueAfterFailure = true
-        app.launchArguments = ["-uiTestResetSaves"]
+        app.launchArguments = ["-uiTestResetSaves"] + seed
         app.launch()
         let newGame = app.buttons["title.newGame"]
         XCTAssertTrue(newGame.waitForExistence(timeout: 10))
@@ -235,8 +280,8 @@ final class TVWalkthroughTests: XCTestCase {
     /// Starts a game from New Game; `configure` runs with the dialog open.
     /// The map has focus once the game starts; with `inHUD`, Play/Pause
     /// then moves focus to the build rail.
-    private func startGame(inHUD: Bool = true, configure: () -> Void = {}) {
-        launch()
+    private func startGame(inHUD: Bool = true, seed: [String] = [], configure: () -> Void = {}) {
+        launch(seed: seed)
         remote.press(.select)
         let start = app.buttons["newGame.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 5))
