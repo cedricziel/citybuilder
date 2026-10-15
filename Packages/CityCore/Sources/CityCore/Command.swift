@@ -83,4 +83,12 @@ public enum Command: Codable, Equatable, Sendable {
     /// Sell up to the quantity of a good from the town center's island.
     /// Spec: `town-market` / Selling at the town center.
     case marketSell(EntityID, Good, Int)
+
+    /// A rival buys up to the quantity of a good into its town center.
+    /// Spec: `rival-towns` / Rival market trades.
+    case rivalMarketBuy(RivalID, Good, Int)
+
+    /// A rival sells up to the quantity of a good from its goods buffers.
+    /// Spec: `rival-towns` / Rival market trades.
+    case rivalMarketSell(RivalID, Good, Int)
 }

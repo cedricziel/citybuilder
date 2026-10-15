@@ -347,6 +347,9 @@ public struct World: Codable, Sendable, Equatable {
 
 private extension Command {
     var isRivalTurn: Bool {
-        if case .rivalPlace = self { true } else { false }
+        switch self {
+        case .rivalPlace, .rivalMarketBuy, .rivalMarketSell: true
+        default: false
+        }
     }
 }

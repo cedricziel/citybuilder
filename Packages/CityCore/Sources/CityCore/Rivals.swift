@@ -99,6 +99,10 @@ public struct RivalTown: Hashable, Codable, Sendable {
     public internal(set) var treasury: Int64
     public let townCenterID: EntityID
     public internal(set) var ai: RivalAIState
+    /// Units this rival bought and sold at its own market this season
+    /// (`rival-towns` / Rival market trades). Saves without it decode
+    /// to fresh limits.
+    public internal(set) var market = MarketLedger()
 
     public var owner: Owner {
         .rival(id)

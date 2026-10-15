@@ -23,7 +23,7 @@ public struct MarketTerms: Equatable, Sendable {
 /// Units the player bought and sold at the market this season, across
 /// all their town centers. Spec: `town-market` / Seasonal limits reset
 /// and persist (design D4).
-public struct MarketLedger: Codable, Equatable, Sendable {
+public struct MarketLedger: Codable, Hashable, Sendable {
     public internal(set) var bought: [Good: Int] = [:]
     public internal(set) var sold: [Good: Int] = [:]
 

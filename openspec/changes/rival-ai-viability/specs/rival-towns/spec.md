@@ -97,28 +97,43 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 ### Requirement: Rival market trades
 
-On its turn, before the threshold rules, a rival SHALL trade at its own town center's market when one of these applies, checked in this order. A trade SHALL take the turn.
+A rival SHALL trade at its own town center's market in three cases.
 
-1. **Unblock.** The step it would take waits only for wood or planks, and the treasury covers the purchase, the step and $50. The rival SHALL buy the shortfall.
-2. **Pay debts.** The treasury is below $150. The rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn.
-3. **Feed.** Food is below 4, one of the rival's houses is short of food, and the treasury is at least $300. The rival SHALL buy up to 5 food.
+1. **Unblock.** When a step it takes (a threshold rule or a script step) lacks only wood or planks that its own huts and sawmill cannot supply, and the treasury covers the purchase, the step and $50, the rival SHALL buy the shortfall in the same batch, ahead of the step's roads and building, so no carrier takes the goods first. A step that its huts or sawmill can still supply SHALL be placed without a purchase and SHALL wait for their delivery, because the market charges 150%. A rival at the building cap, or on a house step at the house cap, takes no step and so buys nothing for one.
+2. **Pay debts or clear the store.** On its turn, before the threshold rules, while the treasury is below $150, or its town center has fewer than 4 units of room and food is below 4, the rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn. The trade takes the turn.
+3. **Feed.** On its turn, before the threshold rules, while food is below 4, one of the rival's houses is short of food and the treasury is at least $300, the rival SHALL buy up to 5 food. The trade takes the turn.
 
-Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
+Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
 
 #### Scenario: Rival buys the planks it is missing
 
-- **WHEN** a rival with no planks, no sawmill and $400 takes a turn whose sawmill step waits only for 1 plank
-- **THEN** its commands buy 1 plank at the market price, and its treasury falls by that price when they apply
+- **WHEN** a rival with no lumberjack hut, no sawmill, no planks and $400 takes a turn whose house step waits only for 4 planks
+- **THEN** its commands buy 4 planks at the market price and then place the house, and when they apply the house does not wait for materials
 
 #### Scenario: Rival in debt sells surplus planks
 
 - **WHEN** a rival with −$20 and 40 planks takes a turn
 - **THEN** it sells 20 planks, the seasonal limit, and its treasury rises by 20 × the market's plank sell price
 
+#### Scenario: Rival clears a full town center
+
+- **WHEN** a rival with $5,000 and a town center holding 38 planks and 2 food takes a turn
+- **THEN** it sells 20 planks, the seasonal limit
+
 #### Scenario: Rival buys food for short houses
 
 - **WHEN** a rival with $500, 1 food and a house short of food takes a turn
 - **THEN** it buys 5 food
+
+#### Scenario: No purchase for a step the caps rule out
+
+- **WHEN** a rival at the building cap, with no planks and $400, takes a turn whose house step waits only for planks
+- **THEN** it buys no planks
+
+#### Scenario: No purchase into a full town center
+
+- **WHEN** a rival with $500, 1 food, a house short of food and a town center full of goods it keeps (12 wood, 12 planks, 15 iron) takes a turn
+- **THEN** it buys no food and takes its build step instead
 
 #### Scenario: Rival limits are its own
 
