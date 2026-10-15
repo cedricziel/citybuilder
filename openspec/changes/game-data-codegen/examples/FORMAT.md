@@ -6,11 +6,12 @@ A pack is one YAML document: optional `defaults` (anchors only, ignored except w
 
 | Kind | Required | Optional |
 |---|---|---|
-| `Good` | `id`, `name`, `unit` (plural stack noun), `basePrice` (int > 0) | `market` `{buy: int ≥ 0, sell: int ≥ 0}` (town market units per season the player can buy and sell; each defaults to 0) |
+| `Good` | `id`, `name`, `unit` (plural stack noun), `basePrice` (int > 0) | `market` `{buy: int ≥ 0, sell: int ≥ 0}` (town market units per season the player can buy and sell; each defaults to 0), `neededBy` [tier] (adds the good to those tiers' needs, after their own) |
 | `Building` | `id`, `footprint` `[w, h]`, `cost` (int ≥ 0) | `name` (palette label, default: id title-cased), `storage` (stockpile capacity; omit for none), `plantTicks` (int > 0: ticks per forest tile a planting building such as the forester plants), `category` (`town`, `gather` or `craft`: the build drawer; omit for no drawer), `upkeep` (int, default 0), `buildTicks` (int > 0, default 30), `materials` `{good: int}`, `recipe`, `effect` (`code`), `unlockedBy` (tech), `obsoletedBy` (tech), `culture` (culture id: only that culture may build it), `placement`, `legacyIds` [string] |
-| `Culture` | `id`, `name`, `blurb`, `tiers` `{peasants, citizens, merchants}` (display names), `luxury` `{raw, good, garden, producer}`, `signature` (building), `residentNames` [string] | |
+| `Culture` | `id`, `name`, `blurb`, `luxury` `{raw, good, garden, producer}`, `signature` (building), `residentNames` [string] | `tiers` `{tier: name}` (the culture's name for some or all tiers; a tier left out uses its own `name`) |
 | `Tech` | `id`, `cost` (knowledge, int > 0), `age` (age from which it can be researched) | `name` (default: id title-cased), `prerequisites` [tech], `era` (age this tech opens), `eraGate` `{tier, residents}` (required when `era` is set) |
 | `Age` | `id`, `startYear` (astronomical: −499 = 500 BC), `blurb`, `signature` (building), `rivalResidents` (residents a rival needs to enter this age) | `name` |
+| `Tier` | `id`, `name` (default display name), `capacity` (residents, int > 0), `taxPerResident` (int ≥ 0), `needs` [good] (complete list, in consumption order) | |
 
 `recipe`: `{ inputs: {good: int}, outputs: {good: int}, cycleTicks: int > 0 }`. `inputs` is optional. `outputs` must name at least one good unless the building also sets `effect: code`, in which case `outputs` may be left out.
 
@@ -18,7 +19,7 @@ A pack is one YAML document: optional `defaults` (anchors only, ignored except w
 
 `placement`: either `{ shore: { minLand: int, minWater: int } }` or `{ terrain: { type: grass|forest|beach|water|mountain, minTiles: int } }`.
 
-Tiers: `peasants`, `citizens`, `merchants`. Merchants additionally need their culture's luxury good.
+Tiers: `peasants`, `citizens`, `merchants`, declared in `core.yaml`. Their order is save format: a tier's raw value is its position, from 1. Needs are not inherited, so a good wanted by two tiers names both in `neededBy`. Merchants additionally need their culture's luxury good. Food, planks and bread have their own consumption rates; every other need is eaten at 1 per 8 residents.
 
 ## Rules
 
@@ -28,8 +29,8 @@ Tiers: `peasants`, `citizens`, `merchants`. Merchants additionally need their cu
 - Ids are unique per kind across all packs.
 - The sim runs at 10 ticks per second.
 - Every building, culture and age needs sprite catalog entries; the existing `SpritesStyleCatalogTests` lists what it expects.
-- `eraGate.tier` and the culture `tiers` keys must be `peasants`, `citizens` or `merchants`.
-- Every good needs a consumer: a recipe input, a material, a culture luxury, or a house tier need. Tier needs are still in Swift (`HouseTier.needs`: food, planks, bread, tools), so a new consumer good also needs that follow-up change.
+- `eraGate.tier`, the culture `tiers` keys and `neededBy` must name declared tiers. A good may not join a tier that already needs it.
+- Every good needs a consumer: a recipe input, a material, a culture luxury, or a tier need (including `neededBy`). The generator rejects a good with none.
 
 ## Existing content you can reference (from core and ages packs)
 

@@ -108,9 +108,9 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 
 ## Game data packs
 
-Goods, buildings (recipes, storage, placement), cultures, techs and ages live in YAML packs under `Packages/CityCore/GameData/packs/`. `Packages/CityCore/GameData/index.yaml` lists the packs in load order, as paths without `.yaml`. Each pack has an optional `defaults:` block of anchors, shared with YAML merge keys (`<<: *name`; keys written on the item win), and an ordered `items:` list. Every item has a `kind` (`Good`, `Building`, `Culture`, `Tech`, `Age`) and a kebab-case `id`. References may point into any pack: a building names the tech that unlocks it with `unlockedBy`, and the generator derives each tech's unlock list. Field tables per kind are in the format reference in the game-data-codegen change ([`FORMAT.md`](openspec/changes/game-data-codegen/examples/FORMAT.md)).
+Goods, buildings (recipes, storage, placement), cultures, techs, ages and house tiers live in YAML packs under `Packages/CityCore/GameData/packs/`. `Packages/CityCore/GameData/index.yaml` lists the packs in load order, as paths without `.yaml`. Each pack has an optional `defaults:` block of anchors, shared with YAML merge keys (`<<: *name`; keys written on the item win), and an ordered `items:` list. Every item has a `kind` (`Good`, `Building`, `Culture`, `Tech`, `Age`, `Tier`) and a kebab-case `id`. References may point into any pack: a building names the tech that unlocks it with `unlockedBy`, and the generator derives each tech's unlock list. In the same way, a good joins a house tier's needs with `neededBy: [merchants]`, so a pack adds demand without editing `core.yaml`. Field tables per kind are in the format reference in the game-data-codegen change ([`FORMAT.md`](openspec/changes/game-data-codegen/examples/FORMAT.md)).
 
-`Packages/GameDataGen` (Swift, uses Yams, build-time only; CityCore never depends on it) validates every pack and writes Swift into `Packages/CityCore/Sources/CityCore/Generated/`. It rejects unknown fields, unknown references, duplicate ids, prerequisite cycles, inert buildings and pack files missing from the manifest. The generated files are committed; never edit them by hand.
+`Packages/GameDataGen` (Swift, uses Yams, build-time only; CityCore never depends on it) validates every pack and writes Swift into `Packages/CityCore/Sources/CityCore/Generated/`. It rejects unknown fields, unknown references, duplicate ids, prerequisite cycles, inert buildings, goods that nothing consumes (no recipe input, material, culture luxury or tier need) and pack files missing from the manifest. The generated files are committed; never edit them by hand.
 
 To change content:
 
@@ -131,7 +131,7 @@ To review a content change, run `swift run --package-path Packages/GameDataGen g
 
 The Bash tool isn't hooked, so `sed -i` or a shell redirect into `Generated/` gets past the hook. The pre-commit `gamedata-check` catches that drift before it is committed.
 
-**Order matters.** Enum case order is load order: packs in manifest order, then items in file order. The order of `Good`, `Culture`, `Tech` and `Age` feeds the simulation (caravans, rival setup, research, age comparison), so reorder only on purpose. `BuildingKind` order only sets the build palette order.
+**Order matters.** Enum case order is load order: packs in manifest order, then items in file order. The order of `Good`, `Culture`, `Tech` and `Age` feeds the simulation (caravans, rival setup, research, age comparison), so reorder only on purpose. `BuildingKind` order only sets the build palette order. `Tier` order is also save format: a tier's raw value is its position, from 1.
 
 **Code-backed buildings.** `effect: code` marks a building whose behaviour is written in Swift: houses, storage, roads, town center, port, shipyard, library, monument and signature buildings. A building with neither a recipe that produces goods nor `effect: code` is rejected as inert. A new `effect: code` building compiles but does nothing until its Swift behaviour exists.
 
