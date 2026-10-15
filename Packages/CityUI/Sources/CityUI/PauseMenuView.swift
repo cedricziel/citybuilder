@@ -70,7 +70,11 @@ public struct PauseMenuView: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier("pause.\(action.kind)")
         if action.kind == .resume {
+            #if os(macOS)
             button.cancelActionHotkey()
+            #else
+            button.pauseHotkeys()
+            #endif
         } else {
             button
         }
