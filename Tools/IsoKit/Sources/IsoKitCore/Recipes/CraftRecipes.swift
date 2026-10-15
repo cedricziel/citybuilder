@@ -212,8 +212,8 @@ extension Recipes {
 }
 
 extension Builder {
-    /// Four sails on an east-facing hub, turning about x: one overlay frame per eighth of a turn
-    /// (the blades repeat every 90 degrees, so four frames make a turn).
+    /// Four sails on an east-facing hub, turning about x by a sixteenth of a turn (π/8) per overlay
+    /// frame: four frames make a quarter turn, which the four-fold symmetry repeats.
     func sails(hub: SCNVector3, length: CGFloat, frame: Int) {
         add(SCNCylinder(radius: 0.22, height: 0.35), Finish.timber.material(), at: hub, euler: SCNVector3(0, 0, CGFloat.pi / 2))
         let step = CGFloat.pi / 2 / 4
