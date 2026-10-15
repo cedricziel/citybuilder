@@ -1,15 +1,14 @@
 import CityCore
+import CityRender2D
 import SpriteKit
 import SwiftUI
 
-/// Building sprites for the build rail, drawer and tool strip, read from
-/// the `Buildings` atlas, or `Kit` for art-kit renders, with the same crisp
-/// interpolation as the good icons. Falls back to an SF Symbol when neither
-/// atlas has the texture, which is always the case in package tests.
+/// Building sprites for the build rail, drawer and tool strip, read from the
+/// atlas the sprite routes to (`SpriteAtlasRouting`). Art-kit renders scale
+/// smoothly; legacy pixel art keeps the good icons' crisp interpolation.
+/// Falls back to an SF Symbol when the atlas lacks the texture, which is
+/// always the case in package tests.
 public enum BuildingIconLoader {
-    /// Legacy pixel art first, then the art kit's own atlas (mirrors `SpriteAtlasRouting`).
-    public static let atlasNames = ["Buildings", "Kit"]
-
     /// Port and shipyard ship one sprite per facing; the rail shows the
     /// south-facing one.
     public static func textureName(for kind: BuildingKind) -> String {
@@ -17,6 +16,15 @@ public enum BuildingIconLoader {
         case .port, .shipyard: "building-\(kind.rawValue)-s"
         default: "building-\(kind.rawValue)"
         }
+    }
+
+    static func atlasName(for kind: BuildingKind) -> String? {
+        SpriteAtlasRouting.atlasName(for: textureName(for: kind))
+    }
+
+    /// Smooth for linearly filtered kit renders, which nearest scaling turns jaggy; crisp for pixel art.
+    public static func interpolation(for kind: BuildingKind) -> Image.Interpolation {
+        TextureFiltering.mode(for: textureName(for: kind)) == .linear ? .high : GoodIconLoader.pixelArtInterpolation
     }
 
     public static func fallbackSymbolName(for kind: BuildingKind) -> String {
@@ -42,13 +50,13 @@ public enum BuildingIconLoader {
     @MainActor
     private static func loadImage(for kind: BuildingKind) -> Image {
         let name = textureName(for: kind)
-        for atlasName in atlasNames {
-            let atlas = SKTextureAtlas(named: atlasName)
-            let names = Set(atlas.textureNames)
-            guard names.contains(name) || names.contains(name + ".png") else { continue }
-            let cgImage = atlas.textureNamed(name).cgImage()
-            return Image(decorative: cgImage, scale: 1).interpolation(GoodIconLoader.pixelArtInterpolation)
+        guard let atlasName = atlasName(for: kind) else { return Image(systemName: fallbackSymbolName(for: kind)) }
+        let atlas = SKTextureAtlas(named: atlasName)
+        let names = Set(atlas.textureNames)
+        guard names.contains(name) || names.contains(name + ".png") else {
+            return Image(systemName: fallbackSymbolName(for: kind))
         }
-        return Image(systemName: fallbackSymbolName(for: kind))
+        let cgImage = atlas.textureNamed(name).cgImage()
+        return Image(decorative: cgImage, scale: 1).interpolation(interpolation(for: kind))
     }
 }
