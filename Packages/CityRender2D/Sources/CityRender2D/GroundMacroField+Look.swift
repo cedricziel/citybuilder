@@ -121,9 +121,10 @@ extension GroundMacroField {
                 floor = SIMD3(0.66, 0.70, 0.62)
                 worn = SIMD3(1.06, 0.94, 0.76)
             case .autumn:
-                dry = SIMD3(1.20, 1.04, 0.72)
-                lush = SIMD3(0.88, 0.92, 0.80)
-                fallow = SIMD3(1.08, 0.92, 0.72)
+                // The autumn grass is already ochre: lift and darken it, barely warm it further.
+                dry = SIMD3(1.12, 1.06, 0.90)
+                lush = SIMD3(0.86, 0.92, 0.88)
+                fallow = SIMD3(1.04, 0.94, 0.84)
                 mottle = 0.08
                 floor = SIMD3(0.70, 0.68, 0.60)
                 worn = SIMD3(1.04, 0.92, 0.76)
