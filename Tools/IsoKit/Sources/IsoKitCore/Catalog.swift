@@ -6,11 +6,25 @@ public struct CatalogEntry: Equatable {
     public let source: String
     /// Sprite names listed in the brief (`- (r, c): \`name\`` lines), in file order.
     public let spriteNames: [String]
+    /// `- Key: value` lines of the brief's `## Recipe` section.
+    public let recipeFacts: [String: String]
 
-    public init(id: String, source: String, spriteNames: [String] = []) {
+    public init(id: String, source: String, spriteNames: [String] = [], recipeFacts: [String: String] = [:]) {
         self.id = id
         self.source = source
         self.spriteNames = spriteNames
+        self.recipeFacts = recipeFacts
+    }
+
+    static func recipeFacts(fromMarkdown text: String) -> [String: String] {
+        let lines = text.components(separatedBy: "\n")
+        guard let start = lines.firstIndex(of: "## Recipe") else { return [:] }
+        var facts: [String: String] = [:]
+        for line in lines[(start + 1)...].prefix(while: { !$0.hasPrefix("## ") }) where line.hasPrefix("- ") {
+            let parts = line.dropFirst(2).split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count == 2 { facts[parts[0]] = parts[1] }
+        }
+        return facts
     }
 
     /// Migrated entries are rendered by the new pipeline; everything else keeps its committed PNGs.
@@ -64,7 +78,8 @@ public struct Catalog {
             return CatalogEntry(
                 id: file.deletingPathExtension().lastPathComponent,
                 source: CatalogEntry.source(fromMarkdown: text),
-                spriteNames: CatalogEntry.spriteNames(fromMarkdown: text)
+                spriteNames: CatalogEntry.spriteNames(fromMarkdown: text),
+                recipeFacts: CatalogEntry.recipeFacts(fromMarkdown: text)
             )
         }
         return Catalog(entries: entries)
@@ -91,8 +106,34 @@ public enum RecipeRegistry {
                 problems.append("\(entry.id) sprite names differ from its brief: missing \(missing), extra \(extra)")
             }
         }
+        for entry in catalog.entries where entry.isIsoKit {
+            if let main = recipes.first(where: { $0.id == entry.id }) {
+                problems += factMismatches(main, entry)
+            }
+        }
         for recipe in recipes where catalog.entry(recipe.entry) == nil {
             problems.append("recipe \(recipe.id) has no catalog entry")
+        }
+        return problems
+    }
+}
+
+extension RecipeRegistry {
+    /// The brief's `Recipe` numbers must match the recipe it names.
+    static func factMismatches(_ recipe: Recipe, _ entry: CatalogEntry) -> [String] {
+        var problems: [String] = []
+        let checks: [(String, Int)] = [
+            ("Construction stages", recipe.constructionFrames),
+            ("Operational frames", recipe.operationalFrames)
+        ]
+        for (key, actual) in checks {
+            if let stated = entry.recipeFacts[key], Int(stated) != actual {
+                problems.append("\(entry.id): brief says \(key) \(stated), recipe has \(actual)")
+            }
+        }
+        let statedPart = entry.recipeFacts["Moving part"]?.split(separator: ",").first.map(String.init)
+        if statedPart != recipe.moving?.name {
+            problems.append("\(entry.id): brief names moving part \(statedPart ?? "none"), recipe has \(recipe.moving?.name ?? "none")")
         }
         return problems
     }

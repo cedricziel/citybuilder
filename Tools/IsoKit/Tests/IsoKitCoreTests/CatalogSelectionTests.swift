@@ -55,6 +55,29 @@ struct CatalogSelectionTests {
         #expect(RecipeRegistry.mismatches(recipes: [house, tier2], catalog: Catalog(entries: [entry])).isEmpty)
     }
 
+    @Test("a migrated brief's Recipe numbers must match its recipe")
+    func recipeFactsMustMatch() {
+        let sawmill = Recipe(
+            id: "building-sawmill", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 4,
+            moving: MovingPart(name: "sails") { _, _ in }
+        ) { _, _ in }
+        let agreeing = CatalogEntry(id: "building-sawmill", source: "isokit", recipeFacts: [
+            "Construction stages": "3", "Operational frames": "4", "Moving part": "sails, 4 frames, sweeps right"
+        ])
+        #expect(RecipeRegistry.mismatches(recipes: [sawmill], catalog: Catalog(entries: [agreeing])).isEmpty)
+        let stale = CatalogEntry(id: "building-sawmill", source: "isokit", recipeFacts: ["Operational frames": "2"])
+        #expect(RecipeRegistry.mismatches(recipes: [sawmill], catalog: Catalog(entries: [stale])) == [
+            "building-sawmill: brief says Operational frames 2, recipe has 4",
+            "building-sawmill: brief names moving part none, recipe has sails"
+        ])
+    }
+
+    @Test("recipe facts are read from the Recipe section only")
+    func recipeFactsParsing() {
+        let text = "## Sheet\n\n- Grid: 4\n\n## Recipe\n\n- Recipe: `x` (IsoKit)\n- Construction stages: 3\n\n## Notes\n- Other: 1\n"
+        #expect(CatalogEntry.recipeFacts(fromMarkdown: text) == ["Recipe": "`x` (IsoKit)", "Construction stages": "3"])
+    }
+
     @Test("sheet lines yield sprite names and skip spare cells")
     func sheetNamesParsing() {
         let text = "## Sheet\n\n- (0, 0): `building-house` — base\n- (0, 1): `building-house-constructing-0` — x\n- (1, 2): spare\n"
