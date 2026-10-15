@@ -25,8 +25,13 @@ public enum MinimapLayout {
         }
     }
 
-    static func cardSize(for idiom: HUDIdiom) -> CGSize {
-        let map = mapSize(for: idiom)
+    /// The map image's size for `layout`: the phone's in a compact width.
+    public static func mapSize(for layout: HUDLayout) -> CGSize {
+        mapSize(for: layout.isCompactWidth ? .phone : layout.idiom)
+    }
+
+    static func cardSize(for layout: HUDLayout) -> CGSize {
+        let map = mapSize(for: layout)
         return CGSize(width: map.width + padding * 2, height: map.height + padding * 2)
     }
 
@@ -36,10 +41,18 @@ public enum MinimapLayout {
         layout.placement == .leftRail ? .bottomTrailing : .topTrailing
     }
 
+    /// The width the stocks tray and the session banner may take beside the
+    /// minimap in the dock layout, for a HUD `hudWidth` points wide inside
+    /// its margins.
+    public static func trayColumnWidth(hudWidth: CGFloat, layout: HUDLayout, showsMinimap: Bool) -> CGFloat {
+        let card = showsMinimap && corner(for: layout) == .topTrailing ? cardSize(for: layout).width + 8 : 0
+        return max(0, hudWidth - layout.railInset - card)
+    }
+
     /// The minimap card in full-screen coordinates, the space the inspector
     /// callout is placed in.
     public static func frame(in size: CGSize, insets: EdgeInsets, layout: HUDLayout) -> CGRect {
-        let card = cardSize(for: layout.idiom)
+        let card = cardSize(for: layout)
         let originX = size.width - insets.trailing - layout.margin - card.width
         let originY = switch corner(for: layout) {
         case .bottomTrailing: size.height - insets.bottom - layout.margin - card.height
@@ -51,24 +64,16 @@ public enum MinimapLayout {
 
 /// Whether the player shows the minimap, kept in user defaults. With
 /// nothing stored it shows on iPad and Mac and stays hidden on the tight
-/// phone screen. The HUD binds the same key through `@AppStorage`.
-/// Spec: `platform-shells` / Minimap toggle. Design D6.
-public struct MinimapPreference {
+/// phone screen. Spec: `platform-shells` / Minimap toggle. Design D6.
+public enum MinimapPreference {
     public static let defaultsKey = "Citybuilder.showsMinimap"
-    private let defaults: UserDefaults
-    private let idiom: HUDIdiom
-
-    public init(defaults: UserDefaults = .standard, idiom: HUDIdiom) {
-        self.defaults = defaults
-        self.idiom = idiom
-    }
 
     public static func shownByDefault(on idiom: HUDIdiom) -> Bool {
         idiom != .phone
     }
 
-    public var isShown: Bool {
-        get { defaults.object(forKey: Self.defaultsKey) as? Bool ?? Self.shownByDefault(on: idiom) }
-        nonmutating set { defaults.set(newValue, forKey: Self.defaultsKey) }
+    /// The HUD's binding to the stored choice.
+    public static func storage(idiom: HUDIdiom, store: UserDefaults? = nil) -> AppStorage<Bool> {
+        AppStorage(wrappedValue: shownByDefault(on: idiom), defaultsKey, store: store)
     }
 }

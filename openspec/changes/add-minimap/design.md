@@ -13,11 +13,11 @@ A tile (x, y) maps to `u = x − y` across and `v = x + y` down, the same orient
 
 ### D2. Terrain is a pixel raster, drawn off the main path
 
-`MinimapTerrainRaster` fills an RGBA byte buffer at 2 pixels per `u` unit (an image `2(W + H)` by `W + H` pixels). For each pixel it inverts the projection, rounds to the nearest tile and writes that terrain's colour. Pixels off the map are transparent. The buffer becomes a `CGImage` through CoreGraphics, which is available on every platform. The raster is a pure function, so tests read the bytes. `MinimapModel` keeps the raster and the last drawn grid. When the grid differs, it repaints only the pixels of the tiles that changed and wraps the bytes in a new image.
+`MinimapTerrainRaster` fills an RGBA byte buffer at 2 pixels per `u` unit (an image `2(W + H)` by `W + H` pixels), capped at 512 pixels across (1,024 on Apple TV), about the largest the minimap shows. For each pixel it inverts the projection, rounds to the nearest tile and writes that terrain's colour. Pixels off the map are transparent. The buffer becomes a `CGImage` through CoreGraphics, which is available on every platform. The raster is a pure function, so tests read the bytes. `MinimapModel` keeps the raster and the last drawn grid. When the grid differs, it repaints only the pixels of the tiles that changed, and wraps the bytes in a new image at the markers' cadence, at most every 3 ticks.
 
 ### D3. Markers are rebuilt every 3 ticks
 
-`MinimapModel.apply(_:)` runs from `GameSession.step()`. It rebuilds the building and ship marker arrays when 3 ticks have passed since the last rebuild. The arrays hold one entry per building or ship, never one per tile. The SwiftUI `Canvas` draws the cached image, the markers and the camera rectangle. Of these, only the camera rectangle reads live state (`session.world.camera`).
+`MinimapModel.apply(_:)` runs from `GameSession.step()`. It rebuilds the building and ship marker arrays when 3 ticks have passed since the last rebuild. The arrays hold one entry per building or ship, never one per tile. The SwiftUI `Canvas` draws the cached image, the markers and the camera rectangle. The camera rectangle draws in its own layer from `MinimapModel.camera`, which the session mirrors from the world once per rendered frame, so it redraws when the camera moves and not on every tick.
 
 ### D4. Camera jump and glide
 

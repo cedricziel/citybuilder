@@ -9,7 +9,7 @@
 - [x] 2.2 `GameSession.centerCamera` and `CameraGlide`
 - [x] 2.3 `MinimapView` (Canvas, gesture), `MinimapPreference`, the HUD toggle with `M`, and placement in the rail and dock layouts
 - [x] 2.4 Inspector callout free area leaves out the minimap
-- [x] 2.5 Check on the Mac app: window screenshot with the minimap in the rail layout; click, drag and `M` are covered by tests (the session could not drive the window)
+- [ ] 2.5 Check on the Mac app by hand: click, drag, `M`, and scroll or pinch over the card (it must not pan the map). A window screenshot of the minimap in the rail layout is done; the input is covered only by unit tests
 
 ## 3. Apple TV overview
 

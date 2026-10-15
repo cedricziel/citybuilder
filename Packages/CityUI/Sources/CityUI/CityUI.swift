@@ -18,7 +18,7 @@ public struct CityRootView: View {
     @State var pauseMenuViewModel: PauseMenuViewModel?
     @State var buildRail = BuildRailModel()
     @State var inspectorExpanded = false
-    @AppStorage(MinimapPreference.defaultsKey) var showsMinimap = MinimapPreference.shownByDefault(on: HUDMetrics.idiom)
+    @AppStorage var showsMinimap: Bool
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
     #if os(macOS)
@@ -34,12 +34,14 @@ public struct CityRootView: View {
         @ViewBuilder settings: @escaping () -> some View
     ) {
         _session = State(initialValue: session)
+        _showsMinimap = MinimapPreference.storage(idiom: HUDMetrics.idiom)
         self.settingsContent = { AnyView(settings()) }
         self.pauseMenuConfig = pauseMenu
     }
 
     public init(session: GameSession = GameSession(), pauseMenu: PauseMenuConfig? = nil) {
         _session = State(initialValue: session)
+        _showsMinimap = MinimapPreference.storage(idiom: HUDMetrics.idiom)
         self.settingsContent = nil
         self.pauseMenuConfig = pauseMenu
     }
@@ -59,7 +61,7 @@ public struct CityRootView: View {
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
                 let insets = proxy.safeAreaInsets
-                hudLayer(layout: layout, worldViewSize: CGSize(
+                hudLayer(layout: layout, hudWidth: proxy.size.width - layout.margin * 2, worldViewSize: CGSize(
                     width: proxy.size.width + insets.leading + insets.trailing,
                     height: proxy.size.height + insets.top + insets.bottom
                 ))
@@ -106,6 +108,7 @@ public struct CityRootView: View {
 @Observable
 public final class GameSession {
     public var world: World
+
     public let hud: HUDViewModel
     /// Optional sink for the per-tick `WorldEvent` stream. When non-nil,
     /// every tick's events are forwarded after the snapshot is applied.
@@ -156,6 +159,7 @@ public final class GameSession {
         self.audioSnapshotConsumer = audioSnapshotConsumer
         routeList.commandSink = { [weak self] in self?.enqueue($0) }
         minimap.apply(world.snapshot())
+        minimap.camera = world.camera
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -395,10 +399,10 @@ public final class GameSession {
 
     @MainActor
     public var worldView: some View {
-        // The renderer pulls a snapshot every frame, so a minimap glide
-        // steps here, on the same clock.
+        // The renderer pulls a snapshot every frame: the minimap's glide
+        // and camera follow on the same clock.
         let provider: @MainActor @Sendable () -> WorldSnapshot? = { [weak self] in
-            self?.stepCameraGlide(now: CACurrentMediaTime())
+            self?.frameWillRender(now: CACurrentMediaTime())
             return self?.world.snapshot()
         }
         let tapSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in

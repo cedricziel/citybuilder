@@ -6,8 +6,8 @@ import SwiftUI
 /// Split out of `CityRootView` to keep the main file under SwiftLint's
 /// 500-line ceiling. Spec: `platform-shells` / Adaptive HUD per idiom.
 extension CityRootView {
-    func hudLayer(layout: HUDLayout, worldViewSize: CGSize) -> some View {
-        let railInset = layout.placement == .leftRail ? layout.railWidth + 8 : 0
+    func hudLayer(layout: HUDLayout, hudWidth: CGFloat, worldViewSize: CGSize) -> some View {
+        let railInset = layout.railInset
         return ZStack {
             VStack(spacing: 8) {
                 // The section includes the inset, so its frame spans the
@@ -17,7 +17,13 @@ extension CityRootView {
                     .tvFocusSection()
                 HStack(alignment: .top, spacing: 8) {
                     VStack(spacing: 8) {
-                        StocksTrayView(hud: session.hud, layout: layout)
+                        StocksTrayView(
+                            hud: session.hud,
+                            layout: layout,
+                            maxWidth: MinimapLayout.trayColumnWidth(
+                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap
+                            )
+                        )
                         SessionBannerView(banner: session.banner)
                             .padding(.top, 4)
                         Spacer(minLength: 0)

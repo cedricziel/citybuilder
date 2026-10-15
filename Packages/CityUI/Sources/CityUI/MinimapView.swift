@@ -27,7 +27,11 @@ private struct MinimapMarkersLayer: View {
                 context.draw(Image(decorative: image, scale: 1).interpolation(.medium), in: CGRect(origin: .zero, size: size))
             }
             for marker in model.buildings {
-                context.fill(Self.footprint(marker, projection: projection), with: .color(Color(marker.colour)))
+                // The outline keeps azure and emerald markers apart from
+                // water and forest.
+                let footprint = Self.footprint(marker, projection: projection)
+                context.fill(footprint, with: .color(Color(marker.colour)))
+                context.stroke(footprint, with: .color(.white.opacity(0.85)), lineWidth: 0.75)
             }
             let radius = max(size.width / 120, 1.5)
             for ship in model.ships {
@@ -70,8 +74,8 @@ private struct MinimapCameraLayer: View {
     let worldViewSize: CGSize
 
     var body: some View {
-        let camera = session.world.camera
         let model = session.minimap
+        let camera = model.camera
         Canvas { context, size in
             let frame = model.projection(size: size).cameraRect(camera: camera, viewSize: worldViewSize)
                 .intersection(CGRect(origin: .zero, size: size).insetBy(dx: 0.75, dy: 0.75))
@@ -101,7 +105,7 @@ struct MinimapCard: View {
     @State private var isDragging = false
 
     var body: some View {
-        let size = MinimapLayout.mapSize(for: layout.idiom)
+        let size = MinimapLayout.mapSize(for: layout)
         MinimapCanvas(session: session, worldViewSize: worldViewSize)
             .frame(width: size.width, height: size.height)
             .contentShape(Rectangle())
@@ -110,7 +114,6 @@ struct MinimapCard: View {
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Minimap")
-            .accessibilityHint("Tap a place to move the map there")
             .accessibilityIdentifier("hud.minimap")
     }
 

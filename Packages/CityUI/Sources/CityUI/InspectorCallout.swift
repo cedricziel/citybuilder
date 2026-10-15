@@ -72,7 +72,7 @@ public enum InspectorCalloutLayout {
     public static func freeArea(size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool) -> CGRect {
         let margin = layout.margin
         var top = topBarBottom(topInset: insets.top, layout: layout)
-        let left = insets.leading + margin + (layout.placement == .leftRail ? layout.railWidth + 8 : 0)
+        let left = insets.leading + margin + layout.railInset
         let right = size.width - insets.trailing - margin
         var bottom = size.height - insets.bottom - margin - (layout.placement == .bottomDock ? 74 : 0)
         if showsMinimap {

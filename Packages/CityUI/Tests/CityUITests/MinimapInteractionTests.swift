@@ -72,9 +72,9 @@ func scenarioMinimapShownByDefaultOnIPadAndMac() throws {
     let suite = "minimap-default-\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
-    #expect(MinimapPreference(defaults: defaults, idiom: .pad).isShown)
-    #expect(MinimapPreference(defaults: defaults, idiom: .mac).isShown)
-    #expect(!MinimapPreference(defaults: defaults, idiom: .phone).isShown)
+    #expect(MinimapPreference.storage(idiom: .pad, store: defaults).wrappedValue)
+    #expect(MinimapPreference.storage(idiom: .mac, store: defaults).wrappedValue)
+    #expect(!MinimapPreference.storage(idiom: .phone, store: defaults).wrappedValue)
 }
 
 @Test("scenario: Hiding the minimap persists")
@@ -82,10 +82,10 @@ func scenarioHidingTheMinimapPersists() throws {
     let suite = "minimap-hide-\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
-    MinimapPreference(defaults: defaults, idiom: .mac).isShown = false
-    #expect(!MinimapPreference(defaults: defaults, idiom: .mac).isShown)
-    MinimapPreference(defaults: defaults, idiom: .phone).isShown = true
-    #expect(MinimapPreference(defaults: defaults, idiom: .phone).isShown, "a phone player's choice to show it holds")
+    MinimapPreference.storage(idiom: .mac, store: defaults).wrappedValue = false
+    #expect(!MinimapPreference.storage(idiom: .mac, store: defaults).wrappedValue)
+    MinimapPreference.storage(idiom: .phone, store: defaults).wrappedValue = true
+    #expect(MinimapPreference.storage(idiom: .phone, store: defaults).wrappedValue, "a phone player's choice to show it holds")
 }
 
 @Test("scenario: Mac minimap hotkey")
@@ -123,4 +123,36 @@ func scenarioCalloutAvoidsTheMinimap() {
     let phoneSize = CGSize(width: 390, height: 844)
     let phoneFree = InspectorCalloutLayout.freeArea(size: phoneSize, insets: insets, layout: phone, showsMinimap: true)
     #expect(phoneFree.minY > MinimapLayout.frame(in: phoneSize, insets: insets, layout: phone).maxY)
+}
+
+@Test("scenario: Stocks tray stays clear of the minimap", arguments: [
+    (CGSize(width: 390, height: 844), HUDIdiom.phone),
+    (CGSize(width: 820, height: 1180), HUDIdiom.pad),
+    (CGSize(width: 320, height: 1000), HUDIdiom.pad),
+    (CGSize(width: 900, height: 1000), HUDIdiom.mac)
+])
+func trayAvoidsTheCard(size: CGSize, idiom: HUDIdiom) {
+    let layout = HUDLayout.make(size: size, idiom: idiom)
+    let insets = EdgeInsets(top: 47, leading: 0, bottom: 34, trailing: 0)
+    let card = MinimapLayout.frame(in: size, insets: insets, layout: layout)
+    let hudWidth = size.width - layout.margin * 2
+    let column = MinimapLayout.trayColumnWidth(hudWidth: hudWidth, layout: layout, showsMinimap: true)
+    for chips in [1, 4, 18] {
+        let columns = StocksTrayLayout.columns(fitting: column, isPhone: layout.isPhone, chips: chips)
+        // The tray is centered in its column, which starts at the margin.
+        let trayMaxX = layout.margin + (column + StocksTrayLayout.width(columns: columns)) / 2
+        #expect(trayMaxX <= card.minX, "\(size) with \(chips) goods")
+    }
+}
+
+@MainActor
+@Test("The minimap follows the camera once per frame")
+func minimapFollowsTheCamera() {
+    let session = makeSession()
+    session.frameWillRender(now: 0)
+    #expect(session.minimap.camera == session.world.camera)
+    session.handlePanDelta(deltaX: 64, deltaY: 0)
+    #expect(session.minimap.camera != session.world.camera, "only the frame hands the camera over")
+    session.frameWillRender(now: 0)
+    #expect(session.minimap.camera == session.world.camera)
 }

@@ -49,6 +49,16 @@ public extension GameSession {
         cameraGlide = CameraGlide(fromX: camera.centerX, fromY: camera.centerY, toX: x, toY: y, start: now)
     }
 
+    /// Runs once per rendered frame: steps a glide and hands the camera to
+    /// the minimap, whose camera layer then redraws only when the camera
+    /// moves rather than on every tick.
+    internal func frameWillRender(now: TimeInterval) {
+        stepCameraGlide(now: now)
+        if minimap.camera != world.camera {
+            minimap.camera = world.camera
+        }
+    }
+
     internal func stepCameraGlide(now: TimeInterval) {
         guard let glide = cameraGlide else { return }
         let (x, y) = glide.position(at: now)
