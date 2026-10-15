@@ -53,6 +53,7 @@ extension Recipes {
     static func houseEastAsian(_ kit: Builder) {
         kit.hallEast(SCNVector3(1.4, 0, 1.4), SCNVector3(6.6, 2.7, 6.0), plinth: 0.45)
         kit.hipRoof(RoofSpec(lo: SCNVector3(1.4, 3.0, 1.4), hi: SCNVector3(6.6, 0, 6.0), pitchDegrees: 30, overhang: 0.9, finish: .slate))
+        kit.chimney(x: 5.2, depth: 4.6, from: 2.7, to: 4.7, finish: .brick)
         kit.block(SCNVector3(2.6, 0, 6.9), SCNVector3(3.4, 0.5, 7.5), .thatch)
     }
 
@@ -62,6 +63,7 @@ extension Recipes {
         kit.pent(SCNVector3(1.0, 2.6, 1.2), SCNVector3(7.0, 0, 6.4))
         kit.hallEast(SCNVector3(1.5, 2.8, 1.6), SCNVector3(6.5, 5.0, 6.0), plinth: 0)
         kit.hipRoof(RoofSpec(lo: SCNVector3(1.5, 5.3, 1.6), hi: SCNVector3(6.5, 0, 6.0), pitchDegrees: 30, overhang: 0.9, finish: .slate))
+        kit.chimney(x: 5.1, depth: 4.6, from: 5.0, to: 7.0, finish: .brick)
     }
 
     /// Three storeys over a dark tiled plinth wall, two pent roofs, red posts and a flared crown roof.
@@ -73,6 +75,7 @@ extension Recipes {
         kit.pent(SCNVector3(1.4, 5.6, 1.4), SCNVector3(6.6, 0, 6.4))
         kit.hallEast(SCNVector3(1.9, 5.8, 1.9), SCNVector3(6.1, 7.6, 5.9), plinth: 0)
         kit.hipRoof(RoofSpec(lo: SCNVector3(1.9, 7.9, 1.9), hi: SCNVector3(6.1, 0, 5.9), pitchDegrees: 30, overhang: 0.9, finish: .slate))
+        kit.chimney(x: 4.9, depth: 4.6, from: 7.6, to: 9.4, finish: .brick)
     }
 
     // MARK: Mediterranean
@@ -88,8 +91,8 @@ extension Recipes {
             finish: .paint(Looks.blueShutter)
         )
         kit.shuttered(Face.east(wallX: 6.6), at: [3.6], y: 1.7)
-        kit.block(SCNVector3(2.0, 2.8, 2.4), SCNVector3(2.6, 4.6, 3.0), .plasterPale)
-        kit.block(SCNVector3(1.9, 4.6, 2.3), SCNVector3(2.7, 4.8, 3.1), .tile)
+        kit.chimney(x: 5.2, depth: 4.4, from: 2.8, to: 4.6, finish: .plasterPale)
+        kit.block(SCNVector3(4.84, 4.6, 4.04), SCNVector3(5.56, 4.72, 4.76), .tile)
         kit.amphorae(at: SCNVector3(4.6, 0, 7.0))
     }
 
@@ -100,6 +103,7 @@ extension Recipes {
         kit.shuttered(Face.south(wallZ: 6.2), at: [2.2, 4.0, 5.8], y: 4.0)
         kit.shuttered(Face.east(wallX: 7.0), at: [2.4, 4.8], y: 4.0)
         kit.shuttered(Face.east(wallX: 7.0), at: [3.6], y: 1.6)
+        kit.chimney(x: 5.6, depth: 4.6, from: 5.0, to: 6.9, finish: .plasterPale)
     }
 
     /// Three storeys on a stone ground floor, a balcony, and a belvedere tower with an open loggia.
@@ -121,6 +125,7 @@ extension Recipes {
         kit.shuttered(Face.east(wallX: 7.1), at: [2.4, 5.0], y: 3.8)
         kit.block(SCNVector3(2.6, 2.9, 6.6), SCNVector3(5.4, 3.0, 7.4), .ashlar)
         kit.block(SCNVector3(2.6, 3.0, 7.32), SCNVector3(5.4, 3.8, 7.4), .paint(Trade.iron))
+        kit.chimney(x: 5.8, depth: 5.0, from: 6.8, to: 8.4, finish: .plasterPale)
         kit.block(SCNVector3(1.4, 6.8, 1.4), SCNVector3(3.6, 8.6, 3.6), .plasterPale)
         kit.arcade(Face.south(wallZ: 3.6), from: 1.6, to: 3.4, base: 6.9)
         kit.arcade(Face.east(wallX: 3.6), from: 1.6, to: 3.4, base: 6.9)
@@ -132,6 +137,7 @@ extension Recipes {
     /// A sandstone cottage behind a parapet, small arched windows, a blue-framed door under an awning, and a palm.
     static func houseMiddleEastern(_ kit: Builder) {
         kit.parapetBlock(SCNVector3(1.4, 0, 1.4), SCNVector3(6.0, 3.0, 5.6))
+        kit.chimney(x: 5.1, depth: 4.7, from: 3.0, to: 4.1, finish: .ashlar)
         kit.blueArch(Face.south(wallZ: 5.6), along: 3.6, width: 1.0, height: 2.0)
         for along in [2.2, 5.0] as [CGFloat] {
             kit.archDoor(Face.south(wallZ: 5.6), along: along, width: 0.5, height: 0.9, base: 1.3, finish: .paint(Crops.opening))
@@ -145,6 +151,7 @@ extension Recipes {
     /// Two storeys with a projecting lattice bay and a rooftop room behind its own parapet.
     static func houseMiddleEastern2(_ kit: Builder) {
         kit.parapetBlock(SCNVector3(1.0, 0, 1.2), SCNVector3(6.8, 5.2, 6.4))
+        kit.chimney(x: 5.9, depth: 5.5, from: 5.2, to: 6.3, finish: .ashlar)
         kit.blueArch(Face.south(wallZ: 6.4), along: 2.4, width: 1.0, height: 2.0)
         kit.latticeBay(Face.south(wallZ: 6.4), along: 4.8, base: 2.8)
         kit.archDoor(Face.east(wallX: 6.8), along: 3.8, width: 0.5, height: 0.9, base: 3.4, finish: .paint(Crops.opening))
@@ -155,6 +162,7 @@ extension Recipes {
     /// Three storeys with two lattice bays and a slotted wind tower on the roof.
     static func houseMiddleEastern3(_ kit: Builder) {
         kit.parapetBlock(SCNVector3(0.9, 0, 1.0), SCNVector3(7.0, 7.4, 6.6))
+        kit.chimney(x: 6.1, depth: 5.7, from: 7.4, to: 8.5, finish: .ashlar)
         kit.blueArch(Face.south(wallZ: 6.6), along: 4.0, width: 1.2, height: 2.2)
         kit.latticeBay(Face.south(wallZ: 6.6), along: 2.2, base: 3.0)
         kit.latticeBay(Face.south(wallZ: 6.6), along: 5.8, base: 3.0)

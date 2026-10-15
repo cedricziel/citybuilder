@@ -81,6 +81,7 @@ public enum Recipes {
         let finish: Finish = stage >= 3 ? .thatch : .planks
         kit.gableRoof(RoofSpec(lo: SCNVector3(lo.x, wallTop, lo.z), hi: hi, pitchDegrees: 45, finish: finish))
         guard stage >= 3 else { return }
+        kit.chimney(x: lo.x + 3.9, depth: (lo.z + hi.z) / 2 + 0.5, from: wallTop, to: 5.7)
         kit.logStack(at: SCNVector3(hi.x + 0.3, 0, lo.z + 1.6), length: 1.6, rows: 2, alongX: false)
         kit.barrel(at: SCNVector3(lo.x + 1.9, 0, hi.z + 0.45))
         kit.ground(SCNVector3(lo.x + 2.6, 0, hi.z + 0.5), SCNVector3(hi.x, 0, 7.6), .paint(Palette.soil))
@@ -124,7 +125,7 @@ public enum Recipes {
             finish: .tile,
             gableFinish: .plasterPale
         ))
-        kit.chimney(x: lo.x + 4.5, depth: (lo.z + hi.z) / 2 - 1.0, from: 5.0, to: ridge + 0.8)
+        kit.chimney(x: lo.x + 4.5, depth: (lo.z + hi.z) / 2 + 0.9, from: 5.0, to: ridge + 0.6)
         kit.porch(alongX: (lo.x + 0.8) ... (lo.x + 2.4), wallZ: hi.z, depth: 0.9, height: 2.5)
         kit.barrel(at: SCNVector3(lo.x + 2.9, 0, hi.z + 0.5))
         kit.barrel(at: SCNVector3(lo.x + 3.5, 0, hi.z + 0.7))
