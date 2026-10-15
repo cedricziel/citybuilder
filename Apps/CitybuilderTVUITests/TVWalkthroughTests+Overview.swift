@@ -23,10 +23,12 @@ extension TVWalkthroughTests {
     func testZoomCycleReachesTheOverviewAndBackCloses() {
         startGame(inHUD: false)
         let overview = app.descendants(matching: .any)["tv.overview"]
-        for _ in 0 ..< 4 where !overview.exists {
+        for _ in 0 ..< 4 {
             remote.press(.playPause, forDuration: 0.6)
+            if overview.waitForExistence(timeout: 2) { break }
         }
-        XCTAssertTrue(overview.waitForExistence(timeout: 5), "the zoom cycle should reach the overview")
+        XCTAssertTrue(overview.exists, "the zoom cycle should reach the overview")
+        snapshot("map-overview-from-zoom-cycle")
         remote.press(.menu)
         XCTAssertTrue(waitUntilGone(overview), "Back should close the overview")
         XCTAssertFalse(app.buttons["pause.resume"].exists, "closing the overview must not pause")
