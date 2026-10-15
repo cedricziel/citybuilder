@@ -23,7 +23,7 @@ public enum RemoteDirection: Hashable, Sendable, CaseIterable {
 /// so every tile can be the reticle tile. Spec: `tv-remote-controls` /
 /// Reticle marks the target tile, Zoom without pinch. Design D1.
 public extension GameSession {
-    static let zoomStep = 1.5
+    nonisolated static let zoomStep = 1.5
 
     /// Switches the session to the Apple TV input rules.
     func useAppleTVInput() {
