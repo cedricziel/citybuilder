@@ -15,9 +15,16 @@ struct SnapshotHostView: View {
     let selectionProvider: @MainActor @Sendable () -> TileCoordinate?
     let routeOverlayProvider: @MainActor @Sendable () -> RouteOverlay?
     var body: some View {
-        SnapshotRendererRegistry.shared.factory(
-            snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeOverlayProvider
-        )
+        if let factory = SnapshotRendererRegistry.shared.factory {
+            factory(
+                snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeOverlayProvider
+            )
+        } else {
+            Color.black.overlay(
+                Text("World renderer not registered")
+                    .foregroundStyle(.white)
+            )
+        }
     }
 }
 
@@ -32,8 +39,7 @@ public final class SnapshotRendererRegistry {
     public static let shared = SnapshotRendererRegistry()
 
     /// Returns a SwiftUI view that draws the world from the given snapshot
-    /// provider. Default is a placeholder text view; CityRender2D registers
-    /// a real implementation on app launch.
+    /// provider. CityRender2D registers a real implementation on app launch.
     public typealias SnapshotProvider = @MainActor @Sendable () -> WorldSnapshot?
     public typealias TapSink = @MainActor @Sendable (TileCoordinate) -> Void
     public typealias DragSink = @MainActor @Sendable (TileCoordinate) -> Void
@@ -47,7 +53,7 @@ public final class SnapshotRendererRegistry {
     /// from the session.
     public typealias RouteOverlayProvider = @MainActor @Sendable () -> RouteOverlay?
 
-    public var factory: (
+    public typealias Factory = (
         @escaping SnapshotProvider,
         @escaping TapSink,
         @escaping DragSink,
@@ -56,12 +62,9 @@ public final class SnapshotRendererRegistry {
         @escaping GhostProvider,
         @escaping SelectionProvider,
         @escaping RouteOverlayProvider
-    ) -> AnyView = { _, _, _, _, _, _, _, _ in
-        AnyView(
-            Color.black.overlay(
-                Text("World renderer not registered")
-                    .foregroundStyle(.white)
-            )
-        )
-    }
+    ) -> AnyView
+
+    /// The registered renderer; nil until an app registers one, so tests
+    /// and previews can draw a stand-in.
+    public var factory: Factory?
 }
