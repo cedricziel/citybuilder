@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,12 +9,7 @@ where houses draw it to satisfy their food need.
 
 ## Visual identity
 
-A grain field in iso furrows filling the whole footprint, with a small
-thatched barn on the back corner. Ripe wheat in `#D4A86A` with `#A07C50`
-stalks and `#8B5A2B` row shadows, dark-loam `#3D2A1D` furrows. The barn
-has a lit `#D4A86A` south-west wall, a shaded `#A07C50` south-east wall,
-a `#8B5A2B` thatch roof, and a `#4A2F1A` door, outlined in `#1A1410`.
-Drawn locally by `scripts/generate_sprites_ai/procedural.py`.
+Rendered by IsoKit in the shared light rig. A plank barn under a thatch roof in the back corner, cabbage beds in dark soil filling the front, a crate and a barrel by the door.
 
 ## Sheet
 
@@ -38,7 +33,7 @@ Two animation loops: construction (one-shot) and operational (forever).
 
 ## Recipe
 
-- Recipe: `building-farm` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-farm` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
 - Construction stages: 3
 - Operational frames: 2

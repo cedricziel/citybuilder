@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -11,11 +11,7 @@ distance.
 
 ## Visual identity
 
-A small one-room timber shed with a thatch roof, smaller than the
-lumberjack hut, in the north corner of its yard. Rows of young
-conifers fill the rest of the yard: the nursery the forester plants
-from. Palette anchors: `#6E4A2A` timber frame, `#8B5A2B` thatch roof,
-`#3F5C26` sapling shade and `#5C8038` sapling light.
+Rendered by IsoKit in the shared light rig. A small half-timbered hut under a thatch roof in the back corner, its yard a nursery of young conifers in rows behind a fence.
 
 ## Sheet
 

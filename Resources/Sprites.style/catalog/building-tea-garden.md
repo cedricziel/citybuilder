@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grows tea leaves for the tea house. East Asian towns only.
 
 ## Visual identity
 
-Rows of clipped, rounded tea bushes forming hedges, behind a low fence; a small paper-walled hut with dark posts under an upturned slate roof, a stone lantern and a basket of leaves. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A half-timbered, paper-pale hut under a hipped slate roof, rounded clipped tea hedges in rows, and a stone lantern.
 
 ## Sheet
 
@@ -30,7 +29,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-tea-garden` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-tea-garden` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
 - Construction stages: 3
 - Operational frames: 2
