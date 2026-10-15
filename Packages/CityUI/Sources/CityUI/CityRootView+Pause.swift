@@ -9,6 +9,9 @@ extension CityRootView {
     /// standings and routes when they apply, then settings.
     var menuButtons: some View {
         HStack(spacing: 6) {
+            #if os(tvOS)
+            TVZoomButtons(session: session)
+            #endif
             goalsButton
             researchButton
             standingsButton

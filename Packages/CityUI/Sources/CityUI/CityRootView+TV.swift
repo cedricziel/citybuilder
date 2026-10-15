@@ -132,4 +132,28 @@ private struct ReticleDiamond: Shape {
         }
     }
 }
+
+/// Apple TV has no pinch: the top bar zooms by 1.5 per press. Spec:
+/// `tv-remote-controls` / Zoom without pinch.
+struct TVZoomButtons: View {
+    let session: GameSession
+
+    var body: some View {
+        HStack(spacing: 6) {
+            button("Zoom Out", systemImage: "minus.magnifyingglass") { session.zoomOut() }
+            button("Zoom In", systemImage: "plus.magnifyingglass") { session.zoomIn() }
+        }
+    }
+
+    private func button(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .imageScale(.large)
+                .padding(8)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+    }
+}
 #endif
