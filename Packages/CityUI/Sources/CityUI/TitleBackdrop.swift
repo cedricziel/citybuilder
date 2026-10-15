@@ -52,12 +52,15 @@ struct TitleBackdropMotion: Sendable {
 
 /// The starting island behind the title menu, drawn by the registered
 /// world renderer with a drifting camera and a time-lapse sky. Without a
-/// renderer (tests, previews) it is a warm gradient. `active` false drops
-/// the scene, so it stops drawing while a sheet covers the title.
+/// renderer (tests, previews) it is a warm gradient. `active` false fades
+/// the scene out, so it stops drawing while a sheet covers the title.
 struct TitleBackdrop: View {
     var active = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var snapshot: WorldSnapshot?
+    /// When the drift started; kept across sheets so the camera resumes
+    /// where it would be instead of jumping back to the start.
+    @State private var origin = Date.now
 
     var body: some View {
         ZStack {
@@ -73,18 +76,18 @@ struct TitleBackdrop: View {
             }
         }
         .animation(.easeInOut(duration: 1.2), value: snapshot != nil)
+        .animation(.easeInOut(duration: 0.4), value: active)
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .task {
             guard snapshot == nil, SnapshotRendererRegistry.shared.factory != nil else { return }
-            snapshot = await Task.detached(priority: .utility) { Self.island }.value
+            snapshot = await Task.detached(priority: .utility) { Self.makeSnapshot() }.value
         }
     }
 
     private func world(_ snapshot: WorldSnapshot, factory: SnapshotRendererRegistry.Factory) -> some View {
         let motion = TitleBackdropMotion(center: snapshot.camera, reduceMotion: reduceMotion)
-        let origin = Date.now
         return factory(
             {
                 let elapsed = Date.now.timeIntervalSince(origin)
@@ -97,12 +100,12 @@ struct TitleBackdrop: View {
         )
     }
 
-    /// Built once, on first use: the world is deterministic.
-    nonisolated static let island = makeSnapshot()
-
     /// The default island with finished houses, under the new-game camera
-    /// (on the town center), zoomed in a little, without warning markers. Generating it ticks the
-    /// sim, so callers keep it off the main thread.
+    /// (on the town center), zoomed in a little, without warning markers.
+    /// It reuses the art-review town from `UITestSeed`, so a change to that
+    /// seed changes the title too; the seed's test stock never shows, since
+    /// the title never ticks the world. Generating it ticks the sim, so
+    /// callers keep it off the main thread.
     nonisolated static func makeSnapshot() -> WorldSnapshot {
         var world = UITestSeed.townWorld(houses: 6)
         world.camera.setZoom(1.2)

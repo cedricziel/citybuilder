@@ -24,6 +24,7 @@ public enum UITestSeed {
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
     /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
     /// each listed kind at the nearest site the rules allow, for a family's before and after shots.
+    /// The title backdrop draws this town too (`TitleBackdrop.makeSnapshot`).
     public static func townWorld(houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil) -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0)
         world.seedUnlimitedTestInventory()
