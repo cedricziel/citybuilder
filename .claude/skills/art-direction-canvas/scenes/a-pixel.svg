@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="180 70 1040 560" shape-rendering="crispEdges">
+<defs>
+  <pattern id="dgrass" width="6" height="4" patternUnits="userSpaceOnUse"><rect width="6" height="4" fill="#5C8038"/><rect x="0" y="0" width="1" height="1" fill="#8FB04E"/><rect x="3" y="2" width="1" height="1" fill="#8FB04E"/><rect x="5" y="1" width="1" height="1" fill="#3F5C26"/></pattern>
+  <pattern id="dforest" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#3F5C26"/><rect x="1" y="1" width="1" height="1" fill="#5C8038"/><rect x="3" y="3" width="1" height="1" fill="#1A1410"/></pattern>
+  <pattern id="dsand" width="5" height="3" patternUnits="userSpaceOnUse"><rect width="5" height="3" fill="#C9A671"/><rect x="2" y="1" width="1" height="1" fill="#8C6A45"/></pattern>
+  <pattern id="dwater" width="24" height="12" patternUnits="userSpaceOnUse"><rect width="24" height="12" fill="#2A4E6E"/><rect x="2" y="3" width="5" height="1" fill="#3F6E94"/><rect x="14" y="9" width="4" height="1" fill="#3F6E94"/></pattern>
+  <pattern id="dcobble" width="4" height="2" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#A89884"/><rect x="0" y="0" width="1" height="1" fill="#7A6B59"/><rect x="2" y="1" width="1" height="1" fill="#7A6B59"/></pattern>
+  <pattern id="dthatch" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="#8B5A2B"/><rect x="0" y="0" width="1" height="2" fill="#A07C50"/></pattern>
+
+  <g id="house">
+    <path d="M0,8 L34,14 L82,38 L34,62 L0,56Z" fill="#3F5C26"/>
+    <path d="M-48,32 L0,56 L0,26 L-48,2Z" fill="#D4A86A" stroke="#1A1410"/>
+    <path d="M-48,17 L0,41 M-36,8 L-36,38 M-24,14 L-24,44 M-12,20 L-12,50 M-48,32 L-36,23 M-12,35 L0,44" stroke="#6E4A2A" stroke-width="2" fill="none"/>
+    <path d="M-38,27 L-31,30 L-31,21 L-38,17Z M-12,40 L-5,44 L-5,34 L-12,30Z" fill="#3D2A1D"/>
+    <path d="M-23,44 L-17,47 L-17,32 L-23,29Z" fill="#4A2F1A"/>
+    <path d="M0,56 L48,32 L48,2 L0,26Z" fill="#A07C50" stroke="#1A1410"/>
+    <path d="M14,39 L22,35 L22,25 L14,29Z M30,31 L38,27 L38,17 L30,21Z" fill="#3D2A1D"/>
+    <path d="M0,26 L48,2 L24,-6Z" fill="#8C6A45" stroke="#1A1410"/>
+    <path d="M-24,-30 L24,-6 L48,2 L0,-22Z" fill="#7A1F1A" stroke="#1A1410"/>
+    <path d="M10,-26 L16,-23 L16,-35 L10,-38Z" fill="#7A6B59" stroke="#1A1410"/>
+    <path d="M-51,4 L0,29 L24,-6 L-24,-30Z" fill="#A53329" stroke="#1A1410"/>
+    <path d="M-42,-7 L8,17 M-33,-18 L16,6" stroke="#7A1F1A" fill="none"/>
+  </g>
+  <g id="houseB">
+    <path d="M0,8 L34,14 L82,38 L34,62 L0,56Z" fill="#3F5C26"/>
+    <path d="M-48,32 L0,56 L0,18 L-48,-6Z" fill="#FFE9C8" stroke="#1A1410"/>
+    <path d="M-48,13 L0,37 M-32,2 L-32,40 M-16,10 L-16,48" stroke="#4A2F1A" stroke-width="2" fill="none"/>
+    <path d="M-44,20 L-36,24 L-36,14 L-44,10Z M-28,28 L-20,32 L-20,22 L-28,18Z M-12,36 L-4,40 L-4,30 L-12,26Z" fill="#3D2A1D"/>
+    <path d="M-28,48 L-21,51 L-21,37 L-28,34Z" fill="#4A2F1A"/>
+    <path d="M0,56 L48,32 L48,-6 L0,18Z" fill="#D4A86A" stroke="#1A1410"/>
+    <path d="M14,34 L22,30 L22,20 L14,24Z M30,26 L38,22 L38,12 L30,16Z" fill="#3D2A1D"/>
+    <path d="M0,18 L48,-6 L24,-14Z" fill="#C9A671" stroke="#1A1410"/>
+    <path d="M-24,-38 L24,-14 L48,-6 L0,-30Z" fill="#3F2A26" stroke="#1A1410"/>
+    <path d="M-51,-4 L0,21 L24,-14 L-24,-38Z" fill="#5C5046" stroke="#1A1410"/>
+    <path d="M-42,-15 L8,9 M-33,-26 L16,-2" stroke="#3F2A26" fill="none"/>
+    <path d="M-10,0 L-2,4 L-2,-8 L-10,-12Z" fill="#7A6B59" stroke="#1A1410"/>
+  </g>
+  <g id="townhall">
+    <path d="M0,0 L96,48 L0,96 L-96,48Z" fill="url(#dcobble)" stroke="#5C5046"/>
+    <path d="M0,6 L60,14 L140,56 L64,92 L32,74Z" fill="#5C5046"/>
+    <path d="M-25.6,-50.8 L57.6,-9.2 L83.2,8 L0,-33.6Z" fill="#3F2A26" stroke="#1A1410"/>
+    <path d="M32,48 L57.6,60.8 L57.6,-19.2 L32,-32Z" fill="#A89884" stroke="#1A1410"/>
+    <path d="M57.6,60.8 L83.2,48 L83.2,-32 L57.6,-19.2Z" fill="#7A6B59" stroke="#1A1410"/>
+    <path d="M-51.2,32 L32,73.6 L32,33.6 L-51.2,-8Z" fill="#A89884" stroke="#1A1410"/>
+    <path d="M-38.7,26.2 L-32.1,29.6 L-32.1,13.6 L-38.7,10.2Z M-22.1,34.6 L-15.4,37.9 L-15.4,21.9 L-22.1,18.6Z M2.9,47 L9.5,50.4 L9.5,34.4 L2.9,31Z M19.5,55.4 L26.2,58.7 L26.2,42.7 L19.5,39.4Z" fill="#2A4E6E" stroke="#1A1410"/>
+    <path d="M-12.9,51.1 L-4.6,55.3 L-4.6,33.3 L-12.9,29.1Z" fill="#4A2F1A" stroke="#1A1410"/>
+    <path d="M32,73.6 L83.2,48 L83.2,8 L32,33.6Z" fill="#7A6B59" stroke="#1A1410"/>
+    <path d="M32,33.6 L83.2,8 L57.6,-9.2Z" fill="#5C5046" stroke="#1A1410"/>
+    <path d="M-54,-6 L32,37 L57.6,-9.2 L-25.6,-50.8Z" fill="#A53329" stroke="#1A1410"/>
+    <path d="M-45,-21 L41,22 M-36,-36 L49,6" stroke="#7A1F1A" fill="none"/>
+    <path d="M32,-32 L57.6,-19.2 L57.6,-64Z" fill="#A53329" stroke="#1A1410"/>
+    <path d="M57.6,-19.2 L83.2,-32 L57.6,-64Z" fill="#7A1F1A" stroke="#1A1410"/>
+    <path d="M57.6,-64 L57.6,-80" stroke="#1A1410"/>
+    <rect x="58" y="-80" width="9" height="5" fill="#8B1A1A"/>
+    <path d="M-44,60 L-32,66 L-20,60 L-32,54Z" fill="#7A6B59" stroke="#1A1410"/>
+    <rect x="-34" y="58" width="4" height="2" fill="#2A4E6E"/>
+    <path d="M-14,72 L2,80 L8,77 L-8,69Z" fill="#D2C094" stroke="#1A1410"/>
+    <path d="M-12,73 L-12,80 M6,78 L6,85" stroke="#4A2F1A"/>
+    <path d="M-66,58 L-50,66 L-44,63 L-60,55Z" fill="#8B1A1A" stroke="#1A1410"/>
+    <path d="M-64,59 L-64,66 M-46,64 L-46,71" stroke="#4A2F1A"/>
+  </g>
+  <g id="sawmill">
+    <path d="M0,10 L30,14 L74,36 L30,58 L0,54Z" fill="#3F5C26"/>
+    <path d="M-44,32 L0,54 L0,32 L-44,10Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-38,30 L-6,46 L-6,32 L-38,16Z" fill="#1A1410"/>
+    <path d="M-30,30 L-14,38" stroke="#A8CCDD" stroke-width="2"/>
+    <path d="M0,54 L44,32 L44,10 L0,32Z" fill="#4A2F1A" stroke="#1A1410"/>
+    <path d="M0,32 L44,10 L22,5Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-22,-17 L22,5 L44,10 L0,-12Z" fill="#3F2A26" stroke="#1A1410"/>
+    <path d="M-47,12 L0,35 L22,5 L-22,-17Z" fill="#8B5A2B" stroke="#1A1410"/>
+    <path d="M-38,4 L8,26 M-30,-6 L15,16" stroke="#6E4A2A" fill="none"/>
+    <circle cx="-58" cy="50" r="3" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-52" cy="53" r="3" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-46" cy="56" r="3" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-55" cy="45" r="3" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-49" cy="48" r="3" fill="#A07C50" stroke="#4A2F1A"/>
+    <path d="M22,50 L36,57 L46,52 L32,45Z" fill="#D4A86A" stroke="#1A1410"/>
+    <path d="M22,50 L36,57 L36,61 L22,54Z" fill="#A07C50" stroke="#1A1410"/>
+  </g>
+  <g id="hut">
+    <path d="M0,5 L22,9 L44,20 L22,31 L0,27Z" fill="#3F5C26"/>
+    <path d="M-22,16 L0,27 L0,13 L-22,2Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-12,21 L-8,23 L-8,13 L-12,11Z" fill="#1A1410"/>
+    <path d="M0,27 L22,16 L22,2 L0,13Z" fill="#4A2F1A" stroke="#1A1410"/>
+    <path d="M0,13 L22,2 L11,-8.5Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-11,-19.5 L11,-8.5 L22,2 L0,-9Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-24,4 L0,16 L11,-8.5 L-11,-19.5Z" fill="url(#dthatch)" stroke="#1A1410"/>
+    <circle cx="-30" cy="24" r="2.5" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-26" cy="26" r="2.5" fill="#A07C50" stroke="#4A2F1A"/><circle cx="-28" cy="21" r="2.5" fill="#A07C50" stroke="#4A2F1A"/>
+    <rect x="14" y="22" width="5" height="3" fill="#8C6A45" stroke="#1A1410"/>
+  </g>
+  <g id="forester">
+    <path d="M0,5 L22,9 L44,20 L22,31 L0,27Z" fill="#3F5C26"/>
+    <path d="M-22,16 L0,27 L0,13 L-22,2Z" fill="#D4A86A" stroke="#1A1410"/>
+    <path d="M-12,21 L-8,23 L-8,13 L-12,11Z" fill="#4A2F1A"/>
+    <path d="M0,27 L22,16 L22,2 L0,13Z" fill="#A07C50" stroke="#1A1410"/>
+    <path d="M0,13 L22,2 L11,-8.5Z" fill="#8C6A45" stroke="#1A1410"/>
+    <path d="M-11,-19.5 L11,-8.5 L22,2 L0,-9Z" fill="#3F5C26" stroke="#1A1410"/>
+    <path d="M-24,4 L0,16 L11,-8.5 L-11,-19.5Z" fill="#5C8038" stroke="#1A1410"/>
+  </g>
+  <g id="sapling"><rect x="-0.5" y="-3" width="1" height="3" fill="#4A2F1A"/><circle cx="0" cy="-5" r="2.5" fill="#8FB04E" stroke="#3F5C26"/></g>
+  <g id="tree"><rect x="-1" y="-7" width="2" height="7" fill="#4A2F1A"/><circle cx="0" cy="-14" r="8" fill="#3F5C26" stroke="#1A1410"/><circle cx="-1.5" cy="-15.5" r="6" fill="#5C8038"/><circle cx="-3" cy="-17" r="2.5" fill="#8FB04E"/></g>
+  <g id="pine"><rect x="-1" y="-5" width="2" height="5" fill="#4A2F1A"/><path d="M0,-28 L8,-5 L-8,-5Z" fill="#3F5C26" stroke="#1A1410"/><path d="M0,-28 L0,-5 L-8,-5Z" fill="#5C8038"/></g>
+  <g id="grove">
+    <use href="#pine" x="0" y="0"/><use href="#tree" x="20" y="4"/><use href="#pine" x="-18" y="6"/><use href="#tree" x="-34" y="14"/><use href="#pine" x="6" y="14"/><use href="#tree" x="24" y="20"/><use href="#pine" x="-12" y="22"/><use href="#tree" x="8" y="30"/>
+  </g>
+  <g id="walker"><rect x="-2" y="-3" width="1" height="3" fill="#3D2A1D"/><rect x="1" y="-3" width="1" height="3" fill="#3D2A1D"/><rect x="-2" y="-9" width="4" height="6" fill="currentColor"/><rect x="-1" y="-12" width="3" height="3" fill="#D4A86A"/></g>
+  <g id="cart">
+    <path d="M-12,-5 L2,2 L2,-3 L-12,-10Z" fill="#6E4A2A" stroke="#1A1410"/>
+    <path d="M-12,-10 L2,-3 L6,-5 L-8,-12Z" fill="#A07C50" stroke="#1A1410"/>
+    <circle cx="-4" cy="0" r="3" fill="#3D2A1D"/>
+    <path d="M4,0 L12,4 L12,0 L4,-4Z" fill="#5C3F28" stroke="#1A1410"/>
+    <rect x="11" y="-4" width="3" height="3" fill="#5C3F28"/>
+  </g>
+  <g id="boat">
+    <path d="M-26,-2 L24,22 L18,24 L-22,4Z" fill="#A8CCDD"/>
+    <path d="M-22,-10 L22,12 L16,18 L-16,2Z" fill="#4A2F1A" stroke="#1A1410"/>
+    <path d="M-18,-9 L18,9 L14,12 L-14,-3Z" fill="#6E4A2A"/>
+    <path d="M0,1 L0,-40" stroke="#1A1410" stroke-width="2"/>
+    <path d="M-14,-36 L12,-23 L12,-6 L-14,-19Z" fill="#D2C094" stroke="#1A1410"/>
+    <path d="M-14,-28 L12,-15" stroke="#8B1A1A" stroke-width="2"/>
+  </g>
+  <g id="strip">
+    <path d="M0,0 L32,16 L-32,48 L-64,32Z" fill="currentColor" stroke="#5C3F28"/>
+    <path d="M8,4 L-56,36 M16,8 L-48,40 M24,12 L-40,44" stroke="#8C6A45" fill="none"/>
+  </g>
+</defs>
+
+<rect x="180" y="70" width="1040" height="560" fill="url(#dwater)"/>
+<path d="M640,86 L760,146 L880,208 L1000,268 L1120,328 L1192,376 L1110,418 L1000,474 L880,536 L776,600 L700,566 L560,494 L400,418 L300,368 L216,316 L320,258 L420,206 L520,154 L600,112 Z" fill="#3F6E94"/>
+<path d="M640,100 L700,128 L760,160 L830,192 L880,222 L940,248 L1000,282 L1060,308 L1120,342 L1172,376 L1130,398 L1100,414 L1040,440 L1000,462 L940,490 L880,522 L830,548 L776,584 L740,566 L700,552 L650,522 L600,502 L560,480 L500,452 L460,428 L400,404 L350,376 L300,354 L236,316 L270,296 L320,270 L370,244 L420,220 L470,194 L520,168 L560,148 L600,124 Z" fill="url(#dsand)" stroke="#A8CCDD" stroke-width="3"/>
+<path d="M640,118 L700,146 L760,176 L830,208 L880,236 L940,262 L1000,294 L1060,320 L1110,346 L1146,374 L1110,394 L1080,408 L1030,432 L990,452 L930,480 L872,510 L824,534 L776,562 L742,548 L702,534 L654,506 L604,486 L562,466 L504,438 L466,416 L406,392 L356,366 L306,344 L264,316 L290,302 L330,280 L378,256 L428,232 L476,206 L524,180 L564,160 L604,138 Z" fill="url(#dgrass)"/>
+<path d="M640,122 L740,172 L700,200 L640,206 L600,236 L560,250 L520,280 L470,300 L420,330 L380,350 L320,330 L270,312 L330,280 L420,234 L520,182 Z" fill="url(#dforest)"/>
+
+<path d="M540.8,266.4 L944,468 L921.6,479.2 L518.4,277.6Z" fill="#8C6A45" stroke="#5C3F28"/>
+<path d="M900.8,272.8 L923.2,284 L547.2,472 L524.8,460.8Z" fill="#8C6A45" stroke="#5C3F28"/>
+<path d="M428.8,314.4 L563.2,381.6 L553.6,386.4 L419.2,319.2Z" fill="#5C3F28"/>
+<g color="#C9A671"><use href="#strip" x="736" y="456"/></g>
+<g color="#8FB04E"><use href="#strip" x="768" y="472"/></g>
+<g color="#C9A671"><use href="#strip" x="800" y="488"/></g>
+<path d="M566.4,451.2 L585.6,460.8 L489.6,508.8 L470.4,499.2Z" fill="#A07C50" stroke="#4A2F1A"/>
+<path d="M585.6,460.8 L489.6,508.8 L489.6,512 L585.6,464Z" fill="#4A2F1A"/>
+<path d="M540,474 L540,480 M520,484 L520,490 M500,494 L500,500 M480,504 L480,510" stroke="#1A1410" stroke-width="2"/>
+
+<use href="#grove" x="633" y="149"/>
+<use href="#grove" x="592" y="192"/>
+<use href="#grove" x="496" y="208"/>
+<use href="#grove" x="620" y="213"/>
+<use href="#forester" x="704" y="184"/>
+<use href="#sapling" x="736" y="212"/><use href="#sapling" x="746" y="227"/><use href="#sapling" x="717" y="225"/><use href="#sapling" x="730" y="236"/>
+<use href="#grove" x="499" y="248"/>
+<use href="#grove" x="403" y="258"/>
+<use href="#hut" x="448" y="280"/>
+<use href="#tree" x="832" y="280"/><use href="#tree" x="992" y="328"/><use href="#tree" x="1040" y="384"/>
+<use href="#house" x="640" y="248"/>
+<use href="#houseB" x="704" y="280"/>
+<use href="#grove" x="339" y="296"/>
+<use href="#grove" x="384" y="318"/>
+<g color="#3F6E94"><use href="#walker" x="592" y="304"/></g>
+<g color="#8B1A1A"><use href="#walker" x="880" y="296"/></g>
+<use href="#cart" x="640" y="328"/>
+<g color="#D2C094"><use href="#walker" x="688" y="352"/></g>
+<g color="#6E4A2A"><use href="#walker" x="480" y="280"/></g>
+<g color="#8B5A2B"><use href="#walker" x="464" y="328"/></g>
+<use href="#houseB" x="544" y="296"/>
+<use href="#house" x="608" y="328"/>
+<use href="#townhall" x="864" y="328"/>
+<g color="#3F6E94"><use href="#walker" x="800" y="336"/></g>
+<use href="#house" x="960" y="376"/>
+<use href="#sawmill" x="576" y="376"/>
+<use href="#tree" x="400" y="360"/><use href="#tree" x="492" y="394"/>
+<use href="#cart" x="784" y="400"/>
+<g color="#A53329"><use href="#walker" x="816" y="416"/></g>
+<use href="#house" x="736" y="392"/>
+<use href="#cart" x="704" y="392"/>
+<g color="#D2C094"><use href="#walker" x="656" y="416"/></g>
+<use href="#houseB" x="800" y="424"/>
+<g color="#3F2A26"><use href="#walker" x="880" y="448"/></g>
+<use href="#tree" x="688" y="464"/>
+<use href="#houseB" x="864" y="456"/>
+<g color="#6E4A2A"><use href="#walker" x="752" y="512"/></g>
+<g color="#3F6E94"><use href="#walker" x="528" y="488"/></g>
+<use href="#boat" x="544" y="504"/>
+<use href="#boat" x="360" y="480"/>
+</svg>
