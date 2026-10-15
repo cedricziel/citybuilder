@@ -96,3 +96,21 @@ def test_a_changed_recipe_fails_the_check(monkeypatch, capsys):
     monkeypatch.setattr(sounds, "SOUNDS", [louder])
     assert generate.main(["--check"]) == 1
     assert original.path in capsys.readouterr().err
+
+
+def test_soft_clip_is_monotonic_and_continuous():
+    ceiling, knee = 0.95, 0.76
+    xs = [i / 1000 for i in range(-3000, 3001)]
+    ys = [dsp.soft_clip(x, ceiling, knee) for x in xs]
+    assert all(b >= a for a, b in zip(ys, ys[1:]))
+    assert all(abs(b - a) <= 0.0011 for a, b in zip(ys, ys[1:]))  # no jumps, slope at most 1
+    assert max(abs(y) for y in ys) <= ceiling
+    assert dsp.soft_clip(0.5, ceiling, knee) == 0.5
+
+
+def test_loudest_window_checks_every_offset():
+    # A burst that straddles two half-window steps is still found whole.
+    signal = [0.0] * 1000
+    for i in range(325, 425):
+        signal[i] = 1.0
+    assert abs(dsp.loudest_window_rms(signal, 100) - 1.0) < 1e-9

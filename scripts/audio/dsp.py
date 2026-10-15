@@ -44,7 +44,7 @@ def exp(x: float) -> float:
 
 
 def tanh(x: float) -> float:
-    """Soft clipper: a Padé tanh, exact at the ends of [-3, 3] and clamped beyond."""
+    """A Padé tanh: monotonic, with slope 0 where it reaches ±1 at ±3, clamped beyond."""
     if x >= 3:
         return 1.0
     if x <= -3:
@@ -196,20 +196,34 @@ def rms(signal: list[float]) -> float:
 
 
 def loudest_window_rms(signal: list[float], window: int) -> float:
-    """RMS of the loudest `window`-sample stretch: a one-shot's perceived level."""
-    best = 0.0
-    for start in range(0, max(1, len(signal) - window + 1), window // 2):
-        best = max(best, rms(signal[start : start + window]))
-    return best
+    """RMS of the loudest `window`-sample stretch, checking every offset: a one-shot's perceived level."""
+    if len(signal) <= window:
+        return rms(signal)
+    total = 0.0
+    for x in signal[:window]:
+        total += x * x
+    best = total
+    for i in range(window, len(signal)):
+        total += signal[i] * signal[i] - signal[i - window] * signal[i - window]
+        best = max(best, total)
+    return math.sqrt(max(best, 0.0) / window)
+
+
+def soft_clip(y: float, ceiling: float, knee: float) -> float:
+    """Passes |y| up to `knee` unchanged, then bends smoothly towards `ceiling`.
+
+    Continuous with slope 1 at the knee, monotonic, never above the ceiling.
+    """
+    magnitude = y if y >= 0 else -y
+    if magnitude <= knee:
+        return y
+    room = ceiling - knee
+    bent = knee + room * tanh((magnitude - knee) / room)
+    return bent if y >= 0 else -bent
 
 
 def normalise(signal: list[float], level: float, measured: float, ceiling: float = 0.95) -> list[float]:
-    """Scales so `measured` becomes `level`, soft-clipping anything above `ceiling`."""
+    """Scales so `measured` becomes `level`, softly limiting peaks above 80% of `ceiling`."""
     gain = level / measured if measured > 0 else 0.0
-    out = []
-    for x in signal:
-        y = x * gain
-        if y > ceiling or y < -ceiling:
-            y = ceiling * tanh(y / ceiling)
-        out.append(y)
-    return out
+    knee = 0.8 * ceiling
+    return [soft_clip(x * gain, ceiling, knee) for x in signal]
