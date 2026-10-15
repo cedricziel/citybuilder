@@ -1,7 +1,8 @@
 """Deterministic DSP building blocks for the procedural sound generator.
 
 Every function here uses only IEEE-754 basic arithmetic (+, -, *, /, sqrt)
-in a fixed order, plus our own polynomial sine and exponential. `math.sin`
+in a fixed order, plus our own polynomial sine and exponential; powers are
+written as products, since `**` on floats calls libm's pow. `math.sin`
 and friends come from the platform's libm and may differ in the last bit
 between macOS and Linux, which would break the byte-for-byte regeneration
 check. Signals are plain lists of floats in [-1, 1].
