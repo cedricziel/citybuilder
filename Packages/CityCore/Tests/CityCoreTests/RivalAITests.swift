@@ -85,8 +85,8 @@ func scenarioFoodThresholdOverridesTheScript() {
     #expect(world.rival(1)?.ai.scriptIndex == 12)
 }
 
-@Test("scenario: a farm for every house")
-func scenarioAFarmForEveryHouse() {
+@Test("scenario: fewer farms than houses")
+func scenarioFewerFarmsThanHouses() {
     var world = normalWorld()
     world.setRival(1) { $0.ai.scriptIndex = 12 }
     world.setRivalStock(1, [.wood: 20, .planks: 10, .food: 2])
