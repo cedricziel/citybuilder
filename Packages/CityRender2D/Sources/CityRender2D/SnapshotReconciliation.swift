@@ -6,7 +6,9 @@ import Foundation
 /// scene layer just diffs sprite-id sets.
 public struct SpriteSpec: Hashable, Sendable {
     public enum Kind: Hashable, Sendable {
-        case terrain(TerrainType)
+        /// A terrain tile, with the corner-mask transition its neighbours call for (nil when its
+        /// corners agree). The renderer uses the transition sprite when the atlas has it.
+        case terrain(TerrainType, transition: TerrainTransition? = nil)
         /// One sprite per building, anchored at the building's anchor tile.
         /// The renderer is responsible for drawing the building large
         /// enough to cover its footprint.
@@ -59,10 +61,13 @@ public struct SpriteSpec: Hashable, Sendable {
 public enum SnapshotReconciler {
     /// Build the desired sprite set for one snapshot inside the visible
     /// range. Pure function.
+    /// `transitions` is the scene's cached map for this snapshot's terrain; without it each visible
+    /// tile's transition is worked out on the spot.
     public static func desiredSprites(
         in snapshot: WorldSnapshot,
         xRange: ClosedRange<Int>,
-        yRange: ClosedRange<Int>
+        yRange: ClosedRange<Int>,
+        transitions: TerrainTransitionMap? = nil
     ) -> Set<SpriteSpec> {
         var result = Set<SpriteSpec>()
         result.reserveCapacity((xRange.count) * (yRange.count) * 2)
@@ -70,7 +75,9 @@ public enum SnapshotReconciler {
             for tileX in xRange {
                 let coord = TileCoordinate(x: tileX, y: tileY)
                 guard let terrainHere = snapshot.terrain(at: coord) else { continue }
-                result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere)))
+                let transition = transitions.map { $0.transition(at: coord) }
+                    ?? TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
+                result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition)))
             }
         }
         // Emit one sprite per building (at its anchor) when its anchor is

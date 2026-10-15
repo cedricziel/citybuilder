@@ -33,6 +33,8 @@ public final class IsoWorldScene: SKScene {
     /// seasonal variants) check it before falling back; tests replace it
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
+    /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
+    private(set) var transitionMap: TerrainTransitionMap?
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {
@@ -243,7 +245,6 @@ public final class IsoWorldScene: SKScene {
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
                 node.position = position(forCarrier: carrier)
                 node.zPosition = 50 // above terrain, below tall buildings
-                node.texture?.filteringMode = .nearest
                 node.run(
                     SKAction.repeatForever(SKAction.animate(with: frames, timePerFrame: 0.15)),
                     withKey: "walk"
@@ -307,7 +308,7 @@ public final class IsoWorldScene: SKScene {
         guard season != appliedSeason else { return }
         appliedSeason = season
         for (spec, node) in presentSprites {
-            guard case let .terrain(kind) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
+            guard case let .terrain(kind, _) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
             node.removeFromParent()
             presentSprites.removeValue(forKey: spec)
         }
@@ -322,10 +323,14 @@ public final class IsoWorldScene: SKScene {
         )
         else { return }
 
+        if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
+            transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
+        }
         let desired = SnapshotReconciler.desiredSprites(
             in: snapshot,
             xRange: xRange,
-            yRange: yRange
+            yRange: yRange,
+            transitions: transitionMap
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),

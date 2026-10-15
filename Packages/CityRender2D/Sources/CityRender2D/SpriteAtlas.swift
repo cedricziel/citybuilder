@@ -172,7 +172,7 @@ public enum SpriteAtlas {
         // the extension also resolves cleanly.
         guard names.contains(name) || names.contains(name + ".png") else { return nil }
         let texture = atlas.textureNamed(name)
-        texture.filteringMode = .nearest
+        texture.filteringMode = TextureFiltering.mode(for: name)
         cacheQueue.sync { textureCache[name] = texture }
         return texture
     }

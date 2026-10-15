@@ -39,10 +39,10 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 
 ## 3. Renderer: transitions and filtering
 
-- [ ] 3.1 Tests-first in CityRender2D: write failing tests for the `rendering-2_5d` scenarios "Grass meeting beach picks a transition tile", "Grass beside water shows a beach edge", "Transitions do not change gameplay", "Building textures filter linearly" and "Goods icons stay pixel art"
-- [ ] 3.2 Implement a pure `TerrainCorners` function (vertex rank, grass-water demotion, mask), and use it in tile reconciliation and `SpriteAtlas` lookup
-- [ ] 3.3 Switch world textures to `.linear` and keep icons and badges on `.nearest`. Confirm SpriteKit loads the `@2x` atlas images on retina devices and on Apple TV
-- [ ] 3.4 Measure atlas memory on the Apple TV simulator before and after, and record it in design D7
+- [x] 3.1 Tests-first in CityRender2D: tests for the `rendering-2_5d` scenarios "Grass meeting beach picks a transition tile", "Grass beside water shows a beach edge", "Transitions do not change gameplay", "Building textures filter linearly" and "Goods icons stay pixel art"
+- [x] 3.2 A pure `TerrainCorners` (vertex terrain with forest and mountain counted as grass, beach where grass meets water, corner mask); `SnapshotReconciler` carries the transition in `SpriteSpec.Kind.terrain(_:transition:)`, and the node factory draws it when the atlas has the tile, else the tile's own sprite. In autumn and winter the seasonal grass sprite wins, so grass edges blend only in spring and summer until seasonal transition tiles exist; beach and water edges blend all year
+- [x] 3.3 `TextureFiltering` routes every atlas texture: art-kit entries (`kitRenderedEntries`, extended by each family PR) are `.linear`, goods icons and badges `.nearest`, legacy pixel art `.nearest` until its family migrates (linear-filtered pixel art would blur during the rollout). SpriteKit picks the `@2x` atlas images; confirmed on device with the first family (4.1)
+- [ ] 3.4 Measure atlas memory on the Apple TV simulator before and after — moved into 4.1, the first PR that ships `@2x` art
 
 ## 4. Rollout, one family per PR
 
