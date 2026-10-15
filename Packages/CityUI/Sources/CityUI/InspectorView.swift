@@ -24,6 +24,8 @@ public struct InspectorViewModel: Sendable {
     public let routeStartPort: EntityID?
     /// What stops the building working, nil when nothing does.
     public let problem: String?
+    /// A player town center's market, nil elsewhere.
+    public let townMarket: TownMarketSection?
 
     public init(
         bullets: [String],
@@ -35,7 +37,8 @@ public struct InspectorViewModel: Sendable {
         rival: RivalSummary? = nil,
         market: RivalMarketSection? = nil,
         routeStartPort: EntityID? = nil,
-        problem: String? = nil
+        problem: String? = nil,
+        townMarket: TownMarketSection? = nil
     ) {
         self.bullets = bullets
         self.title = title
@@ -47,11 +50,17 @@ public struct InspectorViewModel: Sendable {
         self.market = market
         self.routeStartPort = routeStartPort
         self.problem = problem
+        self.townMarket = townMarket
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
     /// an empty model when the tile is unoccupied — the view hides itself.
-    public static func make(from snapshot: WorldSnapshot, tile: TileCoordinate, buildings: [EntityID: Building]) -> InspectorViewModel {
+    public static func make(
+        from snapshot: WorldSnapshot,
+        tile: TileCoordinate,
+        buildings: [EntityID: Building],
+        townMarket: TownMarketSection? = nil
+    ) -> InspectorViewModel {
         guard let entityID = snapshot.occupiedTiles[tile],
               let building = buildings[entityID]
         else { return InspectorViewModel(bullets: []) }
@@ -99,7 +108,8 @@ public struct InspectorViewModel: Sendable {
             rival: rival,
             market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
             routeStartPort: building.kind == .port ? entityID : nil,
-            problem: problem
+            problem: problem,
+            townMarket: townMarket
         )
     }
 
@@ -123,24 +133,31 @@ public struct InspectorView: View {
     let onCommission: () -> Void
     let onPickExport: (Good?) -> Void
     let onStartRoute: (EntityID) -> Void
+    let onMarketTrade: (TradeDirection, Good, Int) -> Void
     /// The lines to list; nil lists every bullet.
     let lines: [String]?
     let isFramed: Bool
+    /// Whether the details, such as the town center market, show.
+    let showsDetails: Bool
 
     public init(
         viewModel: InspectorViewModel,
         lines: [String]? = nil,
         isFramed: Bool = true,
+        showsDetails: Bool = true,
         onCommission: @escaping () -> Void = {},
         onPickExport: @escaping (Good?) -> Void = { _ in },
-        onStartRoute: @escaping (EntityID) -> Void = { _ in }
+        onStartRoute: @escaping (EntityID) -> Void = { _ in },
+        onMarketTrade: @escaping (TradeDirection, Good, Int) -> Void = { _, _, _ in }
     ) {
         self.viewModel = viewModel
         self.lines = lines
         self.isFramed = isFramed
+        self.showsDetails = showsDetails
         self.onCommission = onCommission
         self.onPickExport = onPickExport
         self.onStartRoute = onStartRoute
+        self.onMarketTrade = onMarketTrade
     }
 
     public var body: some View {
@@ -165,6 +182,9 @@ public struct InspectorView: View {
                 }
                 if let market = viewModel.market {
                     marketSection(market)
+                }
+                if showsDetails, let townMarket = viewModel.townMarket {
+                    TownMarketView(market: townMarket, onTrade: onMarketTrade)
                 }
                 if let port = viewModel.routeStartPort {
                     Button("Route from here", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
