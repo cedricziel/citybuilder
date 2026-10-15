@@ -169,6 +169,16 @@ struct KitGateTests {
         #expect(report.output.contains("terrain-water-2.png frame_empty"))
     }
 
+    @Test("a sprite belongs to the brief whose Sheet lists it, before any prefix match")
+    func sheetListBeatsPrefix() {
+        let catalog = GateCatalog(
+            entries: [.init(id: "building-house", source: "isokit"), .init(id: "building-house-renaissance", source: "procedural")],
+            sheetNames: ["building-house-renaissance": ["building-house-renaissance", "building-house-tier3-renaissance"]]
+        )
+        #expect(catalog.entry(forSprite: "building-house-tier3-renaissance.png")?.id == "building-house-renaissance")
+        #expect(catalog.entry(forSprite: "building-house-tier2.png")?.id == "building-house")
+    }
+
     @Test("@2x frames compare against their @2x base")
     func twoXFramesUseTwoXBase() {
         #expect(SpriteContentGate.coherenceBase(for: "building-sawmill-operational-1@2x.png") == "building-sawmill@2x.png")

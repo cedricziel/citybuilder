@@ -26,9 +26,18 @@ public struct GateCatalog: Sendable {
     }
 
     public let entries: [String: Entry]
+    /// Sprite stem → owning brief, from each brief's Sheet list (`- (r, c): `name``).
+    let owners: [String: String]
 
-    public init(entries: [Entry]) {
+    public init(entries: [Entry], sheetNames: [String: [String]] = [:]) {
         self.entries = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var owners: [String: String] = [:]
+        for (id, names) in sheetNames {
+            for name in names {
+                owners[name] = id
+            }
+        }
+        self.owners = owners
     }
 
     /// The catalog under `<resources>/Sprites.style/catalog`, or an empty one when there is none.
@@ -37,9 +46,22 @@ public struct GateCatalog: Sendable {
         guard FileManager.default.fileExists(atPath: directory.path) else { return GateCatalog(entries: []) }
         let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "md" }
-        return try GateCatalog(entries: files.map { file in
-            try parse(id: file.deletingPathExtension().lastPathComponent, markdown: String(contentsOf: file, encoding: .utf8))
-        })
+        var entries: [Entry] = [], sheets: [String: [String]] = [:]
+        for file in files {
+            let id = file.deletingPathExtension().lastPathComponent
+            let markdown = try String(contentsOf: file, encoding: .utf8)
+            entries.append(parse(id: id, markdown: markdown))
+            sheets[id] = sheetNames(in: markdown)
+        }
+        return GateCatalog(entries: entries, sheetNames: sheets)
+    }
+
+    static func sheetNames(in markdown: String) -> [String] {
+        markdown.components(separatedBy: "\n").compactMap { line in
+            guard line.hasPrefix("- ("), let open = line.firstIndex(of: "`") else { return nil }
+            let rest = line[line.index(after: open)...]
+            return rest.firstIndex(of: "`").map { String(rest[..<$0]) }
+        }
     }
 
     static func parse(id: String, markdown: String) -> Entry {
@@ -63,10 +85,12 @@ public struct GateCatalog: Sendable {
         return Entry(id: id, source: source, sweptEdge: edge)
     }
 
-    /// The brief a sprite belongs to: the longest catalog id that is the sprite's stem or a
-    /// `-`-separated prefix of it (`building-house-tier2` → `building-house`).
+    /// The brief a sprite belongs to: the brief whose Sheet lists it, else the longest catalog id that
+    /// is the sprite's stem or a `-`-separated prefix of it. The Sheet comes first because prefixes
+    /// mislead: `building-house-tier3-renaissance` belongs to `building-house-renaissance`.
     public func entry(forSprite fileName: String) -> Entry? {
         let stem = SpriteFile(fileName).stem
+        if let owner = owners[stem] { return entries[owner] }
         var candidate = stem
         while true {
             if let entry = entries[candidate] { return entry }
