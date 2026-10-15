@@ -72,6 +72,18 @@ struct RecipeRulesTests {
         #expect(abs(topCorner.y - 64) < 0.001)
     }
 
+    /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
+    @Test("a unit whose moving part crosses the cell edge does not fit")
+    func unitCellFitIsStrict() {
+        let ship = Recipe(
+            id: "ship-test", entry: "ship", cell: SpriteCell(footprint: 1, heightPx: 72),
+            constructionFrames: 0, operationalFrames: 1,
+            moving: MovingPart(name: "sail") { kit, _ in kit.block(SCNVector3(4.0, 0, 0), SCNVector3(4.1, 1, 0.1), .wood) },
+            plot: nil, unit: true
+        ) { kit, _ in kit.block(SCNVector3(1.5, 0, 1.5), SCNVector3(2.5, 1, 2.5), .wood) }
+        #expect(!CellFit.problems(in: ship).isEmpty)
+    }
+
     /// The renderer centres a W x H sprite on the footprint's width, level with its bottom vertex.
     @Test("a 2x3 cell is 160 points wide and centred on the footprint's width")
     func twoByThreeCellGeometry() {

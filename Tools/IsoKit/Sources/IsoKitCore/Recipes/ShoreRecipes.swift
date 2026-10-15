@@ -180,26 +180,27 @@ enum ShipFacing: String, CaseIterable {
 
 extension Recipes {
     /// Where the hull's centre sits: up-screen of the tile centre, at the renderer's ship anchor
-    /// (0.5, 0.3), 21.6 pt up a 72 pt cell.
-    static let shipCentre = SCNVector3(1.3, 0, 1.3)
+    /// (0.5, 0.3), 21.6 pt up a 72 pt cell, and 2 pt left of centre so the mast's shadow, which
+    /// falls to the right, stays in the cell.
+    static let shipCentre = SCNVector3(1.175, 0, 1.425)
 
     /// A single-masted cog: a tarred lower hull, plank strakes, pointed ends, an aft castle and a mast.
     static func ship(_ kit: Builder, _ facing: ShipFacing) {
         kit.yawed(facing.yaw, about: shipCentre) { hull in
-            hull.block(SCNVector3(-1.9, -0.1, -0.8), SCNVector3(1.9, 0.45, 0.8), .paint(Shore.tar))
-            hull.block(SCNVector3(-2.1, 0.45, -0.9), SCNVector3(2.1, 1.05, 0.9), .timber)
+            hull.block(SCNVector3(-1.6, -0.1, -0.75), SCNVector3(1.6, 0.45, 0.75), .paint(Shore.tar))
+            hull.block(SCNVector3(-1.8, 0.45, -0.85), SCNVector3(1.8, 1.05, 0.85), .timber)
             for end in [CGFloat(-1), 1] {
                 hull.add(
-                    SCNBox(width: 1.2, height: 0.95, length: 1.2, chamferRadius: 0), Finish.timber.material(),
-                    at: SCNVector3(end * 2.05, 0.55, 0), euler: SCNVector3(0, CGFloat.pi / 4, 0)
+                    SCNBox(width: 1.0, height: 0.95, length: 1.0, chamferRadius: 0), Finish.timber.material(),
+                    at: SCNVector3(end * 1.75, 0.55, 0), euler: SCNVector3(0, CGFloat.pi / 4, 0)
                 )
             }
-            hull.block(SCNVector3(-1.95, 0.95, -0.75), SCNVector3(1.95, 1.0, 0.75), .wood)
-            hull.block(SCNVector3(-2.2, 1.0, -0.85), SCNVector3(-1.2, 1.55, 0.85), .planks)
-            hull.add(SCNCylinder(radius: 0.09, height: 3.6), Finish.timber.material(), at: SCNVector3(0.2, 2.8, 0))
+            hull.block(SCNVector3(-1.65, 0.95, -0.7), SCNVector3(1.65, 1.0, 0.7), .wood)
+            hull.block(SCNVector3(-1.9, 1.0, -0.8), SCNVector3(-1.0, 1.55, 0.8), .planks)
+            hull.add(SCNCylinder(radius: 0.09, height: 3.3), Finish.timber.material(), at: SCNVector3(0.2, 2.65, 0))
             hull.add(
-                SCNCylinder(radius: 0.05, height: 2.6), Finish.timber.material(),
-                at: SCNVector3(0.3, 4.3, 0), euler: SCNVector3(CGFloat.pi / 2, 0, 0)
+                SCNCylinder(radius: 0.05, height: 2.4), Finish.timber.material(),
+                at: SCNVector3(0.3, 4.0, 0), euler: SCNVector3(CGFloat.pi / 2, 0, 0)
             )
         }
     }
@@ -209,9 +210,9 @@ extension Recipes {
         kit.yawed(facing.yaw, about: shipCentre) { rig in
             let slack: CGFloat = luff == 0 ? 0 : 1
             rig.add(
-                SCNBox(width: 0.06, height: 2.3, length: 2.4 - 0.15 * slack, chamferRadius: 0),
+                SCNBox(width: 0.06, height: 2.1, length: 2.2 - 0.15 * slack, chamferRadius: 0),
                 Finish.paint(Palette.sailcloth).material(),
-                at: SCNVector3(0.42 - 0.12 * slack, 3.05, 0), euler: SCNVector3(0, 0, 0.08 + 0.1 * slack)
+                at: SCNVector3(0.42 - 0.12 * slack, 2.85, 0), euler: SCNVector3(0, 0, 0.08 + 0.1 * slack)
             )
         }
     }

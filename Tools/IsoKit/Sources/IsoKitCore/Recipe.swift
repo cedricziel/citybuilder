@@ -107,7 +107,16 @@ public struct Recipe {
     /// close together (a sail just ahead of the mast), so a depth-only overlay would not reliably
     /// keep them in order.
     public func unitFrame(_ frame: Int) -> SCNNode {
-        let root = scene(stage: .finished)
+        let root = SCNNode()
+        root.addChildNode(unitModel(frame))
+        Rig.add(to: root, cell: cell)
+        root.addChildNode(Rig.shadowCatcher())
+        return root
+    }
+
+    /// A unit frame's own nodes: the body with that frame's moving part, without lights or ground.
+    func unitModel(_ frame: Int) -> SCNNode {
+        let root = build(stage: .finished)
         if let moving {
             let part = Builder()
             moving.build(part, frame)
