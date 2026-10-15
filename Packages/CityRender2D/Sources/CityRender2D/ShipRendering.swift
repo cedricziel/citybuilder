@@ -119,6 +119,19 @@ public enum ShoreOrientationMath {
         return dy > 0 ? .s : .n
     }
 
+    /// The finished sprite a placement ghost shows for `kind` at `anchor`: for a shore building, the
+    /// facing it would get from the water under its footprint (south when the footprint is all land or
+    /// all water); nil for any other kind.
+    public static func ghostTextureName(
+        kind: BuildingKind, anchor: TileCoordinate, terrain: (TileCoordinate) -> TerrainType?
+    ) -> String? {
+        guard BuildingCatalog.spec(for: kind).shorePlacement != nil else { return nil }
+        let tiles = BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor)
+        let sea = tiles.filter { terrain($0) == .water }, land = tiles.filter { terrain($0) != .water }
+        let facing = sea.isEmpty || land.isEmpty ? .s : orientation(landFaceTiles: land, seaFaceTiles: sea) ?? .s
+        return textureName(kind: kind, orientation: facing, state: nil, frame: nil)
+    }
+
     /// Sprite-name suffix for a shore building variant.
     public static func textureName(
         kind: BuildingKind, orientation: ShoreOrientation,

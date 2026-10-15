@@ -19,6 +19,24 @@ public enum UITestSeed {
         return world
     }
 
+    /// `-uiTestSeedShore`: the port seed with a shipyard on the nearest free stretch of coast, both
+    /// finished, and a ship at the shipyard, under the camera on the port. Art reviews shoot the
+    /// shore family from it.
+    public static func shoreWorld() -> World {
+        var world = portWorld()
+        world.seedTestFunds()
+        guard let port = world.buildings.values.first(where: { $0.kind == .port && $0.owner == .player }),
+              let site = nearestSite(for: .shipyard, in: world, around: port.anchor, from: 2)
+        else { return world }
+        world.enqueue(.place(.shipyard, at: site))
+        _ = world.tick()
+        settle(&world) { $0.buildings.values.contains { [.port, .shipyard].contains($0.kind) && $0.state != .operational } }
+        if let yard = world.buildings.values.first(where: { $0.kind == .shipyard && $0.owner == .player }) {
+            world.emitShip(fromShipyard: yard.id)
+        }
+        return world
+    }
+
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
@@ -41,10 +59,7 @@ public enum UITestSeed {
             placed.insert(site)
         }
         // Wait only on what the seed placed, so a starter building that never opens can't hold it up.
-        let pending = { world.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
-        for _ in 0 ..< 2000 where pending() {
-            _ = world.tick()
-        }
+        settle(&world) { $0.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
         if let season {
             for _ in 0 ..< CalendarState.ticksPerYear where world.date.season != season {
                 _ = world.tick()
@@ -58,6 +73,15 @@ public enum UITestSeed {
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         return BuildingKind.allCases.filter { $0.category == arguments[flag + 1] }
+    }
+
+    /// Ticks `world` while `pending` holds, for at most 2000 ticks.
+    private static func settle(_ world: inout World, while pending: (World) -> Bool) {
+        var ticks = 0
+        while pending(world), ticks < 2000 {
+            _ = world.tick()
+            ticks += 1
+        }
     }
 
     /// The closest tile to `center`, ring by ring from `radius`, where `kind` may be placed.
