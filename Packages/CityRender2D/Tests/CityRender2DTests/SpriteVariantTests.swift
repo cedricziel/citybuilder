@@ -28,9 +28,9 @@ func scenarioMountainShipsFourArtVariants() {
     }
 }
 
-/// The four art variants are retired: roads pick a connection sprite instead (RoadLinks).
-@Test("scenario: road ships four art variants")
-func scenarioRoadShipsFourArtVariants() {
+/// Roads retired their four art variants and pick a connection sprite instead (RoadLinks).
+@Test("scenario: road ships its connection tiles")
+func scenarioRoadShipsItsConnectionTiles() {
     let names = Set(SpriteAtlas.catalogSpriteNames)
     #expect(names.contains("building-road"))
     #expect(!names.contains("building-road-v1"))
@@ -163,23 +163,22 @@ func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
     }
 }
 
-@Test("scenario: placed road tile picks its variant from its coord")
-func scenarioPlacedRoadTilePicksItsVariantFromItsCoord() {
+@Test("scenario: placed road tile picks its connection sprite")
+@MainActor
+func scenarioPlacedRoadTilePicksItsConnectionSprite() {
     SpriteAtlas.resetForTesting()
-    let count = SpriteAtlas.buildingVariantCounts[.road] ?? 1
-    for coord in [
-        TileCoordinate(x: 1, y: 1),
-        TileCoordinate(x: 9, y: 4),
-        TileCoordinate(x: 5, y: 12),
-        TileCoordinate(x: 0, y: 7)
-    ] {
-        let variant = SpriteAtlas.variantIndex(coord: coord, count: count)
-        let expected = SpriteAtlas.textureOrPlaceholder(
-            named: SpriteAtlas.variantAssetName(stem: "building-road", variant: variant)
-        )
-        let actual = SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: coord)
-        #expect(actual === expected, "road at \(coord) must resolve via variant index \(variant)")
-    }
+    let scene = IsoWorldScene()
+    let link = RoadLink(mask: 2 | 8, plaza: true)
+    let spec = SpriteSpec(coord: TileCoordinate(x: 9, y: 4), kind: .building(
+        kind: .road, state: .operational, footprint: BuildingCatalog.spec(for: .road).footprint,
+        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false, roadLink: link
+    ))
+    scene.hasSprite = { $0 == link.assetName }
+    #expect(scene.makeBuildingNode(for: spec).userData?[IsoWorldScene.textureNameKey] as? String == "building-road-plaza-c10")
+    // Without the connection sprite the road draws its base sprite: roads have no art variants left.
+    #expect(SpriteAtlas.buildingVariantCounts[.road] == nil)
+    #expect(SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: spec.coord) === SpriteAtlas
+        .textureOrPlaceholder(named: "building-road"))
 }
 
 // MARK: - Ghost preview wiring

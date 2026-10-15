@@ -64,13 +64,14 @@ public struct SpriteSpec: Hashable, Sendable {
 public enum SnapshotReconciler {
     /// Build the desired sprite set for one snapshot inside the visible
     /// range. Pure function.
-    /// `transitions` is the scene's cached map for this snapshot's terrain; without it each visible
-    /// tile's transition is worked out on the spot.
+    /// `transitions` and `roadLinks` are the scene's caches for this snapshot; without them each visible
+    /// tile's transition, and every road's link, is worked out on the spot.
     public static func desiredSprites(
         in snapshot: WorldSnapshot,
         xRange: ClosedRange<Int>,
         yRange: ClosedRange<Int>,
-        transitions: TerrainTransitionMap? = nil
+        transitions: TerrainTransitionMap? = nil,
+        roadLinks: [TileCoordinate: RoadLink]? = nil
     ) -> Set<SpriteSpec> {
         var result = Set<SpriteSpec>()
         result.reserveCapacity((xRange.count) * (yRange.count) * 2)
@@ -83,7 +84,7 @@ public enum SnapshotReconciler {
                 result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition)))
             }
         }
-        let roadLinks = RoadLinks.links(in: snapshot)
+        let roadLinks = roadLinks ?? RoadLinks.links(in: snapshot)
         // Emit one sprite per building (at its anchor) when its anchor is
         // inside the visible range. Multi-tile buildings draw as a single
         // visual unit so the "four pillars" artefact goes away.

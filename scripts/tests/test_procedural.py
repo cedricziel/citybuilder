@@ -161,7 +161,7 @@ def test_derived_frames_differ_and_stay_in_palette() -> None:
                 assert (r, g, b) in palette
 
 
-ROAD_FULL = ["building-road", "building-road-v1", "building-road-v2", "building-road-v3", "building-road-constructing-2"]
+ROAD_FULL = ["building-road", "building-road-constructing-2"]
 ROAD_STAGES = ["building-road-constructing-0", "building-road-constructing-1"]
 
 
@@ -183,7 +183,3 @@ def test_road_sprites_stay_in_palette(name: str) -> None:
         assert a in (0, 255)
         if a:
             assert (r, g, b) in palette, name
-
-
-def test_road_variants_differ() -> None:
-    assert len({render(n).tobytes() for n in ROAD_FULL[:4]}) == 4

@@ -22,6 +22,26 @@ public struct RoadLink: Hashable, Sendable {
     }
 }
 
+/// The links of the last snapshot, kept until a building is placed or removed: links depend only on
+/// which tiles hold roads and the town center, so the scene need not work them out every frame.
+public struct RoadLinkCache {
+    private var occupancy: [TileCoordinate: EntityID]?
+    private var links: [TileCoordinate: RoadLink] = [:]
+    /// How many times the links were worked out; for tests.
+    public private(set) var computations = 0
+
+    public init() {}
+
+    public mutating func links(for snapshot: WorldSnapshot) -> [TileCoordinate: RoadLink] {
+        if occupancy != snapshot.occupiedTiles {
+            occupancy = snapshot.occupiedTiles
+            links = RoadLinks.links(in: snapshot)
+            computations += 1
+        }
+        return links
+    }
+}
+
 public enum RoadLinks {
     struct Arm {
         let bit: Int, dx: Int, dy: Int

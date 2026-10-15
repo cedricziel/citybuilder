@@ -35,6 +35,8 @@ public final class IsoWorldScene: SKScene {
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
     private(set) var transitionMap: TerrainTransitionMap?
+    /// Road links, worked out again only when a building is placed or removed.
+    private(set) var roadLinkCache = RoadLinkCache()
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {
@@ -337,7 +339,8 @@ public final class IsoWorldScene: SKScene {
             in: snapshot,
             xRange: xRange,
             yRange: yRange,
-            transitions: transitionMap
+            transitions: transitionMap,
+            roadLinks: roadLinkCache.links(for: snapshot)
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),

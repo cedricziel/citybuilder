@@ -123,7 +123,9 @@ The public `SpriteAtlas` API remains unchanged.
 - **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
 - **THEN** the lookup is performed against `SKTextureAtlas(named: "Buildings")` and returns a non-nil texture
 
-### Requirement: Per-tile art variants
+## ADDED Requirements
+
+### Requirement: Per-tile art variants for terrain
 A subset of terrain kinds SHALL ship multiple visually distinct sprites under the variant slot of the naming grammar (per the modified `Sprite naming grammar` requirement). The renderer SHALL pick one variant per tile via a deterministic function of the tile coordinate so that the choice is stable across replays, snapshots, and renderer reconciliations of equal `World` values.
 
 Per-kind variant counts SHALL be declared in two `SpriteAtlas` constants — `terrainVariantCounts: [TerrainType: Int]` and `buildingVariantCounts: [BuildingKind: Int]`. A kind absent from its table renders only the canonical sprite (variant 0). The variant inventory SHALL be:
@@ -136,7 +138,7 @@ Variant selection SHALL be implemented by a pure function `SpriteAtlas.variantIn
 - **WHEN** the sprite catalog is enumerated for the mountain terrain kind
 - **THEN** four entries are present: `terrain-mountain` (variant 0) and `terrain-mountain-v1`, `terrain-mountain-v2`, `terrain-mountain-v3`
 
-#### Scenario: Road ships four art variants
+#### Scenario: Road ships its connection tiles
 - **WHEN** the sprite catalog is enumerated for the road building kind
 - **THEN** it holds `building-road` and, for each of the 47 connection masks, `building-road-c<mask>` and `building-road-plaza-c<mask>`, and no `building-road-v<n>` variants
 
@@ -156,14 +158,14 @@ Variant selection SHALL be implemented by a pure function `SpriteAtlas.variantIn
 - **WHEN** `SpriteAtlas.variantIndex(coord:count:)` is called for every integer coord in a 16×16 region with count `4`
 - **THEN** every variant index `0`, `1`, `2`, `3` appears at least once in the resulting distribution
 
-### Requirement: Renderer picks variants per tile coord
+### Requirement: Renderer picks per-tile sprites
 The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or land-only building sprite spec via the variant-aware lookup keyed on `spec.coord`, except that an operational road draws its connection sprite when the atlas has it. The ghost preview path SHALL use the same lookup keyed on the ghost's target tile so the preview matches what the placed tile will render.
 
 #### Scenario: Placed mountain tile picks its variant from its coord
 - **WHEN** the snapshot reconciler emits a mountain terrain spec at coord `(x, y)`
 - **THEN** the renderer node's texture is `SpriteAtlas.terrainTextureOrPlaceholder(for: .mountain, coord: TileCoordinate(x: x, y: y))`
 
-#### Scenario: Placed road tile picks its variant from its coord
+#### Scenario: Placed road tile picks its connection sprite
 - **WHEN** the snapshot reconciler emits a road building spec at coord `(x, y)` in operational state
 - **THEN** the renderer node's texture is the road's `RoadLink` sprite, or `SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: TileCoordinate(x: x, y: y))` when the atlas lacks it
 
@@ -171,7 +173,6 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 - **WHEN** the ghost preview is reconciled for a road build at coord `(x, y)`
 - **THEN** the ghost node's texture is `SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: TileCoordinate(x: x, y: y))`, the base road sprite
 
-## ADDED Requirements
 
 ### Requirement: Atlas PNGs are rendered by the art kit
 
@@ -254,6 +255,19 @@ Every `walker-*` sprite SHALL be 10×16 points (20×32 pixels @2×), with the wa
 - **THEN** `walker-<facing>-0` … `-3` exist for `ne`, `nw`, `se` and `sw`
 
 ## REMOVED Requirements
+
+### Requirement: Per-tile art variants
+
+**Reason**: Roads retired their four art variants; only terrain keeps variants.
+
+**Migration**: "Per-tile art variants for terrain" replaces it.
+
+### Requirement: Renderer picks variants per tile coord
+
+**Reason**: Operational roads now draw a connection sprite instead of a coord-picked variant.
+
+**Migration**: "Renderer picks per-tile sprites" replaces it.
+
 
 ### Requirement: PNG contents are produced by the style-catalog pipeline
 **Reason**: The style-catalog pipeline (PIL procedural sheets and the image API) is retired. Its scenarios demand byte-identical output from `make sprites` and catalog-to-cache mapping, which GPU renders cannot meet.
