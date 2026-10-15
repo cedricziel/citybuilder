@@ -30,7 +30,8 @@ public enum SwiftEmitter {
             ("ProductionCatalog+Generated.swift", types.productionCatalog),
             ("Culture+Generated.swift", types.culture),
             ("Tech+Generated.swift", types.tech),
-            ("Age+Generated.swift", types.age)
+            ("Age+Generated.swift", types.age),
+            ("HouseTier+Generated.swift", types.houseTier)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -173,6 +174,18 @@ private struct Types {
         ])
     }
 
+    /// Raw values are positions from 1: saves store them, and `next` and
+    /// `previous` step through them (design D1 of `tier-needs-data`).
+    var houseTier: String {
+        let all = data.tiers
+        return enumDecl("HouseTier", "UInt8, CaseIterable, Codable, Sendable", all.map(\.id), rawValues: all.indices.map { "\($0 + 1)" }, [
+            property("capacity", "UInt32", all.map { ($0.id, "\($0.capacity)") }),
+            property("needs", "[Good]", all.map { ($0.id, caseList($0.needs)) }),
+            property("taxPerResident", "Int64", all.map { ($0.id, "\($0.taxPerResident)") }),
+            property("displayName", "String", all.map { ($0.id, literal($0.name)) })
+        ])
+    }
+
     // MARK: - Values
 
     private func spec(_ building: Building) -> String {
@@ -213,10 +226,14 @@ private struct Types {
 
     // MARK: - Declarations
 
-    /// An enum with one case per id, followed by its members.
-    private func enumDecl(_ name: String, _ conformances: String, _ ids: [String], _ members: [String]) -> String {
-        let cases = ids.map { id in
-            unquotedCaseName(id) == id ? "    case \(caseName(id))\n" : "    case \(caseName(id)) = \(literal(id))\n"
+    /// An enum with one case per id, followed by its members. A case's raw
+    /// value is its id unless `rawValues` gives one per id.
+    private func enumDecl(
+        _ name: String, _ conformances: String, _ ids: [String], rawValues: [String]? = nil, _ members: [String]
+    ) -> String {
+        let cases = ids.enumerated().map { index, id in
+            if let raw = rawValues?[index] { return "    case \(caseName(id)) = \(raw)\n" }
+            return unquotedCaseName(id) == id ? "    case \(caseName(id))\n" : "    case \(caseName(id)) = \(literal(id))\n"
         }
         let body = members.filter { !$0.isEmpty }.map { "\n" + $0 }.joined()
         return "\n\(access)enum \(name): \(conformances) {\n\(cases.joined())\(body)}\n"

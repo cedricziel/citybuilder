@@ -26,6 +26,13 @@ public extension HouseTier {
         self == .merchants ? needs + [culture.luxury] : needs
     }
 
+    /// Every good some tier needs in `culture`, in `Good` order (design
+    /// D6 of `tier-needs-data`).
+    static func allNeeds(in culture: Culture) -> [Good] {
+        let needed = Set(allCases.flatMap { $0.needs(in: culture) })
+        return Good.allCases.filter(needed.contains)
+    }
+
     /// The culture's name for this tier (design D2).
     func displayName(in culture: Culture) -> String {
         culture.tierName(self)

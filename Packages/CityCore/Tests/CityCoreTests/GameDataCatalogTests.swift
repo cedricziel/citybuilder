@@ -13,17 +13,6 @@ func scenarioLegacyBuildingIdentifiersStillDecode() throws {
     #expect(throws: DecodingError.self) { try decoder.decode(BuildingKind.self, from: Data(#""castle""#.utf8)) }
 }
 
-@Test("scenario: every good has a consumer")
-func scenarioEveryGoodHasAConsumer() {
-    let recipeInputs = BuildingKind.allCases.flatMap { ProductionCatalog.recipe(for: $0)?.inputs.keys.map(\.self) ?? [] }
-    let materials = BuildingCatalog.all.flatMap(\.materialCost.keys)
-    let luxuries = Culture.allCases.map(\.luxury)
-    let needs = HouseTier.allCases.flatMap(\.needs)
-    let consumed = Set(recipeInputs + materials + luxuries + needs)
-    let unused = Good.allCases.filter { !consumed.contains($0) }
-    #expect(unused.isEmpty, "goods nothing consumes: \(unused)")
-}
-
 @Test func everyContentCaseHasItsDisplayValues() {
     for kind in BuildingKind.allCases {
         #expect(!kind.displayName.isEmpty, "\(kind)")

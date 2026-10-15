@@ -22,6 +22,9 @@ struct Validator {
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
         checkConsumers()
+        if data.tiers.isEmpty {
+            log.error("no house tiers: declare at least one `Tier` item in a pack", at: Origin(file: "index.yaml"))
+        }
     }
 
     private struct References {

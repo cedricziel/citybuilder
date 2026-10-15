@@ -11,6 +11,17 @@ func tierOrderIsCaseOrder() throws {
     #expect(data.tiers.map(\.taxPerResident) == [1, 2, 4])
 }
 
+@Test func packsWithoutTiersAreRejected() {
+    var core = Fixtures.core
+    for line in core.split(separator: "\n") where line.contains("kind: Tier") {
+        core = core.replacingOccurrences(of: line + "\n", with: "")
+    }
+    let ages = Fixtures.ages.replacingOccurrences(of: "eraGate: { tier: citizens, residents: 20 }", with: "")
+        .replacingOccurrences(of: "    era: medieval\n", with: "")
+    let errors = Fixtures.errors(Fixtures.source([("core", core), ("ages", ages)]))
+    #expect(errors.contains { $0.contains("no house tiers") }, "\(errors)")
+}
+
 @Test("scenario: unknown tier in neededBy is rejected")
 func unknownTierInNeededBy() {
     let extra = "items:\n  - { kind: Good, id: cloth, name: Cloth, unit: bolts, basePrice: 9, neededBy: [nobles] }\n"
@@ -100,4 +111,27 @@ func cultureOverridesOneTierName() throws {
     let data = try Fixtures.load(Fixtures.withCulture(culture)).get()
     let northern = try #require(data.cultures.first)
     #expect(data.tiers.map(northern.tierName) == ["Peasants", "Citizens", "Jarls"])
+}
+
+@Test func emitsHouseTierWithPositionalRawValues() throws {
+    let extra = "items:\n  - { kind: Good, id: cloth, name: Cloth, unit: bolts, basePrice: 9, neededBy: [merchants] }\n"
+    let source = try emitted("HouseTier+Generated.swift", from: Fixtures.withExtraPack(extra))
+    #expect(source.contains("public enum HouseTier: UInt8, CaseIterable, Codable, Sendable {\n"))
+    #expect(source.contains("    case peasants = 1\n    case citizens = 2\n    case merchants = 3\n"))
+    #expect(source.contains("public var capacity: UInt32 {"))
+    #expect(source.contains("case .citizens: 6"))
+    #expect(source.contains("public var needs: [Good] {"))
+    #expect(source.contains("case .merchants: [.planks, .wood, .cloth]"))
+    #expect(source.contains("public var taxPerResident: Int64 {"))
+    #expect(source.contains("case .merchants: 4"))
+    #expect(source.contains("case .peasants: \"Peasants\""))
+}
+
+@Test func emitsTierNamesWithTheTiersOwnNameAsFallback() throws {
+    let culture = Fixtures.culture.replacingOccurrences(
+        of: "tiers: { peasants: Peasants, citizens: Citizens, merchants: Merchants }", with: "tiers: { merchants: Jarls }"
+    )
+    let source = try emitted("Culture+Generated.swift", from: Fixtures.withCulture(culture))
+    #expect(source.contains("case (.northernEuropean, .peasants): \"Peasants\""))
+    #expect(source.contains("case (.northernEuropean, .merchants): \"Jarls\""))
 }

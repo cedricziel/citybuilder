@@ -9,11 +9,12 @@ extension World {
             .filter { $0.kind == .house && $0.state == .operational }
             .sorted { $0.id.raw < $1.id.raw }
         let reach = supplyReach()
+        let tracked = HouseTier.allNeeds(in: culture)
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
             consumeIfDue(&pop, building: building)
-            updateSatisfaction(&pop, building: building, reach: reach)
+            updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
             updateGrowth(&pop, modifiers: modifiers)
             updateTier(&pop, building: building, modifiers: modifiers, reach: reach)
             populations[building.id] = pop
@@ -28,16 +29,17 @@ extension World {
             return
         }
         for good in pop.tier.needs(in: culture) {
-            let amount = pop.consumption(of: good, in: culture)
+            let amount = HousePopulation.amount(of: good, residents: pop.population)
             pop.setShort(good, consume(good, amount: amount, by: building) < amount)
         }
     }
 
     /// A need is met while a buffer on the house's road network holds
-    /// the good and the last consumption of it was not short.
-    private func updateSatisfaction(_ pop: inout HousePopulation, building: Building, reach: SupplyReach) {
+    /// the good and the last consumption of it was not short. `goods` is
+    /// every tier's needs, so a house knows them before it advances.
+    private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], building: Building, reach: SupplyReach) {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
-        for good in HouseTier.merchants.needs(in: culture) {
+        for good in goods {
             let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint, reach: reach)
             pop.setSatisfied(good, inReach && !pop.isShort(good))
         }
