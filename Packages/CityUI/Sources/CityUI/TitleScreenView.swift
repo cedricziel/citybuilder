@@ -41,6 +41,8 @@ public struct TitleScreenView: View {
             TitleBackdrop(active: !viewModel.presentingNewGameDialog && !viewModel.presentingSettings)
             scrim
             menu
+                // The menu sits on a dark scrim in either appearance.
+                .environment(\.colorScheme, .dark)
         }
         .onAppear { entered = true }
         #if os(tvOS)
@@ -135,8 +137,8 @@ public struct TitleScreenView: View {
                                 .opacity(0.8)
                         }
                         #if os(tvOS)
-                        // The system style sizes to the label.
-                        .frame(maxWidth: 280)
+                        // The system style hugs the label; keep the date on one line.
+                        .frame(minWidth: 280)
                         .padding(.vertical, 10)
                         #endif
                     }

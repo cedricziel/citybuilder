@@ -100,15 +100,22 @@ struct TitleBackdrop: View {
         )
     }
 
-    /// The default island with finished houses, under the new-game camera
-    /// (on the town center), zoomed in a little, without warning markers.
-    /// It reuses the art-review town from `UITestSeed`, so a change to that
-    /// seed changes the title too; the seed's test stock never shows, since
-    /// the title never ticks the world. Generating it ticks the sim, so
-    /// callers keep it off the main thread.
+    // The default island with finished houses, under the new-game camera
+    // (on the town center), zoomed in a little, without warning markers.
+    // It reuses the art-review town from `UITestSeed`, so a change to that
+    // seed changes the title too; the seed's test stock never shows, since
+    // the title never ticks the world. Generating it ticks the sim, so
+    // callers keep it off the main thread.
+    // Apple TV fills a 1920-point screen, so it zooms closer to keep the town legible.
+    #if os(tvOS)
+    static let titleZoom = 2.0
+    #else
+    static let titleZoom = 1.2
+    #endif
+
     nonisolated static func makeSnapshot() -> WorldSnapshot {
         var world = UITestSeed.townWorld(houses: 6)
-        world.camera.setZoom(1.2)
+        world.camera.setZoom(titleZoom)
         // A title card shows no road-access warnings.
         var snapshot = world.snapshot()
         snapshot.roadDisconnectedBuildings = []
