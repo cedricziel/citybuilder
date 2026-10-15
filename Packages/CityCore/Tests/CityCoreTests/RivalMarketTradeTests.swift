@@ -115,6 +115,51 @@ func scenarioRivalClearsAFullTownCenter() {
     #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
 }
 
+@Test("a full but fed town does not sell")
+func fullButFedTownDoesNotSell() {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.planks: 30, .food: 10])
+    #expect(rivalTrades(world.takeTurn(1)).isEmpty)
+}
+
+@Test("clearing the store sells from the town center first")
+func clearingTheStoreSellsFromTheTownCenterFirst() throws {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.planks: 38, .food: 2])
+    // A warehouse that holds planks too.
+    let rival = try #require(world.rival(1))
+    let center = try #require(world.buildings[rival.townCenterID])
+    let warehouse = world.testPlace(.warehouse, at: TileCoordinate(x: center.anchor.x + 5, y: center.anchor.y), owner: .rival(1))
+    world.testSetStock([.planks: 30], in: warehouse)
+    world.enqueue(.rivalMarketSell(1, .planks, 20))
+    world.tick()
+    #expect(world.stockpiles[rival.townCenterID]?.quantity(of: .planks) == 18)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .planks) == 30)
+}
+
+@Test("wood bought for a step reaches it although a sawmill stands")
+func boughtWoodReachesTheStepDespiteASawmill() throws {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.treasury = 1000
+    }
+    // One house wants a farm (2 wood); no wood in stock and no forest in
+    // reach, but a working sawmill that would take any wood it can get.
+    world.setRivalStock(1, [.planks: 10, .food: 0])
+    world.testAddBuilding(.house, owner: .rival(1))
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(commands.first == .rivalMarketBuy(1, .wood, 2))
+    #expect(placedKind(commands.last) == .farm)
+    world.tick()
+    let farm = try #require(placedAnchor(commands.last).flatMap { world.occupiedTiles[$0] }.flatMap { world.buildings[$0] })
+    #expect(farm.kind == .farm)
+    #expect(farm.constructionState != .waitingForMaterials)
+}
+
 @Test("scenario: rival buys food for short houses")
 func scenarioRivalBuysFoodForShortHouses() {
     var world = normalWorld()
