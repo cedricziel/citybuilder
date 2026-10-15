@@ -172,6 +172,49 @@ final class TVWalkthroughTests: XCTestCase {
         XCTAssertTrue(app.buttons["Zoom Out"].exists)
     }
 
+    func testBackFromADrawerClosesItThenReturnsToTheMap() {
+        startGame()
+        remote.press(.select)
+        let house = app.buttons["House"].firstMatch
+        XCTAssertTrue(house.waitForExistence(timeout: 5), "the Town drawer should open")
+        // Let the drawer finish opening; a Back mid-animation can be lost.
+        Thread.sleep(forTimeInterval: 1)
+        snapshot("drawer-open")
+        remote.press(.menu)
+        let closed = waitUntilGone(house)
+        snapshot("drawer-after-back")
+        XCTAssertTrue(closed, "Back should close the drawer")
+        XCTAssertFalse(app.descendants(matching: .any)["tv.map"].hasFocus, "the first Back only closes the drawer")
+        remote.press(.menu)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        XCTAssertFalse(app.buttons["pause.resume"].exists, "Back from the HUD returns to the map without pausing")
+    }
+
+    func testBackFromTheInspectorReturnsToTheMap() {
+        startGame(inHUD: false)
+        let callout = app.descendants(matching: .any)["inspector.callout"]
+        for step in [XCUIRemote.Button.left, .up, .up] where !callout.exists {
+            remote.press(.select)
+            if callout.waitForExistence(timeout: 2) { break }
+            remote.press(step)
+        }
+        XCTAssertTrue(callout.exists, "selecting the town center should show its callout")
+        remote.press(.select)
+        snapshot("inspector-focused")
+        let focusedInCallout = callout.descendants(matching: .any).matching(NSPredicate(format: "hasFocus == true")).firstMatch
+        XCTAssertTrue(focusedInCallout.waitForExistence(timeout: 5), "select on the selected building focuses its callout")
+        remote.press(.menu)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        XCTAssertFalse(app.buttons["pause.resume"].exists, "Back from the callout returns to the map")
+    }
+
+    func testPlayPauseInTheHUDReturnsToTheMapOnce() {
+        startGame()
+        remote.press(.playPause)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        snapshot("map-after-hud-playpause")
+    }
+
     /// Launches with an empty save folder, so New Game is the primary
     /// button.
     private func launch() {
