@@ -101,7 +101,10 @@ struct RecipeRulesTests {
             kit.chimney(x: 6, depth: 6, from: 0, to: 4)
         }
         let expected = Projection.screen(SCNVector3(6, 4, 6), in: hut.cell)
-        #expect(try abs(#require(hut.chimneyAnchor).x - expected.x / 128) < 0.001)
+        let anchor = try #require(hut.chimneyAnchor)
+        // Both chimneys sit on the same screen column, so the height tells them apart.
+        #expect(abs(anchor.x - expected.x / 128) < 0.001)
+        #expect(abs(anchor.y - (1 - expected.y / 128)) < 0.001)
     }
 
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
