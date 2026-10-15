@@ -60,6 +60,30 @@ struct RoadLinksTests {
         #expect(links.allSatisfy { RoadLinks.allMasks.contains($0.mask) })
     }
 
+    /// A road finishes within the tick that places it (the road graph connects it on placement too),
+    /// so no snapshot shows a road under construction: a new road and its neighbour join at once.
+    /// Only operational roads carry a link.
+    @Test("a newly placed road joins its neighbour in the next snapshot")
+    func newRoadJoinsAtOnce() {
+        var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
+        world.enqueue(.place(.road, at: TileCoordinate(x: 3, y: 3)))
+        _ = world.tick()
+        _ = world.tick()
+        world.enqueue(.place(.road, at: TileCoordinate(x: 4, y: 3)))
+        _ = world.tick()
+        let snapshot = world.snapshot()
+        let states = Dictionary(snapshot.buildings.values.map { ($0.anchor, $0.state) }, uniquingKeysWith: { first, _ in first })
+        #expect(states[TileCoordinate(x: 3, y: 3)] == .operational)
+        #expect(states[TileCoordinate(x: 4, y: 3)] == .operational)
+        let specs = SnapshotReconciler.desiredSprites(in: snapshot, xRange: 0 ... 7, yRange: 0 ... 7)
+        var links: [TileCoordinate: RoadLink?] = [:]
+        for spec in specs {
+            if case let .building(.road, _, _, _, _, _, _, _, _, link) = spec.kind { links[spec.coord] = link }
+        }
+        #expect(links[TileCoordinate(x: 3, y: 3)] == RoadLink(mask: 1, plaza: false))
+        #expect(links[TileCoordinate(x: 4, y: 3)] == RoadLink(mask: 4, plaza: false))
+    }
+
     @MainActor
     @Test("the factory draws a road's connection sprite, else its base sprite")
     func factoryDrawsTheConnectionSprite() {

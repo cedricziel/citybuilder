@@ -114,7 +114,7 @@ public enum SnapshotReconciler {
                     isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id),
                     houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants,
                     look: SignatureLooks.look(for: building, in: snapshot),
-                    roadLink: building.kind == .road && building.state != .constructing ? roadLinks[building.anchor] : nil
+                    roadLink: building.kind == .road && building.state == .operational ? roadLinks[building.anchor] : nil
                 )
             ))
         }
