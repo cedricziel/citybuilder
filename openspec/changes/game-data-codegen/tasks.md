@@ -46,8 +46,8 @@
 
 ## 5. M5 — Agent tooling: semantic diff, hooks and vetted skills
 
-- [ ] 5.1 Tests-first: translate "Value change is listed once", "Anchor change lists every affected item", "Invalid pack edit is reported to the agent", "Hand edit of generated code is blocked" and "Unrelated edit passes through" into failing `GameDataGenTests` (the hook cases feed hook JSON to the `hook` subcommand). Confirm red.
-- [ ] 5.2 Implement to green: `gamedata-gen diff <ref>` (load both revisions through `git show`, resolve merges, print value-level changes, additions and removals in load order).
+- [x] 5.1 Tests-first: translate "Value change is listed once", "Anchor change lists every affected item", "Invalid pack edit is reported to the agent", "Hand edit of generated code is blocked" and "Unrelated edit passes through" into failing `GameDataGenTests` (the hook cases feed hook JSON to the `hook` subcommand). Confirm red.
+- [x] 5.2 Implement to green: `gamedata-gen diff <ref>` (load both revisions through `git show`, resolve merges, print value-level changes, additions and removals in load order).
 - [ ] 5.3 Implement to green: `gamedata-gen hook pre|post`, then land `scripts/gamedata-hook.sh` and the hook entries in a committed `.claude/settings.json` from the drafts in `hooks/`. Check by hand in a Claude Code session that an invalid edit is reported and an edit to `Generated/` is blocked.
 - [ ] 5.4 Add `make skills-eval`: for each skill's `evals/` cases, run three headless Claude Haiku sessions in a scratch worktree with the hooks enabled, and grade each run (generator validates, `gamedata-check` passes, semantic diff matches the expectation; review cases must report the seeded blockers).
 - [ ] 5.5 Land `gamedata-tune` under `.claude/skills/` with at least five eval cases (single field, item overriding an anchor, anchor change naming every user, vague request that must stop for confirmation, value outside the packs that must be refused). Iterate until `make skills-eval` passes.
