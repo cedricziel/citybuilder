@@ -72,6 +72,10 @@ public struct CityRootView: View {
             }
             touchPlacementHUD
                 .zIndex(1)
+            #if os(tvOS)
+            TVMapOverviewView(session: session)
+                .zIndex(2)
+            #endif
         }
         .onChange(of: isAnySheetPresented) { _, presented in
             if presented { buildRail.close() }
@@ -139,6 +143,8 @@ public final class GameSession {
     public let minimap = MinimapModel()
     /// A minimap tap's camera move in progress; a pan stops it.
     public internal(set) var cameraGlide: CameraGlide?
+    /// The Apple TV map overview while it is open.
+    public internal(set) var overview: MapOverview?
 
     /// Ends the game: runs `onEnd` once. The title screen calls this when
     /// it drops the session.

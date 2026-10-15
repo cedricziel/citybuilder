@@ -18,6 +18,8 @@ public enum RemoteInput: Hashable, Sendable {
     case back
     /// A controller's Menu button.
     case menu
+    /// A controller's X button: opens the map overview.
+    case overview
     /// Trigger zoom, -1 (out) to 1 (in), sent once per controller update.
     case zoomAxis(Double)
     case focusChanged(RemoteFocus)
@@ -52,6 +54,13 @@ public struct RemoteInputMapper {
 
     public mutating func handle(_ input: RemoteInput, at time: TimeInterval, session: GameSession) -> [RemoteEffect] {
         defer { updateTooltip(at: time, session: session) }
+        if handlesOverview(input, session: session) {
+            return []
+        }
+        return handleOnMap(input, at: time, session: session)
+    }
+
+    private mutating func handleOnMap(_ input: RemoteInput, at time: TimeInterval, session: GameSession) -> [RemoteEffect] {
         switch input {
         case let .focusChanged(newFocus):
             focus = newFocus
@@ -89,7 +98,15 @@ public struct RemoteInputMapper {
     private mutating func holdPlayPauseIfDue(at time: TimeInterval, session: GameSession) {
         guard let downAt = playPauseDownAt, time - downAt >= Self.holdDuration else { return }
         playPauseDownAt = nil
-        if focus == .map {
+        guard focus == .map else { return }
+        // The overview is the cycle's fourth stop. Spec: `platform-shells`
+        // / Apple TV map overview.
+        if session.overview != nil {
+            session.closeOverview()
+            session.world.camera.setZoom(2.0)
+        } else if session.world.camera.zoom == 0.5 {
+            session.openOverview()
+        } else {
             session.cycleZoomLevel()
         }
     }
@@ -99,6 +116,8 @@ public struct RemoteInputMapper {
         holdPlayPauseIfDue(at: time, session: session)
         guard playPauseDownAt != nil else { return [] }
         playPauseDownAt = nil
+        // A short press does nothing while the overview is open.
+        if session.overview != nil, focus == .map { return [] }
         switch focus {
         case .map:
             focus = .hud

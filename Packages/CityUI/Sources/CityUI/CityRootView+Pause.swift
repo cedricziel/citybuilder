@@ -11,6 +11,7 @@ extension CityRootView {
         HStack(spacing: 6) {
             #if os(tvOS)
             TVZoomButtons(session: session)
+            TVMapButton(session: session, remote: tvRemote)
             #endif
             goalsButton
             researchButton
