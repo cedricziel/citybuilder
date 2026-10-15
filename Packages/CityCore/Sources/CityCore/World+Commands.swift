@@ -31,17 +31,14 @@ extension World {
 
     /// The player's and the rivals' market trades.
     private mutating func applyMarketCommand(_ command: Command, events: inout [WorldEvent]) {
-        switch command {
-        case let .marketBuy(townCenter, good, quantity):
+        if case let .marketBuy(townCenter, good, quantity) = command {
             applyMarketTrade(.bought, good, quantity, at: townCenter, events: &events)
-        case let .marketSell(townCenter, good, quantity):
+        } else if case let .marketSell(townCenter, good, quantity) = command {
             applyMarketTrade(.sold, good, quantity, at: townCenter, events: &events)
-        case let .rivalMarketBuy(rival, good, quantity):
+        } else if case let .rivalMarketBuy(rival, good, quantity) = command {
             applyRivalMarketTrade(.bought, good, quantity, for: rival)
-        case let .rivalMarketSell(rival, good, quantity):
+        } else if case let .rivalMarketSell(rival, good, quantity) = command {
             applyRivalMarketTrade(.sold, good, quantity, for: rival)
-        default:
-            return
         }
     }
 
