@@ -126,6 +126,36 @@ func theTownCenterFillsFirst() {
     #expect(market.stock(.food, in: market.warehouse) == 7)
 }
 
+@Test("scenario: Stores the town center's roads reach fill first")
+func storesTheTownCentersRoadsReachFillFirst() {
+    var market = MarketFixture()
+    // A road under the town center (x 0…2, y 0…2) reaches a second
+    // warehouse at (3, 3); the fixture's warehouse at (4, 0) touches no road.
+    for x in 0 ... 2 {
+        market.world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+    }
+    let reached = market.world.testPlace(.warehouse, at: TileCoordinate(x: 3, y: 3), owner: .player)
+    #expect(market.warehouse.raw < reached.raw)
+    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.buy(.food, 10)
+    #expect(market.stock(.food, in: reached) == 10)
+    #expect(market.stock(.food, in: market.warehouse) == 0)
+}
+
+@Test("scenario: Warehouses fill before ports")
+func warehousesFillBeforePorts() {
+    var market = MarketFixture()
+    // The fixture's warehouse is full; a port, then a second warehouse.
+    market.world.testSetStock([.planks: 200], in: market.warehouse)
+    let port = market.world.testPlace(.port, at: TileCoordinate(x: 7, y: 3), owner: .player)
+    let warehouse = market.world.testPlace(.warehouse, at: TileCoordinate(x: 3, y: 3), owner: .player)
+    #expect(port.raw < warehouse.raw)
+    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.buy(.food, 10)
+    #expect(market.stock(.food, in: warehouse) == 10)
+    #expect(market.stock(.food, in: port) == 0)
+}
+
 @Test("scenario: Stores on another island stay out of a buy")
 func storesOnAnotherIslandStayOutOfABuy() {
     var market = MarketFixture()

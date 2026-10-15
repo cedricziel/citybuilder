@@ -9,5 +9,5 @@
 
 ## 2. Road-connected stores first (#113)
 
-- [ ] 2.1 Tests-first: "Stores the town center's roads reach fill first" and "Warehouses fill before ports"; confirm red
-- [ ] 2.2 Implement to green: purchase order town center, connected warehouses, connected ports, then the rest by kind, each by entity ID (design D2)
+- [x] 2.1 Tests-first: "Stores the town center's roads reach fill first" and "Warehouses fill before ports"; confirm red
+- [x] 2.2 Implement to green: purchase order town center, connected warehouses, connected ports, then the rest by kind, each by entity ID (design D2)
