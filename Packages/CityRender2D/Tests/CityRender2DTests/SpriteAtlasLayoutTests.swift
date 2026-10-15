@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import Foundation
 import Testing
+@testable import CityRender2D
 
 // Filesystem + code-scan scenarios for the sprite-asset-pipeline and
 // rendering-2_5d capabilities introduced by add-sprite-atlas-layout.
@@ -85,5 +86,29 @@ func scenarioRendererSourceUsesSpriteAtlasExclusively() throws {
         )
     }
     #expect(violations.isEmpty)
+}
+
+/// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
+/// Buildings, or a render written to Kit.atlas without its stem listed, would pass every other test
+/// and then draw the placeholder or never blend.
+@Test("every committed atlas PNG sits in the atlas its name routes to")
+func everyAtlasPNGSitsWhereItRoutes() throws {
+    let resources = worktreeRoot().appendingPathComponent("Resources")
+    let atlases = try FileManager.default.contentsOfDirectory(at: resources, includingPropertiesForKeys: nil)
+        .filter { $0.pathExtension == "atlas" }
+    var misplaced: [String] = []
+    var checked = 0
+    for atlas in atlases {
+        let folder = atlas.deletingPathExtension().lastPathComponent
+        let files = try FileManager.default.contentsOfDirectory(at: atlas, includingPropertiesForKeys: nil)
+        for file in files where file.pathExtension == "png" {
+            let name = file.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "@2x", with: "")
+            let routed = SpriteAtlasRouting.atlasName(for: name)
+            checked += 1
+            if routed != folder { misplaced.append("\(folder).atlas/\(file.lastPathComponent) routes to \(routed ?? "nothing")") }
+        }
+    }
+    #expect(checked > 300)
+    #expect(misplaced.isEmpty, "\(misplaced)")
 }
 #endif
