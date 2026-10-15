@@ -4,10 +4,11 @@ import Testing
 
 // rival-towns / Rival viability (change rival-ai-viability, M3).
 
-/// Seeds checked by default; `RIVAL_SWEEP=1` widens it to seeds 0–9 for
+/// Seed 0 is checked by default, one game per difficulty run in parallel;
+/// `RIVAL_SWEEP=1` widens it to seeds 0–9 for
 /// release runs (design D7).
 private let sweepSeeds: [UInt64] = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == "1"
-    ? Array(0 ..< 10) : [0, 1]
+    ? Array(0 ..< 10) : [0]
 
 struct ViabilityCase: CustomTestStringConvertible, Sendable {
     let seed: UInt64
@@ -31,7 +32,7 @@ private func residentsFloor(_ difficulty: Difficulty) -> Int {
     }
 }
 
-@Test("scenario: rivals are viable across seeds", .serialized, arguments: viabilityCases)
+@Test("scenario: rivals are viable across seeds", arguments: viabilityCases)
 func scenarioRivalsAreViableAcrossSeeds(_ viability: ViabilityCase) {
     var world = World.newGame(layout: .archipelago, seed: viability.seed, difficulty: viability.difficulty)
     let year = Int(CalendarState.ticksPerYear)
