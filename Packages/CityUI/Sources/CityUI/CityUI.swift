@@ -119,9 +119,7 @@ public final class GameSession {
     /// snapshot, no event forwarding. The audio engine is untouched so
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
-    public var isPaused: Bool = false {
-        didSet { if isPaused != oldValue { UISounds.play(.toggle) } }
-    }
+    public var isPaused: Bool = false
 
     /// Ticks per timer firing. Session state, never saved.
     public var speed: GameSpeed = .normal
@@ -215,6 +213,21 @@ public final class GameSession {
     func enqueue(_ command: Command) {
         guard !isGameOver else { return }
         world.enqueue(command)
+    }
+
+    /// The player pauses or resumes: the pause button, the pause hotkeys,
+    /// or the Apple TV Menu button. Only these make the toggle sound, not
+    /// a pause the game makes itself. Spec: `platform-shells` / Interface
+    /// actions make a sound.
+    public func togglePause() {
+        isPaused.toggle()
+        UISounds.play(.toggle)
+    }
+
+    /// The player pauses (the Apple TV Menu button); no-op when paused.
+    public func pauseByPlayer() {
+        guard !isPaused else { return }
+        togglePause()
     }
 
     /// Toggle a tool: tap the same palette button twice to disarm.

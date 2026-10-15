@@ -52,7 +52,7 @@ struct InterfaceSoundTests {
         let session = GameSession(world: World.newGame())
         let heard = recording {
             session.selectTool(.place(.road))
-            session.isPaused = true
+            session.togglePause()
         }
         #expect(heard == [.select, .toggle])
     }
@@ -64,6 +64,16 @@ struct InterfaceSoundTests {
         let water = TileCoordinate(x: 0, y: 0)
         let heard = recording { session.handleTap(at: water) }
         #expect(heard == [.reject])
+    }
+
+    @Test("scenario: a pause the game makes is silent")
+    func programmaticPauseIsSilent() {
+        let session = GameSession(world: World.newGame())
+        let heard = recording {
+            session.isPaused = true
+            session.isPaused = false
+        }
+        #expect(heard.isEmpty)
     }
 
     @Test func noSinkIsSilent() {

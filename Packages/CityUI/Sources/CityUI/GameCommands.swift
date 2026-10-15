@@ -40,7 +40,7 @@ public enum GameMenuCommand: Hashable, CaseIterable, Sendable {
     @MainActor
     public func perform(on session: GameSession) {
         switch self {
-        case .togglePause: session.isPaused.toggle()
+        case .togglePause: session.togglePause()
         case let .speed(speed): session.choose(speed: speed)
         case .zoomIn: session.zoomIn()
         case .zoomOut: session.zoomOut()

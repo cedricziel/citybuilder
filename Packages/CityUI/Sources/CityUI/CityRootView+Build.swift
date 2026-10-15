@@ -41,7 +41,7 @@ extension CityRootView {
 
     @ViewBuilder
     private func topBar(layout: HUDLayout) -> some View {
-        let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.isPaused.toggle() }
+        let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.togglePause() }
             .fixedSize()
         if layout.foldsMenus {
             HStack(alignment: .top, spacing: 8) {
