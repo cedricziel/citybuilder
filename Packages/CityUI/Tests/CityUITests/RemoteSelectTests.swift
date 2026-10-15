@@ -213,3 +213,17 @@ func scenarioBuildingPlacementIsConfirmedByDefaultOnAppleTV() {
     #expect(session.confirmsBuildingPlacement)
     #expect(session.clampsCameraToMap)
 }
+
+@Test("A select held while focus moves to the HUD neither holds nor taps")
+@MainActor
+func selectHoldDoesNotLeakIntoTheHUD() {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    _ = mapper.handle(.selectDown, at: 0, session: session)
+    _ = mapper.handle(.focusChanged(.hud), at: 0.1, session: session)
+    _ = mapper.handle(.tick, at: 0.5, session: session)
+    _ = mapper.handle(.focusChanged(.map), at: 0.6, session: session)
+    _ = mapper.handle(.selectUp, at: 0.7, session: session)
+    #expect(session.tileMenuRequest == nil)
+    #expect(session.selectedTile == nil)
+}

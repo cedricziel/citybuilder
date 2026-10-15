@@ -55,6 +55,7 @@ public struct RemoteInputMapper {
         switch input {
         case let .focusChanged(newFocus):
             focus = newFocus
+            selectDownAt = nil
         case .playPauseDown:
             playPauseDownAt = time
         case .playPauseUp:
@@ -95,6 +96,7 @@ public struct RemoteInputMapper {
         switch focus {
         case .map:
             focus = .hud
+            selectDownAt = nil
             return [.focusHUD]
         case .hud:
             focus = .map
