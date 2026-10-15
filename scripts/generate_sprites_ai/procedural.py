@@ -366,21 +366,15 @@ def _farm(field_stage: str, barn_stage: str, wind: int = 0) -> Image.Image:
 
 # ---------------- road (1×1 building) ----------------
 
-def _road(variant: int) -> Image.Image:
+def _road() -> Image.Image:
     """Packed-earth road filling the whole diamond, so neighbouring road
-    tiles join into one path. Variants add ruts, cobbles or a puddle."""
+    tiles join into one path."""
 
     def paint(x: int, y: int) -> Rgb:
         n = _hash01(x, y, 70)
         colour = MEDIUM_LOAM if n < 0.22 else (PALE_SAND if n > 0.93 else LIGHT_LOAM)
         if n > 0.985:
             colour = STONE
-        if variant == 1 and (x - 2 * y) % 16 in (3, 11):
-            colour = MEDIUM_LOAM
-        if variant == 2 and _hash01(x // 3, y // 2, 71) > 0.82:
-            colour = LIGHT_STONE if (x + y) % 3 else STONE
-        if variant == 3 and ((x - 38) / 7) ** 2 + ((y - 17) / 3) ** 2 <= 1:
-            colour = MID_WATER if ((x - 37) / 5) ** 2 + ((y - 16) / 2) ** 2 <= 1 else DARK_LOAM
         return colour
 
     return _shade_south_rims(_paint_diamond(paint), MEDIUM_LOAM)
@@ -427,8 +421,7 @@ _RENDERERS: dict[str, Callable[[], Image.Image]] = {
     "terrain-water": lambda: _water(0),
     **{f"terrain-water-{i}": (lambda i=i: _water(i)) for i in range(4)},
     **{name: (lambda name=name: _mountain(name)) for name in _MOUNTAINS},
-    "building-road": lambda: _road(0),
-    **{f"building-road-v{v}": (lambda v=v: _road(v)) for v in (1, 2, 3)},
+    "building-road": _road,
     **{f"building-road-constructing-{i}": (lambda i=i: _road_stage(i)) for i in range(3)},
     "building-farm": lambda: _farm("ripe", "roof"),
     "building-farm-constructing-0": lambda: _farm("tilled", "pad"),
