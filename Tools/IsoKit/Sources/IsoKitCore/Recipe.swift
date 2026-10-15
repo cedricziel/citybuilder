@@ -40,6 +40,9 @@ public struct Recipe {
     public let customStages: Bool
     /// Finish of the plot slab under the whole footprint, or nil for none.
     public let plot: Finish?
+    /// A unit (ship) rather than a building: no base sprite and no construction, only its
+    /// operational frames, named `<id>-<frame>` (`ship-ne-1`).
+    public let unit: Bool
     let body: (Builder, Stage) -> Void
 
     public init(
@@ -51,6 +54,7 @@ public struct Recipe {
         moving: MovingPart? = nil,
         customStages: Bool = false,
         plot: Finish? = .yard,
+        unit: Bool = false,
         body: @escaping (Builder, Stage) -> Void
     ) {
         self.id = id
@@ -61,6 +65,7 @@ public struct Recipe {
         self.moving = moving
         self.customStages = customStages
         self.plot = plot
+        self.unit = unit
         self.body = body
     }
 
@@ -70,7 +75,8 @@ public struct Recipe {
 
     /// Atlas sprite names, in render order (naming grammar of `sprite-asset-pipeline`).
     public var spriteNames: [String] {
-        [id]
+        if unit { return (0 ..< operationalFrames).map { "\(id)-\($0)" } }
+        return [id]
             + (0 ..< constructionFrames).map { "\(id)-constructing-\($0)" }
             + (0 ..< operationalFrames).map { "\(id)-operational-\($0)" }
     }
@@ -78,7 +84,7 @@ public struct Recipe {
     /// The recipe's own nodes, without lights or ground.
     public func build(stage: Stage) -> SCNNode {
         let kit = Builder()
-        if let plot { kit.plot(size: cell.sizeMetres, plot) }
+        if let plot { kit.plot(width: cell.sizeMetres, depth: cell.depthMetres, plot) }
         if case let .constructing(index) = stage, !customStages {
             body(kit, .finished)
             ConstructionStages.cut(kit.root, frame: index, frames: constructionFrames)
@@ -94,6 +100,28 @@ public struct Recipe {
         root.addChildNode(build(stage: stage))
         Rig.add(to: root, cell: cell)
         root.addChildNode(Rig.shadowCatcher())
+        return root
+    }
+
+    /// A unit frame: the whole scene with the moving part in it. A unit is small and its parts sit
+    /// close together (a sail just ahead of the mast), so a depth-only overlay would not reliably
+    /// keep them in order.
+    public func unitFrame(_ frame: Int) -> SCNNode {
+        let root = SCNNode()
+        root.addChildNode(unitModel(frame))
+        Rig.add(to: root, cell: cell)
+        root.addChildNode(Rig.shadowCatcher())
+        return root
+    }
+
+    /// A unit frame's own nodes: the body with that frame's moving part, without lights or ground.
+    func unitModel(_ frame: Int) -> SCNNode {
+        let root = build(stage: .finished)
+        if let moving {
+            let part = Builder()
+            moving.build(part, frame)
+            root.addChildNode(part.root)
+        }
         return root
     }
 

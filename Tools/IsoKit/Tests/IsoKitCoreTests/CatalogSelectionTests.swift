@@ -101,4 +101,13 @@ struct CatalogSelectionTests {
             "building-sawmill-operational-2", "building-sawmill-operational-3"
         ])
     }
+
+    @Test("a unit's sprite names are its frames, with no base or stages")
+    func unitSpriteNamesAreFrames() {
+        let recipe = Recipe(
+            id: "ship-ne", entry: "ship", cell: SpriteCell(footprint: 1, heightPx: 72),
+            constructionFrames: 0, operationalFrames: 2, plot: nil, unit: true
+        ) { _, _ in }
+        #expect(recipe.spriteNames == ["ship-ne-0", "ship-ne-1"])
+    }
 }

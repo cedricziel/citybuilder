@@ -26,7 +26,10 @@ public enum TextureFiltering {
         "building-warehouse", "building-library", "building-mead-hall", "building-forum", "building-tea-house",
         "building-temple-garden", "building-caravanserai", "building-monument", "building-guild-hall", "building-gallery",
         "building-warehouse-east-asian", "building-warehouse-mediterranean", "building-warehouse-middle-eastern",
-        "building-library-east-asian", "building-library-mediterranean", "building-library-middle-eastern"
+        "building-library-east-asian", "building-library-mediterranean", "building-library-middle-eastern",
+        "building-port-n", "building-port-e", "building-port-s", "building-port-w",
+        "building-shipyard-n", "building-shipyard-e", "building-shipyard-s", "building-shipyard-w",
+        "ship-n", "ship-ne", "ship-e", "ship-se", "ship-s", "ship-sw", "ship-w", "ship-nw"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {

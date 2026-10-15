@@ -148,4 +148,4 @@ The 8×12 walker cannot show a hat, a load or a gait. Walkers become 10×16 poin
 ## Open Questions
 
 - Do status overlay badges move to the kit (3D signage) or stay pixel art? Proposed: they stay pixel art in this change.
-- Shore buildings (port, shipyard) need four orientations. Rendering them is a camera yaw of the recipe, which is cheap, but the light rig must stay fixed in screen space. This is confirmed in the ships and shore family PR.
+- Shore buildings (port, shipyard) need four orientations. Resolved in the ships and shore family PR: a facing moves the geometry (shore buildings lay out in a land-to-sea frame, ships turn about their centre), so the camera and the light rig stay fixed in screen space and every facing lights alike.

@@ -299,14 +299,14 @@ public enum SpriteAtlas {
             if isShore {
                 // Shore-placement kinds use the orientation-bearing
                 // grammar: 4 orientations × {idle, 3 constructing
-                // frames, 2 operational frames} = 24 entries per kind.
+                // frames, their operational frames}.
                 for orientation in SpriteName.shoreOrientations {
                     let stem = "building-\(kind.rawValue)-\(orientation)"
                     names.append(stem)
                     for frame in 0 ..< 3 {
                         names.append("\(stem)-constructing-\(frame)")
                     }
-                    for frame in 0 ..< 2 {
+                    for frame in 0 ..< (SpriteName.shoreOperationalFrames[kind.rawValue] ?? 2) {
                         names.append("\(stem)-operational-\(frame)")
                     }
                 }

@@ -73,14 +73,24 @@ func scenarioShipNameWithUnknownFacingRejected() {
 
 @Test("scenario: ship name routes to units atlas")
 func scenarioShipNameRoutesToUnitsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "ship-ne-0") == "Units")
-    #expect(SpriteAtlasRouting.atlasName(for: "ship-nw-1") == "Units")
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-x-0") == "Units")
 }
 
 @Test("scenario: shore-building name routes to buildings atlas")
 func scenarioShoreBuildingNameRoutesToBuildingsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "building-port-w-operational-1") == "Buildings")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-shipyard-s") == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-port-x-operational-1") == "Buildings")
+}
+
+@Test("scenario: ship name routes to kit atlas")
+func scenarioShipNameRoutesToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-ne-0") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-nw-1") == "Kit")
+}
+
+@Test("scenario: shore-building name routes to kit atlas")
+func scenarioShoreBuildingNameRoutesToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "building-port-w-operational-1") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-shipyard-s") == "Kit")
 }
 
 // MARK: - Ship sprite inventory
@@ -100,18 +110,16 @@ func scenarioAll16ShipSpritesDeclared() {
 
 // MARK: - Shore-building sprite inventory
 
-@Test("scenario: all 24 port sprites declared")
-func scenarioAll24PortSpritesDeclared() {
+@Test("scenario: all 20 port sprites declared")
+func scenarioAll20PortSpritesDeclared() {
     let names = Set(SpriteAtlas.catalogSpriteNames.filter { $0.hasPrefix("building-port-") })
-    #expect(names.count == 24)
+    #expect(names.count == 20)
     for orientation in SpriteName.shoreOrientations {
         #expect(names.contains("building-port-\(orientation)"))
         for frame in 0 ..< 3 {
             #expect(names.contains("building-port-\(orientation)-constructing-\(frame)"))
         }
-        for frame in 0 ..< 2 {
-            #expect(names.contains("building-port-\(orientation)-operational-\(frame)"))
-        }
+        #expect(names.contains("building-port-\(orientation)-operational-0"))
     }
 }
 
@@ -130,29 +138,18 @@ func scenarioAll24ShipyardSpritesDeclared() {
     }
 }
 
-// MARK: - Sprite catalog declares new content
+// MARK: - Catalog counts
 
-@Test("scenario: catalog count grows by exactly 64")
-func scenarioCatalogCountGrowsByExactly64() {
-    // Pre-M7.5 catalog count for the 6 non-shore building kinds was
-    // their static entries + constructing frames (no operational
-    // animations for some), plus terrain entries + walker entries.
-    // M7.5 ADDS 64 entries (16 ship + 24 port + 24 shipyard) and
-    // REMOVES the 2 stale `building-port` / `building-shipyard`
-    // entries that pre-M7.5 enumeration emitted under the non-shore
-    // grammar. The net delta on the catalog is therefore +64 - 2.
+@Test("the catalog declares 16 ships, 20 port sprites and 24 shipyard sprites")
+func catalogCountsShipsAndShoreSprites() {
     let names = Set(SpriteAtlas.catalogSpriteNames)
-    let shipCount = names.count(where: { $0.hasPrefix("ship-") })
-    let portCount = names.count(where: { $0.hasPrefix("building-port-") })
-    let shipyardCount = names.count(where: { $0.hasPrefix("building-shipyard-") })
-    #expect(shipCount == 16)
-    #expect(portCount == 24)
-    #expect(shipyardCount == 24)
-    #expect(shipCount + portCount + shipyardCount == 64)
+    #expect(names.count(where: { $0.hasPrefix("ship-") }) == 16)
+    #expect(names.count(where: { $0.hasPrefix("building-port-") }) == 20)
+    #expect(names.count(where: { $0.hasPrefix("building-shipyard-") }) == 24)
 }
 
-@Test("scenario: pre-existing catalog entries unchanged")
-func scenarioPreExistingCatalogEntriesUnchanged() {
+@Test("pre-existing catalog entries stay declared")
+func preExistingCatalogEntriesStayDeclared() {
     // Pre-M7.5 entries for non-shore building kinds, terrain, and
     // walkers must continue to appear with identical names. We snapshot
     // a representative set rather than the full list — the existing
@@ -173,4 +170,18 @@ func scenarioPreExistingCatalogEntriesUnchanged() {
     // no longer fit the shore-building grammar.
     #expect(!names.contains("building-port"))
     #expect(!names.contains("building-shipyard"))
+}
+
+// MARK: - Placement ghost
+
+/// A shore building has no facing-free sprite, so its ghost asks for the facing it would get.
+@Test("a shore building's ghost shows the facing the water gives it")
+func shoreGhostShowsItsFacing() {
+    let anchor = TileCoordinate(x: 10, y: 10)
+    let waterSouth = { (tile: TileCoordinate) -> TerrainType? in tile.y >= 12 ? .water : .grass }
+    let waterWest = { (tile: TileCoordinate) -> TerrainType? in tile.x == 10 ? .water : .grass }
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .port, anchor: anchor, terrain: waterSouth) == "building-port-s")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .shipyard, anchor: anchor, terrain: waterWest) == "building-shipyard-w")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .port, anchor: anchor) { _ in .grass } == "building-port-s")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .house, anchor: anchor, terrain: waterSouth) == nil)
 }

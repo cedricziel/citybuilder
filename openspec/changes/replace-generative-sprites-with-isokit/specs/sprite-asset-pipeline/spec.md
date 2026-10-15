@@ -116,14 +116,48 @@ The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to 
 The public `SpriteAtlas` API remains unchanged.
 
 #### Scenario: Ship name routes to Units atlas
-- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Units")` and returns a non-nil texture
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name whose stem is not kit-rendered
+- **THEN** it answers `Units`, the prefix fallback
 
 #### Scenario: Shore-building name routes to Buildings atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a shore-building name whose facing is not kit-rendered
+- **THEN** it answers `Buildings`, the prefix fallback
+
+#### Scenario: Ship name routes to Kit atlas
+- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+#### Scenario: Shore-building name routes to Kit atlas
 - **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Buildings")` and returns a non-nil texture
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+### Requirement: Ship sprite inventory
+The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross product of facings `{n, ne, e, se, s, sw, w, nw}` and frames `{0, 1}`. Every declared ship sprite MUST resolve to a non-nil texture in `Kit.atlas` (verified by the asset-presence check from `sprite-asset-pipeline`).
+
+#### Scenario: All 16 ship sprites declared
+- **WHEN** the sprite catalog is enumerated
+- **THEN** there are exactly 16 entries matching the pattern `ship-<facing>-<frame>` covering every (facing, frame) pair
+
+#### Scenario: Every declared ship sprite resolves
+- **WHEN** the debug-build asset-presence check runs on a build containing this change's PNGs
+- **THEN** every declared `ship-<facing>-<frame>` resolves to a non-nil texture from `Kit.atlas`
 
 ## ADDED Requirements
+
+### Requirement: Shore-building sprites per facing
+For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: one for the Port, whose operational sprite does not loop, and two for the Shipyard, whose hull work does. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
+
+#### Scenario: All 20 port sprites declared
+- **WHEN** the sprite catalog is enumerated for the Port kind
+- **THEN** there are exactly 20 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0`
+
+#### Scenario: All 24 shipyard sprites declared
+- **WHEN** the sprite catalog is enumerated for the Shipyard kind
+- **THEN** there are exactly 24 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` and `-1`
+
+#### Scenario: Every declared shore-building sprite resolves
+- **WHEN** the debug-build asset-presence check runs
+- **THEN** every declared `building-<kind>-<orientation>[-<state>-<frame>]` for Port and Shipyard resolves to a non-nil texture from `Kit.atlas`
 
 ### Requirement: Per-tile art variants for terrain
 A subset of terrain kinds SHALL ship multiple visually distinct sprites under the variant slot of the naming grammar (per the modified `Sprite naming grammar` requirement). The renderer SHALL pick one variant per tile via a deterministic function of the tile coordinate so that the choice is stable across replays, snapshots, and renderer reconciliations of equal `World` values.
@@ -255,6 +289,18 @@ Every `walker-*` sprite SHALL be 10×16 points (20×32 pixels @2×), with the wa
 - **THEN** `walker-<facing>-0` … `-3` exist for `ne`, `nw`, `se` and `sw`
 
 ## REMOVED Requirements
+
+### Requirement: Shore-building sprite inventory
+
+**Reason**: The port's second operational frame repeated the first, and the shore sprites moved to `Kit.atlas`.
+
+**Migration**: "Shore-building sprites per facing" replaces it: 20 port sprites and 24 shipyard sprites.
+
+### Requirement: Sprite catalog declares new content
+
+**Reason**: It pinned the one-time growth of the catalog when ships and shore buildings arrived (64 entries), which no longer holds once the port drops a frame.
+
+**Migration**: "Ship sprite inventory" and "Shore-building sprites per facing" pin the counts per kind.
 
 ### Requirement: Per-tile art variants
 
