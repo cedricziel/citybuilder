@@ -37,7 +37,7 @@ jobs:
           set -o pipefail
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
             --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log
-          grep '^RIVAL_SWEEP' rival-sweep.log > rival-sweep.txt || true
+          grep '^RIVAL_SWEEP' rival-sweep.log > rival-sweep.txt
 
       - name: Upload the sweep's per-rival lines
         if: always()
