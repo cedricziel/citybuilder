@@ -158,6 +158,29 @@ simulator down afterwards. The HUD's money and population come from the core
 simulation, so if they differ between the two shots, the builds sit on
 different main commits; the art didn't cause it.
 
+- **Light changes over time.** A day is 1200 ticks and a season 600, so spring
+  and autumn start in daylight and dusk falls about 48 s into play; winter and
+  summer start at night, and winter only gets daylight in its last 60 ticks.
+  Leave the game timing alone. Shoot spring and autumn for lit comparisons,
+  capture both builds at the same moment (the in-panel screenshot is saved
+  under `tool-results/`; a later `simctl io screenshot` can already be at
+  dusk), and label a winter pair as night.
+- Pinch to the zoom-out limit for an island-wide shot; the limit makes the
+  framing repeatable.
+
+## Roads (scripts/art/roads.py)
+
+- A road is a ground overlay, transparent off the road, drawn per connection
+  mask (`RoadLinks` in CityRender2D, `masks()` here): arm bands of one fixed
+  width to paved edge neighbours, and a corner fill only where the diagonal is
+  paved too. Filling a quadrant without the diagonal reaches the tile edge
+  where the neighbour has only a band, and leaves a step.
+- Paved means roads plus the town center's footprint, so the starter ring paves
+  up to the square; roads touching the center use the cobbled plaza surface.
+- New sprite slots need `TextureFiltering.stem` to strip them (`c<mask>` like
+  `v<n>` and `t<mask>`), or routing sends the files to the wrong atlas; the
+  routing tests catch it.
+
 ## Checking by eye
 
 `examples/compose_patch.py` lays sprites on a small patch. Look at 1× with

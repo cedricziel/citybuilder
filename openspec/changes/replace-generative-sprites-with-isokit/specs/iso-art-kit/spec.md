@@ -104,6 +104,14 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 - **WHEN** any two transition tiles of the same pair whose shared corners agree are composited one column east (+col) or one row south (+row) of each other
 - **THEN** no pixel along their shared edge is transparent, and colour changes across the edge only where the boundary curve crosses it
 
+### Requirement: Road tiles come from the road generator
+
+`scripts/art/roads.py` SHALL draw every road sprite: each connection mask on the worn-earth and the cobbled plaza surface, the base road and its construction stages. Arms are bands of one fixed width from the tile centre to an edge midpoint; a corner fills the quadrant between its arms up to the shared vertex. Surfaces are tile-periodic and lit like the terrain. A tile is transparent off the road.
+
+#### Scenario: Road tiles join without a step
+- **WHEN** random networks of road are laid out and each tile takes its connection mask
+- **THEN** road cover matches on both sides of every edge two road tiles share
+
 ### Requirement: Offline render within a tolerance
 
 `make sprites` SHALL build IsoKit with `xcrun swift` and run it and the SVG generators. It writes the atlas PNGs of every catalog entry whose `source` is `isokit` or `svg`. Entries not yet migrated keep their committed PNGs, which makes rollout one family at a time possible. Once every family has migrated, this covers every atlas PNG.

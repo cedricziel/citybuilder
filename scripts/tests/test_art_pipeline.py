@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from art import svg_sprites, terrain_tiles
+from art import svg_sprites
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -35,7 +35,8 @@ def test_every_svg_entry_has_a_source() -> None:
     """SVG-sourced briefs name only sprites the generators can draw. (IsoKit-sourced briefs are
     checked against the recipe registry by Tools/IsoKit's tests.)"""
     wanted = svg_sprites.svg_entry_names(REPO / "Resources/Sprites.style/catalog")
-    missing = [name for name in wanted if name not in terrain_tiles.sources()]
+    drawable = svg_sprites.all_sources()
+    missing = [name for name in wanted if name not in drawable]
     assert missing == []
 
 

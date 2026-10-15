@@ -87,9 +87,8 @@ public enum SpriteAtlas {
     /// Number of art variants per building kind. Only applies to the
     /// idle/operational sprite (not shore-orientation variants, which
     /// already follow their own naming grammar).
-    public static let buildingVariantCounts: [BuildingKind: Int] = [
-        .road: 4
-    ]
+    /// Roads used to ship four art variants; they now pick a connection sprite (`RoadLinks`).
+    public static let buildingVariantCounts: [BuildingKind: Int] = [:]
 
     /// Deterministic variant index for a tile coord. Same `(coord, count)`
     /// always returns the same index — required so the snapshot-driven
@@ -322,6 +321,11 @@ public enum SpriteAtlas {
                     names.append(
                         variantAssetName(stem: "building-\(kind.rawValue)", variant: variant)
                     )
+                }
+            }
+            if kind == .road {
+                names += RoadLinks.allMasks.flatMap { mask in
+                    [false, true].map { RoadLink(mask: mask, plaza: $0).assetName }
                 }
             }
             if let opEntry = SpriteAnimation.entry(for: .buildingOperational(kind)) {

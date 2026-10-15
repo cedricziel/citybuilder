@@ -83,7 +83,7 @@ func scenarioColdEngineIsIdle() throws {
     #expect(cold.action(forKey: "anim") == nil)
     world.buildings[engine]?.fuelled = true
     let hot = try #require(buildingSpec(engine, in: world.snapshot()))
-    guard case let .building(_, _, _, _, _, _, _, _, look) = hot.kind else { return }
+    guard case let .building(_, _, _, _, _, _, _, _, look, _) = hot.kind else { return }
     #expect(look == .standard)
 }
 

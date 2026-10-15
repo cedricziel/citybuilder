@@ -16,7 +16,8 @@ public enum TextureFiltering {
         "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
         "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
         "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
-        "terrain-grass-beach", "terrain-beach-water"
+        "terrain-grass-beach", "terrain-beach-water",
+        "building-road", "building-road-plaza"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
@@ -36,7 +37,8 @@ public enum TextureFiltering {
         }
         while let last = parts.last, parts.count > 2 {
             let isNumber = !last.isEmpty && last.allSatisfy(\.isNumber)
-            let isTagged = (last.hasPrefix("v") || last.hasPrefix("t")) && last.count > 1 && last.dropFirst().allSatisfy(\.isNumber)
+            let isTagged = (last.hasPrefix("v") || last.hasPrefix("t") || last.hasPrefix("c")) && last.count > 1 && last.dropFirst()
+                .allSatisfy(\.isNumber)
             guard isNumber || isTagged else { break }
             parts.removeLast()
             if let state = parts.last, state == "constructing" || state == "operational" {
