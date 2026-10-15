@@ -46,14 +46,14 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 
 ## 4. Rollout, one family per PR
 
-- [ ] 4.1 Houses: every tier (peasant, citizen, merchant) for the default culture, with construction stages. Check Apple TV memory here
+- [ ] 4.1 Houses: every tier (peasant, citizen, merchant) for the default culture, with construction stages. Check Apple TV memory here. Houses and the town center shipped in #96, in their own `Kit` atlas; the Apple TV memory check is still open
 - [ ] 4.2 Forestry: lumberjack hut, forester and sawmill (sails moving part), charcoal burner
 - [ ] 4.3 Civic and storage: town center, warehouse, market, library, road variants
 - [ ] 4.4 Food and craft chains: farm, grain farm, windmill (sails), bakery, brewery, mine, smelter, toolsmith and the remaining production kinds
 - [ ] 4.5 Culture and age variants: culture buildings, age houses and signature buildings (`sprite-style-catalog` culture and age requirements)
 - [ ] 4.6 Ships and shore buildings: port and shipyard in four orientations (resolve the open question in design.md), ship facings
 - [ ] 4.7 Walkers: kit figure recipe, 10×16, 4 facings × 4 gait frames, tunic colour by job. Update the walker node size in the renderer
-- [ ] 4.8 Terrain: grass/beach/water full tiles and both transition sets, season variants (`Terrain shows the season`), lands together with §3
+- [x] 4.8 Terrain: grass/beach/water full tiles and both transition sets, season variants (`Terrain shows the season`), lands together with §3. Moved up after houses: `art.ground` paints lit, tile-periodic ground (grass, beach, water, forest, rock, seasons, frames, rock variants); grass shores have autumn and winter transition sets; `Terrain.atlas` is retired
 - [ ] 4.9 Goods icons: hand-authored SVG sources replace the three image-API icons and the procedural ones
 
 ## 5. Retire the old pipeline and docs
