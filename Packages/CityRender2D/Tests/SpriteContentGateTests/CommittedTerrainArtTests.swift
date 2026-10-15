@@ -48,7 +48,11 @@ struct CommittedTerrainArtTests {
         #expect(entries.count >= 15)
         for entry in entries {
             let text = try String(contentsOf: entry, encoding: .utf8)
-            #expect(text.hasPrefix("---\nsource = \"procedural\"\n---\n"), "\(entry.lastPathComponent)")
+            // Families migrate one at a time (replace-generative-sprites-with-isokit, tasks section 4):
+            // until the last one flips, a brief is either procedural or rendered by IsoKit.
+            let procedural = text.hasPrefix("---\nsource = \"procedural\"\n---\n")
+            let isokit = text.hasPrefix("---\nsource = \"isokit\"\n---\n")
+            #expect(procedural || isokit, "\(entry.lastPathComponent)")
         }
     }
 

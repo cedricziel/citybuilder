@@ -70,7 +70,8 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() {
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path)
         else { continue }
         for entry in entries where entry.hasSuffix(".png") {
-            let stem = (entry as NSString).deletingPathExtension
+            // `@2x` twins belong to their @1x sprite's entry.
+            let stem = (entry as NSString).deletingPathExtension.replacingOccurrences(of: "@2x", with: "")
             // The overlay-* family is renderer-internal, not a catalog
             // entry — skip the routing check for it.
             if stem.hasPrefix("overlay-") { continue }
