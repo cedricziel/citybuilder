@@ -48,6 +48,8 @@ The map moves under a fixed reticle. The reticle tile is always `Camera.centerTi
 
 The mapping is up → NE `(0, −1)`, right → SE `(+1, 0)`, down → SW `(0, +1)` and left → NW `(−1, 0)`, using CityUI's `NudgeDirection`. The reticle shows four hints naming the target tiles, so the 45° turn is visible.
 
+Decided during M2: each hint is an arrow drawn on the tile a click steps to, pointing along the iso axis, rather than the tile's coordinates, which read as debug output. An arrow whose tile is off the map is dimmed.
+
 - _Alternative: screen-aligned steps._ A step straight up the screen is a diagonal in tile space, `(−1, −1)` or `(+1, −1)`, and keeps the parity of x+y. Half the tiles could never be reached with clicks alone. Rejected.
 
 ### D3. One input owner per mode

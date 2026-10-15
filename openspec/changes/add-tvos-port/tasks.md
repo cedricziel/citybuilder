@@ -17,20 +17,20 @@
 ## 2. M2 — Remote and controller input
 
 - [x] 2.1 Spike: host the map in a `GCEventViewController` with `controllerUserInteractionEnabled = false` in the tvOS simulator, and log the event shapes for swipes, edge clicks, select, Play/Pause and Back from the simulator remote; record the findings in design D3 — done in the tvOS 27 simulator with `XCUIRemote`: presses arrive only as `UIPress` events on a focused `GCEventViewController` view, never as GameController events; swipes cannot be simulated and stay with 6.1
-- [ ] 2.2 Tests-first: translate every `tv-remote-controls` scenario and the `rendering-2_5d` scenarios "Remote select dispatched as a tap on the reticle tile" and "Building placement is confirmed by default on Apple TV" into failing CityUI tests against `RemoteInputMapper` and `GameControllerAdapter` with an injected clock (design D4); confirm red
-- [ ] 2.3 Implement to green: `tv-remote-controls` / One input owner per mode — the mapper's map and HUD modes and focus-change events
-- [ ] 2.4 Implement to green: `tv-remote-controls` / Reticle marks the target tile — the camera-center clamp in `GameSession` on tvOS (design D1) and the direction hints using `NudgeDirection` (design D2)
-- [ ] 2.5 Implement to green: `tv-remote-controls` / Reticle tooltip — 0.5 s rest through `HoverTooltipController`, buildings only, hidden while pending or painting
-- [ ] 2.6 Implement to green: `tv-remote-controls` / Remote pans the map and Zoom without pinch — zoom-scaled swipe pan, click steps, zoom buttons ×1.5, holding Play/Pause cycles 2.0 / 1.0 / 0.5, trigger zoom
-- [ ] 2.7 Implement to green: `tv-remote-controls` / Select and hold on the map, and `rendering-2_5d` / Input mapping — tap below 0.4 s, hold for the tile menu, select on the selected building focuses its callout, route stops
-- [ ] 2.8 Implement to green: `tv-remote-controls` / Placement follows the reticle, and `rendering-2_5d` / Palette-armed buildings and Tap is suppressed — `confirmsBuildingPlacement` on for tvOS, `pendingPlacementFollowsCamera`, confirm-and-repeat, Back to inspect (design D5)
-- [ ] 2.9 Implement to green: `tv-remote-controls` / Road painting and Demolish acts on one building at a time — click-only painting, one-shot demolish, reticle styles (design D6)
-- [ ] 2.10 Implement to green: `tv-remote-controls` / Back steps out one level at a time and Play/Pause moves focus between map and HUD (design D7, D8)
-- [ ] 2.11 Implement to green: `tv-remote-controls` / Game controller mapping — `GameControllerAdapter` from button-state snapshots
-- [ ] 2.12 Wire the tvOS map view: the `GCEventViewController` host, the reticle overlay with its hints and styles, and `GCController` callbacks feeding `GameControllerAdapter`, all inside `#if os(tvOS)`
-- [ ] 2.13 Wire the tvOS handover: switch `controllerUserInteractionEnabled` when focus moves between map and HUD; the title screen attaches no exit handler; the pause menu resumes on Back
-- [ ] 2.14 Refactor under a green bar
-- [ ] 2.15 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `tv-remote-controls` or `rendering-2_5d` from this change
+- [x] 2.2 Tests-first: translate every `tv-remote-controls` scenario and the `rendering-2_5d` scenarios "Remote select dispatched as a tap on the reticle tile" and "Building placement is confirmed by default on Apple TV" into failing CityUI tests against `RemoteInputMapper` and `GameControllerAdapter` with an injected clock (design D4); confirm red — tests in `RemoteCameraTests`, `RemoteSelectTests`, `RemoteBackTests` and `GameControllerAdapterTests`, written red first per slice
+- [x] 2.3 Implement to green: `tv-remote-controls` / One input owner per mode — the mapper's map and HUD modes and focus-change events
+- [x] 2.4 Implement to green: `tv-remote-controls` / Reticle marks the target tile — the camera-center clamp in `GameSession` on tvOS (design D1) and the direction hints using `NudgeDirection` (design D2)
+- [x] 2.5 Implement to green: `tv-remote-controls` / Reticle tooltip — 0.5 s rest through `HoverTooltipController`, buildings only, hidden while pending or painting
+- [x] 2.6 Implement to green: `tv-remote-controls` / Remote pans the map and Zoom without pinch — zoom-scaled swipe pan, click steps, zoom buttons ×1.5, holding Play/Pause cycles 2.0 / 1.0 / 0.5, trigger zoom
+- [x] 2.7 Implement to green: `tv-remote-controls` / Select and hold on the map, and `rendering-2_5d` / Input mapping — tap below 0.4 s, hold for the tile menu, select on the selected building focuses its callout, route stops
+- [x] 2.8 Implement to green: `tv-remote-controls` / Placement follows the reticle, and `rendering-2_5d` / Palette-armed buildings and Tap is suppressed — `confirmsBuildingPlacement` on for tvOS, `pendingPlacementFollowsCamera`, confirm-and-repeat, Back to inspect (design D5)
+- [x] 2.9 Implement to green: `tv-remote-controls` / Road painting and Demolish acts on one building at a time — click-only painting, one-shot demolish, reticle styles (design D6)
+- [x] 2.10 Implement to green: `tv-remote-controls` / Back steps out one level at a time and Play/Pause moves focus between map and HUD (design D7, D8)
+- [x] 2.11 Implement to green: `tv-remote-controls` / Game controller mapping — `GameControllerAdapter` from button-state snapshots — `GameControllerAdapter` also maps the Siri Remote (touch deltas, edge clicks) and drops UIKit presses that repeat a GameController event within 50 ms (design D3)
+- [x] 2.12 Wire the tvOS map view: the `GCEventViewController` host, the reticle overlay with its hints and styles, and `GCController` callbacks feeding `GameControllerAdapter`, all inside `#if os(tvOS)` — `TVMapInputHost` (a focusable view in a `GCEventViewController` over the map), `TVRemoteController`, and `TVReticleOverlay`; verified in the tvOS 27 simulator with `CitybuilderTVUITests`: clicks step the reticle without moving focus, and choosing House in the rail starts its placement on the map. Swipes and controllers cannot be driven from `XCUIRemote`; they stay with 6.1 and 6.3
+- [x] 2.13 Wire the tvOS handover: switch `controllerUserInteractionEnabled` when focus moves between map and HUD; the title screen attaches no exit handler; the pause menu resumes on Back — verified in the simulator: Back on an idle map opens the pause menu and Back on it resumes; Play/Pause moves focus to the rail and back. The HUD is disabled for focus while the map owns the remote, and system focus moves (sheets) are reported to the mapper
+- [x] 2.14 Refactor under a green bar — GhostPreview and the pause Settings binding moved out of `CityUI.swift` to stay under 500 lines
+- [x] 2.15 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `tv-remote-controls` or `rendering-2_5d` from this change — no uncovered scenario in `tv-remote-controls` or in this change's `rendering-2_5d`
 
 ## 3. M3 — TV HUD and focus
 

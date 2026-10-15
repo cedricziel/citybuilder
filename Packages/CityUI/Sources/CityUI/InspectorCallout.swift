@@ -90,6 +90,8 @@ struct InspectorCalloutView<Actions: View>: View {
                 placement: layout.placement
             )
             card
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("inspector.callout")
                 .overlay(alignment: .topLeading) { pointer(side: placed.side, anchor: anchor, origin: placed.origin) }
                 .onGeometryChange(for: CGSize.self, of: \.size) { size = $0 }
                 .offset(x: placed.origin.x, y: placed.origin.y)

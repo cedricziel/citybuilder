@@ -22,7 +22,7 @@ extension CityRootView {
     @ViewBuilder
     func withMapGestures(_ content: some View) -> some View {
         #if os(tvOS)
-        content
+        tvMapLayer(content)
         #else
         content
             .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))

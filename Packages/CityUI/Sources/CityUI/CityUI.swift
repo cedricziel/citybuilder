@@ -22,6 +22,9 @@ public struct CityRootView: View {
     #if os(macOS)
     @Environment(\.openSettings) var openSettingsScene
     #endif
+    #if os(tvOS)
+    @State var tvRemote: TVRemoteController?
+    #endif
 
     public init(
         session: GameSession = GameSession(),
@@ -48,10 +51,16 @@ public struct CityRootView: View {
         ZStack(alignment: .top) {
             withMapGestures(session.worldView.ignoresSafeArea())
             inspectorCallout
+                #if os(tvOS)
+                .modifier(TVHUDCommands(root: self, isInspector: true))
+                #endif
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
                 hudLayer(layout: layout)
                     .padding(layout.margin)
+                    #if os(tvOS)
+                    .modifier(TVHUDCommands(root: self))
+                    #endif
             }
             touchPlacementHUD
                 .zIndex(1)
