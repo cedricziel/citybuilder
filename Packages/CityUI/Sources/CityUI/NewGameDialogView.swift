@@ -34,28 +34,50 @@ public struct NewGameDialogView: View {
             Text("New Game")
                 .font(.title.bold())
             // A remote cannot reach a Start button below the long form,
-            // so Apple TV shows the buttons under the title.
+            // and a TV is wide, so Apple TV shows the buttons under the
+            // title and the form in two columns. As one focus section the
+            // button row takes Up from either column.
             #if os(tvOS)
             actionButtons
-            #endif
-
-            modeSection
-            layoutSection
-            seedSection
-            cultureSection
-            if viewModel.mode == .sandbox {
-                ageSection
-                difficultySection
-            } else {
-                scenarioSection
+                .tvFocusSection()
+            HStack(alignment: .top, spacing: 60) {
+                VStack(alignment: .leading, spacing: 20) {
+                    worldSections
+                }
+                VStack(alignment: .leading, spacing: 20) {
+                    townSections
+                }
             }
-
-            #if !os(tvOS)
+            #else
+            worldSections
+            townSections
             actionButtons
             #endif
         }
         .padding(24)
+        #if os(tvOS)
+        .frame(width: 1400)
+        #else
         .frame(minWidth: 360, idealWidth: 440)
+        #endif
+    }
+
+    @ViewBuilder
+    private var worldSections: some View {
+        modeSection
+        layoutSection
+        seedSection
+    }
+
+    @ViewBuilder
+    private var townSections: some View {
+        cultureSection
+        if viewModel.mode == .sandbox {
+            ageSection
+            difficultySection
+        } else {
+            scenarioSection
+        }
     }
 
     private var actionButtons: some View {

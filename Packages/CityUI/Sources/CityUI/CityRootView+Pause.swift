@@ -86,6 +86,45 @@ extension CityRootView {
         session.isPaused = false
     }
 
+    func settingsBinding(whilePaused: Bool) -> Binding<Bool> {
+        Binding(
+            get: {
+                Self.presentsSettings(
+                    fromPauseSheet: whilePaused, settingsPresented: settingsPresented, isPaused: session.isPaused
+                )
+            },
+            set: { settingsPresented = $0 }
+        )
+    }
+
+    /// Settings opens from the root, or from the pause sheet while the
+    /// game is paused, because a view presents one sheet at a time.
+    /// Closing it from the pause sheet leaves the pause menu open.
+    nonisolated static func presentsSettings(fromPauseSheet: Bool, settingsPresented: Bool, isPaused: Bool) -> Bool {
+        settingsPresented && isPaused == fromPauseSheet
+    }
+
+    /// Shows the in-game Settings sheet. The Mac app passes none: its
+    /// Settings live in the standard Settings scene, which opens instead.
+    func showSettings() {
+        switch Self.settingsDestination(hasInGameSettings: settingsContent != nil) {
+        case .sheet:
+            settingsPresented = true
+        case .settingsScene:
+            #if os(macOS)
+            openSettingsScene()
+            #endif
+        }
+    }
+
+    enum SettingsDestination: Equatable {
+        case sheet, settingsScene
+    }
+
+    nonisolated static func settingsDestination(hasInGameSettings: Bool) -> SettingsDestination {
+        hasInGameSettings ? .sheet : .settingsScene
+    }
+
     /// Lazily build the pause menu view-model from the configuration
     /// supplied at init time. Cached so transient view-rebuilds reuse
     /// the same status-message state.
@@ -97,7 +136,7 @@ extension CityRootView {
             session: session,
             platform: config.platform,
             onSaveGame: config.onSaveGame,
-            onSettings: { settingsPresented = true },
+            onSettings: { showSettings() },
             onQuitToTitle: config.onQuitToTitle,
             onQuit: config.onQuit
         )

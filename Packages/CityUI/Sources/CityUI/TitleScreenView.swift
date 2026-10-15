@@ -103,6 +103,10 @@ public struct TitleScreenView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if os(tvOS)
+        // tvOS sheets are translucent; hide the title behind them.
+        .opacity(viewModel.presentingNewGameDialog || viewModel.presentingSettings ? 0 : 1)
+        #endif
         // Continue and New Game are disabled while iCloud is checked.
         .tvDefaultFocus($focusedButton, primaryButton, enabled: !viewModel.isPreparingCloudSaves)
         .sheet(isPresented: $viewModel.presentingNewGameDialog) {
@@ -146,7 +150,7 @@ public struct TitleScreenView: View {
         }
         .sheet(isPresented: $viewModel.presentingSettings) {
             if let content = settingsContent {
-                content()
+                content().tvSheetWidth()
             }
         }
     }

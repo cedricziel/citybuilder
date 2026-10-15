@@ -36,10 +36,7 @@ extension World {
         let held = buffers.reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
         let units = min(limit, RivalMarket.sellQuantity(of: good, stock: [good: held]))
         guard units > 0 else { return false }
-        var left = units
-        for buffer in buffers where left > 0 {
-            left -= stockpiles[buffer.id]?.withdraw(good, amount: left) ?? 0
-        }
+        drain(good, upTo: units, from: buffers)
         ship.cargo[good, default: 0] += units
         settle(good, units: units, rival: rival, direction: .bought, events: &events)
         return true
@@ -76,7 +73,7 @@ extension World {
 
     /// Whole units `purse` pays for at `price`; none when it is empty or
     /// in debt.
-    private static func unitsPaidFor(by purse: Int64, at price: Int64) -> Int {
+    static func unitsPaidFor(by purse: Int64, at price: Int64) -> Int {
         purse > 0 ? Int(purse / price) : 0
     }
 

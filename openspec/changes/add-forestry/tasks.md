@@ -28,10 +28,11 @@
 
 ## 3. M3 — Show the player where wood comes from
 
-- [ ] 3.1 Tests-first: translate the `platform-shells` scenarios "Hut key lines show trees in reach", "Forester key lines show open grass", "Problem text for every building issue" (new wording), "Tool strip hint shows trees at the candidate site" and "Tool strip hint without a candidate site" into failing `CityUITests`. Confirm red.
-- [ ] 3.2 Implement to green: `platform-shells` / Inspector callout. Update `InspectorViewModel.problemText` for both forestry issues.
-- [ ] 3.3 Implement to green: `platform-shells` / Forestry in the inspector and while placing. Add the "Trees in reach" and "Open grass in reach" key lines from `WorldSnapshot.catchments`, and the count suffix on the tool strip hint for the armed hut or forester at its candidate anchor (design D5).
-- [ ] 3.4 Add the forester to the build palette's gather category next to the lumberjack hut, with the short name "Forester".
-- [ ] 3.5 Check in the iOS Simulator with the verify skill: place a hut and a forester, watch grass turn to forest beside the hut, and read the inspector and tool strip lines.
-- [ ] 3.6 Refactor under a green bar.
-- [ ] 3.7 Run `make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change.
+- [x] 3.1 Tests-first: translate the `platform-shells` scenarios "Hut key lines show trees in reach", "Forester key lines show open grass", "Problem text for every building issue" (new wording), "Tool strip hint shows trees at the candidate site" and "Tool strip hint without a candidate site" into failing `CityUITests`. Confirm red.
+- [x] 3.2 Implement to green: `platform-shells` / Inspector callout. Update `InspectorViewModel.problemText` for both forestry issues.
+- [x] 3.3 Implement to green: `platform-shells` / Forestry in the inspector and while placing. Add the "Trees in reach" and "Open grass in reach" key lines from `WorldSnapshot.catchments`, and the count suffix on the tool strip hint for the armed hut or forester at its candidate anchor (design D5).
+- [x] 3.4 Add the forester to the build palette's gather category next to the lumberjack hut, with the short name "Forester".
+- [x] 3.5 Check in the iOS Simulator with the verify skill: place a hut and a forester, watch grass turn to forest beside the hut, and read the inspector and tool strip lines.
+  - iPhone 17 Pro, single island seed 0: the forester sits after the lumberjack in the Gather drawer. A hut placed on grass beside it read "Trees in reach: 0" after "Road: none". The forester read "Open grass in reach: 10" and then 6 about 25 seconds later, and the hut then read "Trees in reach: 7". On iPhone the tool strip hides while a placement is pending and a tap sets no hover, so the hint showed no count there. After review, touch falls back to the camera-center tile (design D5). Re-checked on the iPhone: with the camera over grass by the forest and the lumberjack armed, the strip read "Tap or drag to place lumberjack · 13 trees in reach".
+- [x] 3.6 Refactor under a green bar.
+- [x] 3.7 Run `make test-scenarios` and confirm no uncovered scenario in `platform-shells` from this change.

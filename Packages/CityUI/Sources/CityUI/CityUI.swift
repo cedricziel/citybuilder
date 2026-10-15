@@ -19,6 +19,9 @@ public struct CityRootView: View {
     @State var inspectorExpanded = false
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
+    #if os(macOS)
+    @Environment(\.openSettings) var openSettingsScene
+    #endif
 
     public init(
         session: GameSession = GameSession(),
@@ -61,15 +64,16 @@ public struct CityRootView: View {
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
         .routesSheet(session: session, isPresented: $routesPresented)
-        .sheet(isPresented: $settingsPresented) {
-            if let content = settingsContent {
-                content().hudSheetDetents()
-            }
-        }
+        .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
             isPresented: isPausedBinding,
             onDismiss: dismissPause,
-            content: { pauseMenuContent().hudSheetDetents() }
+            content: {
+                // Settings chosen in the pause menu opens over it, so
+                // closing Settings returns to the menu.
+                pauseMenuContent().hudSheetDetents()
+                    .settingsSheet(isPresented: settingsBinding(whilePaused: true), content: settingsContent)
+            }
         )
     }
 
@@ -246,6 +250,7 @@ public final class GameSession {
         let dCol = -(dxOverW + dyOverH) / zoom
         let dRow = (dxOverW - dyOverH) / zoom
         world.camera.pan(deltaX: dCol, deltaY: dRow)
+        cameraDidMove()
     }
 
     /// Apply a pinch factor (relative to last reading) to the zoom.
@@ -290,11 +295,22 @@ public final class GameSession {
     public var tileMenuRequest: TileMenuRequest?
 
     /// Whether a building other than a road waits for a confirmation
-    /// instead of committing on tap. On by default on iOS only; macOS
+    /// instead of committing on tap. On by default on iOS and Apple TV; macOS
     /// keeps commit-on-click. A flag rather than `#if` so the touch flow
     /// is testable on the Mac.
     public var confirmsBuildingPlacement: Bool = {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
+        true
+        #else
+        false
+        #endif
+    }()
+
+    /// Keeps the camera center on the map after every camera move, so
+    /// the remote's reticle never leaves it. On by default on Apple TV
+    /// only. Spec: `tv-remote-controls` / Reticle marks the target tile.
+    public var clampsCameraToMap: Bool = {
+        #if os(tvOS)
         true
         #else
         false
@@ -326,102 +342,6 @@ public final class GameSession {
             enqueue(.place(kind, at: tile))
         case .demolish:
             enqueue(.demolish(at: tile))
-        }
-    }
-
-    /// Ghost preview state derived from the armed tool + hovered tile.
-    /// `valid` runs the same canPlace check the simulation will use at
-    /// the tick boundary, so the green / red tint matches reality.
-    /// A pending placement overrides the hover.
-    public func ghostState() -> GhostPreview? {
-        if let pending = pendingPlacement {
-            return ghostPreview(kind: pending.kind, tile: pending.anchor)
-        }
-        guard let tile = hoveredTile else { return nil }
-        switch selectedTool {
-        case .inspect, .demolish:
-            return nil
-        case let .place(kind):
-            return ghostPreview(kind: kind, tile: tile)
-        }
-    }
-
-    private func ghostPreview(kind: BuildingKind, tile: TileCoordinate) -> GhostPreview {
-        let valid: Bool = if case .allowed = world.canPlace(kind, at: tile) {
-            world.economy.balance >= BuildingCatalog.spec(for: kind).cost
-        } else {
-            false
-        }
-        return GhostPreview(
-            kind: kind, tile: tile, valid: valid,
-            costBreakdown: costBreakdown(for: kind, anchor: tile)
-        )
-    }
-
-    func costBreakdown(
-        for kind: BuildingKind,
-        anchor: TileCoordinate
-    ) -> [Good: GhostCost]? {
-        let spec = BuildingCatalog.spec(for: kind)
-        guard !spec.materialCost.isEmpty else { return nil }
-        let tileToIsland = world.tileToIslandMap()
-        let available = world.islandStockpile(at: anchor, tileToIsland: tileToIsland)
-        let islandID = tileToIsland[anchor]
-        var breakdown: [Good: GhostCost] = [:]
-        for (good, need) in spec.materialCost {
-            let have = available[good] ?? 0
-            let status = statusFor(
-                need: need, have: have,
-                good: good, islandID: islandID,
-                tileToIsland: tileToIsland
-            )
-            breakdown[good] = GhostCost(need: need, have: have, status: status)
-        }
-        return breakdown
-    }
-
-    private func statusFor(
-        need: Int,
-        have: Int,
-        good: Good,
-        islandID: IslandID?,
-        tileToIsland: [TileCoordinate: IslandID]
-    ) -> CostStatus {
-        if have >= need { return .ok }
-        guard let islandID else { return .blocked }
-        let supplied = world.producesGood(
-            onIsland: islandID, good: good, tileToIsland: tileToIsland
-        )
-        return supplied ? .queueable : .blocked
-    }
-
-    public struct GhostPreview: Equatable, Sendable {
-        public let kind: BuildingKind
-        public let tile: TileCoordinate
-        public let valid: Bool
-        /// Per-good `(need, have)` pair for the armed building on the
-        /// hovered island. Nil when the building is free of materials
-        /// (road, town center) — the cost row hides entirely. The view
-        /// renders a chip per entry; goods where `have < need` paint
-        /// red.
-        public let costBreakdown: [Good: GhostCost]?
-
-        public init(
-            kind: BuildingKind,
-            tile: TileCoordinate,
-            valid: Bool,
-            costBreakdown: [Good: GhostCost]? = nil
-        ) {
-            self.kind = kind
-            self.tile = tile
-            self.valid = valid
-            self.costBreakdown = costBreakdown
-        }
-
-        /// View-helper: `isShort(.wood, in: breakdown)` returns true
-        /// when the chip should render in the destructive style.
-        public static func isShort(_ good: Good, in breakdown: [Good: GhostCost]) -> Bool {
-            (breakdown[good]?.isShort) ?? false
         }
     }
 

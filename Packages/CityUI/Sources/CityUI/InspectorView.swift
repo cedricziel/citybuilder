@@ -88,7 +88,8 @@ public struct InspectorViewModel: Sendable {
                 "State: \(building.state.rawValue)",
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-            ] + signatureLines(for: building, in: snapshot) + houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
+            ] + inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + signatureLines(for: building, in: snapshot) +
+                houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
             title: BuildTool.place(building.kind).displayName,
             tier: tier,
             residentsFill: residentsFill,
@@ -107,7 +108,7 @@ public struct InspectorViewModel: Sendable {
         switch issue {
         case .noRoad: "No road: connect it to a road"
         case .noRouteToStorage: "Its road doesn't reach a warehouse or the town center"
-        case .noTreesInReach: "No forest within \(World.lumberjackCatchmentRadius) tiles"
+        case .noTreesInReach: "No forest within \(World.lumberjackCatchmentRadius) tiles: build a forester beside it"
         case .noRoomToPlant: "No open grass within \(World.lumberjackCatchmentRadius) tiles to plant"
         case let .missingInputs(goods):
             "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
@@ -205,8 +206,20 @@ extension InspectorViewModel {
     /// a house, otherwise state and road. Spec: `platform-shells` /
     /// Inspector callout.
     public var keyLines: [String] {
-        let prefixes = (tier == nil ? ["State:", "Road:"] : ["Residents:", "Needs:"]) + ["Problem:"]
-        return prefixes.compactMap { prefix in bullets.first { $0.hasPrefix(prefix) } }
+        let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:"]
+        return (head + ["Problem:"]).compactMap { marker in
+            bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
+        }
+    }
+
+    private static let inReachMarker = " in reach: "
+
+    /// Trees in reach of a hut, or open grass in reach of a forester.
+    /// Spec: `platform-shells` / Forestry in the inspector and while
+    /// placing.
+    static func inReachLine(for kind: BuildingKind, count: Int?) -> [String] {
+        guard let noun = ToolStripText.inReachNoun(kind), let count else { return [] }
+        return [noun.prefix(1).uppercased() + noun.dropFirst() + inReachMarker + "\(count)"]
     }
 
     /// Up to three named residents with the house's wish. Spec:

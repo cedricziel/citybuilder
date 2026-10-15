@@ -116,6 +116,15 @@ func scenarioInspectorAndRouteActionsAreOffAfterGameOver() {
 }
 
 @MainActor
+@Test func marketTradesAreDroppedAfterGameOver() throws {
+    let session = lostSession()
+    let townCenter = try #require(session.world.buildings.values.first { $0.kind == .townCenter }?.id)
+    session.enqueue(.marketBuy(townCenter, .wood, 5))
+    session.enqueue(.marketSell(townCenter, .wood, 5))
+    #expect(session.world.pendingCommands.isEmpty)
+}
+
+@MainActor
 @Test("scenario: game over ends route mode")
 func scenarioGameOverEndsRouteMode() {
     var world = World.newGame()

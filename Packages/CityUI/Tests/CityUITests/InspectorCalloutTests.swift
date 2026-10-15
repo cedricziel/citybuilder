@@ -37,7 +37,7 @@ func scenarioCalloutTitleAndKeyLines() throws {
 @Test("scenario: callout key lines for other buildings")
 func scenarioCalloutKeyLinesForOtherBuildings() throws {
     let inspector = try inspector(for: .lumberjackHut)
-    #expect(inspector.keyLines.count == 3)
+    #expect(inspector.keyLines.count == 4)
     #expect(inspector.keyLines.first?.hasPrefix("State:") == true)
     #expect(inspector.keyLines.dropFirst().first?.hasPrefix("Road:") == true)
     #expect(inspector.tier == nil)
@@ -54,7 +54,8 @@ func scenarioCalloutNamesWhatStopsABuilding() throws {
 @Test("scenario: problem text for every building issue")
 func scenarioProblemTextForEveryBuildingIssue() {
     #expect(InspectorViewModel.problemText(.noRouteToStorage) == "Its road doesn't reach a warehouse or the town center")
-    #expect(InspectorViewModel.problemText(.noTreesInReach) == "No forest within 2 tiles")
+    #expect(InspectorViewModel.problemText(.noTreesInReach) == "No forest within 2 tiles: build a forester beside it")
+    #expect(InspectorViewModel.problemText(.noRoomToPlant) == "No open grass within 2 tiles to plant")
     #expect(InspectorViewModel.problemText(.missingInputs([.wood, .grain])) == "Waiting for wood, grain")
     #expect(InspectorViewModel.problemText(.storageFull) == "Store full: no carrier can take its goods")
 }

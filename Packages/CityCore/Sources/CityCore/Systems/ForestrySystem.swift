@@ -38,7 +38,7 @@ extension World {
     /// Unoccupied forest a lumberjack hut would reach, or open grass a
     /// forester would reach, from `anchor`, built or not. Tiles under
     /// the footprint itself never count. Read-only (design D5).
-    func catchmentCount(kind: BuildingKind, anchor: TileCoordinate, owner: Owner) -> Int {
+    public func catchmentCount(kind: BuildingKind, anchor: TileCoordinate, owner: Owner) -> Int {
         catchmentCount(kind: kind, anchor: anchor, owner: owner, tileToIsland: tileToIslandMap())
     }
 
