@@ -19,7 +19,7 @@ The building sprites are lit 3D renders, and a chimney often overlaps its roof i
 
 ### D3: One ambient layer with a pooled, capped set of emitters
 
-`AmbientLayerNode` sits above the buildings and below the carriers (z 40). It re-plans only when the tick, camera or view size changes. Planned sources are culled to the visible tile range and sorted: working buildings first, then by distance to the camera centre, then by id. The list is cut to the budget `clamp(Int(24 × zoom), 8, 40)`. Removed emitters go back to a pool and are reused. Each emitter lives for 3 s at about 3 puffs per second, so the screen never holds more than about 500 puffs.
+`AmbientLayerNode` sits above the buildings and below the carriers (z 40). It re-plans only when the tick, the visible tile range, the budget or Reduce Motion changes. A pan inside the same tiles costs nothing, because sprites stay put in the scene while the camera moves. The scene keeps an index of building sprites by anchor next to `presentSprites`, so placing a plume does not scan every sprite. Planned sources are culled to the visible tile range and sorted: working buildings first, then by distance to the camera centre, then by id. The list is cut to the budget `clamp(Int(24 × zoom), 8, 40)`. Removed emitters go back to a pool and are reused. Each emitter lives for 3 s at about 3 puffs per second, so the screen never holds more than about 500 puffs.
 
 ### D4: Reduce Motion
 
@@ -31,4 +31,5 @@ The puff is a 16 px soft radial gradient drawn with Core Graphics once and cache
 
 ## Risks
 
-- The table goes stale when house art changes. Mitigation: a test asserts that every stem in the table has a sprite in the atlas catalog, and the fallback still places smoke on the roof.
+- The table goes stale when house art changes. The fallback still puts smoke on the roof. A follow-up could have IsoKit emit the chimney point as sprite metadata, since the recipe knows where the chimney is.
+- Which kinds have a fire is a switch in the renderer. A follow-up could move it into the game-data packs as a building trait.
