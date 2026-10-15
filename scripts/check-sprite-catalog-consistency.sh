@@ -67,7 +67,7 @@ if [ ${#missing[@]} -gt 0 ]; then
         echo "    but Resources/Sprites.style/_sheets/${id}.png is unchanged." >&2
     done
     echo "" >&2
-    echo "Run \`make sprites\` to regenerate the matching sheet(s) and" >&2
+    echo "Run \`make sprites-ai\` to regenerate the matching sheet(s) and" >&2
     echo "commit them in the same commit. CI's \`make sprites-verify\`" >&2
     echo "will otherwise reject this change for not reproducing offline." >&2
     exit 1
