@@ -1,7 +1,7 @@
 import GameDataModel
 import Testing
 
-private func emitted(_ file: String, from source: InMemorySource = Fixtures.source()) throws -> String {
+func emitted(_ file: String, from source: InMemorySource = Fixtures.source()) throws -> String {
     let files = try SwiftEmitter.emit(Fixtures.load(source).get())
     return try #require(files[file], "no \(file) in \(files.keys.sorted())")
 }

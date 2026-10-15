@@ -1,45 +1,9 @@
 import Foundation
 
 /// Population tier of a house. Spec: `population-and-needs` / Houses
-/// have a population tier.
-public enum HouseTier: UInt8, Codable, Sendable, CaseIterable, Comparable {
-    case peasants = 1
-    case citizens = 2
-    case merchants = 3
-
-    public var capacity: UInt32 {
-        switch self {
-        case .peasants: 4
-        case .citizens: 6
-        case .merchants: 8
-        }
-    }
-
-    /// Goods this tier needs, in catalog order.
-    public var needs: [Good] {
-        switch self {
-        case .peasants: [.food]
-        case .citizens: [.food, .planks]
-        case .merchants: [.food, .planks, .bread, .tools]
-        }
-    }
-
-    public var taxPerResident: Int64 {
-        switch self {
-        case .peasants: 1
-        case .citizens: 2
-        case .merchants: 4
-        }
-    }
-
-    public var displayName: String {
-        switch self {
-        case .peasants: "Peasants"
-        case .citizens: "Citizens"
-        case .merchants: "Merchants"
-        }
-    }
-
+/// have a population tier. Cases, capacity, needs, tax and names are
+/// generated from the packs; raw values are the tiers' load order.
+extension HouseTier: Comparable {
     public var next: HouseTier? {
         HouseTier(rawValue: rawValue + 1)
     }

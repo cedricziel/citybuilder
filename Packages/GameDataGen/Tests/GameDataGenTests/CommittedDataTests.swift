@@ -72,7 +72,7 @@ func everyCatalogEntryComesFromThePacks() throws {
     #expect(!handWritten.isEmpty)
     for file in handWritten {
         let source = try String(contentsOf: cityCoreSources.appendingPathComponent(file), encoding: .utf8)
-        let declaration = source.firstMatch(of: /\benum\s+(Good|BuildingKind|Culture|Tech|Age)\b/)
+        let declaration = source.firstMatch(of: /\benum\s+(Good|BuildingKind|Culture|Tech|Age|HouseTier)\b/)
         #expect(declaration == nil, "\(file) declares a content enum")
     }
 }
