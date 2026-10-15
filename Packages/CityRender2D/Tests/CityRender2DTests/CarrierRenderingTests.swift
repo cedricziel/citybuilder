@@ -30,6 +30,7 @@ func scenarioCarrierGlidesBetweenTiles() throws {
     scene.reconcileCarriers(with: snapshot(carriers: [carrier(at: 0)]), now: 0)
     let node = try #require(scene.carrierVisuals[EntityID(raw: 7)]?.node)
     let start = node.position
+    #expect(node.zPosition > IsoWorldScene.depthZ(4) && node.zPosition < IsoWorldScene.depthZ(4.5))
     #expect(node.action(forKey: SKNode.glideKey) == nil)
     var next = snapshot(carriers: [carrier(at: 1)])
     next.tickCount = 2

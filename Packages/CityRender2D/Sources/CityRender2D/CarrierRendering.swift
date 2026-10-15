@@ -65,7 +65,7 @@ extension IsoWorldScene {
                 let node = SKSpriteNode()
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
                 node.position = target
-                node.zPosition = 50 // above terrain, below tall buildings
+                node.zPosition = Self.zPosition(of: carrier)
                 Self.animate(node, look: look)
                 addChild(node)
                 carrierVisuals[carrier.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now)
@@ -75,6 +75,7 @@ extension IsoWorldScene {
                 visual.look = look
                 Self.animate(visual.node, look: look)
             }
+            visual.node.zPosition = Self.zPosition(of: carrier)
             if visual.target != target {
                 let step = min(0.25, max(0.03, now - visual.movedAt))
                 visual.node.glide(to: target, duration: step)
@@ -100,6 +101,15 @@ extension IsoWorldScene {
         guard idx >= 0, idx < carrier.path.count - 1 else { return .se }
         let from = carrier.path[idx], next = carrier.path[idx + 1]
         return SpriteAtlas.WalkerFacing(stepX: Double(next.x - from.x), stepY: Double(next.y - from.y))
+    }
+
+    /// Just above the road it walks on, so buildings nearer the camera
+    /// cover it; the nearer of its two tiles while it steps.
+    static func zPosition(of carrier: Carrier) -> CGFloat {
+        let first = min(max(0, carrier.pathIndex), carrier.path.count)
+        let tiles = carrier.path[first ..< min(carrier.path.count, first + 2)]
+        let depth = tiles.map { $0.x + $0.y }.max() ?? 0
+        return depthZ(Double(depth + 1)) + figureLift
     }
 
     /// Slightly below the tile centre, so the figure stands on the tile.
