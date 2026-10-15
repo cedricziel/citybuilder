@@ -16,13 +16,9 @@ public enum CarrierLoad: String, CaseIterable, Sendable {
         case .food, .bread, .grain, .flour, .hops, .grapes, .teaLeaves, .tea, .coffeeCherries, .coffee: .sack
         }
     }
-
-    static func assetName(load: CarrierLoad, facing: SpriteAtlas.WalkerFacing, frame: Int) -> String {
-        "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
-    }
 }
 
-public extension Carrier {
+extension Carrier {
     var good: Good {
         switch mission {
         case let .deliver(good, _, _, _), let .retrieve(good, _, _, _), let .deliverToConstructionSite(good, _, _, _): good
@@ -31,24 +27,11 @@ public extension Carrier {
 }
 
 public extension SpriteAtlas {
-    /// The walk cycle of a carrier holding `load`, facing `facing`:
-    /// `carrier-<load>-<facing>-<frame>` when the atlas has every frame,
-    /// else the walker's. The one lookup carrier art goes through.
+    /// The walk cycle of a carrier holding `load`: its own frames when the
+    /// atlas has every one, else the walker's. The one lookup carrier art
+    /// goes through.
     static func carrierAnimation(load: CarrierLoad, facing: WalkerFacing) -> [SKTexture]? {
-        carrierAnimation(load: load, facing: facing, texture: texture(named:))
-    }
-}
-
-extension SpriteAtlas {
-    /// `carrierAnimation(load:facing:)` over any texture source, for tests.
-    static func carrierAnimation(
-        load: CarrierLoad,
-        facing: WalkerFacing,
-        texture: (String) -> SKTexture?
-    ) -> [SKTexture]? {
-        let count = SpriteAnimation.entry(for: .walker(facing))?.frameCount ?? 2
-        let frames = (0 ..< count).compactMap { texture(CarrierLoad.assetName(load: load, facing: facing, frame: $0)) }
-        return frames.count == count ? frames : walkerAnimation(facing: facing)
+        frames(for: .carrier(load, facing)) ?? walkerAnimation(facing: facing)
     }
 }
 
@@ -68,6 +51,8 @@ extension IsoWorldScene {
     /// Despawns finished carriers, and glides live ones to their tile over
     /// the time since their last step, so they keep pace at any speed.
     func reconcileCarriers(with snapshot: WorldSnapshot, now: TimeInterval) {
+        guard snapshot.tickCount != lastCarrierTick else { return }
+        lastCarrierTick = snapshot.tickCount
         let live = Set(snapshot.carriers.map(\.id))
         for (id, visual) in carrierVisuals where !live.contains(id) {
             visual.node.removeFromParent()
@@ -77,7 +62,7 @@ extension IsoWorldScene {
             let look = CarrierLook(load: CarrierLoad.family(of: carrier.good), facing: Self.facing(of: carrier))
             let target = Self.position(of: carrier)
             guard var visual = carrierVisuals[carrier.id] else {
-                let node = SKSpriteNode(texture: SpriteAtlas.walkerAnimation(facing: look.facing)?.first)
+                let node = SKSpriteNode()
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
                 node.position = target
                 node.zPosition = 50 // above terrain, below tall buildings
@@ -92,7 +77,7 @@ extension IsoWorldScene {
             }
             if visual.target != target {
                 let step = min(0.25, max(0.03, now - visual.movedAt))
-                visual.node.run(.move(to: target, duration: step), withKey: Self.glideKey)
+                visual.node.glide(to: target, duration: step)
                 visual.target = target
                 visual.movedAt = now
             }
@@ -100,14 +85,13 @@ extension IsoWorldScene {
         }
     }
 
-    static let glideKey = "glide"
-
     private static func animate(_ node: SKSpriteNode, look: CarrierLook) {
         node.removeAction(forKey: "walk")
         guard let frames = SpriteAtlas.carrierAnimation(load: look.load, facing: look.facing), let first = frames.first else { return }
         node.texture = first
         node.size = first.size()
-        node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.15)), withKey: "walk")
+        let perFrame = SpriteAnimation.entry(for: .carrier(look.load, look.facing))?.timePerFrame ?? 0.15
+        node.run(.repeatForever(.animate(with: frames, timePerFrame: perFrame)), withKey: "walk")
     }
 
     /// Facing from the next path segment.
@@ -115,10 +99,7 @@ extension IsoWorldScene {
         let idx = carrier.pathIndex
         guard idx >= 0, idx < carrier.path.count - 1 else { return .se }
         let from = carrier.path[idx], next = carrier.path[idx + 1]
-        if next.x > from.x { return .se }
-        if next.x < from.x { return .nw }
-        if next.y > from.y { return .sw }
-        return .ne
+        return SpriteAtlas.WalkerFacing(stepX: Double(next.x - from.x), stepY: Double(next.y - from.y))
     }
 
     /// Slightly below the tile centre, so the figure stands on the tile.

@@ -30,11 +30,15 @@ func scenarioCarrierGlidesBetweenTiles() throws {
     scene.reconcileCarriers(with: snapshot(carriers: [carrier(at: 0)]), now: 0)
     let node = try #require(scene.carrierVisuals[EntityID(raw: 7)]?.node)
     let start = node.position
-    #expect(node.action(forKey: IsoWorldScene.glideKey) == nil)
-    scene.reconcileCarriers(with: snapshot(carriers: [carrier(at: 1)]), now: 0.1)
-    #expect(node.action(forKey: IsoWorldScene.glideKey) != nil)
+    #expect(node.action(forKey: SKNode.glideKey) == nil)
+    var next = snapshot(carriers: [carrier(at: 1)])
+    next.tickCount = 2
+    scene.reconcileCarriers(with: next, now: 0.1)
+    #expect(node.action(forKey: SKNode.glideKey) != nil)
     #expect(node.position == start, "the node moves by action, not by a jump")
-    scene.reconcileCarriers(with: snapshot(carriers: []), now: 0.2)
+    var gone = snapshot(carriers: [])
+    gone.tickCount = 3
+    scene.reconcileCarriers(with: gone, now: 0.2)
     #expect(scene.carrierVisuals.isEmpty && node.parent == nil)
 }
 
@@ -46,15 +50,10 @@ func scenarioLoadFamilyFromTheGood() {
 
 @Test("scenario: carrier sprite falls back to the walker")
 func scenarioCarrierSpriteFallsBackToTheWalker() {
-    let walker = SpriteAtlas.walkerAnimation(facing: .se)
-    let none = SpriteAtlas.carrierAnimation(load: .sack, facing: .se) { _ in nil }
-    #expect(none == walker)
-    // Half a cycle is not a cycle: it falls back too.
-    let partial = SpriteAtlas.carrierAnimation(load: .sack, facing: .se) { $0.hasSuffix("-0") ? SKTexture() : nil }
-    #expect(partial == walker)
-    var asked: [String] = []
-    let full = SpriteAtlas.carrierAnimation(load: .sack, facing: .se) { asked.append($0); return SKTexture() }
-    #expect(full?.count == 2)
-    #expect(asked == ["carrier-sack-se-0", "carrier-sack-se-1"])
+    // Test bundles carry no atlases, so the carrier frames are missing.
+    #expect(SpriteAtlas.frames(for: .carrier(.sack, .se)) == nil)
+    #expect(SpriteAtlas.carrierAnimation(load: .sack, facing: .se) == SpriteAtlas.walkerAnimation(facing: .se))
+    #expect(SpriteAnimation.assetName(for: .carrier(.sack, .se), frame: 1) == "carrier-sack-se-1")
+    #expect(SpriteAnimation.entry(for: .carrier(.sack, .se)) == SpriteAnimation.entry(for: .walker(.se)))
     #expect(SpriteAtlasRouting.atlasName(for: "carrier-sack-se-0") == SpriteAtlasRouting.unitsAtlasName)
 }

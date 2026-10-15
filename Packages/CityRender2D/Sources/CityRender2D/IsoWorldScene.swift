@@ -40,6 +40,7 @@ public final class IsoWorldScene: SKScene {
     /// Carrier nodes keyed by carrier id. Spec: `rendering-2_5d` /
     /// Carriers glide and show their load.
     var carrierVisuals: [EntityID: CarrierVisual] = [:]
+    var lastCarrierTick: UInt64?
     private let cameraNode = SKCameraNode()
 
     /// Ghost preview node shown at the hovered tile when a build tool is
