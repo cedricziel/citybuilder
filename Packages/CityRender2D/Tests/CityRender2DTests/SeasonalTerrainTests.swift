@@ -82,6 +82,25 @@ func shoresFollowTheSeason() {
     #expect(shoreNames().allSatisfy { $0.hasSuffix("-autumn") })
 }
 
+/// Spring and summer share every terrain sprite, so turning from one to the other redraws nothing.
+@MainActor
+@Test("a season change that keeps the look keeps the terrain nodes")
+func seasonChangeWithoutNewLookKeepsNodes() {
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { _ in true }
+    let terrainNodes = { Set(scene.children.filter { $0.zPosition == 0 }.map(ObjectIdentifier.init)) }
+    let spring = FixedSnapshot(grassSnapshot(season: .spring, shore: true))
+    scene.dataSource = spring
+    scene.update(0)
+    let before = terrainNodes()
+    let summer = FixedSnapshot(grassSnapshot(season: .summer, shore: true))
+    scene.dataSource = summer
+    scene.update(1)
+    #expect(!before.isEmpty)
+    #expect(terrainNodes() == before)
+}
+
 @MainActor
 @Test("a shore without a seasonal set keeps its plain transition")
 func shoreWithoutSeasonalSetKeepsPlainTransition() {

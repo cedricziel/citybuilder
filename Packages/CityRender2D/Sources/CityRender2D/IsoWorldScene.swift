@@ -304,9 +304,14 @@ public final class IsoWorldScene: SKScene {
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a
     /// season change so the next reconcile rebuilds them with the season's sprites.
+    /// Seasons with the same look (spring and summer) redraw nothing.
     private func applySeason(_ season: Season) {
         guard season != appliedSeason else { return }
+        let changesLook = Self.seasonalTerrain.contains {
+            Self.seasonalTerrainName(kind: $0, season: season) != Self.seasonalTerrainName(kind: $0, season: appliedSeason)
+        }
         appliedSeason = season
+        guard changesLook else { return }
         for (spec, node) in presentSprites {
             guard case let .terrain(kind, transition) = spec.kind,
                   Self.seasonalTerrain.contains(kind) || transition?.upper == .grass
