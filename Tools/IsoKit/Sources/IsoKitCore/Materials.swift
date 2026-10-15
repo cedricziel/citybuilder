@@ -136,7 +136,7 @@ enum Tex {
     static let ashlar = courses(RGB(0.76, 0.65, 0.50), rowHeight: 16, blockWidth: 32, joint: RGB(0.52, 0.44, 0.34), seed: 5)
     static let planks = planks(RGB(0.58, 0.38, 0.20), seed: 4)
     static let thatchStraw = thatch(seed: 6)
-    static let tile = courses(RGB(0.72, 0.27, 0.13), rowHeight: 16, blockWidth: 16, joint: RGB(0.32, 0.11, 0.05), seed: 7)
+    static let tile = courses(RGB(0.60, 0.26, 0.17), rowHeight: 16, blockWidth: 16, joint: RGB(0.28, 0.11, 0.07), seed: 7)
     static let slate = courses(RGB(0.31, 0.35, 0.45), rowHeight: 12, blockWidth: 14, joint: RGB(0.16, 0.18, 0.24), seed: 8)
     static let cobbles = cobble(seed: 9)
     static let wood = speckled(RGB(0.60, 0.39, 0.20), amount: 0.1, seed: 10)
