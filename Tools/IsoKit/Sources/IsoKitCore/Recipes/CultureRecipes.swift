@@ -91,8 +91,7 @@ extension Recipes {
             finish: .paint(Looks.blueShutter)
         )
         kit.shuttered(Face.east(wallX: 6.6), at: [3.6], y: 1.7)
-        kit.chimney(x: 5.2, depth: 4.4, from: 2.8, to: 4.6, finish: .plasterPale)
-        kit.block(SCNVector3(4.84, 4.6, 4.04), SCNVector3(5.56, 4.72, 4.76), .tile)
+        kit.chimney(x: 5.2, depth: 4.4, from: 2.8, to: 4.72, finish: .plasterPale, cap: .tile)
         kit.amphorae(at: SCNVector3(4.6, 0, 7.0))
     }
 
@@ -103,7 +102,7 @@ extension Recipes {
         kit.shuttered(Face.south(wallZ: 6.2), at: [2.2, 4.0, 5.8], y: 4.0)
         kit.shuttered(Face.east(wallX: 7.0), at: [2.4, 4.8], y: 4.0)
         kit.shuttered(Face.east(wallX: 7.0), at: [3.6], y: 1.6)
-        kit.chimney(x: 5.6, depth: 4.6, from: 5.0, to: 6.9, finish: .plasterPale)
+        kit.chimney(x: 5.6, depth: 4.6, from: 5.0, to: 6.9, finish: .plasterPale, cap: .tile)
     }
 
     /// Three storeys on a stone ground floor, a balcony, and a belvedere tower with an open loggia.
@@ -125,7 +124,7 @@ extension Recipes {
         kit.shuttered(Face.east(wallX: 7.1), at: [2.4, 5.0], y: 3.8)
         kit.block(SCNVector3(2.6, 2.9, 6.6), SCNVector3(5.4, 3.0, 7.4), .ashlar)
         kit.block(SCNVector3(2.6, 3.0, 7.32), SCNVector3(5.4, 3.8, 7.4), .paint(Trade.iron))
-        kit.chimney(x: 5.8, depth: 5.0, from: 6.8, to: 8.4, finish: .plasterPale)
+        kit.chimney(x: 5.8, depth: 5.0, from: 6.8, to: 8.4, finish: .plasterPale, cap: .tile)
         kit.block(SCNVector3(1.4, 6.8, 1.4), SCNVector3(3.6, 8.6, 3.6), .plasterPale)
         kit.arcade(Face.south(wallZ: 3.6), from: 1.6, to: 3.4, base: 6.9)
         kit.arcade(Face.east(wallX: 3.6), from: 1.6, to: 3.4, base: 6.9)
