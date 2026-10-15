@@ -1,4 +1,4 @@
-"""Render SVG-sourced sprites (terrain, transitions, icons) to raw RGBA PNGs with rsvg-convert.
+"""Render SVG-sourced sprites (terrain, transitions, roads, icons) to raw RGBA PNGs with rsvg-convert.
 
 usage: python -m art.svg_sprites --catalog <dir> --out <dir> [--all]
 
@@ -16,14 +16,14 @@ import sys
 import tempfile
 from pathlib import Path
 
-from art import terrain_tiles
+from art import roads, terrain_tiles
 
 SHEET_LINE = re.compile(r"^- \(\d+, *\d+\): `([a-z0-9-]+)`", re.MULTILINE)
 SOURCE_LINE = re.compile(r'^source\s*=\s*"([a-z]+)"', re.MULTILINE)
 
 
 def all_sources() -> dict[str, str]:
-    return dict(terrain_tiles.sources())
+    return {**terrain_tiles.sources(), **roads.sources()}
 
 
 def svg_entry_names(catalog: Path) -> list[str]:
