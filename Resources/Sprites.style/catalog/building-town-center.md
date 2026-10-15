@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -10,13 +10,7 @@ its central tower.
 
 ## Visual identity
 
-Two-storey stone-and-timber building with a small central tower
-flying a red flag. Slate gable roof flanked by two smaller hipped
-roofs. Wider footprint than a warehouse. Palette anchors: `#A89884`
-light-stone (ashlar — reserved for the town centre's tower), `#7A6B59`
-weathered stone walls, `#6E4A2A` timber half-timber framing, `#3F2A26`
-slate roof, `#8B1A1A` flag-red on the small central banner. Slight
-`#FFE9C8` sun-warm highlight on the tower's south face.
+Rendered by IsoKit in the shared light rig. A long ashlar hall under a slate hip roof, with a tall square tower at its east end under a steep slate spire flying a red flag. The whole 3×3 footprint is a cobbled market square with a covered well, two market stalls (red and cream awnings), barrels and crates. The flag hangs furled in one operational frame and flies in the other.
 
 ## Sheet
 
@@ -55,3 +49,4 @@ The per-cell roles above describe the original AI sprites.
 - Cell: 3×3 footprint, 192 pt tall
 - Construction stages: 3
 - Operational frames: 2
+- Moving part: flag, 2 frames, sweeps right

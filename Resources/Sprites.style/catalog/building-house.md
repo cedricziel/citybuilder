@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,12 +9,7 @@ no working sound).
 
 ## Visual identity
 
-Half-timber-and-plaster cottage with steeply-pitched terracotta-tile
-roof. Two-storey but compact silhouette; one south-facing window with
-mullions, one south-facing wooden door. Palette anchors: `#D4A86A`
-light-wood plaster panels, `#6E4A2A` timber framing in a vertical-stud
-pattern, `#7A1F1A` terracotta tile, `#A53329` south-facing roof
-highlight band. Tight `#1A1410` outline on south and east edges.
+Rendered by IsoKit in the shared light rig. Peasants: a one-storey half-timbered cottage of warm plaster under a steep thatch roof, green shutters, a door on the south face, a woodpile, a fenced cabbage plot and a barrel. Citizens (tier 2): an ashlar ground floor with a jettied, timber-framed plaster upper storey, red shutters, a terracotta tile roof, a chimney and a porch over the door. Merchants (tier 3): an ashlar shop floor, two jettied timber-framed storeys with green shutters, a slate hip roof with two chimneys, and a market awning with goods. Construction runs from plinth and bare frame, to plastered walls, to roof boards, to the thatched house.
 
 ## Sheet
 
@@ -50,6 +45,6 @@ The per-cell roles above describe the original AI sprites.
 
 - Recipe: `building-house` (IsoKit)
 - Also renders: `building-house-tier2`, `building-house-tier3`
-- Cell: 2×2 footprint, 112 pt tall (tier 2: 144 pt)
+- Cell: 2×2 footprint, 112 pt tall (tier 2: 144 pt, tier 3: 176 pt)
 - Construction stages: 3
 - Operational frames: 0

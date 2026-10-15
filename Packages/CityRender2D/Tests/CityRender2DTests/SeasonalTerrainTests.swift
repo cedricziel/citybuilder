@@ -53,5 +53,5 @@ func scenarioWinterTintsGrass() {
 func scenarioSummerHasNoTint() {
     let names = renderedGrassTextureNames(season: .summer)
     #expect(!names.isEmpty)
-    #expect(names.allSatisfy { $0 == nil })
+    #expect(names.allSatisfy { $0 == "terrain-grass" })
 }

@@ -105,14 +105,47 @@ struct KitGateTests {
         try writeBrief(root, id: "building-bakery", source: "procedural")
         let atlas = root.appendingPathComponent("Buildings.atlas")
         try writePNG(grounded(), to: atlas.appendingPathComponent("building-house.png"))
-        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png")) // legacy: no twin needed
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png")) // legacy, no @2x art yet: fine
 
         var failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
         #expect(failures == [.init(file: "building-house.png", reason: .scaleTwinMismatch)])
 
         try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-house@2x.png"))
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-bakery@2x.png")) // now the atlas has @2x art
         failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
         #expect(failures.isEmpty)
+    }
+
+    @Test("in an atlas with @2x art, legacy sprites need exact nearest-neighbour twins")
+    func legacySpritesNeedTwinsOnceTheAtlasHasTwoX() throws {
+        let root = temporaryResources()
+        try writeBrief(root, id: "building-house", source: "isokit")
+        try writeBrief(root, id: "building-bakery", source: "procedural")
+        let atlas = root.appendingPathComponent("Buildings.atlas")
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-house.png"))
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-house@2x.png"))
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png"))
+
+        var failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+        #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)])
+
+        let shifted = image(width: 128, height: 64) { x, y in (30 ..< 90).contains(x) && y >= 8 ? wall : nil }
+        try writePNG(shifted, to: atlas.appendingPathComponent("building-bakery@2x.png"))
+        failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+        #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)]) // not the exact double
+
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-bakery@2x.png"))
+        #expect(try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3).isEmpty)
+    }
+
+    @Test("an @2x file without its @1x sprite is an orphan")
+    func orphanTwin() throws {
+        let root = temporaryResources()
+        try writePNG(grounded(scale: 2), to: root.appendingPathComponent("Buildings.atlas/building-ghost@2x.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+
+        #expect(failures == [.init(file: "building-ghost@2x.png", reason: .scaleTwinOrphan)])
     }
 
     @Test("scenario: Walker frames have the walker size")
@@ -167,6 +200,26 @@ struct KitGateTests {
 
         #expect(report.exitCode != 0)
         #expect(report.output.contains("terrain-water-2.png frame_empty"))
+    }
+
+    @Test("a sprite belongs to the brief whose Sheet lists it, before any prefix match")
+    func sheetListBeatsPrefix() {
+        let catalog = GateCatalog(
+            entries: [.init(id: "building-house", source: "isokit"), .init(id: "building-house-renaissance", source: "procedural")],
+            sheetNames: ["building-house-renaissance": ["building-house-renaissance", "building-house-tier3-renaissance"]]
+        )
+        #expect(catalog.entry(forSprite: "building-house-tier3-renaissance.png")?.id == "building-house-renaissance")
+        #expect(catalog.entry(forSprite: "building-house-tier2.png")?.id == "building-house")
+    }
+
+    @Test("a brief is migrated whatever its front-matter order and spacing, and lists its sheet names")
+    func migratedBriefsParseLoosely() {
+        let markdown = "---\nid = \"building-house\"\nsource=  \"isokit\"\n---\n## Sheet\n"
+            + "- (0, 0): `building-house`\n- (0, 1): `building-house-tier2`\n"
+        let entry = GateCatalog.parse(id: "building-house", markdown: markdown)
+        #expect(entry.isMigrated)
+        let catalog = GateCatalog(entries: [entry], sheetNames: ["building-house": GateCatalog.sheetNames(in: markdown)])
+        #expect(catalog.migratedSheetNames == ["building-house", "building-house-tier2"])
     }
 
     @Test("@2x frames compare against their @2x base")

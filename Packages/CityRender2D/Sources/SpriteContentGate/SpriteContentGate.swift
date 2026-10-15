@@ -17,8 +17,11 @@ public enum SpriteContentGate {
         case frameIncoherent = "frame_incoherent"
         case frameMisaligned = "frame_misaligned"
         case notGrounded = "not_grounded"
-        /// A migrated sprite's `@2x` twin is missing or not exactly twice its size.
+        /// A sprite's `@2x` twin is missing, not exactly twice its size, or (for legacy art) not its
+        /// exact nearest-neighbour double.
         case scaleTwinMismatch = "scale_twin_mismatch"
+        /// An `@2x` file has no `@1x` sprite.
+        case scaleTwinOrphan = "scale_twin_orphan"
         /// A migrated walker frame is not 10×16 points.
         case walkerSize = "walker_size"
         /// A migrated walker facing lacks one of its four gait frames.

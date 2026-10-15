@@ -3,11 +3,12 @@ import SpriteKit
 import SwiftUI
 
 /// Building sprites for the build rail, drawer and tool strip, read from
-/// the `Buildings` atlas with the same crisp interpolation as the good
-/// icons. Falls back to an SF Symbol when the atlas lacks the texture,
-/// which is always the case in package tests.
+/// the `Buildings` atlas, or `Kit` for art-kit renders, with the same crisp
+/// interpolation as the good icons. Falls back to an SF Symbol when neither
+/// atlas has the texture, which is always the case in package tests.
 public enum BuildingIconLoader {
-    public static let atlasName = "Buildings"
+    /// Legacy pixel art first, then the art kit's own atlas (mirrors `SpriteAtlasRouting`).
+    public static let atlasNames = ["Buildings", "Kit"]
 
     /// Port and shipyard ship one sprite per facing; the rail shows the
     /// south-facing one.
@@ -40,13 +41,14 @@ public enum BuildingIconLoader {
 
     @MainActor
     private static func loadImage(for kind: BuildingKind) -> Image {
-        let atlas = SKTextureAtlas(named: atlasName)
         let name = textureName(for: kind)
-        let names = Set(atlas.textureNames)
-        guard names.contains(name) || names.contains(name + ".png") else {
-            return Image(systemName: fallbackSymbolName(for: kind))
+        for atlasName in atlasNames {
+            let atlas = SKTextureAtlas(named: atlasName)
+            let names = Set(atlas.textureNames)
+            guard names.contains(name) || names.contains(name + ".png") else { continue }
+            let cgImage = atlas.textureNamed(name).cgImage()
+            return Image(decorative: cgImage, scale: 1).interpolation(GoodIconLoader.pixelArtInterpolation)
         }
-        let cgImage = atlas.textureNamed(name).cgImage()
-        return Image(decorative: cgImage, scale: 1).interpolation(GoodIconLoader.pixelArtInterpolation)
+        return Image(systemName: fallbackSymbolName(for: kind))
     }
 }

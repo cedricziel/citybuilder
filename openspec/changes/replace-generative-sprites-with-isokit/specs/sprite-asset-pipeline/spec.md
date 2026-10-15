@@ -85,7 +85,7 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 
 ### Requirement: Atlas PNGs are rendered by the art kit
 
-Every sprite PNG under `Resources/{Terrain,Buildings,Units,Icons}.atlas/` SHALL be produced by:
+Every sprite PNG under `Resources/{Kit,Terrain,Buildings,Units,Icons}.atlas/` SHALL be produced by:
 
 - IsoKit, for buildings and units, or
 - the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons.

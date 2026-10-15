@@ -9,8 +9,8 @@ public enum Rig {
         let centre = SCNVector3(cell.sizeMetres / 2, 0, cell.sizeMetres / 2)
         let sun = SCNLight()
         sun.type = .directional
-        sun.color = NSColor(red: 1.0, green: 0.84, blue: 0.64, alpha: 1)
-        sun.intensity = 2600
+        sun.color = NSColor(red: 1.0, green: 0.80, blue: 0.56, alpha: 1)
+        sun.intensity = 3000
         sun.castsShadow = true
         sun.shadowMapSize = CGSize(width: 4096, height: 4096)
         sun.shadowSampleCount = 16
@@ -25,7 +25,7 @@ public enum Rig {
 
         let sky = SCNLight()
         sky.type = .ambient
-        sky.color = NSColor(red: 0.66, green: 0.68, blue: 0.78, alpha: 1)
+        sky.color = NSColor(red: 0.74, green: 0.70, blue: 0.70, alpha: 1)
         sky.intensity = 480
         let skyNode = SCNNode()
         skyNode.light = sky
@@ -56,7 +56,7 @@ public enum Rig {
         cam.screenSpaceAmbientOcclusionIntensity = ssao ? 1.4 : 0
         cam.screenSpaceAmbientOcclusionRadius = 0.5
         cam.wantsHDR = true
-        cam.exposureOffset = -0.3
+        cam.exposureOffset = -0.15
         let node = SCNNode()
         node.camera = cam
         node.eulerAngles = SCNVector3(-CGFloat.pi / 6, CGFloat.pi / 4, 0)

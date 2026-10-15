@@ -12,7 +12,9 @@ public enum TextureFiltering {
     /// States, frames, variants and transition masks are stripped before the lookup, so
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.
-    public static let kitRenderedStems: Set<String> = []
+    public static let kitRenderedStems: Set<String> = [
+        "building-house", "building-house-tier2", "building-house-tier3", "building-town-center"
+    ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
         if spriteName.hasPrefix("good-") || spriteName.hasPrefix("overlay-") {

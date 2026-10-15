@@ -133,6 +133,15 @@ public final class Builder {
 // MARK: roofs
 
 extension Builder {
+    /// A thicker, weathered course along a thatched slab's lower edge, at slab-local `edge` along z.
+    private func thatchEave(length: CGFloat, at edge: CGFloat) -> SCNNode {
+        let eave = SCNBox(width: length, height: 0.24, length: 0.4, chamferRadius: 0.06)
+        eave.materials = [Finish.thatchEave.material(repeatU: 0.25, repeatV: length / 2, rotated: true)]
+        let node = SCNNode(geometry: eave)
+        node.position = SCNVector3(0, 0.02, edge)
+        return node
+    }
+
     /// Gable roof of two thick slabs plus gable triangles. Returns the ridge height.
     @discardableResult
     func gableRoof(_ spec: RoofSpec) -> CGFloat {
@@ -155,6 +164,9 @@ extension Builder {
             node.position = SCNVector3(length / 2, spec.eave + rise / 2 + 0.1, side * (depth / 4 + 0.12))
             node.eulerAngles = SCNVector3(side * spec.pitchDegrees * .pi / 180, 0, 0)
             frame.addChildNode(node)
+            if case .thatch = spec.finish {
+                node.addChildNode(thatchEave(length: length + 2 * spec.overhang, at: side * (slope / 2 - 0.2)))
+            }
         }
         for gableX in [CGFloat(0.1), length - 0.1] {
             let path = NSBezierPath()

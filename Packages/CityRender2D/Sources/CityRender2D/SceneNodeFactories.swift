@@ -41,24 +41,26 @@ extension IsoWorldScene {
     }
 
     func makeTerrainNode(kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition? = nil) -> SKNode {
-        if let seasonal = seasonalTerrainNode(kind: kind) {
-            seasonal.zPosition = 0
-            return seasonal
-        }
-        // Blended shore and grass edges, once the terrain family ships its transition tiles;
-        // until then (or for a missing mask) the tile keeps its own sprite.
+        // Blended shore and grass edges, once the terrain family ships its transition tiles; until
+        // then (or for a missing mask) the tile keeps its own sprite. Shore shape outranks seasonal
+        // tint, so the transition comes first.
         if let transition, hasSprite(transition.assetName) {
             let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: transition.assetName))
             node.userData = [Self.textureNameKey: transition.assetName]
             node.zPosition = 0
             return node
         }
+        if let seasonal = seasonalTerrainNode(kind: kind) {
+            seasonal.zPosition = 0
+            return seasonal
+        }
         // Variant-aware lookup picks a deterministic per-tile sprite for
         // kinds with multiple variants (mountain); falls through to the
         // canonical sprite for all others. Placeholder path satisfies the
         // rendering-2_5d `Missing-sprite fallback in release` requirement.
-        let texture = SpriteAtlas.terrainTextureOrPlaceholder(for: kind, coord: coord)
-        let node = SKSpriteNode(texture: texture)
+        let name = SpriteAtlas.terrainAssetName(for: kind, coord: coord)
+        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        node.userData = [Self.textureNameKey: name]
         node.zPosition = 0
         if let action = SpriteAnimation.loopingAction(for: .terrain(kind)) {
             node.run(action, withKey: "anim")

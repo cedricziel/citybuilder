@@ -35,17 +35,19 @@ public struct RenderJob {
     }
 
     func render(_ recipe: Recipe, scale: Int) throws -> [String] {
-        let idle = try Renderer.image(recipe.scene(stage: .finished), cell: recipe.cell, scale: scale)
+        let base = try Renderer.image(recipe.scene(stage: .finished), cell: recipe.cell, scale: scale)
+        // A moving part belongs to the idle sprite too (a mill at rest still has sails): idle shows frame 0.
+        let overlays = try (0 ..< max(recipe.operationalFrames, 1)).map { frame in
+            try recipe.movingFrame(frame).map { try Renderer.image($0, cell: recipe.cell, scale: scale) }
+        }
+        let idle = try overlays[0].map { try Renderer.composite(base, $0) } ?? base
         var images: [(String, CGImage)] = [(recipe.id, idle)]
         for index in 0 ..< recipe.constructionFrames {
             let frame = try Renderer.image(recipe.scene(stage: .constructing(index)), cell: recipe.cell, scale: scale)
             images.append(("\(recipe.id)-constructing-\(index)", frame))
         }
         for index in 0 ..< recipe.operationalFrames {
-            var frame = idle
-            if let overlay = recipe.movingFrame(index) {
-                frame = try Renderer.composite(idle, Renderer.image(overlay, cell: recipe.cell, scale: scale))
-            }
+            let frame = try overlays[index].map { try Renderer.composite(base, $0) } ?? idle
             images.append(("\(recipe.id)-operational-\(index)", frame))
         }
         return try images.map { name, image in

@@ -46,6 +46,8 @@ targets:
         buildPhase: resources
       - path: Resources/Buildings.atlas
         buildPhase: resources
+      - path: Resources/Kit.atlas
+        buildPhase: resources
       - path: Resources/Units.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas
@@ -121,6 +123,8 @@ targets:
         buildPhase: resources
       - path: Resources/Buildings.atlas
         buildPhase: resources
+      - path: Resources/Kit.atlas
+        buildPhase: resources
       - path: Resources/Units.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas
@@ -180,6 +184,8 @@ targets:
       - path: Resources/Terrain.atlas
         buildPhase: resources
       - path: Resources/Buildings.atlas
+        buildPhase: resources
+      - path: Resources/Kit.atlas
         buildPhase: resources
       - path: Resources/Units.atlas
         buildPhase: resources

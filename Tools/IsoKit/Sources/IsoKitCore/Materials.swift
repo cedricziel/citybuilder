@@ -94,9 +94,8 @@ enum Tex {
     }
 
     /// Straw: streaks down the slope (texture y) and darker course bands.
-    static func thatch(seed: UInt64) -> CGImage {
-        let straw = RGB(0.66, 0.52, 0.28)
-        return bitmap(seed: seed) { ctx, rng in
+    static func thatch(_ straw: RGB, seed: UInt64) -> CGImage {
+        bitmap(seed: seed) { ctx, rng in
             fill(ctx, straw, CGRect(x: 0, y: 0, width: size, height: size))
             for _ in 0 ..< 900 {
                 let rect = CGRect(x: rng.next() * 128, y: rng.next() * 128, width: 1, height: 5 + rng.next() * 9)
@@ -109,7 +108,7 @@ enum Tex {
     }
 
     static func cobble(seed: UInt64) -> CGImage {
-        let stone = RGB(0.62, 0.58, 0.52)
+        let stone = RGB(0.71, 0.61, 0.47)
         return bitmap(seed: seed) { ctx, rng in
             fill(ctx, stone.shifted(-0.25), CGRect(x: 0, y: 0, width: size, height: size))
             for row in 0 ..< 11 {
@@ -129,24 +128,26 @@ enum Tex {
         }
     }
 
-    static let plaster = speckled(RGB(0.90, 0.80, 0.64), amount: 0.08, seed: 1)
-    static let plasterPale = speckled(RGB(0.95, 0.91, 0.82), amount: 0.06, seed: 11)
-    static let timber = speckled(RGB(0.28, 0.17, 0.10), amount: 0.06, seed: 2)
-    static let rubble = speckled(RGB(0.56, 0.53, 0.49), amount: 0.18, seed: 3)
-    static let ashlar = courses(RGB(0.66, 0.62, 0.56), rowHeight: 16, blockWidth: 32, joint: RGB(0.45, 0.42, 0.38), seed: 5)
-    static let planks = planks(RGB(0.52, 0.36, 0.22), seed: 4)
-    static let thatchStraw = thatch(seed: 6)
-    static let tile = courses(RGB(0.62, 0.24, 0.14), rowHeight: 16, blockWidth: 16, joint: RGB(0.28, 0.10, 0.06), seed: 7)
-    static let slate = courses(RGB(0.34, 0.35, 0.39), rowHeight: 12, blockWidth: 14, joint: RGB(0.18, 0.18, 0.21), seed: 8)
+    static let plaster = speckled(RGB(0.93, 0.80, 0.60), amount: 0.08, seed: 1)
+    static let plasterPale = speckled(RGB(0.96, 0.90, 0.78), amount: 0.06, seed: 11)
+    static let timber = speckled(RGB(0.33, 0.18, 0.09), amount: 0.06, seed: 2)
+    static let rubble = speckled(RGB(0.63, 0.55, 0.45), amount: 0.18, seed: 3)
+    static let ashlar = courses(RGB(0.76, 0.65, 0.50), rowHeight: 16, blockWidth: 32, joint: RGB(0.52, 0.44, 0.34), seed: 5)
+    static let planks = planks(RGB(0.58, 0.38, 0.20), seed: 4)
+    static let thatchStraw = thatch(RGB(0.55, 0.47, 0.35), seed: 6)
+    /// The eave course: older straw, weathered darker and greyer than the slope above it.
+    static let thatchEave = thatch(RGB(0.38, 0.35, 0.30), seed: 13)
+    static let tile = courses(RGB(0.60, 0.26, 0.17), rowHeight: 16, blockWidth: 16, joint: RGB(0.28, 0.11, 0.07), seed: 7)
+    static let slate = courses(RGB(0.31, 0.35, 0.45), rowHeight: 12, blockWidth: 14, joint: RGB(0.16, 0.18, 0.24), seed: 8)
     static let cobbles = cobble(seed: 9)
-    static let wood = speckled(RGB(0.55, 0.38, 0.22), amount: 0.1, seed: 10)
+    static let wood = speckled(RGB(0.60, 0.39, 0.20), amount: 0.1, seed: 10)
     /// Trodden earth with grass: the building plot under every footprint.
     static let yard = speckled(RGB(0.47, 0.46, 0.29), amount: 0.16, seed: 12)
 }
 
 /// A finish = texture + PBR response. `repeatU/V` = texture repeats across the face.
 public enum Finish {
-    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, tile, slate, cobbles, wood, yard
+    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, thatchEave, tile, slate, cobbles, wood, yard
     case paint(NSColor), glass, litGlass
 
     var roughness: CGFloat {
@@ -167,6 +168,7 @@ public enum Finish {
         case .ashlar: Tex.ashlar
         case .planks: Tex.planks
         case .thatch: Tex.thatchStraw
+        case .thatchEave: Tex.thatchEave
         case .tile: Tex.tile
         case .slate: Tex.slate
         case .cobbles: Tex.cobbles

@@ -35,8 +35,9 @@ struct RenderTests {
         try RenderJob(recipes: [recipe], output: dir, scales: [1]).run()
         let idle = try PixelScan.rgba(dir.appendingPathComponent("building-sawmill.png"))
         let frames = try (0 ..< 4).map { try PixelScan.rgba(dir.appendingPathComponent("building-sawmill-operational-\($0).png")) }
+        // The mill at rest still has its sails: idle is frame 0.
+        #expect(frames[0] == idle)
         for (index, frame) in frames.enumerated() {
-            #expect(frame != idle, "operational-\(index) shows no sails")
             #expect(frame != frames[(index + 1) % 4], "operational-\(index) and the next frame are identical")
         }
         // Away from the sails the frame is the idle sprite: the top-left 30x30 corner has no sails.

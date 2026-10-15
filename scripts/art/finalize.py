@@ -1,4 +1,4 @@
-"""Quantize a directory of raw RGBA renders into the atlases.
+"""Quantize a directory of raw RGBA renders into the Kit atlas.
 
 usage: python -m art.finalize <raw-dir> <resources-dir>
 """
@@ -14,10 +14,10 @@ from art import atlas
 
 
 def finalize(raw: Path, resources: Path) -> list[Path]:
-    """Writes `<resources>/<Atlas>.atlas/<file>` for every PNG in `raw`; returns the paths written."""
+    """Writes `<resources>/Kit.atlas/<file>` for every PNG in `raw`; returns the paths written."""
     written = []
     for source in sorted(raw.glob("*.png")):
-        dest = atlas.atlas_path(resources, source.name)
+        dest = atlas.kit_path(resources, source.name)
         with Image.open(source) as image:
             atlas.save_indexed(image, dest)
         written.append(dest)

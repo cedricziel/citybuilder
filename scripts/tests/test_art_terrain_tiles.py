@@ -37,27 +37,52 @@ def test_generation_is_deterministic() -> None:
     assert terrain_tiles.sources() == terrain_tiles.sources()
 
 
+N, E, S, W = 1, 2, 4, 8
+# Neighbour one column east (+col) sits at (32, 16) and shares our E-S edge with its N-W edge;
+# one row south (+row) sits at (-32, 16) and shares our S-W edge with its E-N edge.
+NEIGHBOURS = {
+    (32, 16): ((E, N), (S, W)),
+    (-32, 16): ((W, N), (S, E)),
+}
+
+
+def seam_faults(west: Image.Image, east: Image.Image, offset: tuple[int, int]) -> tuple[int, int]:
+    """Gaps (unpainted pixels) and colour jumps along the edge two placed tiles share."""
+    dx, dy = offset
+    canvas = Image.new("RGBA", (160, 48), (0, 0, 0, 0))
+    canvas.alpha_composite(west, (32, 0))
+    canvas.alpha_composite(east, (32 + dx, dy))
+    sign = 1 if dx > 0 else -1
+    gaps, jumps = 0, 0
+    for step in range(2, 31):
+        x, y = 64 + sign * (32 - step), 16 + step / 2  # canvas point on the shared edge
+        if canvas.getpixel((int(x), int(y)))[3] < 255:
+            gaps += 1
+        inside_west = west.getpixel((int(x) - 32 - sign, int(y - 1)))
+        inside_east = east.getpixel((int(x) - 32 - dx + sign, int(y - dy + 1)))
+        if sum(abs(a - b) for a, b in zip(inside_west[:3], inside_east[:3])) > 120:
+            jumps += 1
+    return gaps, jumps
+
+
 @needs_rsvg
 @pytest.mark.scenario("Neighbouring transition tiles join without a seam")
 def test_neighbouring_tiles_join_without_a_seam(tmp_path: Path) -> None:
     sources = terrain_tiles.sources()
-    names = ["terrain-grass-beach-t3", "terrain-grass-beach-t7"]
-    svg_sprites.render_sources({name: sources[name] for name in names}, tmp_path, scales=(1,))
-    west = Image.open(tmp_path / f"{names[0]}.png").convert("RGBA")
-    east = Image.open(tmp_path / f"{names[1]}.png").convert("RGBA")
-    # The mask-7 tile is one column east (+col) of the mask-3 tile: offset (32, 16) on the lattice.
-    canvas = Image.new("RGBA", (96, 48), (0, 0, 0, 0))
-    canvas.alpha_composite(west, (0, 0))
-    canvas.alpha_composite(east, (32, 16))
-    # Shared edge runs from (64, 16) to (32, 32) in canvas coordinates.
-    gaps, jumps = 0, 0
-    for step in range(2, 31):
-        x, y = 64 - step, 16 + step / 2
-        if canvas.getpixel((x, int(y)))[3] < 255:
-            gaps += 1
-        inside_west = west.getpixel((x - 1, int(y) - 1))
-        inside_east = east.getpixel((x + 1 - 32, int(y) + 1 - 16))
-        if sum(abs(a - b) for a, b in zip(inside_west[:3], inside_east[:3])) > 120:
-            jumps += 1
-    assert gaps == 0
-    assert jumps <= 3  # only where the boundary itself crosses the edge
+    svg_sprites.render_sources(sources, tmp_path, scales=(1,))
+    tiles = {name: Image.open(tmp_path / f"{name}.png").convert("RGBA") for name in sources}
+    checked, faults = 0, []
+    for pair in ("grass-beach", "beach-water"):
+        for here in range(1, 15):
+            for there in range(1, 15):
+                for offset, corners in NEIGHBOURS.items():
+                    if any(bool(here & mine) != bool(there & theirs) for mine, theirs in corners):
+                        continue
+                    gaps, jumps = seam_faults(tiles[f"terrain-{pair}-t{here}"], tiles[f"terrain-{pair}-t{there}"], offset)
+                    checked += 1
+                    # Colour may change along an edge only where the boundary crosses it (its two corners differ).
+                    crossed = len({bool(here & mine) for mine, _ in corners}) == 2
+                    if gaps or jumps > (6 if crossed else 0):
+                        faults.append((pair, here, there, offset, gaps, jumps))
+    assert checked == 200
+    assert faults == []

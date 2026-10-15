@@ -4,24 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from art import atlas, finalize
 
 
-def test_routes_by_prefix() -> None:
-    assert atlas.atlas_name("building-house@2x.png") == "Buildings"
-    assert atlas.atlas_name("overlay-waiting-materials.png") == "Buildings"
-    assert atlas.atlas_name("terrain-grass-beach-t3.png") == "Terrain"
-    assert atlas.atlas_name("walker-se-0.png") == "Units"
-    assert atlas.atlas_name("ship-n-0.png") == "Units"
-    assert atlas.atlas_name("good-wood.png") == "Icons"
-    with pytest.raises(ValueError):
-        atlas.atlas_name("mystery.png")
-
-
-def test_finalize_writes_indexed_pngs_into_atlases(tmp_path: Path) -> None:
+def test_finalize_writes_indexed_pngs_into_the_kit_atlas(tmp_path: Path) -> None:
     raw, resources = tmp_path / "raw", tmp_path / "Resources"
     raw.mkdir()
     Image.new("RGBA", (128, 112), (120, 80, 50, 255)).save(raw / "building-house.png")
@@ -29,9 +17,9 @@ def test_finalize_writes_indexed_pngs_into_atlases(tmp_path: Path) -> None:
     Image.new("RGBA", (64, 32), (90, 140, 60, 255)).save(raw / "terrain-grass-beach-t3.png")
     written = finalize.finalize(raw, resources)
     assert sorted(p.relative_to(resources).as_posix() for p in written) == [
-        "Buildings.atlas/building-house.png",
-        "Buildings.atlas/building-house@2x.png",
-        "Terrain.atlas/terrain-grass-beach-t3.png",
+        "Kit.atlas/building-house.png",
+        "Kit.atlas/building-house@2x.png",
+        "Kit.atlas/terrain-grass-beach-t3.png",
     ]
     for path in written:
         assert Image.open(path).mode == "P"
