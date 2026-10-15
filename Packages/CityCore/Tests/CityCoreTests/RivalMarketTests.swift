@@ -10,7 +10,8 @@ import Testing
 private func portReadyWorld(houses: Int = 6) -> World {
     var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
     world.setRival(1) { $0.treasury = 500 }
-    world.setRivalStock(1, [.wood: 10, .planks: 8, .food: 20])
+    // Room left in the town center keeps the warehouse rule quiet.
+    world.setRivalStock(1, [.wood: 10, .planks: 8, .food: 16])
     for _ in 0 ..< houses {
         world.testAddBuilding(.house, owner: .rival(1))
     }

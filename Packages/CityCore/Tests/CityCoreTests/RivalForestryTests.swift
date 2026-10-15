@@ -23,7 +23,8 @@ private func rivalWithOneHut(houses: Int = 4) throws -> (world: World, hut: Tile
         world.terrainGrid[tile.y * world.mapWidth + tile.x] = .grass
     }
     world.setRival(1) { $0.ai.scriptIndex = 12 }
-    world.setRivalStock(1, [.wood: 20, .planks: 10, .food: 10])
+    // Room left in the town center keeps the warehouse rule quiet.
+    world.setRivalStock(1, [.wood: 16, .planks: 10, .food: 10])
     world.setRival(1) { $0.treasury = 5000 }
     // Foresters wait for a town of 4 houses (`rival-ai-viability` D3).
     for _ in 0 ..< houses {
