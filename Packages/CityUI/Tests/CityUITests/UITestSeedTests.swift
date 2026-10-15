@@ -115,3 +115,13 @@ func startGameFlagSkipsTheTitle() {
     started.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
     #expect(started.committedSession != nil)
 }
+
+@Test("A test or shot launch saves into a folder of its own, a regular launch into the player's")
+func uiTestLaunchesKeepTheirOwnSaves() throws {
+    #expect(UITestSeed.saveDirectory(fromArguments: ["Citybuilder"]) == nil)
+    #expect(UITestSeed.saveDirectory(fromArguments: ["Citybuilder", "-NSDocumentRevisionsDebugMode", "YES"]) == nil)
+    for flag in ["-uiTestSeedTown", "-uiTestStartGame", "-uiTestResetSaves", "-uiTestCamera"] {
+        let directory = try #require(UITestSeed.saveDirectory(fromArguments: ["Citybuilder", flag]))
+        #expect(directory.path.hasPrefix(FileManager.default.temporaryDirectory.path))
+    }
+}

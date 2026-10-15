@@ -63,6 +63,8 @@ Debug builds take launch flags that set up a scene, so a shot needs no clicks an
 4. `screencapture -x -o -l<windowid> shot.png` captures only that window, even behind others.
 5. Quit your instance (`kill <pid>`).
 
+Any `-uiTest…` flag also gives the launch a save folder of its own under the temporary directory (and, on Apple TV, an in-memory iCloud), so pause-menu and quit-to-title saves never touch the player's games or Continue slot.
+
 Never click, type or use accessibility actions in a Citybuilder window: another session, or the owner, may be playing a build with the same bundle id.
 
 ## Apple TV

@@ -87,6 +87,20 @@ public enum UITestSeed {
         return townWorld(showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments))
     }
 
+    /// Whether the app was launched for a test or a shot: any `-uiTest…` flag.
+    public static func isActive(fromArguments arguments: [String]) -> Bool {
+        arguments.contains { $0.hasPrefix("-uiTest") }
+    }
+
+    /// Where such a launch keeps its saves: a folder of its own under the temporary directory, so a
+    /// test or a shot never autosaves over the player's games or fills their Continue slot. Nil for a
+    /// regular launch, which `SaveStore(baseDirectory:)` reads as the player's folder.
+    public static func saveDirectory(fromArguments arguments: [String]) -> URL? {
+        guard isActive(fromArguments: arguments) else { return nil }
+        return FileManager.default.temporaryDirectory
+            .appendingPathComponent("citybuilder-ui-test-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
+    }
+
     /// `-uiTestStartGame`: skip the title and start a game at once, from the seed the other flags ask
     /// for (or a regular new game), so in-game shots need no clicks.
     public static func startsGame(fromArguments arguments: [String]) -> Bool {

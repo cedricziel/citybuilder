@@ -14,7 +14,7 @@ struct CitybuilderTVApp: App {
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
-        let saveStore = SaveStore()
+        let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
         self.saveStore = saveStore
         saveSync = Self.makeSaveSync(store: saveStore)
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
@@ -48,13 +48,22 @@ struct CitybuilderTVApp: App {
             }
     }
 
-    /// The walk-through UI tests launch with `-uiTestResetSaves` (Debug
-    /// only): an empty save folder, an empty pending-upload list and a
-    /// signed-out, in-memory iCloud, so saves from iCloud or from manual
-    /// runs cannot move the title's focus to Continue.
+    /// Debug launches with any `-uiTest…` flag (the walk-through UI tests pass `-uiTestResetSaves`)
+    /// get an empty save folder of their own, an empty pending-upload list and a signed-out,
+    /// in-memory iCloud: saves from iCloud or from manual runs cannot move the title's focus to
+    /// Continue, and nothing the test plays reaches the player's saves.
+    /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
+    private static var uiTestSaveDirectory: URL? {
+        #if DEBUG
+        UITestSeed.saveDirectory(fromArguments: ProcessInfo.processInfo.arguments)
+        #else
+        nil
+        #endif
+    }
+
     private static func makeSaveSync(store: SaveStore) -> TVSaveSync {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-uiTestResetSaves") {
+        if UITestSeed.isActive(fromArguments: ProcessInfo.processInfo.arguments) {
             let suite = "citybuilder.uiTests"
             try? FileManager.default.removeItem(at: store.baseDirectory)
             UserDefaults().removePersistentDomain(forName: suite)
