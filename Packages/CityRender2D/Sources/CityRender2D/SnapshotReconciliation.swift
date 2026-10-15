@@ -6,7 +6,9 @@ import Foundation
 /// scene layer just diffs sprite-id sets.
 public struct SpriteSpec: Hashable, Sendable {
     public enum Kind: Hashable, Sendable {
-        case terrain(TerrainType)
+        /// A terrain tile, with the corner-mask transition its neighbours call for (nil when its
+        /// corners agree). The renderer uses the transition sprite when the atlas has it.
+        case terrain(TerrainType, transition: TerrainTransition? = nil)
         /// One sprite per building, anchored at the building's anchor tile.
         /// The renderer is responsible for drawing the building large
         /// enough to cover its footprint.
@@ -70,7 +72,8 @@ public enum SnapshotReconciler {
             for tileX in xRange {
                 let coord = TileCoordinate(x: tileX, y: tileY)
                 guard let terrainHere = snapshot.terrain(at: coord) else { continue }
-                result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere)))
+                let transition = TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
+                result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition)))
             }
         }
         // Emit one sprite per building (at its anchor) when its anchor is

@@ -243,7 +243,6 @@ public final class IsoWorldScene: SKScene {
                 node.anchorPoint = CGPoint(x: 0.5, y: 0)
                 node.position = position(forCarrier: carrier)
                 node.zPosition = 50 // above terrain, below tall buildings
-                node.texture?.filteringMode = .nearest
                 node.run(
                     SKAction.repeatForever(SKAction.animate(with: frames, timePerFrame: 0.15)),
                     withKey: "walk"
@@ -307,7 +306,7 @@ public final class IsoWorldScene: SKScene {
         guard season != appliedSeason else { return }
         appliedSeason = season
         for (spec, node) in presentSprites {
-            guard case let .terrain(kind) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
+            guard case let .terrain(kind, _) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
             node.removeFromParent()
             presentSprites.removeValue(forKey: spec)
         }
