@@ -111,10 +111,10 @@ Every market command that moves at least one unit SHALL emit `marketTraded` with
 - **WHEN** the game is over and a buy command for wood is applied
 - **THEN** the balance and stock are unchanged and no `marketTraded` event is emitted
 
-### Requirement: Rivals stay off the market
+### Requirement: Player trades leave rivals alone
 
-Rivals SHALL NOT trade at the market, and market trades SHALL NOT change rival prices, offers or treasuries.
+The player's market trades SHALL NOT change any rival's treasury, island stock, prices, offers or market counts. Rivals trade at their own town centers under `rival-towns` / Rival market trades, and those trades SHALL NOT count against the player's limits.
 
 #### Scenario: Market trade leaves rivals alone
 - **WHEN** the player sells 20 wood at the market in an archipelago game
-- **THEN** every rival's treasury, island stock and offers are unchanged
+- **THEN** every rival's treasury, island stock, offers and market counts are unchanged
