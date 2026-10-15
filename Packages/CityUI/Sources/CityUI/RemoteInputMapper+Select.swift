@@ -71,6 +71,10 @@ extension RemoteInputMapper {
             focus = .hud
             return [.focusInspector]
         }
+        if session.selectedTool == .place(.road), session.routeAuthoring == nil {
+            toggleRoadPainting(session: session)
+            return []
+        }
         session.handleTap(at: reticle)
         return []
     }
