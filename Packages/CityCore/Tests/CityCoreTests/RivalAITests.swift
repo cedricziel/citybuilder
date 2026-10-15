@@ -85,6 +85,117 @@ func scenarioFoodThresholdOverridesTheScript() {
     #expect(world.rival(1)?.ai.scriptIndex == 12)
 }
 
+@Test("scenario: a farm for every house")
+func scenarioAFarmForEveryHouse() {
+    var world = normalWorld()
+    world.setRival(1) { $0.ai.scriptIndex = 12 }
+    world.setRivalStock(1, [.wood: 20, .planks: 10, .food: 2])
+    for _ in 0 ..< 5 {
+        world.testAddHouse(owner: .rival(1), residents: 4)
+    }
+    for _ in 0 ..< 4 {
+        world.testAddBuilding(.farm, owner: .rival(1))
+    }
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(placedKind(commands.last) == .farm)
+}
+
+/// Road tiles the rival's next step would lay, read from a probe world
+/// with money to spare.
+private func roadsOfNextStep(_ world: World) -> Int {
+    var probe = world
+    probe.setRival(1) { $0.treasury = 100_000 }
+    return probe.takeTurn(1).count { if case .rivalPlace(_, .road, _) = $0 { true } else { false } }
+}
+
+@Test("scenario: reserve keeps money for the first houses")
+func scenarioReserveKeepsMoneyForTheFirstHouses() {
+    var world = normalWorld()
+    world.setRivalStock(1, [.wood: 10, .planks: 5, .food: 10])
+    world.testAddHouse(owner: .rival(1), residents: 4)
+    let roads = Int64(roadsOfNextStep(world))
+    // Enough for the hut, its roads and the $50 margin, short of the $150 reserve.
+    world.setRival(1) { $0.treasury = 80 + roads * 5 + 50 + 100 }
+    #expect(world.takeTurn(1).isEmpty)
+    #expect(world.rival(1)?.ai.waitTurns == 1)
+}
+
+@Test("scenario: houses and the first sawmill ignore the reserve")
+func scenarioHousesAndTheFirstSawmillIgnoreTheReserve() {
+    var world = normalWorld()
+    world.setRival(1) { $0.ai.scriptIndex = 1 }
+    world.setRivalStock(1, [.wood: 10, .planks: 3, .food: 10])
+    let roads = Int64(roadsOfNextStep(world))
+    world.setRival(1) { $0.treasury = 120 + roads * 5 + 50 }
+    var needed = world
+    #expect(placedKind(needed.takeTurn(1).last) == .sawmill)
+    // With planks for a house still in stock the sawmill can wait.
+    world.setRivalStock(1, [.wood: 10, .planks: 5, .food: 10])
+    #expect(world.takeTurn(1).isEmpty)
+}
+
+@Test("scenario: sawmill before planks run out")
+func scenarioSawmillBeforePlanksRunOut() {
+    var world = normalWorld()
+    world.setRival(1) { $0.ai.scriptIndex = 3 }
+    world.setRivalStock(1, [.wood: 10, .planks: 3, .food: 10])
+    world.testAddBuilding(.farm, owner: .rival(1))
+    var noHut = world
+    #expect(placedKind(noHut.takeTurn(1).last) != .sawmill, "a town without a hut has no wood to saw")
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(placedKind(commands.last) == .sawmill)
+    #expect(world.rival(1)?.ai.scriptIndex == 3)
+}
+
+@Test("scenario: a rival's first sawmill costs no materials")
+func scenarioARivalsFirstSawmillCostsNoMaterials() {
+    var world = normalWorld()
+    #expect(world.materialCost(of: .sawmill, for: .rival(1)).isEmpty)
+    #expect(!world.materialCost(of: .sawmill, for: .player).isEmpty)
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    #expect(world.materialCost(of: .sawmill, for: .rival(1)) == BuildingCatalog.spec(for: .sawmill).materialCost)
+}
+
+@Test("a rival's first sawmill is placed without waiting for planks")
+func rivalFirstSawmillPlacedWithoutPlanks() throws {
+    var world = normalWorld()
+    world.setRivalStock(1, [:])
+    world.setRival(1) { $0.ai.scriptIndex = 1 }
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(placedKind(commands.last) == .sawmill)
+    world.tick()
+    let anchor = try #require(placedAnchor(commands.last))
+    let sawmill = try #require(world.occupiedTiles[anchor].flatMap { world.buildings[$0] })
+    #expect(sawmill.kind == .sawmill)
+    #expect(sawmill.constructionState != .waitingForMaterials)
+}
+
+/// The Easy death spiral measured for `rival-ai-viability`: the opening
+/// left the rival $10 at the end of year 1, too little for a house, and
+/// sawmill upkeep then ran it into debt for good.
+@Test("easy rival does not spend itself into debt before its first houses")
+func easyRivalDoesNotSpiralIntoDebt() throws {
+    var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .easy)
+    let ticksPerYear = Int(CalendarState.ticksPerYear)
+    for tick in 1 ... 2 * ticksPerYear {
+        // A passive player must not reach game over, which stops all tax and upkeep.
+        if tick.isMultiple(of: 600) { world.economy.balance = 1000 }
+        world.tick()
+        if tick == ticksPerYear {
+            let rival = try #require(world.rival(1))
+            #expect(world.population(of: rival.owner) > 0, "no residents after year 1")
+        }
+    }
+    let rival = try #require(world.rival(1))
+    #expect(world.population(of: rival.owner) > 0)
+    #expect(rival.treasury > 0)
+}
+
 @Test("a threshold rule the rival can't carry out gives way to the next")
 func unsuppliedThresholdGivesWayToTheNext() {
     var world = normalWorld()
@@ -168,6 +279,18 @@ func rivalTakesNoStepAtTheBuildingCap() {
 }
 
 // MARK: - Rival town plan
+
+@Test("a town plan with no room past its home block has no slot")
+func townPlanWithoutRoomHasNoSlot() {
+    // A 6×6 map: the town center fills its home block and every other
+    // block's ring runs off the map, so nothing can be opened.
+    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    let center = TileCoordinate(x: 1, y: 1)
+    world.testPlace(.townCenter, at: center, owner: .player)
+    var plan = RivalTownPlan(world: world, owner: .player, center: center)
+    #expect(plan.slot(for: .house) == nil)
+    #expect(plan.slot(for: .warehouse) == nil)
+}
 
 @Test("scenario: first building opens the home block")
 func scenarioFirstBuildingOpensTheHomeBlock() throws {

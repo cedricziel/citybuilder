@@ -55,8 +55,13 @@ extension World {
     /// The materials `kind` costs `owner`. Wood producers cost no one any
     /// materials (`add-forestry` D4). A rival's port costs none either: it
     /// has no road, so no carrier could bring them, and a rival's stock
-    /// rarely holds them all at once (`add-rival-trade` D1).
+    /// rarely holds them all at once (`add-rival-trade` D1). Nor does a
+    /// rival's first sawmill: residents eat planks, and a town whose last
+    /// plank went before it had a sawmill could never make another
+    /// (`rival-ai-viability` D2).
     func materialCost(of kind: BuildingKind, for owner: Owner) -> [Good: Int] {
-        owner != .player && kind == .port ? [:] : BuildingCatalog.spec(for: kind).materialCost
+        guard owner != .player else { return BuildingCatalog.spec(for: kind).materialCost }
+        let firstSawmill = kind == .sawmill && !buildings.values.contains { $0.owner == owner && $0.kind == .sawmill }
+        return kind == .port || firstSawmill ? [:] : BuildingCatalog.spec(for: kind).materialCost
     }
 }
