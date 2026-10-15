@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32" shape-rendering="crispEdges">
+<defs>
+  <pattern id="w" width="32" height="16" patternUnits="userSpaceOnUse">
+    <rect width="32" height="16" fill="#2F6F86"/>
+    <path d="M3,4 h6 M19,12 h5" stroke="#5E9AA6" stroke-width="1"/>
+  </pattern>
+</defs>
+<path d="M32,0 L64,16 L32,32 L0,16Z" fill="url(#w)"/>
+</svg>

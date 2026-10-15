@@ -1,0 +1,194 @@
+// isokit: deterministic procedural textures and PBR finishes.
+import AppKit
+import SceneKit
+
+struct Rng {
+    var state: UInt64
+    mutating func next() -> CGFloat {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return CGFloat(state >> 33) / CGFloat(UInt64(1) << 31)
+    }
+
+    /// Uniform in [-amount/2, amount/2].
+    mutating func jitter(_ amount: CGFloat) -> CGFloat {
+        (next() - 0.5) * amount
+    }
+}
+
+struct RGB {
+    let red: CGFloat, green: CGFloat, blue: CGFloat
+    init(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) {
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
+
+    func shifted(_ amount: CGFloat) -> RGB {
+        RGB(red + amount, green + amount, blue + amount * 0.8)
+    }
+}
+
+enum Tex {
+    static let size = 128
+
+    static func bitmap(seed: UInt64, _ draw: (CGContext, inout Rng) -> Void) -> CGImage {
+        let ctx = CGContext(
+            data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )
+        guard let ctx else { fatalError("CGContext") }
+        var rng = Rng(state: seed)
+        draw(ctx, &rng)
+        guard let image = ctx.makeImage() else { fatalError("makeImage") }
+        return image
+    }
+
+    static func fill(_ ctx: CGContext, _ colour: RGB, _ rect: CGRect) {
+        ctx.setFillColor(red: colour.red, green: colour.green, blue: colour.blue, alpha: 1)
+        ctx.fill(rect)
+    }
+
+    static func speckled(_ base: RGB, amount: CGFloat, seed: UInt64) -> CGImage {
+        bitmap(seed: seed) { ctx, rng in
+            fill(ctx, base, CGRect(x: 0, y: 0, width: size, height: size))
+            for _ in 0 ..< 1400 {
+                let rect = CGRect(x: rng.next() * 128, y: rng.next() * 128, width: 2, height: 2)
+                fill(ctx, base.shifted(rng.jitter(amount)), rect)
+            }
+        }
+    }
+
+    /// Vertical boards with dark joints and grain.
+    static func planks(_ base: RGB, seed: UInt64) -> CGImage {
+        bitmap(seed: seed) { ctx, rng in
+            for board in 0 ..< 8 {
+                let colour = base.shifted(rng.jitter(0.12))
+                fill(ctx, colour, CGRect(x: board * 16, y: 0, width: 16, height: size))
+                for _ in 0 ..< 6 {
+                    let rect = CGRect(
+                        x: CGFloat(board * 16) + 2 + rng.next() * 12,
+                        y: rng.next() * 100,
+                        width: 1,
+                        height: 10 + rng.next() * 20
+                    )
+                    fill(ctx, colour.shifted(-0.06), rect)
+                }
+                fill(ctx, base.shifted(-0.28), CGRect(x: board * 16, y: 0, width: 2, height: size))
+            }
+        }
+    }
+
+    /// Courses of blocks (ashlar) or staggered roof tiles; rows run along texture x.
+    static func courses(_ base: RGB, rowHeight: Int, blockWidth: Int, joint: RGB, seed: UInt64) -> CGImage {
+        bitmap(seed: seed) { ctx, rng in
+            for row in 0 ..< size / rowHeight {
+                let offset = row % 2 == 0 ? 0 : blockWidth / 2
+                for col in -1 ... size / blockWidth {
+                    let rect = CGRect(x: col * blockWidth + offset, y: row * rowHeight, width: blockWidth - 1, height: rowHeight)
+                    fill(ctx, base.shifted(rng.jitter(0.12)), rect)
+                }
+                fill(ctx, joint, CGRect(x: 0, y: row * rowHeight, width: size, height: 2))
+            }
+        }
+    }
+
+    /// Straw: streaks down the slope (texture y) and darker course bands.
+    static func thatch(seed: UInt64) -> CGImage {
+        let straw = RGB(0.66, 0.52, 0.28)
+        return bitmap(seed: seed) { ctx, rng in
+            fill(ctx, straw, CGRect(x: 0, y: 0, width: size, height: size))
+            for _ in 0 ..< 900 {
+                let rect = CGRect(x: rng.next() * 128, y: rng.next() * 128, width: 1, height: 5 + rng.next() * 9)
+                fill(ctx, straw.shifted(rng.jitter(0.3)), rect)
+            }
+            for band in 0 ..< 4 {
+                fill(ctx, straw.shifted(-0.2), CGRect(x: 0, y: band * 32, width: size, height: 3))
+            }
+        }
+    }
+
+    static func cobble(seed: UInt64) -> CGImage {
+        let stone = RGB(0.62, 0.58, 0.52)
+        return bitmap(seed: seed) { ctx, rng in
+            fill(ctx, stone.shifted(-0.25), CGRect(x: 0, y: 0, width: size, height: size))
+            for row in 0 ..< 11 {
+                for col in 0 ..< 11 {
+                    let rect = CGRect(
+                        x: CGFloat(col) * 11.6 + rng.next() * 2,
+                        y: CGFloat(row) * 11.6 + rng.next() * 2,
+                        width: 9.5,
+                        height: 9.5
+                    )
+                    let colour = stone.shifted(rng.jitter(0.16))
+                    ctx.setFillColor(red: colour.red, green: colour.green, blue: colour.blue, alpha: 1)
+                    ctx.addPath(CGPath(roundedRect: rect, cornerWidth: 3, cornerHeight: 3, transform: nil))
+                    ctx.fillPath()
+                }
+            }
+        }
+    }
+
+    static let plaster = speckled(RGB(0.90, 0.80, 0.64), amount: 0.08, seed: 1)
+    static let plasterPale = speckled(RGB(0.95, 0.91, 0.82), amount: 0.06, seed: 11)
+    static let timber = speckled(RGB(0.28, 0.17, 0.10), amount: 0.06, seed: 2)
+    static let rubble = speckled(RGB(0.56, 0.53, 0.49), amount: 0.18, seed: 3)
+    static let ashlar = courses(RGB(0.66, 0.62, 0.56), rowHeight: 16, blockWidth: 32, joint: RGB(0.45, 0.42, 0.38), seed: 5)
+    static let planks = planks(RGB(0.52, 0.36, 0.22), seed: 4)
+    static let thatchStraw = thatch(seed: 6)
+    static let tile = courses(RGB(0.62, 0.24, 0.14), rowHeight: 16, blockWidth: 16, joint: RGB(0.28, 0.10, 0.06), seed: 7)
+    static let slate = courses(RGB(0.34, 0.35, 0.39), rowHeight: 12, blockWidth: 14, joint: RGB(0.18, 0.18, 0.21), seed: 8)
+    static let cobbles = cobble(seed: 9)
+    static let wood = speckled(RGB(0.55, 0.38, 0.22), amount: 0.1, seed: 10)
+}
+
+/// A finish = texture + PBR response. `repeatU/V` = texture repeats across the face.
+enum Finish {
+    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, tile, slate, cobbles, wood
+    case paint(NSColor), glass, litGlass
+
+    var roughness: CGFloat {
+        switch self {
+        case .glass: 0.2
+        case .tile, .slate: 0.65
+        case .timber, .wood, .planks: 0.8
+        default: 0.92
+        }
+    }
+
+    var contents: Any {
+        switch self {
+        case .plaster: Tex.plaster
+        case .plasterPale: Tex.plasterPale
+        case .timber: Tex.timber
+        case .rubble: Tex.rubble
+        case .ashlar: Tex.ashlar
+        case .planks: Tex.planks
+        case .thatch: Tex.thatchStraw
+        case .tile: Tex.tile
+        case .slate: Tex.slate
+        case .cobbles: Tex.cobbles
+        case .wood: Tex.wood
+        case let .paint(colour): colour
+        case .glass: NSColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1)
+        case .litGlass: NSColor(red: 0.95, green: 0.62, blue: 0.25, alpha: 1)
+        }
+    }
+
+    /// Roofs on an SCNBox slab: box faces map u down the slope, so rotate 90 deg to run courses along the ridge.
+    func material(repeatU: CGFloat = 1, repeatV: CGFloat = 1, rotated: Bool = false) -> SCNMaterial {
+        let material = SCNMaterial()
+        material.lightingModel = .physicallyBased
+        material.diffuse.contents = contents
+        material.diffuse.wrapS = .repeat
+        material.diffuse.wrapT = .repeat
+        let scale = SCNMatrix4MakeScale(max(repeatU, 0.25), max(repeatV, 0.25), 1)
+        material.diffuse.contentsTransform = rotated ? SCNMatrix4Mult(SCNMatrix4MakeRotation(.pi / 2, 0, 0, 1), scale) : scale
+        material.roughness.contents = roughness
+        material.metalness.contents = 0.0
+        if case .litGlass = self {
+            material.emission.contents = NSColor(red: 1.0, green: 0.62, blue: 0.22, alpha: 1)
+        }
+        return material
+    }
+}

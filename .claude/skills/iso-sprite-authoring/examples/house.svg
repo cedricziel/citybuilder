@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="112" viewBox="-64 -48 128 112">
+<!-- 2x2 house, painterly-warm direction. Origin = footprint top corner; footprint bottom corner (0,64) = sprite bottom-center = SpriteKit anchor (0.5,0). Light from upper-left. -->
+<defs>
+  <linearGradient id="roofR" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#D9663E"/><stop offset="1" stop-color="#9E3A24"/></linearGradient>
+  <linearGradient id="wallL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCE2B4"/><stop offset="1" stop-color="#E2B887"/></linearGradient>
+  <linearGradient id="wallR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B98E6C"/><stop offset="1" stop-color="#8A6650"/></linearGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
+</defs>
+<path d="M0,10 L40,14 L62,26 L62,38 L36,60 L0,58Z" fill="#2A1A0E" opacity="0.38" filter="url(#soft)"/>
+<path d="M-48,32 L0,56 L0,26 L-48,2Z" fill="url(#wallL)"/>
+<path d="M-48,17 L0,41 M-36,8 L-36,38 M-24,14 L-24,44 M-12,20 L-12,50 M-48,2 L0,26" stroke="#5A3420" stroke-width="2" fill="none"/>
+<path d="M-38,27 L-31,30.5 L-31,21 L-38,17.5Z" fill="#3A2416"/>
+<path d="M-11,40.5 L-5,43.5 L-5,34 L-11,31Z" fill="#FFB24E"/>
+<path d="M-23,44 L-17,47 L-17,32 L-23,29Z" fill="#4A2A18"/>
+<path d="M0,56 L48,32 L48,2 L0,26Z" fill="url(#wallR)"/>
+<path d="M0,41 L48,17 M16,48 L16,18 M32,40 L32,10" stroke="#43261A" stroke-width="2" fill="none"/>
+<path d="M5,41 L12,37.5 L12,28 L5,31.5Z" fill="#FFB24E"/>
+<path d="M36,28 L42,25 L42,16 L36,19Z" fill="#2E1E14"/>
+<path d="M0,26 L48,2 L24,-6Z" fill="#9E7558"/>
+<path d="M-24,-30 L24,-6 L48,2 L0,-22Z" fill="#7C2E1C"/>
+<path d="M10,-15 L16,-12 L16,-28 L10,-31Z" fill="#9A8170"/>
+<path d="M16,-12 L19,-13.5 L19,-29.5 L16,-28Z" fill="#6A5446"/>
+<path d="M-52,5 L0,30 L24,-6 L-24,-30Z" fill="url(#roofR)"/>
+<path d="M-44,-5 L7,20 M-36,-15 L14,9" stroke="#7E2C18" stroke-width="1.5" opacity="0.8"/>
+<path d="M-24,-30 L24,-6" stroke="#FFC08A" stroke-width="2" stroke-linecap="round"/>
+<path d="M-52,5 L0,30" stroke="#5A1C10" stroke-width="1.5"/>
+</svg>
