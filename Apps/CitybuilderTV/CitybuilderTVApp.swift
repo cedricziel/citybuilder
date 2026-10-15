@@ -67,13 +67,25 @@ struct CitybuilderTVApp: App {
         return TVSaveSync(store: store, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
     }
 
+    /// With `-uiTestSeedPort` (Debug only) a new game starts from
+    /// `UITestSeed.portWorld()`, so the walk-throughs can reach Routes and
+    /// the manifest editor.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedPort") {
+            return UITestSeed.portWorld()
+        }
+        #endif
+        return world
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
                 saveStore: SaveStoreFacadeAdapter(store: saveStore),
                 sessionFactory: { [audio] world in
                     GameSession(
-                        world: world,
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },
