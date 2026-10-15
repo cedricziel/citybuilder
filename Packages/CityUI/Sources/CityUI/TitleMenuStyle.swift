@@ -40,13 +40,13 @@ private struct MenuEntranceModifier: ViewModifier {
 struct TitleMenuButtonStyle: ButtonStyle {
     var prominent = false
 
-    static func scale(pressed: Bool, hovered: Bool, reduceMotion: Bool) -> CGFloat {
+    nonisolated static func scale(pressed: Bool, hovered: Bool, reduceMotion: Bool) -> CGFloat {
         guard !reduceMotion else { return 1 }
         if pressed { return 0.96 }
         return hovered ? 1.03 : 1
     }
 
-    static func brightness(pressed: Bool, hovered: Bool) -> Double {
+    nonisolated static func brightness(pressed: Bool, hovered: Bool) -> Double {
         if pressed { return -0.12 }
         return hovered ? 0.06 : 0
     }
