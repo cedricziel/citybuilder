@@ -54,17 +54,11 @@ struct CitybuilderiOSApp: App {
     /// default island with finished houses around the town center, for before/after art screenshots;
     /// `-uiTestSeason winter` starts it in that season. `-uiTestSeedShore` starts from
     /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
+    /// `-uiTestSeedLived` starts from `UITestSeed.livedTownWorld()`, an inhabited town at work.
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-uiTestSeedShore") {
-            return UITestSeed.shoreWorld()
-        }
-        if arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld(
-                showcase: UITestSeed.showcase(fromArguments: arguments),
-                season: UITestSeed.season(fromArguments: arguments)
-            )
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
         }
         #endif
         return world

@@ -55,6 +55,18 @@ struct CitybuilderMacApp: App {
             }
     }
 
+    /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
+    /// `-uiTestSeedLived`.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
+        }
+        #endif
+        return world
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
@@ -64,7 +76,7 @@ struct CitybuilderMacApp: App {
                 ),
                 sessionFactory: { [audio] world in
                     GameSession(
-                        world: world,
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },
