@@ -15,3 +15,13 @@ func portSeedHasAPlayerPortUnderTheCamera() throws {
     #expect(world.occupiedTiles[world.camera.centerTile()] == port.id)
     #expect(GameSession(world: world).showsRoutesButton)
 }
+
+@Test("The town seed has finished houses beside the town center under the default camera")
+@MainActor
+func townSeedHasFinishedHousesUnderTheDefaultCamera() {
+    let world = UITestSeed.townWorld()
+    let houses = world.buildings.values.filter { $0.kind == .house && $0.owner == .player }
+    #expect(houses.count == 4)
+    #expect(houses.allSatisfy { $0.state == .operational })
+    #expect(world.camera == World.newGame(layout: .singleIsland, seed: 0).camera)
+}

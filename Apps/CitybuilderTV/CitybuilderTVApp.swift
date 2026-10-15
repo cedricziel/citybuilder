@@ -75,6 +75,9 @@ struct CitybuilderTVApp: App {
         if ProcessInfo.processInfo.arguments.contains("-uiTestSeedPort") {
             return UITestSeed.portWorld()
         }
+        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedTown") {
+            return UITestSeed.townWorld()
+        }
         #endif
         return world
     }

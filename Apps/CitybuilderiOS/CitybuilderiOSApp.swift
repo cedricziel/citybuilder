@@ -50,6 +50,17 @@ struct CitybuilderiOSApp: App {
             }
     }
 
+    /// With `-uiTestSeedTown` (Debug only) a new game starts from `UITestSeed.townWorld()`: the
+    /// default island with finished houses around the town center, for before/after art screenshots.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedTown") {
+            return UITestSeed.townWorld()
+        }
+        #endif
+        return world
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
@@ -59,7 +70,7 @@ struct CitybuilderiOSApp: App {
                 ),
                 sessionFactory: { [audio] world in
                     GameSession(
-                        world: world,
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },
