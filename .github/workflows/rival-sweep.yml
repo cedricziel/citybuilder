@@ -1,9 +1,11 @@
 name: rival-sweep
 
-# The full rival viability sweep (rival-ai-viability design D7): seeds
-# 0–9 at every difficulty over 36,000 ticks, with the year-5 floors.
-# Too slow for every PR, so it runs weekly and on demand. It is not a
-# required check and not part of `ci-ok`.
+# The long balance sweeps, too slow for every PR, so they run weekly and
+# on demand. They are not a required check and not part of `ci-ok`.
+# - Rival viability (rival-ai-viability design D7): seeds 0–9 at every
+#   difficulty over 36,000 ticks, with the year-5 floors.
+# - Solvency (hard-bankruptcy-grace design D2): a market-trading scripted
+#   town on Normal, seeds 0–9 on both layouts over 36,000 ticks.
 on:
   workflow_dispatch:
   schedule:
@@ -39,9 +41,22 @@ jobs:
             --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log
           grep '^RIVAL_SWEEP' rival-sweep.log > rival-sweep.txt
 
-      - name: Upload the sweep's per-rival lines
+      - name: Run the solvency sweep (release build)
+        if: always()
+        env:
+          RIVAL_SWEEP: "1"
+        shell: bash
+        run: |
+          set -o pipefail
+          swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
+            --filter scenarioMarketTradingTownsStaySolventAcrossSeeds 2>&1 | tee solvency-sweep.log
+          grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
+
+      - name: Upload the sweeps' per-game lines
         if: always()
         uses: actions/upload-artifact@v7.0.2
         with:
           name: rival-sweep
-          path: rival-sweep.txt
+          path: |
+            rival-sweep.txt
+            solvency-sweep.txt
