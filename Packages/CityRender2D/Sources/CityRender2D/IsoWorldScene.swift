@@ -42,6 +42,8 @@ public final class IsoWorldScene: SKScene {
     /// Whether a macro field is building off the main thread, and the latest request waiting for it.
     var groundMacroBuilding = false
     var groundMacroPending: GroundMacroInputs?
+    /// What the macro field on screen was built from.
+    var groundMacroShown: GroundMacroInputs?
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {

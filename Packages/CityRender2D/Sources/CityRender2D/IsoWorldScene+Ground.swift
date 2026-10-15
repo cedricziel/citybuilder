@@ -52,35 +52,37 @@ extension IsoWorldScene {
     public static let groundMacroNodeName = "ground-macro"
 
     /// Multiplies the macro field over the ground tiles (z 0), under objects and buildings (z >= 10).
-    /// The first field is built at once; later ones off the main thread, one at a time, so a harvested
-    /// forest tile or a new house never stalls a frame. Requests that arrive meanwhile collapse into
-    /// the latest one, built when the current build is shown.
+    /// Fields build off the main thread, one at a time and at most every quarter second, so neither
+    /// the title backdrop nor a harvested forest tile stalls a frame; the ground shows unmultiplied
+    /// until the first one lands. Requests that arrive meanwhile collapse into the latest.
     func reconcileGround(with snapshot: WorldSnapshot) {
         guard let inputs = groundMacroCache.inputs(for: snapshot) else { return }
-        guard childNode(withName: Self.groundMacroNodeName) != nil else {
-            show(inputs.build())
-            return
-        }
         groundMacroPending = inputs
         buildPendingGroundMacro()
     }
+
+    /// The gap between the end of one build and the start of the next.
+    nonisolated static let groundMacroRebuildInterval: Duration = .milliseconds(250)
 
     private func buildPendingGroundMacro() {
         guard !groundMacroBuilding, let inputs = groundMacroPending else { return }
         groundMacroPending = nil
         groundMacroBuilding = true
-        Task.detached(priority: .utility) {
+        Task.detached(priority: .utility) { [weak self] in
             let field = inputs.build()
-            await MainActor.run { [weak self] in
-                guard let self else { return }
-                groundMacroBuilding = false
-                show(field)
-                buildPendingGroundMacro()
-            }
+            await self?.show(field, from: inputs)
+            try? await Task.sleep(for: Self.groundMacroRebuildInterval)
+            await self?.finishGroundMacroBuild()
         }
     }
 
-    private func show(_ field: GroundMacroField) {
+    private func finishGroundMacroBuild() {
+        groundMacroBuilding = false
+        buildPendingGroundMacro()
+    }
+
+    private func show(_ field: GroundMacroField, from inputs: GroundMacroInputs) {
+        groundMacroShown = inputs
         let node = childNode(withName: Self.groundMacroNodeName) as? SKSpriteNode ?? {
             let node = SKSpriteNode()
             node.name = Self.groundMacroNodeName

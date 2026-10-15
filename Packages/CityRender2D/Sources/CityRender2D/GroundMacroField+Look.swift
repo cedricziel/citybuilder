@@ -133,7 +133,7 @@ extension GroundMacroField {
                 fallow = SIMD3(1, 1, 1)
                 mottle = 0.03
                 floor = SIMD3(0.92, 0.93, 0.96)
-                worn = SIMD3(0.95, 0.93, 0.92)
+                worn = .one
             }
         }
 
@@ -151,7 +151,9 @@ extension GroundMacroField {
             colour *= mix(.one, rock, min(1, share[TerrainShares.mountain] * 1.3))
             colour *= mix(.one, worn, share[TerrainShares.worn])
             colour *= mix(.one, wetSand, min(1, share[TerrainShares.beach] * share[TerrainShares.water] * 4))
-            colour *= mix(.one, mix(shallow, deep, share[TerrainShares.depth]), share[TerrainShares.water])
+            // Only where water outweighs sand, or the waterside half of every beach turns teal.
+            let sea = simd_clamp((share[TerrainShares.water] - share[TerrainShares.beach]) * 1.5, 0, 1)
+            colour *= mix(.one, mix(shallow, deep, share[TerrainShares.depth]), sea)
             return colour
         }
 

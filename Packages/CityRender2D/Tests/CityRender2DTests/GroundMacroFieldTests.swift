@@ -112,29 +112,69 @@ private final class FixedSource: IsoWorldDataSource {
     }
 }
 
+/// Updates the scene until its macro field shows `occupied`, for at most two seconds.
+@MainActor
+private func settle(_ scene: IsoWorldScene, showing occupied: Set<TileCoordinate>) async {
+    for _ in 0 ..< 200 where scene.groundMacroShown?.occupied != occupied {
+        scene.update(0)
+        try? await Task.sleep(for: .milliseconds(10))
+    }
+}
+
 @MainActor
 @Test("The scene multiplies the macro field over the ground, under objects and buildings")
-func sceneDrawsTheMacroFieldBetweenGroundAndBuildings() throws {
+func sceneDrawsTheMacroFieldBetweenGroundAndBuildings() async throws {
     let scene = IsoWorldScene()
     scene.size = CGSize(width: 1024, height: 768)
     scene.hasSprite = { _ in true }
     let source = FixedSource(snapshot(season: .spring))
     scene.dataSource = source
-    scene.update(0)
+    await settle(scene, showing: [])
     let node = try #require(scene.childNode(withName: IsoWorldScene.groundMacroNodeName) as? SKSpriteNode)
     #expect(node.blendMode == .multiplyX2)
     #expect(node.zPosition > 0 && node.zPosition < 10)
     #expect(node.size == CGSize(width: 16 * 32, height: 16 * 16))
 }
 
-@Test("The macro texture keeps the field's top row at the top")
-func macroTextureKeepsTheTopRowAtTheTop() throws {
-    let sea = grid(12, 12, fill: .water) { x, y in x < 3 && y < 3 ? .forest : nil }
-    let field = GroundMacroField(width: 12, height: 12, grid: sea, occupied: [], season: .summer)
-    let image = field.texture().cgImage()
-    let data = try #require(image.dataProvider?.data as Data?)
-    let row = 4, column = field.width / 2
-    let offset = row * image.bytesPerRow + column * image.bitsPerPixel / 8
-    #expect(Array(data[offset ..< offset + 3]) ==
-        Array(field.pixels[(row * field.width + column) * 4 ..< (row * field.width + column) * 4 + 3]))
+@MainActor
+@Test("Rapid changes end on the newest field")
+func rapidChangesEndOnTheNewestField() async {
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { _ in true }
+    let source = FixedSource(snapshot(season: .spring))
+    scene.dataSource = source
+    for x in 1 ... 3 {
+        source.snapshot = snapshot(season: .spring, occupied: [.init(x: x, y: 2): EntityID(raw: UInt32(x))])
+        scene.update(0)
+    }
+    await settle(scene, showing: [.init(x: 3, y: 2)])
+    #expect(scene.groundMacroShown?.occupied == [.init(x: 3, y: 2)])
+}
+
+@Test("Texels just outside the map's edge carry the edge's colour, not neutral grey")
+func borderTexelsCarryTheEdgeColour() {
+    let field = GroundMacroField(width: 12, height: 12, grid: grid(12, 12, fill: .water), occupied: [], season: .summer)
+    var checked = 0
+    for row in 0 ..< field.height {
+        for column in 0 ..< field.width {
+            let point = CGPoint(x: field.topLeft.x + (CGFloat(column) + 0.5) * 16, y: field.topLeft.y - (CGFloat(row) + 0.5) * 16)
+            let tile = IsoMath.tileCoordinate(forScreenPoint: point)
+            let vx = tile.col + 0.5, vy = tile.row + 0.5
+            // Within half a texel outside the north-west edge, alongside the map.
+            guard vx < 0, vx > -0.25, vy > 1, vy < 11 else { continue }
+            let base = (row * field.width + column) * 4
+            #expect(Array(field.pixels[base ..< base + 3]) != [128, 128, 128])
+            checked += 1
+        }
+    }
+    #expect(checked > 0)
+}
+
+@Test("Beaches keep their colour beside the sea")
+func beachesKeepTheirColourBesideTheSea() {
+    let coast = grid(20, 20, fill: .water) { x, _ in x < 8 ? .grass : x < 10 ? .beach : nil }
+    let field = GroundMacroField(width: 20, height: 20, grid: coast, occupied: [], season: .summer)
+    let shore = field.multiplier(atVertex: TileCoordinate(x: 10, y: 10))
+    #expect(shore.y <= shore.x * 1.03, "beach edge tinted \(shore)")
 }

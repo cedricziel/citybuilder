@@ -43,7 +43,7 @@ public struct GroundMacroField: Sendable {
         vertices[vertex.y * (mapWidth + 1) + vertex.x]
     }
 
-    /// Texels interpolate the vertex colours bilinearly; off the map they stay neutral.
+    /// Texels interpolate the vertex colours bilinearly; well off the map they stay neutral.
     private static func fill(
         _ vertices: [SIMD3<Float>], mapWidth: Int, mapHeight: Int, size: (width: Int, height: Int), topLeft: CGPoint
     ) -> [UInt8] {
@@ -55,16 +55,19 @@ public struct GroundMacroField: Sendable {
         let x0 = Float(topLeft.x) + step / 2, y0 = Float(topLeft.y) - step / 2
         let stride = mapWidth + 1
         let maxX = Float(mapWidth), maxY = Float(mapHeight)
+        // Texels up to one texel outside the map still cover the edge tiles' outer corners: clamp them.
+        let reach: Float = 0.75
         for row in 0 ..< height {
             let sceneY = y0 - Float(row) * step
             for column in 0 ..< width {
                 let sceneX = x0 + Float(column) * step
                 // `IsoMath.tileCoordinate(forScreenPoint:)`, plus half a tile from centre to vertex.
                 let across = sceneX / halfWidth, down = -sceneY / halfHeight
-                let vx = (across + down) / 2 + 0.5, vy = (down - across) / 2 + 0.5
+                let rawX = (across + down) / 2 + 0.5, rawY = (down - across) / 2 + 0.5
                 let base = (row * width + column) * 4
                 pixels[base + 3] = 255
-                guard vx >= 0, vy >= 0, vx <= maxX, vy <= maxY else { continue }
+                guard rawX >= -reach, rawY >= -reach, rawX <= maxX + reach, rawY <= maxY + reach else { continue }
+                let vx = simd_clamp(rawX, 0, maxX), vy = simd_clamp(rawY, 0, maxY)
                 let ix = min(Int(vx), mapWidth - 1), iy = min(Int(vy), mapHeight - 1)
                 let fx = vx - Float(ix), fy = vy - Float(iy)
                 let corner = iy * stride + ix
