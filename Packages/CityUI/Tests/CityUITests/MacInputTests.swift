@@ -26,26 +26,29 @@ private func mapPoint(under offset: CGSize, in session: GameSession) -> (x: Doub
     return (camera.centerX + (overW + overH) / camera.zoom, camera.centerY + (overH - overW) / camera.zoom)
 }
 
-/// The drawer and the inspector's details, as `CityRootView` holds them.
-private func escapeState(expanded: Bool = false) -> (Binding<BuildRailModel>, Binding<Bool>) {
-    var rail = BuildRailModel()
-    var isExpanded = expanded
-    return (Binding(get: { rail }, set: { rail = $0 }), Binding(get: { isExpanded }, set: { isExpanded = $0 }))
-}
-
 @MainActor
 @Suite("Esc steps back on the Mac")
 struct MacEscapeTests {
+    @Test("scenario: Esc closes the overview first")
+    func overviewFirst() {
+        let session = makeSession()
+        var state = StepBackState(overviewOpen: true)
+        state.rail.toggle(.town)
+        CityRootView.stepBack(session: session, state: &state)
+        #expect(!state.overviewOpen)
+        #expect(state.rail.openDrawer == .town)
+    }
+
     @Test("scenario: Esc closes the drawer before the tool")
     func drawerBeforeTool() {
         let session = makeSession()
-        let (rail, expanded) = escapeState()
+        var state = StepBackState()
         session.selectTool(.place(.road))
-        rail.wrappedValue.toggle(.town)
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
-        #expect(rail.wrappedValue.openDrawer == nil)
+        state.rail.toggle(.town)
+        CityRootView.stepBack(session: session, state: &state)
+        #expect(state.rail.openDrawer == nil)
         #expect(session.selectedTool == .place(.road))
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
+        CityRootView.stepBack(session: session, state: &state)
         #expect(session.selectedTool == .inspect)
         #expect(!session.isPaused)
     }
@@ -53,9 +56,9 @@ struct MacEscapeTests {
     @Test("scenario: Esc leaves route mode")
     func leavesRouteMode() {
         let session = makeSession()
-        let (rail, expanded) = escapeState()
+        var state = StepBackState()
         session.beginRouteAuthoring()
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
+        CityRootView.stepBack(session: session, state: &state)
         #expect(session.routeAuthoring == nil)
         #expect(!session.isPaused)
     }
@@ -63,12 +66,12 @@ struct MacEscapeTests {
     @Test("scenario: Esc folds the market before closing the inspector")
     func foldsDetailsThenClears() {
         let session = makeSession()
-        let (rail, expanded) = escapeState(expanded: true)
+        var state = StepBackState(inspectorExpanded: true)
         session.selectedTile = TileCoordinate(x: 3, y: 3)
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
-        #expect(!expanded.wrappedValue)
+        CityRootView.stepBack(session: session, state: &state)
+        #expect(!state.inspectorExpanded)
         #expect(session.selectedTile == TileCoordinate(x: 3, y: 3))
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
+        CityRootView.stepBack(session: session, state: &state)
         #expect(session.selectedTile == nil)
         #expect(!session.isPaused)
     }
@@ -76,8 +79,8 @@ struct MacEscapeTests {
     @Test("scenario: Esc on an idle map pauses")
     func idlePauses() {
         let session = makeSession()
-        let (rail, expanded) = escapeState()
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
+        var state = StepBackState()
+        CityRootView.stepBack(session: session, state: &state)
         #expect(session.isPaused)
     }
 
@@ -85,11 +88,11 @@ struct MacEscapeTests {
     func cancelsPendingPlacement() {
         let session = makeSession()
         session.confirmsBuildingPlacement = true
-        let (rail, expanded) = escapeState()
+        var state = StepBackState()
         session.selectTool(.place(.house))
         session.handleTap(at: TileCoordinate(x: 5, y: 5))
         #expect(session.pendingPlacement != nil)
-        CityRootView.stepBack(session: session, rail: rail, inspectorExpanded: expanded)
+        CityRootView.stepBack(session: session, state: &state)
         #expect(session.pendingPlacement == nil)
         #expect(session.selectedTool == .inspect)
     }
@@ -167,6 +170,12 @@ struct MacKeyboardCameraTests {
         #expect(MacMapInput.key("1") == nil)
     }
 
+    @Test("scenario: Command-equals zooms in")
+    func commandEqualsZoomsIn() {
+        #expect(MacMapInput.commandKey("=") == .zoom(GameSession.zoomStep))
+        #expect(MacMapInput.commandKey("q") == nil)
+    }
+
     @Test("scenario: Plus zooms in")
     func plusZoomsIn() {
         #expect(MacMapInput.key("+") == .zoom(GameSession.zoomStep))
@@ -176,6 +185,38 @@ struct MacKeyboardCameraTests {
 }
 
 #if os(macOS)
+import AppKit
+import SpriteKit
+
+@MainActor
+@Suite("Mac map routing")
+struct MacMapRoutingTests {
+    @Test("scenario: Scrolling over the HUD leaves the map alone")
+    func hudKeepsScroll() {
+        let host = NSView()
+        let map = SKView()
+        let mapChild = NSView()
+        let pill = NSView()
+        host.addSubview(map)
+        map.addSubview(mapChild)
+        host.addSubview(pill)
+        #expect(MacMapInput.map(containing: mapChild) === map)
+        #expect(MacMapInput.map(containing: map) === map)
+        #expect(MacMapInput.map(containing: pill) == nil)
+        #expect(MacMapInput.map(containing: nil) == nil)
+    }
+
+    @Test("scenario: Momentum keeps the gesture's target")
+    func momentumContinues() {
+        #expect(!MacMapInput.continuesGesture(phase: .began, momentumPhase: []))
+        #expect(!MacMapInput.continuesGesture(phase: .mayBegin, momentumPhase: []))
+        #expect(MacMapInput.continuesGesture(phase: .changed, momentumPhase: []))
+        #expect(MacMapInput.continuesGesture(phase: .ended, momentumPhase: []))
+        #expect(MacMapInput.continuesGesture(phase: [], momentumPhase: .changed))
+        #expect(!MacMapInput.continuesGesture(phase: [], momentumPhase: []))
+    }
+}
+
 @MainActor
 @Suite("Mac Game menu")
 struct MacGameMenuTests {
@@ -197,6 +238,14 @@ struct MacGameMenuTests {
         #expect(GameMenuCommand.togglePause.title(isPaused: true) == "Resume")
         GameMenuCommand.togglePause.perform(on: session)
         #expect(!session.isPaused)
+    }
+
+    @Test("scenario: Pause waits for the sheet")
+    func pauseWaitsForSheet() {
+        #expect(!GameMenuCommand.togglePause.isEnabled(hasSession: true, hasSheet: true))
+        #expect(GameMenuCommand.togglePause.isEnabled(hasSession: true, hasSheet: false))
+        #expect(GameMenuCommand.zoomIn.isEnabled(hasSession: true, hasSheet: true))
+        #expect(!GameMenuCommand.zoomIn.isEnabled(hasSession: false, hasSheet: false))
     }
 
     @Test("Choosing a speed from the menu resumes")
