@@ -341,7 +341,7 @@ def coast() -> list[float]:
     """A beach: waves swelling in and breaking every few seconds, gulls overhead."""
     rng = dsp.Rng(191)
     n = int(18.0 * SR)
-    out = dsp.scale(bed(18.0, 193, 300, 3, 1.0)[0], 1.0)
+    out = bed(18.0, 193, 300, 3, 1.0)[0]
     for at in (0.0, 6.2, 11.8):  # each wave: a rising wash, a break, a long hiss back
         m = int(6.5 * SR)
         wash = dsp.lowpass(dsp.white(m, rng), 1600, SR)
@@ -351,6 +351,7 @@ def coast() -> list[float]:
             t = i / m
             rise = t / 0.35 if t < 0.35 else dsp.exp(-(t - 0.35) * 5)
             wave.append(wash[i] * rise + hiss[i] * rise * rise * 0.35)
+        wave = dsp.fade_edges(wave, 0.0, 0.02, SR)
         dsp.mix_into(out, wave, int(at * SR), 0.9, wrap=True)
     for at in (2.5, 9.0, 14.5):  # gull: a high cry falling away, twice
         for k in range(2):
