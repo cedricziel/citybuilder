@@ -96,6 +96,7 @@ struct CitybuilderMacApp: App {
                 Button("Quit Citybuilder") { MacAppTerminator.terminate() }
                     .keyboardShortcut("q")
             }
+            GameCommands()
         }
         Settings {
             TabView {
@@ -150,7 +151,7 @@ private struct TitleSettingsSheet: View {
                     Task { await audio.syncSettingsToCloud() }
                     dismiss()
                 }
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
         }
