@@ -19,7 +19,7 @@ extension Recipes {
         Recipe(id: "building-bakery", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in bakery(kit) },
         Recipe(
             id: "building-windmill",
-            cell: SpriteCell(footprint: 2, heightPx: 192),
+            cell: SpriteCell(footprint: 2, heightPx: 128),
             operationalFrames: 4,
             moving: MovingPart(name: "sails", build: windmillSails)
         ) { kit, _ in windmill(kit) },
@@ -35,8 +35,8 @@ extension Recipes {
         },
         Recipe(id: "building-brewery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in brewery(kit) },
         Recipe(id: "building-winery", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in winery(kit) },
-        Recipe(id: "building-roastery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in roastery(kit) },
-        Recipe(id: "building-steam-engine", cell: SpriteCell(footprint: 2, heightPx: 176), operationalFrames: 2) { kit, _ in
+        Recipe(id: "building-roastery", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in roastery(kit) },
+        Recipe(id: "building-steam-engine", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in
             steamEngine(kit)
         },
         Recipe(id: "building-power-plant", cell: SpriteCell(footprint: 3, heightPx: 224), operationalFrames: 2) { kit, _ in

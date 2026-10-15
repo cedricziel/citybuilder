@@ -32,7 +32,7 @@ Construction stages are cut from the recipe at rising heights, with scaffold on 
 ## Recipe
 
 - Recipe: `building-windmill` (IsoKit)
-- Cell: 2×2 footprint, 192 pt tall
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 4
 - Moving part: sails, 4 frames, sweeps right
