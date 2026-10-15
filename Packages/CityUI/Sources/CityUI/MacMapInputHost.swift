@@ -102,7 +102,7 @@ struct MacMapInputHost: NSViewRepresentable {
                 onEscape?()
                 return true
             }
-            guard let action = MacMapInput.key(characters) else { return false }
+            guard let action = MacMapInput.key(characters, atZoom: session.world.camera.zoom) else { return false }
             session.apply(action)
             return true
         }

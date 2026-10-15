@@ -12,14 +12,16 @@ public enum MapCameraAction: Equatable, Sendable {
 /// it is testable without `NSEvent`. Spec: `platform-shells` / Mac
 /// trackpad and mouse camera, Mac keyboard camera.
 public enum MacMapInput {
-    /// One tile width, per pan key press.
-    static let panStep: CGFloat = 64
+    /// A tile's width in screen points at zoom 1.
+    static let tileWidth: Double = 64
     /// Zoom per mouse-wheel notch.
     static let wheelZoomStep = 1.1
 
-    /// A trackpad scroll pans as a drag would; its deltas already follow
-    /// the system scroll direction. A mouse wheel zooms, in when the wheel
-    /// turns away from the player whatever that setting.
+    /// Precise deltas (a trackpad, or a Magic Mouse's touch surface) pan as
+    /// a drag would; they already follow the system scroll direction.
+    /// AppKit names no scroll device, so precision is the policy: a
+    /// line-based wheel zooms, in when it turns away from the player
+    /// whatever that setting.
     public static func scroll(deltaX: CGFloat, deltaY: CGFloat, isPrecise: Bool, isInverted: Bool) -> MapCameraAction {
         if isPrecise {
             return .pan(CGSize(width: deltaX, height: deltaY))
@@ -34,10 +36,12 @@ public enum MacMapInput {
     }
 
     /// The arrow keys and WASD pan toward the side they name; `+`, `=`
-    /// and `-` zoom. `characters` is the key's `charactersIgnoringModifiers`;
+    /// and `-` zoom. A pan key moves one tile width of the map whatever
+    /// the zoom. `characters` is the key's `charactersIgnoringModifiers`;
     /// U+F700 to U+F703 are AppKit's arrow keys.
-    public static func key(_ characters: String) -> MapCameraAction? {
-        switch characters.lowercased() {
+    public static func key(_ characters: String, atZoom zoom: Double = 1) -> MapCameraAction? {
+        let panStep = CGFloat(tileWidth * zoom)
+        return switch characters.lowercased() {
         case "a", "\u{F702}": .pan(CGSize(width: panStep, height: 0))
         case "d", "\u{F703}": .pan(CGSize(width: -panStep, height: 0))
         case "w", "\u{F700}": .pan(CGSize(width: 0, height: panStep))

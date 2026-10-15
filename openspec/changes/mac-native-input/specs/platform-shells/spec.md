@@ -22,7 +22,7 @@ On the Mac, Esc SHALL close the topmost open thing, one per press. In a sheet, E
 
 ### Requirement: Mac trackpad and mouse camera
 
-On the Mac, over the map, a two-finger trackpad scroll SHALL pan the camera as a drag of the same distance would, including the scroll's momentum, in the direction the system scroll setting gives. A pinch SHALL zoom around the cursor, and a mouse scroll wheel SHALL zoom around the cursor, in when the wheel turns away from the player. Zooming around the cursor SHALL keep the point under the cursor in place and SHALL stay within the camera's zoom limits. A right-drag or a middle-drag SHALL pan the camera like a left-drag. Left-click and left-drag SHALL select, place and pan as before. iOS and Apple TV SHALL keep their gestures.
+On the Mac, over the map, a scroll with precise deltas (a trackpad, or a Magic Mouse's touch surface) SHALL pan the camera as a drag of the same distance would, including the scroll's momentum, in the direction the system scroll setting gives. A pinch SHALL zoom around the cursor, and a line-based mouse scroll wheel SHALL zoom around the cursor, in when the wheel turns away from the player. Zooming around the cursor SHALL keep the point under the cursor in place and SHALL stay within the camera's zoom limits. A right-drag or a middle-drag SHALL pan the camera like a left-drag. Left-click and left-drag SHALL select, place and pan as before. iOS and Apple TV SHALL keep their gestures.
 
 #### Scenario: Trackpad scroll pans
 - **WHEN** a trackpad scroll arrives with deltas (30, -12)
@@ -46,10 +46,10 @@ On the Mac, over the map, a two-finger trackpad scroll SHALL pan the camera as a
 
 ### Requirement: Mac keyboard camera
 
-On the Mac game window, with no sheet open and no text field focused, the arrow keys and W, A, S and D SHALL pan the camera one tile width per press, toward the side the key names, repeating while held. `+` and `=` SHALL zoom in and `-` SHALL zoom out by the camera's zoom step.
+On the Mac game window, with no sheet open and no text field focused, the arrow keys and W, A, S and D SHALL pan the camera one tile width of the map per press at any zoom, toward the side the key names, repeating while held. `+` and `=` SHALL zoom in and `-` SHALL zoom out by the camera's zoom step.
 
 #### Scenario: Left arrow pans left
-- **WHEN** the player presses the left arrow or A
+- **WHEN** the player presses the left arrow or A at zoom 1
 - **THEN** the camera pans as a drag of 64 points to the right would
 
 #### Scenario: Plus zooms in

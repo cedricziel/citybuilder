@@ -147,6 +147,16 @@ struct MacKeyboardCameraTests {
         #expect(MacMapInput.key("A") == .pan(CGSize(width: 64, height: 0)))
     }
 
+    @Test("A pan key moves one tile width of the map at any zoom")
+    func panStepFollowsZoom() throws {
+        #expect(MacMapInput.key("a", atZoom: 2) == .pan(CGSize(width: 128, height: 0)))
+        let session = makeSession()
+        session.world.camera.setZoom(2)
+        try session.apply(#require(MacMapInput.key("a", atZoom: 2)))
+        let camera = session.world.camera
+        #expect(abs((camera.centerX - 12) - -1) < 1e-9 && abs((camera.centerY - 12) - 1) < 1e-9)
+    }
+
     @Test("Every pan key moves toward the side it names")
     func panKeys() throws {
         #expect(MacMapInput.key("d") == .pan(CGSize(width: -64, height: 0)))
