@@ -126,7 +126,9 @@ A long Play/Pause press on the map cycles three zoom levels. The simulation paus
 
 ### D8. Back order and the Home screen
 
-The order is fixed in `tv-remote-controls`, and the mapper walks it. The pause menu resumes on Back. The title screen attaches no exit handler, so Back reaches the system and the app returns to the Home screen, as Apple's tvOS guidance requires.
+The order is fixed in `tv-remote-controls`, and the mapper walks it.
+
+Decided during M2: the mapper handles only the steps that live on the map. Sheets (Goals, Research, Standings, Routes, Settings, the manifest editor and the pause menu) take focus when they open, so the system closes them on Back and the mapper never sees that press; the host reports the focus move, and the next Back reaches the map. The build rail's drawer is part of the HUD, whose exit command closes it before it returns focus to the map. The tile menu is session state (`tileMenuRequest`), so the mapper closes it. The pause menu resumes on Back. The title screen attaches no exit handler, so Back reaches the system and the app returns to the Home screen, as Apple's tvOS guidance requires.
 
 ### D9. TV HUD layout in `HUDLayout.make`
 
