@@ -24,10 +24,15 @@ public struct TerrainTransition: Hashable, Sendable {
 /// Vertex (c, r) is the top corner of tile (c, r), shared with tiles (c-1, r-1), (c, r-1) and (c-1, r).
 /// Tile (c, r) has corners N = (c, r), E = (c+1, r), S = (c+1, r+1), W = (c, r+1).
 public enum TerrainCorners {
+    /// The four tiles sharing a vertex, as offsets from it.
+    static let tilesAroundVertex = [(-1, -1), (0, -1), (-1, 0), (0, 0)]
+    /// A tile's corners N, E, S, W, as vertex offsets from the tile.
+    static let cornerOffsets = [(0, 0), (1, 0), (1, 1), (0, 1)]
+
     /// The terrain at a vertex. Forest and mountain count as grass; a vertex touching both grass
     /// and water is beach, so beach always separates the two.
     public static func vertex(_ vertex: TileCoordinate, terrain: (TileCoordinate) -> TerrainType?) -> TerrainType? {
-        let around = [(-1, -1), (0, -1), (-1, 0), (0, 0)].compactMap { dx, dy in
+        let around = tilesAroundVertex.compactMap { dx, dy in
             terrain(TileCoordinate(x: vertex.x + dx, y: vertex.y + dy)).map(blendClass)
         }
         guard !around.isEmpty else { return nil }
@@ -40,8 +45,8 @@ public enum TerrainCorners {
     /// The transition tile for `coord`, or nil when its corners agree or its kind doesn't blend
     /// (forest and mountain keep their own sprites).
     public static func transition(at coord: TileCoordinate, terrain: (TileCoordinate) -> TerrainType?) -> TerrainTransition? {
-        guard let own = terrain(coord), [.grass, .beach, .water].contains(own) else { return nil }
-        let corners = [(0, 0), (1, 0), (1, 1), (0, 1)].compactMap { dx, dy in
+        guard let own = terrain(coord), blends(own) else { return nil }
+        let corners = cornerOffsets.compactMap { dx, dy in
             vertex(TileCoordinate(x: coord.x + dx, y: coord.y + dy), terrain: terrain)
         }
         return transition(corners: corners)
@@ -53,6 +58,14 @@ public enum TerrainCorners {
         let pair: (upper: TerrainType, lower: TerrainType) = corners.contains(.grass) ? (.grass, .beach) : (.beach, .water)
         let mask = corners.enumerated().reduce(0) { mask, corner in corner.element == pair.upper ? mask | (1 << corner.offset) : mask }
         return TerrainTransition(upper: pair.upper, lower: pair.lower, mask: mask)
+    }
+
+    /// Grass, beach and water blend into each other; forest and mountain keep their own sprites.
+    static func blends(_ kind: TerrainType) -> Bool {
+        switch kind {
+        case .grass, .beach, .water: true
+        default: false
+        }
     }
 
     static func blendClass(_ kind: TerrainType) -> TerrainType {
@@ -89,9 +102,8 @@ public struct TerrainTransitionMap: Sendable {
         var transitions = [TerrainTransition?](repeating: nil, count: width * height)
         for y in 0 ..< height {
             for x in 0 ..< width {
-                let own = grid[y * width + x]
-                guard [.grass, .beach, .water].contains(own) else { continue }
-                let corners = [(0, 0), (1, 0), (1, 1), (0, 1)].compactMap { dx, dy in vertices[(y + dy) * (width + 1) + x + dx] }
+                guard TerrainCorners.blends(grid[y * width + x]) else { continue }
+                let corners = TerrainCorners.cornerOffsets.compactMap { dx, dy in vertices[(y + dy) * (width + 1) + x + dx] }
                 transitions[y * width + x] = TerrainCorners.transition(corners: corners)
             }
         }
