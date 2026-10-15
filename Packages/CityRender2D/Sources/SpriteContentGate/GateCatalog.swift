@@ -45,7 +45,17 @@ public struct GateCatalog: Sendable {
         owners.filter { entries[$0.value]?.isMigrated == true }.keys.sorted()
     }
 
+    /// Sprite names more than one brief lists in its Sheet section.
+    public struct DuplicateSheetNames: Error, Equatable, CustomStringConvertible {
+        public let names: [String]
+
+        public var description: String {
+            "sprites listed by more than one catalog brief: \(names.joined(separator: ", "))"
+        }
+    }
+
     /// The catalog under `<resources>/Sprites.style/catalog`, or an empty one when there is none.
+    /// Throws `DuplicateSheetNames` when two briefs claim the same sprite.
     public static func load(resourcesRoot: URL) throws -> GateCatalog {
         let directory = resourcesRoot.appendingPathComponent("Sprites.style/catalog")
         guard FileManager.default.fileExists(atPath: directory.path) else { return GateCatalog(entries: []) }
@@ -58,6 +68,12 @@ public struct GateCatalog: Sendable {
             entries.append(parse(id: id, markdown: markdown))
             sheets[id] = sheetNames(in: markdown)
         }
+        var claims: [String: Int] = [:]
+        for name in sheets.values.joined() {
+            claims[name, default: 0] += 1
+        }
+        let duplicates = claims.filter { $0.value > 1 }.keys.sorted()
+        guard duplicates.isEmpty else { throw DuplicateSheetNames(names: duplicates) }
         return GateCatalog(entries: entries, sheetNames: sheets)
     }
 
