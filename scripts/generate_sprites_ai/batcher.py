@@ -392,6 +392,12 @@ def _read_back(sprite_name: str) -> Image.Image:
     return sheet
 
 
+def _is_migrated(entry: CatalogEntry) -> bool:
+    """`source = "isokit"` / `"svg"` entries belong to the new art pipeline (`make sprites`,
+    capability `iso-art-kit`); this legacy pipeline leaves their atlas PNGs alone."""
+    return entry.front_matter.get("source", "").strip().lower() in {"isokit", "svg"}
+
+
 def _is_procedural(entry: CatalogEntry) -> bool:
     """`source = "procedural"` entries are drawn locally by
     `procedural.render_sheet` instead of the image API."""
@@ -492,6 +498,8 @@ def run_pipeline(offline: bool = False, verify: bool = False) -> int:
     for md in sorted(paths.CATALOG_DIR.glob("*.md")):
         text = md.read_text(encoding="utf-8")
         entry = parse_catalog_entry(md.stem, text)
+        if _is_migrated(entry):
+            continue
         role_map = build_role_map(text)
         plan = slice_plan(entry)
         # Stable in-entry ordering: non-operational sprites first.
