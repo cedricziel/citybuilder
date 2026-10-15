@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,13 +9,7 @@ brings the windmill.
 
 ## Visual identity
 
-A small mud-brick workshop under a pale thatch gable roof, a hand quern
-in the yard (two stacked millstones on a stone block, turned by an
-upright wooden handle, flour spilling from the lower stone) and grain
-sacks by the wall. Palette anchors: `#8C6A45`/`#5C3F28` mud brick,
-`#D2C094`/`#8B5A2B` thatch, `#A89884`/`#7A6B59`/`#5C5046` millstones.
-Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A rubble-walled workshop under a thatch roof, a hand quern of two millstones on a stone block with an upright handle in the yard, and flour sacks.
 
 ## Sheet
 
@@ -32,6 +26,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. The building
   stays pixel-identical; only the quern handle moves, so the stone
@@ -39,7 +35,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Recipe
 
-- Recipe: `building-quern-house` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-quern-house` (IsoKit)
+- Cell: 2×2 footprint, 112 pt tall
 - Construction stages: 3
 - Operational frames: 2

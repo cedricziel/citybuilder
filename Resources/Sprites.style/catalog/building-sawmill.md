@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -10,12 +10,7 @@ signal in the world.
 
 ## Visual identity
 
-Two-storey timber building with a stone lower course. South-facing
-open-fronted work shed showing a vertical-saw frame. Pitched terracotta
-roof over the milling chamber. Pile of fresh-cut planks (light wood)
-neatly stacked east of the building. Palette anchors: `#7A6B59` stone
-plinth, `#6E4A2A` timber frame, `#A07C50` plank stack and saw frame
-timber, `#5C5046` iron saw-blade, `#7A1F1A` terracotta roof.
+Rendered by IsoKit in the shared light rig. A plank mill under a thatch roof with a dark saw opening in its south wall and four sails on the east gable, logs and sawn planks stacked in a sawdust yard.
 
 ## Sheet
 
@@ -38,16 +33,11 @@ Grid: 4 cols × 2 rows. Default sheet size. All 8 cells used.
 
 ## Animation
 
-Two loops: construction (one-shot) and operational (forever, 4 frames).
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the sails turn through 4 overlay frames.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)` → `(1, 2)` → `(1, 3)`. All four
   frames are placed in adjacent cells on row 1.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
-`units.py`) in the register pinned by `world.md` § Building register.
-Operational frames keep the finished building and add a rising smoke plume.
-The per-cell roles above describe the original AI sprites.
 
 ## Recipe
 

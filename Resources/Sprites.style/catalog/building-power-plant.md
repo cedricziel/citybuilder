@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Modern age signature. Burns charcoal; while fuelled it energises houses and spee
 
 ## Visual identity
 
-A brick hall on a concrete base with tall windows and a concrete cornice under a slate roof, two concrete chimneys with red bands, and a transformer yard with a lattice pylon. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A brick hall on a concrete base with tall windows and a concrete cornice under a slate roof, two concrete chimneys with red bands, and a fenced transformer yard.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-power-plant` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-power-plant` (IsoKit)
+- Cell: 3×3 footprint, 224 pt tall
 - Construction stages: 3
 - Operational frames: 2

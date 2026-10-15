@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Mediterranean luxury producer. Carriers bring grapes; every 50 ticks the winery 
 
 ## Visual identity
 
-A whitewashed winery under a low terracotta hip roof with an arched cellar door and shuttered windows, a wooden basket wine press, casks, amphorae and a cypress. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A whitewashed winery under a low hipped tile roof, a wooden basket press, casks and a cypress.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-winery` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-winery` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

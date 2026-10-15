@@ -222,7 +222,7 @@ let water = sprite("Resources/Kit.atlas/terrain-water.png")
 let beach = sprite("Resources/Kit.atlas/terrain-beach.png")
 let forest = sprite("Resources/Kit.atlas/terrain-forest.png")
 let house = sprite("Resources/Kit.atlas/building-house.png")
-let sawmill = sprite("Resources/Buildings.atlas/building-sawmill.png")
+let sawmill = sprite("Resources/Kit.atlas/building-sawmill.png")
 let lumberjack = sprite("Resources/Kit.atlas/building-lumberjack-hut.png")
 
 // Terrain and buildings are drawn on separate transparent layers so the
