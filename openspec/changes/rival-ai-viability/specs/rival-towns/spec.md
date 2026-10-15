@@ -99,7 +99,7 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 On its turn, before the threshold rules, a rival SHALL trade at its own town center's market when one of these applies, checked in this order. A trade SHALL take the turn.
 
-1. **Unblock.** The step it would take waits only for wood or planks, and the treasury covers the purchase, the step and $50. The rival SHALL buy the shortfall.
+1. **Unblock.** The step it would take waits only for wood or planks, and the treasury covers the purchase, the step and $50. The rival SHALL buy the shortfall. It SHALL NOT buy for a step while it is at the building cap, or for a house step at the house cap.
 2. **Pay debts.** The treasury is below $150. The rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn.
 3. **Feed.** Food is below 4, one of the rival's houses is short of food, and the treasury is at least $300. The rival SHALL buy up to 5 food.
 
@@ -119,6 +119,11 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 - **WHEN** a rival with $500, 1 food and a house short of food takes a turn
 - **THEN** it buys 5 food
+
+#### Scenario: No purchase for a step the caps rule out
+
+- **WHEN** a rival at the building cap, with no planks and $400, takes a turn whose house step waits only for planks
+- **THEN** it buys no planks
 
 #### Scenario: No purchase into a full town center
 
