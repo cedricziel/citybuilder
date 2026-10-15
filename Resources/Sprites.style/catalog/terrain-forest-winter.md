@@ -8,7 +8,7 @@ The winter look of the forest tile. The renderer swaps it in for
 
 ## Visual identity
 
-Painted by `scripts/art/ground.py`. The canopy in winter: bare broadleaf crowns as a grey lace of twigs over snow, and dark conifers carrying snow on their sunlit side. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
+Painted by `scripts/art/ground.py`. The canopy in winter: bare broadleaf crowns as a grey haze of twigs painted onto the snow, with no relief or shadow of their own, and conifers carrying snow on their sunlit side. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 

@@ -9,7 +9,7 @@ forest.
 
 ## Visual identity
 
-Painted by `scripts/art/ground.py`. A closed canopy of scattered broadleaf and conifer crowns, each lit and casting soft shadow onto the dark forest floor. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
+Painted by `scripts/art/ground.py`. A loose canopy of broadleaf crowns in five greens and three sizes among darker conifers, scattered so the tile repeat is hard to see, with small clearings where the floor shows. Shallow relief keeps it light enough to read next to the grass. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 

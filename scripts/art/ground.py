@@ -143,42 +143,48 @@ def _wrapped_distance(uu: np.ndarray, vv: np.ndarray, cu: float, cv: float) -> n
 
 
 FOLIAGE = {
-    "spring": [(0.20, 0.36, 0.14), (0.27, 0.44, 0.16), (0.34, 0.48, 0.18)],
-    "autumn": [(0.56, 0.36, 0.14), (0.62, 0.50, 0.18), (0.46, 0.26, 0.12)],
-    "winter": [(0.50, 0.46, 0.41), (0.54, 0.50, 0.45), (0.46, 0.43, 0.39)],
+    "spring": [(0.26, 0.44, 0.17), (0.33, 0.52, 0.19), (0.42, 0.56, 0.21), (0.48, 0.58, 0.24), (0.24, 0.40, 0.22)],
+    "autumn": [(0.58, 0.44, 0.20), (0.64, 0.54, 0.26), (0.50, 0.34, 0.18), (0.54, 0.50, 0.26), (0.38, 0.44, 0.22)],
 }
-CONIFER = (0.14, 0.28, 0.16)
+CONIFER = (0.18, 0.34, 0.20)
+FLOOR = (0.28, 0.30, 0.15)
+TWIGS = (0.46, 0.42, 0.38)
 SNOW = (0.84, 0.90, 0.98)  # cool, so the warm sun leaves it white rather than cream
 
 
 def forest(season: str = "spring") -> Surface:
-    """A closed canopy of 20 crowns per tile, scattered rather than gridded so the repeat is hard to
-    see. A quarter are conifers: they keep their needles in winter and catch snow on top, while the
-    bare broadleaf crowns turn into a thin lace of twigs over the snow."""
-    rng = np.random.default_rng(7)
+    """A loose canopy of 26 crowns per tile in five tones and three sizes, scattered so the repeat is
+    hard to see, with small clearings where the floor shows. Three in ten are conifers. Relief stays shallow so cast shadows
+    model the crowns without drowning the tile. In winter the broadleaf crowns are bare: a grey
+    haze of twigs painted onto the snow with no relief of its own, so it casts no shadow; the
+    conifers keep their needles and carry snow on their sunlit side."""
+    rng = np.random.default_rng(11)
     uu, vv = _grid()
     winter = season == "winter"
-    height = np.full((SIZE, SIZE), -0.4)
+    height = np.full((SIZE, SIZE), -0.15)
     albedo = np.empty((SIZE, SIZE, 3))
-    albedo[:] = SNOW if winter else (0.20, 0.19, 0.11)
+    albedo[:] = SNOW if winter else FLOOR
+    albedo *= (1 + 0.12 * noise("forest-floor", 0.1))[..., None]
     leaves = noise("forest-leaves", 0.03, sharp=1.0)
-    twigs = np.abs(noise("forest-twigs", 0.025, sharp=0.5)) < 0.5
-    crowns = [(rng.random(), rng.random(), rng.uniform(0.09, 0.15), rng.random() < 0.25) for _ in range(20)]
-    for cu, cv, radius, conifer in crowns:
-        bare = winter and not conifer
+    lace = np.clip(1 - np.abs(noise("forest-twigs", 0.02, sharp=0.5)) * 2, 0, 1)
+    crowns = [(rng.random(), rng.random(), rng.choice([0.07, 0.11, 0.16]), rng.random() < 0.3) for _ in range(26)]
+    for cu, cv, radius, conifer in sorted(crowns, key=lambda c: c[2]):
+        tone = FOLIAGE["autumn" if season == "autumn" else "spring"][rng.integers(5)]
+        shade = 0.88 + 0.24 * rng.random()
+        lift = 0.1 * rng.random()
         d = _wrapped_distance(uu, vv, cu, cv) / radius
-        lift = 0.3 * rng.random()
-        crown = np.sqrt(np.clip(1 - d**2, 0, 1)) * radius * TILE_METRES * (0.4 if bare else 1.1) + lift
+        if winter and not conifer:
+            twigs = (d < 1) * (0.35 + 0.45 * lace) * (1 - d.clip(0, 1) ** 2)
+            albedo = albedo * (1 - twigs[..., None]) + np.array(TWIGS) * twigs[..., None]
+            continue
+        crown = np.sqrt(np.clip(1 - d**2, 0, 1)) * min(radius * TILE_METRES, 0.45) + lift
         inside = (d < 1) & (crown > height)
-        if bare:
-            inside &= twigs
         height = np.where(inside, crown, height)
-        base = CONIFER if conifer else FOLIAGE[season][rng.integers(3)]
-        colour = np.array(base) * (0.9 + 0.2 * rng.random())
-        albedo[inside] = colour * (1 + 0.25 * leaves[inside, None])
-        if winter and conifer:
-            snowy = inside & (d < 0.75) & ((uu - cu + 0.5) % 1 - 0.5 < 0.02)
-            albedo[snowy] = 0.5 * albedo[snowy] + 0.5 * np.array(SNOW)
+        colour = np.array(CONIFER if conifer else tone) * shade
+        albedo[inside] = colour * (1 + 0.22 * leaves[inside, None])
+        if winter:
+            snowy = inside & (d < 0.8) & ((uu - cu + 0.5) % 1 - 0.5 < 0.03) & (leaves > -0.3)
+            albedo[snowy] = 0.4 * albedo[snowy] + 0.6 * np.array(SNOW)
     return Surface(height, np.clip(albedo, 0, 1))
 
 
