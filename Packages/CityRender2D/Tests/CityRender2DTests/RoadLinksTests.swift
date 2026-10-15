@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import CityCore
 @testable import CityRender2D
@@ -82,6 +83,23 @@ struct RoadLinksTests {
         }
         #expect(links[TileCoordinate(x: 3, y: 3)] == RoadLink(mask: 1, plaza: false))
         #expect(links[TileCoordinate(x: 4, y: 3)] == RoadLink(mask: 4, plaza: false))
+    }
+
+    /// The road brief lists one sprite per mask that `scripts/art/roads.py` draws (its test checks
+    /// that); the renderer must ask for exactly those.
+    @Test("the renderer's road masks are the ones the brief lists")
+    func masksMatchTheBrief() throws {
+        let brief = try String(
+            contentsOf: URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                .deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("Resources/Sprites.style/catalog/building-road.md"),
+            encoding: .utf8
+        )
+        let listed = Set(brief.components(separatedBy: "`building-road-c").dropFirst().compactMap {
+            Int($0.prefix { $0.isNumber })
+        })
+        #expect(listed == Set(RoadLinks.allMasks))
     }
 
     /// Links depend only on which tiles hold roads and the town center, so the scene works them out
