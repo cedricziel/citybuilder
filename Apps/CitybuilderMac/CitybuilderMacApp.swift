@@ -55,6 +55,18 @@ struct CitybuilderMacApp: App {
             }
     }
 
+    /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
+    /// `-uiTestSeedLived`.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
+        }
+        #endif
+        return world
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
@@ -63,8 +75,8 @@ struct CitybuilderMacApp: App {
                     defaultGameID: Self.defaultGameID
                 ),
                 sessionFactory: { [audio] world in
-                    GameSession(
-                        world: world,
+                    let session = GameSession(
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },
@@ -72,6 +84,9 @@ struct CitybuilderMacApp: App {
                             audio.consumeSnapshot(snapshot)
                         }
                     )
+                    // Leaving the game silences its workshop loops.
+                    session.onEnd = { audio.endSession() }
+                    return session
                 },
                 pauseMenuFactory: { [saveStore] session in
                     // onQuitToTitle is injected by TitleScreenHost — spec
@@ -96,6 +111,7 @@ struct CitybuilderMacApp: App {
                 Button("Quit Citybuilder") { MacAppTerminator.terminate() }
                     .keyboardShortcut("q")
             }
+            GameCommands()
         }
         Settings {
             TabView {
@@ -150,7 +166,7 @@ private struct TitleSettingsSheet: View {
                     Task { await audio.syncSettingsToCloud() }
                     dismiss()
                 }
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
         }
