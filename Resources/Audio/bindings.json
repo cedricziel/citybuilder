@@ -66,18 +66,14 @@
   },
   "music": {
     "tracks": [
-      {
-        "file": "music/bards-tale.m4a"
-      }
+      { "file": "music/bards-tale.m4a" }
     ],
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
   },
   "ambient": {
     "tracks": [
-      {
-        "file": "ambient/forest-birds.caf"
-      }
+      { "file": "ambient/forest-birds.caf" }
     ]
   }
 }
