@@ -11,6 +11,17 @@ func tierOrderIsCaseOrder() throws {
     #expect(data.tiers.map(\.taxPerResident) == [1, 2, 4])
 }
 
+@Test func packsWithoutTiersAreRejected() {
+    var core = Fixtures.core
+    for line in core.split(separator: "\n") where line.contains("kind: Tier") {
+        core = core.replacingOccurrences(of: line + "\n", with: "")
+    }
+    let ages = Fixtures.ages.replacingOccurrences(of: "eraGate: { tier: citizens, residents: 20 }", with: "")
+        .replacingOccurrences(of: "    era: medieval\n", with: "")
+    let errors = Fixtures.errors(Fixtures.source([("core", core), ("ages", ages)]))
+    #expect(errors.contains { $0.contains("no house tiers") }, "\(errors)")
+}
+
 @Test("scenario: unknown tier in neededBy is rejected")
 func unknownTierInNeededBy() {
     let extra = "items:\n  - { kind: Good, id: cloth, name: Cloth, unit: bolts, basePrice: 9, neededBy: [nobles] }\n"
