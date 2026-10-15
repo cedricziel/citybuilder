@@ -105,14 +105,47 @@ struct KitGateTests {
         try writeBrief(root, id: "building-bakery", source: "procedural")
         let atlas = root.appendingPathComponent("Buildings.atlas")
         try writePNG(grounded(), to: atlas.appendingPathComponent("building-house.png"))
-        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png")) // legacy: no twin needed
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png")) // legacy, no @2x art yet: fine
 
         var failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
         #expect(failures == [.init(file: "building-house.png", reason: .scaleTwinMismatch)])
 
         try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-house@2x.png"))
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-bakery@2x.png")) // now the atlas has @2x art
         failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
         #expect(failures.isEmpty)
+    }
+
+    @Test("in an atlas with @2x art, legacy sprites need exact nearest-neighbour twins")
+    func legacySpritesNeedTwinsOnceTheAtlasHasTwoX() throws {
+        let root = temporaryResources()
+        try writeBrief(root, id: "building-house", source: "isokit")
+        try writeBrief(root, id: "building-bakery", source: "procedural")
+        let atlas = root.appendingPathComponent("Buildings.atlas")
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-house.png"))
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-house@2x.png"))
+        try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png"))
+
+        var failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+        #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)])
+
+        let shifted = image(width: 128, height: 64) { x, y in (30 ..< 90).contains(x) && y >= 8 ? wall : nil }
+        try writePNG(shifted, to: atlas.appendingPathComponent("building-bakery@2x.png"))
+        failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+        #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)]) // not the exact double
+
+        try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-bakery@2x.png"))
+        #expect(try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3).isEmpty)
+    }
+
+    @Test("an @2x file without its @1x sprite is an orphan")
+    func orphanTwin() throws {
+        let root = temporaryResources()
+        try writePNG(grounded(scale: 2), to: root.appendingPathComponent("Buildings.atlas/building-ghost@2x.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+
+        #expect(failures == [.init(file: "building-ghost@2x.png", reason: .scaleTwinOrphan)])
     }
 
     @Test("scenario: Walker frames have the walker size")
