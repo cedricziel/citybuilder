@@ -236,6 +236,12 @@ final class TVWalkthroughTests: XCTestCase {
         press(.down, until: last)
         XCTAssertTrue(less.isHittable, "Less should stay on screen")
         snapshot("market-last-row")
+        let otherGoods = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Other goods'")).firstMatch
+        XCTAssertTrue(otherGoods.exists, "goods the island cannot use should collapse under Other goods")
+        press(.down, until: otherGoods)
+        remote.press(.select)
+        XCTAssertTrue(app.buttons["Hide other goods"].waitForExistence(timeout: 5), "Other goods should expand")
+        snapshot("market-other-goods")
     }
 
     /// Presses `direction` until `element` holds focus, at most 60 times.
