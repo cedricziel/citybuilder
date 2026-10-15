@@ -46,6 +46,20 @@ The single-island "before" figures match exactly. The two harnesses differ in th
 
 **Reference numbers (M1 acceptance test, `FairStartSiteTests`).** Archipelago seeds 0–49 at Easy, Normal and Hard plus the single island: 751 of 751 town centers fair (750 archipelago, 1 single island), no fallback placement, terrain identical across the three difficulties of every seed. Every start's best hut site reaches 32 trees, the grove's clearing. The single-island town center stands at (39,60) with 169 grass and 90 of 361 mountain tiles in its start area.
 
+**Playtest re-run (M2).** The `add-forestry` headless harness (not committed) was re-run on `main` (forester merged, old start) and on this change. A scripted player follows the rival AI's rules on the player's island for 36,000 ticks (15 in-game years). It builds a forester for every hut. Both builds were release builds, and the two worlds differ only in the start site, the grove and the camera. The figures are end-of-year residents, balance, wood and planks for the player, and residents per rival.
+
+| Run | `main` | fair start |
+|---|---|---|
+| Single island seed 0, 1201 | 4 residents, $70, 0 wood, 23 planks, 2 huts (1 bare) | 8 residents, $94, 0 wood, 24 planks, 4 huts (3 bare) |
+| Single island seed 0, 1202 | 3 residents, $83, 39 planks | 15 residents, $69, 39 planks |
+| Single island seed 0, end | bankrupt in 1205 (18 residents in 1203 at best) | bankrupt in 1203 |
+| Archipelago seed 7, player | 0 residents, bankrupt in 1202 | 0 residents, bankrupt in 1202 |
+| Archipelago seed 7, rivals 1201–1205 | Lowtide 0 (treasury −$79), Stoneholm 1–3 | Lowtide 6–10, Stoneholm 8–16 (the same range through 1215) |
+
+The fair start helps rivals clearly: on `main` the archipelago rivals stay near 0 residents through 1205, and with the fair start both hold a small town. For the player bot it doubles the residents of the first two years on the single island, but the run still ends bankrupt, one year earlier than on `main`. In every run wood stays at 0 while planks pile up to the town center's 40-unit cap. The sawmill turns all wood into planks, and nothing can sell the surplus. That is the soft-lock `add-town-market` describes, not a start-site problem, so this change leaves it to that change. The earlier bankruptcy is input for balancing the market. A better start lets the bot build and pay upkeep sooner, so it runs out of money sooner while its planks have no buyer. A market that buys surplus planks early would turn that head start into income. No run reached 20 citizens. These runs predate rival foresters (#40) and the grass-after-grove check, and neither changes the player's opening on the single island. The bot is the `add-forestry` harness bot, so these runs compare starts with each other; they do not measure how a human plays.
+
+**Simulator check (M2).** A new single-island game on the iPhone 17 simulator opens on the town center, which stands on grass with its road ring. The edge of the mountain core is a few tiles away, and the starter grove with its grass clearing is next to the road ring. A new archipelago game (seed 0, Normal, rivals on) opens on the home town center on grass, with the denser grove block beside the ring and the island's scattered forest dots around it. Before task 1.12, the single-island camera opened on the map centre and the screen showed only mountain.
+
 ## Goals / Non-Goals
 
 **Goals:**

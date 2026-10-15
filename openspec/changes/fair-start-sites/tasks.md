@@ -15,5 +15,5 @@
 
 ## 2. M2 — Playtest check
 
-- [ ] 2.1 Start a new single-island game and a new archipelago game with the verify skill; screenshot the start, check the grove reads as forest beside the ringed town center, and place a lumberjack hut on the clearing to confirm the placement hint shows 32 trees in reach (needs `add-forestry` M3 for the hint)
-- [ ] 2.2 Re-run the `add-forestry` headless playtest bot on seed 0 single island and archipelago seed 7, and record in design "Evidence" how the first in-game year changes against the numbers in `add-forestry` design
+- [ ] 2.1 Start a new single-island game and a new archipelago game with the verify skill; screenshot the start, check the grove reads as forest beside the ringed town center, and place a lumberjack hut on the clearing to confirm the placement hint shows 32 trees in reach (needs `add-forestry` M3 for the hint). PARTIAL: both starts were checked on the iPhone 17 simulator, and that check found the camera issue fixed in 1.12. The hint is not on `main` yet (`add-forestry` M3), so the 32 trees are covered by the test "Grove gives a hut site with 32 trees" instead of the UI
+- [x] 2.2 Re-run the `add-forestry` headless playtest bot on seed 0 single island and archipelago seed 7, and record in design "Evidence" how the first in-game year changes against the numbers in `add-forestry` design
