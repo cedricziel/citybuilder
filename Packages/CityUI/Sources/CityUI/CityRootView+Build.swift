@@ -21,6 +21,7 @@ extension CityRootView {
                         .padding(.top, 4)
                     Spacer(minLength: 0)
                 }
+                .panelAnimation(value: session.banner)
                 .padding(.leading, railInset)
             }
             if let authoring = session.routeAuthoring {
@@ -32,6 +33,7 @@ extension CityRootView {
                 .panelTransition(.slide(.bottom))
             } else {
                 buildControls(layout: layout, railInset: railInset)
+                    .panelAnimation(value: buildRail.openDrawer)
             }
         }
         .panelAnimation(value: session.routeAuthoring != nil)
@@ -76,7 +78,6 @@ extension CityRootView {
                 BuildDrawerView(session: session, rail: $buildRail, layout: layout)
                 Spacer(minLength: 0)
             }
-            .panelAnimation(value: buildRail.openDrawer)
             .tvFocusSection()
             .frame(maxHeight: .infinity)
             VStack {
@@ -92,7 +93,6 @@ extension CityRootView {
                 BuildRailView(session: session, rail: $buildRail, layout: layout)
                     .tvFocusSection()
             }
-            .panelAnimation(value: buildRail.openDrawer)
         }
     }
 
