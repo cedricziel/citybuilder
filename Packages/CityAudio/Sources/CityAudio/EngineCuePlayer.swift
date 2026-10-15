@@ -21,6 +21,8 @@ public final class EngineCuePlayer {
     /// upfront and round-robin through them.
     private var oneShotPool: [AudioBus: [AVAudioPlayerNode]] = [:]
     private var nextPoolIndex: [AudioBus: Int] = [:]
+    /// When each pooled node's cue ends, so a new one-shot doesn't cut it off.
+    private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
     /// Building loops, one voice per entity, nearest the listener.
@@ -39,6 +41,7 @@ public final class EngineCuePlayer {
             }
             oneShotPool[bus] = nodes
             nextPoolIndex[bus] = 0
+            poolSlots[bus] = Array(repeating: OneShotPool.Slot(endsAt: 0, isLong: false), count: oneShotPoolSize)
         }
     }
 
@@ -108,7 +111,7 @@ public final class EngineCuePlayer {
     }
 
     private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let player = nextOneShotPlayer(on: cue.bus) else { return }
+        guard let player = nextOneShotPlayer(on: cue.bus, file: file) else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
@@ -229,13 +232,15 @@ public final class EngineCuePlayer {
         }
     }
 
-    private func nextOneShotPlayer(on bus: AudioBus) -> AVAudioPlayerNode? {
-        guard var nodes = oneShotPool[bus], !nodes.isEmpty else { return nil }
-        let index = nextPoolIndex[bus] ?? 0
-        let player = nodes[index]
+    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> AVAudioPlayerNode? {
+        guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
+        let now = ProcessInfo.processInfo.systemUptime
+        let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
+        let seconds = Double(file.length) / file.processingFormat.sampleRate
+        slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
+        poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count
-        oneShotPool[bus] = nodes
-        return player
+        return nodes[index]
     }
 
     private func loadFile(at path: String) -> AVAudioFile? {

@@ -58,7 +58,7 @@ struct StandingsPanelView: View {
             }
             .navigationTitle("Standings")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
             }
         }
     }
@@ -94,11 +94,7 @@ extension View {
 extension Color {
     /// A colour from "#RRGGBB".
     init(hex: String) {
-        let value = UInt32(hex.dropFirst(), radix: 16) ?? 0
-        self.init(
-            red: Double((value >> 16) & 0xFF) / 255,
-            green: Double((value >> 8) & 0xFF) / 255,
-            blue: Double(value & 0xFF) / 255
-        )
+        let rgba = MinimapRGBA(hex: hex)
+        self.init(red: Double(rgba.red) / 255, green: Double(rgba.green) / 255, blue: Double(rgba.blue) / 255)
     }
 }
