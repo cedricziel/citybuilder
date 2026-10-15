@@ -117,11 +117,12 @@ private func terrainNamesTheRendererRequests() -> Set<String> {
 
 /// The reverse of the check below: nothing the renderer requests may fall back to the placeholder.
 @MainActor
-@Test("every terrain sprite the renderer can request is committed where it routes")
+@Test("every terrain and road sprite the renderer can request is committed where it routes")
 func everyRequestedTerrainSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
-    let names = terrainNamesTheRendererRequests()
-    #expect(names.count >= 80) // 16 tiles and frames, 8 seasonal, 56 transitions
+    let roads = RoadLinks.allMasks.flatMap { mask in [false, true].map { RoadLink(mask: mask, plaza: $0).assetName } }
+    let names = terrainNamesTheRendererRequests().union(roads)
+    #expect(names.count >= 80 + 94) // terrain: 16 tiles and frames, 8 seasonal, 56 transitions; roads: 47 masks x 2
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
