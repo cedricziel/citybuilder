@@ -102,6 +102,13 @@ jobs:
       - name: pre-commit run --all-files
         run: pre-commit run --all-files --show-diff-on-failure
 
+      # Two PRs that each fit under SwiftLint's file_length limit can go
+      # over it once both merge, failing lint for everyone. This warns at
+      # 450 lines; it never fails the job.
+      - name: Warn about Swift files near the length limit
+        if: always()
+        run: scripts/check-file-length-headroom.sh
+
       - name: Scenario-to-test coverage report
         env:
           SCENARIO_COVERAGE_STRICT: "0"
