@@ -72,6 +72,19 @@ struct RecipeRulesTests {
         #expect(abs(topCorner.y - 64) < 0.001)
     }
 
+    /// The game starts chimney smoke at this point, so it must follow the chimney the recipe builds.
+    @Test("a recipe's chimney anchor is its chimney top, as fractions of the sprite")
+    func chimneyAnchorIsTheChimneyTop() throws {
+        let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
+            kit.chimney(x: 8, depth: 8, from: 0, to: 4)
+        }
+        let anchor = try #require(hut.chimneyAnchor)
+        let top = Projection.screen(SCNVector3(8, 4, 8), in: hut.cell)
+        #expect(abs(anchor.x - 0.5) < 0.001)
+        #expect(abs(anchor.y - (1 - top.y / 128)) < 0.001)
+        #expect(Recipe(id: "building-test-shed", cell: SpriteCell(footprint: 1, heightPx: 64)) { _, _ in }.chimneyAnchor == nil)
+    }
+
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
     @Test("a unit whose moving part crosses the cell edge does not fit")
     func unitCellFitIsStrict() {

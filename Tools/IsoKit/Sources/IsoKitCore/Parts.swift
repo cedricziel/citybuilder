@@ -43,6 +43,8 @@ struct RoofSpec {
 /// Collects a recipe's nodes. Recipes only call its part methods.
 public final class Builder {
     let root = SCNNode()
+    /// The top centre of the first chimney built, where the game draws its smoke.
+    var chimneyTop: SCNVector3?
 
     public init() {}
 
@@ -258,9 +260,10 @@ extension Builder {
         onFace(face, FaceRect(along: along, y: base + height / 2, width: width, height: height), depth: 0.08, finish: .planks)
     }
 
-    func chimney(x: CGFloat, depth: CGFloat, from bottom: CGFloat, to top: CGFloat) {
-        block(SCNVector3(x - 0.3, bottom, depth - 0.3), SCNVector3(x + 0.3, top, depth + 0.3), .rubble)
-        block(SCNVector3(x - 0.36, top - 0.12, depth - 0.36), SCNVector3(x + 0.36, top, depth + 0.36), .rubble)
+    func chimney(x: CGFloat, depth: CGFloat, from bottom: CGFloat, to top: CGFloat, finish: Finish = .rubble) {
+        block(SCNVector3(x - 0.3, bottom, depth - 0.3), SCNVector3(x + 0.3, top, depth + 0.3), finish)
+        block(SCNVector3(x - 0.36, top - 0.12, depth - 0.36), SCNVector3(x + 0.36, top, depth + 0.36), finish)
+        if chimneyTop == nil { chimneyTop = SCNVector3(x, top, depth) }
     }
 
     /// Lean-to porch on a south face: two posts and a sloped slab.
