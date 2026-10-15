@@ -84,6 +84,24 @@ struct RoadLinksTests {
         #expect(links[TileCoordinate(x: 4, y: 3)] == RoadLink(mask: 4, plaza: false))
     }
 
+    /// Links depend only on which tiles hold roads and the town center, so the scene works them out
+    /// once per change of occupancy, not on every frame.
+    @Test("road links are recomputed only when occupancy changes")
+    func linksAreCached() {
+        var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
+        world.enqueue(.place(.road, at: TileCoordinate(x: 3, y: 3)))
+        _ = world.tick()
+        var cache = RoadLinkCache()
+        let first = cache.links(for: world.snapshot())
+        _ = world.tick()
+        #expect(cache.links(for: world.snapshot()) == first)
+        #expect(cache.computations == 1)
+        world.enqueue(.place(.road, at: TileCoordinate(x: 4, y: 3)))
+        _ = world.tick()
+        #expect(cache.links(for: world.snapshot())[TileCoordinate(x: 3, y: 3)] == RoadLink(mask: 1, plaza: false))
+        #expect(cache.computations == 2)
+    }
+
     @MainActor
     @Test("the factory draws a road's connection sprite, else its base sprite")
     func factoryDrawsTheConnectionSprite() {
