@@ -2,17 +2,25 @@ import CityCore
 import Foundation
 import Observation
 
-/// Owns the remote input mapper and the controller adapter for one game.
+/// Owns the remote input mapper and the controller adapters for one game.
 /// The tvOS host feeds it presses and controller snapshots and applies the
-/// focus changes it reports; the HUD reads the tooltip from it. Kept
-/// platform-neutral so the wiring's rules run on the Mac. Design D3, D4.
+/// focus changes it reports; the HUD and the reticle read `focus` and the
+/// tooltip from it. Kept platform-neutral so the wiring's rules run on the
+/// Mac. Design D3, D4.
 @MainActor
 @Observable
 public final class TVRemoteController {
     public let session: GameSession
-    public private(set) var mapper = RemoteInputMapper()
+    /// Who owns the remote. Published only when it changes, so the HUD
+    /// and the reticle do not redraw on every frame's tick.
+    public private(set) var focus: RemoteFocus = .map
     public private(set) var tooltipBuilding: EntityID?
-    @ObservationIgnored private var adapter = GameControllerAdapter()
+    /// True from a select on the selected building until the inspector
+    /// callout holds focus; the rest of the HUD steps aside meanwhile.
+    public private(set) var focusesInspector = false
+    @ObservationIgnored public private(set) var mapper = RemoteInputMapper()
+    /// One adapter per controller, so each keeps its own button state.
+    @ObservationIgnored private var adapters: [Int: GameControllerAdapter] = [:]
     /// The host's handler for focus changes.
     @ObservationIgnored public var applyEffect: ((RemoteEffect) -> Void)?
 
@@ -24,28 +32,33 @@ public final class TVRemoteController {
         apply(mapper.handle(input, at: time, session: session), at: time)
     }
 
-    /// A press from UIKit; dropped when GameController already sent it.
+    /// A press from UIKit; dropped when a controller already sent it.
     public func sendUIKit(_ input: RemoteInput, at time: TimeInterval) {
-        if let input = adapter.uiKitPress(input, at: time) {
-            send(input, at: time)
-        }
+        guard adapters.values.allSatisfy({ $0.uiKitPress(input, at: time) != nil }) else { return }
+        send(input, at: time)
     }
 
-    public func send(_ snapshot: ControllerSnapshot, at time: TimeInterval) {
-        for input in adapter.update(snapshot, at: time) {
-            send(input, at: time)
-        }
+    public func send(_ snapshot: ControllerSnapshot, from controller: Int, at time: TimeInterval) {
+        forward(adapters[controller, default: GameControllerAdapter()].update(snapshot, at: time), at: time)
     }
 
-    public func send(_ snapshot: RemoteSnapshot, at time: TimeInterval) {
-        for input in adapter.update(snapshot, at: time) {
-            send(input, at: time)
-        }
+    public func send(_ snapshot: RemoteSnapshot, from controller: Int, at time: TimeInterval) {
+        forward(adapters[controller, default: GameControllerAdapter()].update(snapshot, at: time), at: time)
+    }
+
+    /// Releases whatever the controller held when it went away.
+    public func controllerDisconnected(_ controller: Int, at time: TimeInterval) {
+        send(ControllerSnapshot(), from: controller, at: time)
+        send(RemoteSnapshot(), from: controller, at: time)
+        adapters[controller] = nil
     }
 
     /// The focus engine moved focus onto or off the map, for example when
     /// a sheet opened or closed. Keeps the mapper's owner in step.
     public func focusMoved(toMap onMap: Bool, at time: TimeInterval) {
+        if onMap {
+            focusesInspector = false
+        }
         let owner: RemoteFocus = onMap ? .map : .hud
         if mapper.focus != owner {
             send(.focusChanged(owner), at: time)
@@ -69,9 +82,30 @@ public final class TVRemoteController {
         }
     }
 
+    /// Controller input acts only while the map owns the remote; in the
+    /// HUD the focus engine handles the same presses (design D3). The
+    /// adapter still sees every snapshot, so its edges stay correct.
+    private func forward(_ inputs: [RemoteInput], at time: TimeInterval) {
+        guard mapper.focus == .map else { return }
+        for input in inputs {
+            send(input, at: time)
+        }
+    }
+
+    /// The inspector callout holds focus, so the HUD can take part again.
+    public func inspectorTookFocus() {
+        focusesInspector = false
+    }
+
     private func apply(_ effects: [RemoteEffect], at time: TimeInterval) {
         for effect in effects {
+            if effect == .focusInspector {
+                focusesInspector = true
+            }
             applyEffect?(effect)
+        }
+        if mapper.focus != focus {
+            focus = mapper.focus
         }
         let tooltip = mapper.tooltipBuilding(at: time, session: session)
         if tooltip != tooltipBuilding {

@@ -44,7 +44,7 @@ final class TVMapInputController: GCEventViewController {
     private let remote: TVRemoteController
     private let mapView = TVMapFocusView()
     private var displayLink: CADisplayLink?
-    private var connectObserver: NSObjectProtocol?
+    private var controllerObservers: [NSObjectProtocol] = []
 
     init(remote: TVRemoteController) {
         self.remote = remote
@@ -72,13 +72,13 @@ final class TVMapInputController: GCEventViewController {
         }
         mapView.onFocusChange = { [weak self] focused in
             self?.remote.focusMoved(toMap: focused, at: CACurrentMediaTime())
+            self?.displayLink?.isPaused = !focused
         }
-        connectObserver = NotificationCenter.default.addObserver(
-            forName: .GCControllerDidConnect, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.attachControllers() }
-        }
-        attachControllers()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        startObservingControllers()
         let link = CADisplayLink(target: self, selector: #selector(tick))
         link.add(to: .main, forMode: .common)
         displayLink = link
@@ -89,10 +89,16 @@ final class TVMapInputController: GCEventViewController {
         focusMap()
     }
 
+    /// The display link retains its target, so it must stop here for the
+    /// controller to be released.
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         displayLink?.invalidate()
         displayLink = nil
+        for observer in controllerObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        controllerObservers = []
     }
 
     override var preferredFocusEnvironments: [UIFocusEnvironment] {
@@ -109,28 +115,32 @@ final class TVMapInputController: GCEventViewController {
         switch effect {
         case .focusMap:
             focusMap()
-        case .focusHUD, .focusInspector:
+        case .focusHUD:
             focusHUD()
+        case .focusInspector:
+            focusHUD()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [remote] in
+                remote.inspectorTookFocus()
+            }
         }
     }
 
-    /// Requested on the next run-loop turn, after SwiftUI restores focus
-    /// to the control that closed a drawer or a menu.
+    /// The SwiftUI overlay moves focus onto the map when the controller
+    /// publishes the change; the map only has to accept it.
     private func focusMap() {
         mapView.acceptsFocus = true
         controllerUserInteractionEnabled = false
-        DispatchQueue.main.async { [mapView] in
-            UIFocusSystem.focusSystem(for: mapView)?.requestFocusUpdate(to: mapView)
-        }
     }
 
     /// The map stops taking focus, so the focus engine moves it to the
-    /// HUD's preferred control.
+    /// HUD's preferred control on the next run-loop turn.
     private func focusHUD() {
         mapView.acceptsFocus = false
         controllerUserInteractionEnabled = true
-        guard let window = view.window else { return }
-        UIFocusSystem.focusSystem(for: window)?.requestFocusUpdate(to: window)
+        DispatchQueue.main.async { [weak self] in
+            guard let window = self?.view.window else { return }
+            UIFocusSystem.focusSystem(for: window)?.requestFocusUpdate(to: window)
+        }
     }
 
     // MARK: UIKit presses (the simulator's remote, and keyboards)
@@ -186,28 +196,43 @@ final class TVMapInputController: GCEventViewController {
 
     // MARK: GameController (the Siri Remote's touch surface, controllers)
 
+    private func startObservingControllers() {
+        let center = NotificationCenter.default
+        controllerObservers = [
+            center.addObserver(forName: .GCControllerDidConnect, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.attachControllers() }
+            },
+            center.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] note in
+                let id = (note.object as? GCController).map { ObjectIdentifier($0).hashValue }
+                MainActor.assumeIsolated {
+                    if let id { self?.remote.controllerDisconnected(id, at: CACurrentMediaTime()) }
+                }
+            }
+        ]
+        attachControllers()
+    }
+
+    /// Each controller reports under its own id, so two controllers never
+    /// share button state.
     private func attachControllers() {
         for controller in GCController.controllers() {
+            let id = ObjectIdentifier(controller).hashValue
             if let gamepad = controller.extendedGamepad {
                 gamepad.valueChangedHandler = { [weak self] gamepad, _ in
-                    MainActor.assumeIsolated { self?.send(Self.snapshot(of: gamepad)) }
+                    MainActor.assumeIsolated {
+                        self?.remote.send(Self.snapshot(of: gamepad), from: id, at: CACurrentMediaTime())
+                    }
                 }
             } else if let remoteProfile = controller.microGamepad {
                 remoteProfile.reportsAbsoluteDpadValues = true
                 remoteProfile.allowsRotation = false
                 remoteProfile.valueChangedHandler = { [weak self] profile, _ in
-                    MainActor.assumeIsolated { self?.send(Self.snapshot(of: profile)) }
+                    MainActor.assumeIsolated {
+                        self?.remote.send(Self.snapshot(of: profile), from: id, at: CACurrentMediaTime())
+                    }
                 }
             }
         }
-    }
-
-    private func send(_ snapshot: ControllerSnapshot) {
-        remote.send(snapshot, at: CACurrentMediaTime())
-    }
-
-    private func send(_ snapshot: RemoteSnapshot) {
-        remote.send(snapshot, at: CACurrentMediaTime())
     }
 
     private static func snapshot(of gamepad: GCExtendedGamepad) -> ControllerSnapshot {
