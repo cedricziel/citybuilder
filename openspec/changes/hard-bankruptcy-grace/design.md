@@ -25,18 +25,25 @@ Every failed game bottomed out at −$1 or −$2.
 
 ### D1. Hard grace 50 ticks
 
-50 ticks is one tax interval: the shortest grace that always sees the next collection. It keeps Hard the strictest difficulty in practice, because a Hard town's upkeep is 125%.
+50 ticks is one tax interval: the shortest grace that always sees the next collection. The code states every grace in whole tax intervals (3, 1 and 1), so the rule holds if the interval changes. Hard stays the strictest difficulty in practice, because a Hard town's upkeep is 125%.
 
 ### D2. A scripted bot in the test target
 
 The bot is the #47 playtest bot: the rival AI's opening and growth loop and town plan (`RivalAI`, `RivalTownPlan`) for the player, with the simple threshold rules the rivals had then, plus the market trades in the requirement. It keeps those rules on purpose, so its numbers stay comparable with #47 and #72. It lives in the test target only, as test support.
 
-- The CI test plays archipelago seeds 1, 2 and 3 on Normal for 2 years. Without the market, all three go bankrupt within those 2 years, so the test fails if the market stops rescuing the town.
+- The CI test plays archipelago seeds 2, 6 and 9 on Normal for 4,000 ticks. Without the market, these three go bankrupt at ticks 3,849, 3,699 and 3,699, so the test fails if the market stops rescuing the town.
 - The sweep plays seeds 0–9 on both layouts for 36,000 ticks behind `RIVAL_SWEEP=1`, the flag the rival sweep already uses, and runs in the weekly `rival-sweep` workflow.
 
 ## Evidence
 
-Hard, same bot and seeds, grace 30 → 50 ticks: recorded in the PR.
+Hard, same bot and seeds, 36,000 ticks:
+
+| Bankrupt on Hard | Grace 30 | Grace 50 |
+| ---------------- | -------- | -------- |
+| Without market   | 20 / 20  | 20 / 20  |
+| With market      | 1 / 20   | 1 / 20   |
+
+The outcomes don't change: these towns run real deficits in year 1, and doubling the grace to 100 ticks still failed the same games. The change removes the rule defect, not those deficits.
 
 ## Risks / Trade-offs
 

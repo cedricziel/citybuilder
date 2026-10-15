@@ -6,7 +6,7 @@ A scripted town SHALL stay solvent on Normal when it trades at its own town cent
 
 #### Scenario: A market-trading town stays solvent on Normal
 
-- **WHEN** such a town plays archipelago seeds 1, 2 and 3 on Normal for 2 years
+- **WHEN** such a town plays archipelago seeds 2, 6 and 9 on Normal for 4,000 ticks
 - **THEN** none of the games ends in bankruptcy
 
 #### Scenario: Market-trading towns stay solvent across seeds
