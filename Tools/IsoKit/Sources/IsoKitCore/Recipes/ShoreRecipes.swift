@@ -84,7 +84,7 @@ extension Recipes {
                 plot: nil
             ) { kit, stage in
                 kit.quay(frame, to: frame.shore + 0.4)
-                kit.pier(frame, along: frame.width - 2.8 ... frame.width + 0.12)
+                kit.wharf(frame)
                 kit.staged(stage) { port($0, frame) }
             },
             Recipe(
@@ -114,7 +114,7 @@ extension Recipes {
     }
 
     /// On the quay: a timber-framed warehouse on the land side, a crane at the quay edge, and cargo.
-    /// The quay and the pier come first, so the construction stages show them from the start.
+    /// The quay and the wharf come first, so the construction stages show them from the start.
     static func port(_ kit: Builder, _ frame: ShoreFrame) {
         let (lo, hi) = frame.box(out: 1.1 ... frame.shore - 1.0, y: 0.5 ... 3.3, along: 1.0 ... frame.width - 3.4)
         kit.shed(lo, hi, walls: .plaster, roof: .tile)
@@ -244,22 +244,23 @@ extension Builder {
         }
     }
 
-    /// A plank deck on pilings from the quay to the seaward edge.
-    func pier(_ frame: ShoreFrame, along span: ClosedRange<CGFloat>) {
+    /// A plank wharf on pilings over the whole seaward half: the water may lie under either end of it,
+    /// since a shore footprint only needs one water tile. Pilings show along the visible edges.
+    func wharf(_ frame: ShoreFrame) {
+        let span: ClosedRange<CGFloat> = 0.2 ... frame.width + 0.12
         let (lo, hi) = frame.box(out: frame.shore ... frame.seaEdge, y: 0.42 ... 0.56, along: span)
         block(lo, hi, .planks)
         var out = frame.shore + 1.2
         while out < frame.length {
-            for along in [span.lowerBound + 0.2, span.upperBound - 0.32] {
-                add(SCNCylinder(radius: 0.13, height: 0.9), Finish.timber.material(), at: frame.point(out, 0.3, along))
-            }
+            add(SCNCylinder(radius: 0.13, height: 0.9), Finish.timber.material(), at: frame.point(out, 0.3, frame.width - 0.3))
             out += 1.6
         }
-        add(
-            SCNCylinder(radius: 0.12, height: 0.5),
-            Finish.timber.material(),
-            at: frame.point(frame.length - 0.4, 0.8, span.lowerBound + 0.3)
-        )
+        var along = span.lowerBound + 0.4
+        while along < frame.width {
+            add(SCNCylinder(radius: 0.13, height: 0.9), Finish.timber.material(), at: frame.point(frame.length - 0.3, 0.3, along))
+            add(SCNCylinder(radius: 0.12, height: 0.5), Finish.timber.material(), at: frame.point(frame.length - 0.4, 0.8, along))
+            along += 2.4
+        }
     }
 
     /// A timber crane: a post at the quay edge with a jib reaching over the water and a hanging crate.
