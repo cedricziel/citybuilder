@@ -11,7 +11,8 @@ import Glibc
 /// `World.tick()` runs on the calling thread.
 func threadCPUNanoseconds() -> UInt64 {
     var now = timespec()
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now)
+    let status = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now)
+    precondition(status == 0, "clock_gettime(CLOCK_THREAD_CPUTIME_ID) failed: errno \(errno)")
     return UInt64(now.tv_sec) * 1_000_000_000 + UInt64(now.tv_nsec)
 }
 
