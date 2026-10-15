@@ -63,7 +63,7 @@ struct CitybuilderMacApp: App {
                     defaultGameID: Self.defaultGameID
                 ),
                 sessionFactory: { [audio] world in
-                    GameSession(
+                    let session = GameSession(
                         world: world,
                         audioEventConsumer: { events in
                             audio.consume(events: events)
@@ -72,6 +72,9 @@ struct CitybuilderMacApp: App {
                             audio.consumeSnapshot(snapshot)
                         }
                     )
+                    // Leaving the game silences its workshop loops.
+                    session.onEnd = { audio.endSession() }
+                    return session
                 },
                 pauseMenuFactory: { [saveStore] session in
                     // onQuitToTitle is injected by TitleScreenHost — spec

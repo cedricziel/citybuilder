@@ -114,6 +114,16 @@ public final class AudioCoordinator: @unchecked Sendable {
         stop(entity)
     }
 
+    /// Stops every active loop and forgets the last snapshot, so the next
+    /// game starts with no loops even if it reuses entity IDs.
+    @MainActor
+    public func endSession() {
+        for entity in Array(activeLoops.keys) {
+            stopLoop(for: entity)
+        }
+        cachedSnapshot = nil
+    }
+
     /// True if a loop is currently registered for `entity`. Used by tests.
     public func hasActiveLoop(for entity: EntityID) -> Bool {
         activeLoops[entity] != nil

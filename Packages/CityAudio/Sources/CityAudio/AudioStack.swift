@@ -141,6 +141,14 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Ends the game session's sounds: every building loop stops. App
+    /// shells call this when the player leaves a game and before a new
+    /// one starts. Music and the ambient bed play on.
+    public func endSession() {
+        coordinator.endSession()
+        player.stopAllBuildingLoops()
+    }
+
     /// Forward the per-tick `WorldSnapshot` into the coordinator so it can
     /// resolve each event's primary entity to a `TileCoordinate` for the
     /// spatial layer. Call this immediately before `consume(events:)` for

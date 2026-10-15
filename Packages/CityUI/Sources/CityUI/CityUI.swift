@@ -111,6 +111,10 @@ public final class GameSession {
     /// for spatial playback. Per spec `audio-playback` "Cue dispatched
     /// with optional position".
     public var audioSnapshotConsumer: AudioSnapshotConsumer?
+    /// Called once when the player leaves this game, so the audio layer
+    /// can silence the game's loops. Spec: `audio-playback` / A session's
+    /// loops end with it.
+    public var onEnd: (@MainActor () -> Void)?
     /// Hard pause. While `true`, `step()` short-circuits: no tick, no
     /// snapshot, no event forwarding. The audio engine is untouched so
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
@@ -122,6 +126,14 @@ public final class GameSession {
     public var routeAuthoring: RouteAuthoringViewModel?
     /// The route list; its selection drives the map's route overlay.
     public let routeList = RouteListViewModel()
+
+    /// Ends the game: runs `onEnd` once. The title screen calls this when
+    /// it drops the session.
+    public func end() {
+        let handler = onEnd
+        onEnd = nil
+        handler?()
+    }
 
     public init(
         world: World = World.newGame(),
