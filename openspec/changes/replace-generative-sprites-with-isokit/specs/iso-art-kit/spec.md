@@ -101,14 +101,14 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 
 #### Scenario: Neighbouring transition tiles join without a seam
 
-- **WHEN** tiles for masks 3 and 6 are composited as east–west neighbours on the iso lattice
+- **WHEN** a grass→beach mask-7 tile is composited one column east (+col) of a mask-3 tile, so they share an edge
 - **THEN** no pixel along their shared edge is transparent and the boundary curve is continuous across the edge
 
 ### Requirement: Offline render within a tolerance
 
 `make sprites` SHALL build IsoKit with `xcrun swift` and run it and the SVG generators. It writes the atlas PNGs of every catalog entry whose `source` is `isokit` or `svg`. Entries not yet migrated keep their committed PNGs, which makes rollout one family at a time possible. Once every family has migrated, this covers every atlas PNG.
 
-`make sprites-verify` SHALL re-render the same set of entries into a scratch directory and compare each PNG with the committed file. It fails when a PNG's mean absolute channel difference exceeds 0.1/255, or when more than 0.1% of its pixels differ by more than 8 in any channel.
+`make sprites-verify` SHALL re-render the same set of entries into a scratch directory and compare each fresh render with its committed (indexed) PNG, both premultiplied by alpha. It fails when a PNG's mean absolute channel difference exceeds 1.5/255, or when more than 0.3% of its pixels differ by more than 24 in any channel.
 
 #### Scenario: Unchanged recipes pass verification
 
