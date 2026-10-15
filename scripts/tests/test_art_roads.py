@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import random
+import re
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -48,6 +50,26 @@ def test_road_tiles_join_without_a_step() -> None:
                 mine = roads.coverage(mask, *here)
                 theirs = roads.coverage(masks[neighbour], *there)
                 assert np.abs(mine - theirs).max() < 0.05, (x, y, mask, neighbour, masks[neighbour])
+
+
+def test_masks_match_the_brief_the_renderer_reads() -> None:
+    """The road brief lists one sprite per mask; CityRender2D's RoadLinksTests checks the same list
+    against RoadLinks.allMasks, so the brief ties the two mask sets together."""
+    brief = (Path(__file__).resolve().parents[2] / "Resources/Sprites.style/catalog/building-road.md").read_text()
+    earth = {int(m) for m in re.findall(r"`building-road-c(\d+)`", brief)}
+    plaza = {int(m) for m in re.findall(r"`building-road-plaza-c(\d+)`", brief)}
+    assert earth == plaza == set(roads.masks())
+
+
+@pytest.mark.parametrize("surface", roads.SURFACES)
+def test_surfaces_repeat_once_per_tile(surface: str) -> None:
+    """Across the wrap the colour changes no more than between neighbouring texels, so road tiles
+    join without a seam in their texture."""
+    texels = roads.surface(surface)
+    for axis in (0, 1):
+        inner = np.abs(np.diff(texels, axis=axis)).max()
+        wrap = np.abs(np.take(texels, 0, axis=axis) - np.take(texels, -1, axis=axis)).max()
+        assert wrap <= inner
 
 
 def test_an_unconnected_road_is_transparent_at_its_edges() -> None:
