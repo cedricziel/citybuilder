@@ -143,9 +143,21 @@ func scenarioSawmillBeforePlanksRunOut() {
     world.setRival(1) { $0.ai.scriptIndex = 3 }
     world.setRivalStock(1, [.wood: 10, .planks: 3, .food: 10])
     world.testAddBuilding(.farm, owner: .rival(1))
+    var noHut = world
+    #expect(placedKind(noHut.takeTurn(1).last) != .sawmill, "a town without a hut has no wood to saw")
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .sawmill)
     #expect(world.rival(1)?.ai.scriptIndex == 3)
+}
+
+@Test("scenario: a rival's first sawmill costs no materials")
+func scenarioARivalsFirstSawmillCostsNoMaterials() {
+    var world = normalWorld()
+    #expect(world.materialCost(of: .sawmill, for: .rival(1)).isEmpty)
+    #expect(!world.materialCost(of: .sawmill, for: .player).isEmpty)
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    #expect(world.materialCost(of: .sawmill, for: .rival(1)) == BuildingCatalog.spec(for: .sawmill).materialCost)
 }
 
 /// The Easy death spiral measured for `rival-ai-viability`: the opening

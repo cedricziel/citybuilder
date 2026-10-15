@@ -86,7 +86,7 @@ private struct RivalTurn {
         let planks = stock[.planks, default: 0]
         var kinds: [BuildingKind] = []
         if stock[.food, default: 0] < 4, counts[.farm, default: 0] < houses { kinds.append(.farm) }
-        if sawmills == 0, planks < RivalAI.housePlanks { kinds.append(.sawmill) }
+        if sawmills == 0, allHuts > 0, planks < RivalAI.housePlanks { kinds.append(.sawmill) }
         if pastOpening, planks < 6, sawmills < huts { kinds.append(.sawmill) }
         if stock[.wood, default: 0] < 4, huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest {
             kinds.append(.lumberjackHut)
