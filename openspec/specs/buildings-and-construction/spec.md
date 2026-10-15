@@ -294,7 +294,7 @@ A player `demolish` command on a rival building SHALL be ignored, and a player `
 
 ### Requirement: Town center starter road
 
-World generation SHALL ring every town center the player owns with road on each non-water, unoccupied tile that touches its footprint, including the corners. The starter road SHALL be free. Rival town centers SHALL NOT get a starter road.
+World generation SHALL ring every town center the player owns with road on each non-water, unoccupied tile that touches its footprint, including the corners. The starter road SHALL be free. Rival town centers SHALL NOT get a starter road. Because a town center placed by the fair start rule (`world-terrain` / Fair start sites) stands inside a 5×5 square of grass, its ring SHALL have all 16 tiles.
 
 #### Scenario: Fresh-world town center starts ringed by road
 - **WHEN** a new single-island game is created
@@ -307,6 +307,10 @@ World generation SHALL ring every town center the player owns with road on each 
 #### Scenario: Rival town centers get no starter road
 - **WHEN** a new archipelago game with rivals is created
 - **THEN** no tile around a rival's town center holds road
+
+#### Scenario: Starter road ring is complete on every fair start
+- **WHEN** a new single-island game or a new archipelago game with seeds 0 to 49 is created
+- **THEN** each player town center placed by the fair start rule has all 16 ring tiles as player road
 
 ### Requirement: Wood producers cost no materials
 

@@ -24,7 +24,7 @@ extension World {
         let rival = turn.rival
         // A full town center takes no food from the farms, so a starving
         // town clears it like a debt is paid.
-        let starvingAndFull = turn.centerFreeSpace < RivalAI.fullStoreSpace && turn.stock[.food, default: 0] < 4
+        let starvingAndFull = turn.storeFull && turn.stock[.food, default: 0] < 4
         if rival.treasury < RivalAI.debtThreshold || starvingAndFull {
             for good in RivalAI.saleOrder {
                 let units = min(turn.stock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))

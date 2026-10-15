@@ -30,6 +30,20 @@ enum RivalAI {
     static let reserveUntilOccupiedHouses = 3
     static let foresterMinHouses = 4
 
+    /// Farms that feed `houses` full houses: a farm makes 2.5 food per
+    /// 100 ticks, less in winter, and a citizens' house eats 3
+    /// (`rival-viability-margin` D1).
+    static func farmTarget(houses: Int) -> Int {
+        (3 * houses + 1) / 2
+    }
+
+    /// Huts a town keeps once a forester replants, thinned ones
+    /// included, so dead huts don't fill the building cap
+    /// (`rival-viability-margin` D2).
+    static func hutLimit(houses: Int) -> Int {
+        2 + houses / 2
+    }
+
     /// Planks a house needs.
     static var housePlanks: Int {
         BuildingCatalog.spec(for: .house).materialCost[.planks, default: 0]
@@ -81,18 +95,23 @@ struct RivalTurn {
     /// without a sawmill builds one before its planks fall below a
     /// house's worth, since a sawmill needs a plank too; the planks rule
     /// waits for the end of the opening; food and wood apply at any time.
-    /// A farm per house keeps food up (`rival-ai-viability` D2, D4); huts
-    /// are replaced before their last forest is cut.
+    /// Three farms for every two houses feed a citizens' house
+    /// (`rival-viability-margin` D1); huts are replaced before their last
+    /// forest is cut, until a replanting town reaches its hut limit.
     func thresholdKinds(pastOpening: Bool) -> [BuildingKind] {
         let houses = counts[.house, default: 0]
         let huts = counts[.lumberjackHut, default: 0]
         let sawmills = counts[.sawmill, default: 0]
         let planks = stock[.planks, default: 0]
         var kinds: [BuildingKind] = []
-        if stock[.food, default: 0] < 4, counts[.farm, default: 0] < houses { kinds.append(.farm) }
+        if stock[.food, default: 0] < 4, counts[.farm, default: 0] < RivalAI.farmTarget(houses: houses) {
+            kinds.append(.farm)
+        }
         if sawmills == 0, allHuts > 0, planks < RivalAI.housePlanks { kinds.append(.sawmill) }
         if pastOpening, planks < 6, sawmills < huts { kinds.append(.sawmill) }
-        if stock[.wood, default: 0] < 4, huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest {
+        let wantsHut = huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest
+        let hutRoom = counts[.forester, default: 0] == 0 || allHuts < RivalAI.hutLimit(houses: houses)
+        if stock[.wood, default: 0] < 4, wantsHut, hutRoom {
             kinds.append(.lumberjackHut)
         }
         // A thinned hut needs a forester most, so every hut counts; a
@@ -101,6 +120,17 @@ struct RivalTurn {
             kinds.append(.forester)
         }
         return kinds
+    }
+
+    /// True when the town center has no room for the farms' food.
+    var storeFull: Bool {
+        centerFreeSpace < RivalAI.fullStoreSpace
+    }
+
+    /// True when the town center is full and no warehouse stands or is
+    /// being built (`rival-viability-margin` D3).
+    var needsWarehouse: Bool {
+        storeFull && counts[.warehouse, default: 0] == 0
     }
 
     /// Money a step must leave for houses: none for houses and farms,
@@ -157,6 +187,13 @@ extension World {
         let turn = rivalTurn(rival, stock: islandStockpile(at: center.anchor, tileToIsland: plan.tileToIsland))
         if let trades = rivalMarketCommands(turn: turn) {
             pendingCommands += trades
+            return
+        }
+        // A first warehouse comes before every other rule and even at the
+        // building cap.
+        let wantsWarehouse = turn.needsWarehouse && turn.waiting.isEmpty
+        if wantsWarehouse, let commands = rivalCommands(.warehouse, turn: turn, plan: &plan) {
+            pendingCommands += commands
             return
         }
         guard turn.cappedBuildings < difficulty.rivalBuildingCap else { return }
