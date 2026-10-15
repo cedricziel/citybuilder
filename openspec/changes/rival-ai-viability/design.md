@@ -6,13 +6,13 @@ See proposal.md (Why). The rival AI (`Systems/RivalSystem.swift`, spec `rival-to
 
 A scratch harness (not committed) ran archipelago seeds 0–9 at each difficulty for 36,000 ticks (15 years) on `main` at fa8a5dd: 10 rivals on Easy, 20 on Normal, 30 on Hard. The player was passive and its balance was topped up, because a game over stops all tax and upkeep, the rivals' included. The numbers are also posted on issue #69.
 
-| Baseline | Easy | Normal | Hard |
-|---|---|---|---|
-| Rivals at 0 residents, year 15 | 10/10 | 6/20 | 12/30 |
-| Residents year 3, median (range) | 0 | 27 (0–51) | 14 (0–43) |
-| Residents year 15 | 0 | 25.5 (0–49) | 21 (0–48) |
-| Treasury year 15 | −$1,334 | $23,967 (−$1,344…$77,205) | $11,779 (−$1,329…$50,899) |
-| Top tier year 15 | none | citizens 14, none 6 | citizens 14, peasants 4, none 12 |
+| Baseline                         | Easy    | Normal                    | Hard                             |
+| -------------------------------- | ------- | ------------------------- | -------------------------------- |
+| Rivals at 0 residents, year 15   | 10/10   | 6/20                      | 12/30                            |
+| Residents year 3, median (range) | 0       | 27 (0–51)                 | 14 (0–43)                        |
+| Residents year 15                | 0       | 25.5 (0–49)               | 21 (0–48)                        |
+| Treasury year 15                 | −$1,334 | $23,967 (−$1,344…$77,205) | $11,779 (−$1,329…$50,899)        |
+| Top tier year 15                 | none    | citizens 14, none 6       | citizens 14, peasants 4, none 12 |
 
 What the rows show:
 
@@ -23,10 +23,10 @@ What the rows show:
 
 Two counterfactuals were run with scratch edits to `RivalSystem.swift`:
 
-| Variant | Rivals at 0 residents | Easy / Normal / Hard residents year 15 |
-|---|---|---|
-| A: opening with houses before the sawmill; forester only after the opening and with ≥ 4 houses; non-house steps keep $150 until 3 houses | 0/60 | 8 / 4 / 33.5 |
-| B: original opening; same forester gate and reserve | 8/60 | 4 / 24 / 23.5 |
+| Variant                                                                                                                                  | Rivals at 0 residents | Easy / Normal / Hard residents year 15 |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------- |
+| A: opening with houses before the sawmill; forester only after the opening and with ≥ 4 houses; non-house steps keep $150 until 3 houses | 0/60                  | 8 / 4 / 33.5                           |
+| B: original opening; same forester gate and reserve                                                                                      | 8/60                  | 4 / 24 / 23.5                          |
 
 Both show the second dead end. Once planks reach 0 without a sawmill, the rival can build neither a house (4 planks) nor a sawmill (1 plank). It then sits for 15 years with $1,000–$4,500 and 20–30 food. In A, the house steps used up the starter planks before the sawmill step. In B, the reserve held back the sawmill while houses used up the planks.
 
@@ -62,16 +62,16 @@ M1 also found and fixed a placement bug. `applyPlace` read a building's material
 
 The same sweep with rival market trades on top of M1, M1 values in brackets:
 
-|                                    | Easy         | Normal      | Hard        |
-| ---------------------------------- | ------------ | ----------- | ----------- |
-| Rivals at 0 residents, year 15     | 0/10 (3/10)  | 0/20 (1/20) | 0/30 (5/30) |
-| Rivals ever in debt                | 0 (3)        | 0 (1)       | 0 (5)       |
-| Residents year 3, median           | 13 (9)       | 36 (35.5)   | 33 (21.5)   |
-| Residents year 5, median | 28 (22.5) | 34 (35) | 32 (21.5) |
-| Residents year 5, minimum | 15 (0) | 23 (0) | 21 (0) |
-| Residents year 15, median | 25.5 (19) | 35 (35.5) | 33 (24) |
-| Residents year 15, minimum | 18 (0) | 27 (0) | 20 (0) |
-| Citizens reached by year 15 | 10 (6) | 20 (19) | 30 (21) |
+|                                | Easy        | Normal      | Hard        |
+| ------------------------------ | ----------- | ----------- | ----------- |
+| Rivals at 0 residents, year 15 | 0/10 (3/10) | 0/20 (1/20) | 0/30 (5/30) |
+| Rivals ever in debt            | 0 (3)       | 0 (1)       | 0 (5)       |
+| Residents year 3, median       | 13 (9)      | 36 (35.5)   | 33 (21.5)   |
+| Residents year 5, median       | 28 (22.5)   | 34 (35)     | 32 (21.5)   |
+| Residents year 5, minimum      | 15 (0)      | 23 (0)      | 21 (0)      |
+| Residents year 15, median      | 25.5 (19)   | 35 (35.5)   | 33 (24)     |
+| Residents year 15, minimum     | 18 (0)      | 27 (0)      | 20 (0)      |
+| Citizens reached by year 15    | 10 (6)      | 20 (19)     | 30 (21)     |
 
 Every rival survives, none goes into debt, and all reach the citizen tier. D7's year-5 floors hold on Easy (8) and Normal (20). Hard's floor of 30 does not: the median is 32, but the weakest Hard rival has 21. That is M3's input.
 
@@ -85,15 +85,15 @@ Three things M2 found and changed before this result:
 
 The committed scenario test `scenarioRivalsAreViableAcrossSeeds` was run with `RIVAL_SWEEP=1` in a release build: seeds 0–9 at every difficulty over 36,000 ticks, one line per rival. M3's figures below come from those lines. The M2 figures in brackets come from the earlier uncommitted harness, which ran the same games and measured the same way.
 
-| | Easy | Normal | Hard |
-|---|---|---|---|
+|                                | Easy        | Normal      | Hard        |
+| ------------------------------ | ----------- | ----------- | ----------- |
 | Rivals at 0 residents, year 15 | 0/10 (0/10) | 0/20 (0/20) | 0/30 (0/30) |
-| Lowest treasury, any rival | $50 ($50) | $50 ($50) | $50 ($50) |
-| Residents year 3, median | 13 (13) | 37.5 (36) | 42.5 (33) |
-| Residents year 5, median | 20.5 (28) | 35.5 (34) | 43 (32) |
-| Residents year 5, minimum | 15 (15) | 20 (23) | 30 (21) |
-| Residents year 15, median | 19 (25.5) | 37.5 (35) | 42 (33) |
-| Residents year 15, minimum | 13 (18) | 25 (27) | 28 (20) |
+| Lowest treasury, any rival     | $50 ($50)   | $50 ($50)   | $50 ($50)   |
+| Residents year 3, median       | 13 (13)     | 37.5 (36)   | 42.5 (33)   |
+| Residents year 5, median       | 20.5 (28)   | 35.5 (34)   | 43 (32)     |
+| Residents year 5, minimum      | 15 (15)     | 20 (23)     | 30 (21)     |
+| Residents year 15, median      | 19 (25.5)   | 37.5 (35)   | 42 (33)     |
+| Residents year 15, minimum     | 13 (18)     | 25 (27)     | 28 (20)     |
 
 D7's year-5 floors hold on every seed: Easy 8, Normal 20 and Hard 30. But Normal's minimum of 20 and Hard's of 30 sit exactly on their floors, with no margin (see Risks and #98). Difficulty now sets a rival's size: Hard rivals end around 42 residents and Easy rivals around 19. Hard rivals reach the Renaissance in 29 of 30 games, and one reaches the Industrial age.
 
@@ -167,10 +167,10 @@ This reverses `add-town-market`'s "Rivals stay off the market". That change kept
 
 ### D6 — Caps scaled by difficulty, foresters and roads not counted
 
-| | Easy | Normal | Hard |
-|---|---|---|---|
-| House cap | 16 | 24 | 32 |
-| Building cap (excluding roads and foresters) | 32 | 48 | 64 |
+|                                              | Easy | Normal | Hard |
+| -------------------------------------------- | ---- | ------ | ---- |
+| House cap                                    | 16   | 24     | 32   |
+| Building cap (excluding roads and foresters) | 32   | 48     | 64   |
 
 The old cap counted foresters, which took 8 of 50 slots in every living town. The building cap counts houses too. These numbers set how big a rival gets; the turn interval and starting treasury still set how fast. They are starting values for M3 to tune against the targets in D7.
 
