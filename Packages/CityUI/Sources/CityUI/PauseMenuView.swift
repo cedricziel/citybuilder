@@ -70,7 +70,7 @@ public struct PauseMenuView: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier("pause.\(action.kind)")
         if action.kind == .resume {
-            button.pauseHotkeys()
+            button.cancelActionHotkey()
         } else {
             button
         }

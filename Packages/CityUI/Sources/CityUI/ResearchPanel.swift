@@ -99,6 +99,7 @@ struct ResearchPanelView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: dismiss)
+                        .cancelActionHotkey()
                 }
             }
         }
