@@ -27,6 +27,8 @@ public final class AudioStack {
     public let coordinator: AudioCoordinator
     public let playlist: MusicPlaylist
     public let ambientBed: AmbientBed
+    /// Seasonal and coastal beds, when the bindings name them.
+    public let ambientScene: AmbientScene?
     /// Optional iCloud sync layer. Non-nil when the app shell passes a
     /// `CloudKeyValueStore` (typically `UbiquitousAudioSettingsStore` in
     /// production). The settings model writes through to UserDefaults
@@ -57,12 +59,7 @@ public final class AudioStack {
         let session = PlatformAudioSession(engine: engine)
         let player = EngineCuePlayer(engine: engine, bundle: bundle)
 
-        // Apply persisted volumes to the engine buses.
-        engine.setVolume(settings.musicVolume, on: .music)
-        engine.setVolume(settings.sfxVolume, on: .sfx)
-        engine.setVolume(settings.sfxVolume, on: .ambient)
-        engine.setVolume(settings.musicVolume, on: .loop)
-        engine.isMuted = settings.isMuted
+        Self.applyVolumes(settings, to: engine)
 
         // Production dispatcher: route every dispatched cue to the cue
         // player. When music ducking is enabled, wrap the player in a
@@ -109,6 +106,7 @@ public final class AudioStack {
         self.coordinator = coordinator
         self.playlist = playlist
         self.ambientBed = ambientBed
+        self.ambientScene = AmbientScene(section: bindings.ambient, player: player)
         self.settingsSync = cloudStore.map { AudioSettingsSync(store: $0, defaults: userDefaults) }
         // Pull any cloud-stored values into UserDefaults at launch so the
         // engine starts with the latest cross-device volumes.
@@ -127,6 +125,15 @@ public final class AudioStack {
         startMusicIfAvailable()
     }
 
+    /// Applies the persisted bus volumes and mute to the engine.
+    private static func applyVolumes(_ settings: AudioSettings, to engine: AudioEngine) {
+        engine.setVolume(settings.musicVolume, on: .music)
+        engine.setVolume(settings.sfxVolume, on: .sfx)
+        engine.setVolume(settings.sfxVolume, on: .ambient)
+        engine.setVolume(settings.musicVolume, on: .loop)
+        engine.isMuted = settings.isMuted
+    }
+
     /// Push the current local audio settings to the cloud store, if any.
     /// Call from the Settings UI after the user changes a slider or toggle.
     public func syncSettingsToCloud() async {
@@ -138,6 +145,7 @@ public final class AudioStack {
     /// engine semantics require it); this just routes events.
     public func consume(events: [WorldEvent]) {
         ambientBed.consume(events: events)
+        ambientScene?.tick()
         coordinator.consume(events: events)
     }
 
@@ -155,6 +163,7 @@ public final class AudioStack {
     /// the same tick. Snapshots before any events are valid — the cached
     /// snapshot is just used for entity lookups.
     public func consumeSnapshot(_ snapshot: WorldSnapshot) {
+        ambientScene?.consumeSnapshot(snapshot)
         coordinator.consumeSnapshot(snapshot)
     }
 
@@ -165,6 +174,7 @@ public final class AudioStack {
     /// Per spec `audio-playback` "Listener position from camera".
     public func setListenerPosition(_ tile: TileCoordinate?) {
         player.setListener(tile)
+        ambientScene?.setListener(tile)
         guard let env = engine.environmentNode, let tile else { return }
         env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
     }

@@ -70,6 +70,11 @@ public final class EngineCuePlayer {
         detach(player)
     }
 
+    /// Sets the volume of the path-keyed loop for `path`, if it plays.
+    public func setLoopVolume(path: String, volume: Float) {
+        loopPlayers[path]?.volume = volume
+    }
+
     /// Halts the building loop of `entity`; another wanted loop may take its place.
     public func stopLoop(entity: EntityID) {
         buildingLoops.stop(entity)
