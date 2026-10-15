@@ -228,6 +228,13 @@ struct KitGateTests {
         }
     }
 
+    @Test("a brief that lists its own sprite twice is not a duplicate owner")
+    func briefListingASpriteTwiceLoads() throws {
+        let root = temporaryResources()
+        try writeBrief(root, id: "building-house", source: "isokit", recipe: "- (0, 0): `building-house`\n- (0, 1): `building-house`")
+        #expect(try GateCatalog.load(resourcesRoot: root).migratedSheetNames == ["building-house"])
+    }
+
     @Test("@2x frames compare against their @2x base")
     func twoXFramesUseTwoXBase() {
         #expect(SpriteContentGate.coherenceBase(for: "building-sawmill-operational-1@2x.png") == "building-sawmill@2x.png")

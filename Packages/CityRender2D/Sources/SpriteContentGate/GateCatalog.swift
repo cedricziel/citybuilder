@@ -69,7 +69,8 @@ public struct GateCatalog: Sendable {
             sheets[id] = sheetNames(in: markdown)
         }
         var claims: [String: Int] = [:]
-        for name in sheets.values.joined() {
+        // A brief may list a sprite twice (two cells for one frame); only claims by different briefs clash.
+        for name in sheets.values.flatMap(Set.init) {
             claims[name, default: 0] += 1
         }
         let duplicates = claims.filter { $0.value > 1 }.keys.sorted()
