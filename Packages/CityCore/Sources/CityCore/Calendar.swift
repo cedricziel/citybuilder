@@ -130,6 +130,9 @@ extension World {
         let today = date
         events.append(.seasonChanged(today.season))
         market = MarketLedger()
+        for index in rivals.indices {
+            rivals[index].market = MarketLedger()
+        }
         guard calendar.isActive, tickCount.isMultiple(of: CalendarState.ticksPerYear),
               let event = historyEvent(forYear: today.year),
               event != .ratsInTheGranary || playerFoodStores.contains(where: { $0.food >= 2 })

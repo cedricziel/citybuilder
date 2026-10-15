@@ -24,10 +24,24 @@ extension World {
             applyCommission(gallery, events: &events)
         case let .setExport(caravanserai, good):
             applySetExport(caravanserai, good: good)
+        case .marketBuy, .marketSell, .rivalMarketBuy, .rivalMarketSell:
+            applyMarketCommand(command, events: &events)
+        }
+    }
+
+    /// The player's and the rivals' market trades.
+    private mutating func applyMarketCommand(_ command: Command, events: inout [WorldEvent]) {
+        switch command {
         case let .marketBuy(townCenter, good, quantity):
             applyMarketTrade(.bought, good, quantity, at: townCenter, events: &events)
         case let .marketSell(townCenter, good, quantity):
             applyMarketTrade(.sold, good, quantity, at: townCenter, events: &events)
+        case let .rivalMarketBuy(rival, good, quantity):
+            applyRivalMarketTrade(.bought, good, quantity, for: rival)
+        case let .rivalMarketSell(rival, good, quantity):
+            applyRivalMarketTrade(.sold, good, quantity, for: rival)
+        default:
+            return
         }
     }
 

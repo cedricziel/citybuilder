@@ -1,0 +1,130 @@
+import Foundation
+import Testing
+@testable import CityCore
+
+// rival-towns / Rival market trades (change rival-ai-viability, M2).
+
+private func normalWorld() -> World {
+    World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
+}
+
+private func rivalTrades(_ commands: [Command]) -> [Command] {
+    commands.filter {
+        switch $0 {
+        case .rivalMarketBuy, .rivalMarketSell: true
+        default: false
+        }
+    }
+}
+
+@Test("scenario: rival buys the planks it is missing")
+func scenarioRivalBuysThePlanksItIsMissing() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 3
+        $0.treasury = 400
+    }
+    world.setRivalStock(1, [.wood: 10, .food: 10])
+    let commands = world.takeTurn(1)
+    #expect(commands == [.rivalMarketBuy(1, .planks, 4)])
+    world.tick()
+    let price = Good.planks.marketPrice(.bought)
+    #expect(world.rival(1)?.treasury == 400 - 4 * price)
+    #expect(world.rivalStock(1)[.planks] == 4)
+    #expect(world.rival(1)?.market.traded(.planks, .bought) == 4)
+}
+
+@Test("scenario: rival in debt sells surplus planks")
+func scenarioRivalInDebtSellsSurplusPlanks() {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = -20 }
+    world.setRivalStock(1, [.planks: 40])
+    let commands = world.takeTurn(1)
+    #expect(commands == [.rivalMarketSell(1, .planks, 20)])
+    world.tick()
+    #expect(world.rival(1)?.treasury == -20 + 20 * Good.planks.marketPrice(.sold))
+    #expect(world.rivalStock(1)[.planks] == 20)
+}
+
+@Test("scenario: rival buys food for short houses")
+func scenarioRivalBuysFoodForShortHouses() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.treasury = 500
+    }
+    world.setRivalStock(1, [.wood: 10, .planks: 10, .food: 1])
+    let house = world.testAddHouse(owner: .rival(1), residents: 4)
+    world.populations[house]?.setShort(.food, true)
+    let commands = world.takeTurn(1)
+    #expect(commands == [.rivalMarketBuy(1, .food, 5)])
+}
+
+@Test("scenario: no purchase into a full town center")
+func scenarioNoPurchaseIntoAFullTownCenter() {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.treasury = 500
+    }
+    // 40 units fill the town center.
+    world.setRivalStock(1, [.wood: 19, .planks: 20, .food: 1])
+    let house = world.testAddHouse(owner: .rival(1), residents: 4)
+    world.populations[house]?.setShort(.food, true)
+    let commands = world.takeTurn(1)
+    #expect(rivalTrades(commands).isEmpty)
+    #expect(!commands.isEmpty)
+}
+
+@Test("scenario: rival limits are its own")
+func scenarioRivalLimitsAreItsOwn() throws {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.treasury = 500
+        $0.market.record(10, of: .food, .bought)
+    }
+    world.setRivalStock(1, [.wood: 10, .planks: 10, .food: 1])
+    let house = world.testAddHouse(owner: .rival(1), residents: 4)
+    world.populations[house]?.setShort(.food, true)
+    #expect(rivalTrades(world.takeTurn(1)).isEmpty)
+    let center = try #require(world.goodsBuffers(of: .player).first { $0.kind == .townCenter }?.id)
+    world.testSetStock([:], in: center)
+    world.enqueue(.marketBuy(center, .food, 10))
+    world.tick()
+    #expect(world.market.traded(.food, .bought) == 10)
+    #expect(world.rival(1)?.market.traded(.food, .bought) == 10)
+    // The season turns: the rival's count resets with the player's.
+    _ = world.testRun(ticks: Int(CalendarState.ticksPerSeason))
+    #expect(world.rival(1)?.market.traded(.food, .bought) == 0)
+}
+
+@Test("scenario: rival trades leave the player alone")
+func scenarioRivalTradesLeaveThePlayerAlone() {
+    var world = normalWorld()
+    world.setRivalStock(1, [.planks: 40])
+    let balance = world.economy.balance
+    let playerStock = world.goodsBuffers(of: .player).map { world.stockpiles[$0.id] }
+    world.enqueue(.rivalMarketSell(1, .planks, 20))
+    let events = world.tick().events
+    #expect(world.rivalStock(1)[.planks] == 20)
+    #expect(world.economy.balance == balance)
+    #expect(world.goodsBuffers(of: .player).map { world.stockpiles[$0.id] } == playerStock)
+    #expect(world.market == MarketLedger())
+    #expect(!events.contains { if case .marketTraded = $0 { true } else { false } })
+}
+
+@Test("a rival's market counts survive a save, and older saves load with none")
+func rivalMarketCountsPersist() throws {
+    var world = normalWorld()
+    world.setRival(1) { $0.market.record(3, of: .planks, .sold) }
+    let data = try JSONEncoder().encode(world)
+    let loaded = try JSONDecoder().decode(World.self, from: data)
+    #expect(loaded.rival(1)?.market.traded(.planks, .sold) == 3)
+
+    let rival = try #require(world.rival(1))
+    var object = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(rival)) as? [String: Any])
+    object.removeValue(forKey: "market")
+    let old = try JSONDecoder().decode(RivalTown.self, from: JSONSerialization.data(withJSONObject: object))
+    #expect(old.market == MarketLedger())
+}

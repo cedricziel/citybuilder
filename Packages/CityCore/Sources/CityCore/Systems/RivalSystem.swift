@@ -57,7 +57,7 @@ extension RivalAIState {
 }
 
 /// What a rival has on its island when its turn starts (design D5).
-private struct RivalTurn {
+struct RivalTurn {
     let rival: RivalTown
     /// Buildings by kind; huts low on forest are left out.
     var counts: [BuildingKind: Int] = [:]
@@ -71,6 +71,10 @@ private struct RivalTurn {
     var allHuts = 0
     /// Houses with at least one resident.
     var occupiedHouses = 0
+    /// True when one of the rival's houses went short of food.
+    var hasHouseShortOfFood = false
+    /// Room in the town center, where market purchases go.
+    var centerFreeSpace = 0
     let stock: [Good: Int]
 
     /// The threshold rules that apply, in order (design D5). A town
@@ -151,6 +155,10 @@ extension World {
         guard let center = buildings[rival.townCenterID] else { return }
         var plan = RivalTownPlan(world: self, owner: rival.owner, center: center.anchor)
         let turn = rivalTurn(rival, stock: islandStockpile(at: center.anchor, tileToIsland: plan.tileToIsland))
+        if let trades = rivalMarketCommands(turn: turn, plan: &plan) {
+            pendingCommands += trades
+            return
+        }
         guard turn.nonRoad < RivalAI.buildingCap else { return }
         if let commands = thresholdCommands(turn: turn, plan: &plan) {
             pendingCommands += commands
@@ -198,14 +206,16 @@ extension World {
 
     private func rivalTurn(_ rival: RivalTown, stock: [Good: Int]) -> RivalTurn {
         var turn = RivalTurn(rival: rival, stock: stock)
+        turn.centerFreeSpace = stockpiles[rival.townCenterID]?.freeSpace ?? 0
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
             turn.nonRoad += building.kind == .road ? 0 : 1
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
             }
-            if building.kind == .house, populations[building.id]?.population ?? 0 > 0 {
-                turn.occupiedHouses += 1
+            if building.kind == .house, let pop = populations[building.id] {
+                if pop.population > 0 { turn.occupiedHouses += 1 }
+                if pop.isShort(.food) { turn.hasHouseShortOfFood = true }
             }
             if building.kind == .lumberjackHut {
                 turn.allHuts += 1

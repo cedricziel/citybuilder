@@ -199,9 +199,13 @@ func easyRivalDoesNotSpiralIntoDebt() throws {
 @Test("a threshold rule the rival can't carry out gives way to the next")
 func unsuppliedThresholdGivesWayToTheNext() {
     var world = normalWorld()
-    world.setRival(1) { $0.ai.scriptIndex = 12 }
-    // One house asks for a farm, but there is no wood for it and no
-    // forest left to cut; a hut needs no wood from a rival.
+    // One house asks for a farm, but there is no wood for it, no forest
+    // left to cut, and the market has sold the rival all the wood it may
+    // this season; a hut needs no wood from a rival.
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.market.record(10, of: .wood, .bought)
+    }
     world.setRivalStock(1, [.planks: 10, .food: 0])
     world.testAddBuilding(.house, owner: .rival(1))
     world.testAddBuilding(.sawmill, owner: .rival(1))
