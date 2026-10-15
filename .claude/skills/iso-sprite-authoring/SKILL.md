@@ -37,6 +37,11 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
 - Building cell: n×n footprint → **64n pt wide**; anchor `(0.5, 0)` =
   footprint bottom vertex. Each recipe declares its height; `CellFit` projects
   every geometry corner and fails a clipped stage (`isokit check`).
+- Non-square footprints: `SpriteCell(footprint: cols, rows:)` is 32 pt per column and per row
+  wide; the cell's bottom-centre is level with the bottom vertex, centred on the footprint's
+  width (the renderer's offset for W ≠ H). The port and shipyard are 2 × 3.
+- Units (ships): `Recipe(unit: true)` renders only `<id>-<frame>`, each frame as one whole scene.
+  The renderer anchors a ship at (0.5, 0.3), so the hull centre sits 30 % up a 72 pt cell.
 - Walkers: 10×16 (8×12 is too small to read).
 
 ## Recipes
@@ -60,7 +65,15 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   corner projects above the cell.
 - **Moving parts** (sails, saws): overlay frames with the building drawn
   depth-only and no ground, composited onto the idle sprite as
-  `-operational-N`. Four-blade sails repeat every 90°, so 4 frames make a turn.
+  `-operational-N`. Four-blade sails repeat every 90°, so 4 frames make a turn. Parts a few
+  centimetres apart (a sail ahead of its mast) can swap order between runs in the overlay;
+  render those frames whole.
+- **Facings:** move the geometry, never the camera or the sun. Shore buildings lay out in a
+  land-to-sea frame (`ShoreFrame`); `-s` means the sea lies toward +z, as `ShoreOrientationMath`
+  derives it. The water tiles can sit anywhere along the shore (one is enough), so seaward
+  structures span the whole seaward half. Slabs overhang only the two visible edges, and
+  full-footprint ground works (quay, slipway) stay out of the construction cut, or the scaffold
+  poles land outside the cell.
 - Recipes may not add lights or materials outside the finish set. `RecipeRules`
   checks every construction stage and every moving-part frame, in the tests and
   in `isokit check`.
@@ -155,7 +168,8 @@ branch. Launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
 with `simctl io screenshot`. Add `-uiTestSeason autumn` or `winter` to start
 the town in that season, and `-uiTestShowcase <category>` (`gather`, `craft`,
 `town`) to also place one of each kind in that build category where the rules
-allow. Ask for the simulator slot first and shut the
+allow. Shore art uses `-uiTestSeedShore` instead: a port, a shipyard and a ship on
+the coast, under the camera on the port. Ask for the simulator slot first and shut the
 simulator down afterwards. The HUD's money and population come from the core
 simulation, so if they differ between the two shots, the builds sit on
 different main commits; the art didn't cause it.
