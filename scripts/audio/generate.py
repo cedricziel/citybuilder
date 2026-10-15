@@ -32,11 +32,16 @@ def manifest_entry(sound: sounds.Sound) -> dict[str, str]:
             "source": SOURCE, "license": "CC0"}
 
 
-def updated_manifest(manifest: dict) -> dict:
-    """The manifest with an entry per generated sound, in place of any older entry for its path."""
-    generated = {sound.path: manifest_entry(sound) for sound in sounds.SOUNDS}
-    kept = [entry for entry in manifest["entries"] if entry["path"] not in generated]
-    return {**manifest, "entries": kept + list(generated.values())}
+def updated_manifest(manifest: dict, generated: dict[str, dict] | None = None) -> dict:
+    """The manifest with `generated` entries (by default every sound's):
+    an existing entry for the path is replaced where it stands, a new one
+    is appended, so generators that share the manifest don't reorder it."""
+    if generated is None:
+        generated = {sound.path: manifest_entry(sound) for sound in sounds.SOUNDS}
+    entries = [generated.get(entry["path"], entry) for entry in manifest["entries"]]
+    present = {entry["path"] for entry in entries}
+    entries += [entry for path, entry in generated.items() if path not in present]
+    return {**manifest, "entries": entries}
 
 
 def main(argv: list[str] | None = None) -> int:
