@@ -171,3 +171,17 @@ func preExistingCatalogEntriesStayDeclared() {
     #expect(!names.contains("building-port"))
     #expect(!names.contains("building-shipyard"))
 }
+
+// MARK: - Placement ghost
+
+/// A shore building has no facing-free sprite, so its ghost asks for the facing it would get.
+@Test("a shore building's ghost shows the facing the water gives it")
+func shoreGhostShowsItsFacing() {
+    let anchor = TileCoordinate(x: 10, y: 10)
+    let waterSouth = { (tile: TileCoordinate) -> TerrainType? in tile.y >= 12 ? .water : .grass }
+    let waterWest = { (tile: TileCoordinate) -> TerrainType? in tile.x == 10 ? .water : .grass }
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .port, anchor: anchor, terrain: waterSouth) == "building-port-s")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .shipyard, anchor: anchor, terrain: waterWest) == "building-shipyard-w")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .port, anchor: anchor) { _ in .grass } == "building-port-s")
+    #expect(ShoreOrientationMath.ghostTextureName(kind: .house, anchor: anchor, terrain: waterSouth) == nil)
+}
