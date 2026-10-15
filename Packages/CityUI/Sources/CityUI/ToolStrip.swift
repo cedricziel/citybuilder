@@ -45,6 +45,13 @@ public extension GameSession {
         return costBreakdown(for: kind, anchor: world.camera.centerTile())
     }
 
+    /// Whether the player may place `kind` at `tile` and can pay for it,
+    /// the ghost's green tint.
+    internal func isValidPlacement(_ kind: BuildingKind, at tile: TileCoordinate) -> Bool {
+        guard case .allowed = world.canPlace(kind, at: tile) else { return false }
+        return world.economy.balance >= BuildingCatalog.spec(for: kind).cost
+    }
+
     /// Trees or open grass the armed hut or forester would reach at its
     /// candidate site: the pending placement, else the hovered tile, else
     /// on touch the camera-center tile, as for the material chips. Nil for

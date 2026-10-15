@@ -375,13 +375,6 @@ public final class GameSession {
         )
     }
 
-    /// Whether the player may place `kind` at `tile` and can pay for it,
-    /// the ghost's green tint.
-    func isValidPlacement(_ kind: BuildingKind, at tile: TileCoordinate) -> Bool {
-        guard case .allowed = world.canPlace(kind, at: tile) else { return false }
-        return world.economy.balance >= BuildingCatalog.spec(for: kind).cost
-    }
-
     func costBreakdown(
         for kind: BuildingKind,
         anchor: TileCoordinate
