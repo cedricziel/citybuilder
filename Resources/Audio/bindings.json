@@ -1,6 +1,21 @@
 {
   "version": 1,
   "bindings": {
+    "ui.tap": [
+      { "file": "ui/tap.caf", "bus": "sfx", "volume": 0.35 }
+    ],
+    "ui.select": [
+      { "file": "ui/select.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.toggle": [
+      { "file": "ui/toggle.caf", "bus": "sfx", "volume": 0.45 }
+    ],
+    "ui.open": [
+      { "file": "ui/open.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.close": [
+      { "file": "ui/close.caf", "bus": "sfx", "volume": 0.4 }
+    ],
     "buildingDemolished": [
       { "file": "sfx/demolish.caf", "bus": "sfx", "volume": 0.8 }
     ],
