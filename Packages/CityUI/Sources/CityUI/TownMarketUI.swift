@@ -58,19 +58,8 @@ public extension GameSession {
 
     /// Buy or sell `quantity` of `good` at the selected town center.
     func tradeAtMarket(_ direction: TradeDirection, _ good: Good, _ quantity: Int) {
-        guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.marketReach(at: id) != nil else { return }
+        guard let tile = selectedTile, let id = world.occupiedTiles[tile], world.hasMarket(at: id) else { return }
         enqueue(direction == .bought ? .marketBuy(id, good, quantity) : .marketSell(id, good, quantity))
-    }
-
-    /// Inspector model derived from the current snapshot + selection.
-    var inspector: InspectorViewModel {
-        guard let selectedTile else { return InspectorViewModel(bullets: []) }
-        return InspectorViewModel.make(
-            from: world.snapshot(),
-            tile: selectedTile,
-            buildings: world.buildings,
-            townMarket: townMarket
-        )
     }
 }
 
@@ -80,31 +69,47 @@ struct TownMarketView: View {
     let market: TownMarketSection
     let onTrade: (TradeDirection, Good, Int) -> Void
 
-    /// Twelve rows outgrow a phone's callout, so they scroll.
-    static let maxHeight: CGFloat = 200
-
     var body: some View {
         Section {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(market.rows) { row in
+            ForEach(market.rows) { row in
+                VStack(alignment: .leading, spacing: 2) {
+                    rowText(row)
+                    // All four buttons on one line where they fit, else Buy
+                    // and Sell on a line each.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 10) { buttons(row) }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(row.text).font(.caption.monospaced()).fixedSize(horizontal: false, vertical: true)
-                            HStack(spacing: 10) {
-                                if row.isBuyable {
-                                    button("Buy", .bought, row, isEnabled: row.canBuy)
-                                }
-                                if row.isSellable {
-                                    button("Sell", .sold, row, isEnabled: row.canSell)
-                                }
-                            }
+                            HStack(spacing: 10) { buttons(row, only: .bought) }
+                            HStack(spacing: 10) { buttons(row, only: .sold) }
                         }
                     }
                 }
             }
-            .frame(maxHeight: Self.maxHeight)
         } header: {
             Text("Market").font(.caption.bold())
+        }
+    }
+
+    /// On Apple TV a row whose buttons are all off would hold nothing to
+    /// focus, so the remote could never scroll its prices into view; the
+    /// text itself takes focus there.
+    @ViewBuilder
+    private func rowText(_ row: TownMarketSection.Row) -> some View {
+        let text = Text(row.text).font(.caption.monospaced()).fixedSize(horizontal: false, vertical: true)
+        #if os(tvOS)
+        text.focusable()
+        #else
+        text
+        #endif
+    }
+
+    @ViewBuilder
+    private func buttons(_ row: TownMarketSection.Row, only direction: TradeDirection? = nil) -> some View {
+        if row.isBuyable, direction != .sold {
+            button("Buy", .bought, row, isEnabled: row.canBuy)
+        }
+        if row.isSellable, direction != .bought {
+            button("Sell", .sold, row, isEnabled: row.canSell)
         }
     }
 

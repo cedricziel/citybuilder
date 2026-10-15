@@ -18,7 +18,7 @@ private func marketSession(_ change: (inout World, EntityID) -> Void = { _, _ in
 
 @MainActor
 private func row(_ good: Good, in session: GameSession) throws -> TownMarketSection.Row {
-    let market = try #require(session.inspector.townMarket)
+    let market = try #require(session.townMarket)
     return try #require(market.rows.first { $0.good == good })
 }
 
@@ -26,10 +26,20 @@ private func row(_ good: Good, in session: GameSession) throws -> TownMarketSect
 @Test("scenario: Town market rows")
 func townMarketRows() throws {
     let (session, _) = try marketSession()
-    let market = try #require(session.inspector.townMarket)
+    let market = try #require(session.townMarket)
     #expect(market.rows.first?.text == "Wood — buy $6 (10 left) · sell $2 (20 left)")
     #expect(try row(.tools, in: session).text == "Tools — sell $15 (20 left)")
-    #expect(market.rows.map(\.good) == Good.allCases)
+    #expect(market.rows.map(\.good) == session.world.marketQuotes.map(\.good))
+}
+
+@MainActor
+@Test func buyStaysEnabledWithRoomForFewerThanFive() throws {
+    for room in 1 ... 4 {
+        let (session, _) = try marketSession { world, center in
+            world.stockpiles[center] = Stockpile(capacity: room)
+        }
+        #expect(try row(.wood, in: session).canBuy, "room \(room)")
+    }
 }
 
 @MainActor
@@ -89,7 +99,7 @@ func marketLockedAfterGameOver() throws {
         world.economy.gameOver = true
         world.stockpiles[center]?.deposit(.planks, amount: 1)
     }
-    let market = try #require(session.inspector.townMarket)
+    let market = try #require(session.townMarket)
     #expect(market.rows.allSatisfy { !$0.canBuy && !$0.canSell })
     session.tradeAtMarket(.bought, .wood, 1)
     #expect(session.world.pendingCommands.isEmpty)
@@ -104,7 +114,7 @@ func noMarketAtARivalTownCenter() throws {
     let session = GameSession(world: world)
     session.selectedTile = try #require(world.buildings[rival.townCenterID]).anchor
     #expect(session.inspector.rival != nil)
-    #expect(session.inspector.townMarket == nil)
+    #expect(session.townMarket == nil)
     session.tradeAtMarket(.bought, .wood, 1)
     #expect(session.world.pendingCommands.isEmpty)
 }
@@ -113,5 +123,5 @@ func noMarketAtARivalTownCenter() throws {
 @Test func otherBuildingsHaveNoTownMarket() throws {
     let (session, _) = try marketSession()
     session.selectedTile = nil
-    #expect(session.inspector.townMarket == nil)
+    #expect(session.townMarket == nil)
 }

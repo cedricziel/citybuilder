@@ -11,6 +11,8 @@ public enum InspectorCalloutLayout {
     /// in the dock layout.
     public static let sideGap: CGFloat = 14
     public static let belowGap: CGFloat = 12
+    static let spacing: CGFloat = 6
+    static let padding = CGSize(width: 12, height: 10)
 
     /// Which side of the building the callout ended up on.
     public enum Side: Equatable, Sendable {
@@ -59,6 +61,12 @@ public enum InspectorCalloutLayout {
 
 /// Spec: `platform-shells` / Inspector callout.
 public extension GameSession {
+    /// Inspector model derived from the current snapshot + selection.
+    var inspector: InspectorViewModel {
+        guard let selectedTile else { return InspectorViewModel(bullets: []) }
+        return InspectorViewModel.make(from: world.snapshot(), tile: selectedTile, buildings: world.buildings)
+    }
+
     /// The callout's Demolish: demolishes the selected building and clears
     /// the selection.
     func demolishSelection() {
@@ -77,19 +85,33 @@ struct InspectorCalloutView<Actions: View>: View {
     @Binding var isExpanded: Bool
     @ViewBuilder let actions: () -> Actions
     @State private var size = CGSize(width: InspectorCalloutLayout.width, height: 120)
+    /// The details' full height, so their scroll view is no taller.
+    @State private var detailsHeight: CGFloat = 0
+    /// The scroll view's current height; the rest of `size` is the
+    /// header, footer, spacing and padding.
+    @State private var scrollHeight: CGFloat = 0
 
     var body: some View {
+        // The safe area is read before it is ignored: inside, the insets
+        // read zero, and on Apple TV the callout then ran under the top bar.
+        GeometryReader { safe in
+            fullScreen(insets: safe.safeAreaInsets)
+        }
+    }
+
+    private func fullScreen(insets: EdgeInsets) -> some View {
         // Full-screen coordinates, the same space the world view projects into.
         GeometryReader { proxy in
             let (anchor, half) = projection(viewSize: proxy.size)
+            let bounds = freeArea(size: proxy.size, insets: insets)
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,
                 buildingHalfSize: half,
                 calloutSize: size,
-                bounds: freeArea(size: proxy.size, insets: proxy.safeAreaInsets),
+                bounds: bounds,
                 placement: layout.placement
             )
-            card
+            card(maxHeight: bounds.height)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("inspector.callout")
                 .overlay(alignment: .topLeading) { pointer(side: placed.side, anchor: anchor, origin: placed.origin) }
@@ -129,10 +151,41 @@ struct InspectorCalloutView<Actions: View>: View {
         return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
     }
 
-    private var card: some View {
+    /// The details, such as the town center market, scroll when the
+    /// callout would outgrow `maxHeight`, so Less and Demolish stay on
+    /// screen.
+    private func card(maxHeight: CGFloat) -> some View {
         let keyLines = viewModel.keyLines
         let rest = viewModel.bullets.filter { !keyLines.contains($0) && !$0.hasPrefix("Kind:") }
-        return VStack(alignment: .leading, spacing: 6) {
+        let room = max(0, maxHeight - (size.height - scrollHeight))
+        return VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
+            header(keyLines)
+            if isExpanded {
+                // The scroll view takes what the header and footer leave,
+                // and no more than the details need.
+                ScrollView {
+                    details(rest)
+                        .onGeometryChange(for: CGFloat.self, of: \.size.height) { detailsHeight = $0 }
+                }
+                .frame(maxHeight: min(detailsHeight, room))
+                .onGeometryChange(for: CGFloat.self, of: \.size.height) { scrollHeight = $0 }
+                // tvOS scroll views draw outside their bounds for focus effects.
+                .clipped()
+            } else {
+                details(rest)
+            }
+            footer
+        }
+        .padding(.horizontal, InspectorCalloutLayout.padding.width)
+        .padding(.vertical, InspectorCalloutLayout.padding.height)
+        .frame(width: InspectorCalloutLayout.width, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+    }
+
+    /// Title, tier, residents meter and key lines.
+    private func header(_ keyLines: [String]) -> some View {
+        VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(viewModel.title ?? "Building").font(.headline)
                 Spacer(minLength: 0)
@@ -153,36 +206,40 @@ struct InspectorCalloutView<Actions: View>: View {
                     Text(line).font(.caption.monospaced()).lineLimit(2)
                 }
             }
-            InspectorView(
-                viewModel: viewModel,
-                lines: isExpanded ? rest : [],
-                isFramed: false,
-                showsDetails: isExpanded,
-                onCommission: session.commissionArt,
-                onPickExport: session.pickExport,
-                onStartRoute: { session.beginRouteAuthoring(from: $0) },
-                onMarketTrade: session.tradeAtMarket
-            )
-            .disabled(session.isGameOver)
-            .foregroundStyle(.primary.opacity(0.75))
-            HStack(spacing: 8) {
-                Button(isExpanded ? "Less" : "Details") { isExpanded.toggle() }
-                Spacer(minLength: 0)
-                actions()
-                if viewModel.rival == nil {
-                    Button("Demolish", role: .destructive, action: session.demolishSelection)
-                        .foregroundStyle(.red)
-                        .disabled(session.isGameOver)
-                }
-            }
-            .font(.caption.weight(.semibold))
-            .buttonStyle(.borderless)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(width: InspectorCalloutLayout.width, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+    }
+
+    /// The other lines and the building's controls, the market among them.
+    private func details(_ rest: [String]) -> some View {
+        InspectorView(
+            viewModel: viewModel,
+            lines: isExpanded ? rest : [],
+            isFramed: false,
+            townMarket: isExpanded ? session.townMarket : nil,
+            onCommission: session.commissionArt,
+            onPickExport: session.pickExport,
+            onStartRoute: { session.beginRouteAuthoring(from: $0) },
+            onMarketTrade: session.tradeAtMarket
+        )
+        .disabled(session.isGameOver)
+        .foregroundStyle(.primary.opacity(0.75))
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Details or Less, the actions, and Demolish.
+    private var footer: some View {
+        HStack(spacing: 8) {
+            Button(isExpanded ? "Less" : "Details") { isExpanded.toggle() }
+            Spacer(minLength: 0)
+            actions()
+            if viewModel.rival == nil {
+                Button("Demolish", role: .destructive, action: session.demolishSelection)
+                    .foregroundStyle(.red)
+                    .disabled(session.isGameOver)
+            }
+        }
+        .font(.caption.weight(.semibold))
+        .buttonStyle(.borderless)
     }
 
     private func residentsMeter(_ fill: Double) -> some View {
