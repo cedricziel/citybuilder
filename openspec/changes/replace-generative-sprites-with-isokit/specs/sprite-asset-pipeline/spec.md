@@ -182,7 +182,7 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 #### Scenario: Every committed terrain sprite fills the diamond
 
-- **WHEN** the content gate inspects every PNG in `Resources/Terrain.atlas/`
+- **WHEN** the content gate inspects every `terrain-*` PNG under `Resources/*.atlas/`
 - **THEN** each one has no transparent pixel inside the diamond and no opaque pixel more than 1 point outside it
 
 #### Scenario: Content gate rejects an under-filled tile
