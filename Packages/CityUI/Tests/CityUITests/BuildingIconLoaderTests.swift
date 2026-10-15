@@ -14,13 +14,13 @@ func buildingIconsUseTheAtlasTextureNames() {
 func kitIconsScaleSmoothly() {
     #expect(BuildingIconLoader.interpolation(for: .house) == .high)
     #expect(BuildingIconLoader.interpolation(for: .townCenter) == .high)
-    #expect(BuildingIconLoader.interpolation(for: .sawmill) == GoodIconLoader.pixelArtInterpolation)
+    #expect(BuildingIconLoader.interpolation(for: .warehouse) == GoodIconLoader.pixelArtInterpolation)
 }
 
 @Test("building icons come from the atlas their sprite routes to")
 func buildingIconsUseSpriteRouting() {
     #expect(BuildingIconLoader.atlasName(for: .house) == "Kit")
-    #expect(BuildingIconLoader.atlasName(for: .sawmill) == "Buildings")
+    #expect(BuildingIconLoader.atlasName(for: .warehouse) == "Buildings")
 }
 
 @Test("building icons fall back to a symbol")

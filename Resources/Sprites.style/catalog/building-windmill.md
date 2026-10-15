@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Grinds grain into flour.
 
 ## Visual identity
 
-A stone tower mill under a thatched hip roof with four turning sails. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A tapering stone tower mill under a conical thatch cap, four sails on its east side, a door at the foot and flour sacks by it.
 
 ## Sheet
 
@@ -25,12 +24,15 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the sails turn through 4 overlay frames.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)` → `(1, 2)` → `(1, 3)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-windmill` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-windmill` (IsoKit)
+- Cell: 2×2 footprint, 192 pt tall
 - Construction stages: 3
 - Operational frames: 4
+- Moving part: sails, 4 frames, sweeps right

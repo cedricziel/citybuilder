@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ the bakery turns 2 food into 1 bread for merchant houses.
 
 ## Visual identity
 
-A plastered, half-timbered bakehouse under a terracotta gable roof, with
-a domed brick oven and its own stone flue against the east wall, and
-flour crates by the door. Drawn by the procedural building kit in the
-register pinned by `world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A half-timbered bakehouse under a tile roof, a domed brick oven with a glowing mouth and its own stone flue against the east wall, and flour sacks and a crate in the yard.
 
 ## Sheet
 
@@ -28,12 +25,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-bakery` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-bakery` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

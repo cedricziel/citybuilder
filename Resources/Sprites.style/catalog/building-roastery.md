@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Middle Eastern luxury producer. Carriers bring coffee cherries; every 50 ticks t
 
 ## Visual identity
 
-A sandstone roastery with a parapet roof and a blue-tiled dome, a striped awning, an iron roasting drum on a brick firebox with a crank, coffee sacks and a date palm. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A sandstone roastery with a parapet roof and a blue-tiled dome, a red awning over the door, an iron roasting drum on a brick firebox, and a date palm.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-roastery` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-roastery` (IsoKit)
+- Cell: 2×2 footprint, 144 pt tall
 - Construction stages: 3
 - Operational frames: 2

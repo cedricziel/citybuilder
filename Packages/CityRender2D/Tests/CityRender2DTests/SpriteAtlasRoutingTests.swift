@@ -26,9 +26,9 @@ func terrainNamesRouteToTheKitAtlas() {
 
 @Test("scenario: building name routes to buildings atlas")
 func scenarioBuildingNameRoutesToBuildingsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "building-sawmill-operational-0") == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-warehouse-constructing-0") == "Buildings")
     #expect(SpriteAtlasRouting.atlasName(for: "building-house-mediterranean") == "Buildings")
-    if let texture = SpriteAtlas.texture(named: "building-sawmill-operational-0") {
+    if let texture = SpriteAtlas.texture(named: "building-warehouse-constructing-0") {
         #expect(texture.size().width > 0)
     }
 }
@@ -130,7 +130,7 @@ struct LazyConstructionSuite {
         #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
         SpriteAtlas.resetForTesting()
-        _ = SpriteAtlas.texture(named: "building-sawmill")
+        _ = SpriteAtlas.texture(named: "building-warehouse")
         #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
 
         SpriteAtlas.resetForTesting()

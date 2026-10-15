@@ -19,7 +19,10 @@ public enum TextureFiltering {
         "terrain-grass-beach", "terrain-beach-water",
         "building-road", "building-road-plaza",
         "building-lumberjack-hut", "building-forester", "building-farm", "building-grain-farm", "building-mine",
-        "building-hop-garden", "building-vineyard", "building-tea-garden", "building-coffee-grove"
+        "building-hop-garden", "building-vineyard", "building-tea-garden", "building-coffee-grove",
+        "building-sawmill", "building-bakery", "building-windmill", "building-quern-house", "building-charcoal-burner",
+        "building-smelter", "building-toolsmith", "building-brewery", "building-winery", "building-roastery",
+        "building-steam-engine", "building-power-plant"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {

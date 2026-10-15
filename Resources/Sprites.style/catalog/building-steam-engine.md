@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Industrial age signature. Burns charcoal; while fuelled it doubles the speed of 
 
 ## Visual identity
 
-A brick engine house under a slate gable roof, a tall round brick chimney, a rocking beam on a stone bob wall over a pump head, and a coal heap. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A brick engine house under slate, a tall round brick chimney, a rocking beam on a stone bob wall over a pump head, and a coal heap.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-steam-engine` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-steam-engine` (IsoKit)
+- Cell: 2×2 footprint, 176 pt tall
 - Construction stages: 3
 - Operational frames: 2

@@ -45,7 +45,7 @@ public enum Recipes {
         Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
             forester(kit)
         }
-    ] + gather
+    ] + gather + craft
 
     /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {
@@ -244,23 +244,7 @@ public enum Recipes {
 
     /// Four sails on the east gable, rotating about x. Rendered as overlay frames (90 deg symmetry).
     static func sawmillSails(_ kit: Builder, frame: Int) {
-        let hub = SCNVector3(6.45, 4.0, 3.5)
-        kit.add(SCNCylinder(radius: 0.22, height: 0.35), Finish.timber.material(), at: hub, euler: SCNVector3(0, 0, CGFloat.pi / 2))
-        let step = CGFloat.pi / 2 / 4
-        for blade in 0 ..< 4 {
-            let arm = SCNNode()
-            arm.position = hub + SCNVector3(0.1, 0, 0)
-            arm.eulerAngles = SCNVector3(CGFloat(blade) * .pi / 2 + CGFloat(frame) * step, 0, 0)
-            let spar = SCNNode(geometry: SCNBox(width: 0.1, height: 2.9, length: 0.12, chamferRadius: 0))
-            spar.geometry?.materials = [Finish.timber.material()]
-            spar.position = SCNVector3(0, 1.5, 0)
-            let cloth = SCNNode(geometry: SCNBox(width: 0.04, height: 2.2, length: 0.72, chamferRadius: 0))
-            cloth.geometry?.materials = [Finish.paint(Palette.sailcloth).material()]
-            cloth.position = SCNVector3(0.04, 1.85, 0.42)
-            arm.addChildNode(spar)
-            arm.addChildNode(cloth)
-            kit.root.addChildNode(arm)
-        }
+        kit.sails(hub: SCNVector3(6.45, 4.0, 3.5), length: 2.9, frame: frame)
     }
 
     static func lumberjackHut(_ kit: Builder) {

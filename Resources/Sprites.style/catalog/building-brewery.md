@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ Northern European luxury producer. Carriers bring hops; every 50 ticks the brewe
 
 ## Visual identity
 
-A plastered, half-timbered brewhouse under a terracotta gable roof with a tall stone chimney, casks stacked by the door and a golden tankard sign. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A half-timbered brewhouse under a tile roof with a tall stone chimney, and casks stacked by the door.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-brewery` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-brewery` (IsoKit)
+- Cell: 2×2 footprint, 144 pt tall
 - Construction stages: 3
 - Operational frames: 2
