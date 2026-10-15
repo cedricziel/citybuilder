@@ -8,7 +8,7 @@ Before the threshold rules, a rival whose town center has fewer than 4 units of 
 
 The threshold rules, in order:
 
-- food below 4 with fewer than 3 × houses / 2 farms → farm;
+- food below 4 and farms × 2 < houses × 3 → farm;
 - no operational or constructing sawmill, at least one lumberjack hut and fewer than 4 planks in stock → sawmill;
 - once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill;
 - wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut, unless the rival has a forester and already 2 + houses / 2 lumberjack huts, counting every hut;
@@ -25,7 +25,7 @@ A step SHALL be issued only when:
 
 Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut, forester and first sawmill SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
 
-House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
+House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. Lumberjack hut steps SHALL be skipped while the rival has a forester and 2 + houses / 2 lumberjack huts, counting every hut. Warehouse steps SHALL be skipped once the rival has a warehouse built or under construction. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
 
 #### Scenario: Opening step
 
@@ -37,7 +37,7 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 - **WHEN** a rival past its opening with 4 houses, 1 farm and 3 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm and its script index is unchanged
 
-#### Scenario: A farm for every house
+#### Scenario: Fewer farms than houses
 
 - **WHEN** a rival past its opening with 5 houses, 4 farms and 2 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm
@@ -96,6 +96,16 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 - **WHEN** a Normal rival at the building cap, with no warehouse, 2 units of room in its town center and enough money takes a turn
 - **THEN** it places a warehouse, while a rival that already has a warehouse issues no commands
+
+#### Scenario: Script hut steps stop at the hut limit
+
+- **WHEN** a rival with 8 houses, 6 foresters and 6 lumberjack huts takes a turn while its script points at a lumberjack hut
+- **THEN** it skips the step and places the house that follows, while with 5 huts it places the hut
+
+#### Scenario: One warehouse per town
+
+- **WHEN** a rival that already has a warehouse takes a turn while its script points at the opening's warehouse
+- **THEN** it skips the step and places the house that follows
 
 #### Scenario: Building cap ignores foresters and roads
 
