@@ -22,6 +22,12 @@ func scenarioHardUpkeep() {
     #expect(Difficulty.easy.scaledUpkeep(0) == 0)
 }
 
+@Test("scenario: hard grace spans a tax interval")
+func scenarioHardGraceSpansATaxInterval() {
+    #expect(Difficulty.allCases.map(\.bankruptcyGraceTicks) == [150, 50, 50])
+    #expect(Difficulty.allCases.allSatisfy { $0.bankruptcyGraceTicks >= Economy.taxIntervalTicks })
+}
+
 @Test("scenario: easy has no rats")
 func scenarioEasyHasNoRats() {
     var world = World.newGame(layout: .singleIsland, seed: 7, difficulty: .easy)
