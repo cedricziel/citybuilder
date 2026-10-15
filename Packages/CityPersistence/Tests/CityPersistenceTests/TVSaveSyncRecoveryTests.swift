@@ -157,7 +157,7 @@ func cancellingTheCallerOfATimedCallStopsTheWait() async {
     }
 
     caller.cancel()
-    let cancelled = await finishing(within: .seconds(3)) { await caller.value }
+    let cancelled = await finishing { await caller.value }
 
     #expect(cancelled == true)
     await hang.release()

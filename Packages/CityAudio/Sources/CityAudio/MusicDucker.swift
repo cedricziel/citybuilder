@@ -12,10 +12,13 @@ import Foundation
 public final class MusicDucker {
     public typealias VolumeReader = @MainActor () -> Float
     public typealias VolumeWriter = @MainActor (Float) -> Void
+    /// Waits out the release window. Tests pass one that returns at once.
+    public typealias Sleeper = @Sendable (_ nanoseconds: UInt64) async throws -> Void
 
     private let inner: AudioCoordinator.CueDispatcher
     private let readMusicVolume: VolumeReader
     private let writeMusicVolume: VolumeWriter
+    private let sleep: Sleeper
     private let attackSeconds: Double
     private let releaseSeconds: Double
     /// Linear gain applied during the ducked window. 0.5 ≈ −6 dB.
@@ -26,6 +29,8 @@ public final class MusicDucker {
     /// Generation counter: each duck bumps it so any in-flight release
     /// task from a prior duck recognises it is stale and skips the restore.
     private var generation: UInt64 = 0
+    /// The release scheduled by the latest duck.
+    private(set) var pendingRelease: Task<Void, Never>?
 
     public init(
         inner: @escaping AudioCoordinator.CueDispatcher,
@@ -33,11 +38,13 @@ public final class MusicDucker {
         writeMusicVolume: @escaping VolumeWriter,
         attackSeconds: Double = 0.03,
         releaseSeconds: Double = 0.30,
-        duckFactor: Float = 0.5
+        duckFactor: Float = 0.5,
+        sleep: @escaping Sleeper = { try await Task.sleep(nanoseconds: $0) }
     ) {
         self.inner = inner
         self.readMusicVolume = readMusicVolume
         self.writeMusicVolume = writeMusicVolume
+        self.sleep = sleep
         self.attackSeconds = attackSeconds
         self.releaseSeconds = releaseSeconds
         self.duckFactor = duckFactor
@@ -62,8 +69,9 @@ public final class MusicDucker {
         generation &+= 1
         let myGen = generation
         let releaseNs = UInt64(max(0, attackSeconds + releaseSeconds) * 1_000_000_000)
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: releaseNs)
+        let sleep = sleep
+        pendingRelease = Task { @MainActor [weak self] in
+            try? await sleep(releaseNs)
             guard let self else { return }
             guard self.generation == myGen else { return }
             if let saved = self.savedVolume {

@@ -14,7 +14,7 @@ func scenarioUnansweredICloudCallDoesNotHoldTheTitleScreen() async {
     await client.configure(hangsListing: true)
     let sync = harness.launchSync(client: client, callTimeout: .milliseconds(200))
 
-    let result = await finishing(within: .seconds(3)) { await sync.launch() }
+    let result = await finishing { await sync.launch() }
 
     #expect(result == TVLaunchSyncResult())
     await client.release()
@@ -29,7 +29,7 @@ func launchReturnsBeforeItsUploadsFinish() async throws {
     await client.configure(hangsUploads: true)
     let sync = harness.launchSync(client: client)
 
-    let result = await finishing(within: .seconds(3)) { await sync.launch() }
+    let result = await finishing { await sync.launch() }
     await client.release()
 
     #expect(result == TVLaunchSyncResult())
@@ -52,7 +52,7 @@ func aRetryWhenTheAppBecomesActiveDoesNotHoldUpLaunch() async throws {
     let sync = harness.launchSync(client: client)
 
     let retry = Task { await sync.retryPendingUploads() }
-    let result = await finishing(within: .seconds(3)) { await sync.launch() }
+    let result = await finishing { await sync.launch() }
     await client.release()
     await retry.value
 

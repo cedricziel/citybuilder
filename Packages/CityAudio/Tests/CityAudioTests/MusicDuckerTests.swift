@@ -34,27 +34,82 @@ func scenarioSfxCueDucksTheMusicBus() {
     #expect(forwarded.count == 1, "inner dispatcher must still receive the cue")
 }
 
+/// Stands in for `Task.sleep`: each wait is recorded and suspends until
+/// the test ends it, so the release window passes without the wall clock.
+private actor ManualSleeper {
+    private(set) var requested: [UInt64] = []
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+
+    func sleep(nanoseconds: UInt64) async {
+        requested.append(nanoseconds)
+        await withCheckedContinuation { waiting.append($0) }
+    }
+
+    /// Waits until `count` sleeps have started.
+    func waitForSleeps(_ count: Int) async {
+        while waiting.count < count {
+            await Task.yield()
+        }
+    }
+
+    /// Ends the wait of the sleep that started `index`-th.
+    func wake(_ index: Int) {
+        waiting[index].resume()
+    }
+}
+
 @MainActor
 @Test("scenario: music recovers after release window")
-func scenarioMusicRecoversAfterReleaseWindow() async throws {
+func scenarioMusicRecoversAfterReleaseWindow() async {
     let volume = VolumeBox(0.8)
+    let sleeper = ManualSleeper()
     let ducker = MusicDucker(
         inner: { _ in },
         readMusicVolume: { volume.current },
         writeMusicVolume: { volume.current = $0 },
-        // Use a tight release window so the test stays fast. The
-        // production constants are 30 / 300 ms.
-        attackSeconds: 0.0,
-        releaseSeconds: 0.05
+        attackSeconds: 0.03,
+        releaseSeconds: 0.5,
+        sleep: { await sleeper.sleep(nanoseconds: $0) }
     )
     let sfx = DispatchedCue(
         cue: Bindings.Cue(file: "ui/click.caf", bus: .sfx),
         position: nil
     )
     ducker.dispatch(sfx)
-    #expect(volume.current == Float(0.4))
-    try await Task.sleep(nanoseconds: 200_000_000) // 200 ms — well past release
+    await sleeper.waitForSleeps(1)
+    #expect(volume.current == Float(0.4), "music stays ducked during the release window")
+    await sleeper.wake(0)
+    await ducker.pendingRelease?.value
     #expect(volume.current == Float(0.8), "music must recover to baseline")
+    let requested = await sleeper.requested
+    #expect(requested == [530_000_000], "the release waits attack plus release")
+}
+
+@MainActor
+@Test("a release from an earlier duck leaves a later duck in place")
+func staleReleaseLeavesTheLaterDuck() async {
+    let volume = VolumeBox(0.8)
+    let sleeper = ManualSleeper()
+    let ducker = MusicDucker(
+        inner: { _ in },
+        readMusicVolume: { volume.current },
+        writeMusicVolume: { volume.current = $0 },
+        sleep: { await sleeper.sleep(nanoseconds: $0) }
+    )
+    let sfx = DispatchedCue(
+        cue: Bindings.Cue(file: "ui/click.caf", bus: .sfx),
+        position: nil
+    )
+    ducker.dispatch(sfx)
+    let first = ducker.pendingRelease
+    ducker.dispatch(sfx)
+    await sleeper.waitForSleeps(2)
+    await sleeper.wake(0)
+    await first?.value
+    #expect(volume.current == Float(0.4), "the first release must not undo the second duck")
+    await sleeper.wake(1)
+    await ducker.pendingRelease?.value
+    #expect(volume.current == Float(0.8))
 }
 
 @MainActor
