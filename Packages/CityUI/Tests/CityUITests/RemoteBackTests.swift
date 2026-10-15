@@ -213,3 +213,34 @@ func scenarioControllerMenuOpensThePauseMenu() {
     _ = mapper.handle(.menu, at: 1, session: session)
     #expect(session.isPaused)
 }
+
+@Test("The reticle tooltip hides while road painting is on")
+@MainActor
+func tooltipHidesWhilePainting() {
+    let session = makeSession(reticle: tile(5, 5))
+    session.world.enqueue(.place(.house, at: tile(5, 5)))
+    session.step()
+    session.selectTool(.place(.road))
+    var mapper = RemoteInputMapper()
+    _ = mapper.handle(.selectDown, at: 0, session: session)
+    _ = mapper.handle(.selectUp, at: 0.1, session: session)
+    _ = mapper.handle(.tick, at: 1, session: session)
+    #expect(session.isPaintingRoad)
+    #expect(mapper.tooltipBuilding(at: 1, session: session) == nil)
+}
+
+@Test("Back after a sheet took focus returns to the map and leaves the game running")
+@MainActor
+func backAfterASheetTookFocus() {
+    let session = makeSession()
+    session.selectedTile = tile(5, 5)
+    var mapper = RemoteInputMapper()
+    // A sheet (Goals, Research, Settings…) takes focus; the host reports
+    // it, and the system closes the sheet on Back before the next press
+    // reaches the mapper.
+    _ = mapper.handle(.focusChanged(.hud), at: 0, session: session)
+    let effects = mapper.handle(.back, at: 1, session: session)
+    #expect(effects == [.focusMap])
+    #expect(session.selectedTile == tile(5, 5))
+    #expect(!session.isPaused)
+}
