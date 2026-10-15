@@ -1,7 +1,7 @@
 ## 1. Minimap model
 
-- [ ] 1.1 Tests-first: "Terrain colours", "Iso orientation", "Terrain redraws only when it changes", "Buildings in their owner's colour", "Ships as dots", "Markers refresh at most every 3 ticks", "Camera frame"
-- [ ] 1.2 `MinimapProjection`, `MinimapTerrainRaster`, `MinimapModel`; feed it from `GameSession.step()`
+- [x] 1.1 Tests-first: "Terrain colours", "Iso orientation", "Terrain redraws only when it changes", "Buildings in their owner's colour", "Ships as dots", "Markers refresh at most every 3 ticks", "Camera frame"
+- [x] 1.2 `MinimapProjection`, `MinimapTerrainRaster`, `MinimapModel`; feed it from `GameSession.step()`
 
 ## 2. Minimap view, interaction and layout
 

@@ -122,6 +122,8 @@ public final class GameSession {
     public var routeAuthoring: RouteAuthoringViewModel?
     /// The route list; its selection drives the map's route overlay.
     public let routeList = RouteListViewModel()
+    /// The minimap's terrain image and markers. Spec: `platform-shells` / Minimap.
+    public let minimap = MinimapModel()
 
     public init(
         world: World = World.newGame(),
@@ -133,6 +135,7 @@ public final class GameSession {
         self.audioEventConsumer = audioEventConsumer
         self.audioSnapshotConsumer = audioSnapshotConsumer
         routeList.commandSink = { [weak self] in self?.enqueue($0) }
+        minimap.apply(world.snapshot())
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -159,6 +162,7 @@ public final class GameSession {
         hud.apply(snapshot)
         routeList.snapshot = snapshot
         routeAuthoring?.snapshot = snapshot
+        minimap.apply(snapshot)
         // Push the snapshot to audio before the matching events so the
         // coordinator's primaryEntityID → tile resolution sees this tick's
         // building positions, not the prior tick's.
