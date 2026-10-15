@@ -98,9 +98,16 @@ extension World {
     }
 
     /// The market buffers in the order a purchase fills them: the town
-    /// center first, then the rest by entity ID (`market-buys-use-island-stores` D2).
+    /// center, then stores on its road network before the rest, ports
+    /// after warehouses, each by entity ID (`market-buys-use-island-stores` D2).
     private func purchaseBuffers(of center: Building) -> [Building] {
-        [center] + marketBuffers(of: center).filter { $0.id != center.id }
+        let components = Dictionary(uniqueKeysWithValues: supplyReach().buffers.map { ($0.id, $0.component) })
+        let centerComponent = components[center.id] ?? nil
+        let others = marketBuffers(of: center).filter { $0.id != center.id }.map { buffer in
+            let reached = centerComponent != nil && components[buffer.id] ?? nil == centerComponent
+            return (buffer, rank: (reached ? 0 : 1, buffer.kind == .port ? 1 : 0, buffer.id.raw))
+        }
+        return [center] + others.sorted { $0.rank < $1.rank }.map(\.0)
     }
 
     /// Puts as many of `amount` units into `buffers`, in order, as fit and
