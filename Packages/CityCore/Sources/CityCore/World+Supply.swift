@@ -67,6 +67,8 @@ extension World {
             .map { ($0, Self.suppliedGoods(of: $0)) }
             .filter { !$0.1.isEmpty }
             .sorted { $0.0.id.raw < $1.0.id.raw }
+        // Dispatching moves goods, not buildings: list the buffers once.
+        let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
@@ -76,7 +78,7 @@ extension World {
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
                 while needsSupply(consumer.id, good: good, amount: amount) {
-                    guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad) else { break }
+                    guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
                 }
             }
@@ -126,9 +128,13 @@ extension World {
 
     /// Operational goods buffer holding `good` with the shortest road
     /// path to `road`; ties go to the lower entity ID.
-    func nearestBuffer(holding good: Good, toRoad road: TileCoordinate) -> (EntityID, [TileCoordinate])? {
+    /// `buffers` are the operational buffers in entity order, when the
+    /// caller has listed them already.
+    func nearestBuffer(
+        holding good: Good, toRoad road: TileCoordinate, among buffers: [Building]? = nil
+    ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for buffer in goodsBuffers() where buffer.state == .operational {
+        for buffer in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   let bufferRoad = anyAdjacentRoad(
                       anchor: buffer.anchor,

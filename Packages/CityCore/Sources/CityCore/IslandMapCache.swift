@@ -99,12 +99,26 @@ final class IslandMapCache: @unchecked Sendable {
         }
     }
 
+    /// Runs once after every terrain change, and huts and foresters change
+    /// terrain nearly every tick in a large town, so it is a plain loop
+    /// without closures: a debug build runs it many times faster. Only
+    /// water is unbuildable (`IslandDetector.buildableTile`).
     private static func sameBuildableMask(_ lhs: [TerrainType], _ rhs: [TerrainType]) -> Bool {
         lhs.withUnsafeBufferPointer { left in
             rhs.withUnsafeBufferPointer { right in
-                let buildable = IslandDetector.buildableTile
-                return !(0 ..< left.count).contains { buildable(left[$0]) != buildable(right[$0]) }
+                var index = 0
+                while index < left.count {
+                    if isWater(left[index]) != isWater(right[index]) { return false }
+                    index += 1
+                }
+                return true
             }
         }
+    }
+
+    @inline(__always)
+    private static func isWater(_ kind: TerrainType) -> Bool {
+        if case .water = kind { return true }
+        return false
     }
 }

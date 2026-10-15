@@ -241,16 +241,19 @@ extension World {
     /// Returns any road tile orthogonally adjacent to the footprint, or nil
     /// if the building isn't road-connected.
     func anyAdjacentRoad(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
-        let tiles = footprint.tiles(anchor: anchor)
-        let occupied = Set(tiles)
-        for tile in tiles {
-            for neighbor in [
-                TileCoordinate(x: tile.x + 1, y: tile.y),
-                TileCoordinate(x: tile.x - 1, y: tile.y),
-                TileCoordinate(x: tile.x, y: tile.y + 1),
-                TileCoordinate(x: tile.x, y: tile.y - 1)
-            ] where !occupied.contains(neighbor) && roadGraph.isConnected(neighbor) {
-                return neighbor
+        // Runs per house, need and producer every tick, so it allocates
+        // nothing: the footprint is a rectangle, tested by its bounds.
+        func inside(_ tile: TileCoordinate) -> Bool {
+            tile.x >= anchor.x && tile.x < anchor.x + footprint.width
+                && tile.y >= anchor.y && tile.y < anchor.y + footprint.height
+        }
+        for dy in 0 ..< footprint.height {
+            for dx in 0 ..< footprint.width {
+                let x = anchor.x + dx, y = anchor.y + dy
+                for (nx, ny) in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)] {
+                    let neighbor = TileCoordinate(x: nx, y: ny)
+                    if !inside(neighbor), roadGraph.isConnected(neighbor) { return neighbor }
+                }
             }
         }
         return nil

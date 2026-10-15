@@ -74,7 +74,7 @@ func noUnblockingBuyAtTheBuildingCap() {
         $0.treasury = 400
     }
     world.setRivalStock(1, [.wood: 10, .food: 10])
-    for _ in 0 ..< RivalAI.buildingCap {
+    for _ in 0 ..< world.difficulty.rivalBuildingCap {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
     #expect(rivalTrades(world.takeTurn(1)).isEmpty)
@@ -89,7 +89,7 @@ func noUnblockingBuyAtTheHouseCap() {
     }
     world.setRivalStock(1, [.wood: 10, .food: 10])
     // Below the building cap, so only the house cap stands in the way.
-    for _ in 0 ..< RivalAI.houseCap {
+    for _ in 0 ..< world.difficulty.rivalHouseCap {
         world.testAddBuilding(.house, owner: .rival(1))
     }
     #expect(!rivalTrades(world.takeTurn(1)).contains(.rivalMarketBuy(1, .planks, 4)))
@@ -113,6 +113,54 @@ func scenarioRivalClearsAFullTownCenter() {
     world.setRival(1) { $0.treasury = 5000 }
     world.setRivalStock(1, [.planks: 38, .food: 2])
     #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
+}
+
+@Test("a full but fed town does not sell")
+func fullButFedTownDoesNotSell() {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.planks: 30, .food: 10])
+    #expect(rivalTrades(world.takeTurn(1)).isEmpty)
+}
+
+@Test("clearing the store sells from the town center first")
+func clearingTheStoreSellsFromTheTownCenterFirst() throws {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.planks: 38, .food: 2])
+    // A warehouse that holds planks too.
+    let rival = try #require(world.rival(1))
+    let center = try #require(world.buildings[rival.townCenterID])
+    let warehouse = world.testPlace(.warehouse, at: TileCoordinate(x: center.anchor.x + 5, y: center.anchor.y), owner: .rival(1))
+    world.testSetStock([.planks: 30], in: warehouse)
+    world.enqueue(.rivalMarketSell(1, .planks, 20))
+    world.tick()
+    #expect(world.stockpiles[rival.townCenterID]?.quantity(of: .planks) == 18)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .planks) == 30)
+}
+
+@Test("wood bought for a step is in the same batch as the step, ahead of it")
+func boughtWoodComesInTheStepsBatch() throws {
+    var world = normalWorld()
+    world.setRival(1) {
+        $0.ai.scriptIndex = 12
+        $0.treasury = 1000
+    }
+    // One house wants a farm (2 wood), with no wood in stock and no forest
+    // in reach. The purchase must come in the farm's own batch, ahead of
+    // it: the farm's materials are then deducted when it is placed, at the
+    // same tick boundary, before any carrier could take the wood to a
+    // sawmill. A purchase on an earlier turn lost that race.
+    world.setRivalStock(1, [.planks: 10, .food: 0])
+    world.testAddBuilding(.house, owner: .rival(1))
+    world.testAddBuilding(.sawmill, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(commands.first == .rivalMarketBuy(1, .wood, 2))
+    #expect(placedKind(commands.last) == .farm)
+    world.tick()
+    let farm = try #require(placedAnchor(commands.last).flatMap { world.occupiedTiles[$0] }.flatMap { world.buildings[$0] })
+    #expect(farm.kind == .farm)
+    #expect(farm.constructionState != .waitingForMaterials)
 }
 
 @Test("scenario: rival buys food for short houses")

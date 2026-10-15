@@ -107,15 +107,19 @@ extension World {
     /// serves the whole pass instead of a listing and a path search per
     /// house, need and buffer.
     struct SupplyReach {
-        let buffers: [Building]
+        /// Each operational buffer, in entity order, with the road
+        /// component of its first adjacent road (nil without one).
+        let buffers: [(id: EntityID, component: Int?)]
         let roadComponents: [TileCoordinate: Int]
     }
 
     func supplyReach() -> SupplyReach {
-        SupplyReach(
-            buffers: goodsBuffers().filter { $0.state == .operational },
-            roadComponents: roadGraph.componentLabels()
-        )
+        let components = roadGraph.componentLabels()
+        let buffers = goodsBuffers().filter { $0.state == .operational }.map { buffer in
+            let road = anyAdjacentRoad(anchor: buffer.anchor, footprint: BuildingCatalog.spec(for: buffer.kind).footprint)
+            return (buffer.id, road.flatMap { components[$0] })
+        }
+        return SupplyReach(buffers: buffers, roadComponents: components)
     }
 
     /// True if any operational buffer holding `good` is road-connected
@@ -128,12 +132,8 @@ extension World {
         guard let from = anyAdjacentRoad(anchor: anchor, footprint: footprint),
               let component = reach.roadComponents[from]
         else { return false }
-        for building in reach.buffers {
-            guard (stockpiles[building.id]?.quantity(of: good) ?? 0) > 0 else { continue }
-            let bufferFootprint = BuildingCatalog.spec(for: building.kind).footprint
-            let road = anyAdjacentRoad(anchor: building.anchor, footprint: bufferFootprint)
-            if let road, reach.roadComponents[road] == component { return true }
+        return reach.buffers.contains { buffer in
+            buffer.component == component && (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0
         }
-        return false
     }
 }

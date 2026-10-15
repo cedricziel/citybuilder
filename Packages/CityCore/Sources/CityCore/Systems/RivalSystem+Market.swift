@@ -77,7 +77,11 @@ extension World {
                 good, amount: min(wanted, space, Self.unitsPaidFor(by: rival.treasury, at: price))
             ) ?? 0
         case .sold:
-            drain(good, upTo: wanted, from: goodsBuffers(of: rival.owner).filter { $0.state == .operational })
+            // The town center first: it is the store a sale clears for the
+            // farms (`rival-towns` / Rival market trades).
+            drain(good, upTo: wanted, from: [center] + goodsBuffers(of: rival.owner).filter {
+                $0.state == .operational && $0.id != center.id
+            })
         }
         guard units > 0 else { return }
         let total = Int64(units) * price
