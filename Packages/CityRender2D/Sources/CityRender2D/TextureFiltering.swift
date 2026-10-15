@@ -22,7 +22,11 @@ public enum TextureFiltering {
         "building-hop-garden", "building-vineyard", "building-tea-garden", "building-coffee-grove",
         "building-sawmill", "building-bakery", "building-windmill", "building-quern-house", "building-charcoal-burner",
         "building-smelter", "building-toolsmith", "building-brewery", "building-winery", "building-roastery",
-        "building-steam-engine", "building-power-plant"
+        "building-steam-engine", "building-power-plant",
+        "building-warehouse", "building-library", "building-mead-hall", "building-forum", "building-tea-house",
+        "building-temple-garden", "building-caravanserai", "building-monument", "building-guild-hall", "building-gallery",
+        "building-warehouse-east-asian", "building-warehouse-mediterranean", "building-warehouse-middle-eastern",
+        "building-library-east-asian", "building-library-mediterranean", "building-library-middle-eastern"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
@@ -35,7 +39,7 @@ public enum TextureFiltering {
     /// `building-sawmill-operational-2` → `building-sawmill`; `terrain-grass-beach-t3-1` and
     /// `terrain-grass-beach-t3-winter` → `terrain-grass-beach`; `terrain-mountain-v2` → `terrain-mountain`.
     /// A season ends a stem (`terrain-grass-autumn`) unless it follows a transition mask.
-    static func stem(of spriteName: String) -> String {
+    public static func stem(of spriteName: String) -> String {
         var parts = spriteName.split(separator: "-").map(String.init)
         if parts.count > 2, ["autumn", "winter"].contains(parts[parts.count - 1]), isMask(parts[parts.count - 2]) {
             parts.removeLast()

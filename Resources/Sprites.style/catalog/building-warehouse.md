@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,12 +8,7 @@ logistics network. Static silhouette — no operational animation.
 
 ## Visual identity
 
-Long single-storey stone-and-timber storage shed with a slate gable
-roof. Double cargo doors on the south face. Slightly wider footprint
-than a house. Palette anchors: `#7A6B59` weathered stone walls
-(lower half), `#6E4A2A` timber upper half-timbering, `#3F2A26` dark
-slate roof, `#A07C50` pine plank cargo doors. No barrels or sacks
-stacked outside; the storage is implied to be inside.
+Rendered by IsoKit in the shared light rig. A long storehouse with a rubble ground course and a timber-framed upper band under a slate gable roof, two pairs of cargo doors on the south face, and crates and barrels in the yard.
 
 ## Sheet
 
@@ -33,18 +28,13 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-Construction-stage progression — not a loop.
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners.
 
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
-`units.py`) in the register pinned by `world.md` § Building register.
-Operational frames keep the finished building and add a rising smoke plume.
-The per-cell roles above describe the original AI sprites.
-
 ## Recipe
 
-- Recipe: `building-warehouse` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-warehouse` (IsoKit)
+- Cell: 3×3 footprint, 160 pt tall
 - Construction stages: 3
 - Operational frames: 0

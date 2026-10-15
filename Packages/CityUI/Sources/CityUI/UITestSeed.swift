@@ -27,6 +27,7 @@ public enum UITestSeed {
     public static func townWorld(houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil) -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0)
         world.seedUnlimitedTestInventory()
+        world.seedTestFunds()
         guard let center = world.buildings.values.first(where: { $0.kind == .townCenter && $0.owner == .player })?.anchor else {
             return world
         }

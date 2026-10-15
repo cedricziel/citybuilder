@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,9 +8,7 @@ operational.
 
 ## Visual identity
 
-A stone hall with tall narrow windows under a slate gable roof and a
-small bell turret. Drawn by the procedural building kit in the register
-pinned by `world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A stone hall under a slate gable roof with three tall lit windows on its south face and a small slate-capped bell turret on the ridge.
 
 ## Sheet
 
@@ -27,12 +25,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-library` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-library` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

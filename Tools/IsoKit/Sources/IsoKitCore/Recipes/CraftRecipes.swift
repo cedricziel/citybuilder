@@ -8,7 +8,8 @@ enum Trade {
     static let iron = NSColor(red: 0.22, green: 0.22, blue: 0.24, alpha: 1)
     static let flour = NSColor(red: 0.92, green: 0.88, blue: 0.78, alpha: 1)
     static let turf = NSColor(red: 0.30, green: 0.32, blue: 0.18, alpha: 1)
-    static let coal = NSColor(red: 0.12, green: 0.11, blue: 0.11, alpha: 1)
+    /// Coal and charcoal: dark, but light enough that a heap's sunlit side reads as a heap, not a pit.
+    static let coal = NSColor(red: 0.36, green: 0.34, blue: 0.32, alpha: 1)
     static let concrete = NSColor(red: 0.66, green: 0.65, blue: 0.62, alpha: 1)
     static let blueTile = NSColor(red: 0.18, green: 0.38, blue: 0.62, alpha: 1)
     static let awning = NSColor(red: 0.72, green: 0.26, blue: 0.18, alpha: 1)
@@ -19,7 +20,7 @@ extension Recipes {
         Recipe(id: "building-bakery", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in bakery(kit) },
         Recipe(
             id: "building-windmill",
-            cell: SpriteCell(footprint: 2, heightPx: 192),
+            cell: SpriteCell(footprint: 2, heightPx: 128),
             operationalFrames: 4,
             moving: MovingPart(name: "sails", build: windmillSails)
         ) { kit, _ in windmill(kit) },
@@ -35,8 +36,8 @@ extension Recipes {
         },
         Recipe(id: "building-brewery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in brewery(kit) },
         Recipe(id: "building-winery", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in winery(kit) },
-        Recipe(id: "building-roastery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in roastery(kit) },
-        Recipe(id: "building-steam-engine", cell: SpriteCell(footprint: 2, heightPx: 176), operationalFrames: 2) { kit, _ in
+        Recipe(id: "building-roastery", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in roastery(kit) },
+        Recipe(id: "building-steam-engine", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in
             steamEngine(kit)
         },
         Recipe(id: "building-power-plant", cell: SpriteCell(footprint: 3, heightPx: 224), operationalFrames: 2) { kit, _ in
@@ -107,7 +108,7 @@ extension Recipes {
         kit.block(SCNVector3(4.8, 0, 1.4), SCNVector3(6.6, 6.4, 3.2), .rubble)
         kit.block(SCNVector3(4.7, 6.4, 1.3), SCNVector3(6.7, 6.7, 3.3), .rubble)
         kit.onFace(Face.south(wallZ: 3.2), FaceRect(along: 5.7, y: 0.6, width: 1.0, height: 0.9), depth: 0.03, finish: .paint(Trade.ember))
-        kit.add(SCNCone(topRadius: 0.1, bottomRadius: 0.9, height: 0.7), Finish.paint(Crops.ore).material(), at: SCNVector3(2.4, 0.35, 5.6))
+        kit.add(SCNCone(topRadius: 0.1, bottomRadius: 0.9, height: 1.0), Finish.rubble.material(), at: SCNVector3(2.4, 0.5, 5.6))
         kit.add(
             SCNCone(topRadius: 0.1, bottomRadius: 0.7, height: 0.5),
             Finish.paint(Trade.coal).material(),
@@ -212,8 +213,8 @@ extension Recipes {
 }
 
 extension Builder {
-    /// Four sails on an east-facing hub, turning about x: one overlay frame per eighth of a turn
-    /// (the blades repeat every 90 degrees, so four frames make a turn).
+    /// Four sails on an east-facing hub, turning about x by a sixteenth of a turn (π/8) per overlay
+    /// frame: four frames make a quarter turn, which the four-fold symmetry repeats.
     func sails(hub: SCNVector3, length: CGFloat, frame: Int) {
         add(SCNCylinder(radius: 0.22, height: 0.35), Finish.timber.material(), at: hub, euler: SCNVector3(0, 0, CGFloat.pi / 2))
         let step = CGFloat.pi / 2 / 4

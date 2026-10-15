@@ -46,3 +46,13 @@ func townSeedStartsInTheRequestedSeason() {
     #expect(UITestSeed.season(fromArguments: ["app", "-uiTestSeason", "winter"]) == .winter)
     #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
 }
+
+@Test("The town seed stays solvent with a whole category on show")
+@MainActor
+func townSeedStaysSolvent() {
+    var world = UITestSeed.townWorld(showcase: UITestSeed.showcase(fromArguments: ["app", "-uiTestShowcase", "town"]))
+    for _ in 0 ..< 600 {
+        _ = world.tick()
+    }
+    #expect(!world.economy.gameOver)
+}
