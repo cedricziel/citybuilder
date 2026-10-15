@@ -34,18 +34,22 @@ func scenarioBuildingNameRoutesToBuildingsAtlas() throws {
     #expect(SpriteAtlasRouting.atlasName(for: "\(stem)-constructing-0") == "Buildings")
 }
 
-/// A building still drawn as legacy pixel art: the first kind whose stem is outside the art kit and
-/// whose base sprite is committed in Buildings.atlas. Found at runtime, so a family migration never
-/// breaks the tests that need one; nil once every family is on the kit.
-let legacyBuildingStem: String? = BuildingKind.allCases.lazy
-    .map { "building-\($0.rawValue)" }
-    .first { stem in
-        !TextureFiltering.kitRenderedStems.contains(stem) && FileManager.default.fileExists(
-            atPath: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-                .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-                .appendingPathComponent("Resources/Buildings.atlas/\(stem).png").path
-        )
-    }
+/// The building sprites committed in the legacy Buildings.atlas, by name; empty once it is gone.
+let legacyBuildingSprites: [String] = {
+    let atlas = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Resources/Buildings.atlas")
+    let files = (try? FileManager.default.contentsOfDirectory(atPath: atlas.path)) ?? []
+    return files.filter { $0.hasPrefix("building-") && $0.hasSuffix(".png") && !$0.hasSuffix("@2x.png") }
+        .map { String($0.dropLast(".png".count)) }.sorted()
+}()
+
+/// A building sprite still drawn as legacy pixel art: the first committed Buildings.atlas file whose
+/// stem is outside the art kit (an age or culture look, a directional port). Found at runtime, so a
+/// family migration never breaks the tests that need one; nil once no legacy building is left.
+let legacyBuildingStem: String? = legacyBuildingSprites.first {
+    !TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: $0))
+}
 
 /// SpriteKit filters a whole atlas page with one mode (the last one set wins), so the linearly
 /// filtered art-kit renders cannot share a page with nearest-filtered pixel art (design D7).
@@ -124,7 +128,7 @@ func scenarioNoImageNamedLookupsInSpriteAtlas() throws {
 @Suite(.serialized)
 struct LazyConstructionSuite {
     @Test("scenario: sktextureatlas instances are lazily constructed")
-    func scenarioSKTextureAtlasInstancesAreLazilyConstructed() {
+    func scenarioSKTextureAtlasInstancesAreLazilyConstructed() throws {
         // After reset, no atlas exists. The next lookup MUST construct
         // its own category atlas — and no other.
         //
@@ -143,9 +147,9 @@ struct LazyConstructionSuite {
         _ = SpriteAtlas.texture(named: "terrain-grass")
         #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
-        if let legacyBuildingStem {
+        if !legacyBuildingSprites.isEmpty {
             SpriteAtlas.resetForTesting()
-            _ = SpriteAtlas.texture(named: legacyBuildingStem)
+            _ = try SpriteAtlas.texture(named: #require(legacyBuildingStem, "Buildings.atlas holds only kit-rendered names"))
             #expect(SpriteAtlas.isAtlasConstructed(named: "Buildings"))
         }
 
