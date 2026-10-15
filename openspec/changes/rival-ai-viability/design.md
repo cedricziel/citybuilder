@@ -67,9 +67,11 @@ The same sweep with rival market trades on top of M1, M1 values in brackets:
 | Rivals at 0 residents, year 15     | 0/10 (3/10)  | 0/20 (1/20) | 0/30 (5/30) |
 | Rivals ever in debt                | 0 (3)        | 0 (1)       | 0 (5)       |
 | Residents year 3, median           | 13 (9)       | 36 (35.5)   | 33 (21.5)   |
-| Residents year 5, median (minimum) | 28 (15)      | 34 (23)     | 32 (21)     |
-| Residents year 15, median (range)  | 25.5 (18–38) | 35 (27–42)  | 33 (20–51)  |
-| Citizens reached by year 15        | 10 (6)       | 20 (19)     | 30 (21)     |
+| Residents year 5, median | 28 (22.5) | 34 (35) | 32 (21.5) |
+| Residents year 5, minimum | 15 (0) | 23 (0) | 21 (0) |
+| Residents year 15, median | 25.5 (19) | 35 (35.5) | 33 (24) |
+| Residents year 15, minimum | 18 (0) | 27 (0) | 20 (0) |
+| Citizens reached by year 15 | 10 (6) | 20 (19) | 30 (21) |
 
 Every rival survives, none goes into debt, and all reach the citizen tier. D7's year-5 floors hold on Easy (8) and Normal (20). Hard's floor of 30 does not: the median is 32, but the weakest Hard rival has 21. That is M3's input.
 
