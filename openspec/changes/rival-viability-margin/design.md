@@ -34,7 +34,7 @@ Alternative: count warehouses out of the building cap, like foresters. That give
 
 ## Evidence
 
-The `rival-ai-viability` result (before) against this change (after), from the same sweep. The numbers come from an uncommitted harness that also logs buildings and stock per year; on `main` its residents match the committed `RIVAL_SWEEP=1` scenario test line for line.
+The `rival-ai-viability` result (before) against this change (after), from the same sweep. The numbers come from an uncommitted harness that also logs buildings and stock per year; on `main` its residents match the committed `RIVAL_SWEEP=1` scenario test line for line. The `rival-sweep` workflow run of that test on this change (run 38763412083) reports the same "after" residents.
 
 |                                  | Easy         | Normal       | Hard         |
 | -------------------------------- | ------------ | ------------ | ------------ |
