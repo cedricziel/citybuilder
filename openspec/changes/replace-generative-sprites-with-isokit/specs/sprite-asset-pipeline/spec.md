@@ -110,7 +110,7 @@ The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to 
 | `building-` | `Buildings` |
 | `overlay-` | `Buildings` |
 | `walker-` | `Units` |
-| `ship-` | `Kit` |
+| `ship-` | `Units` |
 | `good-` | `Icons` |
 
 The public `SpriteAtlas` API remains unchanged.
