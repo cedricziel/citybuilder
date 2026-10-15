@@ -24,9 +24,15 @@ public enum Recipes {
         ) { kit, _ in
             houseCitizen(kit)
         },
-        Recipe(id: "building-town-center", cell: SpriteCell(footprint: 3, heightPx: 192), operationalFrames: 2) { kit, _ in
-            townCenter(kit)
-        },
+        Recipe(
+            id: "building-house-tier3", entry: "building-house", cell: SpriteCell(footprint: 2, heightPx: 176), constructionFrames: 0
+        ) { kit, _ in houseMerchant(kit) },
+        Recipe(
+            id: "building-town-center",
+            cell: SpriteCell(footprint: 3, heightPx: 192),
+            operationalFrames: 2,
+            moving: MovingPart(name: "flag", build: townCenterFlag)
+        ) { kit, _ in townCenter(kit) },
         Recipe(
             id: "building-sawmill",
             cell: SpriteCell(footprint: 2, heightPx: 128),
@@ -41,15 +47,15 @@ public enum Recipes {
         }
     ]
 
-    /// The peasant house stages itself: frame, then walls and roof boards (twice), then thatch.
+    /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {
         switch stage {
-        case let .constructing(index): min(index, 1)
-        case .finished: 2
+        case let .constructing(index): min(index, 2)
+        case .finished: 3
         }
     }
 
-    /// Stage 0: plinth and bare frame. Stage 1: walls and roof boards. Stage 2: finished.
+    /// Stage 0: plinth and bare frame. 1: walls. 2: roof boards. 3: thatched, with garden and woodpile.
     static func housePeasant(_ kit: Builder, stage: Int) {
         let lo = SCNVector3(1.4, 0, 1.8), hi = SCNVector3(6.6, 0, 6.0)
         let base: CGFloat = 0.35, wallTop: CGFloat = 2.95
@@ -68,9 +74,13 @@ public enum Recipes {
         kit.window(south, along: lo.x + 4.33, y: 1.75, lit: true, shutters: Palette.shutterGreen)
         kit.window(east, along: lo.z + 1.05, y: 1.75, lit: false)
         kit.window(east, along: lo.z + 3.15, y: 1.75, lit: false)
-        let finish: Finish = stage >= 2 ? .thatch : .planks
+        guard stage >= 2 else {
+            kit.plankStack(at: SCNVector3(1.0, 0, 6.6), length: 2.4, layers: 3)
+            return
+        }
+        let finish: Finish = stage >= 3 ? .thatch : .planks
         kit.gableRoof(RoofSpec(lo: SCNVector3(lo.x, wallTop, lo.z), hi: hi, pitchDegrees: 45, finish: finish))
-        guard stage >= 2 else { return }
+        guard stage >= 3 else { return }
         kit.logStack(at: SCNVector3(hi.x + 0.3, 0, lo.z + 1.6), length: 1.6, rows: 2, alongX: false)
         kit.barrel(at: SCNVector3(lo.x + 1.9, 0, hi.z + 0.45))
         kit.ground(SCNVector3(lo.x + 2.6, 0, hi.z + 0.5), SCNVector3(hi.x, 0, 7.6), .paint(Palette.soil))
@@ -146,11 +156,6 @@ public enum Recipes {
             finish: .slate
         ))
         kit.block(SCNVector3(9.57, apex - 0.2, 2.37), SCNVector3(9.63, apex + 1.6, 2.43), .timber)
-        kit.add(
-            SCNBox(width: 0.9, height: 0.55, length: 0.03, chamferRadius: 0),
-            Finish.paint(Palette.shutterRed).material(),
-            at: SCNVector3(10.08, apex + 1.3, 2.4)
-        )
         kit.well(at: SCNVector3(3.0, 0, 9.2))
         kit.stall(at: SCNVector3(6.6, 0, 9.0), cloth: Palette.shutterRed)
         kit.stall(at: SCNVector3(9.6, 0, 7.9), cloth: Palette.sailcloth)
@@ -158,6 +163,62 @@ public enum Recipes {
         kit.barrel(at: SCNVector3(11.2, 0, 6.0))
         kit.crate(at: SCNVector3(7.8, 0, 10.7))
         kit.crate(at: SCNVector3(8.4, 0, 10.9))
+    }
+
+    /// The tower flag: furled against the pole (frame 0), then flying (frame 1).
+    static func townCenterFlag(_ kit: Builder, frame: Int) {
+        let tanPitch = tan(62 * CGFloat.pi / 180)
+        let apex = 9.0 - 0.3 * tanPitch + 1.5 * tanPitch // the tower's hip-roof apex
+        let cloth = Finish.paint(Palette.shutterRed).material()
+        if frame == 0 {
+            kit.add(SCNBox(width: 0.22, height: 0.8, length: 0.04, chamferRadius: 0), cloth, at: SCNVector3(9.72, apex + 1.12, 2.4))
+        } else {
+            kit.add(
+                SCNBox(width: 0.95, height: 0.55, length: 0.03, chamferRadius: 0), cloth,
+                at: SCNVector3(10.1, apex + 1.3, 2.4), euler: SCNVector3(0, 0.2, -0.05)
+            )
+        }
+    }
+
+    /// Merchants: ashlar shop floor, two jettied timber-framed storeys, slate hip roof, awning and goods.
+    static func houseMerchant(_ kit: Builder) {
+        let lo = SCNVector3(0.9, 0, 1.0), hi = SCNVector3(7.0, 0, 6.8), jetty: CGFloat = 0.22
+        kit.block(SCNVector3(lo.x - 0.1, 0, lo.z - 0.1), SCNVector3(hi.x + 0.1, 0.4, hi.z + 0.1), .ashlar)
+        kit.block(SCNVector3(lo.x, 0.4, lo.z), SCNVector3(hi.x, 3.2, hi.z), .ashlar)
+        let south = Face.south(wallZ: hi.z), east = Face.east(wallX: hi.x)
+        kit.door(south, along: lo.x + 1.4, base: 0.4, width: 1.3, height: 2.3)
+        kit.window(south, along: lo.x + 3.4, y: 1.8, lit: true)
+        kit.window(south, along: lo.x + 4.9, y: 1.8, lit: true)
+        kit.window(east, along: lo.z + 1.6, y: 1.8, lit: false)
+        kit.window(east, along: lo.z + 4.2, y: 1.8, lit: true)
+        for storey in 0 ..< 2 {
+            let out = jetty * CGFloat(storey + 1), base = 3.2 + CGFloat(storey) * 2.3
+            kit.block(SCNVector3(lo.x, base, lo.z), SCNVector3(hi.x + out, base + 2.3, hi.z + out), .plasterPale)
+            let southUp = Face.south(wallZ: hi.z + out), eastUp = Face.east(wallX: hi.x + out)
+            kit.timberFrame(southUp, span: lo.x ... (hi.x + out), base: base, height: 2.3, posts: 5)
+            kit.timberFrame(eastUp, span: lo.z ... (hi.z + out), base: base, height: 2.3, posts: 4)
+            for index in 0 ..< 4 {
+                kit.window(
+                    southUp,
+                    along: lo.x + 0.8 + CGFloat(index) * 1.55,
+                    y: base + 1.2,
+                    lit: (index + storey) % 3 == 0,
+                    shutters: Palette.shutterGreen
+                )
+            }
+            for index in 0 ..< 3 {
+                kit.window(eastUp, along: lo.z + 1.0 + CGFloat(index) * 1.9, y: base + 1.2, lit: false, shutters: Palette.shutterGreen)
+            }
+        }
+        let top = kit.hipRoof(RoofSpec(
+            lo: SCNVector3(lo.x, 7.8, lo.z), hi: SCNVector3(hi.x + 2 * jetty, 0, hi.z + 2 * jetty),
+            pitchDegrees: 42, overhang: 0.35, finish: .slate
+        ))
+        kit.chimney(x: lo.x + 1.6, depth: lo.z + 1.4, from: 7.0, to: top + 0.2)
+        kit.chimney(x: hi.x - 1.2, depth: lo.z + 2.6, from: 7.0, to: top - 0.6)
+        kit.stall(at: SCNVector3(lo.x + 4.2, 0, hi.z + 0.9), cloth: Palette.shutterGreen)
+        kit.crate(at: SCNVector3(hi.x + 0.6, 0, hi.z - 0.6))
+        kit.barrel(at: SCNVector3(hi.x + 0.5, 0, hi.z + 0.3))
     }
 
     static func sawmill(_ kit: Builder) {
