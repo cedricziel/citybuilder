@@ -103,7 +103,7 @@ On its turn, before the threshold rules, a rival SHALL trade at its own town cen
 2. **Pay debts.** The treasury is below $150. The rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn.
 3. **Feed.** Food is below 4, one of the rival's houses is short of food, and the treasury is at least $300. The rival SHALL buy up to 5 food.
 
-Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
+Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
 
 #### Scenario: Rival buys the planks it is missing
 
@@ -119,6 +119,11 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 - **WHEN** a rival with $500, 1 food and a house short of food takes a turn
 - **THEN** it buys 5 food
+
+#### Scenario: No purchase into a full town center
+
+- **WHEN** a rival with $500, 1 food, a house short of food and a full town center takes a turn
+- **THEN** it buys no food and takes its build step instead
 
 #### Scenario: Rival limits are its own
 
