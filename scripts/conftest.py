@@ -16,3 +16,9 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
+
+
+def pytest_configure(config) -> None:  # noqa: ANN001 - pytest hook
+    # `@pytest.mark.scenario("Title")` maps a test to an OpenSpec scenario;
+    # scripts/check-scenario-coverage.swift reads it.
+    config.addinivalue_line("markers", "scenario(title): the OpenSpec scenario this test covers")
