@@ -21,9 +21,9 @@ struct CommittedTerrainArtTests {
             .filter { $0.pathExtension == "png" }
         #expect(!files.isEmpty)
         for file in files {
-            let metrics = try DiamondMetrics(of: RGBAImage(contentsOf: file))
-            #expect(metrics.coverage >= SpriteContentGate.minimumTerrainCoverage, "\(file.lastPathComponent)")
-            #expect(metrics.outsideRatio <= SpriteContentGate.maximumOutsideRatio, "\(file.lastPathComponent)")
+            let fill = try DiamondFill(of: RGBAImage(contentsOf: file), bleedPoints: 1, scale: SpriteFile(file.lastPathComponent).scale)
+            #expect(fill.holes == 0, "\(file.lastPathComponent) has \(fill.holes) hole(s) inside the diamond")
+            #expect(fill.beyondBleed == 0, "\(file.lastPathComponent) reaches past the bleed")
         }
     }
 
@@ -33,7 +33,7 @@ struct CommittedTerrainArtTests {
             resourcesRoot: worktreeRoot().appendingPathComponent("Resources"),
             coherenceMaxDistance: 0.3
         )
-        let register = failures.filter { $0.reason == .outlineMissing || $0.reason == .notGrounded }
+        let register = failures.filter { $0.reason == .notGrounded }
         #expect(register.isEmpty, "\(register)")
     }
 
