@@ -98,15 +98,7 @@ public struct RemoteInputMapper {
     private mutating func holdPlayPauseIfDue(at time: TimeInterval, session: GameSession) {
         guard let downAt = playPauseDownAt, time - downAt >= Self.holdDuration else { return }
         playPauseDownAt = nil
-        guard focus == .map else { return }
-        // The overview is the cycle's fourth stop. Spec: `platform-shells`
-        // / Apple TV map overview.
-        if session.overview != nil {
-            session.closeOverview()
-            session.world.camera.setZoom(2.0)
-        } else if session.world.camera.zoom == 0.5 {
-            session.openOverview()
-        } else {
+        if focus == .map {
             session.cycleZoomLevel()
         }
     }
@@ -116,7 +108,8 @@ public struct RemoteInputMapper {
         holdPlayPauseIfDue(at: time, session: session)
         guard playPauseDownAt != nil else { return [] }
         playPauseDownAt = nil
-        // A short press does nothing while the overview is open.
+        // A short press does nothing while the overview is open; the rest
+        // of its input is `handlesOverview`'s.
         if session.overview != nil, focus == .map { return [] }
         switch focus {
         case .map:

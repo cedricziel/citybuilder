@@ -32,10 +32,11 @@ public extension GameSession {
     /// Moves the cursor by a swipe of `dx`, `dy` screen points, y down,
     /// in the map's iso orientation.
     func moveOverviewCursor(dx: Double, dy: Double) {
-        let across = dx / MapOverview.pointsPerUnit
-        let down = dy / (MapOverview.pointsPerUnit / 2)
-        overview?.cursorX += (across + down) / 2
-        overview?.cursorY += (down - across) / 2
+        let delta = MinimapProjection.tileOffset(
+            across: dx / MapOverview.pointsPerUnit, down: dy / (MapOverview.pointsPerUnit / 2)
+        )
+        overview?.cursorX += delta.x
+        overview?.cursorY += delta.y
         clampOverviewCursor()
     }
 
@@ -56,10 +57,11 @@ public extension GameSession {
     }
 
     private func clampOverviewCursor() {
-        guard var cursor = overview else { return }
-        cursor.cursorX = min(max(cursor.cursorX, 0), Double(max(world.mapWidth - 1, 0)))
-        cursor.cursorY = min(max(cursor.cursorY, 0), Double(max(world.mapHeight - 1, 0)))
-        overview = cursor
+        guard let cursor = overview else { return }
+        let (x, y) = MinimapProjection.clamp(
+            x: cursor.cursorX, y: cursor.cursorY, mapWidth: world.mapWidth, mapHeight: world.mapHeight
+        )
+        overview = MapOverview(cursorX: x, cursorY: y)
     }
 }
 
@@ -68,7 +70,7 @@ extension RemoteInputMapper {
     /// Opens the overview on the controller's X while the map has focus,
     /// and handles `input` while it is open. False when the input is not
     /// the overview's, such as a Play/Pause press or a tick.
-    mutating func handlesOverview(_ input: RemoteInput, session: GameSession) -> Bool {
+    func handlesOverview(_ input: RemoteInput, session: GameSession) -> Bool {
         guard focus == .map else { return false }
         guard session.overview != nil else {
             if input == .overview { session.openOverview() }
@@ -79,13 +81,12 @@ extension RemoteInputMapper {
             session.moveOverviewCursor(dx: dx, dy: dy)
         case let .click(direction):
             session.stepOverviewCursor(direction)
-        case .selectDown:
-            break
         case .selectUp:
             session.jumpToOverviewCursor()
         case .back:
             session.closeOverview()
-        case .overview, .zoomAxis, .menu:
+        case .selectDown, .overview, .zoomAxis, .menu:
+            // Select acts on release; the rest does nothing here.
             break
         case .playPauseDown, .playPauseUp, .tick, .focusChanged:
             return false

@@ -41,20 +41,10 @@ struct TVMapOverviewView: View {
         HStack(spacing: 24) {
             Text("Map").font(.title2.bold())
             Spacer()
-            legendItem("You", MinimapPalette.player)
-            ForEach(session.world.rivals, id: \.id) { rival in
-                legendItem(rival.name, MinimapRGBA(hex: rival.colour.hex))
-            }
+            TVMapLegend(rivals: session.minimap.rivals)
         }
         .padding(.horizontal, 80)
         .foregroundStyle(.white)
-    }
-
-    private func legendItem(_ name: String, _ colour: MinimapRGBA) -> some View {
-        HStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 4).fill(Color(colour)).frame(width: 18, height: 18)
-            Text(name).font(.callout)
-        }
     }
 
     private var hints: some View {
@@ -75,6 +65,28 @@ struct TVMapOverviewView: View {
             .shadow(color: .black.opacity(0.6), radius: 3)
             .position(point)
             .accessibilityHidden(true)
+    }
+}
+
+/// Who owns which colour: the player, then each rival. Takes the rivals
+/// as a value so the overview does not redraw with every tick.
+private struct TVMapLegend: View {
+    let rivals: [MinimapRival]
+
+    var body: some View {
+        HStack(spacing: 24) {
+            item("You", Color(MinimapPalette.player))
+            ForEach(rivals, id: \.name) { rival in
+                item(rival.name, Color(hex: rival.colourHex))
+            }
+        }
+    }
+
+    private func item(_ name: String, _ colour: Color) -> some View {
+        HStack(spacing: 8) {
+            Circle().fill(colour).frame(width: 18, height: 18)
+            Text(name).font(.callout)
+        }
     }
 }
 
