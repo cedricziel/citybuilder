@@ -77,24 +77,6 @@ public struct CityRootView: View {
         )
     }
 
-    private func settingsBinding(whilePaused: Bool) -> Binding<Bool> {
-        Binding(
-            get: {
-                Self.presentsSettings(
-                    fromPauseSheet: whilePaused, settingsPresented: settingsPresented, isPaused: session.isPaused
-                )
-            },
-            set: { settingsPresented = $0 }
-        )
-    }
-
-    /// Settings opens from the root, or from the pause sheet while the
-    /// game is paused, because a view presents one sheet at a time.
-    /// Closing it from the pause sheet leaves the pause menu open.
-    nonisolated static func presentsSettings(fromPauseSheet: Bool, settingsPresented: Bool, isPaused: Bool) -> Bool {
-        settingsPresented && isPaused == fromPauseSheet
-    }
-
     private var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
             || session.isPaused
@@ -268,6 +250,7 @@ public final class GameSession {
         let dCol = -(dxOverW + dyOverH) / zoom
         let dRow = (dxOverW - dyOverH) / zoom
         world.camera.pan(deltaX: dCol, deltaY: dRow)
+        cameraDidMove()
     }
 
     /// Apply a pinch factor (relative to last reading) to the zoom.
@@ -312,11 +295,22 @@ public final class GameSession {
     public var tileMenuRequest: TileMenuRequest?
 
     /// Whether a building other than a road waits for a confirmation
-    /// instead of committing on tap. On by default on iOS only; macOS
+    /// instead of committing on tap. On by default on iOS and Apple TV; macOS
     /// keeps commit-on-click. A flag rather than `#if` so the touch flow
     /// is testable on the Mac.
     public var confirmsBuildingPlacement: Bool = {
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
+        true
+        #else
+        false
+        #endif
+    }()
+
+    /// Keeps the camera center on the map after every camera move, so
+    /// the remote's reticle never leaves it. On by default on Apple TV
+    /// only. Spec: `tv-remote-controls` / Reticle marks the target tile.
+    public var clampsCameraToMap: Bool = {
+        #if os(tvOS)
         true
         #else
         false

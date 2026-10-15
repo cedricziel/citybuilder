@@ -16,7 +16,7 @@
 
 ## 2. M2 — Remote and controller input
 
-- [ ] 2.1 Spike: host the map in a `GCEventViewController` with `controllerUserInteractionEnabled = false` in the tvOS simulator, and log the event shapes for swipes, edge clicks, select, Play/Pause and Back from the simulator remote; record the findings in design D3
+- [x] 2.1 Spike: host the map in a `GCEventViewController` with `controllerUserInteractionEnabled = false` in the tvOS simulator, and log the event shapes for swipes, edge clicks, select, Play/Pause and Back from the simulator remote; record the findings in design D3 — done in the tvOS 27 simulator with `XCUIRemote`: presses arrive only as `UIPress` events on a focused `GCEventViewController` view, never as GameController events; swipes cannot be simulated and stay with 6.1
 - [ ] 2.2 Tests-first: translate every `tv-remote-controls` scenario and the `rendering-2_5d` scenarios "Remote select dispatched as a tap on the reticle tile" and "Building placement is confirmed by default on Apple TV" into failing CityUI tests against `RemoteInputMapper` and `GameControllerAdapter` with an injected clock (design D4); confirm red
 - [ ] 2.3 Implement to green: `tv-remote-controls` / One input owner per mode — the mapper's map and HUD modes and focus-change events
 - [ ] 2.4 Implement to green: `tv-remote-controls` / Reticle marks the target tile — the camera-center clamp in `GameSession` on tvOS (design D1) and the direction hints using `NudgeDirection` (design D2)

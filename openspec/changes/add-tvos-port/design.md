@@ -67,6 +67,20 @@ Without a `GCEventViewController`, the Siri Remote's events reach both GameContr
 
 How swipe and click values come through differs between remote generations. A simulator spike, with a hardware check, comes before the input milestone.
 
+Spike findings (task 2.1, tvOS 27 simulator, Xcode 27). Xcode 27 has no Simulator.app, so the remote was driven with `XCUIRemote` from the UI-test target. The spike hosted a `GCEventViewController` (`controllerUserInteractionEnabled = false`) over the map and logged both GameController handlers and `pressesBegan`/`pressesEnded`.
+
+- **Not in the focus chain, nothing arrives.** As a plain overlay the controller never became first responder, and every press went to the SwiftUI focus engine. The host must own a focusable view, and focus must sit on that view while the map has focus.
+- **Focused, presses arrive as `UIPress`.** With the host's view focused (reached by a right press from the rail), presses arrived as `UIPress` events: right, down and left arrows (types 3, 1, 2), select (4) and Play/Pause (6). The first up press after focus landed did not arrive. Holding select for one second gave `began` and `ended` one second apart, so hold timing can be read from `UIPress`.
+- **Focus stays on the map.** While the map held focus, arrow presses did not move focus to the rail.
+- **No GameController events from `XCUIRemote`.** A virtual controller connects (vendor "Gamepad", micro and extended profiles), but its handlers never fired. The simulator's `XCUIRemote` events are synthesised `UIPress`es.
+- **Swipes cannot be simulated.** `XCUIRemote` has no touch-surface input, so swipe deltas, edge clicks and both remote generations stay with the hardware check (6.1).
+
+Consequences for M2:
+
+- The tvOS host feeds the mapper from two sources: `UIPress` events for clicks, select, Play/Pause and Back, and `GCController` for the remote's touch surface (swipes) and for extended controllers.
+- On hardware, with `controllerUserInteractionEnabled = false`, the Siri Remote's buttons reach only GameController, so the GameController path must also produce clicks and select. The adapter drops a `UIPress` that duplicates a GameController event within 50 ms, so one press acts once on both the simulator and hardware.
+- Back on a focused map arrives as a `UIPress` of type `.menu`. The host must handle it, or the system takes the app to the Home screen, which is the known gap against D8.
+
 ### D4. A platform-neutral `RemoteInputMapper` with an injected clock
 
 `RemoteInputMapper` is a value type in CityUI, not inside `#if os(tvOS)`. Its input is a stream of normalised events:
