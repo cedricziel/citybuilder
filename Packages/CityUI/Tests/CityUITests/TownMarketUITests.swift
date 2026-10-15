@@ -163,3 +163,26 @@ func visibleRowsKeepCatalogOrder() throws {
     let indices = market.rows.map { good in order.firstIndex(of: good.good) ?? -1 }
     #expect(indices == indices.sorted())
 }
+
+@MainActor
+@Test("scenario: A good sold out this season stays visible")
+func soldOutGoodStaysVisible() throws {
+    let (session, _) = try marketSession { world, _ in
+        world.market.record(3, of: .tools, .sold)
+    }
+    let market = try #require(session.townMarket)
+    #expect(market.rows.contains { $0.good == .tools }, "the row the player just sold from must not collapse")
+    #expect(!market.otherRows.contains { $0.good == .tools })
+}
+
+@MainActor
+@Test("scenario: Goods the island produces are shown")
+func goodsTheIslandProducesAreShown() throws {
+    let (session, _) = try marketSession()
+    let quotes = session.world.marketQuotes
+    let reach = try #require(session.selectedTile.flatMap { session.world.occupiedTiles[$0] }
+        .flatMap { session.world.marketReach(at: $0) })
+    let market = TownMarketSection(quotes: quotes, reach: reach, balance: 1000, isGameOver: false, produced: [.tools])
+    #expect(market.rows.contains { $0.good == .tools })
+    #expect(!market.otherRows.contains { $0.good == .tools })
+}
