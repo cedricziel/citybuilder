@@ -34,7 +34,7 @@ The minimap is laid out inside the existing HUD stacks rather than floating abov
 
 ### D6. Toggle
 
-`MinimapPreference` stores a flag in `UserDefaults` under `Citybuilder.showsMinimap`, which defaults to shown when nothing is stored. The HUD reads and writes it through `@AppStorage` with the same key. The Mac's `M` is a `keyboardShortcut` on the HUD toggle button, the way the rail keys 1, 2, 3, R and X work. It needs no command or menu entry, which keeps it apart from the Mac input change's Game menu.
+`MinimapPreference` stores a flag in `UserDefaults` under `Citybuilder.showsMinimap`, which defaults to shown on iPad and Mac and hidden on iPhone when nothing is stored (the owner's call: the phone screen is tight). The HUD reads and writes it through `@AppStorage` with the same key. The Mac's `M` is a `keyboardShortcut` on the HUD toggle button, the way the rail keys 1, 2, 3, R and X work. It needs no command or menu entry, which keeps it apart from the Mac input change's Game menu.
 
 ### D7. Apple TV overview
 

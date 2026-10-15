@@ -49,21 +49,26 @@ public enum MinimapLayout {
     }
 }
 
-/// Whether the player shows the minimap, kept in user defaults; shown when
-/// nothing is stored. The HUD binds the same key through `@AppStorage`.
+/// Whether the player shows the minimap, kept in user defaults. With
+/// nothing stored it shows on iPad and Mac and stays hidden on the tight
+/// phone screen. The HUD binds the same key through `@AppStorage`.
 /// Spec: `platform-shells` / Minimap toggle. Design D6.
 public struct MinimapPreference {
     public static let defaultsKey = "Citybuilder.showsMinimap"
-    public static let shownByDefault = true
-
     private let defaults: UserDefaults
+    private let idiom: HUDIdiom
 
-    public init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard, idiom: HUDIdiom) {
         self.defaults = defaults
+        self.idiom = idiom
+    }
+
+    public static func shownByDefault(on idiom: HUDIdiom) -> Bool {
+        idiom != .phone
     }
 
     public var isShown: Bool {
-        get { defaults.object(forKey: Self.defaultsKey) as? Bool ?? Self.shownByDefault }
+        get { defaults.object(forKey: Self.defaultsKey) as? Bool ?? Self.shownByDefault(on: idiom) }
         nonmutating set { defaults.set(newValue, forKey: Self.defaultsKey) }
     }
 }

@@ -67,12 +67,14 @@ func scenarioPointOffTheMapClamps() {
     #expect(session.world.camera.centerY <= 19)
 }
 
-@Test("scenario: Minimap shown by default")
-func scenarioMinimapShownByDefault() throws {
+@Test("scenario: Minimap shown by default on iPad and Mac")
+func scenarioMinimapShownByDefaultOnIPadAndMac() throws {
     let suite = "minimap-default-\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
-    #expect(MinimapPreference(defaults: defaults).isShown)
+    #expect(MinimapPreference(defaults: defaults, idiom: .pad).isShown)
+    #expect(MinimapPreference(defaults: defaults, idiom: .mac).isShown)
+    #expect(!MinimapPreference(defaults: defaults, idiom: .phone).isShown)
 }
 
 @Test("scenario: Hiding the minimap persists")
@@ -80,8 +82,10 @@ func scenarioHidingTheMinimapPersists() throws {
     let suite = "minimap-hide-\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
-    MinimapPreference(defaults: defaults).isShown = false
-    #expect(!MinimapPreference(defaults: defaults).isShown)
+    MinimapPreference(defaults: defaults, idiom: .mac).isShown = false
+    #expect(!MinimapPreference(defaults: defaults, idiom: .mac).isShown)
+    MinimapPreference(defaults: defaults, idiom: .phone).isShown = true
+    #expect(MinimapPreference(defaults: defaults, idiom: .phone).isShown, "a phone player's choice to show it holds")
 }
 
 @Test("scenario: Mac minimap hotkey")

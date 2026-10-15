@@ -57,11 +57,11 @@ A tap or click on the minimap SHALL center the camera on the map point under it.
 
 ### Requirement: Minimap toggle
 
-The HUD SHALL offer a Minimap button among its menu buttons, and in the More menu when the menus fold. It SHALL show and hide the minimap. On the Mac, `M` SHALL do the same. The choice SHALL be stored in user defaults and SHALL hold across launches. The minimap SHALL be shown when nothing is stored.
+The HUD SHALL offer a Minimap button among its menu buttons, and in the More menu when the menus fold. It SHALL show and hide the minimap. On the Mac, `M` SHALL do the same. The choice SHALL be stored in user defaults and SHALL hold across launches. When nothing is stored, the minimap SHALL be shown on iPad and Mac and hidden on iPhone, whose screen is tight.
 
-#### Scenario: Minimap shown by default
-- **WHEN** the minimap preference is read from empty user defaults
-- **THEN** the minimap is shown
+#### Scenario: Minimap shown by default on iPad and Mac
+- **WHEN** the minimap preference is read from empty user defaults on an iPad, a Mac and an iPhone
+- **THEN** the minimap is shown on the iPad and the Mac and hidden on the iPhone
 
 #### Scenario: Hiding the minimap persists
 - **WHEN** the player hides the minimap and the preference is read again from the same user defaults

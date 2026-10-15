@@ -18,7 +18,7 @@ public struct CityRootView: View {
     @State var pauseMenuViewModel: PauseMenuViewModel?
     @State var buildRail = BuildRailModel()
     @State var inspectorExpanded = false
-    @AppStorage(MinimapPreference.defaultsKey) var showsMinimap = MinimapPreference.shownByDefault
+    @AppStorage(MinimapPreference.defaultsKey) var showsMinimap = MinimapPreference.shownByDefault(on: HUDMetrics.idiom)
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
     #if os(macOS)

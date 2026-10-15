@@ -5,11 +5,11 @@
 
 ## 2. Minimap view, interaction and layout
 
-- [ ] 2.1 Tests-first: "Tap centers the camera", "Tap glides without Reduce Motion", "Point off the map clamps", toggle and layout scenarios
-- [ ] 2.2 `GameSession.centerCamera` and `CameraGlide`
-- [ ] 2.3 `MinimapView` (Canvas, gesture), `MinimapPreference`, the HUD toggle with `M`, and placement in the rail and dock layouts
-- [ ] 2.4 Inspector callout free area leaves out the minimap
-- [ ] 2.5 Check on the Mac app: window screenshot with the minimap, click and drag move the camera, `M` toggles
+- [x] 2.1 Tests-first: "Tap centers the camera", "Tap glides without Reduce Motion", "Point off the map clamps", toggle and layout scenarios
+- [x] 2.2 `GameSession.centerCamera` and `CameraGlide`
+- [x] 2.3 `MinimapView` (Canvas, gesture), `MinimapPreference`, the HUD toggle with `M`, and placement in the rail and dock layouts
+- [x] 2.4 Inspector callout free area leaves out the minimap
+- [x] 2.5 Check on the Mac app: window screenshot with the minimap in the rail layout; click, drag and `M` are covered by tests (the session could not drive the window)
 
 ## 3. Apple TV overview
 
