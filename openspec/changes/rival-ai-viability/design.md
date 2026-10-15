@@ -30,6 +30,21 @@ Two counterfactuals were run with scratch edits to `RivalSystem.swift`:
 
 Both show the second dead end. Once planks reach 0 without a sawmill, the rival can build neither a house (4 planks) nor a sawmill (1 plank). It then sits for 15 years with $1,000–$4,500 and 20–30 food. In A, the house steps used up the starter planks before the sawmill step. In B, the reserve held back the sawmill while houses used up the planks.
 
+### M1 result
+
+The same 15-year sweep, run on the M1 branch:
+
+| | Easy | Normal | Hard |
+|---|---|---|---|
+| Rivals at 0 residents, year 15 (baseline) | 5/10 (10/10) | 1/20 (6/20) | 7/30 (12/30) |
+| Residents year 5, median | 7 (0) | 34.5 (25) | 17 (20) |
+| Residents year 15, median | 6 (0) | 33.5 (25.5) | 17 (21) |
+| Rivals ever in debt | 5 (10) | 1 (6) | 7 (12) |
+
+Rivals at 0 residents fall from 28 to 13 of 60. Every one of the 13 ends the same way: the town center is full with 40 planks, wood and food are at 0, and the rival cannot pay for a farm. The sawmill turns all wood into planks that nothing uses or sells. M2's market trades (sell surplus when short of money, buy food) target exactly this. A storage threshold rule (a warehouse when the buffers are nearly full) was tried and made Easy worse (10 of 10 at 0 residents), so it is not part of this change.
+
+Hard residents stay below the baseline: a median of 17 against 21. Fewer Hard rivals end at 0, but the living Hard towns are smaller. The building cap and the turn pace are M3's levers for that. The final M1 sawmill rule, which waits for a hut, is what the table shows.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -62,7 +77,12 @@ M1 found that exempting every first sawmill was not enough. An Easy rival's open
 
 ### D2 — Sawmill first when planks are short
 
-A rival with no operational or constructing sawmill, and fewer planks in stock than a house needs, takes a sawmill step before any other step that uses planks. A sawmill needs 1 plank, so the rule fires while the starter planks last. If planks are already 0 (an older save, or a lost sawmill), D5's market buy is the way out.
+A rival with no sawmill (operational or under construction), at least one lumberjack hut, and fewer planks in stock than a house needs takes a sawmill step before any other step that uses planks. A rival's first sawmill costs no materials, like its huts and foresters.
+
+M1 found two things the first version of this rule missed:
+
+- **Residents eat planks.** A town at 4 planks with one occupied house was at 0 planks a few hundred ticks later, before it could pay for the sawmill. A sawmill that needed 1 plank could then never be built, and the town stayed at 4 residents for 15 years with money and food to spare. A free first sawmill removes that dead end for good, so it no longer waits for M2's market.
+- **The rule should wait for a hut.** On Hard, the starter 3 planks fired it before the first hut, and the sawmill then took the opening's wood. Hard rivals at 0 residents rose from 12 to 13 in the sweep. With the hut condition, the count fell to 7.
 
 ### D3 — Foresters wait for the town
 
