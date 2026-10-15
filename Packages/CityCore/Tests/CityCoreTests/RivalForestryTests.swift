@@ -7,7 +7,7 @@ import Testing
 /// An archipelago whose rival 1 has placed its opening lumberjack hut,
 /// is past its opening and holds enough food, wood and planks that no
 /// other threshold rule applies.
-private func rivalWithOneHut() throws -> (world: World, hut: TileCoordinate) {
+private func rivalWithOneHut(houses: Int = 4) throws -> (world: World, hut: TileCoordinate) {
     var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
     let commands = world.takeTurn(1)
     #expect(placedKind(commands.last) == .lumberjackHut)
@@ -25,7 +25,23 @@ private func rivalWithOneHut() throws -> (world: World, hut: TileCoordinate) {
     world.setRival(1) { $0.ai.scriptIndex = 12 }
     world.setRivalStock(1, [.wood: 20, .planks: 10, .food: 10])
     world.setRival(1) { $0.treasury = 5000 }
+    // Foresters wait for a town of 4 houses (`rival-ai-viability` D3).
+    for _ in 0 ..< houses {
+        world.testAddHouse(owner: .rival(1), residents: 4)
+    }
     return (world, hut)
+}
+
+@Test("scenario: foresters wait for the town")
+func scenarioForestersWaitForTheTown() throws {
+    let (town, _) = try rivalWithOneHut()
+    var control = town
+    #expect(placedKind(control.takeTurn(1).last) == .forester)
+    var opening = town
+    opening.setRival(1) { $0.ai.scriptIndex = 5 }
+    #expect(placedKind(opening.takeTurn(1).last) != .forester)
+    var (small, _) = try rivalWithOneHut(houses: 3)
+    #expect(placedKind(small.takeTurn(1).last) != .forester)
 }
 
 /// Open grass tiles in both the forester's and the hut's catchment.

@@ -25,6 +25,17 @@ enum RivalAI {
     /// Open grass a forester slot must share with a rival hut's
     /// catchment (`add-forestry` D6).
     static let foresterMinSharedGrass = 4
+    /// Money other steps leave for houses until enough are lived in, and
+    /// the houses a town needs before it plants foresters
+    /// (`rival-ai-viability` D1, D3).
+    static let houseReserve: Int64 = 150
+    static let reserveUntilOccupiedHouses = 3
+    static let foresterMinHouses = 4
+
+    /// Planks a house needs.
+    static var housePlanks: Int {
+        BuildingCatalog.spec(for: .house).materialCost[.planks, default: 0]
+    }
 
     static func scriptKind(at index: Int) -> BuildingKind {
         index < opening.count ? opening[index] : growthLoop[(index - opening.count) % growthLoop.count]
@@ -58,25 +69,45 @@ private struct RivalTurn {
     var forestLeft = 0
     /// Every lumberjack hut, thinned ones included.
     var allHuts = 0
+    /// Houses with at least one resident.
+    var occupiedHouses = 0
     let stock: [Good: Int]
 
-    /// The threshold rules that apply, in order (design D5). The planks
-    /// rule waits for the end of the opening; food and wood apply at any
-    /// time. A peasant house eats about what one farm grows, so farms
-    /// keep pace with four in five houses; huts are replaced before their
-    /// last forest is cut.
+    /// The threshold rules that apply, in order (design D5). A town
+    /// without a sawmill builds one before its planks fall below a
+    /// house's worth, since a sawmill needs a plank too; the planks rule
+    /// waits for the end of the opening; food and wood apply at any time.
+    /// A farm per house keeps food up (`rival-ai-viability` D2, D4); huts
+    /// are replaced before their last forest is cut.
     func thresholdKinds(pastOpening: Bool) -> [BuildingKind] {
         let houses = counts[.house, default: 0]
         let huts = counts[.lumberjackHut, default: 0]
+        let sawmills = counts[.sawmill, default: 0]
+        let planks = stock[.planks, default: 0]
         var kinds: [BuildingKind] = []
-        if stock[.food, default: 0] < 4, counts[.farm, default: 0] < (houses * 4 + 4) / 5 { kinds.append(.farm) }
-        if pastOpening, stock[.planks, default: 0] < 6, counts[.sawmill, default: 0] < huts { kinds.append(.sawmill) }
+        if stock[.food, default: 0] < 4, counts[.farm, default: 0] < houses { kinds.append(.farm) }
+        if sawmills == 0, planks < RivalAI.housePlanks { kinds.append(.sawmill) }
+        if pastOpening, planks < 6, sawmills < huts { kinds.append(.sawmill) }
         if stock[.wood, default: 0] < 4, huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest {
             kinds.append(.lumberjackHut)
         }
-        // A thinned hut needs a forester most, so every hut counts.
-        if counts[.forester, default: 0] < allHuts { kinds.append(.forester) }
+        // A thinned hut needs a forester most, so every hut counts; a
+        // young town's starter grove holds its first huts' trees.
+        if pastOpening, houses >= RivalAI.foresterMinHouses, counts[.forester, default: 0] < allHuts {
+            kinds.append(.forester)
+        }
         return kinds
+    }
+
+    /// Money a step must leave for houses: none for houses and farms,
+    /// which house and feed the first residents, none for a first sawmill
+    /// once planks run short of a house, and none once enough houses are
+    /// lived in (`rival-ai-viability` D1).
+    func reserve(before kind: BuildingKind) -> Int64 {
+        let neededSawmill = kind == .sawmill && counts[.sawmill, default: 0] == 0
+            && stock[.planks, default: 0] < RivalAI.housePlanks
+        let exempt = kind == .house || kind == .farm || neededSawmill
+        return exempt || occupiedHouses >= RivalAI.reserveUntilOccupiedHouses ? 0 : RivalAI.houseReserve
     }
 
     /// True when the stock covers `cost`, or the rival's own huts and
@@ -173,6 +204,9 @@ extension World {
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
             }
+            if building.kind == .house, populations[building.id]?.population ?? 0 > 0 {
+                turn.occupiedHouses += 1
+            }
             if building.kind == .lumberjackHut {
                 turn.allHuts += 1
                 let forest = forestTiles(inCatchmentOf: building.anchor, footprint: hutFootprint)
@@ -194,7 +228,8 @@ extension World {
               let slot = plan.slot(for: kind)
         else { return nil }
         let roadCost = BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
-        guard rival.treasury >= spec.cost + roadCost + RivalAI.safetyMargin else { return nil }
+        let reserve = turn.reserve(before: kind)
+        guard rival.treasury >= spec.cost + roadCost + RivalAI.safetyMargin + reserve else { return nil }
         return slot.roads.map { .rivalPlace(rival.id, .road, at: $0) } + [.rivalPlace(rival.id, kind, at: slot.anchor)]
     }
 }
