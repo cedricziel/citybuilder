@@ -37,6 +37,7 @@ func scenarioRivalsAreViableAcrossSeeds(_ viability: ViabilityCase) {
     var world = World.newGame(layout: .archipelago, seed: viability.seed, difficulty: viability.difficulty)
     let year = Int(CalendarState.ticksPerYear)
     var ticksInDebt: [RivalID: Int] = [:]
+    var emptySince: [RivalID: Int] = [:]
     for tick in 1 ... 5 * year {
         // A passive player kept solvent: game over would stop rival tax and upkeep.
         if tick.isMultiple(of: 600) { world.economy.balance = 100_000 }
@@ -45,12 +46,14 @@ func scenarioRivalsAreViableAcrossSeeds(_ viability: ViabilityCase) {
             ticksInDebt[rival.id] = rival.treasury < 0 ? ticksInDebt[rival.id, default: 0] + 1 : 0
             #expect(ticksInDebt[rival.id, default: 0] < year, "rival \(rival.id) in debt for a year")
         }
-        if tick >= 2 * year, tick.isMultiple(of: year) {
-            for rival in world.rivals {
-                #expect(world.population(of: rival.owner) > 0, "rival \(rival.id) empty at tick \(tick)")
+        // After the end of year 2 no rival may empty, not even for a tick.
+        if tick >= 2 * year {
+            for rival in world.rivals where emptySince[rival.id] == nil && world.population(of: rival.owner) == 0 {
+                emptySince[rival.id] = tick
             }
         }
     }
+    #expect(emptySince.isEmpty, "rivals empty after year 2, from tick: \(emptySince)")
     for rival in world.rivals {
         let residents = world.population(of: rival.owner)
         #expect(residents >= residentsFloor(viability.difficulty), "rival \(rival.id) has \(residents)")
