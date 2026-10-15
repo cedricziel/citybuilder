@@ -73,8 +73,7 @@ public final class IsoWorldScene: SKScene {
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Residents on the town center plazas, pooled. Spec: `rendering-2_5d`
     /// / Residents gather on the plaza.
-    var plazaNodes: [PlazaFigureKey: SKSpriteNode] = [:]
-    var plazaPool: [SKSpriteNode] = []
+    var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
     var lastPlazaPass: PlazaPass?
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.

@@ -34,8 +34,7 @@ public enum PlazaCrowdPlanner {
         yRange: ClosedRange<Int>,
         reduceMotion: Bool
     ) -> [Figure] {
-        let phase = TimeOfDay(tick: snapshot.tickCount).phase
-        guard phase == .day || phase == .dusk, snapshot.camera.zoom >= minZoom else { return [] }
+        guard StrollerPlanner.residentsOut(atTick: snapshot.tickCount), snapshot.camera.zoom >= minZoom else { return [] }
         let centers = snapshot.buildings.values.filter {
             $0.kind == .townCenter && $0.state == .operational
                 && xRange.contains($0.anchor.x) && yRange.contains($0.anchor.y)
@@ -74,34 +73,21 @@ public enum PlazaCrowdPlanner {
             col: Double(center.anchor.x) - 0.5 + localU,
             row: Double(center.anchor.y) - 0.5 + localV,
             walking: progress < 1 && previous != target,
-            facing: facing(du: target.u - previous.u, dv: target.v - previous.v)
+            facing: SpriteAtlas.WalkerFacing(stepX: target.u - previous.u, stepY: target.v - previous.v)
         )
     }
 
     /// A spot on the plaza for one visit, from a hash of its inputs.
     static func spot(center: EntityID, slot: Int, visit: UInt64) -> (u: Double, v: Double) {
         let seed = UInt64(center.raw) &* 0x9E37_79B9_7F4A_7C15 ^ UInt64(slot) &* 0xBF58_476D_1CE4_E5B9 ^ visit
-        let bits = splitMix(seed)
+        var rng = DeterministicRNG(seed: seed)
+        let bits = rng.next()
         let unitU = Double(bits & 0xFFFF) / Double(0xFFFF)
         let unitV = Double((bits >> 16) & 0xFFFF) / Double(0xFFFF)
         return (
             plazaU.lowerBound + unitU * (plazaU.upperBound - plazaU.lowerBound),
             plazaV.lowerBound + unitV * (plazaV.upperBound - plazaV.lowerBound)
         )
-    }
-
-    /// The walker facing for a step in tile space: +x is screen
-    /// down-right (se), +y is down-left (sw).
-    static func facing(du: Double, dv: Double) -> SpriteAtlas.WalkerFacing {
-        if abs(du) >= abs(dv) { return du >= 0 ? .se : .nw }
-        return dv >= 0 ? .sw : .ne
-    }
-
-    static func splitMix(_ input: UInt64) -> UInt64 {
-        var value = input &+ 0x9E37_79B9_7F4A_7C15
-        value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
-        return value ^ (value >> 31)
     }
 
     /// Muted cloth tints, one per figure.
@@ -114,13 +100,19 @@ public enum PlazaCrowdPlanner {
     ]
 
     static func tint(center: EntityID, slot: Int) -> SKColor {
-        tints[Int(splitMix(UInt64(center.raw) << 8 | UInt64(slot)) % UInt64(tints.count))]
+        var rng = DeterministicRNG(seed: UInt64(center.raw) << 8 | UInt64(slot))
+        return tints[Int(rng.next() % UInt64(tints.count))]
     }
 }
 
 struct PlazaFigureKey: Hashable {
     let townCenter: EntityID
     let slot: Int
+}
+
+struct PlazaPose: Equatable {
+    let walking: Bool
+    let facing: SpriteAtlas.WalkerFacing
 }
 
 struct PlazaPass: Equatable {
@@ -148,53 +140,46 @@ extension IsoWorldScene {
             PlazaCrowdPlanner.figures(in: snapshot, xRange: $0.xRange, yRange: $0.yRange, reduceMotion: reduceMotion)
         } ?? []
         let keys = Set(figures.map { PlazaFigureKey(townCenter: $0.townCenter, slot: $0.slot) })
-        for (key, node) in plazaNodes where !keys.contains(key) {
-            node.removeFromParent()
-            plazaPool.append(node)
+        for (key, figure) in plazaNodes where !keys.contains(key) {
+            figure.node.removeFromParent()
             plazaNodes.removeValue(forKey: key)
         }
         for figure in figures {
             let key = PlazaFigureKey(townCenter: figure.townCenter, slot: figure.slot)
             let target = IsoMath.screenPoint(forTileFractionalX: figure.col, fractionalY: figure.row)
-            if let node = plazaNodes[key] {
-                // Glide to each 10 Hz position instead of jumping to it.
-                if node.position != target { node.run(.move(to: target, duration: 0.1), withKey: "glide") }
-                pose(node, walking: figure.walking, facing: figure.facing)
+            let pose = PlazaPose(walking: figure.walking, facing: figure.facing)
+            if var shown = plazaNodes[key] {
+                if shown.node.position != target { shown.node.glide(to: target) }
+                if shown.pose != pose {
+                    shown.pose = pose
+                    Self.apply(pose, to: shown.node)
+                    plazaNodes[key] = shown
+                }
                 continue
             }
-            let node = plazaPool.popLast() ?? makePlazaNode()
-            node.removeAllActions()
-            node.userData = [:]
-            node.position = target
+            let node = SKSpriteNode()
+            node.anchorPoint = CGPoint(x: 0.5, y: 0)
+            node.zPosition = 50
             node.color = PlazaCrowdPlanner.tint(center: figure.townCenter, slot: figure.slot)
+            node.colorBlendFactor = 0.35
+            node.position = target
+            Self.apply(pose, to: node)
             addChild(node)
-            plazaNodes[key] = node
-            pose(node, walking: figure.walking, facing: figure.facing)
+            plazaNodes[key] = (node, pose)
         }
-    }
-
-    private func makePlazaNode() -> SKSpriteNode {
-        let node = SKSpriteNode(texture: SpriteAtlas.walkerAnimation(facing: .se)?.first)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0)
-        node.zPosition = 50
-        node.colorBlendFactor = 0.35
-        return node
     }
 
     /// Walk frames while moving, frame 0 while standing. The frames come
     /// from `SpriteAtlas.walkerAnimation`, the one walker lookup, so
-    /// redrawn walkers show up here unchanged. Only touches the node when
-    /// the pose changes.
-    private func pose(_ node: SKSpriteNode, walking: Bool, facing: SpriteAtlas.WalkerFacing) {
-        let pose = "\(facing.rawValue)-\(walking)"
-        guard node.userData?["pose"] as? String != pose else { return }
-        node.userData?["pose"] = pose
+    /// redrawn walkers show up here unchanged.
+    private static func apply(_ pose: PlazaPose, to node: SKSpriteNode) {
         node.removeAction(forKey: "walk")
-        guard let frames = SpriteAtlas.walkerAnimation(facing: facing), let first = frames.first else { return }
+        guard let frames = SpriteAtlas.walkerAnimation(facing: pose.facing), let first = frames.first else { return }
         node.texture = first
         node.size = first.size()
-        if walking, frames.count > 1 {
-            node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.2)), withKey: "walk")
+        if pose.walking, frames.count > 1 {
+            let perFrame = SpriteAnimation.entry(for: .walker(pose.facing))?.timePerFrame ?? 0.15
+            node.run(.repeatForever(.animate(with: frames, timePerFrame: perFrame)), withKey: "walk")
         }
     }
 }
