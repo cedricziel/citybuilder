@@ -6,3 +6,8 @@
 - [x] 1.4 Confirm the `DeterminismFixture` output is unchanged
 - [x] 1.5 Refactor under a green bar
 - [x] 1.6 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
+
+## 2. Road-connected stores first (#113)
+
+- [ ] 2.1 Tests-first: "Stores the town center's roads reach fill first" and "Warehouses fill before ports"; confirm red
+- [ ] 2.2 Implement to green: purchase order town center, connected warehouses, connected ports, then the rest by kind, each by entity ID (design D2)

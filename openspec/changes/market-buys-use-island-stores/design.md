@@ -18,9 +18,9 @@
 
 Issue #70 offers two options: deposit into the island's warehouses, or explain why a buy is blocked. The spec already settles which stores the market reaches: selling draws from every operational player goods buffer on the island. Buying into the same set removes the asymmetry and fixes the failure itself. Feedback alone would leave the player unable to buy food in exactly the situation the market is meant for. The panel already disables a Buy button when there is no room, so that feedback stays for the case where every store is full.
 
-### D2. Town center first, then entity ID order
+### D2. Town center, then road-connected warehouses, then ports
 
-The town center fills first, so a town with room in it behaves exactly as before. The other buffers then fill in ascending entity ID order, the order selling drains them in. The order is deterministic and independent of `Dictionary` order.
+The town center fills first, so a town with room in it behaves exactly as before. Then warehouses, then ports: the order rival port sales use, and ports stay free for ships to unload into. Within that, buffers on a road connected to the town center's road come first (#113): goods bought into a store no road reaches are paid for but no carrier can bring them to the houses. Unconnected stores still fill last rather than fail the purchase. Within each group, buffers fill in ascending entity ID order, so the order is deterministic and independent of `Dictionary` order.
 
 ### D3. The panel's room is the island's room
 
