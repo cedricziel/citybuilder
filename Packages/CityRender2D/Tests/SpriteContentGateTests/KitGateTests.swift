@@ -75,7 +75,7 @@ struct KitGateTests {
             guard insideDiamond(x, y) else { return nil }
             return x == 32 && y == 1 ? nil : water // one transparent pixel on the top edge
         }
-        try writePNG(chipped, to: root.appendingPathComponent("Terrain.atlas/terrain-grass-beach-t3.png"))
+        try writePNG(chipped, to: root.appendingPathComponent("Kit.atlas/terrain-grass-beach-t3.png")) // terrain rules follow the name
 
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.2)
 
