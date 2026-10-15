@@ -77,3 +77,25 @@ func scenarioReturnToTitleIdempotent() {
     #expect(viewModel.committedSession == nil)
     #expect(factoryInvocations == 0)
 }
+
+@MainActor
+@Test("scenario: returning to the title ends the session")
+func returningToTheTitleEndsTheSession() {
+    let viewModel = TitleScreenViewModel(saveStore: EndSessionStore(), sessionFactory: { GameSession(world: $0) })
+    viewModel.commit(world: World.newGame())
+    var ended = 0
+    viewModel.committedSession?.onEnd = { ended += 1 }
+    viewModel.returnToTitle()
+    viewModel.returnToTitle()
+    #expect(ended == 1)
+}
+
+private final class EndSessionStore: SaveStoreFacade, @unchecked Sendable {
+    func mostRecentSave() throws -> SaveSummary? {
+        nil
+    }
+
+    func load(gameID _: UUID) throws -> World {
+        World.newGame()
+    }
+}
