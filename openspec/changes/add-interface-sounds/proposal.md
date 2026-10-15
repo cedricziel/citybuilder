@@ -10,6 +10,7 @@ Nothing in the interface makes a sound: not the title menu, the build rail, pick
   - `select`: picking a build tool.
   - `toggle`: pausing and resuming.
   - `open` and `close`: opening and closing a build drawer.
+  - `reject`: a placement the rules reject. The UI rejects it before the simulation sees it, so the `placementRejected` binding from `add-event-sounds` never fires; `ui.reject` plays the same two knocks.
 - `AudioStack.playInterfaceSound(_:)` plays the cue bound to `ui.<name>` in `bindings.json` on the `sfx` bus. A name without a binding plays nothing.
 - There are five new generated sounds, all soft wooden and paper sounds, quieter than event sounds:
   - `tap`: a light wooden tick;

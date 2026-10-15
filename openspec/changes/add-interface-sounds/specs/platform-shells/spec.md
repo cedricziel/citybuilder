@@ -7,7 +7,8 @@ CityUI SHALL send each interface sound to `UISounds.sink`, which the app shell s
 - `select`: choosing a build tool;
 - `toggle`: pausing or resuming;
 - `open`: opening a build drawer;
-- `close`: closing a build drawer.
+- `close`: closing a build drawer;
+- `reject`: a placement the rules reject, when its message shows. The simulation never sees such a placement, so its `placementRejected` event cannot carry this sound.
 
 With no sink set, nothing SHALL happen.
 
@@ -22,3 +23,7 @@ With no sink set, nothing SHALL happen.
 #### Scenario: Tools and pause make a sound
 - **WHEN** the player picks the road tool, then pauses
 - **THEN** the sink receives `select`, then `toggle`
+
+#### Scenario: A rejected placement knocks
+- **WHEN** the player taps a water tile with the house tool armed
+- **THEN** the sink receives `reject`
