@@ -33,6 +33,22 @@ A transition SHALL win over the seasonal sprite. In autumn and winter a `grass-b
 - **WHEN** a grass tile is drawn as a `grass-beach` transition
 - **THEN** placement on that tile follows the rules for grass
 
+### Requirement: Roads join their neighbours
+
+An operational road SHALL draw the connection sprite for its mask: an arm per paved edge neighbour and a corner where two adjacent arms and the diagonal between them are paved. Paved means a road or the town center's footprint. A road touching the town center, edge-on or diagonally, SHALL draw the cobbled `plaza` set; every other road the worn-earth set. The connection is part of the sprite key, so placing or demolishing a neighbour redraws the road. The derivation is visual only.
+
+#### Scenario: A straight road joins both neighbours
+- **WHEN** a road has road neighbours at -x and +x only
+- **THEN** it draws `building-road-c5`
+
+#### Scenario: A 2x2 block of road closes in the middle
+- **WHEN** four roads form a 2×2 block
+- **THEN** each draws its two inward arms and the corner between them, so the block has no hole
+
+#### Scenario: The starter ring paves up to the town center
+- **WHEN** a road in the town center's starter ring is drawn
+- **THEN** it draws the `plaza` set with arms into the town center's footprint
+
 ### Requirement: World textures are @2x and linearly filtered
 
 Terrain, building, unit and ship textures SHALL be loaded from atlases that include `@2x` images and SHALL use `.linear` filtering. Goods icons and status overlay badges SHALL keep `.nearest` filtering. Sprite sizes in points and every anchor and position rule are unchanged.

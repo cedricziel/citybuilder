@@ -24,7 +24,7 @@ extension IsoWorldScene {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
         node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
-        if case let .building(_, _, footprint, _, _, _, _, _, _) = spec.kind {
+        if case let .building(_, _, footprint, _, _, _, _, _, _, _) = spec.kind {
             let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
             node.zPosition = 10 + CGFloat(depth) * 0.01
         }
@@ -76,7 +76,7 @@ extension IsoWorldScene {
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
         guard case let .building(
             kind, state, footprint, constructionFrameIndex, orientation,
-            isWaitingForMaterials, isRoadDisconnected, houseTier, look
+            isWaitingForMaterials, isRoadDisconnected, houseTier, look, roadLink
         ) = spec.kind
         else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
@@ -100,6 +100,10 @@ extension IsoWorldScene {
             let name = "building-house-tier\(houseTier.rawValue)"
             textureName = name
             texture = SpriteAtlas.textureOrPlaceholder(named: name)
+        } else if let roadLink, hasSprite(roadLink.assetName) {
+            // Spec: `rendering-2_5d` / Roads join their neighbours.
+            textureName = roadLink.assetName
+            texture = SpriteAtlas.textureOrPlaceholder(named: roadLink.assetName)
         } else if let orientation {
             // Shore buildings live under the `building-<kind>-<orientation>-*`
             // grammar; resolve the right state-keyed name and skip the

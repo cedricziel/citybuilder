@@ -28,17 +28,15 @@ func scenarioMountainShipsFourArtVariants() {
     }
 }
 
+/// The four art variants are retired: roads pick a connection sprite instead (RoadLinks).
 @Test("scenario: road ships four art variants")
 func scenarioRoadShipsFourArtVariants() {
-    let names = SpriteAtlas.catalogSpriteNames
-    let expected = [
-        "building-road",
-        "building-road-v1",
-        "building-road-v2",
-        "building-road-v3"
-    ]
-    for entry in expected {
-        #expect(names.contains(entry), "catalog must declare \(entry)")
+    let names = Set(SpriteAtlas.catalogSpriteNames)
+    #expect(names.contains("building-road"))
+    #expect(!names.contains("building-road-v1"))
+    #expect(RoadLinks.allMasks.count == 47)
+    for mask in RoadLinks.allMasks {
+        #expect(names.contains("building-road-c\(mask)") && names.contains("building-road-plaza-c\(mask)"), "mask \(mask)")
     }
 }
 

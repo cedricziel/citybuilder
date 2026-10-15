@@ -49,10 +49,10 @@ struct CommittedTerrainArtTests {
         for entry in entries {
             let text = try String(contentsOf: entry, encoding: .utf8)
             // Families migrate one at a time (replace-generative-sprites-with-isokit, tasks section 4):
-            // until the last one flips, a brief is either procedural or rendered by IsoKit.
-            let procedural = text.hasPrefix("---\nsource = \"procedural\"\n---\n")
-            let isokit = text.hasPrefix("---\nsource = \"isokit\"\n---\n")
-            #expect(procedural || isokit, "\(entry.lastPathComponent)")
+            // until the last one flips, a brief is procedural, rendered by IsoKit, or drawn by an SVG
+            // generator (roads).
+            let source = ["procedural", "isokit", "svg"].first { text.hasPrefix("---\nsource = \"\($0)\"\n---\n") }
+            #expect(source != nil, "\(entry.lastPathComponent)")
         }
     }
 

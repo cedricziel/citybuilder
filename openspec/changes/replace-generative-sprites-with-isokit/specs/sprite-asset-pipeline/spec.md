@@ -6,6 +6,7 @@ Sprite PNG filenames SHALL conform to one of the grammars below based on categor
 - Terrain: `terrain-<kind>[-v<variant>][-<frame>].png` where `<kind>` is a value from `TerrainKind`, `<variant>` is a positive integer when the kind opts into per-tile art variants (the canonical sprite omits the slot), and `<frame>` is a non-negative integer when the sprite is animated.
 - Terrain transition: `terrain-<upper>-<lower>-t<mask>[-<season>][-<frame>].png` where `<upper>` and `<lower>` are `TerrainKind` values forming a declared transition pair (`grass`/`beach`, `beach`/`water`), `<mask>` is an integer 1–14 whose bits mark the corners carrying `<upper>` (N=1, E=2, S=4, W=8), `<season>` is `autumn` or `winter` for the seasonal sets of a pair whose upper terrain changes with the season, and `<frame>` is a non-negative integer when the tile is animated. Transition tiles do NOT opt into the variant slot.
 - Building (land-only): `building-<kind>[-v<variant>][-<state>][-<frame>].png` where `<kind>` is a value from `BuildingKind`, `<variant>` is a positive integer when the kind opts into per-tile art variants, `<state>` is one of `constructing` or `operational` (omitted for the idle baseline sprite), and `<frame>` is a non-negative integer when the sprite is animated.
+- Road connection: `building-road[-plaza]-c<mask>.png` where `<mask>` has an arm bit per paved edge neighbour (+x=1, +y=2, -x=4, -y=8) and a corner bit where two adjacent arms and the diagonal between them are paved ((+x,+y)=16, (-x,+y)=32, (-x,-y)=64, (+x,-y)=128); `plaza` marks the cobbled tiles touching the town center.
 - Building (shore): `building-<kind>-<orientation>[-<state>][-<frame>].png` where `<orientation>` is one of `n`, `s`, `e`, `w` denoting the cardinal direction of the building's water side, `<state>` and `<frame>` follow the same rules as the land-only building grammar. Shore buildings do NOT opt into the variant slot; orientation already provides the per-tile differentiation. The shore grammar applies exclusively to building kinds that opt into the `shorePlacement` rule (per `buildings-and-construction`).
 - Unit (walker): `walker-<facing>-<frame>.png` where `<facing>` is one of `ne`, `nw`, `se`, `sw` and `<frame>` is a non-negative integer. Walkers do NOT opt into the variant slot.
 - Unit (ship): `ship-<facing>-<frame>.png` where `<facing>` is one of `n`, `ne`, `e`, `se`, `s`, `sw`, `w`, `nw` and `<frame>` is a non-negative integer. Ships do NOT opt into the variant slot.
@@ -121,6 +122,54 @@ The public `SpriteAtlas` API remains unchanged.
 #### Scenario: Shore-building name routes to Buildings atlas
 - **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
 - **THEN** the lookup is performed against `SKTextureAtlas(named: "Buildings")` and returns a non-nil texture
+
+### Requirement: Per-tile art variants
+A subset of terrain kinds SHALL ship multiple visually distinct sprites under the variant slot of the naming grammar (per the modified `Sprite naming grammar` requirement). The renderer SHALL pick one variant per tile via a deterministic function of the tile coordinate so that the choice is stable across replays, snapshots, and renderer reconciliations of equal `World` values.
+
+Per-kind variant counts SHALL be declared in two `SpriteAtlas` constants — `terrainVariantCounts: [TerrainType: Int]` and `buildingVariantCounts: [BuildingKind: Int]`. A kind absent from its table renders only the canonical sprite (variant 0). The variant inventory SHALL be:
+- `terrainVariantCounts[.mountain] = 4`
+- `buildingVariantCounts` is empty: roads retired their four art variants and pick a connection sprite instead (rendering-2_5d: Roads join their neighbours)
+
+Variant selection SHALL be implemented by a pure function `SpriteAtlas.variantIndex(coord:count:)` that takes a `TileCoordinate` and the variant count and returns an integer in `0..<count`. The function SHALL be a deterministic function of its inputs alone, with no dependence on RNG, the live `World`, or any external state.
+
+#### Scenario: Mountain ships four art variants
+- **WHEN** the sprite catalog is enumerated for the mountain terrain kind
+- **THEN** four entries are present: `terrain-mountain` (variant 0) and `terrain-mountain-v1`, `terrain-mountain-v2`, `terrain-mountain-v3`
+
+#### Scenario: Road ships four art variants
+- **WHEN** the sprite catalog is enumerated for the road building kind
+- **THEN** it holds `building-road` and, for each of the 47 connection masks, `building-road-c<mask>` and `building-road-plaza-c<mask>`, and no `building-road-v<n>` variants
+
+#### Scenario: Variant selection is a pure function of coord and count
+- **WHEN** `SpriteAtlas.variantIndex(coord: TileCoordinate(x: 12, y: 7), count: 4)` is called twice
+- **THEN** both calls return the same integer in `0..<4`
+
+#### Scenario: Variant selection is in-range
+- **WHEN** `SpriteAtlas.variantIndex(coord: c, count: n)` is called for any `c` and any `n > 0`
+- **THEN** the result is in the half-open interval `0..<n`
+
+#### Scenario: Variant zero when count is one
+- **WHEN** `SpriteAtlas.variantIndex(coord: c, count: 1)` is called for any `c`
+- **THEN** the result is `0`
+
+#### Scenario: Distinct coords map across the full variant range
+- **WHEN** `SpriteAtlas.variantIndex(coord:count:)` is called for every integer coord in a 16×16 region with count `4`
+- **THEN** every variant index `0`, `1`, `2`, `3` appears at least once in the resulting distribution
+
+### Requirement: Renderer picks variants per tile coord
+The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or land-only building sprite spec via the variant-aware lookup keyed on `spec.coord`, except that an operational road draws its connection sprite when the atlas has it. The ghost preview path SHALL use the same lookup keyed on the ghost's target tile so the preview matches what the placed tile will render.
+
+#### Scenario: Placed mountain tile picks its variant from its coord
+- **WHEN** the snapshot reconciler emits a mountain terrain spec at coord `(x, y)`
+- **THEN** the renderer node's texture is `SpriteAtlas.terrainTextureOrPlaceholder(for: .mountain, coord: TileCoordinate(x: x, y: y))`
+
+#### Scenario: Placed road tile picks its variant from its coord
+- **WHEN** the snapshot reconciler emits a road building spec at coord `(x, y)` in operational state
+- **THEN** the renderer node's texture is the road's `RoadLink` sprite, or `SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: TileCoordinate(x: x, y: y))` when the atlas lacks it
+
+#### Scenario: Ghost preview matches placement variant
+- **WHEN** the ghost preview is reconciled for a road build at coord `(x, y)`
+- **THEN** the ghost node's texture is `SpriteAtlas.buildingTextureOrPlaceholder(for: .road, coord: TileCoordinate(x: x, y: y))`, the base road sprite
 
 ## ADDED Requirements
 

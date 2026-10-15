@@ -41,7 +41,10 @@ public struct SpriteSpec: Hashable, Sendable {
             // so a tier change swaps the node.
             houseTier: HouseTier = .peasants,
             // Signature state: idle, monument progress, smoke tint.
-            look: BuildingLook = .standard
+            look: BuildingLook = .standard,
+            // How an operational road joins its neighbours; part of the key so a new
+            // neighbour swaps the node. Nil for everything else.
+            roadLink: RoadLink? = nil
         )
     }
 
@@ -80,6 +83,7 @@ public enum SnapshotReconciler {
                 result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition)))
             }
         }
+        let roadLinks = RoadLinks.links(in: snapshot)
         // Emit one sprite per building (at its anchor) when its anchor is
         // inside the visible range. Multi-tile buildings draw as a single
         // visual unit so the "four pillars" artefact goes away.
@@ -109,7 +113,8 @@ public enum SnapshotReconciler {
                     isWaitingForMaterials: isWaiting,
                     isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id),
                     houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants,
-                    look: SignatureLooks.look(for: building, in: snapshot)
+                    look: SignatureLooks.look(for: building, in: snapshot),
+                    roadLink: building.kind == .road && building.state != .constructing ? roadLinks[building.anchor] : nil
                 )
             ))
         }
