@@ -104,6 +104,8 @@ Each event carries a timestamp from an injected clock. The mapper decides taps a
 
 After a valid confirm, the mapper re-enters pending placement with the same kind, so building a row of houses costs one select each. Back cancels the placement and returns to inspect.
 
+Decided during M2: the anchor follows the camera under the same session flag that keeps the camera center on the map (`clampsCameraToMap`), not a separate `pendingPlacementFollowsCamera` flag. Both rules exist only for the reticle, and a clamped camera with a free anchor, or the reverse, is never wanted.
+
 - _Alternative: show the iOS arrow HUD and move focus over it._ Four focus moves plus a click per tile. Rejected.
 
 ### D6. Road painting by toggle and clicks; demolish never paints
