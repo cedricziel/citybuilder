@@ -29,7 +29,7 @@ Every failed game bottomed out at −$1 or −$2.
 
 ### D2. A scripted bot in the test target
 
-The bot follows the rival AI's threshold rules and script (`RivalAI`, `RivalTownPlan`) for the player, plus the market trades in the requirement. It lives in the test target only, as test support.
+The bot is the #47 playtest bot: the rival AI's opening and growth loop and town plan (`RivalAI`, `RivalTownPlan`) for the player, with the simple threshold rules the rivals had then, plus the market trades in the requirement. It keeps those rules on purpose, so its numbers stay comparable with #47 and #72. It lives in the test target only, as test support.
 
 - The CI test plays archipelago seeds 1, 2 and 3 on Normal for 2 years. Without the market, all three go bankrupt within those 2 years, so the test fails if the market stops rescuing the town.
 - The sweep plays seeds 0–9 on both layouts for 36,000 ticks behind `RIVAL_SWEEP=1`, the flag the rival sweep already uses, and runs in the weekly `rival-sweep` workflow.

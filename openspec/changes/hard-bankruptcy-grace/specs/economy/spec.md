@@ -2,7 +2,7 @@
 
 ### Requirement: Early solvency with the market
 
-A town that builds by the rival AI's rules and trades at its own town center's market SHALL stay solvent on Normal. Trading means it buys the wood or planks a step lacks, and sells planks, then wood, above 12 units while its balance is below $150.
+A scripted town SHALL stay solvent on Normal when it trades at its own town center's market. The town follows the rival AI's opening and growth loop and town plan, adds farms, sawmills, lumberjack huts and foresters when its food, planks or wood run low, and keeps $50 after every step. Trading means it buys the wood or planks a step lacks, and sells planks, then wood, above 12 units while its balance is below $150.
 
 #### Scenario: A market-trading town stays solvent on Normal
 
