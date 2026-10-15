@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The Middle Eastern look of the bulk-goods storage building. Shown in place of
 
 ## Visual identity
 
-Caravanserai-style sandstone store with a flat parapeted roof, a tall arched gateway framed in blue tile, a striped awning, sacks, a crate and a date palm.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `middle-eastern` in `STYLES`) in the register pinned by `world.md` § Building register. Same 3×3 footprint and bottom anchor as
-`building-warehouse`.
+Rendered by IsoKit in the shared light rig. A sandstone store with a parapet roof, a tall arched gate framed in blue tile, a striped awning, cargo and a date palm.
 
 ## Sheet
 
@@ -28,12 +25,11 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-warehouse-constructing-*`
-frames.
+A single finished sprite; no animation.
 
 ## Recipe
 
-- Recipe: `building-warehouse-middle-eastern` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-warehouse-middle-eastern` (IsoKit)
+- Cell: 3×3 footprint, 160 pt tall
 - Construction stages: 0
 - Operational frames: 0

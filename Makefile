@@ -1,4 +1,4 @@
-.PHONY: help generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
+.PHONY: help audio audio-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -31,6 +31,8 @@ help:
 	@echo "  test             Run all swift-testing suites across packages"
 	@echo "  test-coverage    Enforce CityCore coverage floors + diff-cover"
 	@echo "  test-scenarios   Verify every spec scenario maps to a test"
+	@echo "  audio            Render the procedural sounds into Resources/Audio"
+	@echo "  audio-check      Fail when a committed sound differs from its recipe"
 	@echo "  lint             Run SwiftLint in strict mode"
 	@echo "  format           Run SwiftFormat across the repo"
 	@echo "  hooks            Install pre-commit / commit-msg / pre-push hooks"
@@ -72,6 +74,12 @@ test-citycore-framework-free:
 
 test-cli-no-audio:
 	./scripts/check-cli-no-audio.sh
+
+audio:
+	cd scripts && python3 -m audio.generate
+
+audio-check:
+	cd scripts && python3 -m audio.generate --check
 
 test-audio-manifest:
 	$(SWIFT) ./scripts/check-audio-manifest.swift

@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -7,8 +7,7 @@ East Asian luxury producer. Carriers bring tea leaves; every 50 ticks the tea ho
 
 ## Visual identity
 
-A post-and-beam pavilion on a stone plinth with a timber deck, red lacquered veranda posts under a wide, upturned dark roof, red paper lanterns and a steaming kettle on the veranda. Drawn by the procedural building kit in the register pinned by
-`world.md` § Building register.
+Rendered by IsoKit in the shared light rig. A pale pavilion on a stone plinth with a timber deck, red lacquered posts under a wide hipped slate roof, and red lanterns.
 
 ## Sheet
 
@@ -25,12 +24,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
+Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
+
 - Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-tea-house` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-tea-house` (IsoKit)
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

@@ -200,6 +200,7 @@ public final class TitleScreenViewModel {
     public func commit(world: World) {
         let session = sessionFactory(world)
         presentingNewGameDialog = false
+        committedSession?.end()
         committedSession = session
     }
 
@@ -211,6 +212,7 @@ public final class TitleScreenViewModel {
     /// `wire-quit-to-title` / `title-screen` Requirement: Return-to-
     /// title transition.
     public func returnToTitle() {
+        committedSession?.end()
         committedSession = nil
         refreshMostRecentSave()
     }

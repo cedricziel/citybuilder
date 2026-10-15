@@ -21,7 +21,8 @@ func scenarioCultureSignaturesAreCatalogued() {
     #expect(missingEntries.isEmpty, "missing catalog entries: \(missingEntries)")
     var sprites: [String] = []
     for kind in kinds {
-        let base = "Buildings.atlas/building-\(kind.rawValue)"
+        let name = "building-\(kind.rawValue)"
+        let base = "\(SpriteAtlasRouting.atlasName(for: name) ?? "Buildings").atlas/\(name)" // migrated kinds live in Kit
         #expect(SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount == 2)
         sprites += [base] + (0 ..< 3).map { "\(base)-constructing-\($0)" } + (0 ..< 2).map { "\(base)-operational-\($0)" }
     }

@@ -9,10 +9,14 @@ import Foundation
 public struct DispatchedCue: Sendable, Equatable {
     public let cue: Bindings.Cue
     public let position: TileCoordinate?
+    /// The event's primary entity. A loop plays once per entity, so two
+    /// workshops of one kind each get their own player.
+    public let entity: EntityID?
 
-    public init(cue: Bindings.Cue, position: TileCoordinate? = nil) {
+    public init(cue: Bindings.Cue, position: TileCoordinate? = nil, entity: EntityID? = nil) {
         self.cue = cue
         self.position = position
+        self.entity = entity
     }
 
     /// True iff this cue should be routed through the environment node.

@@ -32,6 +32,6 @@ Construction stages are cut from the recipe at rising heights, with scaffold on 
 ## Recipe
 
 - Recipe: `building-steam-engine` (IsoKit)
-- Cell: 2×2 footprint, 176 pt tall
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

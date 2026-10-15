@@ -87,7 +87,9 @@ public final class AudioStack {
         } else {
             dispatcher = playDispatcher
         }
-        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher)
+        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher) { [weak player] entity in
+            player?.stopLoop(entity: entity)
+        }
 
         let playlist = MusicPlaylist(
             tracks: bindings.music?.tracks ?? [],
@@ -139,6 +141,14 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Ends the game session's sounds: every building loop stops. App
+    /// shells call this when the player leaves a game and before a new
+    /// one starts. Music and the ambient bed play on.
+    public func endSession() {
+        coordinator.endSession()
+        player.stopAllBuildingLoops()
+    }
+
     /// Forward the per-tick `WorldSnapshot` into the coordinator so it can
     /// resolve each event's primary entity to a `TileCoordinate` for the
     /// spatial layer. Call this immediately before `consume(events:)` for
@@ -149,10 +159,12 @@ public final class AudioStack {
     }
 
     /// Write the listener's tile-space position to the environment node.
-    /// Called by the renderer at most once per second. No-op if spatial
-    /// audio is disabled (no environment node) or if `tile` is nil.
+    /// Called by the renderer at most once per second. Also re-chooses the
+    /// building loops nearest the listener. The environment node is left
+    /// alone if spatial audio is disabled or `tile` is nil.
     /// Per spec `audio-playback` "Listener position from camera".
     public func setListenerPosition(_ tile: TileCoordinate?) {
+        player.setListener(tile)
         guard let env = engine.environmentNode, let tile else { return }
         env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
     }

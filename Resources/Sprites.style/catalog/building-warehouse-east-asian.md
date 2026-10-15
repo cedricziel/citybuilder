@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The East Asian look of the bulk-goods storage building. Shown in place of
 
 ## Visual identity
 
-Kura storehouse: thick white plaster walls over a dark tiled plinth with a pale diagonal grid, heavy timber doors, a long flared slate roof, rice bales and a crate in the yard.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `east-asian` in `STYLES`) in the register pinned by `world.md` § Building register. Same 3×3 footprint and bottom anchor as
-`building-warehouse`.
+Rendered by IsoKit in the shared light rig. A kura storehouse: white plaster walls over a dark slate plinth, a heavy timber door, a long slate gable roof, and rice bales in the yard.
 
 ## Sheet
 
@@ -28,12 +25,11 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-warehouse-constructing-*`
-frames.
+A single finished sprite; no animation.
 
 ## Recipe
 
-- Recipe: `building-warehouse-east-asian` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-warehouse-east-asian` (IsoKit)
+- Cell: 3×3 footprint, 160 pt tall
 - Construction stages: 0
 - Operational frames: 0

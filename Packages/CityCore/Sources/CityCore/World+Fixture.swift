@@ -170,6 +170,12 @@ public extension World {
     mutating func seedUnlimitedTestInventory() {
         testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
     }
+
+    /// Test helper: a treasury deep enough that a seeded town's upkeep never bankrupts it, so art
+    /// reviews screenshot the town rather than the bankruptcy banner.
+    mutating func seedTestFunds(_ amount: Int64 = 1_000_000) {
+        economy.balance = amount
+    }
 }
 
 public extension World {

@@ -140,16 +140,61 @@ func everyRequestedTerrainSpriteIsOnDisk() {
 @Test("every building sprite the renderer can request is committed where it routes")
 func everyRequestedBuildingSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
+    let kinds = TextureFiltering.kitRenderedStems.compactMap { stem in
+        stem.hasPrefix("building-") ? BuildingKind(rawValue: String(stem.dropFirst("building-".count))) : nil
+    }
     var names: [String] = []
-    for stem in TextureFiltering.kitRenderedStems where stem.hasPrefix("building-") {
-        guard let kind = BuildingKind(rawValue: String(stem.dropFirst("building-".count))) else { continue }
-        names.append(stem)
+    for kind in kinds {
+        names.append("building-\(kind.rawValue)")
         let stages = SpriteAnimation.entry(for: .buildingConstructing(kind))?.frameCount ?? 0
         names += (0 ..< stages).map { SpriteAnimation.assetName(for: .buildingConstructing(kind), frame: $0) }
         let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
         names += (0 ..< frames).map { SpriteAnimation.assetName(for: .buildingOperational(kind), frame: $0) }
     }
-    #expect(names.count >= 60) // town center, peasant house and the nine gather kinds
+    // Culture looks are finished-only: the base and, for kinds with a loop, its operational frames.
+    var looks = 0
+    for kind in IsoWorldScene.cultureVariantKinds.sorted(by: { $0.rawValue < $1.rawValue }) {
+        for culture in Culture.allCases {
+            guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: .peasants, culture: culture),
+                  TextureFiltering.kitRenderedStems.contains(look)
+            else { continue }
+            looks += 1
+            names.append(look)
+            let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+            names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+        }
+    }
+    // Shore buildings draw one look per facing (`-n/-e/-s/-w`), each with its stages and frames.
+    var facings = 0
+    for kind in BuildingKind.allCases where BuildingCatalog.spec(for: kind).shorePlacement != nil {
+        for orientation in ShoreOrientation.allCases {
+            let base = ShoreOrientationMath.textureName(kind: kind, orientation: orientation, state: nil, frame: nil)
+            guard TextureFiltering.kitRenderedStems.contains(base) else { continue }
+            facings += 1
+            names.append(base)
+            for (state, animation) in [
+                (BuildingState.constructing, SpriteAnimation.AnimationKey.buildingConstructing(kind)),
+                (.operational, .buildingOperational(kind))
+            ] {
+                // With no operational loop the renderer still draws a finished one as `-operational-0`.
+                let frames = SpriteAnimation.entry(for: animation)?.frameCount ?? (state == .operational ? 1 : 0)
+                names += (0 ..< frames).map {
+                    ShoreOrientationMath.textureName(kind: kind, orientation: orientation, state: state, frame: $0)
+                }
+            }
+        }
+    }
+    // Ships draw one look per heading, two sail frames each.
+    for facing in ShipFacing.allCases where TextureFiltering.kitRenderedStems.contains("ship-\(facing.rawValue)") {
+        facings += 1
+        names += (0 ..< 2).map { ShipRenderMath.textureName(facing: facing, frame: $0) }
+    }
+    // Every migrated kind contributes its base and three construction stages at least, so the walk
+    // can never pass by checking nothing.
+    #expect(!kinds.isEmpty)
+    #expect(looks >= 6, "the warehouse and library looks of three cultures")
+    #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
+    #expect(names.count >= kinds.count * 4 + looks + facings * 2)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
