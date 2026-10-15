@@ -38,8 +38,7 @@ final class AmbientLayerNode: SKNode {
         }
         let wanted = Set(placed.map(\.0.id))
         for (id, plume) in plumes where !wanted.contains(id) {
-            plume.emitter.removeFromParent()
-            if pool.count < ChimneyPlanner.maxEmitters { pool.append(plume.emitter) }
+            fadeOut(plume.emitter)
             plumes.removeValue(forKey: id)
         }
         for (source, point) in placed {
@@ -52,6 +51,7 @@ final class AmbientLayerNode: SKNode {
                 continue
             }
             let emitter = pool.popLast() ?? SKEmitterNode()
+            emitter.removeAction(forKey: Self.fadeKey)
             Self.configure(emitter, style: source.style, reduceMotion: reduceMotion)
             emitter.position = point
             emitter.resetSimulation()
@@ -61,6 +61,24 @@ final class AmbientLayerNode: SKNode {
             plumes[source.id] = (emitter, source.style)
         }
     }
+
+    /// Stops new puffs and lets the last ones rise and fade before the
+    /// emitter goes back to the pool.
+    private func fadeOut(_ emitter: SKEmitterNode) {
+        emitter.particleBirthRate = 0
+        let linger = TimeInterval(emitter.particleLifetime + emitter.particleLifetimeRange / 2)
+        emitter.run(.sequence([.wait(forDuration: linger), .run { [weak self, weak emitter] in
+            if let emitter { self?.recycle(emitter) }
+        }]), withKey: Self.fadeKey)
+    }
+
+    /// Takes a faded emitter off the layer and pools it.
+    func recycle(_ emitter: SKEmitterNode) {
+        emitter.removeFromParent()
+        if pool.count < ChimneyPlanner.maxEmitters { pool.append(emitter) }
+    }
+
+    private static let fadeKey = "fade"
 
     private static func configure(_ emitter: SKEmitterNode, style: SmokeStyle, reduceMotion: Bool) {
         let look = PlumeLook(style)

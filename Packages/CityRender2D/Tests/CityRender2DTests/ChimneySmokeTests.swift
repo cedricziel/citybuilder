@@ -46,6 +46,17 @@ func scenarioIdleWorkshopIsCold() {
     #expect(sources.map(\.id) == [working.id])
 }
 
+@Test("rival workshops stay cold; rival houses still smoke")
+func rivalWorkshopsStayCold() {
+    let bakery = Building(
+        id: EntityID(raw: 1), kind: .bakery, anchor: TileCoordinate(x: 2, y: 2), state: .operational, owner: .rival(1)
+    )
+    let house = Building(
+        id: EntityID(raw: 2), kind: .house, anchor: TileCoordinate(x: 6, y: 6), state: .operational, owner: .rival(1)
+    )
+    #expect(ChimneyPlanner.sources(in: snapshot([bakery, house], pops: [house.id: residents(3)])).map(\.id) == [house.id])
+}
+
 @Test("scenario: brewery steams")
 func scenarioBrewerySteams() {
     let brewery = operational(1, .brewery, at: 2, 2)
@@ -119,6 +130,9 @@ func emittersArePooled() throws {
     let emitter = try #require(layer.emitter(for: first.id))
     layer.show([], reduceMotion: false)
     #expect(layer.emitterCount == 0)
+    #expect(emitter.particleBirthRate == 0)
+    #expect(emitter.parent === layer, "a removed plume fades before it leaves")
+    layer.recycle(emitter)
     layer.show([(second, CGPoint(x: 5, y: 5))], reduceMotion: false)
     #expect(layer.emitter(for: second.id) === emitter)
     #expect(emitter.position == CGPoint(x: 5, y: 5))
@@ -129,7 +143,39 @@ func chimneyAnchorsSitInsideTheSprite() {
     let size = CGSize(width: 128, height: 128)
     let bakery = ChimneyAnchors.offset(stem: "building-bakery", spriteSize: size)
     #expect(bakery.x > 0 && bakery.y > 64 && bakery.y < 128)
-    let unknown = ChimneyAnchors.offset(stem: "building-house-east-asian", spriteSize: size)
+    let unknown = ChimneyAnchors.offset(stem: "building-mead-hall", spriteSize: size)
     #expect(unknown.x == 0 && unknown.y > 100)
+    let variant = ChimneyAnchors.offset(stem: "building-house-tier2-modern-east-asian", spriteSize: size)
+    #expect(variant == ChimneyAnchors.offset(stem: "building-house-tier2", spriteSize: size))
     #expect(TextureFiltering.stem(of: "building-house-tier2") == "building-house-tier2")
+}
+
+/// Every house and fire-trade sprite in the atlases finds a table row,
+/// directly or through its base stem, unless listed here as using the
+/// roof fallback on purpose.
+@Test("every smoking sprite has a chimney row")
+func everySmokingSpriteHasAChimneyRow() throws {
+    let resources = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Resources")
+    let prefixes = [
+        "building-house",
+        "building-bakery",
+        "building-brewery",
+        "building-smelter",
+        "building-toolsmith",
+        "building-charcoal-burner"
+    ]
+    let rooflessOnPurpose: Set<String> = []
+    var stems: Set<String> = []
+    for atlas in ["Kit.atlas", "Buildings.atlas"] {
+        let files = try FileManager.default.contentsOfDirectory(atPath: resources.appendingPathComponent(atlas).path)
+        for file in files where file.hasSuffix(".png") && !file.contains("-constructing") {
+            let name = String(file.dropLast(4)).replacingOccurrences(of: "@2x", with: "")
+            if prefixes.contains(where: name.hasPrefix) { stems.insert(TextureFiltering.stem(of: name)) }
+        }
+    }
+    #expect(stems.count > 20)
+    let missing = stems.filter { ChimneyAnchors.row(for: $0) == nil && !rooflessOnPurpose.contains($0) }
+    #expect(missing.isEmpty, "no chimney row for \(missing.sorted())")
 }

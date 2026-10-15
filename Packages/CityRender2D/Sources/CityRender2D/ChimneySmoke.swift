@@ -34,14 +34,15 @@ public enum ChimneyPlanner {
         }
     }
 
-    /// Inhabited houses, and workshops with a fire that have no issue,
-    /// in no particular order.
+    /// Inhabited houses, and player workshops with a fire that have no
+    /// issue, in no particular order. Rival workshops stay cold: building
+    /// issues are worked out for the player's buildings only.
     public static func sources(in snapshot: WorldSnapshot) -> [SmokeSource] {
         snapshot.buildings.values.compactMap { building -> SmokeSource? in
             guard building.state == .operational, let style = style(for: building.kind) else { return nil }
             let lit = building.kind == .house
                 ? (snapshot.housePopulations[building.id]?.population ?? 0) > 0
-                : snapshot.buildingIssues[building.id] == nil
+                : building.owner == .player && snapshot.buildingIssues[building.id] == nil
             guard lit else { return nil }
             return SmokeSource(id: building.id, anchor: building.anchor, kind: building.kind, style: style)
         }
@@ -63,17 +64,24 @@ public enum ChimneyPlanner {
         yRange: ClosedRange<Int>,
         camera: Camera
     ) -> [SmokeSource] {
-        let ranked = sources.compactMap { source -> (source: SmokeSource, distance: Double)? in
-            guard xRange.contains(source.anchor.x), yRange.contains(source.anchor.y) else { return nil }
+        typealias Ranked = (source: SmokeSource, distance: Double)
+        func before(_ lhs: Ranked, _ rhs: Ranked) -> Bool {
+            if lhs.source.isWorkshop != rhs.source.isWorkshop { return lhs.source.isWorkshop }
+            return lhs.distance != rhs.distance ? lhs.distance < rhs.distance : lhs.source.id.raw < rhs.source.id.raw
+        }
+        // Keep the best `limit` in order as they come: the budget is at
+        // most 40, so this beats sorting every visible source.
+        let limit = budget(zoom: camera.zoom)
+        var best: [Ranked] = []
+        best.reserveCapacity(limit + 1)
+        for source in sources where xRange.contains(source.anchor.x) && yRange.contains(source.anchor.y) {
             let dx = Double(source.anchor.x) - camera.centerX, dy = Double(source.anchor.y) - camera.centerY
-            return (source, dx * dx + dy * dy)
+            let ranked = (source: source, distance: dx * dx + dy * dy)
+            if best.count == limit, let last = best.last, !before(ranked, last) { continue }
+            best.insert(ranked, at: best.firstIndex { before(ranked, $0) } ?? best.endIndex)
+            if best.count > limit { best.removeLast() }
         }
-        return ranked.sorted {
-            if $0.source.isWorkshop != $1.source.isWorkshop { return $0.source.isWorkshop }
-            return $0.distance != $1.distance ? $0.distance < $1.distance : $0.source.id.raw < $1.source.id.raw
-        }
-        .prefix(budget(zoom: camera.zoom))
-        .map(\.source)
+        return best.map(\.source)
     }
 }
 
@@ -92,12 +100,28 @@ enum ChimneyAnchors {
         "building-house-tier2": (0.656, 0.146),
         "building-house-tier3": (0.504, 0.148)
     ]
-    /// Top centre of the roof, for sprites the table does not know.
+    /// Top centre of the roof, for sprites neither the table nor a base
+    /// stem knows.
     static let fallback: (x: CGFloat, y: CGFloat) = (0.5, 0.15)
+    /// Culture and age suffixes of the house and workshop variants.
+    static let variantSuffixes = [
+        "-east-asian", "-mediterranean", "-middle-eastern", "-antiquity", "-renaissance", "-industrial", "-modern"
+    ]
+
+    /// The table row for `stem`, or for its base stem without culture and
+    /// age suffixes (`building-house-tier2-modern-east-asian` →
+    /// `building-house-tier2`).
+    static func row(for stem: String) -> (x: CGFloat, y: CGFloat)? {
+        var base = stem
+        while table[base] == nil, let suffix = variantSuffixes.first(where: base.hasSuffix) {
+            base.removeLast(suffix.count)
+        }
+        return table[base]
+    }
 
     /// Chimney top relative to a building node anchored at (0.5, 0).
     static func offset(stem: String, spriteSize: CGSize) -> CGPoint {
-        let anchor = table[stem] ?? fallback
+        let anchor = row(for: stem) ?? fallback
         return CGPoint(x: (anchor.x - 0.5) * spriteSize.width, y: (1 - anchor.y) * spriteSize.height)
     }
 }
