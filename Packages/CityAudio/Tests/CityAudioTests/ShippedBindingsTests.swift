@@ -24,3 +24,18 @@ func startCueWithoutBusIsRejected() {
     let json = Data(#"{"version":1,"bindings":{"gameOver":[{"file":"x.caf"}]}}"#.utf8)
     #expect(throws: DecodingError.self) { try JSONDecoder().decode(Bindings.self, from: json) }
 }
+
+@Test("scenario: a broken bindings file is reported")
+func brokenBindingsFileIsReported() throws {
+    let bundleURL = FileManager.default.temporaryDirectory.appendingPathComponent("broken-\(UUID().uuidString).bundle")
+    try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: bundleURL) }
+    try Data(#"{"version":1,"bindings":{"gameOver":[{"file":"x.caf"}]}}"#.utf8)
+        .write(to: bundleURL.appendingPathComponent("bindings.json"))
+    let bundle = try #require(Bundle(url: bundleURL))
+    var reports: [String] = []
+    let bindings = AudioBundleLoader.loadBindings(manifest: Manifest(), in: bundle) { reports.append($0) }
+    #expect(bindings == Bindings())
+    #expect(reports.count == 1)
+    #expect(reports.first?.contains("bindings.json") == true)
+}
