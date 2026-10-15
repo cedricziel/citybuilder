@@ -101,8 +101,8 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 
 #### Scenario: Neighbouring transition tiles join without a seam
 
-- **WHEN** a grass→beach mask-7 tile is composited one column east (+col) of a mask-3 tile, so they share an edge
-- **THEN** no pixel along their shared edge is transparent and the boundary curve is continuous across the edge
+- **WHEN** any two transition tiles of the same pair whose shared corners agree are composited one column east (+col) or one row south (+row) of each other
+- **THEN** no pixel along their shared edge is transparent, and colour changes across the edge only where the boundary curve crosses it
 
 ### Requirement: Offline render within a tolerance
 
