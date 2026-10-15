@@ -10,11 +10,7 @@ extension CityRootView {
     func tvMapLayer(_ map: some View) -> some View {
         map.overlay {
             if let tvRemote {
-                ZStack {
-                    TVMapInputHost(remote: tvRemote)
-                    TVReticleOverlay(remote: tvRemote)
-                        .allowsHitTesting(false)
-                }
+                TVMapOverlay(remote: tvRemote)
             }
         }
         .onAppear {
@@ -28,16 +24,46 @@ extension CityRootView {
     }
 }
 
-/// In the HUD the focus engine owns the remote: Back closes an open
-/// drawer or returns to the map, and Play/Pause returns to the map.
+/// The input host and the reticle. SwiftUI wraps the host's focusable
+/// view in its own focus item, so focus moves onto the map through
+/// `@FocusState`; a UIKit focus request alone is turned down while a
+/// SwiftUI control holds focus.
+struct TVMapOverlay: View {
+    let remote: TVRemoteController
+    @FocusState private var mapFocused: Bool
+
+    var body: some View {
+        ZStack {
+            TVMapInputHost(remote: remote)
+                .focused($mapFocused)
+            TVReticleOverlay(remote: remote)
+                .allowsHitTesting(false)
+        }
+        .onAppear { mapFocused = remote.focus == .map }
+        .onChange(of: remote.focus) { _, focus in
+            mapFocused = focus == .map
+        }
+    }
+}
+
+/// In the HUD and the inspector callout the focus engine owns the remote:
+/// Back closes an open drawer or returns to the map, and Play/Pause
+/// returns to the map.
 struct TVHUDCommands: ViewModifier {
     let root: CityRootView
+    var isInspector = false
+
+    /// While the map owns the remote, the HUD takes no focus, so the focus
+    /// engine cannot land on it. While focus moves into the inspector
+    /// callout, the rest of the HUD stays out of the way too.
+    private var isDisabled: Bool {
+        guard let remote = root.tvRemote else { return false }
+        return remote.focus == .map || (remote.focusesInspector && !isInspector)
+    }
 
     func body(content: Content) -> some View {
         content
-            // While the map owns the remote, the HUD takes no focus, so
-            // the focus engine cannot land on it.
-            .disabled(root.tvRemote?.mapper.focus == .map)
+            .disabled(isDisabled)
             .onExitCommand {
                 if root.buildRail.openDrawer != nil {
                     root.buildRail.close()
@@ -54,8 +80,9 @@ struct TVHUDCommands: ViewModifier {
 }
 
 /// The reticle at the screen center: the target tile's outline in the
-/// style of the armed tool, the four tiles a click would step to, and the
-/// tooltip of a building the reticle rests on. Design D1, D2, D6.
+/// style of the armed tool, an arrow on each tile a click would step to
+/// (dimmed where the map ends), and the tooltip of a building the reticle
+/// rests on. Design D1, D2, D6.
 struct TVReticleOverlay: View {
     let remote: TVRemoteController
 
@@ -64,7 +91,7 @@ struct TVReticleOverlay: View {
     }
 
     var body: some View {
-        if remote.mapper.focus == .map {
+        if remote.focus == .map {
             let zoom = session.world.camera.zoom
             let halfWidth = 32 * zoom
             let halfHeight = 16 * zoom
@@ -75,6 +102,7 @@ struct TVReticleOverlay: View {
                 ForEach(RemoteDirection.allCases, id: \.self) { direction in
                     hint(direction).offset(Self.offset(direction, halfWidth: halfWidth, halfHeight: halfHeight))
                 }
+                .accessibilityHidden(true)
                 if let id = remote.tooltipBuilding, let building = session.world.buildings[id] {
                     Text(BuildTool.place(building.kind).displayName)
                         .font(.headline)
@@ -100,24 +128,34 @@ struct TVReticleOverlay: View {
     }
 
     private func hint(_ direction: RemoteDirection) -> some View {
-        let tile = session.reticleHint(direction)
-        return Text("\(tile.x),\(tile.y)")
-            .font(.caption2.monospacedDigit())
-            .padding(.horizontal, 6)
-            .background(.black.opacity(0.45), in: Capsule())
+        let open = session.world.contains(session.reticleHint(direction))
+        return Image(systemName: Self.arrow(direction))
+            .font(.system(size: 22, weight: .bold))
             .foregroundStyle(.white)
+            .padding(6)
+            .background(.black.opacity(0.45), in: Circle())
+            .opacity(open ? 1 : 0.3)
     }
 
-    /// Up steps north-east, right south-east, down south-west and left
-    /// north-west; each hint sits beyond the tile it names, along the
-    /// same diagonal, so the four labels never overlap.
-    private static func offset(_ direction: RemoteDirection, halfWidth: Double, halfHeight: Double) -> CGSize {
+    private static func arrow(_ direction: RemoteDirection) -> String {
         switch direction {
-        case .up: CGSize(width: halfWidth * 2, height: -halfHeight * 2)
-        case .right: CGSize(width: halfWidth * 2, height: halfHeight * 2)
-        case .down: CGSize(width: -halfWidth * 2, height: halfHeight * 2)
-        case .left: CGSize(width: -halfWidth * 2, height: -halfHeight * 2)
+        case .up: "arrow.up.right"
+        case .right: "arrow.down.right"
+        case .down: "arrow.down.left"
+        case .left: "arrow.up.left"
         }
+    }
+
+    /// Along the diagonal to the neighbouring tile, from the same iso
+    /// projection as the map (x follows dx - dy, y follows dx + dy), and a
+    /// little beyond it, so the arrows clear the reticle's outline.
+    private static func offset(_ direction: RemoteDirection, halfWidth: Double, halfHeight: Double) -> CGSize {
+        let step = direction.nudge.tileOffset
+        let reach = 1.75
+        return CGSize(
+            width: Double(step.dx - step.dy) * halfWidth * reach,
+            height: Double(step.dx + step.dy) * halfHeight * reach
+        )
     }
 }
 

@@ -51,6 +51,9 @@ public struct CityRootView: View {
         ZStack(alignment: .top) {
             withMapGestures(session.worldView.ignoresSafeArea())
             inspectorCallout
+                #if os(tvOS)
+                .modifier(TVHUDCommands(root: self, isInspector: true))
+                #endif
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
                 hudLayer(layout: layout)
