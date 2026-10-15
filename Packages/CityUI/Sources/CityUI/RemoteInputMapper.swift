@@ -71,7 +71,13 @@ public struct RemoteInputMapper {
         case let .swipe(dx, dy) where focus == .map:
             session.handlePanDelta(deltaX: -dx, deltaY: -dy)
         case let .click(direction) where focus == .map:
+            let previous = session.reticleTile
             session.stepCamera(direction)
+            paintAfterClick(from: previous, session: session)
+        case .back:
+            return back(session: session)
+        case .menu:
+            session.isPaused = true
         case let .zoomAxis(value) where focus == .map:
             session.world.camera.multiplyZoom(by: 1 + Self.triggerZoomRate * value)
         default:

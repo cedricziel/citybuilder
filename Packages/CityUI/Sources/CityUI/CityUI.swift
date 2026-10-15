@@ -169,7 +169,13 @@ public final class GameSession {
     /// or `.demolish`, taps enqueue the corresponding command and leave
     /// the tool armed so the player can place a run of roads or houses
     /// in a row without re-arming.
-    public var selectedTool: BuildTool = .inspect
+    public var selectedTool: BuildTool = .inspect {
+        didSet { isPaintingRoad = false }
+    }
+
+    /// Apple TV road painting: select toggles it while the road tool is
+    /// armed. Design D6.
+    public var isPaintingRoad = false
 
     /// The tool taps and drags act with: inspect once the game is over.
     var activeTool: BuildTool {
