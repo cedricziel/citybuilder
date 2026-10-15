@@ -27,12 +27,17 @@ public final class AudioStack {
     public let coordinator: AudioCoordinator
     public let playlist: MusicPlaylist
     public let ambientBed: AmbientBed
+    /// Seasonal and coastal beds, when the bindings name them.
+    public let ambientScene: AmbientScene?
     /// Optional iCloud sync layer. Non-nil when the app shell passes a
     /// `CloudKeyValueStore` (typically `UbiquitousAudioSettingsStore` in
     /// production). The settings model writes through to UserDefaults
     /// either way — the sync layer only mirrors to iCloud.
     public let settingsSync: AudioSettingsSync?
     private var musicStarted = false
+    /// Drives the ambient crossfades by wall-clock time, apart from the
+    /// game's speed and pause.
+    private var ambientTimer: Timer?
 
     public init(
         bundle: Bundle = .main,
@@ -57,12 +62,7 @@ public final class AudioStack {
         let session = PlatformAudioSession(engine: engine)
         let player = EngineCuePlayer(engine: engine, bundle: bundle)
 
-        // Apply persisted volumes to the engine buses.
-        engine.setVolume(settings.musicVolume, on: .music)
-        engine.setVolume(settings.sfxVolume, on: .sfx)
-        engine.setVolume(settings.sfxVolume, on: .ambient)
-        engine.setVolume(settings.musicVolume, on: .loop)
-        engine.isMuted = settings.isMuted
+        Self.applyVolumes(settings, to: engine)
 
         // Production dispatcher: route every dispatched cue to the cue
         // player. When music ducking is enabled, wrap the player in a
@@ -87,7 +87,9 @@ public final class AudioStack {
         } else {
             dispatcher = playDispatcher
         }
-        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher)
+        let coordinator = AudioCoordinator(bindings: bindings, dispatch: dispatcher) { [weak player] entity in
+            player?.stopLoop(entity: entity)
+        }
 
         let playlist = MusicPlaylist(
             tracks: bindings.music?.tracks ?? [],
@@ -107,6 +109,7 @@ public final class AudioStack {
         self.coordinator = coordinator
         self.playlist = playlist
         self.ambientBed = ambientBed
+        self.ambientScene = AmbientScene(section: bindings.ambient, player: player)
         self.settingsSync = cloudStore.map { AudioSettingsSync(store: $0, defaults: userDefaults) }
         // Pull any cloud-stored values into UserDefaults at launch so the
         // engine starts with the latest cross-device volumes.
@@ -118,11 +121,28 @@ public final class AudioStack {
         // the heavy lifting; this just brings PlatformAudioSession's
         // bookkeeping in sync.
         try? session.activate()
+        startAmbientClock()
         // Start music immediately if a track is bound. The previous "wait
         // for first event" gate didn't survive contact with iOS — without
         // engine warmup, no audio plays until the player triggers an event,
         // which on a fresh empty island can take ~5 seconds (tax interval).
         startMusicIfAvailable()
+    }
+
+    private func startAmbientClock() {
+        guard let scene = ambientScene else { return }
+        ambientTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak scene] _ in
+            MainActor.assumeIsolated { scene?.tick(dt: 0.1) }
+        }
+    }
+
+    /// Applies the persisted bus volumes and mute to the engine.
+    private static func applyVolumes(_ settings: AudioSettings, to engine: AudioEngine) {
+        engine.setVolume(settings.musicVolume, on: .music)
+        engine.setVolume(settings.sfxVolume, on: .sfx)
+        engine.setVolume(settings.sfxVolume, on: .ambient)
+        engine.setVolume(settings.musicVolume, on: .loop)
+        engine.isMuted = settings.isMuted
     }
 
     /// Push the current local audio settings to the cloud store, if any.
@@ -139,20 +159,33 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Ends the game session's sounds: every building loop and seasonal
+    /// bed stops. App shells call this when the player leaves a game.
+    /// Music plays on.
+    public func endSession() {
+        coordinator.endSession()
+        player.stopAllBuildingLoops()
+        ambientScene?.endSession()
+    }
+
     /// Forward the per-tick `WorldSnapshot` into the coordinator so it can
     /// resolve each event's primary entity to a `TileCoordinate` for the
     /// spatial layer. Call this immediately before `consume(events:)` for
     /// the same tick. Snapshots before any events are valid — the cached
     /// snapshot is just used for entity lookups.
     public func consumeSnapshot(_ snapshot: WorldSnapshot) {
+        ambientScene?.consumeSnapshot(snapshot)
         coordinator.consumeSnapshot(snapshot)
     }
 
     /// Write the listener's tile-space position to the environment node.
-    /// Called by the renderer at most once per second. No-op if spatial
-    /// audio is disabled (no environment node) or if `tile` is nil.
+    /// Called by the renderer at most once per second. Also re-chooses the
+    /// building loops nearest the listener. The environment node is left
+    /// alone if spatial audio is disabled or `tile` is nil.
     /// Per spec `audio-playback` "Listener position from camera".
     public func setListenerPosition(_ tile: TileCoordinate?) {
+        player.setListener(tile)
+        ambientScene?.setListener(tile)
         guard let env = engine.environmentNode, let tile else { return }
         env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
     }

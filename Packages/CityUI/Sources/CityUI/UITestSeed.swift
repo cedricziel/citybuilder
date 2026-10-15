@@ -10,7 +10,7 @@ public enum UITestSeed {
     public static func portWorld() -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0, age: .renaissance)
         world.seedUnlimitedTestInventory()
-        guard let center = world.buildings.values.first(where: { $0.kind == .townCenter && $0.owner == .player })?.anchor,
+        guard let center = playerTownCenter(in: world),
               let site = nearestPortSite(in: world, around: center)
         else { return world }
         world.enqueue(.place(.port, at: site))
@@ -50,7 +50,7 @@ public enum UITestSeed {
         var world = World.newGame(layout: .singleIsland, seed: 0, culture: culture)
         world.seedUnlimitedTestInventory()
         world.seedTestFunds()
-        guard let center = world.buildings.values.first(where: { $0.kind == .townCenter && $0.owner == .player })?.anchor else {
+        guard let center = playerTownCenter(in: world) else {
             return world
         }
         let camera = world.camera
@@ -72,10 +72,48 @@ public enum UITestSeed {
         return world
     }
 
+    /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore` or
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in that order.
+    public static func world(fromArguments arguments: [String]) -> World? {
+        if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
+        if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
+        guard arguments.contains("-uiTestSeedTown") else { return nil }
+        return townWorld(
+            showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
+            culture: culture(fromArguments: arguments)
+        )
+    }
+
+    /// `-uiTestSeedLived`: the town seed with two farms and the fire trades, every free tile within
+    /// six of the town center paved, and 300 ticks run, so the houses hold residents and the
+    /// workshops work. In-game checks of ambient life (smoke, strollers) start from it.
+    public static func livedTownWorld() -> World {
+        var world = townWorld(showcase: [.farm, .farm, .bakery, .smelter, .brewery, .toolsmith])
+        guard let center = playerTownCenter(in: world) else {
+            return world
+        }
+        let camera = world.camera
+        for dy in -6 ... 6 {
+            for dx in -6 ... 6 {
+                let tile = TileCoordinate(x: center.x + dx, y: center.y + dy)
+                if case .allowed = world.canPlace(.road, at: tile) { world.enqueue(.place(.road, at: tile)) }
+            }
+        }
+        for _ in 0 ..< 300 {
+            _ = world.tick()
+        }
+        world.camera = camera
+        return world
+    }
+
     /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), if any.
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         return BuildingKind.allCases.filter { $0.category == arguments[flag + 1] }
+    }
+
+    private static func playerTownCenter(in world: World) -> TileCoordinate? {
+        world.buildings.values.first { $0.kind == .townCenter && $0.owner == .player }?.anchor
     }
 
     /// Ticks `world` while `pending` holds, for at most 2000 ticks.

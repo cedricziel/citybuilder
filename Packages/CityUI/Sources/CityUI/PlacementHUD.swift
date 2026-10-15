@@ -60,8 +60,8 @@ public enum PlacementHUDLayout {
     /// below the lowest arrow.
     public static let actionGap: CGFloat = 32
 
-    private static let halfTileWidth: CGFloat = 32
-    private static let halfTileHeight: CGFloat = 16
+    static let halfTileWidth: CGFloat = 32
+    static let halfTileHeight: CGFloat = 16
 
     /// Center of `tile` in the world view's coordinate space (y down),
     /// for a view of `viewSize` showing `camera`.

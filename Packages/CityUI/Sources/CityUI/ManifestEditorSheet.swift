@@ -75,6 +75,7 @@ struct ManifestEditorSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .cancelActionHotkey()
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {

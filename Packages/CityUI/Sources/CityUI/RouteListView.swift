@@ -37,7 +37,7 @@ struct RouteListView: View {
             }
             .navigationTitle("Routes")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
             }
         }
         .presentationDetents([.medium, .large])
