@@ -21,8 +21,9 @@ public enum UITestSeed {
 
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
-    /// before and after a sprite family changes.
-    public static func townWorld(houses: Int = 4) -> World {
+    /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
+    /// ticks on until that season starts.
+    public static func townWorld(houses: Int = 4, season: Season? = nil) -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0)
         world.seedUnlimitedTestInventory()
         guard let center = world.buildings.values.first(where: { $0.kind == .townCenter && $0.owner == .player })?.anchor else {
@@ -44,8 +45,19 @@ public enum UITestSeed {
         for _ in 0 ..< 2000 where world.buildings.values.contains(where: { $0.kind == .house && $0.state != .operational }) {
             _ = world.tick()
         }
+        if let season {
+            for _ in 0 ..< CalendarState.ticksPerYear where world.date.season != season {
+                _ = world.tick()
+            }
+        }
         world.camera = camera
         return world
+    }
+
+    /// The season after `-uiTestSeason` in the launch arguments, if any.
+    public static func season(fromArguments arguments: [String]) -> Season? {
+        guard let flag = arguments.firstIndex(of: "-uiTestSeason"), arguments.indices.contains(flag + 1) else { return nil }
+        return Season.allCases.first { arguments[flag + 1] == "\($0)" }
     }
 
     private static func nearestPortSite(in world: World, around center: TileCoordinate) -> TileCoordinate? {

@@ -42,8 +42,6 @@ targets:
     platform: iOS
     sources:
       - path: Apps/CitybuilderiOS
-      - path: Resources/Terrain.atlas
-        buildPhase: resources
       - path: Resources/Buildings.atlas
         buildPhase: resources
       - path: Resources/Kit.atlas
@@ -119,8 +117,6 @@ targets:
     platform: macOS
     sources:
       - path: Apps/CitybuilderMac
-      - path: Resources/Terrain.atlas
-        buildPhase: resources
       - path: Resources/Buildings.atlas
         buildPhase: resources
       - path: Resources/Kit.atlas
@@ -181,8 +177,6 @@ targets:
     platform: tvOS
     sources:
       - path: Apps/CitybuilderTV
-      - path: Resources/Terrain.atlas
-        buildPhase: resources
       - path: Resources/Buildings.atlas
         buildPhase: resources
       - path: Resources/Kit.atlas

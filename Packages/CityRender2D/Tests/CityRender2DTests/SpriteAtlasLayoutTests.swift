@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import Foundation
 import Testing
+@testable import CityRender2D
 
 // Filesystem + code-scan scenarios for the sprite-asset-pipeline and
 // rendering-2_5d capabilities introduced by add-sprite-atlas-layout.
@@ -18,16 +19,13 @@ private func worktreeRoot() -> URL {
 
 @Test("scenario: terrain atlas exists")
 func scenarioTerrainAtlasExists() {
-    let url = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
-    var isDir: ObjCBool = false
-    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-    #expect(exists && isDir.boolValue, "Resources/Terrain.atlas must exist as a directory")
-    // The catalog declares one terrain-<kind> base sprite for each
-    // TerrainType plus animation frames; presence is exercised
-    // exhaustively by the asset-presence scenarios. Here we just
-    // confirm the atlas folder has at least one PNG.
-    let contents = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
-    #expect(contents.contains(where: { $0.hasPrefix("terrain-") && $0.hasSuffix(".png") }))
+    let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
+    let contents = (try? FileManager.default.contentsOfDirectory(atPath: kit.path)) ?? []
+    for kind in ["grass", "beach", "water", "forest", "mountain"] {
+        #expect(contents.contains("terrain-\(kind).png"), "terrain-\(kind).png")
+    }
+    let retired = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
+    #expect(!FileManager.default.fileExists(atPath: retired.path))
 }
 
 @Test("scenario: buildings atlas exists")
@@ -85,5 +83,29 @@ func scenarioRendererSourceUsesSpriteAtlasExclusively() throws {
         )
     }
     #expect(violations.isEmpty)
+}
+
+/// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
+/// Buildings, or a render written to Kit.atlas without its stem listed, would pass every other test
+/// and then draw the placeholder or never blend.
+@Test("every committed atlas PNG sits in the atlas its name routes to")
+func everyAtlasPNGSitsWhereItRoutes() throws {
+    let resources = worktreeRoot().appendingPathComponent("Resources")
+    let atlases = try FileManager.default.contentsOfDirectory(at: resources, includingPropertiesForKeys: nil)
+        .filter { $0.pathExtension == "atlas" }
+    var misplaced: [String] = []
+    var checked = 0
+    for atlas in atlases {
+        let folder = atlas.deletingPathExtension().lastPathComponent
+        let files = try FileManager.default.contentsOfDirectory(at: atlas, includingPropertiesForKeys: nil)
+        for file in files where file.pathExtension == "png" {
+            let name = file.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "@2x", with: "")
+            let routed = SpriteAtlasRouting.atlasName(for: name)
+            checked += 1
+            if routed != folder { misplaced.append("\(folder).atlas/\(file.lastPathComponent) routes to \(routed ?? "nothing")") }
+        }
+    }
+    #expect(checked > 300)
+    #expect(misplaced.isEmpty, "\(misplaced)")
 }
 #endif

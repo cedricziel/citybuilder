@@ -13,7 +13,10 @@ public enum TextureFiltering {
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.
     public static let kitRenderedStems: Set<String> = [
-        "building-house", "building-house-tier2", "building-house-tier3", "building-town-center"
+        "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
+        "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
+        "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
+        "terrain-grass-beach", "terrain-beach-water"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
@@ -23,10 +26,14 @@ public enum TextureFiltering {
         return kitRendered.contains(stem(of: spriteName)) ? .linear : .nearest
     }
 
-    /// `building-sawmill-operational-2` → `building-sawmill`; `terrain-grass-beach-t3-1` → `terrain-grass-beach`;
-    /// `terrain-mountain-v2` → `terrain-mountain`.
+    /// `building-sawmill-operational-2` → `building-sawmill`; `terrain-grass-beach-t3-1` and
+    /// `terrain-grass-beach-t3-winter` → `terrain-grass-beach`; `terrain-mountain-v2` → `terrain-mountain`.
+    /// A season ends a stem (`terrain-grass-autumn`) unless it follows a transition mask.
     static func stem(of spriteName: String) -> String {
         var parts = spriteName.split(separator: "-").map(String.init)
+        if parts.count > 2, ["autumn", "winter"].contains(parts[parts.count - 1]), isMask(parts[parts.count - 2]) {
+            parts.removeLast()
+        }
         while let last = parts.last, parts.count > 2 {
             let isNumber = !last.isEmpty && last.allSatisfy(\.isNumber)
             let isTagged = (last.hasPrefix("v") || last.hasPrefix("t")) && last.count > 1 && last.dropFirst().allSatisfy(\.isNumber)
@@ -37,5 +44,10 @@ public enum TextureFiltering {
             }
         }
         return parts.joined(separator: "-")
+    }
+
+    /// A transition mask segment: `t` and digits.
+    private static func isMask(_ part: String) -> Bool {
+        part.count > 1 && part.hasPrefix("t") && part.dropFirst().allSatisfy(\.isNumber)
     }
 }

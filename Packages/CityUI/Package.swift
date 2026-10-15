@@ -12,12 +12,13 @@ let package = Package(
         .library(name: "CityUI", targets: ["CityUI"])
     ],
     dependencies: [
-        .package(path: "../CityCore")
+        .package(path: "../CityCore"),
+        .package(path: "../CityRender2D")
     ],
     targets: [
         .target(
             name: "CityUI",
-            dependencies: ["CityCore"],
+            dependencies: ["CityCore", "CityRender2D"],
             path: "Sources/CityUI"
         ),
         .testTarget(

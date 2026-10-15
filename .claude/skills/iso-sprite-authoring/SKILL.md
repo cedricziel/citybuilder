@@ -110,27 +110,41 @@ when the art didn't change. Commit only the PNGs a change really moved: restore
 the atlas, run `art.compare` on the fresh raw renders against it, and keep the
 files it lists as outside tolerance.
 
-## Terrain tiles (scripts/art/terrain_tiles.py)
+## Terrain tiles (scripts/art/terrain_tiles.py, scripts/art/ground.py)
 
-- Corner masks N=1/E=2/S=4/W=8 → `terrain-grass-beach-t<m>` and
+- Corner masks N=1/E=2/S=4/W=8 → `terrain-grass-beach-t<m>` (plus `-autumn` and
+  `-winter` sets, because grass changes with the season) and
   `terrain-beach-water-t<m>`, m = 1..14, plus full tiles. Beach always
-  separates grass from water.
+  separates grass from water. The brief of the upper terrain lists its
+  transitions in its Sheet; transitions have no brief of their own.
 - Boundaries cross each tile edge **at its midpoint, leaving perpendicular**.
   Wobble fades to zero at the ends. Neighbours along +col need consistent
   masks (3 next to 7, not 3 next to 6).
 - **Bleed:** mask with a diamond 1 pt larger, and extend every region by
   `BLEED = 0.08` uv past the edge, or seams show as dotted lines of the wrong
-  terrain.
-- Pattern period must divide **32×16**. Per-tile clutter stays within uv
-  0.2–0.8. Never use feTurbulence in tiles.
+  terrain. Edge strokes (fringes, foam, shallows) must stay narrow: a wide
+  halo spills into the plain neighbour tile and leaves a straight step.
+- **Ground textures** (`art.ground`) live in tile space (u, v) and repeat with
+  period 1, so any two tiles join. Each is a small heightfield in metres plus
+  an albedo, lit like the rig: warm sun with soft cast shadows, cool sky,
+  glints on water. FFT-filtered white noise is periodic for free; wave trains
+  with integer wave vectors loop over frames. Window anything per variant with
+  `(sin πu · sin πv)²` so variants still join.
+- Textures enter the SVG as a pattern skewed by `matrix(32 16 -32 16 32 0)`.
+  rsvg clamps the image at pattern-cell edges, so each cell holds 2×2 repeats
+  starting half a tile early; with one repeat per cell the clamp draws a seam
+  along every tile edge.
+- The warm sun yellows grass and turns snow cream: pick cooler albedos than
+  the target (snow `(0.84, 0.90, 0.98)`). Steep relief falls into shadow and
+  reads as mud; rock stays under ~1 m of relief per 4 m tile. Gridded tree
+  crowns show the tile lattice; scatter them.
+- Judge terrain on a composed island, not single tiles: lay real @2x tiles out
+  with the D6 corner rule and put kit houses on them (season by season).
 - Sandbox: shell loops over rsvg get blocked, so drive rsvg from Python.
 - The seam test joins every pair of tiles whose shared corners agree, in both
   lattice directions: no gaps, and colour changes only on edges the boundary
-  crosses.
-- Next to the kit-rendered houses, the flat dark legacy grass reads as a
-  repeating texture. The terrain family should give grass light, value
-  variation and a softer pattern scale, so the town sits in the landscape.
-
+  crosses. The content gate applies the diamond rules to every `terrain-*`
+  name, wherever it lives.
 ## In-game before/after
 
 Debug builds take `-uiTestSeedTown`: the seed-0 island with four finished peasant
@@ -138,7 +152,8 @@ houses beside the town center, under the default camera (`UITestSeed.townWorld`)
 Build the before app from main plus that seed and the after app from the family
 branch. Launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
 -uiTestSeedTown`, tap New Game, then Start, wait about 15 s, and take the shot
-with `simctl io screenshot`. Ask for the simulator slot first and shut the
+with `simctl io screenshot`. Add `-uiTestSeason autumn` or `winter` to start
+the town in that season. Ask for the simulator slot first and shut the
 simulator down afterwards. The HUD's money and population come from the core
 simulation, so if they differ between the two shots, the builds sit on
 different main commits; the art didn't cause it.

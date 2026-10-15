@@ -121,7 +121,7 @@ struct ToolStripView: View {
         if case let .place(kind) = tool {
             BuildingIconLoader.image(for: kind)
                 .resizable()
-                .interpolation(GoodIconLoader.pixelArtInterpolation)
+                .interpolation(BuildingIconLoader.interpolation(for: kind))
                 .scaledToFit()
                 .frame(width: 32, height: 28)
         } else {

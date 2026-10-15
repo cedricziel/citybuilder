@@ -12,8 +12,13 @@ edge by BLEED, so the bleed shows the right terrain.
 
 from __future__ import annotations
 
+import functools
 import math
 import random
+
+import numpy as np
+
+from art import ground
 
 CORNERS = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]  # N E S W
 MIDS = [(0.5, 0.0), (1.0, 0.5), (0.5, 1.0), (0.0, 0.5)]  # edge i joins corner i and i+1
@@ -86,42 +91,47 @@ def _path(points: list[Point], close: bool) -> str:
     return f"M{body}{'Z' if close else ''}"
 
 
-PATTERNS = """
-<pattern id="grass" width="32" height="16" patternUnits="userSpaceOnUse">
-  <rect width="32" height="16" fill="#83A03F"/>
-  <rect x="0" y="8" width="32" height="8" fill="#7E9A3C"/>
-  <path d="M3,3 l2,-2 l1,2 M19,5 l2,-2 l1,2 M11,11 l2,-2 l1,2 M27,13 l2,-2 l1,2 M7,14 l1,-2 l1,2 M23,9 l1,-2 l1,2" stroke="#A6B852" stroke-width="1" fill="none"/>
-  <path d="M8,6 l1,-1 M24,2 l1,-1 M16,14 l1,-1 M30,9 l1,-1 M14,3 l1,-1" stroke="#5C7A2E" stroke-width="1"/>
-</pattern>
-<pattern id="beach" width="32" height="16" patternUnits="userSpaceOnUse">
-  <rect width="32" height="16" fill="#D8BC86"/>
-  <path d="M5,4 h1 M21,6 h1 M13,12 h1 M29,14 h1 M9,9 h1 M25,1 h1 M2,13 h1 M17,2 h1" stroke="#B89A66" stroke-width="1"/>
-  <path d="M11,6 h1 M27,10 h1" stroke="#EAD3A2" stroke-width="1"/>
-</pattern>
-<pattern id="water" width="32" height="16" patternUnits="userSpaceOnUse">
-  <rect width="32" height="16" fill="#2E6C84"/>
-  <path d="M3,4 h6 M19,12 h5 M12,8 h3" stroke="#4E8C9E" stroke-width="1"/>
-</pattern>
+@functools.cache
+def _pattern(pattern_id: str, texture: str) -> str:
+    """A tile-space pattern skewed onto the iso diamond like `px`. Each cell holds 2 x 2 texture
+    repeats and starts half a tile early, so cell edges, where the image is clamped rather than
+    wrapped, never fall on a tile or its bleed."""
+    texels = ground.texture(texture)
+    doubled = np.roll(np.tile(texels, (2, 2, 1)), ground.SIZE // 2, axis=(0, 1))
+    return (
+        f'<pattern id="{pattern_id}" x="-0.5" y="-0.5" width="2" height="2" patternUnits="userSpaceOnUse" '
+        f'patternTransform="matrix(32 16 -32 16 32 0)">'
+        f'<image width="2" height="2" preserveAspectRatio="none" href="{ground.to_data_uri(doubled)}"/>'
+        "</pattern>"
+    )
+
+
+DEFS = """
 <filter id="b1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter>
 <mask id="tile"><path d="M32,-1 L66,16 L32,33 L-2,16Z" fill="#fff" shape-rendering="crispEdges"/></mask>
 """
 
 
-def _svg(body: str) -> str:
+def _svg(body: str, patterns: dict[str, str]) -> str:
+    defs = "".join(_pattern(pid, texture) for pid, texture in patterns.items())
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32">\n'
-        f'<defs>{PATTERNS}</defs>\n<g mask="url(#tile)">\n{body}\n</g>\n</svg>\n'
+        f"<defs>{defs}{DEFS}</defs>\n<g mask=\"url(#tile)\">\n{body}\n</g>\n</svg>\n"
     )
 
 
-def grass_beach(mask: int) -> str:
+FILL = '<rect x="-4" y="-4" width="72" height="40" fill="url(#{})"/>'
+
+
+def grass_beach(mask: int, season: str = "") -> str:
     outline, curves = region_uv(mask, rng_for("grass-beach", mask))
     fill, edge = _path(outline, True), " ".join(_path(c, False) for c in curves)
     return _svg(
-        '<rect x="-4" y="-4" width="72" height="40" fill="url(#beach)"/>\n'
-        f'<path d="{edge}" stroke="#B0A55A" stroke-width="5" fill="none" filter="url(#b1)"/>\n'
+        FILL.format("beach") + "\n"
+        f'<path d="{edge}" stroke="#A89E64" stroke-width="3" stroke-opacity="0.7" fill="none" filter="url(#b1)"/>\n'
         f'<path d="{fill}" fill="url(#grass)"/>\n'
-        f'<path d="{edge}" stroke="#5E7A2E" stroke-width="1" stroke-dasharray="1 2" fill="none"/>'
+        f'<path d="{edge}" stroke="#3E5A22" stroke-width="1.5" stroke-opacity="0.35" fill="none" filter="url(#b1)"/>',
+        {"grass": f"grass-{season}" if season else "grass", "beach": "beach"},
     )
 
 
@@ -129,31 +139,30 @@ def beach_water(mask: int) -> str:
     outline, curves = region_uv(mask, rng_for("beach-water", mask))
     fill, edge = _path(outline, True), " ".join(_path(c, False) for c in curves)
     return _svg(
-        '<rect x="-4" y="-4" width="72" height="40" fill="url(#water)"/>\n'
-        f'<path d="{edge}" stroke="#4E968E" stroke-width="12" fill="none" filter="url(#b1)"/>\n'
-        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="6" stroke-opacity="0.22" fill="none" filter="url(#b1)"/>\n'
+        FILL.format("water") + "\n"
+        f'<path d="{edge}" stroke="#4E968E" stroke-width="5" stroke-opacity="0.55" fill="none" filter="url(#b1)"/>\n'
+        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="3" stroke-opacity="0.25" fill="none" filter="url(#b1)"/>\n'
         f'<path d="{fill}" fill="url(#beach)"/>\n'
         f'<clipPath id="land"><path d="{fill}"/></clipPath>\n'
-        f'<path d="{edge}" stroke="#A88A5E" stroke-width="5" fill="none" clip-path="url(#land)"/>\n'
-        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="1.4" fill="none"/>'
+        f'<path d="{edge}" stroke="#8C7A5C" stroke-width="5" stroke-opacity="0.6" fill="none" clip-path="url(#land)" filter="url(#b1)"/>\n'
+        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="1.2" stroke-opacity="0.85" fill="none"/>',
+        {"water": "water", "beach": "beach"},
     )
 
 
-def full(terrain: str, variant: int) -> str:
-    rng = random.Random(f"{terrain}{variant}")
-    clutter = []
-    for _ in range(4 if terrain != "water" else 2):
-        x, y = px(rng.uniform(0.2, 0.8), rng.uniform(0.2, 0.8))  # clear of the edges
-        if terrain == "grass":
-            clutter.append(
-                f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="3.5" ry="1.6" fill="#6C8A34"/>'
-                f'<circle cx="{x + 1:.1f}" cy="{y - 0.5:.1f}" r="0.7" fill="#E8D7A0"/>'
-            )
-        elif terrain == "beach":
-            clutter.append(f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="1.4" ry="0.8" fill="#9A8B74"/>')
-        else:
-            clutter.append(f'<path d="M{x - 3:.1f},{y:.1f} h6" stroke="#6FA7B4" stroke-width="1"/>')
-    return _svg(f'<rect x="-4" y="-4" width="72" height="40" fill="url(#{terrain})"/>\n' + "\n".join(clutter))
+def full(texture: str) -> str:
+    """A whole tile of one ground texture (`grass`, `grass-autumn-1`, `water-3`, ...)."""
+    return _svg(FILL.format("ground"), {"ground": texture})
+
+
+# Grass changes with the season, so its shore transitions do too (`-t<mask>-<season>`).
+SEASONS = ("autumn", "winter")
+# Every terrain tile the atlas has today: base tiles, animation frames, seasons and rock variants.
+GROUND = ["grass", "grass-0", "grass-1", "grass-autumn", "grass-autumn-0", "grass-autumn-1",
+          "grass-winter", "grass-winter-0", "grass-winter-1", "beach", "beach-0", "beach-1",
+          "water", "water-0", "water-1", "water-2", "water-3",
+          "forest", "forest-autumn", "forest-winter",
+          "mountain", "mountain-v1", "mountain-v2", "mountain-v3"]
 
 
 def sources() -> dict[str, str]:
@@ -161,8 +170,9 @@ def sources() -> dict[str, str]:
     tiles: dict[str, str] = {}
     for mask in range(1, 15):
         tiles[f"terrain-grass-beach-t{mask}"] = grass_beach(mask)
+        for season in SEASONS:
+            tiles[f"terrain-grass-beach-t{mask}-{season}"] = grass_beach(mask, season)
         tiles[f"terrain-beach-water-t{mask}"] = beach_water(mask)
-    for terrain in ("grass", "beach", "water"):
-        for variant in range(3):
-            tiles[f"terrain-{terrain}" + (f"-v{variant}" if variant else "")] = full(terrain, variant)
+    for texture in GROUND:
+        tiles[f"terrain-{texture}"] = full(texture)
     return tiles

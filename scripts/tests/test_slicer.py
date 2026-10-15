@@ -33,6 +33,8 @@ CATALOG_DIR = REPO_ROOT / "Resources" / "Sprites.style" / "catalog"
 NAME_PATTERNS = [
     # Terrain: terrain-<kind>[-v<n>][-<season>][-<frame>]
     re.compile(r"^terrain-[a-z]+(?:-v\d+)?(?:-(?:autumn|winter))?(?:-\d+)?$"),
+    # Terrain transition: terrain-<upper>-<lower>-t<mask>[-<season>][-<frame>]
+    re.compile(r"^terrain-[a-z]+-[a-z]+-t\d+(?:-(?:autumn|winter))?(?:-\d+)?$"),
     # Land building: building-<kind>[-v<n>][-(constructing|operational)-<n>]
     re.compile(
         r"^building-(?!port|shipyard)[a-z0-9-]+?(?:-v\d+)?"

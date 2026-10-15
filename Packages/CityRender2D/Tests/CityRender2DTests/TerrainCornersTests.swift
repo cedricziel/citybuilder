@@ -159,7 +159,8 @@ struct TerrainCornersTests {
         #expect(blended.userData?[IsoWorldScene.textureNameKey] as? String == transition.assetName)
     }
 
-    /// Shore shape outranks seasonal tint: an autumn or winter grass tile on a shore keeps its blend.
+    /// Shore shape outranks seasonal tint: an autumn or winter grass tile on a shore keeps its blend,
+    /// drawn from the season's transition set.
     @MainActor
     @Test("a transition beats the seasonal sprite", arguments: [Season.autumn, .winter])
     func transitionBeatsSeason(season: Season) {
@@ -168,7 +169,7 @@ struct TerrainCornersTests {
         scene.hasSprite = { _ in true }
         let transition = TerrainTransition(upper: .grass, lower: .beach, mask: 3)
         let shore = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0), transition: transition)
-        #expect(shore.userData?[IsoWorldScene.textureNameKey] as? String == transition.assetName)
+        #expect(shore.userData?[IsoWorldScene.textureNameKey] as? String == transition.assetName(in: season))
         let inland = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0))
         let seasonal = IsoWorldScene.seasonalTerrainName(kind: .grass, season: season)
         #expect(seasonal != nil)

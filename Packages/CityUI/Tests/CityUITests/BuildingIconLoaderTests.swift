@@ -10,6 +10,19 @@ func buildingIconsUseTheAtlasTextureNames() {
     #expect(BuildingIconLoader.textureName(for: .shipyard) == "building-shipyard-s")
 }
 
+@Test("kit-rendered building icons scale smoothly, pixel art stays crisp")
+func kitIconsScaleSmoothly() {
+    #expect(BuildingIconLoader.interpolation(for: .house) == .high)
+    #expect(BuildingIconLoader.interpolation(for: .townCenter) == .high)
+    #expect(BuildingIconLoader.interpolation(for: .sawmill) == GoodIconLoader.pixelArtInterpolation)
+}
+
+@Test("building icons come from the atlas their sprite routes to")
+func buildingIconsUseSpriteRouting() {
+    #expect(BuildingIconLoader.atlasName(for: .house) == "Kit")
+    #expect(BuildingIconLoader.atlasName(for: .sawmill) == "Buildings")
+}
+
 @Test("building icons fall back to a symbol")
 func buildingIconsFallBackToASymbol() {
     #expect(BuildingIconLoader.fallbackSymbolName(for: .road) == "road.lanes")

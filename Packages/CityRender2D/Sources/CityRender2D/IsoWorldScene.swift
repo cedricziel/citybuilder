@@ -302,13 +302,15 @@ public final class IsoWorldScene: SKScene {
         presentSprites.removeAll()
     }
 
-    /// Drops present vegetation nodes on a season change so the next
-    /// reconcile rebuilds them with the season's sprites.
+    /// Drops present vegetation nodes, and the grass edges that blend them, on a
+    /// season change so the next reconcile rebuilds them with the season's sprites.
     private func applySeason(_ season: Season) {
         guard season != appliedSeason else { return }
         appliedSeason = season
         for (spec, node) in presentSprites {
-            guard case let .terrain(kind, _) = spec.kind, Self.seasonalTerrain.contains(kind) else { continue }
+            guard case let .terrain(kind, transition) = spec.kind,
+                  Self.seasonalTerrain.contains(kind) || transition?.upper == .grass
+            else { continue }
             node.removeFromParent()
             presentSprites.removeValue(forKey: spec)
         }

@@ -111,7 +111,7 @@ struct BuildRailView: View {
         case let .building(kind):
             BuildingIconLoader.image(for: kind)
                 .resizable()
-                .interpolation(GoodIconLoader.pixelArtInterpolation)
+                .interpolation(BuildingIconLoader.interpolation(for: kind))
                 .scaledToFit()
         case let .symbol(name, color):
             Image(systemName: name)
@@ -185,7 +185,7 @@ struct BuildDrawerView: View {
             VStack(spacing: 2) {
                 BuildingIconLoader.image(for: kind)
                     .resizable()
-                    .interpolation(GoodIconLoader.pixelArtInterpolation)
+                    .interpolation(BuildingIconLoader.interpolation(for: kind))
                     .scaledToFit()
                     .frame(height: 46, alignment: .bottom)
                 HStack(spacing: 3) {

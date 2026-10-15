@@ -55,7 +55,7 @@ public enum SpriteContentGate {
                     failures.append(.init(file: name, reason: .frameEmpty))
                     continue
                 }
-                if atlas.lastPathComponent == "Terrain.atlas" {
+                if name.hasPrefix("terrain-") {
                     failures += terrainFailures(name, image)
                 }
                 if isIncoherent(name, image, in: images, maxDistance: coherenceMaxDistance) {

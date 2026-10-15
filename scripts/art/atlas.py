@@ -10,7 +10,10 @@ from PIL import Image
 
 # Mirrors `SpriteAtlasRouting.kitAtlasName` in CityRender2D. Every art-kit render lives here:
 # SpriteKit filters a whole atlas page with one mode, and kit art is linear while the legacy pixel
-# art in the other atlases stays nearest (design D7).
+# art in the other atlases stays nearest (design D7). Every raw render, terrain transitions
+# included, comes from a migrated brief, so its stem must be in
+# `TextureFiltering.kitRenderedStems`; the CityRender2D test "every committed atlas PNG sits in
+# the atlas its name routes to" fails otherwise.
 KIT_ATLAS = "Kit"
 
 

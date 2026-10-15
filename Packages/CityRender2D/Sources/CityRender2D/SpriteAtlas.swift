@@ -13,7 +13,6 @@ import AppKit
 /// prefix uniquely determines its atlas. New prefixes (e.g. `ship-` once
 /// `add-archipelago-and-sea` lands) extend this table.
 public enum SpriteAtlasRouting {
-    public static let terrainAtlasName = "Terrain"
     public static let buildingsAtlasName = "Buildings"
     public static let unitsAtlasName = "Units"
     public static let iconsAtlasName = "Icons"
@@ -25,7 +24,8 @@ public enum SpriteAtlasRouting {
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
         if TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: spriteName)) { return kitAtlasName }
-        if spriteName.hasPrefix("terrain-") { return terrainAtlasName }
+        // Every terrain family has migrated; the Terrain atlas is retired.
+        if spriteName.hasPrefix("terrain-") { return kitAtlasName }
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         // Status badges drawn over buildings live in the Buildings atlas.
         if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
@@ -38,7 +38,7 @@ public enum SpriteAtlasRouting {
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        terrainAtlasName, buildingsAtlasName, unitsAtlasName, iconsAtlasName, kitAtlasName
+        buildingsAtlasName, unitsAtlasName, iconsAtlasName, kitAtlasName
     ]
 }
 

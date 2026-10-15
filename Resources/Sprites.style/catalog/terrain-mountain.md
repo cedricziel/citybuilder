@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "svg"
 ---
 ## Function
 
@@ -10,16 +10,11 @@ varied rock rather than a row of clones.
 
 ## Visual identity
 
-Grey-brown rocky outcrop with sharp shadow-side faces. Each variant
-shows a different peak silhouette and dither pattern so neighbouring
-tiles never twin. Palette anchors: `#7A6B59` weathered stone mid-tone,
-`#5C5046` shadow stone, `#3D2A1D` deep crevice shadow, sparse
-`#FFE9C8` sun-warm highlight on west-facing peaks. No snow caps.
+Painted by `scripts/art/ground.py`. Grey rock in big rounded forms with a little ridged detail, lit so the relief reads. Variants 1 to 3 add boulders inside a window that fades out before the tile edges, so every variant joins every neighbour. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 
-Grid: 4 cols × 1 rows. Cells 512×512 sheet pixels on a 2048×512 canvas
-(front-matter `sheet_size = "2048x512"` override).
+Grid: 4 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 
 - (0, 0): `terrain-mountain` — canonical variant 0
 - (0, 1): `terrain-mountain-v1` — variant 1
@@ -34,4 +29,5 @@ weight, same shadow direction) so adjacent tiles unify into a range.
 
 ## Recipe
 
-- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)
+- SVG generator: `scripts/art/terrain_tiles.py` (`full`)
+- Texture: `scripts/art/ground.py` (`rock`)

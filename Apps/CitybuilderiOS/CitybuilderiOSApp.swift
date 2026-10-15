@@ -51,11 +51,13 @@ struct CitybuilderiOSApp: App {
     }
 
     /// With `-uiTestSeedTown` (Debug only) a new game starts from `UITestSeed.townWorld()`: the
-    /// default island with finished houses around the town center, for before/after art screenshots.
+    /// default island with finished houses around the town center, for before/after art screenshots;
+    /// `-uiTestSeason winter` starts it in that season.
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld()
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-uiTestSeedTown") {
+            return UITestSeed.townWorld(season: UITestSeed.season(fromArguments: arguments))
         }
         #endif
         return world

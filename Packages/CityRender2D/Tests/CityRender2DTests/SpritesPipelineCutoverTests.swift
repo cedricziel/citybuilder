@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import Foundation
+import SpriteContentGate
 import Testing
 
 // Cutover scenarios from replace-procedural-sprites-with-ai-pipeline:
@@ -56,9 +57,11 @@ private func catalogId(forSpriteName name: String) -> String {
 }
 
 @Test("scenario: every committed atlas png has a catalog entry")
-func scenarioEveryCommittedAtlasPngHasACatalogEntry() {
+func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
+    // A migrated brief lists its sprites by name, transitions included.
+    let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSheetNames)
     let atlases = [
-        "Resources/Terrain.atlas",
+        "Resources/Kit.atlas",
         "Resources/Buildings.atlas",
         "Resources/Units.atlas",
         "Resources/Icons.atlas"
@@ -74,7 +77,7 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() {
             let stem = (entry as NSString).deletingPathExtension.replacingOccurrences(of: "@2x", with: "")
             // The overlay-* family is renderer-internal, not a catalog
             // entry — skip the routing check for it.
-            if stem.hasPrefix("overlay-") { continue }
+            if stem.hasPrefix("overlay-") || listed.contains(stem) { continue }
             let id = catalogId(forSpriteName: stem)
             let catalog = catalogDir.appendingPathComponent("\(id).md")
             if !FileManager.default.fileExists(atPath: catalog.path) {
