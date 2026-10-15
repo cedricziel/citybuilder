@@ -78,9 +78,12 @@ struct ToolStripView: View {
                 art(tool)
                 VStack(alignment: .leading, spacing: 0) {
                     title(tool)
-                    Text(ToolStripText.hint(for: tool, idiom: idiom, inReach: session.armedInReachCount(idiom: idiom)))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    Text(ToolStripText.hint(
+                        for: tool, idiom: idiom, paintingRoad: session.isPaintingRoad,
+                        inReach: session.armedInReachCount(idiom: idiom)
+                    ))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 }
                 .lineLimit(1)
                 if let breakdown = session.armedCostBreakdown, !breakdown.isEmpty {
