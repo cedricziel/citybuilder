@@ -35,6 +35,9 @@ public final class AudioStack {
     /// either way — the sync layer only mirrors to iCloud.
     public let settingsSync: AudioSettingsSync?
     private var musicStarted = false
+    /// Drives the ambient crossfades by wall-clock time, apart from the
+    /// game's speed and pause.
+    private var ambientTimer: Timer?
 
     public init(
         bundle: Bundle = .main,
@@ -118,11 +121,19 @@ public final class AudioStack {
         // the heavy lifting; this just brings PlatformAudioSession's
         // bookkeeping in sync.
         try? session.activate()
+        startAmbientClock()
         // Start music immediately if a track is bound. The previous "wait
         // for first event" gate didn't survive contact with iOS — without
         // engine warmup, no audio plays until the player triggers an event,
         // which on a fresh empty island can take ~5 seconds (tax interval).
         startMusicIfAvailable()
+    }
+
+    private func startAmbientClock() {
+        guard let scene = ambientScene else { return }
+        ambientTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak scene] _ in
+            MainActor.assumeIsolated { scene?.tick(dt: 0.1) }
+        }
     }
 
     /// Applies the persisted bus volumes and mute to the engine.
@@ -145,16 +156,16 @@ public final class AudioStack {
     /// engine semantics require it); this just routes events.
     public func consume(events: [WorldEvent]) {
         ambientBed.consume(events: events)
-        ambientScene?.tick()
         coordinator.consume(events: events)
     }
 
-    /// Ends the game session's sounds: every building loop stops. App
-    /// shells call this when the player leaves a game and before a new
-    /// one starts. Music and the ambient bed play on.
+    /// Ends the game session's sounds: every building loop and seasonal
+    /// bed stops. App shells call this when the player leaves a game.
+    /// Music plays on.
     public func endSession() {
         coordinator.endSession()
         player.stopAllBuildingLoops()
+        ambientScene?.endSession()
     }
 
     /// Forward the per-tick `WorldSnapshot` into the coordinator so it can

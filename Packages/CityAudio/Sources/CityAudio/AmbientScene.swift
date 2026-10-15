@@ -2,13 +2,15 @@ import CityCore
 
 /// Mixes the ambient beds by context: the current season's bed, softened
 /// near the sea, and the coastal bed swelling with the share of water
-/// around the listener. Gains glide toward their targets a step per tick,
-/// so beds crossfade. Spec: `audio-playback` / Ambient beds follow season
+/// around the listener. Gains glide toward their targets by wall-clock
+/// time, so beds crossfade at the same pace at any game speed and while
+/// paused. Spec: `audio-playback` / Ambient beds follow season
 /// and shore.
 @MainActor
 public final class AmbientScene {
     static let radius = 6
-    static let step: Float = 0.025
+    /// Gain change per second: a full crossfade takes 4 seconds.
+    static let ratePerSecond: Float = 0.25
 
     private let seasons: [Season: String]
     private let coast: String?
@@ -76,11 +78,26 @@ public final class AmbientScene {
     public func setListener(_ tile: TileCoordinate?) {
         guard tile != listener else { return }
         listener = tile
+        if tile == nil { seaShare = 0 }
         updateSeaShare()
     }
 
-    /// Moves every gain one step toward its target, starting and stopping beds.
-    public func tick() {
+    /// Stops every bed and forgets the game, for the end of a session.
+    public func endSession() {
+        for path in gains.keys.sorted() {
+            stop(path)
+        }
+        gains.removeAll()
+        snapshot = nil
+        season = nil
+        listener = nil
+        seaShare = 0
+    }
+
+    /// Moves every gain toward its target by `dt` seconds' worth,
+    /// starting and stopping beds.
+    public func tick(dt: Double) {
+        let step = Self.ratePerSecond * Float(dt)
         for (path, target) in targets {
             let current = gains[path]
             if current == nil {
@@ -89,8 +106,8 @@ public final class AmbientScene {
             }
             let from = current ?? 0
             // Snap within a step (plus rounding slack) so 40 steps of 0.025 land on 1.
-            let next = abs(target - from) <= Self.step * 1.001 ? target
-                : from + (target > from ? Self.step : -Self.step)
+            let next = abs(target - from) <= step * 1.001 ? target
+                : from + (target > from ? step : -step)
             if next <= 0, target <= 0 {
                 gains[path] = nil
                 stop(path)
