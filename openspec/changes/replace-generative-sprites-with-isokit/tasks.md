@@ -2,24 +2,26 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 
 ## 1. Tooling: IsoKit and generators (no visible change)
 
-- [ ] 1.1 Create the `Tools/IsoKit` SwiftPM package (macOS 15, executable `isokit`) from `.claude/skills/iso-sprite-authoring/kit/`:
-  - split it into `Kit`, `Finishes`, `Parts`, `Props`, `Recipes` and `CLI`
-  - add `Tools` to `.swiftlint.yml` `included` and to the SwiftFormat config
-- [ ] 1.2 Tests-first: write failing IsoKit tests for the `iso-art-kit` scenarios "Recipes cannot add lights", "Recipes use shared finishes", "A recipe taller than its cell is rejected", "A 2×2 house renders 128 points wide" and "Every catalogued building kind has a recipe" (the registry against the catalog). Confirm they are red
-- [ ] 1.3 Implement to green: recipe registry, cell-height check (design D2), finish-only materials (D3)
-- [ ] 1.4 Implement the CLI:
-  - `isokit render <Resources>` writes `@1x` and `@2x` PNGs for every catalog entry with `source = "isokit"`, quantized to indexed 256 colours (D8)
+- [x] 1.1 Create the `Tools/IsoKit` SwiftPM package (macOS 15, executable `isokit`) from the Kit-proof prototype:
+  - modules: `Geometry`, `Rig`, `Renderer`, `Materials` (finishes), `Parts`, `Props`, `Recipe`, `Catalog`, `CellFit`, `RenderJob`, `Recipes/` and the `isokit` CLI
+  - add `Tools` to `.swiftlint.yml` `included` (SwiftFormat already covers it)
+  - every recipe gets a building plot slab over its whole footprint, which grounds the sprite (`not_grounded`); the slab overhangs the front edges by 12 cm so the cell crops a solid bottom row
+- [x] 1.2 Tests-first: IsoKit tests for the `iso-art-kit` scenarios "Recipes cannot add lights", "Recipes use shared finishes", "A recipe taller than its cell is rejected", "A 2×2 house renders 128 points wide" and "Every catalogued building kind has a recipe" (the registry against the catalog, including each migrated entry's sprite list). Render tests skip when `ISOKIT_SKIP_RENDER=1`; CI sets it
+- [x] 1.3 Implement to green: recipe registry (an entry may own several recipes, e.g. house tiers), cell-fit check with pure projection maths (design D2), finish-only materials (D3)
+- [x] 1.4 Implement the CLI:
+  - `isokit render --catalog <dir> --out <dir>` writes raw RGBA `@1x` and `@2x` PNGs for the recipes of every `source = "isokit"` entry; `art.finalize` quantizes them into the atlases (D8)
   - `isokit render --all --out <dir>` renders every recipe to a scratch directory, whatever the catalog says
-  - construction stages 0–2 (D4)
+  - `isokit check` runs the registry and cell-fit checks without a GPU
+  - construction stages 0–2 (generic height cuts with scaffold unless the recipe stages itself) (D4)
   - operational frames composited from moving parts (D4)
-- [ ] 1.5 Implement `isokit verify <Resources>`: re-render the `source = "isokit"` entries to a temp dir and apply the tolerance (D5), printing each failing PNG with its mean and outlier fraction. Add the scenario test "Entries not yet migrated are left alone". The SVG generator gets the same `verify` mode for `source = "svg"` entries
-- [ ] 1.6 Move the terrain and icon SVG generator to `scripts/art/` in the sprites venv, using the prototype `terrain/transitions.py`. Add a `pytest` for "Both transition sets are complete" and "Neighbouring transition tiles join without a seam"
-- [ ] 1.7 `Makefile`:
-  - `sprites` = `isokit render Resources` + the SVG generator's render, both limited to migrated entries
-  - `sprites-verify` = `isokit verify Resources` + the SVG generator's verify + `sprites-content`
-  - add a `rsvg-convert` presence check with an install hint
-  - keep the old targets until §5
-- [ ] 1.8 With no entry migrated yet:
+- [x] 1.5 Verification: `art.compare` compares each fresh raw render with its committed indexed PNG, premultiplied, within the measured tolerance (D5: mean ≤ 1.5/255, ≤ 0.3% of pixels off by > 24), naming each failing PNG with its numbers. Scenario test "Entries not yet migrated are left alone" in IsoKit, and the legacy pipeline now skips `isokit`/`svg` entries
+- [x] 1.6 Move the terrain generator to `scripts/art/` (`terrain_tiles`, `svg_sprites`, `finalize`, `compare`, `atlas`) in the sprites venv. `pytest` covers "Both transition sets are complete", "Neighbouring transition tiles join without a seam", "Unchanged recipes pass verification" and "A changed recipe without re-rendered PNGs fails verification"; `scripts/check-scenario-coverage.swift` now reads `Tools/*/Tests` and `@pytest.mark.scenario(...)`
+- [x] 1.7 `Makefile`:
+  - `sprites` = `isokit render` + `art.svg_sprites`, both limited to migrated entries, then `art.finalize`
+  - `sprites-verify` = `sprites-art-verify` (render + `art.compare`) + the legacy `sprites-regen-check` + `sprites-content`
+  - `sprites-check` (no GPU); `art.svg_sprites` fails with a `brew install librsvg` hint when it has work and no `rsvg-convert`
+  - the old online pipeline moves to `sprites-ai`; the other old targets stay until §5
+- [x] 1.8 With no entry migrated yet:
   - `make sprites` leaves every atlas PNG unchanged (`git status` is clean)
   - `make sprites-verify` passes
   - `isokit render --all --out <tmp>` renders every recipe, which proves the tooling end to end without touching assets

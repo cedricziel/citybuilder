@@ -40,8 +40,11 @@ struct RoofSpec {
     }
 }
 
-final class Builder {
+/// Collects a recipe's nodes. Recipes only call its part methods.
+public final class Builder {
     let root = SCNNode()
+
+    public init() {}
 
     @discardableResult
     func add(

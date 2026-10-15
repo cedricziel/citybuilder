@@ -1,22 +1,6 @@
-// isokit: building recipes. Each is parts + numbers; no geometry code lives here.
+// Recipes for the first six buildings (Kit proof, #84). Each is parts + numbers; no geometry code lives here.
 import AppKit
 import SceneKit
-
-struct MovingPart {
-    let name: String
-    let frames: Int
-    let build: (Builder, Int) -> Void
-}
-
-struct Building {
-    let name: String
-    let cell: SpriteCell
-    /// Construction stages before the finished building (0 = none).
-    var stages = 0
-    var moving: MovingPart?
-    /// `stage` runs 0..<stages for construction, `stages` for the finished building.
-    let build: (Builder, Int) -> Void
-}
 
 enum Palette {
     static let shutterGreen = NSColor(red: 0.20, green: 0.32, blue: 0.24, alpha: 1)
@@ -27,20 +11,43 @@ enum Palette {
     static let cabbage = NSColor(red: 0.38, green: 0.55, blue: 0.26, alpha: 1)
 }
 
-enum Buildings {
-    static let all: [Building] = [
-        Building(name: "house-peasant", cell: SpriteCell(footprint: 2, heightPx: 112), stages: 2, build: housePeasant),
-        Building(name: "house-citizen", cell: SpriteCell(footprint: 2, heightPx: 144), build: { kit, _ in houseCitizen(kit) }),
-        Building(name: "town-center", cell: SpriteCell(footprint: 3, heightPx: 192), build: { kit, _ in townCenter(kit) }),
-        Building(
-            name: "sawmill",
+public enum Recipes {
+    public static let all: [Recipe] = [
+        Recipe(id: "building-house", cell: SpriteCell(footprint: 2, heightPx: 112), customStages: true) { kit, stage in
+            housePeasant(kit, stage: peasantStage(stage))
+        },
+        Recipe(
+            id: "building-house-tier2",
+            entry: "building-house",
+            cell: SpriteCell(footprint: 2, heightPx: 144),
+            constructionFrames: 0
+        ) { kit, _ in
+            houseCitizen(kit)
+        },
+        Recipe(id: "building-town-center", cell: SpriteCell(footprint: 3, heightPx: 192), operationalFrames: 2) { kit, _ in
+            townCenter(kit)
+        },
+        Recipe(
+            id: "building-sawmill",
             cell: SpriteCell(footprint: 2, heightPx: 128),
-            moving: MovingPart(name: "sails", frames: 4, build: sawmillSails),
-            build: { kit, _ in sawmill(kit) }
-        ),
-        Building(name: "lumberjack-hut", cell: SpriteCell(footprint: 2, heightPx: 112), build: { kit, _ in lumberjackHut(kit) }),
-        Building(name: "forester", cell: SpriteCell(footprint: 2, heightPx: 112), build: { kit, _ in forester(kit) })
+            operationalFrames: 4,
+            moving: MovingPart(name: "sails", build: sawmillSails)
+        ) { kit, _ in sawmill(kit) },
+        Recipe(id: "building-lumberjack-hut", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
+            lumberjackHut(kit)
+        },
+        Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
+            forester(kit)
+        }
     ]
+
+    /// The peasant house stages itself: frame, then walls and roof boards (twice), then thatch.
+    static func peasantStage(_ stage: Stage) -> Int {
+        switch stage {
+        case let .constructing(index): min(index, 1)
+        case .finished: 2
+        }
+    }
 
     /// Stage 0: plinth and bare frame. Stage 1: walls and roof boards. Stage 2: finished.
     static func housePeasant(_ kit: Builder, stage: Int) {

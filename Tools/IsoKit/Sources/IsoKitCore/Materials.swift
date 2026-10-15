@@ -140,11 +140,13 @@ enum Tex {
     static let slate = courses(RGB(0.34, 0.35, 0.39), rowHeight: 12, blockWidth: 14, joint: RGB(0.18, 0.18, 0.21), seed: 8)
     static let cobbles = cobble(seed: 9)
     static let wood = speckled(RGB(0.55, 0.38, 0.22), amount: 0.1, seed: 10)
+    /// Trodden earth with grass: the building plot under every footprint.
+    static let yard = speckled(RGB(0.47, 0.46, 0.29), amount: 0.16, seed: 12)
 }
 
 /// A finish = texture + PBR response. `repeatU/V` = texture repeats across the face.
-enum Finish {
-    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, tile, slate, cobbles, wood
+public enum Finish {
+    case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, tile, slate, cobbles, wood, yard
     case paint(NSColor), glass, litGlass
 
     var roughness: CGFloat {
@@ -169,6 +171,7 @@ enum Finish {
         case .slate: Tex.slate
         case .cobbles: Tex.cobbles
         case .wood: Tex.wood
+        case .yard: Tex.yard
         case let .paint(colour): colour
         case .glass: NSColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1)
         case .litGlass: NSColor(red: 0.95, green: 0.62, blue: 0.25, alpha: 1)
@@ -178,6 +181,7 @@ enum Finish {
     /// Roofs on an SCNBox slab: box faces map u down the slope, so rotate 90 deg to run courses along the ridge.
     func material(repeatU: CGFloat = 1, repeatV: CGFloat = 1, rotated: Bool = false) -> SCNMaterial {
         let material = SCNMaterial()
+        material.name = Self.namePrefix + "\(self)"
         material.lightingModel = .physicallyBased
         material.diffuse.contents = contents
         material.diffuse.wrapS = .repeat
@@ -190,5 +194,12 @@ enum Finish {
             material.emission.contents = NSColor(red: 1.0, green: 0.62, blue: 0.22, alpha: 1)
         }
         return material
+    }
+
+    static let namePrefix = "finish:"
+
+    /// True when `material` came from the shared finish set (recipes may not define their own).
+    static func isShared(_ material: SCNMaterial) -> Bool {
+        material.name?.hasPrefix(namePrefix) == true && material.lightingModel == .physicallyBased
     }
 }

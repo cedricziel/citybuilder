@@ -2,6 +2,7 @@ included:
   - Apps
   - CLI
   - Packages
+  - Tools
 
 excluded:
   - .build

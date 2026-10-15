@@ -1,4 +1,4 @@
-.PHONY: help generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural
+.PHONY: help generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -102,7 +102,35 @@ sprites-venv:
 sprites-test:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m pytest tests
 
+# The art pipeline (capability iso-art-kit): IsoKit renders buildings and units, the SVG
+# generator draws terrain and icons, and art.finalize quantizes both into the atlases.
+# Only catalog entries with source = "isokit" or "svg" are rendered; every other entry keeps
+# its committed PNGs until its family migrates. Needs a Mac GPU and rsvg-convert.
+ISOKIT := $(SWIFT) run -q --package-path Tools/IsoKit isokit
+ART_DIR := $(CURDIR)/.build/art
+CATALOG := $(CURDIR)/Resources/Sprites.style/catalog
+
 sprites:
+	rm -rf $(ART_DIR)/raw
+	$(ISOKIT) render --catalog $(CATALOG) --out $(ART_DIR)/raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.svg_sprites --catalog $(CATALOG) --out $(ART_DIR)/raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.finalize $(ART_DIR)/raw $(CURDIR)/Resources
+
+# Re-render the migrated entries and compare each raw render with its committed (indexed)
+# atlas PNG within the design-D5 tolerance. GPU renders and quantization never match byte for
+# byte, so this runs locally (and in family PRs' test plans), never as a byte check in CI.
+sprites-art-verify:
+	rm -rf $(ART_DIR)/verify-raw
+	$(ISOKIT) render --catalog $(CATALOG) --out $(ART_DIR)/verify-raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.svg_sprites --catalog $(CATALOG) --out $(ART_DIR)/verify-raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.compare $(ART_DIR)/verify-raw $(CURDIR)/Resources
+
+# Recipe/catalog agreement and cell fit, without a GPU.
+sprites-check:
+	$(ISOKIT) check --catalog $(CATALOG)
+
+# Legacy generative pipeline, kept until the last family migrates (tasks §5).
+sprites-ai:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai
 
 sprites-offline:
@@ -114,8 +142,9 @@ sprites-procedural:
 sprites-reference:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
 
-# The byte-identical regen check, then the content gate.
-sprites-verify: sprites-regen-check sprites-content
+# Tolerance check of the art pipeline, the legacy byte check of entries not yet
+# migrated, then the content gate.
+sprites-verify: sprites-art-verify sprites-regen-check sprites-content
 
 sprites-regen-check:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify

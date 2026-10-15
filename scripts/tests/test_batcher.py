@@ -417,3 +417,32 @@ def test_derived_operational_frames_reuse_the_base_building(
     w, h = base.size
     lower = (0, h // 2, w, h)
     assert base.convert("RGBA").crop(lower).tobytes() == frame.convert("RGBA").crop(lower).tobytes()
+
+
+_MIGRATED_ENTRY = """---
+source = "isokit"
+---
+## Function
+
+Rendered by IsoKit.
+
+## Sheet
+
+- (0, 0): `building-sawmill` — base
+"""
+
+
+def test_migrated_entries_are_left_to_the_new_pipeline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`source = "isokit"` entries are skipped: the legacy regen neither writes nor
+    verifies their atlas PNGs (iso-art-kit: Entries not yet migrated are left alone)."""
+    _patch_dirs_to(tmp_path, monkeypatch)
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    (catalog / "building-sawmill.md").write_text(_MIGRATED_ENTRY, encoding="utf-8")
+    monkeypatch.setattr(paths, "CATALOG_DIR", catalog)
+
+    assert batcher.run_pipeline(verify=True) == 0
+    assert batcher.write_procedural_sheets() == []
+    assert not (tmp_path / "Buildings.atlas").exists()

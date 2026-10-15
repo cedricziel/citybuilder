@@ -104,4 +104,11 @@ extension Builder {
     func ground(_ lo: SCNVector3, _ hi: SCNVector3, _ finish: Finish) {
         block(SCNVector3(lo.x, 0, lo.z), SCNVector3(hi.x, 0.04, hi.z), finish, metresPerRepeat: 3)
     }
+
+    /// The building plot: a slab over the whole footprint, 3 cm below yard slabs so they never z-fight.
+    /// It runs 12 cm past the two front edges, so the cell's bottom edge crops it and the bottom row
+    /// is solidly opaque; a diamond tip alone is ~2 px wide and its alpha flickers between renders.
+    func plot(size: CGFloat, _ finish: Finish) {
+        block(SCNVector3(0, -0.02, 0), SCNVector3(size + 0.12, 0.01, size + 0.12), finish, metresPerRepeat: 3)
+    }
 }

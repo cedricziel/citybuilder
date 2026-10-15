@@ -73,7 +73,9 @@ Two runs of the same input measured:
 - **SSAO on:** worst mean absolute difference 0.002/255; 0.014% of pixels differ by more than 8; peak 32.
 - **Without SSAO:** a few pixels still flip because coplanar faces z-fight.
 
-`make sprites-verify` therefore renders to a scratch directory and compares each PNG with its committed file. It fails when the mean absolute difference exceeds 0.1/255 or more than 0.1% of pixels differ by more than 8.
+The committed PNGs are 256-colour indexed (D8), and quantization turns out to dominate. libimagequant picks slightly different palettes for near-identical inputs, so comparing two quantized renders fails on 24 of 62 Kit-proof PNGs. Comparing a fresh raw render with its own quantized PNG shows quantization error alone: worst mean 0.69/255, with 0.06% of pixels off by more than 24. Raw render A against quantized render B gives the same numbers, so GPU noise is negligible next to it.
+
+`make sprites-verify` therefore renders to a scratch directory and compares each fresh **raw** render with its committed indexed PNG. Both are premultiplied, so fully transparent pixels compare equal whatever RGB the palette's transparent entry carries. A PNG fails when the mean absolute difference exceeds 1.5/255, or when more than 0.3% of pixels differ by more than 24, which is about twice and five times the measured worst cases. A real change such as a roof finish swap is off by tens of units over whole faces and fails clearly.
 
 Coplanar parts must sit at least 1 cm apart. An `ISOKIT_SSAO=0` switch exists for debugging.
 

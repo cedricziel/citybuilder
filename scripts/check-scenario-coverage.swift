@@ -7,8 +7,9 @@
 //
 // Mapping convention (design D13): a `#### Scenario: Foo bar baz` header
 // is considered covered when at least one Swift source file under
-// Packages/*/Tests/**/*.swift contains the literal string
-// `@Test("scenario: foo bar baz")` (case-insensitive on the title).
+// Packages/*/Tests/**/*.swift or Tools/*/Tests/**/*.swift contains the literal
+// string `@Test("scenario: foo bar baz")` (case-insensitive on the title), or a
+// Python test under scripts/tests/ is marked `@pytest.mark.scenario("Foo bar baz")`.
 //
 // Exit codes:
 //   0 — every scenario has a matching test
@@ -101,17 +102,37 @@ func loadTestCorpus(from urls: [URL]) -> String {
     return combined
 }
 
+/// Python tests mark scenarios with `@pytest.mark.scenario("Title")`; rewrite each into the
+/// Swift needle so one corpus serves both.
+func pythonScenarioNeedles(under directory: String) -> String {
+    let root = URL(fileURLWithPath: directory)
+    guard
+        let enumerator = fileManager.enumerator(at: root, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]),
+        let pattern = try? NSRegularExpression(pattern: #"pytest\.mark\.scenario\("([^"]+)"\)"#)
+    else { return "" }
+    var needles = ""
+    for case let url as URL in enumerator where url.pathExtension == "py" {
+        guard let body = try? String(contentsOf: url, encoding: .utf8) else { continue }
+        for match in pattern.matches(in: body, range: NSRange(body.startIndex..., in: body)) {
+            if let range = Range(match.range(at: 1), in: body) {
+                needles.append("@test(\"scenario: \(body[range].lowercased())\")\n")
+            }
+        }
+    }
+    return needles
+}
+
 // ----- main -----------------------------------------------------------
 
 let specRoots = [
     "\(repoRoot)/openspec/changes",
     "\(repoRoot)/openspec/specs"
 ]
-let testRoot = "\(repoRoot)/Packages"
+let testRoots = ["\(repoRoot)/Packages", "\(repoRoot)/Tools"]
 
 let specMarkdowns = mdFiles(under: specRoots)
-let testSwifts = swiftFiles(under: testRoot)
-let testCorpus = loadTestCorpus(from: testSwifts)
+let testSwifts = testRoots.flatMap { swiftFiles(under: $0) }
+let testCorpus = loadTestCorpus(from: testSwifts) + pythonScenarioNeedles(under: "\(repoRoot)/scripts/tests")
 
 let scenarios = extractScenarios(from: specMarkdowns)
 
