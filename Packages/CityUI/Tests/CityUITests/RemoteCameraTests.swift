@@ -188,3 +188,17 @@ func appleTVDefaults() {
     #expect(session.clampsCameraToMap)
     #expect(session.confirmsBuildingPlacement)
 }
+
+@Test("Holding Play/Pause in the HUD neither zooms nor moves focus")
+@MainActor
+func holdingPlayPauseInTheHUD() {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    _ = mapper.handle(.focusChanged(.hud), at: 0, session: session)
+    _ = mapper.handle(.playPauseDown, at: 1, session: session)
+    _ = mapper.handle(.tick, at: 1.5, session: session)
+    let effects = mapper.handle(.playPauseUp, at: 1.6, session: session)
+    #expect(session.world.camera.zoom == 1.0)
+    #expect(effects.isEmpty)
+    #expect(mapper.focus == .hud)
+}
