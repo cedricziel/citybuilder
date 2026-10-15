@@ -29,6 +29,11 @@ public extension World {
         }
     }
 
+    /// True when `id` is an operational player town center, so it trades.
+    func hasMarket(at id: EntityID) -> Bool {
+        marketTownCenter(id) != nil
+    }
+
     /// The reach of the market at `townCenter`; nil unless it is an
     /// operational player town center.
     func marketReach(at townCenter: EntityID) -> MarketReach? {
