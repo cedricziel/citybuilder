@@ -42,12 +42,14 @@ public enum UITestSeed {
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
     /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
     /// each listed kind at the nearest site the rules allow, for a family's before and after shots. A `culture`
-    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks. The title backdrop draws
+    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks, an `age` (`-uiTestAge modern`) in that age's. The title
+    /// backdrop draws
     /// this town too (`TitleBackdrop.makeSnapshot`).
     public static func townWorld(
-        houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil, culture: Culture = .northernEuropean
+        houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil, culture: Culture = .northernEuropean,
+        age: Age = .medieval
     ) -> World {
-        var world = World.newGame(layout: .singleIsland, seed: 0, culture: culture)
+        var world = World.newGame(layout: .singleIsland, seed: 0, culture: culture, age: age)
         world.seedUnlimitedTestInventory()
         world.seedTestFunds()
         guard let center = playerTownCenter(in: world) else {
@@ -80,7 +82,7 @@ public enum UITestSeed {
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
-            culture: culture(fromArguments: arguments)
+            culture: culture(fromArguments: arguments), age: age(fromArguments: arguments)
         )
     }
 
@@ -141,6 +143,12 @@ public enum UITestSeed {
             }
         }
         return nil
+    }
+
+    /// The age after `-uiTestAge` in the launch arguments, medieval if none.
+    public static func age(fromArguments arguments: [String]) -> Age {
+        guard let flag = arguments.firstIndex(of: "-uiTestAge"), arguments.indices.contains(flag + 1) else { return .medieval }
+        return Age(rawValue: arguments[flag + 1]) ?? .medieval
     }
 
     /// The culture after `-uiTestCulture` in the launch arguments, Northern European if none.
