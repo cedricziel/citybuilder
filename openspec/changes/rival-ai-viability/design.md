@@ -67,7 +67,7 @@ The same sweep with rival market trades added on top of M1, with the M1 result i
 | Rivals at 0 residents, year 15 | 0/10 (3/10) | 0/20 (1/20) | 0/30 (5/30) |
 | Rivals ever in debt | 0 (3) | 0 (1) | 0 (5) |
 | Residents year 3, median | 1 (9) | 26 (35.5) | 34 (21.5) |
-| Residents year 5, median | 2 (22.5) | 31 (35) | 31 (21.5) |
+| Residents year 5, median | 2 (22.5) | 31.5 (35) | 31.5 (21.5) |
 | Residents year 15, median (range) | 29.5 (11–47) | 32.5 (20–50) | 31 (14–43) |
 | Citizens reached by year 15 | 10 (6) | 20 (19) | 30 (21) |
 
