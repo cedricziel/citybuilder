@@ -13,6 +13,7 @@ public struct TitleScreenView: View {
     @Bindable private var viewModel: TitleScreenViewModel
     private let settingsContent: (() -> AnyView)?
     @FocusState private var focusedButton: TitleButton?
+    @State private var entered = false
 
     private enum TitleButton: Hashable {
         case continueGame, newGame
@@ -36,73 +37,12 @@ public struct TitleScreenView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-            Text("Citybuilder")
-                .font(.system(size: 56, weight: .bold, design: .serif))
-                .accessibilityAddTraits(.isHeader)
-            VStack(spacing: 16) {
-                if let summary = viewModel.mostRecentSave {
-                    Button {
-                        viewModel.continueRequested()
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text("Continue").font(.title3.bold())
-                            Text(summary.displayName)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: 280)
-                        .padding(.vertical, 10)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isPreparingCloudSaves)
-                    .focused($focusedButton, equals: .continueGame)
-                    .accessibilityIdentifier("title.continue")
-                }
-                Button("New Game…") {
-                    viewModel.newGameRequested()
-                }
-                .frame(maxWidth: 280)
-                .padding(.vertical, 8)
-                .buttonStyle(.bordered)
-                .disabled(viewModel.isPreparingCloudSaves)
-                .focused($focusedButton, equals: .newGame)
-                .accessibilityIdentifier("title.newGame")
-
-                Button("Settings") {
-                    viewModel.settingsRequested()
-                }
-                .frame(maxWidth: 280)
-                .padding(.vertical, 8)
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("title.settings")
-
-                #if os(macOS)
-                Button("Quit") {
-                    NSApplication.shared.terminate(nil)
-                }
-                .frame(maxWidth: 280)
-                .padding(.vertical, 8)
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("title.quit")
-                #endif
-            }
-            Spacer()
-            if viewModel.isPreparingCloudSaves {
-                ProgressView("Checking iCloud for saves…")
-                    .accessibilityIdentifier("title.preparingCloudSaves")
-            }
-            if let notice = viewModel.iCloudNotice {
-                Label(notice, systemImage: "icloud.slash")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("title.iCloudNotice")
-            }
+        ZStack {
+            TitleBackdrop(active: !viewModel.presentingNewGameDialog && !viewModel.presentingSettings)
+            scrim
+            menu
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { entered = true }
         #if os(tvOS)
         // tvOS sheets are translucent; hide the title behind them.
         .opacity(viewModel.presentingNewGameDialog || viewModel.presentingSettings ? 0 : 1)
@@ -153,5 +93,99 @@ public struct TitleScreenView: View {
                 content().tvSheetWidth()
             }
         }
+    }
+
+    /// Darkens the top behind the title and the bottom behind the
+    /// notices, leaving the island clear in the middle.
+    private var scrim: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .black.opacity(0.5), location: 0),
+                .init(color: .black.opacity(0.05), location: 0.4),
+                .init(color: .black.opacity(0.05), location: 0.6),
+                .init(color: .black.opacity(0.55), location: 1)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+
+    private var menu: some View {
+        // Title at the top, buttons in the lower third: the town shows between.
+        VStack(spacing: 32) {
+            Text("Citybuilder")
+                .font(.system(size: 56, weight: .bold, design: .serif))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.6), radius: 8, y: 3)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 40)
+                .menuEntrance(0, entered: entered)
+            Spacer()
+            VStack(spacing: 16) {
+                if let summary = viewModel.mostRecentSave {
+                    Button {
+                        viewModel.continueRequested()
+                    } label: {
+                        VStack(spacing: 2) {
+                            Text("Continue").font(.title3.bold())
+                            Text(summary.displayName)
+                                .font(.caption)
+                                .opacity(0.8)
+                        }
+                        #if os(tvOS)
+                        // The system style sizes to the label.
+                        .frame(maxWidth: 280)
+                        .padding(.vertical, 10)
+                        #endif
+                    }
+                    .titleMenuButtonStyle(prominent: true)
+                    .disabled(viewModel.isPreparingCloudSaves)
+                    .focused($focusedButton, equals: .continueGame)
+                    .accessibilityIdentifier("title.continue")
+                    .menuEntrance(1, entered: entered)
+                }
+                Button("New Game…") {
+                    viewModel.newGameRequested()
+                }
+                .titleMenuButtonStyle(prominent: viewModel.mostRecentSave == nil)
+                .disabled(viewModel.isPreparingCloudSaves)
+                .focused($focusedButton, equals: .newGame)
+                .accessibilityIdentifier("title.newGame")
+                .menuEntrance(2, entered: entered)
+
+                Button("Settings") {
+                    viewModel.settingsRequested()
+                }
+                .titleMenuButtonStyle()
+                .accessibilityIdentifier("title.settings")
+                .menuEntrance(3, entered: entered)
+
+                #if os(macOS)
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .titleMenuButtonStyle()
+                .accessibilityIdentifier("title.quit")
+                .menuEntrance(4, entered: entered)
+                #endif
+            }
+            .padding(.bottom, 40)
+            if viewModel.isPreparingCloudSaves {
+                ProgressView("Checking iCloud for saves…")
+                    .foregroundStyle(.white)
+                    .accessibilityIdentifier("title.preparingCloudSaves")
+            }
+            if let notice = viewModel.iCloudNotice {
+                Label(notice, systemImage: "icloud.slash")
+                    .font(.callout)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("title.iCloudNotice")
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
