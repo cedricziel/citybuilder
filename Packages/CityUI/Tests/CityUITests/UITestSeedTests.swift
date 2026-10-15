@@ -69,12 +69,19 @@ func townSeedStaysSolvent() {
     #expect(!world.economy.gameOver)
 }
 
-@Test("Launch arguments pick the seed world, and none means a regular game")
-@MainActor
-func launchArgumentsPickTheSeedWorld() throws {
-    #expect(UITestSeed.world(fromArguments: ["Citybuilder"]) == nil)
-    let port = try #require(UITestSeed.world(fromArguments: ["Citybuilder", "-uiTestSeedPort"]))
-    #expect(port.buildings.values.contains { $0.kind == .port && $0.owner == .player })
-    let town = try #require(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestSeason", "autumn"]))
-    #expect(town.date.season == .autumn)
+@Test("The lived seed has inhabited houses and keeps the default camera")
+func livedSeedHasResidents() {
+    let world = UITestSeed.livedTownWorld()
+    let snapshot = world.snapshot()
+    #expect(snapshot.housePopulations.values.contains { $0.population > 0 })
+    #expect(world.camera == UITestSeed.townWorld().camera)
+}
+
+@Test("Launch arguments pick the seed, and no flag picks none")
+func argumentsPickTheSeed() {
+    #expect(UITestSeed.world(fromArguments: []) == nil)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedShore"])?.ships.count == 1)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedPort"])?.buildings.values.contains { $0.kind == .port } == true)
+    let town = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestShowcase", "craft"])
+    #expect(town?.buildings.values.contains { $0.kind == .bakery } == true)
 }

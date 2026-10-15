@@ -82,7 +82,7 @@ struct CitybuilderTVApp: App {
             TitleScreenHost(
                 saveStore: SaveStoreFacadeAdapter(store: saveStore),
                 sessionFactory: { [audio] world in
-                    GameSession(
+                    let session = GameSession(
                         world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
@@ -91,6 +91,9 @@ struct CitybuilderTVApp: App {
                             audio.consumeSnapshot(snapshot)
                         }
                     )
+                    // Leaving the game silences its workshop loops.
+                    session.onEnd = { audio.endSession() }
+                    return session
                 },
                 pauseMenuFactory: { [saveStore, saveSync] session in
                     PauseMenuConfig(

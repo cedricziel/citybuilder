@@ -55,14 +55,16 @@ struct CitybuilderMacApp: App {
             }
     }
 
-    /// Debug builds start a new game from a `UITestSeed` world when launched with its flag
-    /// (`-uiTestSeedTown`, `-uiTestSeedShore`, `-uiTestSeedPort`), for UI tests and art reviews.
+    /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
+    /// `-uiTestSeedLived`.
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        return UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) ?? world
-        #else
-        return world
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
+        }
         #endif
+        return world
     }
 
     var body: some Scene {
@@ -73,7 +75,7 @@ struct CitybuilderMacApp: App {
                     defaultGameID: Self.defaultGameID
                 ),
                 sessionFactory: { [audio] world in
-                    GameSession(
+                    let session = GameSession(
                         world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
@@ -82,6 +84,9 @@ struct CitybuilderMacApp: App {
                             audio.consumeSnapshot(snapshot)
                         }
                     )
+                    // Leaving the game silences its workshop loops.
+                    session.onEnd = { audio.endSession() }
+                    return session
                 },
                 pauseMenuFactory: { [saveStore] session in
                     // onQuitToTitle is injected by TitleScreenHost — spec
@@ -106,6 +111,7 @@ struct CitybuilderMacApp: App {
                 Button("Quit Citybuilder") { MacAppTerminator.terminate() }
                     .keyboardShortcut("q")
             }
+            GameCommands()
         }
         Settings {
             TabView {
@@ -160,7 +166,7 @@ private struct TitleSettingsSheet: View {
                     Task { await audio.syncSettingsToCloud() }
                     dismiss()
                 }
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
         }

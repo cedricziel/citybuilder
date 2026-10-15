@@ -16,6 +16,9 @@ public final class AudioCoordinator: @unchecked Sendable {
 
     private let bindings: Bindings
     private let dispatch: CueDispatcher
+    /// Called with an entity whose active loop the coordinator stops, so
+    /// the player can halt it.
+    private let stop: (EntityID) -> Void
     private var rng: any RandomNumberGenerator
     /// Active per-entity loops. Used to make loop-start idempotent and to
     /// route `stopLoop(for:)` to the right player.
@@ -29,11 +32,13 @@ public final class AudioCoordinator: @unchecked Sendable {
     public init(
         bindings: Bindings,
         rng: any RandomNumberGenerator = SystemRandomNumberGenerator(),
-        dispatch: @escaping CueDispatcher
+        dispatch: @escaping CueDispatcher,
+        stop: @escaping (EntityID) -> Void = { _ in }
     ) {
         self.bindings = bindings
         self.rng = rng
         self.dispatch = dispatch
+        self.stop = stop
     }
 
     /// Caches the latest `WorldSnapshot` so `consume(events:)` can look up
@@ -82,7 +87,7 @@ public final class AudioCoordinator: @unchecked Sendable {
             }
 
             let position = resolvePosition(for: event)
-            let dispatched = DispatchedCue(cue: cue, position: position)
+            let dispatched = DispatchedCue(cue: cue, position: position, entity: event.primaryEntityID)
 
             if cue.loop == true, let entityId = event.primaryEntityID {
                 // Idempotent loop start — second dispatch for the same
@@ -105,13 +110,18 @@ public final class AudioCoordinator: @unchecked Sendable {
     /// is currently active for that entity.
     @MainActor
     public func stopLoop(for entity: EntityID) {
-        // In Phase 1 the coordinator does not own AVAudioPlayerNode
-        // instances directly — the dispatch closure manages playback. We
-        // signal stop by re-dispatching the cue with a sentinel; for now
-        // the contract is simply "the entity is no longer in activeLoops".
-        // The real engine-backed coordinator (M11 wiring) will hold a
-        // [EntityID: AVAudioPlayerNode] map and stop the node here.
-        activeLoops.removeValue(forKey: entity)
+        guard activeLoops.removeValue(forKey: entity) != nil else { return }
+        stop(entity)
+    }
+
+    /// Stops every active loop and forgets the last snapshot, so the next
+    /// game starts with no loops even if it reuses entity IDs.
+    @MainActor
+    public func endSession() {
+        for entity in Array(activeLoops.keys) {
+            stopLoop(for: entity)
+        }
+        cachedSnapshot = nil
     }
 
     /// True if a loop is currently registered for `entity`. Used by tests.

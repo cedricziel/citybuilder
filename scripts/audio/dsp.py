@@ -1,7 +1,8 @@
 """Deterministic DSP building blocks for the procedural sound generator.
 
 Every function here uses only IEEE-754 basic arithmetic (+, -, *, /, sqrt)
-in a fixed order, plus our own polynomial sine and exponential. `math.sin`
+in a fixed order, plus our own polynomial sine and exponential; powers are
+written as products, since `**` on floats calls libm's pow. `math.sin`
 and friends come from the platform's libm and may differ in the last bit
 between macOS and Linux, which would break the byte-for-byte regeneration
 check. Signals are plain lists of floats in [-1, 1].
@@ -121,12 +122,19 @@ def bandpass(signal: list[float], centre: float, q: float, sr: int) -> list[floa
 
 def mode(n: int, freq: float, decay: float, sr: int, amp: float = 1.0, phase: float = 0.0) -> list[float]:
     """A struck resonance: a sine at `freq` Hz decaying by 1/e every `decay` seconds."""
-    step = exp(-1 / (decay * sr))
-    env = amp
-    out = []
-    for i in range(n):
-        out.append(env * sin_turns(phase + freq * i / sr))
-        env *= step
+    # A damped resonator: each sample from the last two, one multiply-add
+    # instead of a sine per sample.
+    r = exp(-1 / (decay * sr))
+    w = freq / sr
+    c = 2 * r * cos_turns(w)
+    r2 = r * r
+    y2 = amp * sin_turns(phase)
+    y1 = amp * r * sin_turns(phase + w)
+    out = [y2, y1][:n]
+    for _ in range(n - 2):
+        y = c * y1 - r2 * y2
+        out.append(y)
+        y2, y1 = y1, y
     return out
 
 

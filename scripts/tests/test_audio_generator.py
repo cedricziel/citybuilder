@@ -76,16 +76,24 @@ def test_caf_header_describes_mono_ima4():
     assert (rate, fmt.to_bytes(4, "big"), bpp, fpp, channels) == (22050.0, b"ima4", 34, 64, 1)
 
 
-def test_every_sound_is_audible_and_within_full_scale():
-    for sound in sounds.SOUNDS:
-        signal = sounds.render(sound)
+@pytest.fixture(scope="module")
+def rendered() -> dict[str, list[float]]:
+    """Every sound rendered once; rendering them all takes a while."""
+    return {sound.path: sounds.render(sound) for sound in sounds.SOUNDS}
+
+
+def test_every_sound_is_audible_and_within_full_scale(rendered):
+    for path, signal in rendered.items():
         assert max(abs(x) for x in signal) <= 0.95
-        assert dsp.rms(signal) > 0.01, sound.path
+        assert dsp.rms(signal) > 0.01, path
 
 
 @pytest.mark.scenario("Regenerating reproduces the committed sounds")
-def test_committed_sounds_match_their_recipes():
-    assert generate.main(["--check"]) == 0
+def test_committed_sounds_match_their_recipes(rendered):
+    for path, signal in rendered.items():
+        assert (generate.AUDIO_DIR / path).read_bytes() == caf.write_caf(signal, sounds.SR), path
+    manifest = generate.json.loads(generate.MANIFEST.read_text(encoding="utf-8"))
+    assert generate.updated_manifest(manifest) == manifest
 
 
 @pytest.mark.scenario("A stale sound fails the check")
@@ -114,3 +122,11 @@ def test_loudest_window_checks_every_offset():
     for i in range(325, 425):
         signal[i] = 1.0
     assert abs(dsp.loudest_window_rms(signal, 100) - 1.0) < 1e-9
+
+
+def test_mode_resonator_matches_a_decaying_sine():
+    sr, freq, decay = 44100, 523.25, 0.3
+    signal = dsp.mode(sr, freq, decay, sr, 0.8, 0.1)
+    for i in (0, 1, 1000, 20000, 44099):
+        expected = 0.8 * math.exp(-i / (decay * sr)) * math.sin(2 * math.pi * (0.1 + freq * i / sr))
+        assert abs(signal[i] - expected) < 5e-5

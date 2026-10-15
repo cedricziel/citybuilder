@@ -11,9 +11,15 @@ extension View {
         #endif
     }
 
-    /// Escape and ⌘. both toggle pause.
+    /// Escape and ⌘. both toggle pause. On the Mac, Esc steps back
+    /// through `MacMapInputHost` instead.
+    @ViewBuilder
     func pauseHotkeys() -> some View {
+        #if os(macOS)
+        hotkey(".", modifiers: .command)
+        #else
         hotkey(.escape).hotkey(".", modifiers: .command)
+        #endif
     }
 
     @ViewBuilder
