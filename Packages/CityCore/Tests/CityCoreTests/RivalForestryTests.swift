@@ -14,6 +14,14 @@ private func rivalWithOneHut() throws -> (world: World, hut: TileCoordinate) {
     let hut = try #require(placedAnchor(commands.last))
     world.tick()
     #expect(world.occupiedTiles[hut].flatMap { world.buildings[$0]?.kind } == .lumberjackHut)
+    // The opening hut stands in the starter grove, so its catchment
+    // starts full. Cut its first 12 trees in harvest order, as 12 cycles
+    // would, so there is open grass beside it to replant.
+    let felled = catchment(of: hut).filter { world.terrain(at: $0) == .forest }
+        .sorted { ($0.y, $0.x) < ($1.y, $1.x) }.prefix(12)
+    for tile in felled {
+        world.terrainGrid[tile.y * world.mapWidth + tile.x] = .grass
+    }
     world.setRival(1) { $0.ai.scriptIndex = 12 }
     world.setRivalStock(1, [.wood: 20, .planks: 10, .food: 10])
     world.setRival(1) { $0.treasury = 5000 }
