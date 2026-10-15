@@ -116,8 +116,9 @@ struct KitGateTests {
         #expect(failures.isEmpty)
     }
 
-    @Test("in an atlas with @2x art, legacy sprites need exact nearest-neighbour twins")
-    func legacySpritesNeedTwinsOnceTheAtlasHasTwoX() throws {
+    /// SpriteKit loads only the @2x pages of such an atlas on retina, so a 1x-only sprite would vanish.
+    @Test("in an atlas with @2x art, every sprite needs an @2x twin")
+    func everySpriteNeedsATwinOnceTheAtlasHasTwoX() throws {
         let root = temporaryResources()
         try writeBrief(root, id: "building-house", source: "isokit")
         try writeBrief(root, id: "building-bakery", source: "procedural")
@@ -126,13 +127,8 @@ struct KitGateTests {
         try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-house@2x.png"))
         try writePNG(grounded(), to: atlas.appendingPathComponent("building-bakery.png"))
 
-        var failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
         #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)])
-
-        let shifted = image(width: 128, height: 64) { x, y in (30 ..< 90).contains(x) && y >= 8 ? wall : nil }
-        try writePNG(shifted, to: atlas.appendingPathComponent("building-bakery@2x.png"))
-        failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3)
-        #expect(failures == [.init(file: "building-bakery.png", reason: .scaleTwinMismatch)]) // not the exact double
 
         try writePNG(grounded(scale: 2), to: atlas.appendingPathComponent("building-bakery@2x.png"))
         #expect(try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.3).isEmpty)
@@ -220,6 +216,16 @@ struct KitGateTests {
         #expect(entry.isMigrated)
         let catalog = GateCatalog(entries: [entry], sheetNames: ["building-house": GateCatalog.sheetNames(in: markdown)])
         #expect(catalog.migratedSheetNames == ["building-house", "building-house-tier2"])
+    }
+
+    @Test("two briefs listing the same sprite are rejected, since its owner would be arbitrary")
+    func duplicateSheetOwnersAreRejected() throws {
+        let root = temporaryResources()
+        try writeBrief(root, id: "building-house", source: "isokit", recipe: "- (0, 1): `building-house-tier2`")
+        try writeBrief(root, id: "building-house-tier2", source: "procedural", recipe: "- (0, 0): `building-house-tier2`")
+        #expect(throws: GateCatalog.DuplicateSheetNames(names: ["building-house-tier2"])) {
+            try GateCatalog.load(resourcesRoot: root)
+        }
     }
 
     @Test("@2x frames compare against their @2x base")
