@@ -58,7 +58,7 @@ struct StandingsPanelView: View {
             }
             .navigationTitle("Standings")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
             }
         }
     }
