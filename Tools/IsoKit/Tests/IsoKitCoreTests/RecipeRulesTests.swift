@@ -84,6 +84,30 @@ struct RecipeRulesTests {
         #expect(!CellFit.problems(in: ship).isEmpty)
     }
 
+    /// A bare band in a texture shows as a stripe wherever it repeats (the slate courses left one).
+    /// Joints between blocks may be bare; a whole bare row may not.
+    @Test("no finish texture has a bare row")
+    func finishTexturesHaveNoBareRow() throws {
+        let textures: [(String, CGImage)] = [
+            ("plaster", Tex.plaster), ("timber", Tex.timber), ("rubble", Tex.rubble), ("ashlar", Tex.ashlar),
+            ("planks", Tex.planks), ("thatch", Tex.thatchStraw), ("tile", Tex.tile), ("slate", Tex.slate),
+            ("cobbles", Tex.cobbles), ("wood", Tex.wood), ("yard", Tex.yard), ("rock", Tex.rock), ("brick", Tex.brick)
+        ]
+        for (name, image) in textures {
+            let size = Tex.size
+            var pixels = [UInt8](repeating: 0, count: size * size * 4)
+            let ctx = try #require(CGContext(
+                data: &pixels, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ))
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+            let bareRows = (0 ..< size).filter { row in
+                (0 ..< size).allSatisfy { pixels[(row * size + $0) * 4 + 3] == 0 }
+            }
+            #expect(bareRows.isEmpty, "\(name) has bare rows \(bareRows)")
+        }
+    }
+
     /// The renderer centres a W x H sprite on the footprint's width, level with its bottom vertex.
     @Test("a 2x3 cell is 160 points wide and centred on the footprint's width")
     func twoByThreeCellGeometry() {
