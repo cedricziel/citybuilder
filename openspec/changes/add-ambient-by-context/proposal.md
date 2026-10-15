@@ -13,7 +13,9 @@ The game has one ambient bed, spring birdsong, and it plays all year and everywh
 - **The mix follows the context.** `AmbientScene` reads the season from each snapshot. It also reads how much of the land around the listener (the camera's centre tile, radius 6) is sea. It then sets a gain for each bed:
   - the season's bed at full, softened by up to half near the sea;
   - the coastal bed at the sea share, scaled up.
-- **Gains glide.** They move toward their targets a little each tick (a full crossfade takes about 4 s). A bed starts silent and stops once it has faded out.
+- **Gains glide.** They move toward their targets by wall-clock time, 0.25 per second, so a full crossfade takes 4 s at any game speed and while paused; `AudioStack` drives this from its own 10 Hz timer. A bed starts silent and stops once it has faded out.
+- **Session end stops the beds.** When the player leaves a game, every bed stops and the scene forgets the game, so the title screen is quiet.
+- **No click at the loop wrap.** The IMA4 encoder starts its first packet on the first sample's top 9 bits, with the step size the signal settles to, instead of from silence; every sound is regenerated.
 - **Bindings.** The `ambient` section gains `seasons` (a file per season) and `coast`. A section without them keeps the single-track behaviour.
 
 ## Capabilities
