@@ -43,6 +43,11 @@ public final class MinimapModel {
 
     public init() {}
 
+    /// The projection of this map onto a minimap of `size` points.
+    public func projection(size: CGSize) -> MinimapProjection {
+        MinimapProjection(mapWidth: mapWidth, mapHeight: mapHeight, size: size)
+    }
+
     public func apply(_ snapshot: WorldSnapshot) {
         if let drawnTerrain, drawnTerrain != snapshot.terrainGrid {
             if mapWidth == snapshot.mapWidth, mapHeight == snapshot.mapHeight {

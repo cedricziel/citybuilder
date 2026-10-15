@@ -94,7 +94,6 @@ extension View {
 extension Color {
     /// A colour from "#RRGGBB".
     init(hex: String) {
-        let rgba = MinimapRGBA(hex: hex)
-        self.init(red: Double(rgba.red) / 255, green: Double(rgba.green) / 255, blue: Double(rgba.blue) / 255)
+        self.init(MinimapRGBA(hex: hex))
     }
 }

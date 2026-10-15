@@ -1,5 +1,6 @@
 import CityCore
 import Foundation
+import QuartzCore
 import SwiftUI
 
 /// The top-level view shown by every app shell. Composes a snapshot-driven
@@ -17,6 +18,7 @@ public struct CityRootView: View {
     @State var pauseMenuViewModel: PauseMenuViewModel?
     @State var buildRail = BuildRailModel()
     @State var inspectorExpanded = false
+    @AppStorage(MinimapPreference.defaultsKey) var showsMinimap = MinimapPreference.shownByDefault
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
     #if os(macOS)
@@ -56,11 +58,15 @@ public struct CityRootView: View {
                 #endif
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
-                hudLayer(layout: layout)
-                    .padding(layout.margin)
-                    #if os(tvOS)
-                    .modifier(TVHUDCommands(root: self))
-                    #endif
+                let insets = proxy.safeAreaInsets
+                hudLayer(layout: layout, worldViewSize: CGSize(
+                    width: proxy.size.width + insets.leading + insets.trailing,
+                    height: proxy.size.height + insets.top + insets.bottom
+                ))
+                .padding(layout.margin)
+                #if os(tvOS)
+                .modifier(TVHUDCommands(root: self))
+                #endif
             }
             touchPlacementHUD
                 .zIndex(1)
@@ -124,6 +130,8 @@ public final class GameSession {
     public let routeList = RouteListViewModel()
     /// The minimap's terrain image and markers. Spec: `platform-shells` / Minimap.
     public let minimap = MinimapModel()
+    /// A minimap tap's camera move in progress; a pan stops it.
+    public internal(set) var cameraGlide: CameraGlide?
 
     public init(
         world: World = World.newGame(),
@@ -263,6 +271,7 @@ public final class GameSession {
     /// decreases, camera moves DOWN in scene, content shifts UP — which is
     /// "drag up → scroll down" in scroll-bar parlance.
     public func handlePanDelta(deltaX: CGFloat, deltaY: CGFloat) {
+        cameraGlide = nil
         let zoom = max(world.camera.zoom, 0.0001)
         let dxOverW = Double(deltaX) / Self.tileWidth
         let dyOverH = Double(deltaY) / Self.tileHeight
@@ -374,8 +383,11 @@ public final class GameSession {
 
     @MainActor
     public var worldView: some View {
+        // The renderer pulls a snapshot every frame, so a minimap glide
+        // steps here, on the same clock.
         let provider: @MainActor @Sendable () -> WorldSnapshot? = { [weak self] in
-            self?.world.snapshot()
+            self?.stepCameraGlide(now: CACurrentMediaTime())
+            return self?.world.snapshot()
         }
         let tapSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
             self?.handleTap(at: tile)
