@@ -180,7 +180,7 @@ The `rival-towns` spec gains targets checked by test:
 - No rival's treasury stays below 0 for 2,400 consecutive ticks.
 - By the end of year 5, every rival has at least 8 residents on Easy, 20 on Normal and 30 on Hard.
 
-The default test runs seed 0 at each difficulty for 12,000 ticks, one game per difficulty in parallel; seeds 0 and 1 one after another took over eight minutes in the debug suite. A full sweep (seeds 0–9, 36,000 ticks) runs as an opt-in test (`RIVAL_SWEEP=1`) in release mode at each milestone's end, and its numbers are recorded here.
+The scenario test is the full sweep: seeds 0–9 at each difficulty over 36,000 ticks, checking the three conditions above, with the residents floor read at the end of year 5. It takes minutes even in a release build, so it runs only with `RIVAL_SWEEP=1`, in a separate weekly `rival-sweep` workflow (also started by hand) that is not a required check and not part of `ci-ok`, and at each milestone's end. It prints one line per rival, and those lines are the evidence recorded here. Every CI run checks a lighter test instead: seed 0 at each difficulty over 3 years (7,200 ticks), with no rival empty on any tick after year 2 and none in debt for a year. That takes about a minute in the debug suite; the earlier 12,000-tick default took several.
 
 ### D8 — Determinism and CityCore
 

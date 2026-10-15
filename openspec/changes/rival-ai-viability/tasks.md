@@ -26,7 +26,7 @@
 
 - [x] 3.1 Tests-first: translate "House cap", "Building cap ignores foresters and roads" and `rival-towns` / Rival viability "Rivals are viable across seeds" into failing tests; confirm red
 - [x] 3.2 Implement to green: house and building caps per difficulty as `Difficulty` properties next to `rivalCount`, with foresters and roads left out of the building count (design D6)
-- [x] 3.3 Add the viability test: seeds 0 and 1 at each difficulty for 12,000 ticks in the default suite, and the full sweep (seeds 0–9, 36,000 ticks) behind `RIVAL_SWEEP=1` for release runs
+- [x] 3.3 Add the viability tests: seed 0 at each difficulty for 7,200 ticks (3 years) in the default suite, checking that no rival empties after year 2 or stays in debt for a year; and the scenario sweep (seeds 0–9, 36,000 ticks, year-5 floors) behind `RIVAL_SWEEP=1`, run by the weekly `rival-sweep` workflow
 - [x] 3.4 Tune the caps and the reserve against design D7 using the full sweep; record the final numbers in design "Evidence"
 - [x] 3.5 Check the "replayed rival game" tick budget on Hard with the 64-building cap; run the `add-forestry` player playtest bot next to the rivals on archipelago seed 7 and record player against rival residents for the Island Rivalry goal
 - [x] 3.6 Regenerate the determinism baseline as in 1.7
