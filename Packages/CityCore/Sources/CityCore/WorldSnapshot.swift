@@ -81,6 +81,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Every rival town, by ID. Spec: `rendering-2_5d` / Buildings render
     /// in their owner's culture.
     public let rivals: [RivalSummary]
+    /// The town market's goods, prices and what is left this season, in
+    /// catalog order. Spec: `town-market` / Market trades are reported.
+    public let market: [MarketQuote]
 
     public init(
         tickCount: UInt64,
@@ -106,7 +109,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
         houseModifiers: [EntityID: HouseModifiers] = [:],
-        rivals: [RivalSummary] = []
+        rivals: [RivalSummary] = [],
+        market: [MarketQuote] = []
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -132,6 +136,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.age = age
         self.houseModifiers = houseModifiers
         self.rivals = rivals
+        self.market = market
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -225,7 +230,8 @@ public extension World {
             culture: culture,
             age: age,
             houseModifiers: snapshotHouseModifiers(),
-            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id)) }
+            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id)) },
+            market: marketQuotes
         )
     }
 

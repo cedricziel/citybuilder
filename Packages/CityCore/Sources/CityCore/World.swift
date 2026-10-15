@@ -92,6 +92,11 @@ public struct World: Codable, Sendable, Equatable {
 
     /// ---- economy ---------------------------------------------------
     public internal(set) var economy: Economy = .init()
+    /// Units traded at the town market this season. Spec: `town-market`
+    /// / Seasonal limits reset and persist. Saves without it decode an
+    /// empty ledger (see the `KeyedDecodingContainer` overload in
+    /// `TownMarket.swift`).
+    public internal(set) var market: MarketLedger = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -300,6 +305,10 @@ public struct World: Codable, Sendable, Equatable {
             applyCommission(gallery, events: &events)
         case let .setExport(caravanserai, good):
             applySetExport(caravanserai, good: good)
+        case let .marketBuy(townCenter, good, quantity):
+            applyMarketTrade(.bought, good, quantity, at: townCenter, events: &events)
+        case let .marketSell(townCenter, good, quantity):
+            applyMarketTrade(.sold, good, quantity, at: townCenter, events: &events)
         }
     }
 

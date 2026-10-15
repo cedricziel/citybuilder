@@ -109,6 +109,12 @@ public enum WorldEvent: Sendable {
     /// units of `good` for `total`. Spec: `rival-trade` / Trading at a
     /// rival port.
     case tradeCompleted(rival: RivalID, good: Good, quantity: Int, total: Int64, direction: TradeDirection)
+
+    // MARK: Town market
+
+    /// The player bought or sold `quantity` units of `good` for `total` at
+    /// the town market. Spec: `town-market` / Market trades are reported.
+    case marketTraded(good: Good, quantity: Int, total: Int64, direction: TradeDirection)
 }
 
 /// Which way goods went in a trade, from the player's point of view.
@@ -118,7 +124,7 @@ public enum TradeDirection: Hashable, Sendable {
 }
 
 extension WorldEvent: Equatable {
-    // swiftlint:disable:next cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     public static func == (lhs: WorldEvent, rhs: WorldEvent) -> Bool {
         switch (lhs, rhs) {
         case let (.buildingPlaced(lEntity, lKind, lAnchor), .buildingPlaced(rEntity, rKind, rAnchor)):
@@ -177,6 +183,8 @@ extension WorldEvent: Equatable {
         ):
             return lRival == rRival && lGood == rGood && lQuantity == rQuantity && lTotal == rTotal
                 && lDirection == rDirection
+        case let (.marketTraded(lGood, lQuantity, lTotal, lDirection), .marketTraded(rGood, rQuantity, rTotal, rDirection)):
+            return (lGood, lQuantity, lTotal, lDirection) == (rGood, rQuantity, rTotal, rDirection)
         default:
             return false
         }
@@ -224,7 +232,8 @@ public extension WorldEvent {
              .ageAdvanced,
              .scenarioWon,
              .rivalAgeAdvanced,
-             .tradeCompleted:
+             .tradeCompleted,
+             .marketTraded:
             return nil
         }
     }
@@ -266,7 +275,8 @@ public extension WorldEvent {
              .commissionEnded,
              .caravanSold,
              .rivalAgeAdvanced,
-             .tradeCompleted:
+             .tradeCompleted,
+             .marketTraded:
             return nil
         }
     }
@@ -307,6 +317,7 @@ public extension WorldEvent {
         case .rivalAgeAdvanced: return 27
         case .tradeCompleted: return 28
         case .forestPlanted: return 29
+        case .marketTraded: return 30
         }
     }
 }
