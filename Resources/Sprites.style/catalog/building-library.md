@@ -33,6 +33,6 @@ Construction stages are cut from the recipe at rising heights, with scaffold on 
 ## Recipe
 
 - Recipe: `building-library` (IsoKit)
-- Cell: 2×2 footprint, 160 pt tall
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2

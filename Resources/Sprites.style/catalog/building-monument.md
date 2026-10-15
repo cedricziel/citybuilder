@@ -32,6 +32,6 @@ Construction stages are cut from the recipe at rising heights, with scaffold on 
 ## Recipe
 
 - Recipe: `building-monument` (IsoKit)
-- Cell: 3×3 footprint, 192 pt tall
+- Cell: 3×3 footprint, 160 pt tall
 - Construction stages: 3
 - Operational frames: 2

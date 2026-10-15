@@ -34,6 +34,6 @@ The operational frames repeat the finished building.
 ## Recipe
 
 - Recipe: `building-library-middle-eastern` (IsoKit)
-- Cell: 2×2 footprint, 160 pt tall
+- Cell: 2×2 footprint, 128 pt tall
 - Construction stages: 0
 - Operational frames: 2

@@ -16,7 +16,7 @@ enum Civic {
 extension Recipes {
     static let civic: [Recipe] = [
         Recipe(id: "building-warehouse", cell: SpriteCell(footprint: 3, heightPx: 160)) { kit, _ in warehouse(kit) },
-        Recipe(id: "building-library", cell: SpriteCell(footprint: 2, heightPx: 160), operationalFrames: 2) { kit, _ in library(kit) },
+        Recipe(id: "building-library", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in library(kit) },
         Recipe(id: "building-mead-hall", cell: SpriteCell(footprint: 3, heightPx: 176), operationalFrames: 2) { kit, _ in meadHall(kit) },
         Recipe(id: "building-forum", cell: SpriteCell(footprint: 3, heightPx: 160), operationalFrames: 2) { kit, _ in forum(kit) },
         Recipe(id: "building-tea-house", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in teaHouse(kit) },
@@ -26,9 +26,9 @@ extension Recipes {
         Recipe(id: "building-caravanserai", cell: SpriteCell(footprint: 3, heightPx: 176), operationalFrames: 2) { kit, _ in
             caravanserai(kit)
         },
-        Recipe(id: "building-monument", cell: SpriteCell(footprint: 3, heightPx: 192), operationalFrames: 2) { kit, _ in monument(kit) },
+        Recipe(id: "building-monument", cell: SpriteCell(footprint: 3, heightPx: 160), operationalFrames: 2) { kit, _ in monument(kit) },
         Recipe(id: "building-guild-hall", cell: SpriteCell(footprint: 3, heightPx: 224), operationalFrames: 2) { kit, _ in guildHall(kit) },
-        Recipe(id: "building-gallery", cell: SpriteCell(footprint: 2, heightPx: 176), operationalFrames: 2) { kit, _ in gallery(kit) },
+        Recipe(id: "building-gallery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in gallery(kit) },
         Recipe(id: "building-warehouse-east-asian", cell: SpriteCell(footprint: 3, heightPx: 160), constructionFrames: 0) { kit, _ in
             warehouseEastAsian(kit)
         },
@@ -39,13 +39,13 @@ extension Recipes {
             warehouseMiddleEastern(kit)
         },
         Recipe(
-            id: "building-library-east-asian", cell: SpriteCell(footprint: 2, heightPx: 144), constructionFrames: 0, operationalFrames: 2
+            id: "building-library-east-asian", cell: SpriteCell(footprint: 2, heightPx: 112), constructionFrames: 0, operationalFrames: 2
         ) { kit, _ in libraryEastAsian(kit) },
         Recipe(
-            id: "building-library-mediterranean", cell: SpriteCell(footprint: 2, heightPx: 160), constructionFrames: 0, operationalFrames: 2
+            id: "building-library-mediterranean", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0, operationalFrames: 2
         ) { kit, _ in libraryMediterranean(kit) },
         Recipe(
-            id: "building-library-middle-eastern", cell: SpriteCell(footprint: 2, heightPx: 160), constructionFrames: 0,
+            id: "building-library-middle-eastern", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0,
             operationalFrames: 2
         ) { kit, _ in libraryMiddleEastern(kit) }
     ]
