@@ -369,15 +369,17 @@ public final class GameSession {
     }
 
     private func ghostPreview(kind: BuildingKind, tile: TileCoordinate) -> GhostPreview {
-        let valid: Bool = if case .allowed = world.canPlace(kind, at: tile) {
-            world.economy.balance >= BuildingCatalog.spec(for: kind).cost
-        } else {
-            false
-        }
-        return GhostPreview(
-            kind: kind, tile: tile, valid: valid,
+        GhostPreview(
+            kind: kind, tile: tile, valid: isValidPlacement(kind, at: tile),
             costBreakdown: costBreakdown(for: kind, anchor: tile)
         )
+    }
+
+    /// Whether the player may place `kind` at `tile` and can pay for it,
+    /// the ghost's green tint.
+    func isValidPlacement(_ kind: BuildingKind, at tile: TileCoordinate) -> Bool {
+        guard case .allowed = world.canPlace(kind, at: tile) else { return false }
+        return world.economy.balance >= BuildingCatalog.spec(for: kind).cost
     }
 
     func costBreakdown(
