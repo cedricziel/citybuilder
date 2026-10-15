@@ -41,17 +41,18 @@ extension IsoWorldScene {
     }
 
     func makeTerrainNode(kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition? = nil) -> SKNode {
-        if let seasonal = seasonalTerrainNode(kind: kind) {
-            seasonal.zPosition = 0
-            return seasonal
-        }
-        // Blended shore and grass edges, once the terrain family ships its transition tiles;
-        // until then (or for a missing mask) the tile keeps its own sprite.
+        // Blended shore and grass edges, once the terrain family ships its transition tiles; until
+        // then (or for a missing mask) the tile keeps its own sprite. Shore shape outranks seasonal
+        // tint, so the transition comes first.
         if let transition, hasSprite(transition.assetName) {
             let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: transition.assetName))
             node.userData = [Self.textureNameKey: transition.assetName]
             node.zPosition = 0
             return node
+        }
+        if let seasonal = seasonalTerrainNode(kind: kind) {
+            seasonal.zPosition = 0
+            return seasonal
         }
         // Variant-aware lookup picks a deterministic per-tile sprite for
         // kinds with multiple variants (mountain); falls through to the
