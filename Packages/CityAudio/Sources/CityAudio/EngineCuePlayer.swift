@@ -21,10 +21,14 @@ public final class EngineCuePlayer {
     /// upfront and round-robin through them.
     private var oneShotPool: [AudioBus: [AVAudioPlayerNode]] = [:]
     private var nextPoolIndex: [AudioBus: Int] = [:]
-    /// Active loop player nodes keyed by the source path. The
-    /// `AudioCoordinator` carries the entity → cue mapping; this layer
-    /// only needs the path to stop the right player.
+    /// When each pooled node's cue ends, so a new one-shot doesn't cut it off.
+    private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
+    /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
+    /// Building loops, one voice per entity, nearest the listener.
+    private lazy var buildingLoops = EntityLoopMixer { [unowned self] dispatched in
+        self.makeVoice(for: dispatched)
+    }
 
     public init(engine: AudioEngine, bundle: Bundle = .main, oneShotPoolSize: Int = 4) {
         self.engine = engine
@@ -37,6 +41,7 @@ public final class EngineCuePlayer {
             }
             oneShotPool[bus] = nodes
             nextPoolIndex[bus] = 0
+            poolSlots[bus] = Array(repeating: OneShotPool.Slot(endsAt: 0, isLong: false), count: oneShotPoolSize)
         }
     }
 
@@ -53,7 +58,9 @@ public final class EngineCuePlayer {
             return
         }
 
-        if cue.loop == true {
+        if cue.loop == true, dispatched.entity != nil {
+            buildingLoops.want(dispatched)
+        } else if cue.loop == true {
             playLoop(dispatched: dispatched, file: file)
         } else {
             playOneShot(cue: cue, file: file)
@@ -63,13 +70,43 @@ public final class EngineCuePlayer {
     /// Halts the loop player for `path`, if any.
     public func stopLoop(path: String) {
         guard let player = loopPlayers.removeValue(forKey: path) else { return }
+        detach(player)
+    }
+
+    /// Halts the building loop of `entity`; another wanted loop may take its place.
+    public func stopLoop(entity: EntityID) {
+        buildingLoops.stop(entity)
+    }
+
+    /// Silences every building loop, for the end of a game session.
+    public func stopAllBuildingLoops() {
+        buildingLoops.stopAll()
+    }
+
+    /// Moves the listener, so the nearest building loops play.
+    public func setListener(_ tile: TileCoordinate?) {
+        buildingLoops.setListener(tile)
+    }
+
+    private func makeVoice(for dispatched: DispatchedCue) -> LoopVoice? {
+        guard let file = loadFile(at: dispatched.cue.file) else { return nil }
+        let node = startLoopPlayer(dispatched: dispatched, file: file)
+        return PlayerLoopVoice(
+            node: node,
+            file: file,
+            engine: engine.underlyingEngine,
+            volume: dispatched.cue.volume ?? 1
+        )
+    }
+
+    private func detach(_ player: AVAudioPlayerNode) {
         player.stop()
-        // Detach so subsequent play() doesn't reuse a node that's mid-stop.
-        engine.bus(.loop).engine?.detach(player)
+        // Detach so a later play() doesn't reuse a node that's mid-stop.
+        engine.underlyingEngine.detach(player)
     }
 
     private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let player = nextOneShotPlayer(on: cue.bus) else { return }
+        guard let player = nextOneShotPlayer(on: cue.bus, file: file) else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
@@ -89,6 +126,14 @@ public final class EngineCuePlayer {
         // this path, leave it alone. The coordinator also guards against
         // duplicate-start via its EntityID map.
         if loopPlayers[cue.file] != nil { return }
+        let player = startLoopPlayer(dispatched: dispatched, file: file)
+        loopPlayers[cue.file] = player
+        scheduleLooped(player: player, file: file, path: cue.file)
+        player.play()
+    }
+
+    /// A new player for a loop cue, attached and routed, not yet scheduled.
+    private func startLoopPlayer(dispatched: DispatchedCue, file: AVAudioFile) -> AVAudioPlayerNode {
         let player = AVAudioPlayerNode()
         let routing = Self.loopRouting(for: dispatched, environmentAvailable: engine.environmentNode != nil)
         let target = node(for: routing.target, dispatched: dispatched)
@@ -97,12 +142,8 @@ public final class EngineCuePlayer {
         if let position = routing.position {
             player.position = position
         }
-        if let volume = cue.volume {
-            player.volume = volume
-        }
-        loopPlayers[cue.file] = player
-        scheduleLooped(player: player, file: file, path: cue.file)
-        player.play()
+        player.volume = dispatched.cue.volume ?? 1
+        return player
     }
 
     /// Where a loop cue should attach. `loopMixer` is the historical path
@@ -182,13 +223,15 @@ public final class EngineCuePlayer {
         }
     }
 
-    private func nextOneShotPlayer(on bus: AudioBus) -> AVAudioPlayerNode? {
-        guard var nodes = oneShotPool[bus], !nodes.isEmpty else { return nil }
-        let index = nextPoolIndex[bus] ?? 0
-        let player = nodes[index]
+    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> AVAudioPlayerNode? {
+        guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
+        let now = ProcessInfo.processInfo.systemUptime
+        let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
+        let seconds = Double(file.length) / file.processingFormat.sampleRate
+        slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
+        poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count
-        oneShotPool[bus] = nodes
-        return player
+        return nodes[index]
     }
 
     private func loadFile(at path: String) -> AVAudioFile? {
