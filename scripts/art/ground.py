@@ -148,6 +148,7 @@ FOLIAGE = {
 }
 CONIFER = (0.18, 0.34, 0.20)
 FLOOR = (0.28, 0.30, 0.15)
+FLOOR_HEIGHT = -0.15
 TWIGS = (0.46, 0.42, 0.38)
 SNOW = (0.84, 0.90, 0.98)  # cool, so the warm sun leaves it white rather than cream
 
@@ -161,7 +162,7 @@ def forest(season: str = "spring") -> Surface:
     rng = np.random.default_rng(11)
     uu, vv = _grid()
     winter = season == "winter"
-    height = np.full((SIZE, SIZE), -0.15)
+    height = np.full((SIZE, SIZE), FLOOR_HEIGHT)
     albedo = np.empty((SIZE, SIZE, 3))
     albedo[:] = SNOW if winter else FLOOR
     albedo *= (1 + 0.12 * noise("forest-floor", 0.1))[..., None]
@@ -174,7 +175,8 @@ def forest(season: str = "spring") -> Surface:
         lift = 0.1 * rng.random()
         d = _wrapped_distance(uu, vv, cu, cv) / radius
         if winter and not conifer:
-            twigs = (d < 1) * (0.35 + 0.45 * lace) * (1 - d.clip(0, 1) ** 2)
+            on_floor = height <= FLOOR_HEIGHT  # never over a crown painted before
+            twigs = (d < 1) * on_floor * (0.35 + 0.45 * lace) * (1 - d.clip(0, 1) ** 2)
             albedo = albedo * (1 - twigs[..., None]) + np.array(TWIGS) * twigs[..., None]
             continue
         crown = np.sqrt(np.clip(1 - d**2, 0, 1)) * min(radius * TILE_METRES, 0.45) + lift
