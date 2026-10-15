@@ -72,6 +72,15 @@ struct RecipeRulesTests {
         #expect(abs(topCorner.y - 64) < 0.001)
     }
 
+    @Test("a narrow cell keeps its anchor at the bottom centre")
+    func narrowCellGeometry() {
+        let cell = SpriteCell(footprint: 1, heightPx: 30, widthPx: 24)
+        #expect(cell.widthPx == 24)
+        let anchor = Projection.screen(SCNVector3(4, 0, 4), in: cell)
+        #expect(abs(anchor.x - 12) < 0.001)
+        #expect(abs(anchor.y) < 0.001)
+    }
+
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
     @Test("a unit whose moving part crosses the cell edge does not fit")
     func unitCellFitIsStrict() {
