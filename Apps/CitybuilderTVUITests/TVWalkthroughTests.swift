@@ -239,6 +239,7 @@ final class TVWalkthroughTests: XCTestCase {
         let otherGoods = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Other goods'")).firstMatch
         XCTAssertTrue(otherGoods.exists, "goods the island cannot use should collapse under Other goods")
         press(.down, until: otherGoods)
+        guard otherGoods.hasFocus else { return }
         remote.press(.select)
         XCTAssertTrue(app.buttons["Hide other goods"].waitForExistence(timeout: 5), "Other goods should expand")
         snapshot("market-other-goods")

@@ -91,8 +91,13 @@ struct TownMarketView: View {
         Section {
             rowViews(market.rows)
             if !market.otherRows.isEmpty {
-                Button(showsOtherGoods ? "Hide other goods" : "Other goods (\(market.otherRows.count))") {
+                // Full width, so Down from any button in the row above
+                // reaches it on Apple TV.
+                Button {
                     showsOtherGoods.toggle()
+                } label: {
+                    Text(showsOtherGoods ? "Hide other goods" : "Other goods (\(market.otherRows.count))")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.caption.weight(.semibold))
                 .buttonStyle(.borderless)
