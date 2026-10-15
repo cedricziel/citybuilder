@@ -361,3 +361,23 @@ func buyingNeverOverdraws() {
     market.buy(.wood, 1)
     #expect(market.stock(.wood) == 0)
 }
+
+// MARK: - Reach
+
+@Test func marketReachIsTheTownCenterSpaceAndTheIslandStock() {
+    var market = MarketFixture()
+    market.world.testSetStock([.bread: 3, .wood: 4], in: market.townCenter)
+    market.world.testSetStock([.bread: 5], in: market.warehouse)
+    market.world.testSetStock([.iron: 9], in: market.farWarehouse)
+    let reach = market.world.marketReach(at: market.townCenter)
+    #expect(reach == MarketReach(freeSpace: 33, stock: [.bread: 8, .wood: 4]))
+}
+
+@Test func onlyOperationalPlayerTownCentersHaveAMarket() {
+    var market = MarketFixture()
+    let rival = market.world.testPlace(.townCenter, at: TileCoordinate(x: 14, y: 3), owner: .rival(1))
+    #expect(market.world.marketReach(at: market.warehouse) == nil)
+    #expect(market.world.marketReach(at: rival) == nil)
+    market.world.buildings[market.townCenter]?.state = .constructing
+    #expect(market.world.marketReach(at: market.townCenter) == nil)
+}
