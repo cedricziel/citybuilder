@@ -140,16 +140,21 @@ func everyRequestedTerrainSpriteIsOnDisk() {
 @Test("every building sprite the renderer can request is committed where it routes")
 func everyRequestedBuildingSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
+    let kinds = TextureFiltering.kitRenderedStems.compactMap { stem in
+        stem.hasPrefix("building-") ? BuildingKind(rawValue: String(stem.dropFirst("building-".count))) : nil
+    }
     var names: [String] = []
-    for stem in TextureFiltering.kitRenderedStems where stem.hasPrefix("building-") {
-        guard let kind = BuildingKind(rawValue: String(stem.dropFirst("building-".count))) else { continue }
-        names.append(stem)
+    for kind in kinds {
+        names.append("building-\(kind.rawValue)")
         let stages = SpriteAnimation.entry(for: .buildingConstructing(kind))?.frameCount ?? 0
         names += (0 ..< stages).map { SpriteAnimation.assetName(for: .buildingConstructing(kind), frame: $0) }
         let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
         names += (0 ..< frames).map { SpriteAnimation.assetName(for: .buildingOperational(kind), frame: $0) }
     }
-    #expect(names.count >= 60) // town center, peasant house and the nine gather kinds
+    // Every migrated kind contributes its base and three construction stages at least, so the walk
+    // can never pass by checking nothing.
+    #expect(!kinds.isEmpty)
+    #expect(names.count >= kinds.count * 4)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
