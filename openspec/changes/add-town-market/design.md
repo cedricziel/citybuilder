@@ -74,7 +74,7 @@ Why these numbers:
 - A citizen house eats 1 plank per 100 ticks, 24 a year. The market's 40 planks a year keep fewer than 2 citizen houses supplied.
 - Sell income is capped for each good: 20 × 4 seasons × the sell price. Summed over all ten core goods (sell prices 2+4+2+6+1+3+2+2+7+15 = $44) that is $3,520 a year, plus $640 for a culture's two goods. A medium town's tax is many times that, so the market is a side income that needs the chains already built. It is not a money printer.
 
-`World.market` holds `bought` and `sold` as `[Good: Int]` for the current season. It is `Codable` and decoded as empty when missing.
+`World.market` holds `bought` and `sold` as `[Good: Int]` for the current season. It is `Codable` and decoded as empty when missing. The fallback is a `KeyedDecodingContainer.decode(MarketLedger.Type, forKey:)` overload, which `World`'s synthesized decoder picks up without a hand-written `init(from:)`. The overload is internal to CityCore but applies to every `MarketLedger` field decoded inside the module, not only `World.market`; today `World.market` is the only one.
 
 - **Alternative — unlimited volume with falling prices.** Rejected for now: it is more realistic but harder to read, and it needs state for each good that decays over time. The fixed limit shows "10 left" in the UI.
 - **Alternative — a limit per town center.** Rejected: on an archipelago it multiplies the volume by the number of islands the player holds.

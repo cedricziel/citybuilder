@@ -19,6 +19,14 @@ public extension Good {
     func rivalPrice(_ direction: TradeDirection) -> Int64 {
         direction == .bought ? rivalSellPrice : rivalBuyPrice
     }
+
+    /// The unit price at the town market, from the player's side: 150%
+    /// of base to buy and 50% to sell, rounded down, at least $1. The
+    /// worst channel both ways. Spec: `town-market` / Market prices
+    /// (design D2).
+    func marketPrice(_ direction: TradeDirection) -> Int64 {
+        max(1, direction == .bought ? basePrice * 3 / 2 : basePrice / 2)
+    }
 }
 
 /// One line of a rival's market: a good, how many units and the unit

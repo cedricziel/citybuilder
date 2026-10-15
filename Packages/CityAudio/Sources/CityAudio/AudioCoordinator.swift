@@ -152,6 +152,7 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .caravanSold: return "caravanSold"
         case .rivalAgeAdvanced: return "rivalAgeAdvanced"
         case .tradeCompleted: return "tradeCompleted"
+        case .marketTraded: return "marketTraded"
         }
     }
 }

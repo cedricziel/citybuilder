@@ -16,7 +16,7 @@ struct CitybuilderTVApp: App {
     init() {
         let saveStore = SaveStore()
         self.saveStore = saveStore
-        saveSync = TVSaveSync(store: saveStore, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
+        saveSync = Self.makeSaveSync(store: saveStore)
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         SnapshotRendererRegistry.shared
@@ -46,6 +46,25 @@ struct CitybuilderTVApp: App {
                     )
                 )
             }
+    }
+
+    /// The walk-through UI tests launch with `-uiTestResetSaves` (Debug
+    /// only): an empty save folder, an empty pending-upload list and a
+    /// signed-out, in-memory iCloud, so saves from iCloud or from manual
+    /// runs cannot move the title's focus to Continue.
+    private static func makeSaveSync(store: SaveStore) -> TVSaveSync {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestResetSaves") {
+            let suite = "citybuilder.uiTests"
+            try? FileManager.default.removeItem(at: store.baseDirectory)
+            UserDefaults().removePersistentDomain(forName: suite)
+            return TVSaveSync(
+                store: store, client: InMemoryCloudKitClient(accountAvailable: false),
+                deviceID: "Apple TV", defaultsSuite: suite
+            )
+        }
+        #endif
+        return TVSaveSync(store: store, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
     }
 
     var body: some Scene {

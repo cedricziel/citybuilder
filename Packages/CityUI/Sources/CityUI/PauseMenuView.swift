@@ -68,6 +68,7 @@ public struct PauseMenuView: View {
             .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("pause.\(action.kind)")
         if action.kind == .resume {
             button.pauseHotkeys()
         } else {

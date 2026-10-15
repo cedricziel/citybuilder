@@ -94,6 +94,11 @@ enum WorldEventJSON {
                 "case": "tradeCompleted", "rival": rival, "good": good.rawValue, "quantity": quantity,
                 "total": total, "direction": String(describing: direction)
             ]
+        case let .marketTraded(good, quantity, total, direction):
+            return [
+                "case": "marketTraded", "good": good.rawValue, "quantity": quantity, "total": total,
+                "direction": String(describing: direction)
+            ]
         default:
             return ["case": String(describing: event)]
         }

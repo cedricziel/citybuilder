@@ -75,4 +75,12 @@ public enum Command: Codable, Equatable, Sendable {
     /// Set or clear a caravanserai's export good. Spec:
     /// `culture-signatures` / The caravanserai exports a chosen good.
     case setExport(EntityID, Good?)
+
+    /// Buy up to the quantity of a good into a player town center.
+    /// Spec: `town-market` / Buying at the town center.
+    case marketBuy(EntityID, Good, Int)
+
+    /// Sell up to the quantity of a good from the town center's island.
+    /// Spec: `town-market` / Selling at the town center.
+    case marketSell(EntityID, Good, Int)
 }
