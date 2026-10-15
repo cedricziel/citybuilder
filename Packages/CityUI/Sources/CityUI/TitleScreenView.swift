@@ -134,6 +134,11 @@ public struct TitleScreenView: View {
                                 .font(.caption)
                                 .opacity(0.8)
                         }
+                        #if os(tvOS)
+                        // The system style sizes to the label.
+                        .frame(maxWidth: 280)
+                        .padding(.vertical, 10)
+                        #endif
                     }
                     .titleMenuButtonStyle(prominent: true)
                     .disabled(viewModel.isPreparingCloudSaves)

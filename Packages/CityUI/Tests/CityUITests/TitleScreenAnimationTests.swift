@@ -86,6 +86,12 @@ func menuItemsEnterInOrder() {
     #expect(MenuEntrance.animation(index: 2, reduceMotion: false) != nil)
 }
 
+@Test func appleTVMenuItemsStayOpaque() {
+    #expect(MenuEntrance.opacity(entered: false, reduceMotion: false, fades: true) == 0)
+    #expect(MenuEntrance.opacity(entered: false, reduceMotion: false, fades: false) == 1)
+    #expect(MenuEntrance.opacity(entered: true, reduceMotion: false, fades: true) == 1)
+}
+
 @Test("scenario: menu items appear at once under reduce motion")
 func menuItemsAppearAtOnce() {
     for index in 0 ..< 5 {

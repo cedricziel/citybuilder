@@ -26,7 +26,7 @@ When the app has registered a world renderer, the title screen SHALL draw the st
 
 ### Requirement: Title menu entrance
 
-When the title screen appears, the title and each menu button SHALL fade in and rise 16 points into place, one after another, the item at position n (the title is 0) starting n × 0.08 seconds after the screen appears. With Reduce Motion on, every item SHALL appear at once in place.
+When the title screen appears, the title and each menu button SHALL fade in and rise 16 points into place, one after another, the item at position n (the title is 0) starting n × 0.08 seconds after the screen appears. On Apple TV the items SHALL only rise, staying opaque, so the default focus can land on Continue (or New Game without a save) while they enter. With Reduce Motion on, every item SHALL appear at once in place.
 
 #### Scenario: Menu items enter in order
 - **WHEN** the title screen appears with Reduce Motion off

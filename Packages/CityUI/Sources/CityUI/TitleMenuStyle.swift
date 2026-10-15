@@ -14,6 +14,18 @@ enum MenuEntrance {
         entered || reduceMotion ? 0 : rise
     }
 
+    /// Apple TV keeps every button opaque: focus skips a button that is
+    /// invisible when `defaultFocus` resolves, so only the rise animates.
+    static func opacity(entered: Bool, reduceMotion: Bool, fades: Bool = fadesIn) -> Double {
+        entered || reduceMotion || !fades ? 1 : 0
+    }
+
+    #if os(tvOS)
+    static let fadesIn = false
+    #else
+    static let fadesIn = true
+    #endif
+
     static func animation(index: Int, reduceMotion: Bool) -> Animation? {
         reduceMotion ? nil : .easeOut(duration: 0.45).delay(delay(index: index))
     }
@@ -25,9 +37,8 @@ private struct MenuEntranceModifier: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        let visible = entered || reduceMotion
         content
-            .opacity(visible ? 1 : 0)
+            .opacity(MenuEntrance.opacity(entered: entered, reduceMotion: reduceMotion))
             .offset(y: MenuEntrance.offset(entered: entered, reduceMotion: reduceMotion))
             .animation(MenuEntrance.animation(index: index, reduceMotion: reduceMotion), value: entered)
     }
