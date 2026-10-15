@@ -21,6 +21,8 @@ public final class EngineCuePlayer {
     /// upfront and round-robin through them.
     private var oneShotPool: [AudioBus: [AVAudioPlayerNode]] = [:]
     private var nextPoolIndex: [AudioBus: Int] = [:]
+    /// When each pooled node's cue ends, so a new one-shot doesn't cut it off.
+    private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
     /// Building loops, one voice per entity, nearest the listener.
@@ -39,6 +41,7 @@ public final class EngineCuePlayer {
             }
             oneShotPool[bus] = nodes
             nextPoolIndex[bus] = 0
+            poolSlots[bus] = Array(repeating: OneShotPool.Slot(endsAt: 0, isLong: false), count: oneShotPoolSize)
         }
     }
 
@@ -68,6 +71,11 @@ public final class EngineCuePlayer {
     public func stopLoop(path: String) {
         guard let player = loopPlayers.removeValue(forKey: path) else { return }
         detach(player)
+    }
+
+    /// Sets the volume of the path-keyed loop for `path`, if it plays.
+    public func setLoopVolume(path: String, volume: Float) {
+        loopPlayers[path]?.volume = volume
     }
 
     /// Halts the building loop of `entity`; another wanted loop may take its place.
@@ -103,7 +111,7 @@ public final class EngineCuePlayer {
     }
 
     private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let player = nextOneShotPlayer(on: cue.bus) else { return }
+        guard let player = nextOneShotPlayer(on: cue.bus, file: file) else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
@@ -125,6 +133,8 @@ public final class EngineCuePlayer {
         if loopPlayers[cue.file] != nil { return }
         let player = startLoopPlayer(dispatched: dispatched, file: file)
         loopPlayers[cue.file] = player
+        // Two copies queued, so the next is waiting at the wrap.
+        scheduleLooped(player: player, file: file, path: cue.file)
         scheduleLooped(player: player, file: file, path: cue.file)
         player.play()
     }
@@ -211,22 +221,26 @@ public final class EngineCuePlayer {
         // AVAudioPlayerNode (which isn't Sendable). If `stopLoop(path:)` ran
         // before playback finished, the lookup returns nil and we don't
         // re-schedule — natural lifecycle.
+        // A restarted loop has a new player; the old one's completions stop here.
+        let id = ObjectIdentifier(player)
         player.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                guard let current = self.loopPlayers[path] else { return }
+                guard let current = self.loopPlayers[path], ObjectIdentifier(current) == id else { return }
                 self.scheduleLooped(player: current, file: file, path: path)
             }
         }
     }
 
-    private func nextOneShotPlayer(on bus: AudioBus) -> AVAudioPlayerNode? {
-        guard var nodes = oneShotPool[bus], !nodes.isEmpty else { return nil }
-        let index = nextPoolIndex[bus] ?? 0
-        let player = nodes[index]
+    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> AVAudioPlayerNode? {
+        guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
+        let now = ProcessInfo.processInfo.systemUptime
+        let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
+        let seconds = Double(file.length) / file.processingFormat.sampleRate
+        slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
+        poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count
-        oneShotPool[bus] = nodes
-        return player
+        return nodes[index]
     }
 
     private func loadFile(at path: String) -> AVAudioFile? {

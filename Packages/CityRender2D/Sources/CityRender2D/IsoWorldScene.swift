@@ -70,6 +70,15 @@ public final class IsoWorldScene: SKScene {
     public var routeOverlayProvider: (() -> RouteOverlay?)?
     let routeLayer = RouteLayerNode()
     let shipLayer = ShipLayerNode()
+    /// Chimney smoke and steam. Spec: `rendering-2_5d` / Chimneys smoke.
+    let ambientLayer = AmbientLayerNode()
+    var lastAmbientPass: AmbientPass?
+    var smokeSources: [SmokeSource] = []
+    /// Building sprites on screen by anchor tile, kept with `presentSprites`.
+    var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
+    /// Halves ambient motion when on. `IsoWorldView` sets it from the
+    /// Reduce Motion accessibility setting.
+    public var reduceMotion = false
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -172,6 +181,7 @@ public final class IsoWorldScene: SKScene {
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
+        reconcileAmbient(with: snapshot)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
@@ -306,6 +316,7 @@ public final class IsoWorldScene: SKScene {
             node.removeFromParent()
         }
         presentSprites.removeAll()
+        buildingNodes.removeAll()
     }
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a
@@ -351,12 +362,16 @@ public final class IsoWorldScene: SKScene {
             current: desired
         )
         for spec in diff.removed {
-            presentSprites.removeValue(forKey: spec)?.removeFromParent()
+            if let node = presentSprites.removeValue(forKey: spec) {
+                node.removeFromParent()
+                if buildingNodes[spec.coord] === node { buildingNodes.removeValue(forKey: spec.coord) }
+            }
         }
         for spec in diff.added {
             let node = placedNode(for: spec)
             addChild(node)
             presentSprites[spec] = node
+            if case .building = spec.kind, let sprite = node as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
         }
     }
 }
@@ -408,9 +423,14 @@ public struct IsoWorldView: View {
         _scene = State(initialValue: prepared)
     }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     public var body: some View {
         SpriteView(scene: scene)
             .ignoresSafeArea()
+            .onChange(of: reduceMotion, initial: true) { _, isOn in
+                scene.reduceMotion = isOn
+            }
     }
 }
 

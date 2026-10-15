@@ -26,6 +26,9 @@ final class PlayerLoopVoice: LoopVoice {
     func start() {
         generation += 1
         node.volume = 0
+        // Two copies queued, one more each time one finishes: the next
+        // copy is always waiting, so there's no gap at the wrap.
+        schedule(generation: generation)
         schedule(generation: generation)
         node.play()
         ramp(to: volume, generation: generation) {}

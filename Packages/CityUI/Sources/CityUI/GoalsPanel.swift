@@ -46,7 +46,7 @@ struct GoalsPanelView: View {
             }
             .navigationTitle("Goals")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
             }
         }
     }
@@ -63,7 +63,7 @@ struct ScenarioWonView: View {
             Text("Every goal is met. Keep building, or return to the title screen.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            Button("Keep Playing", action: keepPlaying).buttonStyle(.borderedProminent)
+            Button("Keep Playing", action: keepPlaying).buttonStyle(.borderedProminent).cancelActionHotkey()
             if let quitToTitle {
                 Button("Quit to Title", action: quitToTitle)
             }

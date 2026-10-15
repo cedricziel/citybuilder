@@ -265,6 +265,204 @@ def shipwright() -> list[float]:
     return room(out, SR, wrap=True, wet=0.5)
 
 
+def bed(seconds: float, seed: int, cutoff: float, gusts: float, level: float) -> tuple[list[float], dsp.Rng, int]:
+    """A seamless stretch of breeze: noise darkened to `cutoff`, swelling `gusts` times."""
+    rng = dsp.Rng(seed)
+    n = int(seconds * SR)
+    breeze = dsp.lowpass(dsp.lowpass(dsp.white(n + SR, rng), cutoff, SR), cutoff * 1.5, SR)
+    shaped = [x * (0.5 + 0.5 * dsp.sin_turns(i * gusts / (n + SR))) for i, x in enumerate(breeze)]
+    return dsp.scale(dsp.loop_crossfade(shaped, n), level), rng, n
+
+
+def summer_meadow() -> list[float]:
+    """A hot afternoon: crickets pulsing in chorus, cicadas swelling, a lazy breeze."""
+    out, rng, n = bed(16.0, 173, 600, 2, 1.5)
+    for voice in range(5):  # crickets: short 4–5 kHz chirps in steady trains
+        hz, rate, at = rng.uniform(4200, 5200), rng.uniform(2.5, 4.0), rng.uniform(0, 1)
+        pulse = chirp(SR, hz, hz, 0.035)
+        t = at
+        while t < 16.0:
+            for k in range(3):
+                dsp.mix_into(out, pulse, int((t + k * 0.045) * SR), 0.12 + 0.03 * voice, wrap=True)
+            t += 1 / rate * rng.uniform(0.9, 1.1)
+    for at in (2.0, 9.5):  # cicadas: a buzzing swell, rising and falling
+        m = int(4.0 * SR)
+        buzz = dsp.bandpass(dsp.white(m, rng), 6500, 4, SR)
+        for i in range(m):
+            swell_shape = dsp.sin_turns(i / m / 2)
+            buzz[i] *= swell_shape * swell_shape * (0.6 + 0.4 * dsp.sin_turns(i * 180 / SR))
+        dsp.mix_into(out, buzz, int(at * SR), 1.4, wrap=True)
+    return out
+
+
+def autumn_wind() -> list[float]:
+    """Gusts through drying leaves, and now and then a crow far off."""
+    out, rng, n = bed(16.0, 179, 900, 5, 2.4)
+    leaves = dsp.highpass(dsp.white(n, rng), 3000, SR)
+    gust = [0.5 + 0.5 * dsp.sin_turns(i * 5 / n) for i in range(n)]
+    for i in range(n):
+        out[i] += leaves[i] * gust[i] * gust[i] * 0.05
+    for at in (3.0, 11.2):
+        for k in range(2):  # caw: a harsh, falling, nasal tone
+            m = int(0.28 * SR)
+            phase = 0.0
+            caw = []
+            for i in range(m):
+                t = i / m
+                phase += (720 - 180 * t) / SR
+                saw = phase - int(phase) - 0.5
+                env = dsp.sin_turns(t / 2)
+                caw.append(saw * env * (0.8 + 0.2 * rng.noise()))
+            dsp.mix_into(out, dsp.bandpass(caw, 1400, 1.5, SR), int((at + k * 0.42) * SR), 0.25, wrap=True)
+    return room(out, SR, wrap=True, wet=0.5)
+
+
+def winter_wind() -> list[float]:
+    """A cold wind: a low roar and a thin whistle that rises and falls, nothing alive."""
+    out, rng, n = bed(16.0, 181, 400, 3, 2.0)
+    howl = dsp.white(n + SR, rng)
+    # A resonance that drifts between 500 and 900 Hz, the wind finding a gap.
+    shaped = []
+    y1 = y2 = 0.0
+    for i, x in enumerate(howl):
+        centre = 700 + 200 * dsp.sin_turns(i * 3 / (n + SR))
+        w = centre / SR
+        r = 0.9985
+        y = x * 0.02 + 2 * r * dsp.cos_turns(w) * y1 - r * r * y2
+        y2, y1 = y1, y
+        shaped.append(y * (0.4 + 0.6 * dsp.sin_turns(i * 2 / (n + SR)) * dsp.sin_turns(i * 2 / (n + SR))))
+    whistle = dsp.loop_crossfade(shaped, n)
+    for i in range(n):
+        out[i] += whistle[i] * 0.4
+    return out
+
+
+def coast() -> list[float]:
+    """A beach: waves swelling in and breaking every few seconds, gulls overhead."""
+    rng = dsp.Rng(191)
+    n = int(18.0 * SR)
+    out = bed(18.0, 193, 300, 3, 1.0)[0]
+    for at in (0.0, 6.2, 11.8):  # each wave: a rising wash, a break, a long hiss back
+        m = int(6.5 * SR)
+        wash = dsp.lowpass(dsp.white(m, rng), 1600, SR)
+        hiss = dsp.highpass(dsp.white(m, rng), 2500, SR)
+        wave = []
+        for i in range(m):
+            t = i / m
+            rise = t / 0.35 if t < 0.35 else dsp.exp(-(t - 0.35) * 5)
+            wave.append(wash[i] * rise + hiss[i] * rise * rise * 0.35)
+        wave = dsp.fade_edges(wave, 0.0, 0.02, SR)
+        dsp.mix_into(out, wave, int(at * SR), 0.9, wrap=True)
+    for at in (2.5, 9.0, 14.5):  # gull: a high cry falling away, twice
+        for k in range(2):
+            m = int(0.35 * SR)
+            phase = 0.0
+            cry = []
+            for i in range(m):
+                t = i / m
+                phase += (1500 - 500 * t) / SR
+                env = dsp.sin_turns(t / 2)
+                cry.append(env * (dsp.sin_turns(phase) + 0.4 * dsp.sin_turns(2 * phase) + 0.2 * dsp.sin_turns(3 * phase)))
+            dsp.mix_into(out, cry, int((at + k * 0.45) * SR), 0.12, wrap=True)
+    return out
+
+
+# Partials of a cast bronze bell (hum, prime, tierce, quint, nominal and up),
+# each with its share of the strike and how long it rings relative to the hum.
+BELL_PARTIALS = ((0.5, 0.5, 1.0), (1.0, 1.0, 0.7), (1.183, 0.6, 0.55), (1.506, 0.35, 0.45),
+                 (2.0, 0.55, 0.35), (2.514, 0.25, 0.25), (3.011, 0.2, 0.18), (4.166, 0.12, 0.12))
+
+
+def bell(sr: int, pitch: float, ring: float, rng: dsp.Rng, length: float | None = None) -> list[float]:
+    """A struck bell at `pitch` (its prime), the hum ringing for about `ring` seconds."""
+    n = int((length or ring * 1.6) * sr)
+    out = dsp.mul(dsp.bandpass(dsp.white(n, rng), pitch * 3, 1.0, sr), dsp.decay_env(n, 0.0005, 0.008, sr))
+    out = dsp.scale(out, 0.4)
+    for ratio, amp, life in BELL_PARTIALS:
+        # A slight detuning beats against the partial, as in a real casting.
+        for detune in (1.0, 1.0015):
+            dsp.mix_into(out, dsp.mode(n, pitch * ratio * detune, ring * life, sr, amp * 0.5, rng.uniform(0, 1)), 0)
+    return dsp.fade_edges(out, 0.0005, 0.05, sr)
+
+
+def peal(pitches: list[float], gap: float, ring: float, seed: int) -> list[float]:
+    rng = dsp.Rng(seed)
+    n = int((gap * len(pitches) + ring * 1.6) * SR)
+    out = dsp.silence(n)
+    for k, pitch in enumerate(pitches):
+        dsp.mix_into(out, bell(SR, pitch, ring, rng), int(k * gap * SR), 0.9 if k else 1.0)
+    return dsp.fade_edges(room(out, SR, wet=0.4), 0.0005, 0.2, SR)
+
+
+def coins(seed: int, count: int) -> list[float]:
+    """A handful of coins settling: bright, short metal clinks tumbling closer together."""
+    rng = dsp.Rng(seed)
+    n = int(0.6 * SR)
+    out = dsp.silence(n)
+    t = 0.0
+    for k in range(count):
+        m = int(0.12 * SR)
+        clink = dsp.mul(dsp.highpass(dsp.white(m, rng), 5000, SR), dsp.decay_env(m, 0.0002, 0.002, SR))
+        base = rng.uniform(3800, 5200)
+        for ratio, decay in ((1.0, 0.05), (2.41, 0.03), (3.9, 0.02)):
+            dsp.mix_into(clink, dsp.mode(m, base * ratio, decay, SR, 0.4), 0)
+        dsp.mix_into(out, clink, int(t * SR), 1.0 - 0.6 * k / count)
+        t += rng.uniform(0.03, 0.09) * (1 - 0.5 * k / count)
+    return dsp.fade_edges(room(out, SR, wet=0.2), 0.0005, 0.05, SR)
+
+
+def demolish() -> list[float]:
+    """Timber giving way: a creak, a crack, then beams tumbling onto each other."""
+    rng = dsp.Rng(101)
+    n = int(1.6 * SR)
+    out = dsp.silence(n)
+    crack = dsp.mul(dsp.lowpass(dsp.white(int(0.4 * SR), rng), 2500, SR), dsp.decay_env(int(0.4 * SR), 0.002, 0.08, SR))
+    dsp.mix_into(out, crack, int(0.05 * SR), 1.2)
+    t = 0.15
+    for _ in range(7):
+        dsp.mix_into(out, wood_knock(SR, rng.uniform(90, 180), rng, 0.4), int(t * SR), rng.uniform(0.5, 1.0))
+        t += rng.uniform(0.06, 0.18)
+    rumble = dsp.mul(dsp.lowpass(dsp.white(n, rng), 200, SR), dsp.decay_env(n, 0.1, 0.4, SR))
+    dsp.mix_into(out, rumble, 0, 2.0)
+    return dsp.fade_edges(room(out, SR, wet=0.5), 0.0005, 0.2, SR)
+
+
+def rejected() -> list[float]:
+    """Two dull knocks, lower the second time: no."""
+    rng = dsp.Rng(103)
+    out = dsp.silence(int(0.45 * SR))
+    dsp.mix_into(out, wood_knock(SR, 150, rng, 0.25), 0, 1.0)
+    dsp.mix_into(out, wood_knock(SR, 118, rng, 0.25), int(0.14 * SR), 0.9)
+    return dsp.fade_edges(out, 0.0005, 0.03, SR)
+
+
+def chimes(pitches: list[float], gap: float, seed: int, ring: float = 1.2) -> list[float]:
+    """Small bells struck lightly, like a wind chime or a hand chime."""
+    rng = dsp.Rng(seed)
+    n = int((gap * len(pitches) + ring * 1.6) * SR)
+    out = dsp.silence(n)
+    for k, pitch in enumerate(pitches):
+        dsp.mix_into(out, bell(SR, pitch, ring, rng), int((k * gap + rng.uniform(0, gap * 0.2)) * SR), rng.uniform(0.6, 1.0))
+    return dsp.fade_edges(room(out, SR, wet=0.3), 0.0005, 0.2, SR)
+
+
+def embers() -> list[float]:
+    """A fire going out: a falling hiss and the last few crackles."""
+    rng = dsp.Rng(107)
+    n = int(1.2 * SR)
+    hiss = dsp.highpass(dsp.white(n, rng), 2500, SR)
+    out = [x * (1 - i / n) * (1 - i / n) * 0.6 for i, x in enumerate(hiss)]
+    for _ in range(6):
+        m = int(0.005 * SR)
+        crack = dsp.mul(dsp.highpass(dsp.white(m, rng), 2000, SR), dsp.decay_env(m, 0.0002, 0.0015, SR))
+        dsp.mix_into(out, crack, int(rng.uniform(0.0, 0.8) * SR), rng.uniform(0.4, 1.0))
+    return dsp.fade_edges(out, 0.005, 0.1, SR)
+
+
+# D Dorian, the mode the period tunes lean on: the pitches the bells and chimes use.
+D4, E4, F4, G4, A4, B4, C5, D5, E5, A5 = 293.66, 329.63, 349.23, 392.0, 440.0, 493.88, 523.25, 587.33, 659.26, 880.0
+
+
 SOUNDS = [
     Sound("loop/sawmill.caf", "Sawmill: frame saw", "loop", sawmill),
     Sound("loop/lumberjack.caf", "Lumberjack: axe on timber", "loop", lumberjack),
@@ -277,6 +475,24 @@ SOUNDS = [
     Sound("loop/mine.caf", "Mine: a pick on rock", "loop", mine),
     Sound("loop/brewing.caf", "Brewing: a bubbling vat", "loop", brewing),
     Sound("loop/shipwright.caf", "Shipwright: caulking mallet", "loop", shipwright),
+    Sound("sfx/demolish.caf", "Timber collapsing", "sfx", demolish),
+    Sound("sfx/rejected.caf", "Two dull knocks", "sfx", rejected),
+    Sound("sfx/warning-bell.caf", "A low warning bell", "sfx", lambda: peal([D4 / 2], 0.0, 2.2, 109)),
+    Sound("sfx/relief.caf", "Two rising chimes", "sfx", lambda: chimes([A4 * 2, D5 * 2], 0.18, 113)),
+    Sound("sfx/season.caf", "A wind chime stirs", "sfx", lambda: chimes([D5 * 2, A4 * 2, E5 * 2, C5 * 2, A5 * 2], 0.14, 127, 1.0)),
+    Sound("sfx/handbell.caf", "A handbell rung three times", "sfx", lambda: chimes([A5, A5, A5], 0.32, 131, 0.8)),
+    Sound("sfx/age-peal.caf", "A peal of four bells", "sfx", lambda: peal([D5, C5, A4, G4], 0.42, 2.0, 137)),
+    Sound("sfx/victory-peal.caf", "A rising peal", "sfx", lambda: peal([D4, F4, A4, D5, F4 * 2, A5], 0.3, 1.8, 139)),
+    Sound("sfx/great-bell.caf", "A deep great bell", "sfx", lambda: peal([D4 / 2], 0.0, 3.0, 149)),
+    Sound("sfx/embers.caf", "Embers hissing out", "sfx", embers),
+    Sound("sfx/commission.caf", "A soft two-note chime", "sfx", lambda: chimes([G4 * 2, D5 * 2], 0.22, 151)),
+    Sound("sfx/coins-1.caf", "A few coins", "sfx", lambda: coins(157, 4)),
+    Sound("sfx/coins-2.caf", "A handful of coins", "sfx", lambda: coins(163, 7)),
+    Sound("sfx/coins-3.caf", "A purse emptied", "sfx", lambda: coins(167, 11)),
+    Sound("ambient/summer-meadow.caf", "Summer: crickets, cicadas and a lazy breeze", "ambient", summer_meadow),
+    Sound("ambient/autumn-wind.caf", "Autumn: gusts through dry leaves, a distant crow", "ambient", autumn_wind),
+    Sound("ambient/winter-wind.caf", "Winter: a cold wind whistling", "ambient", winter_wind),
+    Sound("ambient/coast.caf", "Coast: waves on a beach and gulls", "ambient", coast),
 ]
 
 
