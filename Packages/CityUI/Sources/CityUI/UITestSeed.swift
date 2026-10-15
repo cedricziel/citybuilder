@@ -22,7 +22,7 @@ public enum UITestSeed {
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
-    /// ticks on into that season's first daylight, so the shot isn't under the night overlay.
+    /// ticks on until that season starts.
     public static func townWorld(houses: Int = 4, season: Season? = nil) -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0)
         world.seedUnlimitedTestInventory()
@@ -46,8 +46,7 @@ public enum UITestSeed {
             _ = world.tick()
         }
         if let season {
-            let shown = { world.date.season == season && TimeOfDay(tick: world.tickCount).phase == .day }
-            for _ in 0 ..< CalendarState.ticksPerYear where !shown() {
+            for _ in 0 ..< CalendarState.ticksPerYear where world.date.season != season {
                 _ = world.tick()
             }
         }

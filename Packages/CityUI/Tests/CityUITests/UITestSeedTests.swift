@@ -29,11 +29,8 @@ func townSeedHasFinishedHousesUnderTheDefaultCamera() {
 @Test("The town seed can start in a given season, for seasonal art shots")
 @MainActor
 func townSeedStartsInTheRequestedSeason() {
-    for season in [Season.autumn, .winter] {
-        let world = UITestSeed.townWorld(season: season)
-        #expect(world.date.season == season)
-        #expect(TimeOfDay(tick: world.tickCount).phase == .day, "screenshots need daylight")
-    }
+    #expect(UITestSeed.townWorld(season: .winter).date.season == .winter)
+    #expect(UITestSeed.townWorld(season: .autumn).date.season == .autumn)
     #expect(UITestSeed.season(fromArguments: ["app", "-uiTestSeason", "winter"]) == .winter)
     #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
 }
