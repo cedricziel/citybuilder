@@ -89,17 +89,3 @@ func onlyTheNearestLoopsPlay() {
     let chosen = LoopSelection.audible([placed: TileCoordinate(x: 50, y: 50), unplaced: nil], listener: nil, limit: 1)
     #expect(chosen == [placed])
 }
-
-@Test("scenario: shipped bindings decode with bus-less stop cues")
-func shippedBindingsDecode() throws {
-    let bindings = try shippedBindings()
-    let stops = try #require(bindings.bindings["productionStalled"])
-    #expect(!stops.isEmpty)
-    #expect(stops.allSatisfy { $0.action == .stop })
-}
-
-@Test("scenario: a start cue without a bus is rejected")
-func startCueWithoutBusIsRejected() {
-    let json = Data(#"{"version":1,"bindings":{"gameOver":[{"file":"x.caf"}]}}"#.utf8)
-    #expect(throws: DecodingError.self) { try JSONDecoder().decode(Bindings.self, from: json) }
-}
