@@ -4,7 +4,7 @@
 Sprite PNG filenames SHALL conform to one of the grammars below based on category. A new optional `-vN` slot encodes per-tile art variants — visually distinct PNGs the renderer picks per tile from the catalog. Variant 0 is implicit (uses the canonical stem with no suffix); variants 1..N-1 use the literal `v` prefix followed by a non-negative integer.
 
 - Terrain: `terrain-<kind>[-v<variant>][-<frame>].png` where `<kind>` is a value from `TerrainKind`, `<variant>` is a positive integer when the kind opts into per-tile art variants (the canonical sprite omits the slot), and `<frame>` is a non-negative integer when the sprite is animated.
-- Terrain transition: `terrain-<upper>-<lower>-t<mask>[-<frame>].png` where `<upper>` and `<lower>` are `TerrainKind` values forming a declared transition pair (`grass`/`beach`, `beach`/`water`), `<mask>` is an integer 1–14 whose bits mark the corners carrying `<upper>` (N=1, E=2, S=4, W=8), and `<frame>` is a non-negative integer when the tile is animated. Transition tiles do NOT opt into the variant slot.
+- Terrain transition: `terrain-<upper>-<lower>-t<mask>[-<season>][-<frame>].png` where `<upper>` and `<lower>` are `TerrainKind` values forming a declared transition pair (`grass`/`beach`, `beach`/`water`), `<mask>` is an integer 1–14 whose bits mark the corners carrying `<upper>` (N=1, E=2, S=4, W=8), `<season>` is `autumn` or `winter` for the seasonal sets of a pair whose upper terrain changes with the season, and `<frame>` is a non-negative integer when the tile is animated. Transition tiles do NOT opt into the variant slot.
 - Building (land-only): `building-<kind>[-v<variant>][-<state>][-<frame>].png` where `<kind>` is a value from `BuildingKind`, `<variant>` is a positive integer when the kind opts into per-tile art variants, `<state>` is one of `constructing` or `operational` (omitted for the idle baseline sprite), and `<frame>` is a non-negative integer when the sprite is animated.
 - Building (shore): `building-<kind>-<orientation>[-<state>][-<frame>].png` where `<orientation>` is one of `n`, `s`, `e`, `w` denoting the cardinal direction of the building's water side, `<state>` and `<frame>` follow the same rules as the land-only building grammar. Shore buildings do NOT opt into the variant slot; orientation already provides the per-tile differentiation. The shore grammar applies exclusively to building kinds that opt into the `shorePlacement` rule (per `buildings-and-construction`).
 - Unit (walker): `walker-<facing>-<frame>.png` where `<facing>` is one of `ne`, `nw`, `se`, `sw` and `<frame>` is a non-negative integer. Walkers do NOT opt into the variant slot.
@@ -80,6 +80,47 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 
 - **WHEN** the sawmill's catalog entry declares a sails moving part on its east side and an operational frame's right edge extends 9 pixels past the base sprite's
 - **THEN** the gate reports no `frame_misaligned` failure for that frame
+
+### Requirement: Category-atlas folder layout
+The asset pipeline SHALL organize sprite PNGs into category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render, which filters linearly; `Buildings.atlas/`, `Units.atlas/` and `Icons.atlas/` hold the nearest-filtered pixel art, goods icons and status badges. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas whose last sprite migrates SHALL be removed: `Terrain.atlas/` no longer exists. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
+
+#### Scenario: Terrain atlas exists
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Kit.atlas/` contains every `terrain-*.png` referenced by the sprite catalog, and `Resources/Terrain.atlas/` does not exist
+
+#### Scenario: Buildings atlas exists
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Buildings.atlas/` exists and contains every `building-*.png` of a brief that has not migrated to the art kit
+
+#### Scenario: Units atlas exists
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Units.atlas/` exists and contains every `walker-*.png` referenced by the sprite catalog
+
+#### Scenario: Legacy sprite directory removed
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Sprites/` does not exist
+
+### Requirement: Atlas routing by sprite-name prefix
+The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to the atlas holding it. A sprite whose catalog brief has migrated to the art kit routes to `Kit`; every other sprite routes by its prefix:
+
+| Prefix | Atlas |
+|---|---|
+| `terrain-` | `Kit` |
+| `building-` | `Buildings` |
+| `overlay-` | `Buildings` |
+| `walker-` | `Units` |
+| `ship-` | `Units` |
+| `good-` | `Icons` |
+
+The public `SpriteAtlas` API remains unchanged.
+
+#### Scenario: Ship name routes to Units atlas
+- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Units")` and returns a non-nil texture
+
+#### Scenario: Shore-building name routes to Buildings atlas
+- **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Buildings")` and returns a non-nil texture
 
 ## ADDED Requirements
 

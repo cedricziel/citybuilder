@@ -19,16 +19,13 @@ private func worktreeRoot() -> URL {
 
 @Test("scenario: terrain atlas exists")
 func scenarioTerrainAtlasExists() {
-    let url = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
-    var isDir: ObjCBool = false
-    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-    #expect(exists && isDir.boolValue, "Resources/Terrain.atlas must exist as a directory")
-    // The catalog declares one terrain-<kind> base sprite for each
-    // TerrainType plus animation frames; presence is exercised
-    // exhaustively by the asset-presence scenarios. Here we just
-    // confirm the atlas folder has at least one PNG.
-    let contents = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
-    #expect(contents.contains(where: { $0.hasPrefix("terrain-") && $0.hasSuffix(".png") }))
+    let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
+    let contents = (try? FileManager.default.contentsOfDirectory(atPath: kit.path)) ?? []
+    for kind in ["grass", "beach", "water", "forest", "mountain"] {
+        #expect(contents.contains("terrain-\(kind).png"), "terrain-\(kind).png")
+    }
+    let retired = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
+    #expect(!FileManager.default.fileExists(atPath: retired.path))
 }
 
 @Test("scenario: buildings atlas exists")

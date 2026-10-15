@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "svg"
 ---
 ## Function
 
@@ -8,16 +8,11 @@ Shore buildings face water on one or more cardinal sides.
 
 ## Visual identity
 
-Deep-coastal water in three blue-grey bands: deep mid-tone field, a
-slightly lighter horizontal band suggesting current, and a sparse
-highlight glint pattern. Palette anchors: `#2A4E6E` deep base, `#3F6E94`
-mid, `#6FA4C2` highlight band, `#A8CCDD` glint dots (used sparingly at
-≤20% dither). No ships, no foam crests except on the very tile.
+Painted by `scripts/art/ground.py`. Deep teal water with a swell built from a few wave trains and sun glints. The four frames advance every wave by whole periods, so the loop has no jump. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 
-Grid: 5 cols × 1 rows. Cells 512×512 sheet pixels on a 2560×512 canvas
-(front-matter `sheet_size = "2560x512"` override).
+Grid: 5 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 
 - (0, 0): `terrain-water` — canonical static base
 - (0, 1): `terrain-water-0` — animation frame 0 (glint pattern A)
@@ -34,4 +29,5 @@ Four-frame water glint cycle at ~0.20s per frame.
 
 ## Recipe
 
-- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)
+- SVG generator: `scripts/art/terrain_tiles.py` (`full`)
+- Texture: `scripts/art/ground.py` (`water`)

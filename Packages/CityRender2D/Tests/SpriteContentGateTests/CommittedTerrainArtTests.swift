@@ -16,9 +16,9 @@ private func worktreeRoot() -> URL {
 struct CommittedTerrainArtTests {
     @Test("scenario: every committed terrain sprite fills the diamond")
     func committedTerrainFillsDiamond() throws {
-        let atlas = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
+        let atlas = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
         let files = try FileManager.default.contentsOfDirectory(at: atlas, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "png" }
+            .filter { $0.pathExtension == "png" && $0.lastPathComponent.hasPrefix("terrain-") }
         #expect(!files.isEmpty)
         for file in files {
             let fill = try DiamondFill(of: RGBAImage(contentsOf: file), bleedPoints: 1, scale: SpriteFile(file.lastPathComponent).scale)

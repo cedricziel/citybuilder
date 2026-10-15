@@ -13,7 +13,10 @@ public enum TextureFiltering {
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.
     public static let kitRenderedStems: Set<String> = [
-        "building-house", "building-house-tier2", "building-house-tier3", "building-town-center"
+        "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
+        "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
+        "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
+        "terrain-grass-beach", "terrain-beach-water"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {

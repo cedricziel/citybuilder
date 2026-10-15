@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "svg"
 ---
 ## Function
 
@@ -9,17 +9,11 @@ forest.
 
 ## Visual identity
 
-Dense canopy of mixed deciduous trees seen from the south-east —
-overlapping rounded crowns in two-tone green, with a single sliver of
-trunk-brown visible at the south edge. Palette anchors: `#3F5C26`
-shadow-green canopy, `#5C8038` leaf-green sunlit edge, `#5C3F28`
-trunk-brown. Outlines kept tight to silhouette so adjacent forest tiles
-read as continuous woodland rather than separate trees.
+Painted by `scripts/art/ground.py`. A closed canopy of scattered broadleaf and conifer crowns, each lit and casting soft shadow onto the dark forest floor. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 
-Grid: 1 cols × 1 rows. Static — no animation. Cell is 512×512 sheet
-pixels.
+Grid: 1 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 
 - (0, 0): `terrain-forest` — canonical static tile
 
@@ -29,4 +23,5 @@ Static — no animation loop.
 
 ## Recipe
 
-- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)
+- SVG generator: `scripts/art/terrain_tiles.py` (`full`)
+- Texture: `scripts/art/ground.py` (`forest`)

@@ -12,10 +12,11 @@ import Testing
 
 // MARK: - Atlas routing by sprite-name prefix
 
-@Test("scenario: terrain name routes to terrain atlas")
-func scenarioTerrainNameRoutesToTerrainAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "terrain-grass") == "Terrain")
-    #expect(SpriteAtlasRouting.atlasName(for: "terrain-water-3") == "Terrain")
+@Test("terrain names route to the kit atlas")
+func terrainNamesRouteToTheKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "terrain-grass") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "terrain-water-3") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "terrain-grass-beach-t3-winter") == "Kit")
     // The lookup MUST resolve a non-nil texture when the bundle has it;
     // in package-test mode (no bundle) nil is acceptable.
     if let texture = SpriteAtlas.texture(named: "terrain-grass") {
@@ -121,8 +122,12 @@ struct LazyConstructionSuite {
         // the per-category check by reading `isAtlasConstructed` for
         // the expected-positive case only.
         SpriteAtlas.resetForTesting()
+        _ = SpriteAtlas.texture(named: "walker-ne-0")
+        #expect(SpriteAtlas.isAtlasConstructed(named: "Units"))
+
+        SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "terrain-grass")
-        #expect(SpriteAtlas.isAtlasConstructed(named: "Terrain"))
+        #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
         SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "building-sawmill")

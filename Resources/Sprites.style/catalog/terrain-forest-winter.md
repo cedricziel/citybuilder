@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "svg"
 ---
 ## Function
 
@@ -8,12 +8,11 @@ The winter look of the forest tile. The renderer swaps it in for
 
 ## Visual identity
 
-Winter: dark evergreen crowns with cream snow on the upper boughs, standing in cream snow with foam-blue shadows and rims. Same tree layout as `terrain-forest`.
+Painted by `scripts/art/ground.py`. The canopy in winter: bare broadleaf crowns as a grey lace of twigs over snow, and dark conifers carrying snow on their sunlit side. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
 ## Sheet
 
-Grid: 1 cols × 1 rows. Static — no animation. Cell is 512×512 sheet
-pixels.
+Grid: 1 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 
 - (0, 0): `terrain-forest-winter` — canonical static tile
 
@@ -23,4 +22,5 @@ Static — no animation.
 
 ## Recipe
 
-- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)
+- SVG generator: `scripts/art/terrain_tiles.py` (`full`)
+- Texture: `scripts/art/ground.py` (`forest`)
