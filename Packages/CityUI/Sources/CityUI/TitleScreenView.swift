@@ -113,14 +113,16 @@ public struct TitleScreenView: View {
     }
 
     private var menu: some View {
+        // Title at the top, buttons in the lower third: the town shows between.
         VStack(spacing: 32) {
-            Spacer()
             Text("Citybuilder")
                 .font(.system(size: 56, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.6), radius: 8, y: 3)
                 .accessibilityAddTraits(.isHeader)
+                .padding(.top, 40)
                 .menuEntrance(0, entered: entered)
+            Spacer()
             VStack(spacing: 16) {
                 if let summary = viewModel.mostRecentSave {
                     Button {
@@ -164,7 +166,7 @@ public struct TitleScreenView: View {
                 .menuEntrance(4, entered: entered)
                 #endif
             }
-            Spacer()
+            .padding(.bottom, 40)
             if viewModel.isPreparingCloudSaves {
                 ProgressView("Checking iCloud for saves…")
                     .foregroundStyle(.white)

@@ -23,6 +23,6 @@ The title screen is a column of grey buttons on a blank background. It is the fi
   - New `TitleBackdrop`, which builds the island off the main thread and feeds the registered renderer a snapshot whose camera and clock follow `TitleBackdropMotion`.
   - `TitleScreenView` layers the backdrop, a scrim, and the menu with `MenuEntrance` timing and `TitleMenuButtonStyle`.
   - `SnapshotRendererRegistry.factory` is nil until an app registers a renderer, so tests and previews show a plain gradient.
-- **CityCore:** `WorldSnapshot.camera` and `tickCount` become settable, so a renderer can show a still world through another camera at another time of day.
+- **CityCore:** `WorldSnapshot.camera`, `tickCount` and `roadDisconnectedBuildings` become settable, so the title can show a still world through another camera at another time of day, without warning markers.
 - **CityRender2D:** no change.
 - **Performance:** the island is generated once, on a background task. Each frame copies one snapshot struct, which the renderer already reconciles every frame in the game.

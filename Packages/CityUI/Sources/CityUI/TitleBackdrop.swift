@@ -101,11 +101,14 @@ struct TitleBackdrop: View {
     nonisolated static let island = makeSnapshot()
 
     /// The default island with finished houses, under the new-game camera
-    /// (on the town center), zoomed in a little. Generating it ticks the
+    /// (on the town center), zoomed in a little, without warning markers. Generating it ticks the
     /// sim, so callers keep it off the main thread.
     nonisolated static func makeSnapshot() -> WorldSnapshot {
         var world = UITestSeed.townWorld(houses: 6)
         world.camera.setZoom(1.2)
-        return world.snapshot()
+        // A title card shows no road-access warnings.
+        var snapshot = world.snapshot()
+        snapshot.roadDisconnectedBuildings = []
+        return snapshot
     }
 }

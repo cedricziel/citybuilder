@@ -73,6 +73,7 @@ func titleBackdropWithoutRenderer() {
     #expect(snapshot.camera.centerX == newGame.centerX)
     #expect(snapshot.camera.centerY == newGame.centerY)
     #expect(snapshot.camera.zoom == 1.2)
+    #expect(snapshot.roadDisconnectedBuildings.isEmpty)
     #expect(snapshot.buildings.values.contains { $0.kind == .house && $0.state == .operational })
 }
 
