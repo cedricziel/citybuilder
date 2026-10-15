@@ -119,7 +119,10 @@ public final class GameSession {
     /// snapshot, no event forwarding. The audio engine is untouched so
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
-    public var isPaused: Bool = false
+    public var isPaused: Bool = false {
+        didSet { if isPaused != oldValue { UISounds.play(.toggle) } }
+    }
+
     /// Ticks per timer firing. Session state, never saved.
     public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
@@ -213,6 +216,7 @@ public final class GameSession {
     /// Toggle a tool: tap the same palette button twice to disarm.
     public func selectTool(_ tool: BuildTool) {
         guard !isGameOver || tool == .inspect else { return }
+        UISounds.play(.select)
         if selectedTool == tool {
             selectedTool = .inspect
         } else {
@@ -298,6 +302,7 @@ public final class GameSession {
         if routeAuthoring != nil { return handleRouteTap(at: tile) }
         switch activeTool {
         case .inspect:
+            UISounds.play(.tap)
             selectedTile = tile
         case let .place(kind) where needsConfirmation(kind):
             beginPendingPlacement(kind: kind, at: tile)
