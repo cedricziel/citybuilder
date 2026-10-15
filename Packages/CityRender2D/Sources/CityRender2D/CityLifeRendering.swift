@@ -86,7 +86,6 @@ extension IsoWorldScene {
         let node = SKSpriteNode(texture: frames.first)
         node.anchorPoint = CGPoint(x: 0.5, y: 0)
         node.zPosition = 50
-        node.texture?.filteringMode = .nearest
         if frames.count > 1 {
             node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.2)), withKey: "walk")
         }
