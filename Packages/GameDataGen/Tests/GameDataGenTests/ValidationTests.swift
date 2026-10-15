@@ -21,13 +21,6 @@ func unknownHouseTier() {
     #expect(errors.contains { $0.contains("Tech feudal-order") && $0.contains("nobles") })
 }
 
-@Test func unknownCultureTierIsRejected() {
-    let culture = Fixtures.culture.replacingOccurrences(of: "merchants: Merchants", with: "nobles: Nobles")
-    let errors = Fixtures.errors(Fixtures.source([("core", Fixtures.core), ("cultures/n", culture), ("ages", Fixtures.ages)]))
-    #expect(errors.contains { $0.contains("Culture northern-european") && $0.contains("nobles") })
-    #expect(errors.contains { $0.contains("Culture northern-european") && $0.contains("merchants") })
-}
-
 @Test("scenario: tech prerequisite cycle is rejected")
 func prerequisiteCycle() {
     let extra = """

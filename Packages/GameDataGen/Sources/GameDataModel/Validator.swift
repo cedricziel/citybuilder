@@ -10,15 +10,18 @@ struct Validator {
             buildings: unique(data.buildings, kind: "Building", id: \.id, origin: \.origin),
             cultures: unique(data.cultures, kind: "Culture", id: \.id, origin: \.origin),
             techs: unique(data.techs, kind: "Tech", id: \.id, origin: \.origin),
-            ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin)
+            ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin),
+            tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin)
         )
-        data.goods.forEach(check)
+        data.goods.forEach { check($0, refs) }
+        data.tiers.forEach { check($0, refs) }
         data.buildings.forEach { check($0, refs) }
         data.cultures.forEach { check($0, refs) }
         data.techs.forEach { check($0, refs) }
         data.ages.forEach { check($0, refs) }
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
+        checkConsumers()
     }
 
     private struct References {
@@ -27,6 +30,11 @@ struct Validator {
         let cultures: [String: Culture]
         let techs: [String: Tech]
         let ages: [String: Age]
+        let tiers: [String: Tier]
+
+        var tierList: String {
+            tiers.keys.sorted().joined(separator: ", ")
+        }
     }
 
     private func reporter(_ kind: String, _ id: String, _ origin: Origin) -> (String) -> Void {
@@ -71,10 +79,33 @@ struct Validator {
 
     // MARK: - Items
 
-    private func check(_ good: Good) {
+    private func check(_ good: Good, _ refs: References) {
         let report = reporter("Good", good.id, good.origin)
         if good.basePrice <= 0 { report("`basePrice` must be positive") }
         if good.market.buy < 0 || good.market.sell < 0 { report("`market` limits must not be negative") }
+        var named = Set<String>()
+        for tier in good.neededBy {
+            guard let declared = refs.tiers[tier] else {
+                report("`neededBy` names unknown house tier `\(tier)`; expected one of \(refs.tierList)")
+                continue
+            }
+            if !named.insert(tier).inserted {
+                report("`neededBy` names `\(tier)` twice")
+            } else if declared.needs.contains(good.id) {
+                report("`neededBy` names `\(tier)`, which already needs `\(good.id)`")
+            }
+        }
+    }
+
+    private func check(_ tier: Tier, _ refs: References) {
+        let report = reporter("Tier", tier.id, tier.origin)
+        if tier.capacity <= 0 { report("`capacity` must be positive") }
+        if tier.taxPerResident < 0 { report("`taxPerResident` must not be negative") }
+        var seen = Set<String>()
+        for good in tier.needs {
+            if refs.goods[good] == nil { report("`needs` names unknown good `\(good)`") }
+            if !seen.insert(good).inserted { report("`needs` lists `\(good)` twice") }
+        }
     }
 
     private func check(_ building: Building, _ refs: References) {
@@ -128,11 +159,8 @@ struct Validator {
 
     private func check(_ culture: Culture, _ refs: References) {
         let report = reporter("Culture", culture.id, culture.origin)
-        for tier in culture.tiers.keys.sorted() where !houseTiers.contains(tier) {
-            report("`tiers` names unknown house tier `\(tier)`; expected one of \(houseTiers.joined(separator: ", "))")
-        }
-        for tier in houseTiers where culture.tiers[tier] == nil {
-            report("`tiers` is missing `\(tier)`")
+        for tier in culture.tiers.keys.sorted() where refs.tiers[tier] == nil {
+            report("`tiers` names unknown house tier `\(tier)`; expected one of \(refs.tierList)")
         }
         if culture.residentNames.isEmpty { report("`residentNames` must not be empty") }
         checkOwnBuilding(culture.signature, field: "signature", of: culture, refs, report)
@@ -184,8 +212,8 @@ struct Validator {
         default: break
         }
         if let gate = tech.eraGate {
-            if !houseTiers.contains(gate.tier) {
-                report("`eraGate.tier` names unknown house tier `\(gate.tier)`; expected one of \(houseTiers.joined(separator: ", "))")
+            if refs.tiers[gate.tier] == nil {
+                report("`eraGate.tier` names unknown house tier `\(gate.tier)`; expected one of \(refs.tierList)")
             }
             if gate.residents <= 0 { report("`eraGate.residents` must be positive") }
         }
@@ -195,6 +223,23 @@ struct Validator {
         let report = reporter("Age", age.id, age.origin)
         if refs.buildings[age.signature] == nil { report("`signature` names unknown building `\(age.signature)`") }
         if age.rivalResidents < 0 { report("`rivalResidents` must not be negative") }
+    }
+
+    // MARK: - Consumers
+
+    /// Every good must be a recipe input, a material, a culture's luxury or
+    /// a tier need (design D5 of `tier-needs-data`).
+    private func checkConsumers() {
+        let needs = data.tiers.flatMap(\.needs) + data.goods.filter { !$0.neededBy.isEmpty }.map(\.id)
+        var consumed = Set(data.cultures.map(\.luxury.good) + needs)
+        for building in data.buildings {
+            consumed.formUnion((building.materials + (building.recipe?.inputs ?? [])).map(\.good))
+        }
+        for good in data.goods where !consumed.contains(good.id) {
+            reporter("Good", good.id, good.origin)(
+                "no consumer: no recipe input, material, culture luxury or tier need names it; add `neededBy` to make it a need"
+            )
+        }
     }
 
     // MARK: - Cycles

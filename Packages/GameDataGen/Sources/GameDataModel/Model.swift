@@ -6,16 +6,22 @@ public struct GameData: Equatable, Sendable {
     public var cultures: [Culture] = []
     public var techs: [Tech] = []
     public var ages: [Age] = []
+    public var tiers: [Tier] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
         buildings.filter { $0.unlockedBy == tech }.map(\.id)
     }
-}
 
-/// The house tiers the simulation knows. They stay in Swift until the
-/// `tier-needs-data` change makes them data.
-public let houseTiers = ["peasants", "citizens", "merchants"]
+    /// Appends every good that names a tier in `neededBy` to that tier's
+    /// needs, in good order (design D2 of `tier-needs-data`).
+    mutating func mergeNeededBy() {
+        for index in tiers.indices {
+            let tier = tiers[index].id
+            tiers[index].needs += goods.filter { $0.neededBy.contains(tier) }.map(\.id)
+        }
+    }
+}
 
 /// An amount per good, kept in the order the pack wrote it.
 public typealias GoodAmounts = [GoodAmount]
@@ -41,6 +47,8 @@ public struct Good: Equatable, Sendable {
     public var unit: String
     public var basePrice: Int
     public var market: MarketLimits
+    /// Tiers whose needs this good joins (design D2 of `tier-needs-data`).
+    public var neededBy: [String]
     public var origin: Origin
 }
 
@@ -105,12 +113,17 @@ public struct Culture: Equatable, Sendable {
     public var id: String
     public var name: String
     public var blurb: String
-    /// Display name per house tier, keyed by `houseTiers`.
+    /// Display names that override the tiers' own, keyed by tier id.
     public var tiers: [String: String]
     public var luxury: LuxuryChain
     public var signature: String
     public var residentNames: [String]
     public var origin: Origin
+
+    /// The culture's name for `tier`, or the tier's own name.
+    public func tierName(_ tier: Tier) -> String {
+        tiers[tier.id] ?? tier.name
+    }
 }
 
 public struct EraGate: Equatable, Sendable {
@@ -136,5 +149,17 @@ public struct Age: Equatable, Sendable {
     public var blurb: String
     public var signature: String
     public var rivalResidents: Int
+    public var origin: Origin
+}
+
+/// A house tier. Its position in load order is its raw value, from 1.
+public struct Tier: Equatable, Sendable {
+    public var id: String
+    public var name: String
+    public var capacity: Int
+    public var taxPerResident: Int
+    /// The tier's needs: as written while validating, then with every
+    /// `neededBy` merged in.
+    public var needs: [String]
     public var origin: Origin
 }

@@ -24,6 +24,16 @@ items:
   - { kind: Good, id: iron,     name: Iron,     unit: bars,    basePrice: 14, market: { sell: 20 } }
   - { kind: Good, id: tools,    name: Tools,    unit: sets,    basePrice: 30, market: { sell: 20 } }
 
+  # --- House tiers ---------------------------------------------------
+  # Spec: population-and-needs / Houses have a population tier.
+  # Order is save format: a tier's raw value is its position, from 1.
+  # needs: the tier's complete list, in consumption order. Another pack
+  # adds a need with `neededBy` on its good. Merchants also want their
+  # culture's luxury, which stays in code.
+  - { kind: Tier, id: peasants,  name: Peasants,  capacity: 4, taxPerResident: 1, needs: [food] }
+  - { kind: Tier, id: citizens,  name: Citizens,  capacity: 6, taxPerResident: 2, needs: [food, planks] }
+  - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [food, planks, bread, tools] }
+
   # --- Buildings -----------------------------------------------------
   # Holds residents. Spec: population-and-needs
   - kind: Building

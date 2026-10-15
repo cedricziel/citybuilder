@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pack.schema.json",
   "title": "Game data pack",
-  "description": "One feature's goods, buildings, cultures, techs and ages. References may point into any pack.",
+  "description": "One feature's goods, buildings, cultures, techs, ages and house tiers. References may point into any pack.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -17,7 +17,7 @@
     "ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
     "positive": { "type": "integer", "minimum": 1 },
     "nonNegative": { "type": "integer", "minimum": 0 },
-    "tier": { "enum": ["peasants", "citizens", "merchants"] },
+    "tier": { "description": "A house tier id declared by a Tier item.", "$ref": "#/$defs/id" },
     "amounts": {
       "description": "Amount per good id.",
       "type": "object",
@@ -64,7 +64,7 @@
       "type": "object",
       "required": ["kind", "id"],
       "properties": {
-        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age"] }
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier"] }
       },
       "allOf": [
         {
@@ -86,6 +86,11 @@
                   "buy": { "$ref": "#/$defs/nonNegative" },
                   "sell": { "$ref": "#/$defs/nonNegative" }
                 }
+              },
+              "neededBy": {
+                "description": "House tiers whose needs this good joins, after the tier's own needs, in load order.",
+                "type": "array",
+                "items": { "$ref": "#/$defs/tier" }
               }
             }
           }
@@ -127,22 +132,17 @@
           "if": { "properties": { "kind": { "const": "Culture" } } },
           "then": {
             "additionalProperties": false,
-            "required": ["kind", "id", "name", "blurb", "tiers", "luxury", "signature", "residentNames"],
+            "required": ["kind", "id", "name", "blurb", "luxury", "signature", "residentNames"],
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
               "name": { "type": "string" },
               "blurb": { "type": "string" },
               "tiers": {
-                "description": "The culture's name for each house tier.",
+                "description": "The culture's name for house tiers, keyed by tier id. A tier left out uses its own name.",
                 "type": "object",
-                "additionalProperties": false,
-                "required": ["peasants", "citizens", "merchants"],
-                "properties": {
-                  "peasants": { "type": "string" },
-                  "citizens": { "type": "string" },
-                  "merchants": { "type": "string" }
-                }
+                "propertyNames": { "$ref": "#/$defs/tier" },
+                "additionalProperties": { "type": "string" }
               },
               "luxury": {
                 "type": "object",
@@ -199,6 +199,21 @@
               "blurb": { "type": "string" },
               "signature": { "$ref": "#/$defs/id" },
               "rivalResidents": { "description": "Residents a rival needs to enter this age.", "$ref": "#/$defs/nonNegative" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Tier" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "name", "capacity", "taxPerResident", "needs"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "description": "Default display name; a culture's tiers map can override it.", "type": "string" },
+              "capacity": { "description": "Residents a house of this tier holds.", "$ref": "#/$defs/positive" },
+              "taxPerResident": { "$ref": "#/$defs/nonNegative" },
+              "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids" }
             }
           }
         }

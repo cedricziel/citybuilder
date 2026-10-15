@@ -12,6 +12,9 @@ enum Fixtures {
     items:
       - { kind: Good, id: wood, name: Wood, unit: logs, basePrice: 4 }
       - { kind: Good, id: planks, name: Planks, unit: bundles, basePrice: 8 }
+      - { kind: Tier, id: peasants, name: Peasants, capacity: 4, taxPerResident: 1, needs: [planks] }
+      - { kind: Tier, id: citizens, name: Citizens, capacity: 6, taxPerResident: 2, needs: [planks] }
+      - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [planks, wood] }
       - kind: Building
         id: house
         effect: code
@@ -121,6 +124,16 @@ enum Fixtures {
         return InMemorySource(files: files)
     }
 
+    /// The default packs with `core` replaced, and no culture pack.
+    static func withCore(_ core: String) -> InMemorySource {
+        source([("core", core), ("ages", ages)])
+    }
+
+    /// The default packs with the culture pack replaced.
+    static func withCulture(_ culture: String) -> InMemorySource {
+        source([("core", core), ("cultures/n", culture), ("ages", ages)])
+    }
+
     /// The default packs followed by `packs/extra.yaml`.
     static func withExtraPack(_ extra: String) -> InMemorySource {
         source(packs + [("extra", extra)])
@@ -150,28 +163,29 @@ enum Fixtures {
         "Building": ["id": "salt-pan", "footprint": "[1, 1]", "cost": "10"],
         "Culture": [
             "id": "nordic", "name": "Nordic", "blurb": "Cold.",
-            "tiers": "{ peasants: P, citizens: C, merchants: M }",
             "luxury": "{ raw: hops, good: beer, garden: hop-garden, producer: brewery }",
             "signature": "mead-hall", "residentNames": "[Ada]"
         ],
         "Tech": ["id": "salting", "cost": "10", "age": "antiquity"],
-        "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"]
+        "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"],
+        "Tier": ["id": "nobles", "name": "Nobles", "capacity": "10", "taxPerResident": "8", "needs": "[wood]"]
     ]
 
     /// Every optional field of each kind, as raw YAML values.
     static let optionalFields: [String: [String: String]] = [
-        "Good": ["market": "{ buy: 10, sell: 20 }"],
+        "Good": ["market": "{ buy: 10, sell: 20 }", "neededBy": "[merchants]"],
         "Building": [
             "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16", "plantTicks": "40",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
             "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code"
         ],
-        "Culture": [:],
+        "Culture": ["tiers": "{ peasants: P, citizens: C, merchants: M }"],
         "Tech": [
             "name": "Salting", "prerequisites": "[scholarship]", "era": "medieval",
             "eraGate": "{ tier: citizens, residents: 1 }"
         ],
-        "Age": ["name": "Bronze"]
+        "Age": ["name": "Bronze"],
+        "Tier": [:]
     ]
 }

@@ -12,6 +12,7 @@ public enum GameDataLoader {
         }
         if log.diagnostics.isEmpty {
             Validator(data: data, log: log).validate()
+            data.mergeNeededBy()
         }
         return log.diagnostics.isEmpty ? .success(data) : .failure(GameDataErrors(diagnostics: log.diagnostics))
     }
@@ -111,6 +112,7 @@ private struct ItemReader {
         case "Building": building(id).map { data.buildings.append($0) }
         case "Culture": culture(id).map { data.cultures.append($0) }
         case "Tech": tech(id).map { data.techs.append($0) }
+        case "Tier": tier(id).map { data.tiers.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }
@@ -124,7 +126,8 @@ private struct ItemReader {
         guard let name, let unit, let price else { return nil }
         return Good(
             id: id, name: name, unit: unit, basePrice: price,
-            market: market ?? MarketLimits(), origin: fields.origin
+            market: market ?? MarketLimits(), neededBy: fields.strings("neededBy", required: false) ?? [],
+            origin: fields.origin
         )
     }
 
@@ -183,9 +186,9 @@ private struct ItemReader {
     }
 
     private func culture(_ id: String) -> Culture? {
-        let tiers = fields.mapping("tiers").map { tiers in
+        let tiers = fields.mapping("tiers", required: false).map { tiers in
             Dictionary(uniqueKeysWithValues: tiers.keys.compactMap { key in tiers.string(key).map { (key, $0) } })
-        }
+        } ?? [:]
         let luxury = fields.mapping("luxury").flatMap { luxury -> LuxuryChain? in
             luxury.finish(allowed: ["raw", "good", "garden", "producer"])
             let raw = luxury.string("raw"), good = luxury.string("good")
@@ -195,7 +198,7 @@ private struct ItemReader {
         }
         let name = fields.string("name"), blurb = fields.string("blurb"), signature = fields.string("signature")
         let names = fields.strings("residentNames")
-        guard let name, let blurb, let signature, let names, let tiers, let luxury else { return nil }
+        guard let name, let blurb, let signature, let names, let luxury else { return nil }
         return Culture(
             id: id, name: name, blurb: blurb, tiers: tiers, luxury: luxury,
             signature: signature, residentNames: names, origin: fields.origin
@@ -221,6 +224,13 @@ private struct ItemReader {
             eraGate: gate,
             origin: fields.origin
         )
+    }
+
+    private func tier(_ id: String) -> Tier? {
+        let name = fields.string("name"), capacity = fields.int("capacity")
+        let tax = fields.int("taxPerResident"), needs = fields.strings("needs")
+        guard let name, let capacity, let tax, let needs else { return nil }
+        return Tier(id: id, name: name, capacity: capacity, taxPerResident: tax, needs: needs, origin: fields.origin)
     }
 
     private func age(_ id: String) -> Age? {

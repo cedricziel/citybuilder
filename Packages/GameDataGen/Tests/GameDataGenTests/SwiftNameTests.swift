@@ -22,7 +22,7 @@ private let keywords = [
 ]
 
 @Test func swiftKeywordIdsAreBackQuoted() throws {
-    let goods = keywords.map { "  - { kind: Good, id: \"\($0)\", name: X, unit: u, basePrice: 1 }\n" }.joined()
+    let goods = keywords.map { "  - { kind: Good, id: \"\($0)\", name: X, unit: u, basePrice: 1, neededBy: [merchants] }\n" }.joined()
     let data = try Fixtures.load(Fixtures.withExtraPack("items:\n" + goods)).get()
     let source = try #require(SwiftEmitter.emit(data)["Good+Generated.swift"])
     for keyword in keywords {
