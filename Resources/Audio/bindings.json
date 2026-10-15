@@ -18,23 +18,66 @@
     ],
     "productionResumed": [
       { "file": "loop/sawmill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "sawmill" },
-      { "file": "loop/lumberjack.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "lumberjackHut" }
+      { "file": "loop/lumberjack.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "lumberjack-hut" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "farm" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "grain-farm" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "hop-garden" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "vineyard" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "tea-garden" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "coffee-grove" },
+      { "file": "loop/mill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "windmill" },
+      { "file": "loop/mill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "quern-house" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "bakery" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "charcoal-burner" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "roastery" },
+      { "file": "loop/forge.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "smelter" },
+      { "file": "loop/forge.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "toolsmith" },
+      { "file": "loop/mine.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "mine" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "brewery" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "winery" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "tea-house" },
+      { "file": "loop/shipwright.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "shipyard" }
     ],
     "productionStalled": [
-      { "action": "stop", "kindFilter": "sawmill" },
-      { "action": "stop", "kindFilter": "lumberjackHut" }
+      { "action": "stop" }
+    ],
+    "productionCycleCompleted": [
+      { "file": "loop/sawmill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "sawmill" },
+      { "file": "loop/lumberjack.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "lumberjack-hut" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "farm" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "grain-farm" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "hop-garden" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "vineyard" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "tea-garden" },
+      { "file": "loop/fields.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "coffee-grove" },
+      { "file": "loop/mill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "windmill" },
+      { "file": "loop/mill.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "quern-house" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "bakery" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "charcoal-burner" },
+      { "file": "loop/oven.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "roastery" },
+      { "file": "loop/forge.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "smelter" },
+      { "file": "loop/forge.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "toolsmith" },
+      { "file": "loop/mine.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "mine" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "brewery" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "winery" },
+      { "file": "loop/brewing.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "tea-house" },
+      { "file": "loop/shipwright.caf", "bus": "loop", "loop": true, "volume": 0.7, "kindFilter": "shipyard" }
     ]
   },
   "music": {
     "tracks": [
-      { "file": "music/bards-tale.m4a" }
+      {
+        "file": "music/bards-tale.m4a"
+      }
     ],
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
   },
   "ambient": {
     "tracks": [
-      { "file": "ambient/forest-birds.caf" }
+      {
+        "file": "ambient/forest-birds.caf"
+      }
     ]
   }
 }

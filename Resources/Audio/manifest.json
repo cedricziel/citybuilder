@@ -70,6 +70,55 @@
       "author": "Citybuilder sound generator",
       "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
+    },
+    {
+      "path": "loop/fields.caf",
+      "title": "Fields: wind in the crops and a sickle",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/mill.caf",
+      "title": "Mill: millstones and a creaking shaft",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/oven.caf",
+      "title": "Oven: a crackling wood fire",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/forge.caf",
+      "title": "Forge: anvil and bellows",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/mine.caf",
+      "title": "Mine: a pick on rock",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/brewing.caf",
+      "title": "Brewing: a bubbling vat",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "loop/shipwright.caf",
+      "title": "Shipwright: caulking mallet",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
     }
   ]
 }
