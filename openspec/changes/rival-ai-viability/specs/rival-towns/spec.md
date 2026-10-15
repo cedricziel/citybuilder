@@ -16,7 +16,7 @@ The script SHALL be the opening (lumberjack hut, sawmill, farm, house, lumberjac
 
 A step SHALL be issued only when:
 
-- the treasury covers the building cost, the road cost and $50, plus a $150 reserve while the rival has fewer than 3 houses with residents, unless the step is a house, a farm or the rival's first sawmill; and
+- the treasury covers the building cost, the road cost and $50, plus a $150 reserve while the rival has fewer than 3 houses with residents, unless the step is a house, a farm, or a sawmill while the rival has none and fewer planks in stock than a house needs; and
 - the island stock covers the material cost, or the rival's own huts (and, for planks, its sawmill) can still deliver the rest.
 
 Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut and forester SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
@@ -50,8 +50,8 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 #### Scenario: Houses and the first sawmill ignore the reserve
 
-- **WHEN** a rival with no houses, no sawmill and $175 takes a turn on a sawmill step whose slot needs no new roads, holding the sawmill's materials
-- **THEN** it places the sawmill
+- **WHEN** a rival with no houses, no sawmill, 3 planks, the sawmill's wood and $175 takes a turn on a sawmill step whose slot needs no new roads
+- **THEN** it places the sawmill, while with 5 planks, enough for a house, it waits
 
 #### Scenario: Sawmill before planks run out
 

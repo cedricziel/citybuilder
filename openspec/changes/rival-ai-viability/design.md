@@ -45,9 +45,17 @@ Both show the second dead end. Once planks reach 0 without a sawmill, the rival 
 
 ## Decisions
 
-### D1 — A house-first reserve, with the sawmill exempt
+### D1 — A house-first reserve, with the needed sawmill exempt
 
-Until a rival has 3 houses with residents, any step other than a house, a farm or the rival's first sawmill needs $150 on top of cost, roads and the $50 margin. Houses and farms bring income and food. The first sawmill is exempt because B shows that a reserve holding back the sawmill causes the plank dead end.
+Until a rival has 3 houses with residents, a step needs $150 on top of cost, roads and the $50 margin, with three exemptions:
+
+- houses, which bring income;
+- farms, which bring food;
+- a sawmill when the rival has none and its planks have fallen below a house's 4.
+
+The sawmill exemption covers the plank dead end that B shows when a reserve holds the sawmill back.
+
+M1 found that exempting every first sawmill was not enough. An Easy rival's opening hut opened 34 road tiles ($250 with the hut). The exempt sawmill then took $190 with its roads, and the farm $60. That left $96, and the next house needed $50 + roads + $50, so the rival still spiralled into debt. With the narrower exemption, an Easy rival that still holds 8 starter planks keeps its reserve: it builds a farm and a house first, then the sawmill. It has 6 residents in its first year and about 12 in its second.
 
 - **Alternative — reorder the opening (variant A).** Rejected on its own: it removed the deaths but caused the plank dead end on Easy and Normal (4–8 residents for 15 years).
 - **Alternative — waive rival upkeep until the first tax.** Rejected: it hides the problem, and a rival that spends its purse on roads still cannot afford houses.
