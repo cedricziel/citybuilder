@@ -139,15 +139,18 @@ func clearingTheStoreSellsFromTheTownCenterFirst() throws {
     #expect(world.stockpiles[warehouse]?.quantity(of: .planks) == 30)
 }
 
-@Test("wood bought for a step reaches it although a sawmill stands")
-func boughtWoodReachesTheStepDespiteASawmill() throws {
+@Test("wood bought for a step is in the same batch as the step, ahead of it")
+func boughtWoodComesInTheStepsBatch() throws {
     var world = normalWorld()
     world.setRival(1) {
         $0.ai.scriptIndex = 12
         $0.treasury = 1000
     }
-    // One house wants a farm (2 wood); no wood in stock and no forest in
-    // reach, but a working sawmill that would take any wood it can get.
+    // One house wants a farm (2 wood), with no wood in stock and no forest
+    // in reach. The purchase must come in the farm's own batch, ahead of
+    // it: the farm's materials are then deducted when it is placed, at the
+    // same tick boundary, before any carrier could take the wood to a
+    // sawmill. A purchase on an earlier turn lost that race.
     world.setRivalStock(1, [.planks: 10, .food: 0])
     world.testAddBuilding(.house, owner: .rival(1))
     world.testAddBuilding(.sawmill, owner: .rival(1))
