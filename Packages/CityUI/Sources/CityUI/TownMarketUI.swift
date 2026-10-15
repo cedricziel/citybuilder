@@ -22,10 +22,15 @@ public struct TownMarketSection: Equatable, Sendable {
         }
     }
 
+    /// The goods the market sells, and the goods the island holds or
+    /// produces, in catalog order.
     public let rows: [Row]
+    /// Goods the market only buys and the island can do nothing with,
+    /// such as another culture's luxuries; collapsed under "Other goods".
+    public let otherRows: [Row]
 
-    init(quotes: [MarketQuote], reach: MarketReach, balance: Int64, isGameOver: Bool) {
-        rows = quotes.map { quote in
+    init(quotes: [MarketQuote], reach: MarketReach, balance: Int64, isGameOver: Bool, produced: Set<Good> = []) {
+        let all = quotes.map { quote in
             let buyable = quote.good.marketTerms.buyLimit > 0
             let sellable = quote.good.marketTerms.sellLimit > 0
             let sides = [
@@ -41,6 +46,11 @@ public struct TownMarketSection: Equatable, Sendable {
                 canSell: !isGameOver && quote.sellLeft > 0 && reach.stock[quote.good, default: 0] > 0
             )
         }
+        let isUsable = { (row: Row) in
+            row.isBuyable || reach.stock[row.good, default: 0] > 0 || produced.contains(row.good)
+        }
+        rows = all.filter(isUsable)
+        otherRows = all.filter { !isUsable($0) }
     }
 }
 
@@ -48,11 +58,18 @@ public extension GameSession {
     /// The market of the selected town center; nil unless it is the
     /// player's and operational.
     var townMarket: TownMarketSection? {
-        guard let tile = selectedTile, let id = world.occupiedTiles[tile], let reach = world.marketReach(at: id) else {
+        guard let tile = selectedTile, let id = world.occupiedTiles[tile], let reach = world.marketReach(at: id),
+              let anchor = world.buildings[id]?.anchor
+        else {
             return nil
         }
+        let tileToIsland = world.tileToIslandMap()
+        let produced = tileToIsland[anchor].map { island in
+            Set(Good.allCases.filter { world.producesGood(onIsland: island, good: $0, tileToIsland: tileToIsland) })
+        } ?? []
         return TownMarketSection(
-            quotes: world.marketQuotes, reach: reach, balance: world.economy.balance, isGameOver: isGameOver
+            quotes: world.marketQuotes, reach: reach, balance: world.economy.balance, isGameOver: isGameOver,
+            produced: produced
         )
     }
 
@@ -68,25 +85,40 @@ public extension GameSession {
 struct TownMarketView: View {
     let market: TownMarketSection
     let onTrade: (TradeDirection, Good, Int) -> Void
+    @State private var showsOtherGoods = false
 
     var body: some View {
         Section {
-            ForEach(market.rows) { row in
-                VStack(alignment: .leading, spacing: 2) {
-                    rowText(row)
-                    // All four buttons on one line where they fit, else Buy
-                    // and Sell on a line each.
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 10) { buttons(row) }
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 10) { buttons(row, only: .bought) }
-                            HStack(spacing: 10) { buttons(row, only: .sold) }
-                        }
-                    }
+            rowViews(market.rows)
+            if !market.otherRows.isEmpty {
+                Button(showsOtherGoods ? "Hide other goods" : "Other goods (\(market.otherRows.count))") {
+                    showsOtherGoods.toggle()
+                }
+                .font(.caption.weight(.semibold))
+                .buttonStyle(.borderless)
+                if showsOtherGoods {
+                    rowViews(market.otherRows)
                 }
             }
         } header: {
             Text("Market").font(.caption.bold())
+        }
+    }
+
+    private func rowViews(_ rows: [TownMarketSection.Row]) -> some View {
+        ForEach(rows) { row in
+            VStack(alignment: .leading, spacing: 2) {
+                rowText(row)
+                // All four buttons on one line where they fit, else Buy
+                // and Sell on a line each.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { buttons(row) }
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 10) { buttons(row, only: .bought) }
+                        HStack(spacing: 10) { buttons(row, only: .sold) }
+                    }
+                }
+            }
         }
     }
 
