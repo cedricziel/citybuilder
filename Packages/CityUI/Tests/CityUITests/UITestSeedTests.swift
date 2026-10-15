@@ -59,6 +59,14 @@ func townSeedStartsInTheRequestedSeason() {
     #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
 }
 
+@Test("The town seed can be built in another culture, for culture-look shots")
+@MainActor
+func townSeedTakesACulture() {
+    #expect(UITestSeed.townWorld(culture: .mediterranean).culture == .mediterranean)
+    #expect(UITestSeed.culture(fromArguments: ["app", "-uiTestCulture", "east-asian"]) == .eastAsian)
+    #expect(UITestSeed.culture(fromArguments: ["app"]) == .northernEuropean)
+}
+
 @Test("The town seed stays solvent with a whole category on show")
 @MainActor
 func townSeedStaysSolvent() {
