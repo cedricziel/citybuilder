@@ -120,6 +120,10 @@ To change content:
 
 `make gamedata-check` fails when the committed files differ from the packs. It runs in CI (macOS and Linux) and in the pre-commit hook when files under `GameData/` or `Generated/` are staged.
 
+To review a content change, run `swift run --package-path Packages/GameDataGen gamedata-gen diff <ref>` from the repository root. It compares the packs at a git revision with the working tree, or with a second revision given as another argument. It prints one line per changed value (`Building sawmill: cost 120 → 130`), then the added and removed items. Anchors and merge keys are resolved first, so a changed anchor lists every item that merges it. Formatting, comments, key order and moving an item to another pack are not changes.
+
+`.claude/settings.json` wires `scripts/gamedata-hook.sh` into Claude Code. After an agent edits a pack, the hook validates the packs and reports any errors back to the agent. It blocks agent edits to `Generated/`. Edits to other files pass through without running anything, and the hook lets an edit through when the generator can't be built or run.
+
 **Order matters.** Enum case order is load order: packs in manifest order, then items in file order. The order of `Good`, `Culture`, `Tech` and `Age` feeds the simulation (caravans, rival setup, research, age comparison), so reorder only on purpose. `BuildingKind` order only sets the build palette order.
 
 **Code-backed buildings.** `effect: code` marks a building whose behaviour is written in Swift: houses, storage, roads, town center, port, shipyard, library, monument and signature buildings. A building with neither a recipe that produces goods nor `effect: code` is rejected as inert. A new `effect: code` building compiles but does nothing until its Swift behaviour exists.
