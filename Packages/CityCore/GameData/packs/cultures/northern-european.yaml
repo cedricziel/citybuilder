@@ -24,7 +24,6 @@ items:
     id: northern-european
     name: Northern European
     blurb: Half-timbered towns under steep tiled roofs.
-    tiers: { peasants: Peasants, citizens: Citizens, merchants: Merchants }
     luxury: { raw: hops, good: beer, garden: hop-garden, producer: brewery }
     signature: mead-hall
     residentNames: [Astrid, Bjorn, Greta, Hans, Ingrid, Jakob, Karin, Lars, Magda, Nils, Olga, Per,
