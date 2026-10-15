@@ -151,10 +151,24 @@ func everyRequestedBuildingSpriteIsOnDisk() {
         let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
         names += (0 ..< frames).map { SpriteAnimation.assetName(for: .buildingOperational(kind), frame: $0) }
     }
+    // Culture looks are finished-only: the base and, for kinds with a loop, its operational frames.
+    var looks = 0
+    for kind in IsoWorldScene.cultureVariantKinds.sorted(by: { $0.rawValue < $1.rawValue }) {
+        for culture in Culture.allCases {
+            guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: .peasants, culture: culture),
+                  TextureFiltering.kitRenderedStems.contains(look)
+            else { continue }
+            looks += 1
+            names.append(look)
+            let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+            names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+        }
+    }
     // Every migrated kind contributes its base and three construction stages at least, so the walk
     // can never pass by checking nothing.
     #expect(!kinds.isEmpty)
-    #expect(names.count >= kinds.count * 4)
+    #expect(looks >= 6, "the warehouse and library looks of three cultures")
+    #expect(names.count >= kinds.count * 4 + looks)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
