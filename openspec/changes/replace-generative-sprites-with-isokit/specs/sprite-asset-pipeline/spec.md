@@ -110,18 +110,37 @@ The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to 
 | `building-` | `Buildings` |
 | `overlay-` | `Buildings` |
 | `walker-` | `Units` |
-| `ship-` | `Units` |
+| `ship-` | `Kit` |
 | `good-` | `Icons` |
 
 The public `SpriteAtlas` API remains unchanged.
 
 #### Scenario: Ship name routes to Units atlas
-- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Units")` and returns a non-nil texture
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name whose stem is not kit-rendered
+- **THEN** it answers `Units`, the prefix fallback
 
 #### Scenario: Shore-building name routes to Buildings atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a shore-building name whose facing is not kit-rendered
+- **THEN** it answers `Buildings`, the prefix fallback
+
+#### Scenario: Ship name routes to Kit atlas
+- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+#### Scenario: Shore-building name routes to Kit atlas
 - **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Buildings")` and returns a non-nil texture
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+### Requirement: Ship sprite inventory
+The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross product of facings `{n, ne, e, se, s, sw, w, nw}` and frames `{0, 1}`. Every declared ship sprite MUST resolve to a non-nil texture in `Kit.atlas` (verified by the asset-presence check from `sprite-asset-pipeline`).
+
+#### Scenario: All 16 ship sprites declared
+- **WHEN** the sprite catalog is enumerated
+- **THEN** there are exactly 16 entries matching the pattern `ship-<facing>-<frame>` covering every (facing, frame) pair
+
+#### Scenario: Every declared ship sprite resolves
+- **WHEN** the debug-build asset-presence check runs on a build containing this change's PNGs
+- **THEN** every declared `ship-<facing>-<frame>` resolves to a non-nil texture from `Kit.atlas`
 
 ## ADDED Requirements
 

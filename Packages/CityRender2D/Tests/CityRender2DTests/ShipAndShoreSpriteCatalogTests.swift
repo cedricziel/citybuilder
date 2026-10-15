@@ -73,14 +73,24 @@ func scenarioShipNameWithUnknownFacingRejected() {
 
 @Test("scenario: ship name routes to units atlas")
 func scenarioShipNameRoutesToUnitsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "ship-ne-0") == "Units")
-    #expect(SpriteAtlasRouting.atlasName(for: "ship-nw-1") == "Units")
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-x-0") == "Units")
 }
 
 @Test("scenario: shore-building name routes to buildings atlas")
 func scenarioShoreBuildingNameRoutesToBuildingsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "building-port-w-operational-1") == "Buildings")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-shipyard-s") == "Buildings")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-port-x-operational-1") == "Buildings")
+}
+
+@Test("scenario: ship name routes to kit atlas")
+func scenarioShipNameRoutesToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-ne-0") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-nw-1") == "Kit")
+}
+
+@Test("scenario: shore-building name routes to kit atlas")
+func scenarioShoreBuildingNameRoutesToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "building-port-w-operational-1") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-shipyard-s") == "Kit")
 }
 
 // MARK: - Ship sprite inventory

@@ -1,71 +1,43 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
-Sailing-ship unit sprite. Ships emit from shipyards and traverse water
-between ports. Rendered in 8 isometric facings (`n`, `ne`, `e`, `se`,
-`s`, `sw`, `w`, `nw`) × 2 animation frames = 16 cells. The renderer
-selects facing from the ship's velocity direction.
+Sailing-ship unit sprite. Ships leave shipyards and sail between ports. Eight facings × two frames; the renderer picks the facing from the ship's heading (`ShipRenderMath.facing`) and anchors the sprite at (0.5, 0.3).
 
 ## Visual identity
 
-Single-masted clinker-built cog with a square cream-linen sail, dark
-timber hull below the waterline, lighter timber strakes above. Slight
-hull-shadow band where the strakes meet the water. Palette anchors:
-`#4A2F1A` hull below waterline, `#6E4A2A` strakes above, `#A07C50`
-deck and mast, `#D2C094` sail cream, `#A8CCDD` foam bow-wave (max
-2 canonical px). The 2-frame animation shows a gentle sail luff: the
-sail eases between two slack positions — no shape inversion, no
-rope-detail change.
-
-The catalog uses front-matter `sheet_size = "3072x1024"` and
-`cell_grid = "8x2"` so cell pixel dimensions stay at 384×512 to match
-walker cells.
+Rendered by IsoKit in the shared light rig. A single-masted cog: a tarred lower hull, dark timber strakes with pointed ends, a plank deck and aft castle, a mast with a yard, and a square cream sail. The hull is about 5 m long, so it fits a tile in every facing. Facings turn the ship, never the camera or the sun.
 
 ## Sheet
 
-Grid: 8 cols × 2 rows. Front-matter overrides: `sheet_size =
-"3072x1024"`, `cell_grid = "8x2"`. All 16 cells used.
+Grid: 8 cols × 2 rows. All 16 cells used.
 
-- (0, 0): `ship-n-0` — facing north, sail luff frame 0
-- (0, 1): `ship-n-1` — facing north, sail luff frame 1
-- (0, 2): `ship-ne-0` — facing north-east, frame 0
-- (0, 3): `ship-ne-1` — facing north-east, frame 1
-- (0, 4): `ship-e-0` — facing east, frame 0
-- (0, 5): `ship-e-1` — facing east, frame 1
-- (0, 6): `ship-se-0` — facing south-east, frame 0
-- (0, 7): `ship-se-1` — facing south-east, frame 1
-- (1, 0): `ship-s-0` — facing south, frame 0
-- (1, 1): `ship-s-1` — facing south, frame 1
-- (1, 2): `ship-sw-0` — facing south-west, frame 0
-- (1, 3): `ship-sw-1` — facing south-west, frame 1
-- (1, 4): `ship-w-0` — facing west, frame 0
-- (1, 5): `ship-w-1` — facing west, frame 1
-- (1, 6): `ship-nw-0` — facing north-west, frame 0
-- (1, 7): `ship-nw-1` — facing north-west, frame 1
+- (0, 0): `ship-n-0` — facing north, sail drawing
+- (0, 1): `ship-n-1` — facing north, sail easing
+- (0, 2): `ship-ne-0` — facing north-east, sail drawing
+- (0, 3): `ship-ne-1` — facing north-east, sail easing
+- (0, 4): `ship-e-0` — facing east, sail drawing
+- (0, 5): `ship-e-1` — facing east, sail easing
+- (0, 6): `ship-se-0` — facing south-east, sail drawing
+- (0, 7): `ship-se-1` — facing south-east, sail easing
+- (1, 0): `ship-s-0` — facing south, sail drawing
+- (1, 1): `ship-s-1` — facing south, sail easing
+- (1, 2): `ship-sw-0` — facing south-west, sail drawing
+- (1, 3): `ship-sw-1` — facing south-west, sail easing
+- (1, 4): `ship-w-0` — facing west, sail drawing
+- (1, 5): `ship-w-1` — facing west, sail easing
+- (1, 6): `ship-nw-0` — facing north-west, sail drawing
+- (1, 7): `ship-nw-1` — facing north-west, sail easing
 
 ## Animation
 
-Eight independent 2-frame sail-luff cycles, one per facing.
-
-- N luff: `(0, 0)` → `(0, 1)`. Adjacent on row 0.
-- NE luff: `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- E luff: `(0, 4)` → `(0, 5)`. Adjacent on row 0.
-- SE luff: `(0, 6)` → `(0, 7)`. Adjacent on row 0.
-- S luff: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
-- SW luff: `(1, 2)` → `(1, 3)`. Adjacent on row 1.
-- W luff: `(1, 4)` → `(1, 5)`. Adjacent on row 1.
-- NW luff: `(1, 6)` → `(1, 7)`. Adjacent on row 1.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
-`units.py`) in the register pinned by `world.md` § Building register.
-Operational frames keep the finished building and add a rising smoke plume.
-The per-cell roles above describe the original AI sprites.
+Eight independent two-frame sail cycles, one per facing: the sail draws, then eases and slackens aft. The hull stays still.
 
 ## Recipe
 
-- Recipe: `ship` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `ship-<facing>` (IsoKit), one per facing
+- Cell: 1×1 footprint, 72 pt tall
 - Facings: e, n, ne, nw, s, se, sw, w
 - Frames per facing: 2
+- Moving part: sail

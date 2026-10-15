@@ -1,48 +1,37 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
-Shore-placement goods exchange. Carriers deposit/withdraw goods from
-the land side; ships dock at the water side. This catalog entry is the
-**south-facing** port — its sea-facing side is on the north (water tile
-to the north of the building footprint).
+Shore-placement goods exchange. Carriers deposit and withdraw goods on the land side; ships dock at the water side. This entry is the **south-facing** port: the sea lies to the south of its land side (`ShoreOrientation.s`, the direction from the land-face tiles to the sea-face tiles). The footprint is two columns by three rows in every facing.
 
 ## Visual identity
 
-Wooden pier extending north from a stone-quay base, two-storey
-half-timber warehouse on the inland (south) side. The warehouse south
-face presents the loading door to the camera. Palette and silhouette
-register MUST match `building-port-n.md` so all four orientations read
-as the same building reskinned for direction. Cast shadow falls
-south-east as for every building. 2-frame banner wave.
+Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a timber-framed plaster warehouse under a red tile roof and a timber crane whose jib reaches over the water, with crates and barrels. A plank pier on pilings runs out to sea along the visible edge. The four facings move the geometry, never the camera or the sun, so they light alike.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-port-s` — canonical operational base
-- (0, 1): `building-port-s-constructing-0` — pilings driven
-- (0, 2): `building-port-s-constructing-1` — deck + quay
-- (0, 3): `building-port-s-constructing-2` — warehouse framing
-- (1, 0): `building-port-s-operational-0` — banner low
-- (1, 1): `building-port-s-operational-1` — banner unfurled
+- (0, 0): `building-port-s` — finished port
+- (0, 1): `building-port-s-constructing-0` — quay and pier
+- (0, 2): `building-port-s-constructing-1` — warehouse walls rising
+- (0, 3): `building-port-s-constructing-2` — warehouse under its roof, scaffold
+- (1, 0): `building-port-s-operational-0` — operational frame 0
+- (1, 1): `building-port-s-operational-1` — operational frame 1
 - (1, 2): spare
 - (1, 3): spare
 
 ## Animation
 
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Banner-wave: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+Construction stages: the quay and pier are there from the start, and the warehouse and crane rise through rising cuts with scaffold on the visible corners. The operational frames repeat the finished port.
 
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`,
-`units.py`) in the register pinned by `world.md` § Building register.
-Operational frames keep the finished building and add a rising smoke plume.
-The per-cell roles above describe the original AI sprites.
+- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
+- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 
 ## Recipe
 
-- Recipe: `building-port-s` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-port-s` (IsoKit)
+- Cell: 2×3 footprint, 128 pt tall
 - Construction stages: 3
 - Operational frames: 2
