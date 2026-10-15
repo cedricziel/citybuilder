@@ -110,8 +110,7 @@ struct RivalTurn {
         if sawmills == 0, allHuts > 0, planks < RivalAI.housePlanks { kinds.append(.sawmill) }
         if pastOpening, planks < 6, sawmills < huts { kinds.append(.sawmill) }
         let wantsHut = huts < 1 + houses / 4 || forestLeft < RivalAI.hutMinForest
-        let hutRoom = counts[.forester, default: 0] == 0 || allHuts < RivalAI.hutLimit(houses: houses)
-        if stock[.wood, default: 0] < 4, wantsHut, hutRoom {
+        if stock[.wood, default: 0] < 4, wantsHut, !atHutLimit {
             kinds.append(.lumberjackHut)
         }
         // A thinned hut needs a forester most, so every hut counts; a
@@ -120,6 +119,24 @@ struct RivalTurn {
             kinds.append(.forester)
         }
         return kinds
+    }
+
+    /// True when a forester replants and the rival has as many huts,
+    /// thinned ones included, as its houses allow
+    /// (`rival-viability-margin` D2).
+    var atHutLimit: Bool {
+        counts[.forester, default: 0] > 0 && allHuts >= RivalAI.hutLimit(houses: counts[.house, default: 0])
+    }
+
+    /// Script steps the rival passes over: houses at the house cap, huts
+    /// at the hut limit, and a warehouse once one stands or is built.
+    func skipsScriptStep(_ kind: BuildingKind, houseCap: Int) -> Bool {
+        switch kind {
+        case .house: counts[.house, default: 0] >= houseCap
+        case .lumberjackHut: atHutLimit
+        case .warehouse: counts[.warehouse, default: 0] > 0
+        default: false
+        }
     }
 
     /// True when the town center has no room for the farms' food.
@@ -209,9 +226,9 @@ extension World {
         guard !portRuleTookTurn else { return }
         var ai = rival.ai
         var kind = RivalAI.scriptKind(at: ai.scriptIndex)
-        // Bounded: the growth loop holds non-house steps.
-        let atHouseCap = turn.counts[.house, default: 0] >= difficulty.rivalHouseCap
-        for _ in RivalAI.growthLoop.indices where kind == .house && atHouseCap {
+        // Bounded: the growth loop holds farms and sawmills, which are
+        // never skipped.
+        for _ in RivalAI.growthLoop.indices where turn.skipsScriptStep(kind, houseCap: difficulty.rivalHouseCap) {
             ai.advance()
             kind = RivalAI.scriptKind(at: ai.scriptIndex)
         }

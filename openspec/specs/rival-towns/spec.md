@@ -93,7 +93,7 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 - **WHEN** a rival past its opening with 4 houses, 1 farm and 3 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm and its script index is unchanged
 
-#### Scenario: A farm for every house
+#### Scenario: Fewer farms than houses
 
 - **WHEN** a rival past its opening with 5 houses, 4 farms and 2 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm

@@ -6,7 +6,7 @@ import Testing
 // ports, base prices and offers.
 
 /// Rival 1 of a Normal archipelago with `houses` houses, $500, 10 wood,
-/// 8 planks and 20 food.
+/// 8 planks and 16 food.
 private func portReadyWorld(houses: Int = 6) -> World {
     var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .normal)
     world.setRival(1) { $0.treasury = 500 }
