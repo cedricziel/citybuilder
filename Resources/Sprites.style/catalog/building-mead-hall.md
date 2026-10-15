@@ -17,8 +17,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - (0, 1): `building-mead-hall-constructing-0` — stone pad
 - (0, 2): `building-mead-hall-constructing-1` — timber frame
 - (0, 3): `building-mead-hall-constructing-2` — walls with scaffolding
-- (1, 0): `building-mead-hall-operational-0` — smoke from the ridge, doorway lit (left)
-- (1, 1): `building-mead-hall-operational-1` — smoke from the ridge, doorway lit (right)
+- (1, 0): `building-mead-hall-operational-0` — operational frame 0
+- (1, 1): `building-mead-hall-operational-1` — operational frame 1
 - (1, 2): spare
 - (1, 3): spare
 

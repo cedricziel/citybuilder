@@ -17,8 +17,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - (0, 1): `building-monument-constructing-0` — stepped podium
 - (0, 2): `building-monument-constructing-1` — columns standing in scaffolding
 - (0, 3): `building-monument-constructing-2` — roofless colonnade
-- (1, 0): `building-monument-operational-0` — brazier flame leaning east
-- (1, 1): `building-monument-operational-1` — brazier flame flaring
+- (1, 0): `building-monument-operational-0` — operational frame 0
+- (1, 1): `building-monument-operational-1` — operational frame 1
 - (1, 2): spare
 - (1, 3): spare
 

@@ -17,8 +17,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - (0, 1): `building-gallery-constructing-0` — stone pad
 - (0, 2): `building-gallery-constructing-1` — timber frame
 - (0, 3): `building-gallery-constructing-2` — walls with scaffolding
-- (1, 0): `building-gallery-operational-0` — banner flutter, first wave
-- (1, 1): `building-gallery-operational-1` — banner flutter, second wave
+- (1, 0): `building-gallery-operational-0` — operational frame 0
+- (1, 1): `building-gallery-operational-1` — operational frame 1
 - (1, 2): spare
 - (1, 3): spare
 

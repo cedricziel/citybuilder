@@ -17,8 +17,8 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - (0, 1): `building-forum-constructing-0` — stone pad
 - (0, 2): `building-forum-constructing-1` — timber frame
 - (0, 3): `building-forum-constructing-2` — walls with scaffolding
-- (1, 0): `building-forum-operational-0` — striped market stalls, fountain sparkling
-- (1, 1): `building-forum-operational-1` — stall stripes swapped, fountain sparkling
+- (1, 0): `building-forum-operational-0` — operational frame 0
+- (1, 1): `building-forum-operational-1` — operational frame 1
 - (1, 2): spare
 - (1, 3): spare
 
