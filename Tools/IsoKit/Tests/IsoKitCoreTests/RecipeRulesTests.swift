@@ -72,6 +72,20 @@ struct RecipeRulesTests {
         #expect(abs(topCorner.y - 64) < 0.001)
     }
 
+    /// The renderer centres a W x H sprite on the footprint's width, level with its bottom vertex.
+    @Test("a 2x3 cell is 160 points wide and centred on the footprint's width")
+    func twoByThreeCellGeometry() {
+        let cell = SpriteCell(footprint: 2, rows: 3, heightPx: 112)
+        #expect(cell.widthPx == 160)
+        let bottom = Projection.screen(SCNVector3(8, 0, 12), in: cell)
+        #expect(abs(bottom.x - 64) < 0.001)
+        #expect(abs(bottom.y) < 0.001)
+        let left = Projection.screen(SCNVector3(0, 0, 12), in: cell)
+        let right = Projection.screen(SCNVector3(8, 0, 0), in: cell)
+        #expect(abs(left.x) < 0.001)
+        #expect(abs(right.x - 160) < 0.001)
+    }
+
     @Test("scenario: Rendering needs no network")
     func renderingNeedsNoNetwork() throws {
         let sources = RepoPaths.root.appendingPathComponent("Tools/IsoKit/Sources")

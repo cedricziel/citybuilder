@@ -78,7 +78,7 @@ public struct Recipe {
     /// The recipe's own nodes, without lights or ground.
     public func build(stage: Stage) -> SCNNode {
         let kit = Builder()
-        if let plot { kit.plot(size: cell.sizeMetres, plot) }
+        if let plot { kit.plot(width: cell.sizeMetres, depth: cell.depthMetres, plot) }
         if case let .constructing(index) = stage, !customStages {
             body(kit, .finished)
             ConstructionStages.cut(kit.root, frame: index, frames: constructionFrames)

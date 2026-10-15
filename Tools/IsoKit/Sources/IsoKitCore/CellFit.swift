@@ -7,8 +7,7 @@ public enum Projection {
     static let right = SCNVector3(Iso.invRoot2, 0, -Iso.invRoot2)
 
     public static func screen(_ point: SCNVector3, in cell: SpriteCell) -> CGPoint {
-        let anchor = SCNVector3(cell.sizeMetres, 0, cell.sizeMetres)
-        let rel = point - anchor
+        let rel = point - cell.anchor
         return CGPoint(
             x: CGFloat(cell.widthPx) / 2 + rel.dot(right) * Iso.pxPerMetre,
             y: rel.dot(Iso.up) * Iso.pxPerMetre

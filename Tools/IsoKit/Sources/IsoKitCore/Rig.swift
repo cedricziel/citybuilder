@@ -6,7 +6,7 @@ public enum Rig {
     /// One warm sun from screen upper-left, high enough that the cast shadow stays in the cell,
     /// plus a cool sky fill.
     static func add(to root: SCNNode, cell: SpriteCell) {
-        let centre = SCNVector3(cell.sizeMetres / 2, 0, cell.sizeMetres / 2)
+        let centre = SCNVector3(cell.sizeMetres / 2, 0, cell.depthMetres / 2)
         let sun = SCNLight()
         sun.type = .directional
         sun.color = NSColor(red: 1.0, green: 0.80, blue: 0.56, alpha: 1)
@@ -15,7 +15,7 @@ public enum Rig {
         sun.shadowMapSize = CGSize(width: 4096, height: 4096)
         sun.shadowSampleCount = 16
         sun.shadowRadius = 4
-        sun.orthographicScale = cell.sizeMetres * 1.6
+        sun.orthographicScale = max(cell.sizeMetres, cell.depthMetres) * 1.6
         sun.shadowColor = NSColor(red: 0.12, green: 0.08, blue: 0.05, alpha: 0.55)
         let sunNode = SCNNode()
         sunNode.light = sun
@@ -60,8 +60,7 @@ public enum Rig {
         let node = SCNNode()
         node.camera = cam
         node.eulerAngles = SCNVector3(-CGFloat.pi / 6, CGFloat.pi / 4, 0)
-        let anchor = SCNVector3(cell.sizeMetres, 0, cell.sizeMetres)
-        node.position = anchor + Iso.up * halfHeight - Iso.forward * 80
+        node.position = cell.anchor + Iso.up * halfHeight - Iso.forward * 80
         return node
     }
 }
