@@ -145,8 +145,8 @@ func chimneyAnchorsSitInsideTheSprite() {
     #expect(bakery.x > 0 && bakery.y > 64 && bakery.y < 128)
     let unknown = ChimneyAnchors.offset(stem: "building-mead-hall", spriteSize: size)
     #expect(unknown.x == 0 && unknown.y > 100)
-    let variant = ChimneyAnchors.offset(stem: "building-house-tier2-modern-east-asian", spriteSize: size)
-    #expect(variant == ChimneyAnchors.offset(stem: "building-house-tier2", spriteSize: size))
+    let variant = ChimneyAnchors.offset(stem: "building-bakery-mediterranean", spriteSize: size)
+    #expect(variant == ChimneyAnchors.offset(stem: "building-bakery", spriteSize: size))
     #expect(TextureFiltering.stem(of: "building-house-tier2") == "building-house-tier2")
 }
 
