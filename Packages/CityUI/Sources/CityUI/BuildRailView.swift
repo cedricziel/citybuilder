@@ -172,6 +172,7 @@ struct BuildDrawerView: View {
             .padding(10)
             .fixedSize(horizontal: true, vertical: false)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .panelTransition(PanelMotion.drawerStyle(for: layout.placement))
         }
     }
 
