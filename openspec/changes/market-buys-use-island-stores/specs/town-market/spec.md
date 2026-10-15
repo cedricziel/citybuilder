@@ -13,7 +13,7 @@ A `marketBuy(townCenter, good, quantity)` command SHALL move into the operationa
 - **THEN** 2 wood is bought
 
 #### Scenario: Full town center
-- **WHEN** the player asks to buy 10 food, the town center has 3 free space and the island has no other goods buffer
+- **WHEN** the player asks to buy 10 food, the town center has 3 free space and the warehouse on its island is full
 - **THEN** 3 food is bought
 
 #### Scenario: A full town center buys into a warehouse

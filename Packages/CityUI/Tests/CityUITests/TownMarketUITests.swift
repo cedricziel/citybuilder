@@ -83,6 +83,39 @@ func buyDisabledAtTheLimit() throws {
 }
 
 @MainActor
+@Test("scenario: Buy enabled while a warehouse has room")
+func buyEnabledWhileAWarehouseHasRoom() throws {
+    let (session, _) = try marketSession { world, center in
+        world.stockpiles[center] = Stockpile(capacity: 1)
+        world.stockpiles[center]?.deposit(.tools, amount: 1)
+        addWarehouse(beside: center, in: &world)
+    }
+    #expect(session.world.buildings.values.contains { $0.kind == .warehouse && $0.owner == .player })
+    #expect(try row(.wood, in: session).canBuy)
+}
+
+/// Inserts an operational player warehouse on the first free land beside
+/// `center`'s island tiles.
+private func addWarehouse(beside center: EntityID, in world: inout World) {
+    guard let anchor = world.buildings[center]?.anchor else { return }
+    let map = world.tileToIslandMap()
+    let island = map[anchor]
+    let footprint = BuildingCatalog.spec(for: .warehouse).footprint
+    let candidates = (-12 ... 12).flatMap { dy in (-12 ... 12).map { TileCoordinate(x: anchor.x + $0, y: anchor.y + dy) } }
+    guard let site = candidates.first(where: { candidate in
+        footprint.tiles(anchor: candidate).allSatisfy { map[$0] == island && world.occupiedTiles[$0] == nil }
+    })
+    else { return }
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw &+= 1
+    world.buildings[id] = Building(id: id, kind: .warehouse, anchor: site, state: .operational, owner: .player)
+    for tile in footprint.tiles(anchor: site) {
+        world.occupiedTiles[tile] = id
+    }
+    world.stockpiles[id] = World.stockpileCapacity(for: .warehouse).map { Stockpile(capacity: $0) }
+}
+
+@MainActor
 @Test("scenario: Sell disabled without stock")
 func sellDisabledWithoutStock() throws {
     let (session, center) = try marketSession { world, center in

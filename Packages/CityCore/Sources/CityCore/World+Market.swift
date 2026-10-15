@@ -4,7 +4,8 @@ import Foundation
 /// goods on its island to sell. Spec: `platform-shells` / Town center
 /// market panel (design D6).
 public struct MarketReach: Equatable, Sendable {
-    /// Free space in the town center's stockpile.
+    /// Free space across the operational player goods buffers on the
+    /// town center's island: room a purchase can fill.
     public let freeSpace: Int
     /// Goods across the operational player goods buffers on its island.
     public let stock: [Good: Int]
@@ -39,12 +40,15 @@ public extension World {
     func marketReach(at townCenter: EntityID) -> MarketReach? {
         guard let center = marketTownCenter(townCenter) else { return nil }
         var stock: [Good: Int] = [:]
+        var freeSpace = 0
         for buffer in marketBuffers(of: center) {
-            for (good, amount) in stockpiles[buffer.id]?.contents ?? [:] where amount > 0 {
+            guard let pile = stockpiles[buffer.id] else { continue }
+            for (good, amount) in pile.contents where amount > 0 {
                 stock[good, default: 0] += amount
             }
+            freeSpace += pile.freeSpace
         }
-        return MarketReach(freeSpace: stockpiles[townCenter]?.freeSpace ?? 0, stock: stock)
+        return MarketReach(freeSpace: freeSpace, stock: stock)
     }
 }
 
@@ -64,7 +68,7 @@ extension World {
         let wanted = min(quantity, market.left(good, direction))
         let units = switch direction {
         case .bought:
-            depositAffordable(good, upTo: wanted, at: price, into: townCenter)
+            depositAffordable(good, upTo: wanted, at: price, into: purchaseBuffers(of: center))
         case .sold:
             drain(good, upTo: wanted, from: marketBuffers(of: center))
         }
@@ -93,11 +97,15 @@ extension World {
         }
     }
 
-    /// Puts as many of `amount` units into `townCenter` as fit and the
-    /// player's balance pays for at `price`.
-    private mutating func depositAffordable(_ good: Good, upTo amount: Int, at price: Int64, into townCenter: EntityID) -> Int {
-        let space = stockpiles[townCenter]?.freeSpace ?? 0
-        let units = min(amount, space, Self.unitsPaidFor(by: economy.balance, at: price))
-        return stockpiles[townCenter]?.deposit(good, amount: units) ?? 0
+    /// The market buffers in the order a purchase fills them: the town
+    /// center first, then the rest by entity ID (`market-buys-use-island-stores` D2).
+    private func purchaseBuffers(of center: Building) -> [Building] {
+        [center] + marketBuffers(of: center).filter { $0.id != center.id }
+    }
+
+    /// Puts as many of `amount` units into `buffers`, in order, as fit and
+    /// the player's balance pays for at `price`.
+    private mutating func depositAffordable(_ good: Good, upTo amount: Int, at price: Int64, into buffers: [Building]) -> Int {
+        fill(good, upTo: min(amount, Self.unitsPaidFor(by: economy.balance, at: price)), into: buffers)
     }
 }
