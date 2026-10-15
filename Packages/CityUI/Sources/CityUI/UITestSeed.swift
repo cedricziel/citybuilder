@@ -31,12 +31,16 @@ public enum UITestSeed {
             return world
         }
         let camera = world.camera
+        var placed: Set<TileCoordinate> = []
         for kind in Array(repeating: BuildingKind.house, count: houses) + showcase {
             guard let site = nearestSite(for: kind, in: world, around: center, from: 3) else { continue }
             world.enqueue(.place(kind, at: site))
             _ = world.tick()
+            placed.insert(site)
         }
-        for _ in 0 ..< 2000 where world.buildings.values.contains(where: { $0.owner == .player && $0.state != .operational }) {
+        // Wait only on what the seed placed, so a starter building that never opens can't hold it up.
+        let pending = { world.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
+        for _ in 0 ..< 2000 where pending() {
             _ = world.tick()
         }
         if let season {
