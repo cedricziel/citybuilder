@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32" shape-rendering="crispEdges">
+<!-- Edge tile: sand upper-right, water toward +r. Order: shallow water, wet-sand band, dry sand, then foam on the waterline. -->
+<defs>
+  <pattern id="s" width="32" height="16" patternUnits="userSpaceOnUse">
+    <rect width="32" height="16" fill="#D9BC86"/>
+    <path d="M5,4 h1 M21,6 h1 M13,12 h1 M29,14 h1 M9,9 h1 M25,1 h1" stroke="#B89A66" stroke-width="1"/>
+  </pattern>
+</defs>
+<path d="M32,0 L64,16 L32,32 L0,16Z" fill="#4E968E"/>
+<path d="M0,16 L16,8 L48,24 L32,32Z" fill="#3F7F86" opacity="0.6"/>
+<path d="M32,0 L64,16 L48,24 C42,23 38,22 33,19 C27,16 23,15 19,11 C18,10 17,9 16,8Z" fill="#A88A5E"/>
+<path d="M32,0 L64,16 L50,23 C44,21 40,20 35,17 C29,14 25,13 21,10 C19,9 18,8 17,7.5Z" fill="url(#s)"/>
+<path d="M16,8 C17,9 18,10 19,11 C23,15 27,16 33,19 C38,22 42,23 48,24" stroke="#F4F1E4" stroke-width="1.6" fill="none"/>
+<path d="M12,12 C18,15 24,18 30,21 M34,24 C38,26 42,27 44,27" stroke="#F4F1E4" stroke-width="0.9" opacity="0.55" fill="none"/>
+</svg>
