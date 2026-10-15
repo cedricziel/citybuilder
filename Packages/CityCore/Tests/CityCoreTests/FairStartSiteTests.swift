@@ -242,12 +242,17 @@ private struct SweepRow: Sendable {
     }
 }
 
-/// Measures every town center of the world, and checks the rule that
-/// placed it against the generator's terrain before any placement.
+/// Measures every town center of the world, and checks which rule placed
+/// it. The world keeps no record of the rule, so the site search re-runs
+/// on the generator's terrain. That is the terrain generation saw for
+/// each island, because a town center and its grove never reach another
+/// island. A re-run site must also land on the world's actual anchor, or
+/// it counts as a fallback.
 private func sweep(_ world: World, generated: [TerrainType]) -> SweepRow {
     var pristine = World(seed: world.seed, mapWidth: world.mapWidth, mapHeight: world.mapHeight, terrainGrid: generated)
     pristine.islands = world.islands
     let map = pristine.tileToIslandMap()
+    let anchors = Set(townCenters(in: world).map(\.anchor))
     var fair = 0
     var trees: [Int] = []
     var fallbacks = 0
@@ -256,8 +261,11 @@ private func sweep(_ world: World, generated: [TerrainType]) -> SweepRow {
         if area.isFair { fair += 1 }
         trees.append(area.hutSiteTrees)
     }
-    for island in pristine.islands where pristine.townCenterSite(on: island, tileToIsland: map)?.rule != .fair {
-        fallbacks += 1
+    for island in pristine.islands {
+        let site = pristine.townCenterSite(on: island, tileToIsland: map)
+        if site?.rule != .fair || !anchors.contains(site?.anchor ?? TileCoordinate(x: -1, y: -1)) {
+            fallbacks += 1
+        }
     }
     return SweepRow(fair: fair, trees: trees, fallbacks: fallbacks)
 }
