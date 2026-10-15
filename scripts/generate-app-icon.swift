@@ -1,8 +1,8 @@
 #!/usr/bin/env swift
 // scripts/generate-app-icon.swift
 //
-// Composes the app icon from the existing in-game pixel-art sprites
-// (Resources/Terrain.atlas/* and Resources/Buildings.atlas/*). The icon
+// Composes the app icon from the existing in-game sprites
+// (Resources/Kit.atlas/* and Resources/Buildings.atlas/*). The icon
 // is a tiny isometric island vignette — a few grass tiles with a beach
 // trim and water surround, two buildings on the grass, one forest tile.
 //
@@ -217,11 +217,11 @@ func tileOrigin(col: Int, row: Int, cx: Int, cy: Int) -> (x: Int, y: Int) {
 //    (0,2)  (1,2)  (2,2)
 //         (1,3)  (2,3)
 
-let grass = sprite("Resources/Terrain.atlas/terrain-grass.png")
-let water = sprite("Resources/Terrain.atlas/terrain-water.png")
-let beach = sprite("Resources/Terrain.atlas/terrain-beach.png")
-let forest = sprite("Resources/Terrain.atlas/terrain-forest.png")
-let house = sprite("Resources/Buildings.atlas/building-house.png")
+let grass = sprite("Resources/Kit.atlas/terrain-grass.png")
+let water = sprite("Resources/Kit.atlas/terrain-water.png")
+let beach = sprite("Resources/Kit.atlas/terrain-beach.png")
+let forest = sprite("Resources/Kit.atlas/terrain-forest.png")
+let house = sprite("Resources/Kit.atlas/building-house.png")
 let sawmill = sprite("Resources/Buildings.atlas/building-sawmill.png")
 let lumberjack = sprite("Resources/Buildings.atlas/building-lumberjack-hut.png")
 

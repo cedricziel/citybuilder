@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import CityCore
 import Foundation
 import Testing
 @testable import CityRender2D
@@ -83,6 +84,52 @@ func scenarioRendererSourceUsesSpriteAtlasExclusively() throws {
         )
     }
     #expect(violations.isEmpty)
+}
+
+/// Every terrain name the renderer can ask for, in every season: base tiles and their animation
+/// frames, rock variants, seasonal tiles and their frames, and each transition with its seasonal sets.
+@MainActor
+private func terrainNamesTheRendererRequests() -> Set<String> {
+    var names: Set<String> = []
+    for kind in TerrainType.allCases {
+        let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
+        for variant in 0 ..< count {
+            names.insert(SpriteAtlas.variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant))
+        }
+        let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
+        names.formUnion((0 ..< frames).map { SpriteAnimation.assetName(for: .terrain(kind), frame: $0) })
+        for season in Season.allCases {
+            guard let seasonal = IsoWorldScene.seasonalTerrainName(kind: kind, season: season) else { continue }
+            names.insert(seasonal)
+            names.formUnion((0 ..< frames).map { "\(seasonal)-\($0)" })
+        }
+    }
+    for pair in SpriteName.transitionPairs {
+        let parts = pair.split(separator: "-").map(String.init)
+        guard let upper = TerrainType(rawValue: parts[0]), let lower = TerrainType(rawValue: parts[1]) else { continue }
+        for mask in 1 ... 14 {
+            let transition = TerrainTransition(upper: upper, lower: lower, mask: mask)
+            names.formUnion(Season.allCases.map { transition.assetName(in: $0) })
+        }
+    }
+    return names
+}
+
+/// The reverse of the check below: nothing the renderer requests may fall back to the placeholder.
+@MainActor
+@Test("every terrain sprite the renderer can request is committed where it routes")
+func everyRequestedTerrainSpriteIsOnDisk() {
+    let resources = worktreeRoot().appendingPathComponent("Resources")
+    let names = terrainNamesTheRendererRequests()
+    #expect(names.count >= 80) // 16 tiles and frames, 8 seasonal, 56 transitions
+    let missing = names.sorted().flatMap { name -> [String] in
+        let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
+        return ["\(name).png", "\(name)@2x.png"].compactMap { file in
+            let path = resources.appendingPathComponent("\(atlas).atlas/\(file)").path
+            return FileManager.default.fileExists(atPath: path) ? nil : "\(atlas).atlas/\(file)"
+        }
+    }
+    #expect(missing.isEmpty, "\(missing)")
 }
 
 /// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
