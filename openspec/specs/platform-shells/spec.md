@@ -626,7 +626,7 @@ Selecting a building SHALL show the inspector as a callout next to it: 14 points
 
 #### Scenario: Problem text for every building issue
 - **WHEN** the inspector describes each building issue
-- **THEN** no route to storage reads "Its road doesn't reach a warehouse or the town center", no trees in reach reads "No forest within 2 tiles", missing wood and grain reads "Waiting for wood, grain" and storage full reads "Store full: no carrier can take its goods"
+- **THEN** no route to storage reads "Its road doesn't reach a warehouse or the town center", no trees in reach reads "No forest within 2 tiles: build a forester beside it", no room to plant reads "No open grass within 2 tiles to plant", missing wood and grain reads "Waiting for wood, grain" and storage full reads "Store full: no carrier can take its goods"
 
 #### Scenario: Callout flips at the edge
 - **WHEN** a 220 by 120 point callout is placed for a building 14 points from the right edge of an 844 by 390 point view in the rail layout
@@ -659,3 +659,23 @@ On the Mac, the pause menu's Quit SHALL ask whether to save first, offering Save
 #### Scenario: A failed save keeps the game open
 - **WHEN** the player chooses Save and Quit and the save fails
 - **THEN** the game does not quit and the pause menu reports "Couldn't save"
+
+### Requirement: Forestry in the inspector and while placing
+
+The inspector's key lines for a lumberjack hut SHALL include "Trees in reach: N" after its "Road:" line, and for a forester "Open grass in reach: N", with N taken from the snapshot. While a lumberjack hut or a forester is armed for placement and has a candidate anchor, the tool strip hint SHALL end with the count that site would reach: " · 9 trees in reach" for a hut and " · 12 open grass in reach" for a forester.
+
+#### Scenario: Hut key lines show trees in reach
+- **WHEN** the player selects a lumberjack hut whose snapshot count is 7
+- **THEN** its key lines start with "State:", "Road:" and "Trees in reach: 7"
+
+#### Scenario: Forester key lines show open grass
+- **WHEN** the player selects a forester whose snapshot count is 12
+- **THEN** its key lines include "Open grass in reach: 12"
+
+#### Scenario: Tool strip hint shows trees at the candidate site
+- **WHEN** a lumberjack hut is armed on a touch device and its candidate anchor would reach 9 trees
+- **THEN** the tool strip hint reads "Tap or drag to place lumberjack · 9 trees in reach"
+
+#### Scenario: Tool strip hint without a candidate site
+- **WHEN** a forester is armed on the Mac and has no candidate anchor yet
+- **THEN** the tool strip hint has no count
