@@ -112,6 +112,66 @@ final class TVWalkthroughTests: XCTestCase {
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10), "Continue should open the saved game")
     }
 
+    func testMapHoldsFocusAndClicksMoveTheReticle() {
+        startGame(inHUD: false)
+        let reticle = app.descendants(matching: .any)["tv.reticle"]
+        XCTAssertTrue(reticle.waitForExistence(timeout: 5), "the reticle should show while the map has focus")
+        let before = reticle.label
+        remote.press(.right)
+        let moved = NSPredicate(format: "label != %@", before)
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [expectation(for: moved, evaluatedWith: reticle)], timeout: 5),
+            .completed,
+            "a click should step the reticle"
+        )
+        XCTAssertTrue(app.descendants(matching: .any)["tv.map"].hasFocus, "a click on the map must not move focus")
+        snapshot("map-reticle")
+    }
+
+    func testBackOnTheMapOpensThePauseMenu() {
+        startGame(inHUD: false)
+        remote.press(.menu)
+        XCTAssertTrue(app.buttons["pause.resume"].waitForExistence(timeout: 5), "Back on an idle map should pause")
+        snapshot("map-back-pause")
+        remote.press(.menu)
+        XCTAssertTrue(waitUntilGone(app.buttons["pause.resume"]), "Back on the pause menu should resume")
+        XCTAssertTrue(app.descendants(matching: .any)["tv.reticle"].waitForExistence(timeout: 5), "the map should have focus again")
+    }
+
+    func testPlayPauseMovesFocusBetweenMapAndHUD() {
+        startGame(inHUD: false)
+        remote.press(.playPause)
+        waitForFocus(app.buttons["Town"])
+        XCTAssertTrue(waitUntilGone(app.descendants(matching: .any)["tv.reticle"]), "the reticle hides while the HUD has focus")
+        remote.press(.playPause)
+        XCTAssertTrue(app.descendants(matching: .any)["tv.reticle"].waitForExistence(timeout: 5), "Play/Pause should return to the map")
+    }
+
+    func testChoosingAHouseStartsPlacementOnTheMap() {
+        startGame()
+        remote.press(.select)
+        let house = app.buttons["House"].firstMatch
+        XCTAssertTrue(house.waitForExistence(timeout: 5), "the Town drawer should open")
+        focus(house)
+        remote.press(.select)
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
+        let hint = app.staticTexts["Move, then click to place house. Back to cancel."]
+        XCTAssertTrue(hint.waitForExistence(timeout: 5), "the tool strip should show the Apple TV placement hint")
+        snapshot("map-placing-house")
+        remote.press(.menu)
+        XCTAssertTrue(waitUntilGone(hint), "Back should cancel the placement")
+    }
+
+    func testZoomButtonsInTheTopBar() {
+        startGame()
+        let zoomIn = app.buttons["Zoom In"]
+        XCTAssertTrue(zoomIn.exists, "the top bar should offer zoom on Apple TV")
+        focus(zoomIn)
+        remote.press(.select)
+        snapshot("zoomed-in")
+        XCTAssertTrue(app.buttons["Zoom Out"].exists)
+    }
+
     /// Launches with an empty save folder, so New Game is the primary
     /// button.
     private func launch() {
@@ -130,7 +190,9 @@ final class TVWalkthroughTests: XCTestCase {
     }
 
     /// Starts a game from New Game; `configure` runs with the dialog open.
-    private func startGame(configure: () -> Void = {}) {
+    /// The map has focus once the game starts; with `inHUD`, Play/Pause
+    /// then moves focus to the build rail.
+    private func startGame(inHUD: Bool = true, configure: () -> Void = {}) {
         launch()
         remote.press(.select)
         let start = app.buttons["newGame.start"]
@@ -140,6 +202,10 @@ final class TVWalkthroughTests: XCTestCase {
         focus(start)
         remote.press(.select)
         XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
+        if inHUD {
+            remote.press(.playPause)
+            waitForFocus(app.buttons["Town"])
+        }
     }
 
     /// Opens the screen behind `button`, checks that `content` shows,
