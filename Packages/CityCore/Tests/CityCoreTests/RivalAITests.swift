@@ -280,6 +280,18 @@ func rivalTakesNoStepAtTheBuildingCap() {
 
 // MARK: - Rival town plan
 
+@Test("a town plan with no room past its home block has no slot")
+func townPlanWithoutRoomHasNoSlot() {
+    // A 6×6 map: the town center fills its home block and every other
+    // block's ring runs off the map, so nothing can be opened.
+    var world = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1)
+    let center = TileCoordinate(x: 1, y: 1)
+    world.testPlace(.townCenter, at: center, owner: .player)
+    var plan = RivalTownPlan(world: world, owner: .player, center: center)
+    #expect(plan.slot(for: .house) == nil)
+    #expect(plan.slot(for: .warehouse) == nil)
+}
+
 @Test("scenario: first building opens the home block")
 func scenarioFirstBuildingOpensTheHomeBlock() throws {
     var world = normalWorld()
