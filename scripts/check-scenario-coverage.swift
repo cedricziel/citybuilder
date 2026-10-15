@@ -8,7 +8,8 @@
 // Mapping convention (design D13): a `#### Scenario: Foo bar baz` header
 // is considered covered when at least one Swift source file under
 // Packages/*/Tests/**/*.swift or Tools/*/Tests/**/*.swift contains the literal
-// string `@Test("scenario: foo bar baz")` (case-insensitive on the title), or a
+// string `@Test("scenario: foo bar baz"` (case-insensitive on the title; traits,
+// `arguments:` or a line break may follow the title), or a
 // Python test under scripts/tests/ is marked `@pytest.mark.scenario("Foo bar baz")`.
 //
 // Exit codes:
@@ -122,7 +123,51 @@ func pythonScenarioNeedles(under directory: String) -> String {
     return needles
 }
 
+/// Lowercased scenario titles that `@Test("scenario: …"` names in
+/// `corpus`, whatever follows the title: a closing parenthesis, traits or
+/// `arguments:`, on the same line or the next. The corpus is lowercased.
+func coveredTitles(in corpus: String) -> Set<String> {
+    guard let pattern = try? NSRegularExpression(pattern: #"@test\(\s*"scenario: ((?:[^"\\]|\\.)*)""#) else { return [] }
+    var titles = Set<String>()
+    for match in pattern.matches(in: corpus, range: NSRange(corpus.startIndex..., in: corpus)) {
+        if let range = Range(match.range(at: 1), in: corpus) {
+            titles.insert(String(corpus[range]))
+        }
+    }
+    return titles
+}
+
+/// Checks `coveredTitles` against every attribute form the tests use.
+func selfTest() -> Bool {
+    let corpus = """
+    @test("scenario: bare form")
+    @test("scenario: with arguments", arguments: [1, 2])
+    @test("scenario: with a trait", .enabled(if: true))
+    @test(
+        "scenario: split over lines",
+        .enabled(if: flag),
+        arguments: cases
+    )
+    @test("not a scenario")
+    @test("scenario: quote \\" inside")
+    """.lowercased()
+    let expected: Set<String> = [
+        "bare form", "with arguments", "with a trait", "split over lines", #"quote \" inside"#
+    ]
+    let found = coveredTitles(in: corpus)
+    guard found == expected else {
+        print("self-test failed: expected \(expected.sorted()), found \(found.sorted())")
+        return false
+    }
+    print("self-test passed")
+    return true
+}
+
 // ----- main -----------------------------------------------------------
+
+if CommandLine.arguments.contains("--self-test") {
+    exit(selfTest() ? 0 : 1)
+}
 
 let specRoots = [
     "\(repoRoot)/openspec/changes",
@@ -133,11 +178,12 @@ let testRoots = ["\(repoRoot)/Packages", "\(repoRoot)/Tools"]
 let specMarkdowns = mdFiles(under: specRoots)
 let testSwifts = testRoots.flatMap { swiftFiles(under: $0) }
 let testCorpus = loadTestCorpus(from: testSwifts) + pythonScenarioNeedles(under: "\(repoRoot)/scripts/tests")
+let covered = coveredTitles(in: testCorpus)
 
 let scenarios = extractScenarios(from: specMarkdowns)
 
 var unmapped: [Scenario] = []
-for scenario in scenarios where !testCorpus.contains(scenario.expectedTestNeedle.lowercased()) {
+for scenario in scenarios where !covered.contains(scenario.title.lowercased()) {
     unmapped.append(scenario)
 }
 

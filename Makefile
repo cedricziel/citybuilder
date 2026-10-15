@@ -64,6 +64,7 @@ test-coverage:
 	./scripts/check-coverage.sh
 
 test-scenarios:
+	$(SWIFT) ./scripts/check-scenario-coverage.swift --self-test
 	$(SWIFT) ./scripts/check-scenario-coverage.swift
 
 test-citycore-framework-free:
