@@ -72,7 +72,7 @@ func titleBackdropWithoutRenderer() {
     let newGame = World.newGame(layout: .singleIsland, seed: 0).camera
     #expect(snapshot.camera.centerX == newGame.centerX)
     #expect(snapshot.camera.centerY == newGame.centerY)
-    #expect(snapshot.camera.zoom == 1.2)
+    #expect(snapshot.camera.zoom == TitleBackdrop.titleZoom)
     #expect(snapshot.roadDisconnectedBuildings.isEmpty)
     #expect(snapshot.buildings.values.contains { $0.kind == .house && $0.state == .operational })
 }
