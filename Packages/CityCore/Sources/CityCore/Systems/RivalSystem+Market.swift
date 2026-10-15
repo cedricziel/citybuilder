@@ -5,6 +5,8 @@ import Foundation
 extension RivalAI {
     /// Below this treasury a rival sells surplus.
     static let debtThreshold: Int64 = 150
+    /// Below this much room the town center counts as full.
+    static let fullStoreSpace = 4
     /// Units of a good a rival keeps when it sells.
     static let keepOnSale = 12
     /// A rival buys food only with at least this much money.
@@ -16,11 +18,14 @@ extension RivalAI {
 
 extension World {
     /// The trades a rival makes this turn instead of building, if any:
-    /// unblock the step it would take, pay debts, or feed its houses.
-    func rivalMarketCommands(turn: RivalTurn, plan: inout RivalTownPlan) -> [Command]? {
+    /// pay debts, or feed its houses. Buying what a step lacks happens
+    /// with the step itself (`shortfallBuys`).
+    func rivalMarketCommands(turn: RivalTurn) -> [Command]? {
         let rival = turn.rival
-        if let buys = unblockingBuys(turn: turn, plan: &plan) { return buys }
-        if rival.treasury < RivalAI.debtThreshold {
+        // A full town center takes no food from the farms, so a starving
+        // town clears it like a debt is paid.
+        let starvingAndFull = turn.centerFreeSpace < RivalAI.fullStoreSpace && turn.stock[.food, default: 0] < 4
+        if rival.treasury < RivalAI.debtThreshold || starvingAndFull {
             for good in RivalAI.saleOrder {
                 let units = min(turn.stock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))
                 if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
@@ -33,36 +38,25 @@ extension World {
         return nil
     }
 
-    /// Buys for the step the rival would take when only wood or planks
-    /// hold it back and the treasury covers the purchase and the step.
-    private func unblockingBuys(turn: RivalTurn, plan: inout RivalTownPlan) -> [Command]? {
+    /// The wood and planks a step costing `cost` lacks, bought in the
+    /// same batch as its placement so no carrier takes them first, and
+    /// what they cost; nil when another good is missing, the season's
+    /// limit is spent or the town center has no room for them.
+    func shortfallBuys(_ cost: [Good: Int], turn: RivalTurn) -> (commands: [Command], price: Int64)? {
         let rival = turn.rival
-        // At the building cap no step comes, and a house step at the house
-        // cap is skipped: buying for either would waste the money.
-        guard turn.waiting.isEmpty, turn.nonRoad < RivalAI.buildingCap else { return nil }
-        let kind = turn.thresholdKinds(pastOpening: rival.ai.isPastOpening).first
-            ?? RivalAI.scriptKind(at: rival.ai.scriptIndex)
-        guard kind != .house || turn.counts[.house, default: 0] < RivalAI.houseCap else { return nil }
-        let cost = materialCost(of: kind, for: rival.owner)
-        guard !turn.canSupply(cost) else { return nil }
-        var buys: [(Good, Int)] = []
+        var commands: [Command] = []
         var price: Int64 = 0
+        var units = 0
         for good in Good.allCases {
             let missing = cost[good, default: 0] - turn.stock[good, default: 0]
             guard missing > 0 else { continue }
             guard good == .wood || good == .planks, rival.market.left(good, .bought) >= missing else { return nil }
-            buys.append((good, missing))
+            commands.append(.rivalMarketBuy(rival.id, good, missing))
             price += Int64(missing) * good.marketPrice(.bought)
+            units += missing
         }
         // A purchase that cannot fit would fail and take every turn.
-        guard !buys.isEmpty, buys.reduce(0, { $0 + $1.1 }) <= turn.centerFreeSpace,
-              let slot = plan.slot(for: kind)
-        else { return nil }
-        let step = BuildingCatalog.spec(for: kind).cost
-            + BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
-            + RivalAI.safetyMargin + turn.reserve(before: kind)
-        guard rival.treasury >= price + step else { return nil }
-        return buys.map { .rivalMarketBuy(rival.id, $0.0, $0.1) }
+        return units <= turn.centerFreeSpace ? (commands, price) : nil
     }
 
     /// Moves what the rival's limit, treasury, town center space or stock

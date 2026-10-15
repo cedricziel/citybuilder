@@ -155,7 +155,7 @@ extension World {
         guard let center = buildings[rival.townCenterID] else { return }
         var plan = RivalTownPlan(world: self, owner: rival.owner, center: center.anchor)
         let turn = rivalTurn(rival, stock: islandStockpile(at: center.anchor, tileToIsland: plan.tileToIsland))
-        if let trades = rivalMarketCommands(turn: turn, plan: &plan) {
+        if let trades = rivalMarketCommands(turn: turn) {
             pendingCommands += trades
             return
         }
@@ -233,13 +233,17 @@ extension World {
     private func rivalCommands(_ kind: BuildingKind, turn: RivalTurn, plan: inout RivalTownPlan) -> [Command]? {
         let spec = BuildingCatalog.spec(for: kind)
         let rival = turn.rival
-        guard turn.canSupply(materialCost(of: kind, for: rival.owner)),
-              rival.treasury >= spec.cost + RivalAI.safetyMargin,
+        let cost = materialCost(of: kind, for: rival.owner)
+        // A step that lacks only wood or planks buys them first
+        // (`rival-towns` / Rival market trades).
+        guard let buys = turn.canSupply(cost) ? ([], 0) : shortfallBuys(cost, turn: turn),
+              rival.treasury >= spec.cost + RivalAI.safetyMargin + buys.price,
               let slot = plan.slot(for: kind)
         else { return nil }
         let roadCost = BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
         let reserve = turn.reserve(before: kind)
-        guard rival.treasury >= spec.cost + roadCost + RivalAI.safetyMargin + reserve else { return nil }
-        return slot.roads.map { .rivalPlace(rival.id, .road, at: $0) } + [.rivalPlace(rival.id, kind, at: slot.anchor)]
+        guard rival.treasury >= spec.cost + roadCost + RivalAI.safetyMargin + reserve + buys.price else { return nil }
+        return buys.commands + slot.roads.map { .rivalPlace(rival.id, .road, at: $0) }
+            + [.rivalPlace(rival.id, kind, at: slot.anchor)]
     }
 }

@@ -18,7 +18,7 @@ private func rivalTrades(_ commands: [Command]) -> [Command] {
 }
 
 @Test("scenario: rival buys the planks it is missing")
-func scenarioRivalBuysThePlanksItIsMissing() {
+func scenarioRivalBuysThePlanksItIsMissing() throws {
     var world = normalWorld()
     world.setRival(1) {
         $0.ai.scriptIndex = 3
@@ -26,12 +26,17 @@ func scenarioRivalBuysThePlanksItIsMissing() {
     }
     world.setRivalStock(1, [.wood: 10, .food: 10])
     let commands = world.takeTurn(1)
-    #expect(commands == [.rivalMarketBuy(1, .planks, 4)])
+    // The purchase comes in the same batch as the house, ahead of it, so
+    // no carrier can take the planks first.
+    #expect(commands.first == .rivalMarketBuy(1, .planks, 4))
+    #expect(placedKind(commands.last) == .house)
+    let roads = Int64(commands.count { placedKind($0) == .road })
     world.tick()
     let price = Good.planks.marketPrice(.bought)
-    #expect(world.rival(1)?.treasury == 400 - 4 * price)
-    #expect(world.rivalStock(1)[.planks] == 4)
+    #expect(world.rival(1)?.treasury == 400 - 4 * price - 50 - roads * 5)
     #expect(world.rival(1)?.market.traded(.planks, .bought) == 4)
+    let house = try #require(placedAnchor(commands.last).flatMap { world.occupiedTiles[$0] }.flatMap { world.buildings[$0] })
+    #expect(house.constructionState != .waitingForMaterials)
 }
 
 @Test("scenario: rival in debt sells surplus planks")
@@ -87,6 +92,14 @@ func rivalShortOfMoneySellsSurplus() {
     #expect(rivalTrades(comfortable.takeTurn(1)).isEmpty)
 }
 
+@Test("scenario: rival clears a full town center")
+func scenarioRivalClearsAFullTownCenter() {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.planks: 38, .food: 2])
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
+}
+
 @Test("scenario: rival buys food for short houses")
 func scenarioRivalBuysFoodForShortHouses() {
     var world = normalWorld()
@@ -108,8 +121,8 @@ func scenarioNoPurchaseIntoAFullTownCenter() {
         $0.ai.scriptIndex = 12
         $0.treasury = 500
     }
-    // 40 units fill the town center.
-    world.setRivalStock(1, [.wood: 19, .planks: 20, .food: 1])
+    // 40 units fill the town center, none of them surplus it would sell.
+    world.setRivalStock(1, [.wood: 12, .planks: 12, .iron: 15, .food: 1])
     let house = world.testAddHouse(owner: .rival(1), residents: 4)
     world.populations[house]?.setShort(.food, true)
     let commands = world.takeTurn(1)
