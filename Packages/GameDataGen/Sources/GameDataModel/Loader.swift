@@ -16,6 +16,25 @@ public enum GameDataLoader {
         return log.diagnostics.isEmpty ? .success(data) : .failure(GameDataErrors(diagnostics: log.diagnostics))
     }
 
+    /// Every item's mapping in load order, with merges resolved and before
+    /// any type checks or validation. Fails only when a file can't be read
+    /// as YAML or the manifest and pack files disagree.
+    static func items(from source: PackSource) -> Result<[RawItem], GameDataErrors> {
+        let log = DiagnosticLog()
+        var items: [RawItem] = []
+        for file in packFiles(source, log: log) {
+            guard let text = source.read(file),
+                  let node = compose(text, file: file, log: log),
+                  case let .sequence(sequence)? = node.mapping?["items"]
+            else { continue }
+            for case let .mapping(item) in sequence {
+                guard let kind = item["kind"]?.string, let id = item["id"]?.string else { continue }
+                items.append(RawItem(key: "\(kind) \(id)", node: .mapping(item)))
+            }
+        }
+        return log.diagnostics.isEmpty ? .success(items) : .failure(GameDataErrors(diagnostics: log.diagnostics))
+    }
+
     /// Pack paths in manifest order. Reports packs the manifest lists but
     /// that do not exist, and pack files the manifest does not list.
     private static func packFiles(_ source: PackSource, log: DiagnosticLog) -> [String] {
