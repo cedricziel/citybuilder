@@ -4,7 +4,9 @@
     cd scripts && python3 -m audio.generate --check  # fail if any differs
 
 Pure standard-library Python with our own sine and exponential, so the
-bytes are the same on every machine.
+bytes are the same on every machine and every Python from 3.9 on
+(checked with 3.9, 3.10 and 3.14; avoid built-in sum() on floats, which
+3.12 changed).
 """
 
 from __future__ import annotations

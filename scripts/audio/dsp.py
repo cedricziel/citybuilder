@@ -187,7 +187,12 @@ def loop_crossfade(signal: list[float], length: int) -> list[float]:
 
 
 def rms(signal: list[float]) -> float:
-    return math.sqrt(sum(x * x for x in signal) / len(signal)) if signal else 0.0
+    # An explicit loop: the built-in sum() compensates rounding from Python
+    # 3.12 on, so it gives different bits on different interpreters.
+    total = 0.0
+    for x in signal:
+        total += x * x
+    return math.sqrt(total / len(signal)) if signal else 0.0
 
 
 def loudest_window_rms(signal: list[float], window: int) -> float:
