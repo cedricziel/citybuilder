@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,18 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Brick apartment houses with a stone base and cornice, iron-railed balconies, a low slate hip roof and several chimneys. Palette anchors: `#A53329`/`#7A1F1A` brick, `#A89884` stone trim, `#7A6B59`/`#3F2A26` slate.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, `age_style("mediterranean", "industrial")`: the `mediterranean` culture style with the industrial age's materials and shapes) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. Brick apartment houses on a stone ground floor with iron-railed balconies under a low slate hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-industrial-mediterranean` — canonical operational base: two-storey brick house with a balcony
-- (0, 1): `building-house-tier2-industrial-mediterranean` — tier 2: three storeys over an arcaded stone ground floor
-- (0, 2): `building-house-tier3-industrial-mediterranean` — tier 3: four-storey block with two balcony rows
+- (0, 0): `building-house-industrial-mediterranean` — two storeys with a balcony
+- (0, 1): `building-house-tier2-industrial-mediterranean` — three storeys with balconies
+- (0, 2): `building-house-tier3-industrial-mediterranean` — four storeys with a balcony on every floor
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -29,13 +26,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-industrial-mediterranean` (IsoKit), planned
+- Recipe: `building-house-industrial-mediterranean` (IsoKit)
 - Also renders: `building-house-tier2-industrial-mediterranean`, `building-house-tier3-industrial-mediterranean`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 144 pt tall (tier 2 176 pt, tier 3 208 pt)
 - Construction stages: 0
 - Operational frames: 0

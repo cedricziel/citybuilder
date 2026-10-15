@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,18 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Two-storey townhouses: a dark lattice shopfront, a pent roof, a white plastered upper storey between dark posts and a dark-tiled gable roof. Palette anchors: `#5C5046`/`#3F2A26` lattice and tiles, `#FFE9C8`/`#D2C094` plaster.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, `age_style("east-asian", "renaissance")`: the `east-asian` culture style with the renaissance age's materials and shapes) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. A town house with a dark lattice shopfront, a pent roof and a white plastered upper storey under slate. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-renaissance-east-asian` — canonical operational base: two-storey townhouse with a lattice shopfront
-- (0, 1): `building-house-tier2-renaissance-east-asian` — tier 2: townhouse with a white fire-proof storehouse behind it
-- (0, 2): `building-house-tier3-renaissance-east-asian` — tier 3: merchant's residence on a stone base under a large upturned tiled roof
+- (0, 0): `building-house-renaissance-east-asian` — a two-storey town house
+- (0, 1): `building-house-tier2-renaissance-east-asian` — a broader town house
+- (0, 2): `building-house-tier3-renaissance-east-asian` — a merchant's residence under a large slate hip roof
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -29,13 +26,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-renaissance-east-asian` (IsoKit), planned
+- Recipe: `building-house-renaissance-east-asian` (IsoKit)
 - Also renders: `building-house-tier2-renaissance-east-asian`, `building-house-tier3-renaissance-east-asian`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 144 pt tall (tier 2 144 pt, tier 3 160 pt)
 - Construction stages: 0
 - Operational frames: 0
