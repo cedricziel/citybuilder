@@ -33,6 +33,8 @@ public final class IsoWorldScene: SKScene {
     /// seasonal variants) check it before falling back; tests replace it
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
+    /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
+    private(set) var transitionMap: TerrainTransitionMap?
     /// Carrier nodes keyed by carrier EntityID raw, with the last-known
     /// path index so we can interpolate movement.
     private struct CarrierVisual {
@@ -321,10 +323,14 @@ public final class IsoWorldScene: SKScene {
         )
         else { return }
 
+        if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
+            transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
+        }
         let desired = SnapshotReconciler.desiredSprites(
             in: snapshot,
             xRange: xRange,
-            yRange: yRange
+            yRange: yRange,
+            transitions: transitionMap
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),

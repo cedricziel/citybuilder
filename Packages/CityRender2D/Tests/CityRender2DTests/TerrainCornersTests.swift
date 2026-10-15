@@ -89,6 +89,76 @@ struct TerrainCornersTests {
             == TerrainTransition(upper: .beach, lower: .water, mask: 0b0011))
     }
 
+    @Test("a single grass corner gives mask 1")
+    func singleCorner() {
+        let terrain = map([
+            "ggb",
+            "ggb",
+            "bbb"
+        ])
+        #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 1), terrain: terrain)
+            == TerrainTransition(upper: .grass, lower: .beach, mask: 0b0001))
+    }
+
+    @Test("diagonal grass corners give mask 5")
+    func diagonalCorners() {
+        let terrain = map([
+            "ggb",
+            "ggg",
+            "bgg"
+        ])
+        #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 1), terrain: terrain)
+            == TerrainTransition(upper: .grass, lower: .beach, mask: 0b0101))
+    }
+
+    @Test("a beach tile next to grass keeps its own sprite")
+    func beachNextToGrass() {
+        let terrain = map([
+            "gbb",
+            "gbb"
+        ])
+        #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 0), terrain: terrain) == nil)
+    }
+
+    @Test("the cached map agrees with the per-tile function on every tile")
+    func cachedMapAgrees() {
+        let rows = ["fggbbww", "gggbbww", "ggbbwww", "mgbbwww", "ggbwwww", "gbbwwbb"]
+        let terrain = map(rows)
+        let grid = rows.flatMap { row in row.map { char -> TerrainType in
+            switch char {
+            case "g": .grass
+            case "b": .beach
+            case "w": .water
+            case "f": .forest
+            default: .mountain
+            }
+        } }
+        let cached = TerrainTransitionMap(width: 7, height: 6, grid: grid)
+        for y in 0 ..< 6 {
+            for x in 0 ..< 7 {
+                let coord = TileCoordinate(x: x, y: y)
+                #expect(cached.transition(at: coord) == TerrainCorners.transition(at: coord, terrain: terrain), "\(coord)")
+            }
+        }
+        #expect(cached.matches(width: 7, height: 6, grid: grid))
+        var changed = grid
+        changed[0] = .water
+        #expect(!cached.matches(width: 7, height: 6, grid: changed))
+    }
+
+    @MainActor
+    @Test("the factory falls back to the tile's own sprite when the transition is missing")
+    func factoryFallsBackWithoutTransitionSprite() {
+        let scene = IsoWorldScene()
+        let transition = TerrainTransition(upper: .grass, lower: .beach, mask: 3)
+        scene.hasSprite = { _ in false }
+        let plain = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0), transition: transition)
+        #expect(plain.userData?[IsoWorldScene.textureNameKey] as? String != transition.assetName)
+        scene.hasSprite = { $0 == transition.assetName }
+        let blended = scene.makeTerrainNode(kind: .grass, coord: TileCoordinate(x: 0, y: 0), transition: transition)
+        #expect(blended.userData?[IsoWorldScene.textureNameKey] as? String == transition.assetName)
+    }
+
     @Test("off-map neighbours are ignored")
     func mapEdge() {
         let terrain = map(["bw"])
