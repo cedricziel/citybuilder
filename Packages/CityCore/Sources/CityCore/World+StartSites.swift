@@ -45,6 +45,9 @@ extension World {
     static let groveSide = 6
     /// Farthest a grove's corner may be from its target, per axis.
     static let groveSearchReach = 12
+    /// Grass tiles the grove's clearing adds at most: a site with fewer
+    /// than 150 − 4 grass cannot qualify, so its grove is not tried.
+    static let groveClearing = 4
 
     /// The anchor that would centre a 3×3 town center on the island's
     /// bounding box.
@@ -117,9 +120,10 @@ extension World {
         for anchor in candidates where ringSquareIsFreeGrass(anchor, island: island.id, tileToIsland: tileToIsland) {
             let (xs, ys) = startBounds(ofTownCenterAt: anchor)
             let land = landCounts(xs: xs, ys: ys)
-            if land.grass >= StartArea.minimumGrass, land.mountain * 4 <= land.tiles {
-                return StartSite(anchor: anchor, rule: .fair)
-            }
+            let roomy = land.mountain * 4 <= land.tiles && land.grass + Self.groveClearing >= StartArea.minimumGrass
+            let grassLeft = roomy
+                ? grassAfterGrove(besideTownCenterAt: anchor, island: island.id, tileToIsland: tileToIsland) : 0
+            if grassLeft >= StartArea.minimumGrass { return StartSite(anchor: anchor, rule: .fair) }
             if land.grass > grassiest?.grass ?? -1 { grassiest = (anchor, land.grass) }
         }
         if let grassiest { return StartSite(anchor: grassiest.anchor, rule: .grassiest) }
@@ -129,6 +133,19 @@ extension World {
             }
         }
         return landSite.map { StartSite(anchor: $0, rule: .anyLand) }
+    }
+
+    /// Grass in the start area once the grove for a town center at
+    /// `anchor` is planted, so the site is measured as it will be.
+    private func grassAfterGrove(
+        besideTownCenterAt anchor: TileCoordinate,
+        island: IslandID,
+        tileToIsland: [TileCoordinate: IslandID]
+    ) -> Int {
+        var probe = self
+        probe.plantStarterGrove(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland)
+        let (xs, ys) = startBounds(ofTownCenterAt: anchor)
+        return probe.landCounts(xs: xs, ys: ys).grass
     }
 
     /// Plants the starter grove nearest the town center at `anchor`:

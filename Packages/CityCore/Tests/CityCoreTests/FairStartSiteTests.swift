@@ -157,6 +157,34 @@ func scenarioIslandTooNarrowForATownCenterGetsNone() {
     #expect(townCenters(in: world).isEmpty)
 }
 
+@Test("scenario: grass is counted after the grove is planted")
+func scenarioGrassIsCountedAfterTheGroveIsPlanted() throws {
+    var sketch = TerrainSketch(width: 81, height: 41, fill: .forest)
+    sketch.grassRows(every: 2)
+    let centre = try target(of: sketch.world())
+    let far = shifted(centre, 20, 0)
+    sketch.pocket(at: centre)
+    sketch.pocket(at: far)
+    // Thin the grass around the nearest site, outside its 5×5 square and
+    // the far site's start area, until 155 remain: enough before the
+    // grove, not after it takes its share.
+    let ring = Set(World.ringSquare(of: centre))
+    var grass = sketch.pristine().startArea(ofTownCenterAt: centre).grass
+    for y in centre.y - 8 ... centre.y + 10 {
+        for x in centre.x - 8 ... centre.x + 10 where grass > 155 {
+            let tile = TileCoordinate(x: x, y: y)
+            guard !ring.contains(tile), sketch.tiles[y * sketch.width + x] == .grass else { continue }
+            sketch.tiles[y * sketch.width + x] = .forest
+            grass -= 1
+        }
+    }
+    #expect(sketch.pristine().startArea(ofTownCenterAt: centre).grass == 155)
+    let world = sketch.world()
+    #expect(townCenters(in: world).map(\.anchor) == [far])
+    let center = try #require(townCenters(in: world).first)
+    #expect(world.startArea(ofTownCenterAt: center.anchor).grass >= 150)
+}
+
 // MARK: - Starter grove
 
 @Test("scenario: grove gives a hut site with 32 trees")
