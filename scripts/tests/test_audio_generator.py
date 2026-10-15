@@ -130,3 +130,11 @@ def test_mode_resonator_matches_a_decaying_sine():
     for i in (0, 1, 1000, 20000, 44099):
         expected = 0.8 * math.exp(-i / (decay * sr)) * math.sin(2 * math.pi * (0.1 + freq * i / sr))
         assert abs(signal[i] - expected) < 5e-5
+
+
+def test_first_packet_starts_on_the_first_sample():
+    # A loud loop whose decode must not jump at its first sample.
+    pcm = [12000 + int(3000 * dsp.sin_turns(i / 50)) for i in range(4096)]
+    decoded = decode_ima4(caf.encode_ima4(pcm), len(pcm))
+    assert abs(decoded[0] - pcm[0]) < 600
+    assert max(abs(a - b) for a, b in zip(pcm[:64], decoded[:64])) < 600
