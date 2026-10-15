@@ -160,6 +160,21 @@ func scenarioARivalsFirstSawmillCostsNoMaterials() {
     #expect(world.materialCost(of: .sawmill, for: .rival(1)) == BuildingCatalog.spec(for: .sawmill).materialCost)
 }
 
+@Test("a rival's first sawmill is placed without waiting for planks")
+func rivalFirstSawmillPlacedWithoutPlanks() throws {
+    var world = normalWorld()
+    world.setRivalStock(1, [:])
+    world.setRival(1) { $0.ai.scriptIndex = 1 }
+    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    let commands = world.takeTurn(1)
+    #expect(placedKind(commands.last) == .sawmill)
+    world.tick()
+    let anchor = try #require(placedAnchor(commands.last))
+    let sawmill = try #require(world.occupiedTiles[anchor].flatMap { world.buildings[$0] })
+    #expect(sawmill.kind == .sawmill)
+    #expect(sawmill.constructionState != .waitingForMaterials)
+}
+
 /// The Easy death spiral measured for `rival-ai-viability`: the opening
 /// left the rival $10 at the end of year 1, too little for a house, and
 /// sawmill upkeep then ran it into debt for good.

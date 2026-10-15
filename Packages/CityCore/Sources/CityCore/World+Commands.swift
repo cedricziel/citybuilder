@@ -55,6 +55,9 @@ extension World {
             }
             return
         }
+        // Priced before the building exists, so a rival's first sawmill
+        // is still its first (`rival-ai-viability` D2).
+        let materialCost = materialCost(of: kind, for: owner)
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         let initialState: BuildingState = spec.buildDurationTicks == 0 ? .operational : .constructing
@@ -87,7 +90,6 @@ extension World {
         if let capacity = Self.stockpileCapacity(for: kind) {
             stockpiles[id] = Stockpile(capacity: capacity)
         }
-        let materialCost = materialCost(of: kind, for: owner)
         if !materialCost.isEmpty {
             let delivered = deductMaterialsPartial(cost: materialCost, anchor: anchor)
             buildings[id]?.materialsDelivered = delivered
