@@ -155,5 +155,5 @@ Across archipelago seeds and difficulties, rivals SHALL stay viable:
 
 #### Scenario: Rivals are viable across seeds
 
-- **WHEN** archipelago games with seeds 0 and 1 run for 12,000 ticks at Easy, Normal and Hard with a passive player whose balance is kept positive
+- **WHEN** archipelago games with seed 0 run for 12,000 ticks at Easy, Normal and Hard with a passive player whose balance is kept positive
 - **THEN** every rival meets the residents and treasury conditions of this requirement

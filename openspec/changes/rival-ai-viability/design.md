@@ -81,6 +81,26 @@ Three things M2 found and changed before this result:
 - **A starving town clears a full store.** One Easy rival hit the building cap with its town center full of 40 planks. The farms then had nowhere to put food, and the town emptied. A rival whose town center has under 4 units of room and under 4 food now sells surplus as if in debt.
 - **No purchase without room.** A purchase into a full town center fills nothing and, with no fill recorded, repeats every turn. That is the rival side of #70. Rivals buy only what fits.
 
+### M3 result
+
+The same sweep with the difficulty caps of D6 on top of M2, with M2 in brackets:
+
+|                                | Easy        | Normal      | Hard        |
+| ------------------------------ | ----------- | ----------- | ----------- |
+| Rivals at 0 residents, year 15 | 0/10 (0/10) | 0/20 (0/20) | 0/30 (0/30) |
+| Rivals ever in debt            | 0 (0)       | 0 (0)       | 0 (0)       |
+| Residents year 5, median       | 20.5 (28)   | 35.5 (34)   | 43 (32)     |
+| Residents year 5, minimum      | 15 (15)     | 20 (23)     | 30 (21)     |
+| Residents year 15, median      | 19 (25.5)   | 37.5 (35)   | 42 (33)     |
+| Houses at year 15, median      | 9.5         | 15          | 21          |
+
+D7's year-5 floors hold on every seed: Easy 8, Normal 20 and Hard 30. Normal's minimum of 20 and Hard's of 30 sit exactly on their floors, so the caps are not tuned further. Difficulty now sets a rival's size: Hard rivals end around 42 residents and Easy rivals around 19. Hard rivals reach the Renaissance in 29 of 30 games, and one reaches the Industrial age.
+
+Other M3 checks:
+
+- **Tick budget.** With Hard's 64-building cap, the "replayed rival game" tick budget test passes in isolation.
+- **Player playtest bot** (archipelago seed 7, the `add-forestry` harness, not committed). The bot reaches 23 residents by year 5 and 62 by year 10. The two rivals hold 30–43 residents from year 3 on. The bot first outgrows both between years 5 and 10, so "outgrow every rival" is reachable but no longer free.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -160,7 +180,7 @@ The `rival-towns` spec gains targets checked by test:
 - No rival's treasury stays below 0 for 2,400 consecutive ticks.
 - By the end of year 5, every rival has at least 8 residents on Easy, 20 on Normal and 30 on Hard.
 
-The default test runs seeds 0 and 1 at each difficulty for 12,000 ticks, which is affordable in the debug suite. A full sweep (seeds 0–9, 36,000 ticks) runs as an opt-in test (`RIVAL_SWEEP=1`) in release mode at each milestone's end, and its numbers are recorded here.
+The default test runs seed 0 at each difficulty for 12,000 ticks, one game per difficulty in parallel; seeds 0 and 1 one after another took over eight minutes in the debug suite. A full sweep (seeds 0–9, 36,000 ticks) runs as an opt-in test (`RIVAL_SWEEP=1`) in release mode at each milestone's end, and its numbers are recorded here.
 
 ### D8 — Determinism and CityCore
 
