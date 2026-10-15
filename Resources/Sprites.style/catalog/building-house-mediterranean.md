@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -11,18 +11,15 @@ animation.
 
 ## Visual identity
 
-Whitewashed cottage under a low-pitched terracotta hip roof, no timber framing. Blue shutters and a blue door, a whitewashed chimney with a terracotta cap, two amphorae in the yard. Palette anchors: `#FFE9C8` whitewash lit wall, `#D2C094` shaded wall, `#A53329`/`#7A1F1A` roof tile, `#3F6E94` shutters.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `mediterranean` in `STYLES`) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. Whitewashed houses under low terracotta hip roofs, no timber framing, blue-shuttered windows. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-mediterranean` — canonical operational base
-- (0, 1): `building-house-tier2-mediterranean` — citizens: whitewashed two-storey house with an arcaded ground-floor loggia under a low hip roof
-- (0, 2): `building-house-tier3-mediterranean` — patricians: three storeys on a stone ground floor, a balcony, and a belvedere tower with an open loggia
+- (0, 0): `building-house-mediterranean` — a cottage with a blue door, a whitewashed chimney with a tile cap, and amphorae
+- (0, 1): `building-house-tier2-mediterranean` — citizens: two whitewashed storeys over an arcaded ground-floor loggia
+- (0, 2): `building-house-tier3-mediterranean` — patricians: three storeys on a stone ground floor, an arched portal, an iron-railed balcony and a belvedere tower with an open loggia
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -31,13 +28,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-mediterranean` (IsoKit), planned
+- Recipe: `building-house-mediterranean` (IsoKit)
 - Also renders: `building-house-tier2-mediterranean`, `building-house-tier3-mediterranean`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 112 pt tall (tier 2 144 pt, tier 3 176 pt)
 - Construction stages: 0
 - Operational frames: 0
