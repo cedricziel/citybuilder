@@ -2,7 +2,7 @@
 
 ### Requirement: Chimneys smoke
 
-The scene SHALL show smoke rising from the chimney of every operational house with residents, and of every operational bakery, smelter, toolsmith and charcoal burner that has no building issue. An operational brewery with no issue SHALL show steam. Empty houses and buildings with an issue SHALL show neither. Which buildings smoke SHALL be a pure function of the snapshot, and smoke SHALL never change simulation state.
+The scene SHALL show smoke rising from the chimney of every operational house with residents, and of every operational player bakery, smelter, toolsmith and charcoal burner that has no building issue. An operational player brewery with no issue SHALL show steam. Rival workshops SHALL stay cold, because building issues are known only for the player's buildings. Empty houses and buildings with an issue SHALL show neither. Which buildings smoke SHALL be a pure function of the snapshot, and smoke SHALL never change simulation state.
 
 #### Scenario: Inhabited house smokes
 - **WHEN** a snapshot holds an operational house with 4 residents and an operational house with none

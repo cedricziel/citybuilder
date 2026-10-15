@@ -8,14 +8,14 @@ Liveliness work splits into small renderer-only changes. This is the first of th
 
 `ChimneyPlanner.sources(in:)` returns one source per smoking building: its id, anchor, kind, texture stem and style (smoke or steam). The rules:
 - A house smokes when it is operational and has residents.
-- A bakery, smelter, toolsmith or charcoal burner smokes when it is operational and has no building issue.
+- A bakery, smelter, toolsmith or charcoal burner smokes when it is the player's, is operational and has no building issue. Rival workshops stay cold, because the snapshot carries building issues for player buildings only.
 - A brewery steams under the same rule.
 
 The planner reads nothing but the snapshot, so it never feeds back into the simulation.
 
 ### D2: Chimney positions come from a table
 
-The building sprites are lit 3D renders, and a chimney often overlaps its roof in silhouette, so a chimney cannot be found from the alpha mask. `ChimneyAnchors` maps a texture stem to the chimney top as fractions of the sprite (x from the left, y from the top). The values were measured on the IsoKit renders. A stem missing from the table falls back to the top centre of the roof. That fallback covers the legacy culture and age variants, many of which have a smoke hole and no chimney. When IsoKit recipes move a chimney, its row in the table changes with them.
+The building sprites are lit 3D renders, and a chimney often overlaps its roof in silhouette, so a chimney cannot be found from the alpha mask. `ChimneyAnchors` maps a texture stem to the chimney top as fractions of the sprite (x from the left, y from the top). The values were measured on the IsoKit renders. A stem missing from the table is tried again without its culture and age suffixes, so `building-house-tier2-modern-east-asian` uses the `building-house-tier2` row. Only after that does it fall back to the top centre of the roof. A test walks every house and fire-trade sprite in the atlases and checks that each one finds a row. That fallback covers the legacy culture and age variants, many of which have a smoke hole and no chimney. When IsoKit recipes move a chimney, its row in the table changes with them.
 
 ### D3: One ambient layer with a pooled, capped set of emitters
 
