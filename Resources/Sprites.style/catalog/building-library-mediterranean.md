@@ -31,3 +31,10 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Frames keep the
   finished building pixel-identical and add a rising smoke plume.
 - Construction uses the shared `building-library-constructing-*` frames.
+
+## Recipe
+
+- Recipe: `building-library-mediterranean` (IsoKit), planned
+- Cell: set when the recipe lands
+- Construction stages: 0
+- Operational frames: 2

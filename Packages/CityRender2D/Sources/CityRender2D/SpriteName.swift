@@ -18,7 +18,14 @@ public enum SpriteName {
         /// Ship facing must be one of `n`, `ne`, `e`, `se`, `s`, `sw`,
         /// `w`, `nw` — the 8 compass directions.
         case shipFacingUnknown = "ship_facing_unknown"
+        /// `terrain-<upper>-<lower>-t<mask>` names a pair with no transition tiles.
+        case transitionPairUnknown = "transition_pair_unknown"
+        /// A transition mask is outside 1…14 (0 and 15 are full tiles).
+        case transitionMaskOutOfRange = "transition_mask_out_of_range"
     }
+
+    /// Terrain pairs that have corner-mask transition tiles, as `<upper>-<lower>`.
+    public static let transitionPairs: Set<String> = ["grass-beach", "beach-water"]
 
     /// Building kinds that opt into the shore-placement grammar. Kept
     /// as a string set in CityRender2D to avoid a CityCore round-trip
@@ -47,7 +54,23 @@ public enum SpriteName {
         if name.hasPrefix("building-") {
             return validateBuilding(name)
         }
+        if name.hasPrefix("terrain-") {
+            return validateTransition(name)
+        }
         return .success(())
+    }
+
+    /// `terrain-<upper>-<lower>-t<mask>[-<frame>]`; names without a `t<digits>` slot are plain terrain.
+    private static func validateTransition(_ name: String) -> Result<Void, ValidationError> {
+        let stem = name.components(separatedBy: "@").first ?? name
+        let segments = stem.split(separator: "-").map(String.init)
+        guard segments.count >= 4, segments[3].hasPrefix("t"),
+              let mask = Int(segments[3].dropFirst())
+        else { return .success(()) }
+        guard transitionPairs.contains("\(segments[1])-\(segments[2])") else {
+            return .failure(.transitionPairUnknown)
+        }
+        return (1 ... 14).contains(mask) ? .success(()) : .failure(.transitionMaskOutOfRange)
     }
 
     private static func validateShip(_ name: String) -> Result<Void, ValidationError> {

@@ -294,20 +294,33 @@ func scenarioNoOrphanCatalogEntries() throws {
 
 // MARK: - Requirement: Catalog entry declares function, identity, sheet, animation
 
+/// Every brief has `Function` and `Visual identity`. Briefs past the image API also name their
+/// `Recipe` (replace-generative-sprites-with-isokit); briefs the legacy pipeline still slices keep
+/// `Sheet` and `Animation` until their family migrates.
 @Test("scenario: catalog entry declares all required sections")
 func scenarioCatalogEntryDeclaresAllRequiredSections() throws {
     let files = try catalogFiles()
-    let required: Set = ["Function", "Visual identity", "Sheet", "Animation"]
     var failures: [String] = []
     for url in files {
         let body = try String(contentsOf: url, encoding: .utf8)
-        let headings = Set(level2Headings(in: body))
-        let missing = required.subtracting(headings)
+        let source = catalogSource(of: body)
+        var required: Set = ["Function", "Visual identity"]
+        if !source.isEmpty { required.insert("Recipe") }
+        if source != "isokit", source != "svg" { required.formUnion(["Sheet", "Animation"]) }
+        let missing = required.subtracting(Set(level2Headings(in: body)))
         if !missing.isEmpty {
             failures.append("\(url.lastPathComponent): missing \(missing.sorted())")
         }
     }
     #expect(failures.isEmpty, "catalog files missing sections:\n\(failures.joined(separator: "\n"))")
+}
+
+/// `source = "<value>"` from the front matter, or "" for image-API briefs.
+private func catalogSource(of body: String) -> String {
+    for line in body.split(separator: "\n").prefix(5) where line.hasPrefix("source = ") {
+        return line.dropFirst("source = ".count).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+    }
+    return ""
 }
 
 @Test("scenario: sheet section enumerates every cell")

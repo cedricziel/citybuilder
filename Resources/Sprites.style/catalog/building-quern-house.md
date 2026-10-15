@@ -36,3 +36,10 @@ Grid: 4 cols × 2 rows. Default sheet size.
 - Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. The building
   stays pixel-identical; only the quern handle moves, so the stone
   reads as turning.
+
+## Recipe
+
+- Recipe: `building-quern-house` (IsoKit), planned
+- Cell: set when the recipe lands
+- Construction stages: 3
+- Operational frames: 2

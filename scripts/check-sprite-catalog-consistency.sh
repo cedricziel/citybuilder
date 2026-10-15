@@ -40,6 +40,12 @@ done < <(
 
 missing=()
 for id in "${catalog_changes[@]}"; do
+    # Only image-API entries hash their brief into the sheet: procedural sheets are
+    # drawn from code, and isokit/svg entries have no sheet at all
+    # (replace-generative-sprites-with-isokit), so editing those briefs needs no sheet.
+    if grep -qE '^source = "(procedural|isokit|svg)"$' "Resources/Sprites.style/catalog/${id}.md"; then
+        continue
+    fi
     found=0
     for s in "${sheet_changes[@]:-}"; do
         # One sheet per sprite: an entry's sheets are `<id>.png` plus

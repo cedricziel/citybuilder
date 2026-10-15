@@ -29,3 +29,7 @@ Two-frame wind-blade flutter looping at ~0.6s per frame.
 
 - Wind flutter: `(0, 1)` → `(0, 2)`. Frames are placed in adjacent cells
   on row 0.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

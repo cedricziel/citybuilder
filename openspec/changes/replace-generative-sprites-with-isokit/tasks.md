@@ -28,15 +28,14 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 
 ## 2. Content gate and naming for the new rules
 
-- [ ] 2.1 Tests-first in `Packages/CityRender2D`: write failing tests for the `sprite-asset-pipeline` scenarios "Transition tile name accepted", "Transition tile with an undeclared pair rejected", "Transition mask out of range rejected", "Content gate accepts sails sweeping past the wall", "Rendered buildings without an outline pass", "Every committed terrain sprite fills the diamond" (with bleed), "Walker frames have the walker size" and "Every atlas PNG has an @2x twin"
-- [ ] 2.2 Implement to green:
+- [x] 2.1 Tests-first in `Packages/CityRender2D`: tests for the `sprite-asset-pipeline` scenarios "Transition tile name accepted", "Transition tile with an undeclared pair rejected", "Transition mask out of range rejected", "Content gate accepts sails sweeping past the wall", "Rendered buildings without an outline pass", "Content gate rejects a floating rendered building", "Every committed terrain sprite fills the diamond" (with bleed), "Content gate rejects an under-filled tile", "Walker frames have the walker size", "Every facing has four gait frames", "Every atlas PNG has an @2x twin" and "Verification fails on a content defect"; pytest for "make sprites runs offline" and "Every atlas PNG has a recipe or an SVG source"
+- [x] 2.2 Implement to green:
   - the naming validator's `t<mask>` slot and pair list
-  - the moving-part silhouette exemption, read from the catalog `Recipe` section
+  - the gate reads the catalog (`GateCatalog`): each brief's `source`, and the edge its moving part sweeps (`- Moving part: sails, 4 frames, sweeps right`), which is exempt from the silhouette check
   - drop `outline_missing` and keep `not_grounded`
-  - diamond coverage with a 1-point bleed
-  - walker size
-  - the @2x twin check (gated on a per-family allow-list until §4 completes)
-- [ ] 2.3 Catalog briefs: add a `Recipe` section to every `catalog/<id>.md` and keep `Sheet`/`Animation` until each family flips. Add the catalog-section test for "Catalog entry declares all required sections"
+  - terrain: no transparent pixel inside the diamond, nothing opaque beyond a 1-point bleed (every legacy tile already fills its diamond, so the rule applies to all terrain)
+  - `@2x` names compare against their `@2x` base; walker size, four gait frames and the `@2x` twin check apply to migrated (`isokit`/`svg`) briefs only, so legacy families keep their shape until they flip
+- [x] 2.3 Catalog briefs: a `Recipe` section in the 96 non-image-API briefs (the three image-API goods icons get theirs when they migrate in §4.9), `Sheet`/`Animation` kept until each family flips, and the catalog-section test. IsoKit's registry checks a migrated brief's stage, frame and moving-part facts against its recipe. The catalog pre-commit hook now asks for sheet edits only on image-API briefs, whose text feeds the sheet cache
 
 ## 3. Renderer: transitions and filtering
 

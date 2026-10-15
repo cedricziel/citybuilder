@@ -31,3 +31,7 @@ Grid: 4 cols × 1 rows. Cells 512×512 sheet pixels on a 2048×512 canvas
 Static — no animation loop. The variant cells are art alternates, not
 frames. Each variant must be self-consistent (same silhouette outline
 weight, same shadow direction) so adjacent tiles unify into a range.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

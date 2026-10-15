@@ -33,3 +33,11 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 None. Construction uses the shared `building-house-constructing-*`
 frames.
+
+## Recipe
+
+- Recipe: `building-house-east-asian` (IsoKit), planned
+- Also renders: `building-house-tier2-east-asian`, `building-house-tier3-east-asian`
+- Cell: set when the recipe lands
+- Construction stages: 0
+- Operational frames: 0

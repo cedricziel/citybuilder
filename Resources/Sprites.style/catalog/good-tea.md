@@ -20,3 +20,7 @@ Grid: 1 cols × 1 rows.
 ## Animation
 
 Static — no animation loop.
+
+## Recipe
+
+- SVG source: hand-authored icon, planned (goods icons family)

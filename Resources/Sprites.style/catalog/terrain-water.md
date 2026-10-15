@@ -31,3 +31,7 @@ Four-frame water glint cycle at ~0.20s per frame.
 
 - Glint cycle: `(0, 1)` → `(0, 2)` → `(0, 3)` → `(0, 4)`. All frames
   are placed in adjacent cells on row 0.
+
+## Recipe
+
+- SVG generator: `scripts/art/terrain_tiles.py`, planned (terrain family)

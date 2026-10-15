@@ -6,14 +6,9 @@ import ImageIO
 /// check proves the atlas reproduces from `_sheets/`; this proves the
 /// atlas shows something sane. Spec: `sprite-asset-pipeline`.
 public enum SpriteContentGate {
-    public static let minimumTerrainCoverage = 0.90
-    public static let maximumOutsideRatio = 0.02
     /// Allowed drift, in pixels, of an operational frame's left, right
     /// and bottom edges from its base sprite's.
     public static let silhouetteTolerance = 2
-    /// Minimum share of a building base sprite's opaque pixels that
-    /// must be the outline colour `#1A1410`.
-    public static let minimumOutlineShare = 0.03
 
     public enum Reason: String, Sendable {
         case terrainCoverageBelowThreshold = "terrain_coverage_below_threshold"
@@ -21,8 +16,13 @@ public enum SpriteContentGate {
         case frameEmpty = "frame_empty"
         case frameIncoherent = "frame_incoherent"
         case frameMisaligned = "frame_misaligned"
-        case outlineMissing = "outline_missing"
         case notGrounded = "not_grounded"
+        /// A migrated sprite's `@2x` twin is missing or not exactly twice its size.
+        case scaleTwinMismatch = "scale_twin_mismatch"
+        /// A migrated walker frame is not 10×16 points.
+        case walkerSize = "walker_size"
+        /// A migrated walker facing lacks one of its four gait frames.
+        case walkerFramesMissing = "walker_frames_missing"
     }
 
     public struct Failure: Equatable, Sendable {
@@ -43,6 +43,7 @@ public enum SpriteContentGate {
     /// Inspects every `*.atlas/*.png` under `resourcesRoot`. Failures
     /// are sorted by file name, then reason, so output is stable.
     public static func inspect(resourcesRoot: URL, coherenceMaxDistance: Double) throws -> [Failure] {
+        let catalog = try GateCatalog.load(resourcesRoot: resourcesRoot)
         var failures: [Failure] = []
         for atlas in try atlasDirectories(in: resourcesRoot) {
             let images = try loadPNGs(in: atlas)
@@ -52,26 +53,34 @@ public enum SpriteContentGate {
                     continue
                 }
                 if atlas.lastPathComponent == "Terrain.atlas" {
-                    let metrics = DiamondMetrics(of: image)
-                    if metrics.coverage < minimumTerrainCoverage {
-                        failures.append(.init(file: name, reason: .terrainCoverageBelowThreshold))
-                    }
-                    if metrics.outsideRatio > maximumOutsideRatio {
-                        failures.append(.init(file: name, reason: .terrainOutsideDiamond))
-                    }
+                    failures += terrainFailures(name, image)
                 }
                 if isIncoherent(name, image, in: images, maxDistance: coherenceMaxDistance) {
                     failures.append(.init(file: name, reason: .frameIncoherent))
                 }
-                if isMisaligned(name, in: images) {
+                if isMisaligned(name, in: images, sweptEdge: catalog.entry(forSprite: name)?.sweptEdge) {
                     failures.append(.init(file: name, reason: .frameMisaligned))
                 }
-                if isBuildingBase(name) {
-                    failures += buildingRegisterFailures(name, image)
+                if isBuildingBase(name), let bounds = image.opaqueBounds, bounds.maxY < image.height - 2 {
+                    failures.append(.init(file: name, reason: .notGrounded))
                 }
             }
+            failures += KitRules.failures(images: images, catalog: catalog)
         }
         return failures.sorted { ($0.file, $0.reason.rawValue) < ($1.file, $1.reason.rawValue) }
+    }
+
+    /// No transparent pixel inside the diamond, and nothing opaque beyond its 1-point bleed.
+    static func terrainFailures(_ name: String, _ image: RGBAImage) -> [Failure] {
+        let fill = DiamondFill(of: image, bleedPoints: 1, scale: SpriteFile(name).scale)
+        var failures: [Failure] = []
+        if fill.holes > 0 {
+            failures.append(.init(file: name, reason: .terrainCoverageBelowThreshold))
+        }
+        if fill.beyondBleed > 0 {
+            failures.append(.init(file: name, reason: .terrainOutsideDiamond))
+        }
+        return failures
     }
 
     /// Entry point shared by the `sprite-content-gate` executable and
@@ -99,7 +108,8 @@ public enum SpriteContentGate {
     /// - `terrain-mountain-v1` → `terrain-mountain`
     /// - `building-sawmill-operational-0` → `building-sawmill`
     static func coherenceBase(for fileName: String) -> String? {
-        let stem = (fileName as NSString).deletingPathExtension
+        let file = SpriteFile(fileName)
+        let stem = file.stem
         guard let dash = stem.lastIndex(of: "-") else { return nil }
         var suffix = stem[stem.index(after: dash)...]
         if suffix.hasPrefix("v") {
@@ -113,7 +123,7 @@ public enum SpriteContentGate {
         if base.hasSuffix("-operational") {
             base.removeLast("-operational".count)
         }
-        return base + ".png"
+        return file.sibling(base)
     }
 
     private static func isIncoherent(
@@ -128,33 +138,24 @@ public enum SpriteContentGate {
         return PaletteHistogram(of: image).distance(to: PaletteHistogram(of: base)) > maxDistance
     }
 
-    private static func isMisaligned(_ name: String, in images: [String: RGBAImage]) -> Bool {
+    /// A moving part (sails, wheel) changes the frame's extent on the edge it sweeps, so that edge
+    /// is exempt; the bottom edge must always match.
+    private static func isMisaligned(_ name: String, in images: [String: RGBAImage], sweptEdge: GateCatalog.Edge?) -> Bool {
         guard name.contains("-operational-"), let baseName = coherenceBase(for: name),
               let frameBox = images[name]?.opaqueBounds, let baseBox = images[baseName]?.opaqueBounds
         else { return false }
-        let tolerance = silhouetteTolerance
-        return abs(frameBox.minX - baseBox.minX) > tolerance
-            || abs(frameBox.maxX - baseBox.maxX) > tolerance
+        let tolerance = silhouetteTolerance * SpriteFile(name).scale
+        return (sweptEdge != .left && abs(frameBox.minX - baseBox.minX) > tolerance)
+            || (sweptEdge != .right && abs(frameBox.maxX - baseBox.maxX) > tolerance)
             || abs(frameBox.maxY - baseBox.maxY) > tolerance
     }
 
-    /// `building-<kind>.png` or `building-<kind>-<n|e|s|w>.png`; roads,
+    /// `building-<kind>.png` or `building-<kind>-<n|e|s|w>.png` at any scale; roads,
     /// construction stages, operational frames and variants excluded.
     static func isBuildingBase(_ fileName: String) -> Bool {
-        let stem = (fileName as NSString).deletingPathExtension
+        let stem = SpriteFile(fileName).stem
         guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road") else { return false }
         return coherenceBase(for: fileName) == nil && !stem.contains("-constructing-")
-    }
-
-    private static func buildingRegisterFailures(_ name: String, _ image: RGBAImage) -> [Failure] {
-        var failures: [Failure] = []
-        if image.outlineShare < minimumOutlineShare {
-            failures.append(.init(file: name, reason: .outlineMissing))
-        }
-        if let bounds = image.opaqueBounds, bounds.maxY < image.height - 2 {
-            failures.append(.init(file: name, reason: .notGrounded))
-        }
-        return failures
     }
 
     private static func flagDistance(_ arguments: [String]) -> Double? {
@@ -249,19 +250,6 @@ public struct RGBAImage: Sendable {
         return bounds
     }
 
-    /// Share of opaque pixels that are exactly the outline colour.
-    public var outlineShare: Double {
-        var opaque = 0
-        var outline = 0
-        for offset in stride(from: 0, to: rgba.count, by: 4) where rgba[offset + 3] >= Self.opaqueAlpha {
-            opaque += 1
-            if rgba[offset] == 0x1A, rgba[offset + 1] == 0x14, rgba[offset + 2] == 0x10 {
-                outline += 1
-            }
-        }
-        return opaque == 0 ? 0 : Double(outline) / Double(opaque)
-    }
-
     public var opaquePixelCount: Int {
         stride(from: 3, to: rgba.count, by: 4).reduce(0) { $0 + (rgba[$1] >= Self.opaqueAlpha ? 1 : 0) }
     }
@@ -299,32 +287,31 @@ public enum DiamondMask {
     }
 }
 
-public struct DiamondMetrics: Sendable {
-    /// Fraction of diamond pixels that are opaque.
-    public let coverage: Double
-    /// Fraction of opaque pixels that lie outside the diamond.
-    public let outsideRatio: Double
+/// How a terrain tile fills its diamond. Tiles bleed up to `bleedPoints` past the exact diamond
+/// so neighbours overlap: exact diamonds leave stair gaps, and linear filtering samples past them.
+public struct DiamondFill: Sendable {
+    /// Transparent pixels whose centre lies inside the diamond.
+    public let holes: Int
+    /// Opaque pixels beyond the diamond grown by the bleed (2 px across and 1 px down per point).
+    public let beyondBleed: Int
 
-    public init(of image: RGBAImage) {
-        var inside = 0
-        var insideOpaque = 0
-        var outsideOpaque = 0
+    public init(of image: RGBAImage, bleedPoints: Int, scale: Int) {
+        let halfWidth = Double(image.width) / 2, halfHeight = Double(image.height) / 2
+        let grownWidth = halfWidth + Double(2 * bleedPoints * scale), grownHeight = halfHeight + Double(bleedPoints * scale)
+        var holes = 0, beyond = 0
         for y in 0 ..< image.height {
             for x in 0 ..< image.width {
                 let opaque = image.alpha(x: x, y: y) >= RGBAImage.opaqueAlpha
-                if DiamondMask.contains(x: x, y: y, width: image.width, height: image.height) {
-                    inside += 1
-                    if opaque {
-                        insideOpaque += 1
-                    }
-                } else if opaque {
-                    outsideOpaque += 1
+                let dx = abs(Double(x) + 0.5 - halfWidth), dy = abs(Double(y) + 0.5 - halfHeight)
+                if dx / halfWidth + dy / halfHeight <= 1 {
+                    if !opaque { holes += 1 }
+                } else if opaque, dx / grownWidth + dy / grownHeight > 1 {
+                    beyond += 1
                 }
             }
         }
-        let opaque = insideOpaque + outsideOpaque
-        coverage = inside == 0 ? 0 : Double(insideOpaque) / Double(inside)
-        outsideRatio = opaque == 0 ? 0 : Double(outsideOpaque) / Double(opaque)
+        self.holes = holes
+        beyondBleed = beyond
     }
 }
 
