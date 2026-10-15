@@ -208,6 +208,46 @@ final class TVWalkthroughTests: XCTestCase {
         XCTAssertFalse(app.buttons["pause.resume"].exists, "Back from the callout returns to the map")
     }
 
+    /// Every market row takes focus, even one whose buttons are all off,
+    /// so the remote can scroll the whole list into view; Less stays on
+    /// screen throughout.
+    func testTownCenterMarketRowsTakeFocus() {
+        startGame(inHUD: false)
+        let callout = app.descendants(matching: .any)["inspector.callout"]
+        for step in [XCUIRemote.Button.left, .up, .up] where !callout.exists {
+            remote.press(.select)
+            if callout.waitForExistence(timeout: 2) { break }
+            remote.press(step)
+        }
+        XCTAssertTrue(callout.exists, "selecting the town center should show its callout")
+        remote.press(.select)
+        let details = app.buttons["Details"]
+        focus(details)
+        remote.press(.select)
+        let less = app.buttons["Less"]
+        XCTAssertTrue(less.waitForExistence(timeout: 5), "Details should open")
+        XCTAssertTrue(app.buttons["Buy 1"].firstMatch.waitForExistence(timeout: 5), "the market should show")
+        snapshot("market-open")
+        let rows = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'sell $'"))
+        let first = rows.element(boundBy: 0)
+        let last = rows.element(boundBy: rows.count - 1)
+        press(.up, until: first)
+        snapshot("market-first-row")
+        press(.down, until: last)
+        XCTAssertTrue(less.isHittable, "Less should stay on screen")
+        snapshot("market-last-row")
+    }
+
+    /// Presses `direction` until `element` holds focus, at most 60 times.
+    private func press(_ direction: XCUIRemote.Button, until element: XCUIElement) {
+        var presses = 0
+        while !element.hasFocus, presses < 60 {
+            remote.press(direction)
+            presses += 1
+        }
+        XCTAssertTrue(element.hasFocus, "\(element.label) should take focus")
+    }
+
     func testPlayPauseInTheHUDReturnsToTheMapOnce() {
         startGame()
         remote.press(.playPause)
