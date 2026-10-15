@@ -83,18 +83,19 @@ Three things M2 found and changed before this result:
 
 ### M3 result
 
-The same sweep with the difficulty caps of D6 on top of M2, with M2 in brackets:
+The committed scenario test `scenarioRivalsAreViableAcrossSeeds` was run with `RIVAL_SWEEP=1` in a release build: seeds 0–9 at every difficulty over 36,000 ticks, one line per rival. M3's figures below come from those lines. The M2 figures in brackets come from the earlier uncommitted harness, which ran the same games and measured the same way.
 
-|                                | Easy        | Normal      | Hard        |
-| ------------------------------ | ----------- | ----------- | ----------- |
+| | Easy | Normal | Hard |
+|---|---|---|---|
 | Rivals at 0 residents, year 15 | 0/10 (0/10) | 0/20 (0/20) | 0/30 (0/30) |
-| Rivals ever in debt            | 0 (0)       | 0 (0)       | 0 (0)       |
-| Residents year 5, median       | 20.5 (28)   | 35.5 (34)   | 43 (32)     |
-| Residents year 5, minimum      | 15 (15)     | 20 (23)     | 30 (21)     |
-| Residents year 15, median      | 19 (25.5)   | 37.5 (35)   | 42 (33)     |
-| Houses at year 15, median      | 9.5         | 15          | 21          |
+| Lowest treasury, any rival | $50 ($50) | $50 ($50) | $50 ($50) |
+| Residents year 3, median | 13 (13) | 37.5 (36) | 42.5 (33) |
+| Residents year 5, median | 20.5 (28) | 35.5 (34) | 43 (32) |
+| Residents year 5, minimum | 15 (15) | 20 (23) | 30 (21) |
+| Residents year 15, median | 19 (25.5) | 37.5 (35) | 42 (33) |
+| Residents year 15, minimum | 13 (18) | 25 (27) | 28 (20) |
 
-D7's year-5 floors hold on every seed: Easy 8, Normal 20 and Hard 30. Normal's minimum of 20 and Hard's of 30 sit exactly on their floors, so the caps are not tuned further. Difficulty now sets a rival's size: Hard rivals end around 42 residents and Easy rivals around 19. Hard rivals reach the Renaissance in 29 of 30 games, and one reaches the Industrial age.
+D7's year-5 floors hold on every seed: Easy 8, Normal 20 and Hard 30. But Normal's minimum of 20 and Hard's of 30 sit exactly on their floors, with no margin (see Risks and #98). Difficulty now sets a rival's size: Hard rivals end around 42 residents and Easy rivals around 19. Hard rivals reach the Renaissance in 29 of 30 games, and one reaches the Industrial age.
 
 Other M3 checks:
 
@@ -188,6 +189,7 @@ Rival decisions stay pure functions of world state. They draw no RNG and iterate
 
 ## Risks / Trade-offs
 
+- [No margin above the viability floors] → In the 10-seed sweep, the weakest rival at year 5 has exactly 20 residents on Normal and exactly 30 on Hard, the floors themselves. Any small balance change can push one seed under and turn the weekly `rival-sweep` run red. That workflow is not a required check, so it reports the change without blocking merges. Tuning for headroom is #98 (P2).
 - [Rivals grow past the player too easily on Hard] → D7 sets floors, not ceilings, and the Island Rivalry scenario goal stays reachable. M3 re-runs the player playtest bot next to the rivals and records both.
 - [Rival market buys fail when the town center is full (#70)] → Partial fills are normal. A rival in the "unblock" case is short of a good, so its town center is rarely full of it. #70's fix applies to rivals too.
 - [The tick budget with bigger rival towns] → After the `fair-start-sites` perf fix, the 36,000-tick fixture runs in 24 s in a release build. M3 checks the "replayed rival game" tick budget with Hard's 64-building cap.
