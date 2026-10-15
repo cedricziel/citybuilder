@@ -5,7 +5,7 @@
 A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step. The threshold rules, in order:
 
 - food below 4 with fewer farms than houses → farm;
-- no operational or constructing sawmill and fewer than 4 planks in stock → sawmill;
+- no operational or constructing sawmill, at least one lumberjack hut and fewer than 4 planks in stock → sawmill;
 - once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill;
 - wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut;
 - once the opening is complete and the rival has at least 4 houses, fewer foresters than lumberjack huts, counting every hut → forester.
@@ -16,10 +16,10 @@ The script SHALL be the opening (lumberjack hut, sawmill, farm, house, lumberjac
 
 A step SHALL be issued only when:
 
-- the treasury covers the building cost, the road cost and $50, plus a $150 reserve while the rival has fewer than 3 houses with residents, unless the step is a house, a farm or the rival's first sawmill; and
+- the treasury covers the building cost, the road cost and $50, plus a $150 reserve while the rival has fewer than 3 houses with residents, unless the step is a house, a farm, or a sawmill while the rival has none and fewer planks in stock than a house needs; and
 - the island stock covers the material cost, or the rival's own huts (and, for planks, its sawmill) can still deliver the rest.
 
-Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut and forester SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
+Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut, forester and first sawmill SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
 
 House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. No step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
 
@@ -50,13 +50,18 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 #### Scenario: Houses and the first sawmill ignore the reserve
 
-- **WHEN** a rival with no houses, no sawmill and $175 takes a turn on a sawmill step whose slot needs no new roads, holding the sawmill's materials
-- **THEN** it places the sawmill
+- **WHEN** a rival with no houses, no sawmill, 3 planks, the sawmill's wood and $175 takes a turn on a sawmill step whose slot needs no new roads
+- **THEN** it places the sawmill, while with 5 planks, enough for a house, it waits
 
 #### Scenario: Sawmill before planks run out
 
-- **WHEN** a rival with no sawmill, 3 planks, 10 wood and enough money takes a turn while its script points at a house
+- **WHEN** a rival with a lumberjack hut, no sawmill, 3 planks, 10 wood and enough money takes a turn while its script points at a house
 - **THEN** it places a sawmill and its script index is unchanged
+
+#### Scenario: A rival's first sawmill costs no materials
+
+- **WHEN** the material cost of a sawmill is read for a rival without a sawmill, for the player, and for a rival that has one
+- **THEN** the first is empty, and the other two are the catalog's wood and planks
 
 #### Scenario: Skipping a stuck step
 

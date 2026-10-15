@@ -9,7 +9,7 @@ So the "outgrow every rival" goal is met for free on Easy, and on Normal or Hard
 
 ## What Changes
 
-- **BREAKING (rival AI):** until a rival has 3 occupied houses, every step except a house, a farm or its first sawmill keeps a $150 reserve, so the first houses are always affordable.
+- **BREAKING (rival AI):** until a rival has 3 occupied houses, every step except a house, a farm or a sawmill needed for planks keeps a $150 reserve, so the first houses are always affordable.
 - **BREAKING (rival AI):** the forester rule waits until the opening is complete and the rival has 4 houses.
 - **BREAKING (rival AI):** the farm rule keeps one farm per house instead of four per five houses.
 - **BREAKING (rival AI):** a rival with no sawmill and too few planks for a house builds a sawmill first, so planks cannot run out for good.
