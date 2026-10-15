@@ -45,13 +45,17 @@ public struct HousePopulation: Hashable, Sendable {
 
     /// Amount of `good` eaten per consumption interval at this tier.
     public func consumption(of good: Good, in culture: Culture) -> Int {
-        guard tier.needs(in: culture).contains(good) else { return 0 }
+        tier.needs(in: culture).contains(good) ? Self.amount(of: good, residents: population) : 0
+    }
+
+    /// Amount of a needed `good` that `residents` eat per interval; a need
+    /// without its own rate is eaten one per eight residents.
+    static func amount(of good: Good, residents: UInt32) -> Int {
         switch good {
-        case .food: return Int((population + 1) / 2)
-        case .planks: return 1
-        case .bread: return Int((population + 3) / 4)
-        case .tools, .beer, .wine, .tea, .coffee: return Int((population + 7) / 8)
-        default: return 0
+        case .food: Int((residents + 1) / 2)
+        case .planks: 1
+        case .bread: Int((residents + 3) / 4)
+        default: Int((residents + 7) / 8)
         }
     }
 

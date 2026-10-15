@@ -22,3 +22,20 @@ func scenarioShippedTiersKeepTheirValues() {
         #expect(HouseTier.allCases.map { $0.displayName(in: culture) } == expected, "\(culture)")
     }
 }
+
+@Test("scenario: a need without its own rate is eaten one per eight residents")
+func scenarioANeedWithoutItsOwnRateIsEatenOnePerEightResidents() {
+    // No shipped tier needs iron; a pack's `neededBy` could add it.
+    #expect(HousePopulation.amount(of: .iron, residents: 9) == 2)
+    #expect(HousePopulation.amount(of: .tools, residents: 9) == 2)
+    #expect(HousePopulation.amount(of: .food, residents: 9) == 5)
+}
+
+@Test("scenario: a good the tier does not need is not eaten")
+func scenarioAGoodTheTierDoesNotNeedIsNotEaten() {
+    var house = HousePopulation()
+    house.tier = .citizens
+    house.population = 6
+    #expect(house.consumption(of: .tools, in: .northernEuropean) == 0)
+    #expect(house.consumption(of: .planks, in: .northernEuropean) == 1)
+}
