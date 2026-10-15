@@ -10,14 +10,19 @@ extension CityRootView {
         let railInset = layout.placement == .leftRail ? layout.railWidth + 8 : 0
         return ZStack {
             VStack(spacing: 8) {
+                // The section includes the inset, so its frame spans the
+                // rail too and Up from the rail reaches the top bar.
                 topBar(layout: layout)
+                    .padding(.leading, railInset)
                     .tvFocusSection()
-                StocksTrayView(hud: session.hud, layout: layout)
-                SessionBannerView(banner: session.banner)
-                    .padding(.top, 4)
-                Spacer(minLength: 0)
+                VStack(spacing: 8) {
+                    StocksTrayView(hud: session.hud, layout: layout)
+                    SessionBannerView(banner: session.banner)
+                        .padding(.top, 4)
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, railInset)
             }
-            .padding(.leading, railInset)
             if let authoring = session.routeAuthoring {
                 VStack {
                     Spacer()

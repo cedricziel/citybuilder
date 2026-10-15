@@ -40,6 +40,7 @@ struct RouteAuthoringOverlay: View {
             ManifestEditorSheet(title: target.title, model: target.model, actions: authoring.manifest[target.id] ?? []) { actions in
                 authoring.setManifest(actions, forPort: target.id)
             }
+            .tvSheetWidth()
         }
     }
 

@@ -19,6 +19,9 @@ public struct CityRootView: View {
     @State var inspectorExpanded = false
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
+    #if os(macOS)
+    @Environment(\.openSettings) var openSettingsScene
+    #endif
 
     public init(
         session: GameSession = GameSession(),
@@ -61,16 +64,35 @@ public struct CityRootView: View {
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
         .routesSheet(session: session, isPresented: $routesPresented)
-        .sheet(isPresented: $settingsPresented) {
-            if let content = settingsContent {
-                content().hudSheetDetents()
-            }
-        }
+        .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
             isPresented: isPausedBinding,
             onDismiss: dismissPause,
-            content: { pauseMenuContent().hudSheetDetents() }
+            content: {
+                // Settings chosen in the pause menu opens over it, so
+                // closing Settings returns to the menu.
+                pauseMenuContent().hudSheetDetents()
+                    .settingsSheet(isPresented: settingsBinding(whilePaused: true), content: settingsContent)
+            }
         )
+    }
+
+    private func settingsBinding(whilePaused: Bool) -> Binding<Bool> {
+        Binding(
+            get: {
+                Self.presentsSettings(
+                    fromPauseSheet: whilePaused, settingsPresented: settingsPresented, isPaused: session.isPaused
+                )
+            },
+            set: { settingsPresented = $0 }
+        )
+    }
+
+    /// Settings opens from the root, or from the pause sheet while the
+    /// game is paused, because a view presents one sheet at a time.
+    /// Closing it from the pause sheet leaves the pause menu open.
+    nonisolated static func presentsSettings(fromPauseSheet: Bool, settingsPresented: Bool, isPaused: Bool) -> Bool {
+        settingsPresented && isPaused == fromPauseSheet
     }
 
     private var isAnySheetPresented: Bool {

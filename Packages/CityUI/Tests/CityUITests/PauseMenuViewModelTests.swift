@@ -175,3 +175,31 @@ func scenarioAFailedSaveKeepsTheGameOpen() {
     #expect(events.isEmpty)
     #expect(viewModel.statusMessage?.hasPrefix("Couldn't save") == true)
 }
+
+@MainActor
+@Test("Settings chosen in the pause menu opens over the menu and leaves the game paused")
+func settingsFromPauseOpensOverTheMenu() {
+    let session = GameSession()
+    session.isPaused = true
+    var settingsRequested = false
+    let viewModel = PauseMenuViewModel(
+        session: session,
+        platform: .iOS,
+        onSaveGame: {},
+        onSettings: { settingsRequested = true },
+        onQuitToTitle: {},
+        onQuit: nil
+    )
+    viewModel.invoke(.settings)
+    #expect(settingsRequested)
+    #expect(session.isPaused, "the pause menu stays open under Settings")
+    #expect(CityRootView.presentsSettings(fromPauseSheet: true, settingsPresented: true, isPaused: true))
+    #expect(!CityRootView.presentsSettings(fromPauseSheet: false, settingsPresented: true, isPaused: true))
+    #expect(CityRootView.presentsSettings(fromPauseSheet: false, settingsPresented: true, isPaused: false))
+}
+
+@Test("Pause-menu Settings opens the Settings scene when the game has no in-game Settings view")
+func pauseSettingsWithoutInGameViewOpensTheSettingsScene() {
+    #expect(CityRootView.settingsDestination(hasInGameSettings: false) == .settingsScene)
+    #expect(CityRootView.settingsDestination(hasInGameSettings: true) == .sheet)
+}

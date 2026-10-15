@@ -14,9 +14,22 @@ extension View {
         #endif
     }
 
+    /// Apple TV sheets size to their content, which leaves a narrow
+    /// column on a 1920-point screen and truncates the title. A floor
+    /// makes room for it.
+    @ViewBuilder
+    func tvSheetWidth() -> some View {
+        #if os(tvOS)
+        frame(minWidth: 1000, idealWidth: 1100, minHeight: 600, idealHeight: 800)
+            .presentationSizing(.fitted)
+        #else
+        self
+        #endif
+    }
+
     /// Gives `value` the initial focus on Apple TV. A disabled control
-    /// cannot take focus, so when `enabled` turns true later the focus
-    /// moves to `value` then.
+    /// cannot take focus, so when `enabled` turns true later, or `value`
+    /// changes while enabled, the focus moves to `value` then.
     @ViewBuilder
     func tvDefaultFocus<Value: Hashable>(
         _ binding: FocusState<Value>.Binding,
@@ -28,6 +41,11 @@ extension View {
             .onChange(of: enabled) { _, isEnabled in
                 if isEnabled {
                     binding.wrappedValue = value
+                }
+            }
+            .onChange(of: value) { _, newValue in
+                if enabled {
+                    binding.wrappedValue = newValue
                 }
             }
         #else

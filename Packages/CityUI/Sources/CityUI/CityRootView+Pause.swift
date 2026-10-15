@@ -86,6 +86,27 @@ extension CityRootView {
         session.isPaused = false
     }
 
+    /// Shows the in-game Settings sheet. The Mac app passes none: its
+    /// Settings live in the standard Settings scene, which opens instead.
+    func showSettings() {
+        switch Self.settingsDestination(hasInGameSettings: settingsContent != nil) {
+        case .sheet:
+            settingsPresented = true
+        case .settingsScene:
+            #if os(macOS)
+            openSettingsScene()
+            #endif
+        }
+    }
+
+    enum SettingsDestination: Equatable {
+        case sheet, settingsScene
+    }
+
+    nonisolated static func settingsDestination(hasInGameSettings: Bool) -> SettingsDestination {
+        hasInGameSettings ? .sheet : .settingsScene
+    }
+
     /// Lazily build the pause menu view-model from the configuration
     /// supplied at init time. Cached so transient view-rebuilds reuse
     /// the same status-message state.
@@ -97,7 +118,7 @@ extension CityRootView {
             session: session,
             platform: config.platform,
             onSaveGame: config.onSaveGame,
-            onSettings: { settingsPresented = true },
+            onSettings: { showSettings() },
             onQuitToTitle: config.onQuitToTitle,
             onQuit: config.onQuit
         )

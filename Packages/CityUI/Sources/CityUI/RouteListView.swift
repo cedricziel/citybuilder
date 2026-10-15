@@ -110,6 +110,7 @@ extension View {
     func routesSheet(session: GameSession, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {
             RouteListView(session: session) { isPresented.wrappedValue = false }
+                .tvSheetWidth()
         }
     }
 }
