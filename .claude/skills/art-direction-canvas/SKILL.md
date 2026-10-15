@@ -51,6 +51,22 @@ A new direction = a new symbol library; copy the placement block unchanged.
   mismatch is obvious, so every building must come from one route.
 - Clean vector reads as Townscaper; low-poly reads as a toy.
 
+## Round 2a: proving a pipeline on the canvas
+
+- Put a "Kit proof" artboard next to the explorations, with:
+  - every asset type from the pipeline in one scene, at game scale
+  - a before/after strip (today's atlas over the new sprites, both @1×,
+    nearest 2×)
+  - animation as an APNG (a canvas `<img>` plays it)
+  - construction stages as a strip
+  - the full tile set
+  - numbers: build time, render time, lines per asset, and a determinism
+    check
+- Show the new sprites on two grounds: the painterly scene (does it hold the
+  mood?) and an island built only from game tiles (does it work in the
+  engine's terms?).
+- Measure determinism by rendering twice and diffing. Don't claim it.
+
 ## Pitfalls hit
 
 - feTurbulence water with high alpha looks like clouds. Use stretched
