@@ -42,7 +42,8 @@ public enum UITestSeed {
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
     /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
     /// each listed kind at the nearest site the rules allow, for a family's before and after shots. A `culture`
-    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks.
+    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks. The title backdrop draws
+    /// this town too (`TitleBackdrop.makeSnapshot`).
     public static func townWorld(
         houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil, culture: Culture = .northernEuropean
     ) -> World {

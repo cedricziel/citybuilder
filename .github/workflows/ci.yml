@@ -70,6 +70,12 @@ jobs:
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
 
+      # The sound generator promises the same bytes on every machine; the
+      # pytest job checks them on macOS, this checks them on Linux. Stdlib
+      # Python only, about two seconds.
+      - name: Procedural sounds match their recipes on Linux
+        run: make audio-check
+
   lint:
     name: lint
     runs-on: macos-26
