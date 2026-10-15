@@ -27,6 +27,7 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 ## Flows worth driving
 
 - **Title:** New Game… → Single Island / Default seed → Start.
+- **Town for art shots:** launch with `-uiTestSeedTown` (Debug only); New Game then starts on the seed-0 island with four finished houses beside the town center. The `iso-sprite-authoring` skill covers before/after shots.
 - **Build:** Arm a palette button, then tap a grass tile.
   - Starting stock is wood 6 / planks 5 / food 2.
   - Lumberjack (2 wood, $80) succeeds; a house (4 planks) fits too.

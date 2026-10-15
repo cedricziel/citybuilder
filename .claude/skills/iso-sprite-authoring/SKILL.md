@@ -10,7 +10,7 @@ OpenSpec change: `replace-generative-sprites-with-isokit`.
 
 ```
 make sprites-check                        # recipe/catalog agreement + cell fit, no GPU
-make sprites                              # render migrated entries into the atlases
+make sprites                              # render migrated entries into Kit.atlas
 make sprites-verify                       # tolerance check + legacy byte check + content gate
 xcrun swift run --package-path Tools/IsoKit isokit render --all --out /tmp/r   # every recipe, scratch
 ISOKIT_SKIP_RENDER=1 xcrun swift test --package-path Tools/IsoKit             # CI's view
@@ -25,7 +25,7 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   `Props`, `Recipe` (stages, moving parts, plot), `Catalog`, `CellFit`,
   `RenderJob`, and `Recipes/` (one recipe per building look).
 - `scripts/art`: `terrain_tiles` (corner-mask SVG), `svg_sprites` (rsvg),
-  `finalize` (libimagequant into the atlases), `compare` (tolerance).
+  `finalize` (libimagequant into `Kit.atlas`), `compare` (tolerance).
 - A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) migrates by
   setting `source = "isokit"` (or `"svg"`). Until then the legacy pipeline owns
   its PNGs, and `make sprites` leaves them alone.
@@ -61,7 +61,36 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
 - **Moving parts** (sails, saws): overlay frames with the building drawn
   depth-only and no ground, composited onto the idle sprite as
   `-operational-N`. Four-blade sails repeat every 90°, so 4 frames make a turn.
-- Recipes may not add lights or materials outside the finish set (tests check).
+- Recipes may not add lights or materials outside the finish set. `RecipeRules`
+  checks every construction stage and every moving-part frame, in the tests and
+  in `isokit check`.
+
+## Light and finishes
+
+- The rig's sun is warm (1.0, 0.80, 0.56). It multiplies every finish, so a
+  base colour renders noticeably warmer and more saturated than it reads in
+  code. Pick finish colours **greyer than the target**: straw thatch
+  `RGB(0.55, 0.47, 0.35)` renders as weathered straw, while
+  `(0.62, 0.50, 0.32)` still rendered gold.
+- Judge finishes **in the game, next to the terrain**, not on a sprite sheet.
+  Orange tile and gold thatch looked fine alone and hot on grass. When no
+  in-game shot shows a sprite, composite it on grass sampled from a screenshot.
+- Weathering reads at sprite scale through geometry: a darker, greyer eave
+  course on thatch (`Finish.thatchEave`) does more than texture noise.
+
+## Atlases and filtering (design D7)
+
+- Kit renders go to `Resources/Kit.atlas` (`art.finalize` writes there;
+  `SpriteAtlasRouting` sends migrated stems there). SpriteKit applies **one
+  filtering mode to a whole atlas page**: mix `.linear` kit art and `.nearest`
+  pixel art on one page and the last mode set wins for every texture on it.
+- An atlas with any `@2x` art loads only its `@2x` pages on retina, so a
+  1x-only sprite in it disappears (the blank sawmill icon). Kit renders always
+  ship both scales; keeping them out of the legacy atlases means legacy
+  sprites need no twins. The content gate flags missing and orphan `@2x`.
+- Adding a family: set the brief's `source`, add its stems to
+  `TextureFiltering.kitRenderedStems` (a test compares it with the catalog),
+  run `make sprites`, then delete the legacy PNGs the family replaces.
 
 ## Verification (design D5)
 
@@ -73,6 +102,13 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   with the committed indexed PNG: mean ≤ 1.5/255, ≤ 0.3% of pixels off by > 24.
 - Compare **premultiplied**: a palette's transparent entry carries arbitrary
   RGB, and a straight comparison reads that as a 38/255 mean.
+
+## Re-render noise
+
+`make sprites` rewrites every kit PNG, and quantization noise changes bytes even
+when the art didn't change. Commit only the PNGs a change really moved: restore
+the atlas, run `art.compare` on the fresh raw renders against it, and keep the
+files it lists as outside tolerance.
 
 ## Terrain tiles (scripts/art/terrain_tiles.py)
 
@@ -88,6 +124,24 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
 - Pattern period must divide **32×16**. Per-tile clutter stays within uv
   0.2–0.8. Never use feTurbulence in tiles.
 - Sandbox: shell loops over rsvg get blocked, so drive rsvg from Python.
+- The seam test joins every pair of tiles whose shared corners agree, in both
+  lattice directions: no gaps, and colour changes only on edges the boundary
+  crosses.
+- Next to the kit-rendered houses, the flat dark legacy grass reads as a
+  repeating texture. The terrain family should give grass light, value
+  variation and a softer pattern scale, so the town sits in the landscape.
+
+## In-game before/after
+
+Debug builds take `-uiTestSeedTown`: the seed-0 island with four finished peasant
+houses beside the town center, under the default camera (`UITestSeed.townWorld`).
+Build the before app from main plus that seed and the after app from the family
+branch. Launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
+-uiTestSeedTown`, tap New Game, then Start, wait about 15 s, and take the shot
+with `simctl io screenshot`. Ask for the simulator slot first and shut the
+simulator down afterwards. The HUD's money and population come from the core
+simulation, so if they differ between the two shots, the builds sit on
+different main commits; the art didn't cause it.
 
 ## Checking by eye
 
