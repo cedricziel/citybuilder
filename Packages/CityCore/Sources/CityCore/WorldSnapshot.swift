@@ -60,7 +60,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     let tileToIsland: [TileCoordinate: IslandID]
     /// Non-road buildings with no road tile orthogonally adjacent to
     /// their footprint. Spec: `rendering-2_5d` / Road-access marker.
-    public let roadDisconnectedBuildings: Set<EntityID>
+    /// Mutable so a still backdrop can hide the warning markers.
+    public var roadDisconnectedBuildings: Set<EntityID>
     /// Why idle player buildings are idle. Spec:
     /// `warehouses-and-logistics` / Buildings report why they are idle.
     public let buildingIssues: [EntityID: BuildingIssue]
