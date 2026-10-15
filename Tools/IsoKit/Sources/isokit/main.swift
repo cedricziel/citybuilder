@@ -45,7 +45,9 @@ struct UsageError: Error, CustomStringConvertible {
 func run() throws -> Int32 {
     let options = try Options(CommandLine.arguments)
     let catalog = try Catalog.load(directory: options.catalog)
-    let problems = RecipeRegistry.mismatches(recipes: Recipes.all, catalog: catalog) + Recipes.all.flatMap(CellFit.problems)
+    let problems = RecipeRegistry.mismatches(recipes: Recipes.all, catalog: catalog)
+        + Recipes.all.flatMap(CellFit.problems)
+        + Recipes.all.flatMap(RecipeRules.problems)
     switch options.command {
     case "check":
         problems.forEach { print($0) }

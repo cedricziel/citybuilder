@@ -7,28 +7,42 @@ import Testing
 struct RecipeRulesTests {
     @Test("scenario: Recipes cannot add lights")
     func recipesCannotAddLights() {
-        for recipe in Recipes.all {
-            for stage in recipe.allStages {
-                var lights: [String] = []
-                recipe.build(stage: stage).enumerateHierarchy { node, _ in
-                    if node.light != nil { lights.append(node.name ?? "?") }
-                }
-                #expect(lights.isEmpty, "\(recipe.id) stage \(stage) adds lights: \(lights)")
-            }
+        let lamp = MovingPart(name: "lamp") { kit, _ in
+            let node = SCNNode()
+            node.light = SCNLight()
+            kit.root.addChildNode(node)
         }
+        let recipe = Recipe(
+            id: "building-test-lamp",
+            cell: SpriteCell(footprint: 1, heightPx: 64),
+            operationalFrames: 2,
+            moving: lamp
+        ) { kit, _ in
+            kit.block(SCNVector3(0.5, 0, 0.5), SCNVector3(3.5, 2, 3.5), .plaster)
+        }
+        #expect(RecipeRules.problems(in: recipe) == [
+            "building-test-lamp lamp frame 0: adds a light",
+            "building-test-lamp lamp frame 1: adds a light"
+        ])
     }
 
     @Test("scenario: Recipes use shared finishes")
     func recipesUseSharedFinishes() {
-        for recipe in Recipes.all {
-            var foreign: [String] = []
-            recipe.build(stage: .finished).enumerateHierarchy { node, _ in
-                for material in node.geometry?.materials ?? [] where !Finish.isShared(material) {
-                    foreign.append(material.name ?? "unnamed")
-                }
-            }
-            #expect(foreign.isEmpty, "\(recipe.id) uses materials outside the finish set: \(foreign)")
+        let recipe = Recipe(
+            id: "building-test-paint",
+            cell: SpriteCell(footprint: 1, heightPx: 64),
+            constructionFrames: 1,
+            customStages: true
+        ) { kit, stage in
+            let box = kit.block(SCNVector3(0.5, 0, 0.5), SCNVector3(3.5, 2, 3.5), .plaster)
+            if stage == .constructing(0) { box.geometry?.materials = [SCNMaterial()] }
         }
+        #expect(RecipeRules.problems(in: recipe) == ["building-test-paint constructing-0: material unnamed is outside the finish set"])
+    }
+
+    @Test("every shipped recipe passes the rules at every stage and moving-part frame")
+    func shippedRecipesPassTheRules() {
+        #expect(Recipes.all.flatMap(RecipeRules.problems).isEmpty)
     }
 
     @Test("scenario: A recipe taller than its cell is rejected")
