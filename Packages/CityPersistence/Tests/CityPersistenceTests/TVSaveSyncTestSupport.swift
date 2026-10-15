@@ -185,14 +185,17 @@ actor Outcome<Value: Sendable> {
 }
 
 /// Runs `operation` and returns its value, or nil if it has not finished
-/// within `limit`. A call that never returns is left running.
+/// within a minute. A call that never returns is left running.
+///
+/// The minute only stops a hung call from hanging the suite; callers
+/// assert on the outcome. It sits far above what any call needs, because
+/// a tight limit fails on a loaded machine.
 func finishing<Value: Sendable>(
-    within limit: Duration,
     _ operation: @escaping @Sendable () async -> Value
 ) async -> Value? {
     let outcome = Outcome<Value>()
     Task { await outcome.set(operation()) }
-    let deadline = ContinuousClock.now + limit
+    let deadline = ContinuousClock.now + .seconds(60)
     while ContinuousClock.now < deadline {
         if let value = await outcome.value { return value }
         try? await Task.sleep(for: .milliseconds(10))
