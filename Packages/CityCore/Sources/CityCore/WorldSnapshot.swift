@@ -38,7 +38,8 @@ public struct IslandSummary: Hashable, Sendable {
 /// later milestones; for M1 the snapshot exposes terrain, occupancy, the
 /// tick clock, and the camera so the renderer has everything it needs.
 public struct WorldSnapshot: Hashable, Sendable {
-    public let tickCount: UInt64
+    /// Mutable so a renderer can show a still world at another time of day.
+    public var tickCount: UInt64
     public let simulatedTime: SimulationDuration
     public let mapWidth: Int
     public let mapHeight: Int
@@ -50,7 +51,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let routes: [EntityID: Route]
     public let economy: Economy
     public let totalPopulation: UInt64
-    public let camera: Camera
+    /// Mutable so a renderer can move the view over a still world.
+    public var camera: Camera
     /// Per-island aggregate keyed by `IslandID`. Producer-internal
     /// stockpiles are excluded; only warehouse / port / shipyard count.
     public let islandSummaries: [IslandID: IslandSummary]
