@@ -38,19 +38,32 @@ public extension World {
         difficulty: Difficulty = .normal,
         rivals: Bool = true
     ) -> World {
-        let grid: [TerrainType]
-        let width: Int
-        let height: Int
-        switch layout {
+        let (terrain, width, height) = switch layout {
         case .singleIsland:
-            grid = IslandGenerator.generate()
-            width = IslandGenerator.width
-            height = IslandGenerator.height
+            (IslandGenerator.generate(), IslandGenerator.width, IslandGenerator.height)
         case .archipelago:
-            grid = ArchipelagoGenerator.generate(seed: seed)
-            width = ArchipelagoGenerator.width
-            height = ArchipelagoGenerator.height
+            (ArchipelagoGenerator.generate(seed: seed), ArchipelagoGenerator.width, ArchipelagoGenerator.height)
         }
+        return generate(
+            layout: layout, seed: seed, width: width, height: height, terrain: terrain,
+            culture: culture, age: age, difficulty: difficulty, rivals: rivals
+        )
+    }
+
+    /// A new game on the given generator terrain: islands, town centers
+    /// with their starter groves, rivals and starter roads. Tests pass
+    /// hand-made terrain here.
+    internal static func generate(
+        layout: WorldLayout,
+        seed: UInt64,
+        width: Int,
+        height: Int,
+        terrain grid: [TerrainType],
+        culture: Culture = .northernEuropean,
+        age: Age = .medieval,
+        difficulty: Difficulty = .normal,
+        rivals: Bool = true
+    ) -> World {
         var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
         world.layout = layout
         world.islands = IslandDetector.detectIslands(
@@ -71,18 +84,21 @@ public extension World {
             world.seedRivals()
         }
         world.seedStarterRoads()
+        world.centerCameraOnHomeTownCenter()
         return world
     }
 
     /// Seed an operational town center on every island that can host
-    /// the 3×3 footprint, with the starter inventory of 6 wood +
-    /// 5 planks + 2 food. Run once at world-gen; the town center
-    /// becomes the bootstrap goods-buffer for the first placements.
+    /// the 3×3 footprint, on a fair start site with a starter grove
+    /// beside it, with the difficulty's starter inventory. Run once at
+    /// world-gen, before rivals are seated, so every island gets the
+    /// same rule. Spec: `world-terrain` / Fair start sites, Starter grove.
     internal mutating func seedTownCenters() {
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
         let starter = difficulty.starterStock
+        let tileToIsland = tileToIslandMap()
         for island in islands {
-            guard let anchor = findFootprint(footprint, on: island) else { continue }
+            guard let anchor = townCenterSite(on: island, tileToIsland: tileToIsland)?.anchor else { continue }
             let id = EntityID(raw: nextEntityRaw)
             nextEntityRaw &+= 1
             let building = Building(
@@ -101,6 +117,7 @@ public extension World {
                 _ = stockpile.deposit(good, amount: amount)
             }
             stockpiles[id] = stockpile
+            plantStarterGrove(besideTownCenterAt: anchor, island: island.id, tileToIsland: tileToIsland)
         }
     }
 
@@ -129,44 +146,6 @@ public extension World {
                 }
             }
         }
-    }
-
-    /// Deterministic scan for a buildable footprint of the given size
-    /// inside an island's bounding box. Starts from the bounding-box
-    /// center and spirals outward in a row-major sweep so the first
-    /// hit is reproducible across runs.
-    private func findFootprint(_ footprint: Footprint, on island: Island) -> TileCoordinate? {
-        let centerX = (island.bounds.minX + island.bounds.maxX) / 2 - footprint.width / 2
-        let centerY = (island.bounds.minY + island.bounds.maxY) / 2 - footprint.height / 2
-        let maxRadius = max(
-            island.bounds.maxX - island.bounds.minX,
-            island.bounds.maxY - island.bounds.minY
-        )
-        for radius in 0 ... maxRadius {
-            for deltaY in -radius ... radius {
-                for deltaX in -radius ... radius {
-                    // Only check the perimeter at each radius to avoid
-                    // re-testing interior tiles already covered.
-                    if radius > 0, abs(deltaX) != radius, abs(deltaY) != radius {
-                        continue
-                    }
-                    let anchor = TileCoordinate(x: centerX + deltaX, y: centerY + deltaY)
-                    if footprintIsBuildable(footprint, at: anchor) {
-                        return anchor
-                    }
-                }
-            }
-        }
-        return nil
-    }
-
-    private func footprintIsBuildable(_ footprint: Footprint, at anchor: TileCoordinate) -> Bool {
-        for tile in footprint.tiles(anchor: anchor) {
-            guard contains(tile) else { return false }
-            guard let terrainHere = terrain(at: tile), terrainHere != .water else { return false }
-            if occupiedTiles[tile] != nil { return false }
-        }
-        return true
     }
 
     /// First in-bounds tile (row-major scan) whose terrain matches `kind`.

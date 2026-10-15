@@ -137,3 +137,21 @@ func scenarioCacheInvalidatedOnRoadChange() {
     cache.invalidate(currentGeneration: world.roadGraph.generation)
     #expect(cache.lookup(key) == nil)
 }
+
+@Test("road component labels match path finding")
+func roadComponentLabelsMatchPathFinding() {
+    var graph = RoadGraph()
+    let tiles = [(0, 0), (1, 0), (2, 0), (2, 1), (5, 5), (5, 6), (8, 0)].map { TileCoordinate(x: $0.0, y: $0.1) }
+    for tile in tiles {
+        graph.addRoad(at: tile)
+    }
+    graph.removeRoad(at: TileCoordinate(x: 1, y: 0))
+    let labels = graph.componentLabels()
+    #expect(Set(labels.keys) == graph.roadTiles)
+    for start in graph.roadTiles {
+        for goal in graph.roadTiles {
+            let joined = PathFinder.path(from: start, to: goal, in: graph) != nil
+            #expect((labels[start] == labels[goal]) == joined, "\(start) → \(goal)")
+        }
+    }
+}

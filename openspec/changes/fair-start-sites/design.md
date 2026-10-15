@@ -44,6 +44,8 @@ A second, independent scratch harness written for this proposal (not committed) 
 
 The single-island "before" figures match exactly. The two harnesses differ in their hut site definition and search order, so the absolute counts differ (the first counted islands per difficulty differently and found fewer trees per site), but both reach the same conclusions: the site rule alone fixes the single island and leaves most archipelago starts short of trees; the grove makes every start fair; no fallback and no grove failure occurred in 150 runs. The M1 acceptance test (D7) fixes the definitions in code, so the numbers in its output become the reference.
 
+**Reference numbers (M1 acceptance test, `FairStartSiteTests`).** Archipelago seeds 0–49 at Easy, Normal and Hard plus the single island: 751 of 751 town centers fair (750 archipelago, 1 single island), no fallback placement, terrain identical across the three difficulties of every seed. Every start's best hut site reaches 32 trees, the grove's clearing. The single-island town center stands at (39,60) with 169 grass and 90 of 361 mountain tiles in its start area.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -60,7 +62,7 @@ The single-island "before" figures match exactly. The two harnesses differ in th
 
 ### D1 — A start site is a 5×5 all-grass square with fair surroundings
 
-A candidate anchor `(ax, ay)` qualifies when the 5×5 square from `(ax − 1, ay − 1)` to `(ax + 3, ay + 3)` (the footprint plus the starter road ring) is all grass, unoccupied and on the island, and the start area around it holds at least 150 grass tiles and at most 25% mountain. Requiring the ring to be grass means the starter road always gets all 16 tiles, and the town center never stands on mountain, beach or forest.
+A candidate anchor `(ax, ay)` qualifies when the 5×5 square from `(ax − 1, ay − 1)` to `(ax + 3, ay + 3)` (the footprint plus the starter road ring) is all grass, unoccupied and on the island, and the start area around it holds at least 150 grass tiles and at most 25% mountain. Grass is counted as it will be once that anchor's grove (D3) is planted, because the grove can turn up to 32 grass tiles into forest and fairness is measured after generation. A candidate with fewer than 146 grass before the grove is skipped without trying a grove, since the 2×2 clearing adds at most 4. Requiring the ring to be grass means the starter road always gets all 16 tiles, and the town center never stands on mountain, beach or forest.
 
 - **Alternative — score every site and take the best.** Rejected: a best-of search moves starts far from the island centre to chase a few extra grass tiles, and it is slower. Thresholds keep the start near the centre and still guarantee fairness.
 - **Alternative — 3×3 all grass, ring allowed on any land.** Rejected: a ring on beach or mountain is legal road but leaves the start area cramped, and the measured single-island massif edge produced such sites.
@@ -91,7 +93,7 @@ Town centers and groves are placed on every island before `seedRivals` chooses w
 
 ### D6 — Determinism and CityCore invariants
 
-The site search and the grove use integer tile counts, integer squared distances and arrays in index order. No floating point, no `Dictionary` iteration, no RNG draw: the grove consumes no randomness, so later RNG-driven systems see the same stream as before for a given seed. The single island's generator keeps its existing `Double` math unchanged. CityCore stays framework-free: the change is Foundation-only code in `World+Fixture.swift`.
+The site search and the grove use integer tile counts, integer squared distances and arrays in index order. No floating point, no `Dictionary` iteration, no RNG draw: the grove consumes no randomness, so later RNG-driven systems see the same stream as before for a given seed. The single island's generator keeps its existing `Double` math unchanged. CityCore stays framework-free: the change is Foundation-only code in `World+StartSites.swift`, called from `seedTownCenters` in `World+Fixture.swift`.
 
 The `DeterminismFixture` world (archipelago, seed 0xC17B) changes because its town centers and terrain move. CI compares macOS and Linux output on the same commit, so it needs no baseline update. The `game-data-codegen` baseline under `openspec/changes/game-data-codegen/baseline/` records the fixture on an older `main` and is compared by hand, not by CI. This change alters that output on purpose, so the implementing PR regenerates `determinism.json` and `determinism-36k.json` with `SWIFT_DETERMINISTIC_HASHING=1` and states it in the PR description, following the codegen design's rule for content changes.
 

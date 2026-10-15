@@ -4,7 +4,7 @@
 
 World generation SHALL place each island's town center on the nearest qualifying anchor to the island's centre target. The centre target SHALL be `(cx − 1, cy − 1)`, where `(cx, cy)` is the midpoint of the island's bounding box with integer division. Candidates SHALL be ordered by squared Euclidean distance to the target, then by `y`, then by `x`.
 
-The **start area** of a town center with anchor `(ax, ay)` SHALL be the tiles from `(ax − 8, ay − 8)` to `(ax + 10, ay + 10)` that lie inside the map. An anchor SHALL qualify when every tile from `(ax − 1, ay − 1)` to `(ax + 3, ay + 3)` is unoccupied grass on that island, and its start area holds at least 150 grass tiles and at most one quarter mountain tiles.
+The **start area** of a town center with anchor `(ax, ay)` SHALL be the tiles from `(ax − 8, ay − 8)` to `(ax + 10, ay + 10)` that lie inside the map. An anchor SHALL qualify when every tile from `(ax − 1, ay − 1)` to `(ax + 3, ay + 3)` is unoccupied grass on that island, and its start area, counted as it would be after that anchor's starter grove is planted, holds at least 150 grass tiles and at most one quarter mountain tiles.
 
 When no anchor qualifies, the town center SHALL go on the anchor, among those whose 5×5 square is unoccupied grass on the island, with the most grass tiles in its start area, ties broken by the candidate order. When no such anchor exists, it SHALL go on the first anchor in candidate order whose 3×3 footprint is unoccupied non-water land on the island. An island with no such anchor SHALL get no town center.
 
@@ -29,6 +29,14 @@ A town center's start is **fair** when, after world generation, its start area h
 #### Scenario: Fallback without any all-grass square keeps the old rule
 - **WHEN** a new game is generated on an island with no 5×5 square of grass but with free land for a 3×3 footprint
 - **THEN** the island still gets a town center, on the first free 3×3 land anchor in candidate order
+
+#### Scenario: Island too narrow for a town center gets none
+- **WHEN** a new game is generated on an island 2 tiles wide and 5 tiles long
+- **THEN** generation completes and the island has no town center
+
+#### Scenario: Grass is counted after the grove is planted
+- **WHEN** the anchor nearest the centre target has at least 150 grass tiles in its start area before its grove is planted but fewer after, and a farther anchor keeps at least 150 after its grove
+- **THEN** the town center stands on the farther anchor
 
 #### Scenario: Every start is fair across seeds
 - **WHEN** a single-island game and archipelago games with seeds 0 to 49 at Easy, Normal and Hard are generated
@@ -65,3 +73,11 @@ Town center positions, starter groves and the resulting terrain SHALL depend onl
 #### Scenario: Rivals get the same start rule as the player
 - **WHEN** an archipelago game with rivals and one without rivals are created with the same seed
 - **THEN** every rival town center in the first stands on the anchor of the town center on the same island in the second, and its start is fair
+
+### Requirement: New game camera starts on the home town center
+
+A new game's camera SHALL be centred on the middle of the player's home town center footprint: the player town center on the island under the map's centre tile, or the player town center with the lowest entity ID when that island has none. Without a player town center the camera SHALL stay at the map's centre.
+
+#### Scenario: Camera starts on the player's town center
+- **WHEN** a new single-island game or a new archipelago game is created
+- **THEN** the camera's centre tile lies on the player's home town center footprint

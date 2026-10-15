@@ -8,13 +8,14 @@ extension World {
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
             .sorted { $0.id.raw < $1.id.raw }
+        let reach = supplyReach()
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
             consumeIfDue(&pop, building: building)
-            updateSatisfaction(&pop, building: building)
+            updateSatisfaction(&pop, building: building, reach: reach)
             updateGrowth(&pop, modifiers: modifiers)
-            updateTier(&pop, building: building, modifiers: modifiers)
+            updateTier(&pop, building: building, modifiers: modifiers, reach: reach)
             populations[building.id] = pop
         }
     }
@@ -34,10 +35,10 @@ extension World {
 
     /// A need is met while a buffer on the house's road network holds
     /// the good and the last consumption of it was not short.
-    private func updateSatisfaction(_ pop: inout HousePopulation, building: Building) {
+    private func updateSatisfaction(_ pop: inout HousePopulation, building: Building, reach: SupplyReach) {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         for good in HouseTier.merchants.needs(in: culture) {
-            let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint)
+            let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint, reach: reach)
             pop.setSatisfied(good, inReach && !pop.isShort(good))
         }
     }
@@ -64,11 +65,14 @@ extension World {
 
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
-    private func updateTier(_ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers) {
+    private func updateTier(
+        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach
+    ) {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         let canAdvance = pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
-                && next.needs(in: culture).allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint) }
+                && next.needs(in: culture)
+                .allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint, reach: reach) }
         } ?? false
         let mustDecline = pop.tier.previous != nil && !pop.allNeedsSatisfied(in: culture)
         guard canAdvance || mustDecline else {
