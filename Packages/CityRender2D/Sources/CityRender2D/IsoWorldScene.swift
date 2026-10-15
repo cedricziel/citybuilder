@@ -69,6 +69,7 @@ public final class IsoWorldScene: SKScene {
     /// / Residents gather on the plaza.
     var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
     var lastPlazaPass: PlazaPass?
+    var plazaTickAt: TimeInterval = 0
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -173,7 +174,7 @@ public final class IsoWorldScene: SKScene {
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
-        reconcilePlazaCrowd(with: snapshot)
+        reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
