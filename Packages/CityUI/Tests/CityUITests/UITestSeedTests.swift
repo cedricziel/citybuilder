@@ -25,3 +25,12 @@ func townSeedHasFinishedHousesUnderTheDefaultCamera() {
     #expect(houses.allSatisfy { $0.state == .operational })
     #expect(world.camera == World.newGame(layout: .singleIsland, seed: 0).camera)
 }
+
+@Test("The town seed can start in a given season, for seasonal art shots")
+@MainActor
+func townSeedStartsInTheRequestedSeason() {
+    #expect(UITestSeed.townWorld(season: .winter).date.season == .winter)
+    #expect(UITestSeed.townWorld(season: .autumn).date.season == .autumn)
+    #expect(UITestSeed.season(fromArguments: ["app", "-uiTestSeason", "winter"]) == .winter)
+    #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
+}
