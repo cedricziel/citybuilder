@@ -41,7 +41,7 @@ The three tiers go in `core.yaml`, after the goods. Case order is load order (`g
 `needs` is the tier's complete list; tiers do not inherit their predecessor's needs. That matches today's lists (`[food]`, `[food, planks]`, `[food, planks, bread, tools]`), so the packs read the same as the spec table. The validator requires `capacity` > 0 and `taxPerResident` ≥ 0, every need to be a declared good, and no good twice in one list.
 
 *Alternatives considered:*
-- **An explicit `level` field for the raw value.** It would protect saves against a reordered pack, but it is the only kind that would need one, and `next`/`previous` would then have to handle gaps. A reorder is caught by the parity scenario (D7) and the save fixtures instead.
+- **An explicit `level` field for the raw value.** It would protect saves against a reordered pack, but it is the only kind that would need one, and `next`/`previous` would then have to handle gaps. A reorder is caught by the parity scenario (D7) and by a CityPersistence test that decodes an older save with houses of all three tiers.
 - **Inherited needs** (each tier lists only what it adds). Shorter, and a `neededBy: [citizens]` would reach merchants for free. But the merged list's order would then depend on two rules, and the spec table lists complete needs per tier. Rejected for readability; a pack that wants a good at two tiers names both.
 
 ### D2. `neededBy` on goods merges into tier needs in load order
@@ -99,7 +99,7 @@ The generated values equal today's, in the same order: `HouseTier.allCases`, raw
 
 ## Risks / Trade-offs
 
-- [Reordering the tiers in a pack changes raw values and breaks saves] → The parity scenario fails on any reorder, the CityPersistence save fixtures decode tiers, and the pack carries a comment that order is save format.
+- [Reordering the tiers in a pack changes raw values and breaks saves] → The parity scenario fails on any reorder, a CityPersistence test decodes an older save with houses of all three tiers and checks they keep their tier, and the pack carries a comment that order is save format.
 - [A pack removes `peasants` or `merchants`] → The hand-written references stop compiling; the error points at the code that needs them. Not supported (Non-Goals).
 - [A pack adds a fourth tier] → It compiles and plays: advancement steps through raw values, sprites fall back to the shared house look, and era gates may name it. Its art and goals are follow-ups. Not covered by a test in this change.
 - [Merged need order surprises a pack author] → The order rule is in the spec, and the generated `needs` table shows the result in review.
