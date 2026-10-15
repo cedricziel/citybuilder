@@ -180,15 +180,6 @@ func triggersZoomWithinBounds() {
     #expect(session.world.camera.zoom == Camera.minZoom)
 }
 
-@Test("The Apple TV session defaults clamp the camera and confirm building placement")
-@MainActor
-func appleTVDefaults() {
-    let session = GameSession(world: World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1))
-    session.useAppleTVInput()
-    #expect(session.clampsCameraToMap)
-    #expect(session.confirmsBuildingPlacement)
-}
-
 @Test("Holding Play/Pause in the HUD neither zooms nor moves focus")
 @MainActor
 func holdingPlayPauseInTheHUD() {

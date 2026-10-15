@@ -68,9 +68,12 @@ public extension GameSession {
     }
 
     /// Runs after every camera move.
+    /// On Apple TV the camera center stays on the map, and a pending
+    /// placement follows the reticle (design D5).
     internal func cameraDidMove() {
         guard clampsCameraToMap, world.mapWidth > 0, world.mapHeight > 0 else { return }
         world.camera.centerX = min(max(world.camera.centerX, 0), Double(world.mapWidth).nextDown)
         world.camera.centerY = min(max(world.camera.centerY, 0), Double(world.mapHeight).nextDown)
+        pendingPlacement?.anchor = reticleTile
     }
 }

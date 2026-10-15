@@ -28,6 +28,8 @@ public enum RemoteInput: Equatable, Sendable {
 /// What the view layer does in response to an input.
 public enum RemoteEffect: Equatable, Sendable {
     case focusHUD, focusMap
+    /// Focus moves into the selected building's inspector callout.
+    case focusInspector
 }
 
 /// Turns remote and controller input into `GameSession` calls and focus
@@ -40,21 +42,32 @@ public struct RemoteInputMapper {
     /// Zoom factor per controller update at full trigger.
     static let triggerZoomRate = 0.03
 
-    public private(set) var focus: RemoteFocus = .map
+    public internal(set) var focus: RemoteFocus = .map
     private var playPauseDownAt: TimeInterval?
+    var selectDownAt: TimeInterval?
+    var selectHoldFired = false
+    var tooltip = HoverTooltipController()
 
     public init() {}
 
     public mutating func handle(_ input: RemoteInput, at time: TimeInterval, session: GameSession) -> [RemoteEffect] {
+        defer { updateTooltip(at: time, session: session) }
         switch input {
         case let .focusChanged(newFocus):
             focus = newFocus
+            selectDownAt = nil
         case .playPauseDown:
             playPauseDownAt = time
         case .playPauseUp:
             return playPauseReleased(at: time, session: session)
         case .tick:
             holdPlayPauseIfDue(at: time, session: session)
+            holdSelectIfDue(at: time, session: session)
+        case .selectDown where focus == .map:
+            selectDownAt = time
+            selectHoldFired = false
+        case .selectUp where focus == .map:
+            return selectReleased(at: time, session: session)
         case let .swipe(dx, dy) where focus == .map:
             session.handlePanDelta(deltaX: -dx, deltaY: -dy)
         case let .click(direction) where focus == .map:
@@ -83,6 +96,7 @@ public struct RemoteInputMapper {
         switch focus {
         case .map:
             focus = .hud
+            selectDownAt = nil
             return [.focusHUD]
         case .hud:
             focus = .map
