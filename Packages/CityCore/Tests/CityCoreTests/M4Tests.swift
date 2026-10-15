@@ -358,6 +358,18 @@ func scenarioPersistentDeficitTriggersBankruptcy() {
     #expect(world.economy.gameOver)
 }
 
+@Test("test funds pull a deficit world clear of bankruptcy")
+func fundsPreventBankruptcy() {
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    world.economy.balance = -1
+    world.seedTestFunds()
+    for _ in 0 ..< Int(Economy.bankruptcyGraceTicks) + 1 {
+        world.tick()
+    }
+    #expect(world.economy.balance > 0)
+    #expect(!world.economy.gameOver)
+}
+
 @Test("scenario: recovery cancels bankruptcy timer")
 func scenarioRecoveryCancelsBankruptcyTimer() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
