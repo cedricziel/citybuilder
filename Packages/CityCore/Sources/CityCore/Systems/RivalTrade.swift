@@ -57,15 +57,12 @@ extension World {
         let buffers = goodsBuffers(of: rival.owner)
         let held = buffers.reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
         let order = [BuildingKind.townCenter, .warehouse, .port].flatMap { kind in
-            buffers.filter { $0.kind == kind }.map(\.id)
+            buffers.filter { $0.kind == kind }
         }
-        let space = order.reduce(0) { $0 + (stockpiles[$1]?.freeSpace ?? 0) }
+        let space = order.reduce(0) { $0 + (stockpiles[$1.id]?.freeSpace ?? 0) }
         let units = min(limit, RivalMarket.buyQuantity(of: good, stock: [good: held]), space)
         guard units > 0 else { return false }
-        var left = units
-        for buffer in order where left > 0 {
-            left -= stockpiles[buffer]?.deposit(good, amount: left) ?? 0
-        }
+        fill(good, upTo: units, into: order)
         ship.cargo[good] = carried == units ? nil : carried - units
         settle(good, units: units, rival: rival, direction: .sold, events: &events)
         return true
