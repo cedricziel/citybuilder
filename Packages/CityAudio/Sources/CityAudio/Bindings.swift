@@ -63,11 +63,14 @@ public struct Bindings: Codable, Sendable, Equatable {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CueCodingKey.self)
             file = try container.decodeIfPresent(String.self, forKey: .file) ?? ""
-            bus = try container.decode(AudioBus.self, forKey: .bus)
+            action = try container.decodeIfPresent(CueAction.self, forKey: .action) ?? .start
+            // A stop cue plays nothing, so it may leave out the bus.
+            bus = try action == .stop
+                ? container.decodeIfPresent(AudioBus.self, forKey: .bus) ?? .loop
+                : container.decode(AudioBus.self, forKey: .bus)
             volume = try container.decodeIfPresent(Float.self, forKey: .volume)
             loop = try container.decodeIfPresent(Bool.self, forKey: .loop)
             spatialize = try container.decodeIfPresent(Bool.self, forKey: .spatialize)
-            action = try container.decodeIfPresent(CueAction.self, forKey: .action) ?? .start
             kindFilter = try container.decodeIfPresent(BuildingKind.self, forKey: .kindFilter)
         }
     }
