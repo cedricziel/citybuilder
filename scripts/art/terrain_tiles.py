@@ -41,7 +41,7 @@ def curve(edge_out: int, edge_in: int, rng: random.Random, steps: int = 20) -> l
     """From the midpoint of edge_out, through the tile, to the midpoint of edge_in; bleed points on both ends."""
     m0, m1 = MIDS[edge_out], MIDS[edge_in]
     adjacent = (edge_in - edge_out) % 4 in (1, 3)
-    k = 0.3 if adjacent else 0.36
+    k = 0.14 if adjacent else 0.36
     c0 = (m0[0] + INWARD[edge_out][0] * k, m0[1] + INWARD[edge_out][1] * k)
     c1 = (m1[0] + INWARD[edge_in][0] * k, m1[1] + INWARD[edge_in][1] * k)
     amp, freq, phase = rng.uniform(0.02, 0.05), rng.choice([1, 2]), rng.uniform(0, math.tau)
