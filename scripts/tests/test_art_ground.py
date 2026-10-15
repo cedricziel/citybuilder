@@ -8,7 +8,11 @@ import pytest
 from art import ground
 
 
-@pytest.mark.parametrize("name", ["grass", "grass-autumn", "grass-winter-1", "beach", "water-2"])
+TEXTURES = ["grass", "grass-autumn", "grass-winter-1", "beach", "water-2",
+            "forest-autumn", "forest-winter", "mountain", "mountain-v2"]
+
+
+@pytest.mark.parametrize("name", TEXTURES)
 def test_textures_wrap_without_a_seam(name: str) -> None:
     """Across the wrap the colour changes no more than between any two neighbouring texels."""
     texels = ground.texture(name)

@@ -123,7 +123,7 @@ def _svg(body: str, patterns: dict[str, str]) -> str:
 FILL = '<rect x="-4" y="-4" width="72" height="40" fill="url(#{})"/>'
 
 
-def grass_beach(mask: int) -> str:
+def grass_beach(mask: int, season: str = "") -> str:
     outline, curves = region_uv(mask, rng_for("grass-beach", mask))
     fill, edge = _path(outline, True), " ".join(_path(c, False) for c in curves)
     return _svg(
@@ -131,7 +131,7 @@ def grass_beach(mask: int) -> str:
         f'<path d="{edge}" stroke="#A89E64" stroke-width="3" stroke-opacity="0.7" fill="none" filter="url(#b1)"/>\n'
         f'<path d="{fill}" fill="url(#grass)"/>\n'
         f'<path d="{edge}" stroke="#3E5A22" stroke-width="1.5" stroke-opacity="0.35" fill="none" filter="url(#b1)"/>',
-        {"grass": "grass", "beach": "beach"},
+        {"grass": f"grass-{season}" if season else "grass", "beach": "beach"},
     )
 
 
@@ -155,10 +155,14 @@ def full(texture: str) -> str:
     return _svg(FILL.format("ground"), {"ground": texture})
 
 
-# The ground sprites the atlas has today: base tile plus animation frames, and seasonal grass.
+# Grass changes with the season, so its shore transitions do too (`-t<mask>-<season>`).
+SEASONS = ("autumn", "winter")
+# Every terrain tile the atlas has today: base tiles, animation frames, seasons and rock variants.
 GROUND = ["grass", "grass-0", "grass-1", "grass-autumn", "grass-autumn-0", "grass-autumn-1",
           "grass-winter", "grass-winter-0", "grass-winter-1", "beach", "beach-0", "beach-1",
-          "water", "water-0", "water-1", "water-2", "water-3"]
+          "water", "water-0", "water-1", "water-2", "water-3",
+          "forest", "forest-autumn", "forest-winter",
+          "mountain", "mountain-v1", "mountain-v2", "mountain-v3"]
 
 
 def sources() -> dict[str, str]:
@@ -166,6 +170,8 @@ def sources() -> dict[str, str]:
     tiles: dict[str, str] = {}
     for mask in range(1, 15):
         tiles[f"terrain-grass-beach-t{mask}"] = grass_beach(mask)
+        for season in SEASONS:
+            tiles[f"terrain-grass-beach-t{mask}-{season}"] = grass_beach(mask, season)
         tiles[f"terrain-beach-water-t{mask}"] = beach_water(mask)
     for texture in GROUND:
         tiles[f"terrain-{texture}"] = full(texture)
