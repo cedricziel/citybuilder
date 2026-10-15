@@ -26,6 +26,26 @@ struct RenderTests {
         #expect(abs((span.lowerBound + span.upperBound) / 2 - 64) <= 2)
     }
 
+    @Test("scenario: Sawmill sails turn across operational frames")
+    func sawmillSailsTurn() throws {
+        let recipe = try #require(Recipes.all.first { $0.id == "building-sawmill" })
+        #expect(recipe.operationalFrames == 4)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("isokit-sails-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try RenderJob(recipes: [recipe], output: dir, scales: [1]).run()
+        let idle = try PixelScan.rgba(dir.appendingPathComponent("building-sawmill.png"))
+        let frames = try (0 ..< 4).map { try PixelScan.rgba(dir.appendingPathComponent("building-sawmill-operational-\($0).png")) }
+        for (index, frame) in frames.enumerated() {
+            #expect(frame != idle, "operational-\(index) shows no sails")
+            #expect(frame != frames[(index + 1) % 4], "operational-\(index) and the next frame are identical")
+        }
+        // Away from the sails the frame is the idle sprite: the top-left 30x30 corner has no sails.
+        for frame in frames {
+            #expect(PixelScan.region(frame, width: 128, rows: 0 ..< 30, columns: 0 ..< 30)
+                == PixelScan.region(idle, width: 128, rows: 0 ..< 30, columns: 0 ..< 30))
+        }
+    }
+
     @Test("@2x renders are exactly twice the @1x size")
     func twoXIsDouble() throws {
         let recipe = try #require(Recipes.all.first { $0.id == "building-forester" })
@@ -47,6 +67,28 @@ enum PixelScan {
             ctx?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         }
         return stride(from: 3, to: data.count, by: 4).map { data[$0] }
+    }
+
+    /// RGBA bytes of a PNG file, rows from the top.
+    static func rgba(_ url: URL) throws -> [UInt8] {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+        else { throw CocoaError(.fileReadCorruptFile) }
+        var data = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        data.withUnsafeMutableBytes { buffer in
+            let ctx = CGContext(
+                data: buffer.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
+                bytesPerRow: image.width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+            ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        }
+        return data
+    }
+
+    /// Bytes of a rectangle of an RGBA buffer whose rows are `width` pixels wide.
+    static func region(_ data: [UInt8], width: Int, rows: Range<Int>, columns: Range<Int>) -> [UInt8] {
+        rows.flatMap { row in data[(row * width + columns.lowerBound) * 4 ..< (row * width + columns.upperBound) * 4] }
     }
 
     /// Row index counted from the top.
