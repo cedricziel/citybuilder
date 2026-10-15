@@ -44,9 +44,10 @@ extension IsoWorldScene {
         // Blended shore and grass edges, once the terrain family ships its transition tiles; until
         // then (or for a missing mask) the tile keeps its own sprite. Shore shape outranks seasonal
         // tint, so the transition comes first.
-        if let transition, hasSprite(transition.assetName) {
-            let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: transition.assetName))
-            node.userData = [Self.textureNameKey: transition.assetName]
+        let transitionNames = transition.map { [$0.assetName(in: appliedSeason), $0.assetName] } ?? []
+        if let name = transitionNames.first(where: hasSprite) {
+            let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+            node.userData = [Self.textureNameKey: name]
             node.zPosition = 0
             return node
         }

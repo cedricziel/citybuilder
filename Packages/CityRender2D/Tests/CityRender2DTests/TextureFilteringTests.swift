@@ -37,6 +37,8 @@ struct TextureFilteringTests {
         #expect(TextureFiltering.stem(of: "building-sawmill-operational-2") == "building-sawmill")
         #expect(TextureFiltering.stem(of: "building-house-constructing-0") == "building-house")
         #expect(TextureFiltering.stem(of: "terrain-grass-beach-t3-1") == "terrain-grass-beach")
+        #expect(TextureFiltering.stem(of: "terrain-grass-beach-t3-autumn") == "terrain-grass-beach")
+        #expect(TextureFiltering.stem(of: "terrain-grass-autumn-1") == "terrain-grass-autumn")
         #expect(TextureFiltering.stem(of: "terrain-mountain-v2") == "terrain-mountain")
         #expect(TextureFiltering.stem(of: "building-house-tier2") == "building-house-tier2")
         #expect(TextureFiltering.stem(of: "building-house-modern-east-asian") == "building-house-modern-east-asian")

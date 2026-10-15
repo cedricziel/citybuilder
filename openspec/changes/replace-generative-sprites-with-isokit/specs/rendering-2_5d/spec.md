@@ -11,6 +11,13 @@ A tile whose corners hold exactly two terrains of a declared pair SHALL draw `te
 
 The derivation is visual only. Simulation and placement rules MUST keep using each tile's own `TerrainKind`.
 
+A transition SHALL win over the seasonal sprite. In autumn and winter a `grass-beach` transition SHALL draw `terrain-grass-beach-t<mask>-<season>` when the atlas has it, else the plain transition. A season change SHALL redraw every tile with a grass corner, whatever its own terrain.
+
+#### Scenario: Shores follow the season
+
+- **WHEN** the season turns from spring to autumn on a map where grass meets beach
+- **THEN** every `grass-beach` transition on screen, including those on beach tiles, is redrawn from the `-autumn` set
+
 #### Scenario: Grass meeting beach picks a transition tile
 
 - **WHEN** a grass tile's south and west neighbours are beach and its other neighbours are grass

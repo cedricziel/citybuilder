@@ -16,6 +16,17 @@ public struct TerrainTransition: Hashable, Sendable {
     public var assetName: String {
         "terrain-\(upper.rawValue)-\(lower.rawValue)-t\(mask)"
     }
+
+    /// Grass changes with the season, so a grass edge has autumn and winter sets
+    /// (`terrain-grass-beach-t3-winter`); other pairs look the same all year.
+    public func assetName(in season: Season) -> String {
+        guard upper == .grass else { return assetName }
+        switch season {
+        case .spring, .summer: return assetName
+        case .autumn: return assetName + "-autumn"
+        case .winter: return assetName + "-winter"
+        }
+    }
 }
 
 /// Visual-only terrain blending (rendering-2_5d: Terrain transitions from corner terrain, design D6).
