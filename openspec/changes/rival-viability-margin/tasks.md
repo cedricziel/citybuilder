@@ -8,3 +8,10 @@
 - [x] 1.6 Run the `rival-sweep` workflow with `workflow_dispatch` on the branch and link the run in the PR
 - [x] 1.7 Refactor under a green bar
 - [x] 1.8 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `rival-towns` from this change
+
+## 2. Follow-ups from the #105 review
+
+- [x] 2.1 Tests-first: "Script hut steps stop at the hut limit" and "One warehouse per town", plus a test that the warehouse step waits while a site waits for materials; confirm red
+- [x] 2.2 Implement to green: script hut and warehouse steps skip like house steps at the house cap
+- [x] 2.3 Write the farm rule as farms × 2 < houses × 3, and rename "A farm for every house" to "Fewer farms than houses" in the base spec, the delta and the test
+- [x] 2.4 Re-run the rival sweep, update design "Evidence", and regenerate the determinism baseline
