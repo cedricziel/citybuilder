@@ -9,8 +9,6 @@ enum RivalAI {
         .house, .farm, .house, .house, .lumberjackHut, .warehouse
     ]
     static let growthLoop: [BuildingKind] = [.house, .house, .farm, .house, .house, .lumberjackHut, .house, .sawmill]
-    static let houseCap = 30
-    static let buildingCap = 50
     static let waitLimit = 10
     static let safetyMargin: Int64 = 50
     /// A hut with fewer forest tiles left stops counting, so the wood
@@ -61,6 +59,8 @@ struct RivalTurn {
     let rival: RivalTown
     /// Buildings by kind; huts low on forest are left out.
     var counts: [BuildingKind: Int] = [:]
+    /// Buildings that count toward the building cap: all but roads and
+    /// foresters (`rival-ai-viability` D6).
     var nonRoad = 0
     /// Kinds of the rival's sites waiting for materials.
     var waiting: Set<BuildingKind> = []
@@ -159,7 +159,7 @@ extension World {
             pendingCommands += trades
             return
         }
-        guard turn.nonRoad < RivalAI.buildingCap else { return }
+        guard turn.nonRoad < difficulty.rivalBuildingCap else { return }
         if let commands = thresholdCommands(turn: turn, plan: &plan) {
             pendingCommands += commands
             return
@@ -173,7 +173,7 @@ extension World {
         var ai = rival.ai
         var kind = RivalAI.scriptKind(at: ai.scriptIndex)
         // Bounded: the growth loop holds non-house steps.
-        let atHouseCap = turn.counts[.house, default: 0] >= RivalAI.houseCap
+        let atHouseCap = turn.counts[.house, default: 0] >= difficulty.rivalHouseCap
         for _ in RivalAI.growthLoop.indices where kind == .house && atHouseCap {
             ai.advance()
             kind = RivalAI.scriptKind(at: ai.scriptIndex)
@@ -209,7 +209,7 @@ extension World {
         turn.centerFreeSpace = stockpiles[rival.townCenterID]?.freeSpace ?? 0
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
-            turn.nonRoad += building.kind == .road ? 0 : 1
+            turn.nonRoad += building.kind == .road || building.kind == .forester ? 0 : 1
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
             }

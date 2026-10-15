@@ -259,7 +259,7 @@ func scenarioHouseCap() {
     var world = normalWorld()
     world.setRival(1) { $0.ai.scriptIndex = 18 }
     world.setRivalStock(1, [.wood: 14, .planks: 12, .food: 10])
-    for _ in 0 ..< 30 {
+    for _ in 0 ..< 24 {
         world.testAddBuilding(.house, owner: .rival(1))
     }
     for _ in 0 ..< 4 {
@@ -272,14 +272,36 @@ func scenarioHouseCap() {
     #expect(world.rival(1)?.ai.scriptIndex == 12)
 }
 
-@Test("rival takes no step at 50 buildings")
+@Test("rival takes no step at the building cap")
 func rivalTakesNoStepAtTheBuildingCap() {
     var world = normalWorld()
-    for _ in 0 ..< 49 {
+    // The town center and 47 farms: Normal's cap of 48.
+    for _ in 0 ..< 47 {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
     #expect(world.takeTurn(1).isEmpty)
     #expect(world.rival(1)?.ai.waitTurns == 0)
+}
+
+@Test("scenario: building cap ignores foresters and roads")
+func scenarioBuildingCapIgnoresForestersAndRoads() {
+    var world = normalWorld()
+    world.setRival(1) { $0.ai.scriptIndex = 14 }
+    world.setRivalStock(1, [.wood: 10, .planks: 10, .food: 10])
+    // The town center and 41 farms make 42 buildings, plus 8 foresters.
+    for _ in 0 ..< 41 {
+        world.testAddBuilding(.farm, owner: .rival(1))
+    }
+    for _ in 0 ..< 8 {
+        world.testAddBuilding(.forester, owner: .rival(1))
+    }
+    #expect(placedKind(world.takeTurn(1).last) == .farm)
+}
+
+@Test("caps scale with difficulty")
+func rivalCapsScaleWithDifficulty() {
+    #expect(Difficulty.allCases.map(\.rivalHouseCap) == [16, 24, 32])
+    #expect(Difficulty.allCases.map(\.rivalBuildingCap) == [32, 48, 64])
 }
 
 // MARK: - Rival town plan

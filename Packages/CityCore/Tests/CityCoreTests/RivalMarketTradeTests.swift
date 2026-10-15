@@ -74,7 +74,7 @@ func noUnblockingBuyAtTheBuildingCap() {
         $0.treasury = 400
     }
     world.setRivalStock(1, [.wood: 10, .food: 10])
-    for _ in 0 ..< RivalAI.buildingCap {
+    for _ in 0 ..< world.difficulty.rivalBuildingCap {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
     #expect(rivalTrades(world.takeTurn(1)).isEmpty)
@@ -89,7 +89,7 @@ func noUnblockingBuyAtTheHouseCap() {
     }
     world.setRivalStock(1, [.wood: 10, .food: 10])
     // Below the building cap, so only the house cap stands in the way.
-    for _ in 0 ..< RivalAI.houseCap {
+    for _ in 0 ..< world.difficulty.rivalHouseCap {
         world.testAddBuilding(.house, owner: .rival(1))
     }
     #expect(!rivalTrades(world.takeTurn(1)).contains(.rivalMarketBuy(1, .planks, 4)))

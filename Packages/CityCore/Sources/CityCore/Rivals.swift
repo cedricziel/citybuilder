@@ -110,6 +110,25 @@ public struct RivalTown: Hashable, Codable, Sendable {
 }
 
 public extension Difficulty {
+    /// Houses a rival builds at most (`rival-ai-viability` D6).
+    var rivalHouseCap: Int {
+        switch self {
+        case .easy: 16
+        case .normal: 24
+        case .hard: 32
+        }
+    }
+
+    /// Buildings other than roads and foresters a rival builds at most;
+    /// at the cap it takes no step (`rival-ai-viability` D6).
+    var rivalBuildingCap: Int {
+        switch self {
+        case .easy: 32
+        case .normal: 48
+        case .hard: 64
+        }
+    }
+
     /// Rival towns in a new archipelago game.
     var rivalCount: Int {
         switch self {
