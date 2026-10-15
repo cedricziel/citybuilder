@@ -32,18 +32,31 @@ Both show the second dead end. Once planks reach 0 without a sawmill, the rival 
 
 ### M1 result
 
-The same 15-year sweep, run on the M1 branch:
+The same 15-year sweep run on the M1 branch, with the baseline in brackets:
 
-| | Easy | Normal | Hard |
-|---|---|---|---|
-| Rivals at 0 residents, year 15 (baseline) | 5/10 (10/10) | 1/20 (6/20) | 7/30 (12/30) |
-| Residents year 5, median | 7 (0) | 34.5 (25) | 17 (20) |
-| Residents year 15, median | 6 (0) | 33.5 (25.5) | 17 (21) |
-| Rivals ever in debt | 5 (10) | 1 (6) | 7 (12) |
+|                                | Easy         | Normal      | Hard         |
+| ------------------------------ | ------------ | ----------- | ------------ |
+| Rivals at 0 residents, year 15 | 3/10 (10/10) | 1/20 (6/20) | 5/30 (12/30) |
+| Residents year 3, median       | 9 (0)        | 35.5 (27)   | 21.5 (14)    |
+| Residents year 5, median       | 22.5 (0)     | 35 (25)     | 21.5 (20)    |
+| Residents year 15, median      | 19 (0)       | 35.5 (25.5) | 24 (21)      |
+| Rivals ever in debt            | 3 (10)       | 1 (6)       | 5 (12)       |
+| Citizens reached by year 15    | 6 (0)        | 19 (14)     | 21 (14)      |
 
-Rivals at 0 residents fall from 28 to 13 of 60. Every one of the 13 ends the same way: the town center is full with 40 planks, wood and food are at 0, and the rival cannot pay for a farm. The sawmill turns all wood into planks that nothing uses or sells. M2's market trades (sell surplus when short of money, buy food) target exactly this. A storage threshold rule (a warehouse when the buffers are nearly full) was tried and made Easy worse (10 of 10 at 0 residents), so it is not part of this change.
+Rivals at 0 residents fall from 28 to 9 of 60. All 9 end the same way:
 
-Hard residents stay below the baseline: a median of 17 against 21. Fewer Hard rivals end at 0, but the living Hard towns are smaller. The building cap and the turn pace are M3's levers for that. The final M1 sawmill rule, which waits for a hut, is what the table shows.
+- the town center is full, with 40 planks;
+- wood and food are at 0;
+- the rival cannot pay for a farm.
+
+The sawmill turns all the wood into planks that nothing uses or sells. M2's market trades target exactly this: selling surplus when short of money, and buying food.
+
+Two dead ends were tried and rejected during M1:
+
+- **A storage threshold rule** (a warehouse when the buffers are nearly full) made Easy worse: 10 of 10 rivals at 0 residents.
+- **The first version of the sawmill rule** (no hut condition, a sawmill that still cost materials) left 13 rivals at 0, 7 of them on Hard.
+
+M1 also found and fixed a placement bug. `applyPlace` read a building's material cost after inserting it, so a rival's first sawmill was charged a plank it did not have, and the site waited forever.
 
 ## Goals / Non-Goals
 

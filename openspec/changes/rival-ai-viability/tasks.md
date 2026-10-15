@@ -1,14 +1,14 @@
 ## 1. M1 — Rivals spend on houses first
 
-- [ ] 1.1 Rebase on any open forestry rival PR that touches `Systems/RivalSystem.swift`, so the threshold rules change in one place
-- [ ] 1.2 Tests-first: translate the `rival-towns` / Rival build order scenarios "A farm for every house", "Reserve keeps money for the first houses", "Houses and the first sawmill ignore the reserve", "Sawmill before planks run out", "Foresters wait for the town" and the changed "Rival replants beside its hut" and "Rival forester needs open ground beside a hut" into failing swift-testing tests in CityCoreTests; confirm red
-- [ ] 1.3 Implement to green: `rival-towns` / Rival build order — the farm-per-house food rule (design D4) and the forester gate on opening and 4 houses (design D3)
-- [ ] 1.4 Implement to green: `rival-towns` / Rival build order — the sawmill-first rule (design D2) and the $150 house-first reserve with its exemptions (design D1), counting houses with residents from the rival's populations in entity order
-- [ ] 1.5 Update rival tests that relied on the old food ratio or on foresters during the opening (`RivalAITests`, `RivalForestryTests`)
-- [ ] 1.6 Run the rival sweep harness (seeds 0–9, Easy/Normal/Hard, 36,000 ticks, release) and record rivals at 0 residents, residents and treasury per year in design "Evidence"
-- [ ] 1.7 Run `DeterminismFixture` twice at each length with `SWIFT_DETERMINISTIC_HASHING=1`, confirm byte-identical output, and regenerate the `game-data-codegen` baseline in its own commit that says why
-- [ ] 1.8 Refactor under a green bar
-- [ ] 1.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `rival-towns` from this milestone
+- [x] 1.1 Rebase on any open forestry rival PR that touches `Systems/RivalSystem.swift`, so the threshold rules change in one place
+- [x] 1.2 Tests-first: translate the `rival-towns` / Rival build order scenarios "A farm for every house", "Reserve keeps money for the first houses", "Houses and the first sawmill ignore the reserve", "Sawmill before planks run out", "Foresters wait for the town" and the changed "Rival replants beside its hut" and "Rival forester needs open ground beside a hut" into failing swift-testing tests in CityCoreTests; confirm red
+- [x] 1.3 Implement to green: `rival-towns` / Rival build order — the farm-per-house food rule (design D4) and the forester gate on opening and 4 houses (design D3)
+- [x] 1.4 Implement to green: `rival-towns` / Rival build order — the sawmill-first rule (design D2) and the $150 house-first reserve with its exemptions (design D1), counting houses with residents from the rival's populations in entity order
+- [x] 1.5 Update rival tests that relied on the old food ratio or on foresters during the opening (`RivalAITests`, `RivalForestryTests`)
+- [x] 1.6 Run the rival sweep harness (seeds 0–9, Easy/Normal/Hard, 36,000 ticks, release) and record rivals at 0 residents, residents and treasury per year in design "Evidence"
+- [x] 1.7 Run `DeterminismFixture` twice at each length with `SWIFT_DETERMINISTIC_HASHING=1`, confirm byte-identical output, and regenerate the `game-data-codegen` baseline in its own commit that says why
+- [x] 1.8 Refactor under a green bar
+- [x] 1.9 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `rival-towns` from this milestone
 
 ## 2. M2 — Rivals at the market (requires `add-town-market` archived)
 
