@@ -22,27 +22,21 @@ public enum UITestSeed {
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
-    /// ticks on until that season starts.
-    public static func townWorld(houses: Int = 4, season: Season? = nil) -> World {
+    /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
+    /// each listed kind at the nearest site the rules allow, for a family's before and after shots.
+    public static func townWorld(houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil) -> World {
         var world = World.newGame(layout: .singleIsland, seed: 0)
         world.seedUnlimitedTestInventory()
         guard let center = world.buildings.values.first(where: { $0.kind == .townCenter && $0.owner == .player })?.anchor else {
             return world
         }
         let camera = world.camera
-        var placed = 0
-        for radius in 3 ..< 12 where placed < houses {
-            for dy in -radius ... radius where placed < houses {
-                for dx in -radius ... radius where placed < houses && max(abs(dx), abs(dy)) == radius {
-                    let tile = TileCoordinate(x: center.x + dx, y: center.y + dy)
-                    guard case .allowed = world.canPlace(.house, at: tile) else { continue }
-                    world.enqueue(.place(.house, at: tile))
-                    _ = world.tick()
-                    placed += 1
-                }
-            }
+        for kind in Array(repeating: BuildingKind.house, count: houses) + showcase {
+            guard let site = nearestSite(for: kind, in: world, around: center, from: 3) else { continue }
+            world.enqueue(.place(kind, at: site))
+            _ = world.tick()
         }
-        for _ in 0 ..< 2000 where world.buildings.values.contains(where: { $0.kind == .house && $0.state != .operational }) {
+        for _ in 0 ..< 2000 where world.buildings.values.contains(where: { $0.owner == .player && $0.state != .operational }) {
             _ = world.tick()
         }
         if let season {
@@ -52,6 +46,30 @@ public enum UITestSeed {
         }
         world.camera = camera
         return world
+    }
+
+    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), if any.
+    public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
+        guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
+        return BuildingKind.allCases.filter { $0.category == arguments[flag + 1] }
+    }
+
+    /// The closest tile to `center`, ring by ring from `radius`, where `kind` may be placed.
+    private static func nearestSite(
+        for kind: BuildingKind,
+        in world: World,
+        around center: TileCoordinate,
+        from radius: Int
+    ) -> TileCoordinate? {
+        for ring in radius ..< 16 {
+            for dy in -ring ... ring {
+                for dx in -ring ... ring where max(abs(dx), abs(dy)) == ring {
+                    let tile = TileCoordinate(x: center.x + dx, y: center.y + dy)
+                    if case .allowed = world.canPlace(kind, at: tile) { return tile }
+                }
+            }
+        }
+        return nil
     }
 
     /// The season after `-uiTestSeason` in the launch arguments, if any.

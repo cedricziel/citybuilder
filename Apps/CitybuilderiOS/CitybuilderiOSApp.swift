@@ -57,7 +57,10 @@ struct CitybuilderiOSApp: App {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld(season: UITestSeed.season(fromArguments: arguments))
+            return UITestSeed.townWorld(
+                showcase: UITestSeed.showcase(fromArguments: arguments),
+                season: UITestSeed.season(fromArguments: arguments)
+            )
         }
         #endif
         return world

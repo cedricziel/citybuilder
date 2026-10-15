@@ -76,7 +76,11 @@ struct CitybuilderTVApp: App {
             return UITestSeed.portWorld()
         }
         if ProcessInfo.processInfo.arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld(season: UITestSeed.season(fromArguments: ProcessInfo.processInfo.arguments))
+            let arguments = ProcessInfo.processInfo.arguments
+            return UITestSeed.townWorld(
+                showcase: UITestSeed.showcase(fromArguments: arguments),
+                season: UITestSeed.season(fromArguments: arguments)
+            )
         }
         #endif
         return world
