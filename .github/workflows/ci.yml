@@ -22,7 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.filter.outputs.code }}
+      packages: ${{ steps.select.outputs.packages }}
+      apps: ${{ steps.select.outputs.apps }}
+      sprites: ${{ steps.select.outputs.sprites }}
+      gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
+      determinism_linux: ${{ steps.select.outputs.determinism_linux }}
+      determinism_compare: ${{ steps.select.outputs.determinism_compare }}
 
     steps:
       - name: Checkout
@@ -31,25 +36,39 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Specs, agent config and top-level docs need lint only; anything
-      # else runs the full matrix. Pushes to main always do.
-      - name: Decide whether code changed
-        id: filter
+      # Docs need lint only. A change inside Packages/ runs that package
+      # and its dependents, read from the Package.swift graph; anything
+      # else runs everything (see scripts/select_ci_jobs.py). Pushes to
+      # main, and PRs that edit the selector, its tests or this workflow,
+      # select everything here in shell, so a broken selector can't
+      # deselect the jobs that would test it.
+      - name: Select jobs from the changed files
+        id: select
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          select_all() {
+            for manifest in Packages/*/Package.swift; do basename "$(dirname "$manifest")"; done > "$RUNNER_TEMP/packages"
+            echo "packages=$(jq -Rsc 'split("\n")[:-1]' "$RUNNER_TEMP/packages")"
+            echo "apps=true"
+            echo "sprites=true"
+            echo "gamedata_fixture=true"
+            echo "determinism_linux=true"
+            echo "determinism_compare=true"
+          }
+          selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          changed=$(git diff --no-renames --name-only "$BASE_SHA" HEAD)
-          echo "$changed"
-          code_files=$(echo "$changed" | grep -vE '^openspec/|^\.claude/|^[^/]+\.md$' || true)
-          if [ -n "$changed" ] && [ -z "$code_files" ]; then
-            echo "code=false" >> "$GITHUB_OUTPUT"
+            select_all > "$selection"
           else
-            echo "code=true" >> "$GITHUB_OUTPUT"
+            git diff --no-renames --name-only "$BASE_SHA" HEAD | tee "$RUNNER_TEMP/changed-files"
+            if grep -qxE 'scripts/select_ci_jobs\.py|scripts/tests/test_select_ci_jobs\.py|\.github/workflows/ci\.yml' "$RUNNER_TEMP/changed-files"; then
+              select_all > "$selection"
+            else
+              python3 scripts/select_ci_jobs.py < "$RUNNER_TEMP/changed-files" > "$selection"
+            fi
           fi
+          cat "$selection"
+          cat "$selection" >> "$GITHUB_OUTPUT"
 
   lint:
     name: lint
@@ -91,13 +110,13 @@ jobs:
   test:
     name: test (${{ matrix.package }})
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.packages != '[]'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        package: [CityCore, CityPersistence, CityUI, CityRender2D, CityRender3D, CityAudio, GameDataGen]
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
 
     steps:
       - name: Checkout (with full history for diff-cover)
@@ -206,7 +225,7 @@ jobs:
   sprites:
     name: sprite pipeline pytest
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.sprites == 'true'
     runs-on: macos-26
     timeout-minutes: 15
 
@@ -238,7 +257,7 @@ jobs:
   build:
     name: build (${{ matrix.scheme }})
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.apps == 'true'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
@@ -292,7 +311,7 @@ jobs:
   gamedata-fixture:
     name: gamedata — a fixture pack builds without Swift edits
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.gamedata_fixture == 'true'
     runs-on: macos-26
     timeout-minutes: 30
 
@@ -315,7 +334,7 @@ jobs:
   determinism-linux:
     name: determinism — Linux toolchain build + fixture
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.determinism_linux == 'true'
     runs-on: ubuntu-latest
     container: swift:6.0-jammy
     timeout-minutes: 30
@@ -359,7 +378,8 @@ jobs:
   determinism-compare:
     name: determinism — macOS vs Linux byte equality
     runs-on: ubuntu-latest
-    needs: [test, determinism-linux]
+    needs: [changes, test, determinism-linux]
+    if: needs.changes.outputs.determinism_compare == 'true'
     timeout-minutes: 5
 
     steps:
@@ -390,14 +410,16 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Require every job to succeed
+      # A job skips only when `changes` deselects it, so a skip counts
+      # only after `changes` succeeded. If the selection itself failed
+      # or was skipped, nothing passes.
+      - name: Require every selected job to succeed
         env:
+          SELECTION: ${{ needs.changes.result }}
           RESULTS: ${{ join(needs.*.result, ' ') }}
-          CODE: ${{ needs.changes.outputs.code }}
         run: |
-          echo "job results: $RESULTS (code changed: $CODE)"
+          echo "selection: $SELECTION; job results: $RESULTS"
+          [ "$SELECTION" = "success" ] || exit 1
           for result in $RESULTS; do
-            [ "$result" = "success" ] && continue
-            [ "$result" = "skipped" ] && [ "$CODE" = "false" ] && continue
-            exit 1
+            [ "$result" = "success" ] || [ "$result" = "skipped" ] || exit 1
           done
