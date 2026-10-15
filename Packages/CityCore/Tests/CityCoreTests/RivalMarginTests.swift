@@ -90,13 +90,14 @@ func warehouseWaitsForWaitingSites() {
     #expect(!world.takeTurn(1).contains { placedKind($0) == .warehouse })
 }
 
-@Test("scenario: script hut steps stop at the hut limit")
-func scenarioScriptHutStepsStopAtTheHutLimit() {
-    // Eight houses allow 2 + 8 / 2 = 6 huts once a forester stands. Six
-    // foresters keep the forester rule quiet, and the huts' forest is
-    // cut, so none of them counts toward the sawmill rule.
-    let hutStep = RivalAI.opening.count + 5
-    #expect(RivalAI.scriptKind(at: hutStep) == .lumberjackHut)
+/// The script step that places a growth-loop lumberjack hut.
+private let hutStep = RivalAI.opening.count + 5
+
+/// A town with 8 houses on its script's hut step: 2 + 8 / 2 = 6 huts
+/// once a forester stands. Six foresters keep the forester rule quiet,
+/// the huts' forest is cut, so none of them counts toward the sawmill
+/// rule, and a port keeps the port rule (add-rival-trade) quiet.
+private func townOnAHutStep(huts: Int) -> World {
     var world = townPastOpening(houses: 8, stock: [.wood: 10, .planks: 10, .food: 10])
     world.setRival(1) { $0.ai.scriptIndex = hutStep }
     for _ in 0 ..< 6 {
@@ -105,16 +106,33 @@ func scenarioScriptHutStepsStopAtTheHutLimit() {
     for _ in 0 ..< 12 {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
-    for _ in 0 ..< 5 {
+    for _ in 0 ..< huts {
         world.testAddBuilding(.lumberjackHut, owner: .rival(1))
     }
-    // A port already stands, so the port rule (add-rival-trade) is quiet.
     world.testAddBuilding(.port, owner: .rival(1))
-    var belowLimit = world
-    world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    return world
+}
+
+@Test("scenario: script hut steps stop at the hut limit")
+func scenarioScriptHutStepsStopAtTheHutLimit() {
+    #expect(RivalAI.scriptKind(at: hutStep) == .lumberjackHut)
+    var world = townOnAHutStep(huts: 6)
     #expect(placedKind(world.takeTurn(1).last) == .house)
     #expect(world.rival(1)?.ai.scriptIndex == hutStep + 2)
+    var belowLimit = townOnAHutStep(huts: 5)
     #expect(placedKind(belowLimit.takeTurn(1).last) == .lumberjackHut)
+}
+
+@Test("a skipped script step starts the next one's wait count afresh")
+func skippedStepResetsTheWaitCount() {
+    var world = townOnAHutStep(huts: 6)
+    world.setRival(1) {
+        $0.treasury = 40
+        $0.ai.waitTurns = 5
+    }
+    #expect(world.takeTurn(1).isEmpty)
+    #expect(world.rival(1)?.ai.scriptIndex == hutStep + 1)
+    #expect(world.rival(1)?.ai.waitTurns == 1)
 }
 
 @Test("scenario: one warehouse per town")
@@ -127,7 +145,11 @@ func scenarioOneWarehousePerTown() {
         world.testAddBuilding(.farm, owner: .rival(1))
     }
     world.testAddBuilding(.lumberjackHut, owner: .rival(1))
+    var constructing = world
     world.testAddBuilding(.warehouse, owner: .rival(1))
     #expect(placedKind(world.takeTurn(1).last) == .house)
     #expect(world.rival(1)?.ai.scriptIndex == warehouseStep + 2)
+    let site = constructing.testAddBuilding(.warehouse, owner: .rival(1))
+    constructing.buildings[site]?.state = .constructing
+    #expect(placedKind(constructing.takeTurn(1).last) == .house)
 }
