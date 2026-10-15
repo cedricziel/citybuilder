@@ -85,6 +85,25 @@ struct RecipeRulesTests {
         #expect(Recipe(id: "building-test-shed", cell: SpriteCell(footprint: 1, heightPx: 64)) { _, _ in }.chimneyAnchor == nil)
     }
 
+    /// Inhabited houses smoke, so every house look needs a chimney for the smoke to rise from.
+    @Test("every house tier and culture look has a chimney anchor")
+    func everyHouseHasAChimneyAnchor() {
+        let houses = Recipes.all.filter { $0.entry.hasPrefix("building-house") }
+        #expect(houses.count >= 12)
+        #expect(houses.filter { $0.chimneyAnchor == nil }.map(\.id).isEmpty)
+    }
+
+    /// With two chimneys the smoke rises from the one on the visible side.
+    @Test("the chimney anchor is the chimney nearest the viewer")
+    func chimneyAnchorPrefersTheVisibleChimney() throws {
+        let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
+            kit.chimney(x: 2, depth: 2, from: 0, to: 6)
+            kit.chimney(x: 6, depth: 6, from: 0, to: 4)
+        }
+        let expected = Projection.screen(SCNVector3(6, 4, 6), in: hut.cell)
+        #expect(try abs(#require(hut.chimneyAnchor).x - expected.x / 128) < 0.001)
+    }
+
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
     @Test("a unit whose moving part crosses the cell edge does not fit")
     func unitCellFitIsStrict() {
