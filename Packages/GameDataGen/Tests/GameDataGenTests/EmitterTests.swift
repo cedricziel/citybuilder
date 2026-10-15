@@ -16,10 +16,10 @@ private func cases(of type: String, in source: String) -> [String] {
 
 @Test("scenario: case order follows manifest and item order")
 func caseOrder() throws {
-    let packA = "items:\n  - { kind: Good, id: a1, name: A1, unit: u, basePrice: 1 }\n"
-        + "  - { kind: Good, id: a2, name: A2, unit: u, basePrice: 1 }\n"
-    let packB = "items:\n  - { kind: Good, id: b1, name: B1, unit: u, basePrice: 1 }\n"
-        + "  - { kind: Good, id: b2, name: B2, unit: u, basePrice: 1 }\n"
+    let packA = "items:\n  - { kind: Good, id: a1, name: A1, unit: u, basePrice: 1, neededBy: [merchants] }\n"
+        + "  - { kind: Good, id: a2, name: A2, unit: u, basePrice: 1, neededBy: [merchants] }\n"
+    let packB = "items:\n  - { kind: Good, id: b1, name: B1, unit: u, basePrice: 1, neededBy: [merchants] }\n"
+        + "  - { kind: Good, id: b2, name: B2, unit: u, basePrice: 1, neededBy: [merchants] }\n"
     let source = Fixtures.source(Fixtures.packs + [("a", packA), ("b", packB)])
     let goods = try cases(of: "Good", in: emitted("Good+Generated.swift", from: source))
     #expect(goods == ["wood", "planks", "hops", "beer", "a1", "a2", "b1", "b2"])
@@ -87,7 +87,7 @@ func addingCulturePack() throws {
 }
 
 @Test func escapesStringLiterals() throws {
-    let extra = "items:\n  - { kind: Good, id: salt, name: 'Sea \"Salt\" \\ grey', unit: sacks, basePrice: 3 }\n"
+    let extra = "items:\n  - { kind: Good, id: salt, name: 'Sea \"Salt\" \\ grey', unit: sacks, basePrice: 3, neededBy: [merchants] }\n"
     let source = try emitted("Good+Generated.swift", from: Fixtures.withExtraPack(extra))
     #expect(source.contains(#"displayName: "Sea \"Salt\" \\ grey""#))
 }

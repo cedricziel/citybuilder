@@ -128,7 +128,9 @@ private struct Types {
     var culture: String {
         let all = data.cultures
         let tierNames = all.flatMap { culture in
-            houseTiers.map { tier in ("(.\(caseName(culture.id)), .\(tier))", literal(culture.tiers[tier] ?? "")) }
+            data.tiers.map { tier in
+                ("(.\(caseName(culture.id)), .\(caseName(tier.id)))", literal(culture.tierName(tier)))
+            }
         }
         return enumDecl("Culture", "String, CaseIterable, Codable, Hashable, Sendable", all.map(\.id), [
             property("displayName", "String", all.map { ($0.id, literal($0.name)) }),
@@ -136,7 +138,7 @@ private struct Types {
             property("luxuryChain", "LuxuryChain", all.map { ($0.id, luxury($0.luxury)) }),
             property("signature", "BuildingKind", all.map { ($0.id, ".\(caseName($0.signature))") }),
             property("residentNames", "[String]", all.map { ($0.id, "[\($0.residentNames.map(literal).joined(separator: ", "))]") }),
-            all.isEmpty ? "" : function(
+            tierNames.isEmpty ? "" : function(
                 "\(access)func tierName(_ tier: HouseTier) -> String",
                 over: "(self, tier)",
                 tierNames,

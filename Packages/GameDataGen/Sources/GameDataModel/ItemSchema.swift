@@ -11,7 +11,7 @@ public enum ItemSchema {
     }
 
     public static let kinds: [String: Fields] = [
-        "Good": Fields(required: ["id", "name", "unit", "basePrice"], optional: ["market"]),
+        "Good": Fields(required: ["id", "name", "unit", "basePrice"], optional: ["market", "neededBy"]),
         "Building": Fields(
             required: ["id", "footprint", "cost"],
             optional: [
@@ -20,11 +20,12 @@ public enum ItemSchema {
             ]
         ),
         "Culture": Fields(
-            required: ["id", "name", "blurb", "tiers", "luxury", "signature", "residentNames"],
-            optional: []
+            required: ["id", "name", "blurb", "luxury", "signature", "residentNames"],
+            optional: ["tiers"]
         ),
         "Tech": Fields(required: ["id", "cost", "age"], optional: ["name", "prerequisites", "era", "eraGate"]),
-        "Age": Fields(required: ["id", "startYear", "blurb", "signature", "rivalResidents"], optional: ["name"])
+        "Age": Fields(required: ["id", "startYear", "blurb", "signature", "rivalResidents"], optional: ["name"]),
+        "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: [])
     ]
 
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]
