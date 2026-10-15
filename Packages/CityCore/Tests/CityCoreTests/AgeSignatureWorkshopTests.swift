@@ -207,11 +207,8 @@ func signatureSourcesStayInsideTheTickBudget() {
         _ = Fixture.suppliedSawmill(at: TileCoordinate(x: 2 + (slot % 20) * 4, y: 8 + (slot / 20) * 20), in: &world)
         Fixture.inject(.house, at: TileCoordinate(x: 2 + (slot % 20) * 4, y: 12 + (slot / 20) * 20), in: &world)
     }
-    // The mean, not the slowest tick: the suite runs tests in parallel,
-    // so a single tick can stall on a busy machine.
-    var total: UInt64 = 0
-    for _ in 0 ..< 100 {
-        total += world.tick().metrics.wallClockNanoseconds
-    }
-    #expect(total / 100 < 100_000_000, "mean tick took \(total / 100) ns")
+    // CPU time, not wall-clock: the suite runs tests in parallel, and a
+    // busy machine stretches wall-clock ticks.
+    let mean = meanTickCPUNanoseconds(&world, ticks: 100)
+    #expect(mean < 100_000_000, "mean tick used \(mean) ns of CPU")
 }
