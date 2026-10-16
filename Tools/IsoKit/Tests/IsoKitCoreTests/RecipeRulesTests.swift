@@ -108,7 +108,7 @@ struct RecipeRulesTests {
     }
 
     /// Night lights keep only the window panes; a building without one gets no lights at all.
-    @Test("night lights glow from the panes and hide everything else")
+    @Test("scenario: Night lights glow from the panes")
     func lightsKeepOnlyThePanes() throws {
         let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
             kit.block(SCNVector3(1, 0, 1), SCNVector3(7, 3, 7), .plaster)

@@ -84,6 +84,26 @@ A recipe MAY declare a moving part (sails, saw, wheel) with a frame count. For e
 - **WHEN** IsoKit renders the sawmill with a 4-frame sails part
 - **THEN** `building-sawmill-operational-0…3.png` are written, they differ only where the sails are, and the building pixels match the idle sprite within the regen tolerance
 
+### Requirement: Houses and workshops render night lights
+
+For every house look and every workshop whose finished building shows a window pane, IsoKit SHALL also write `<sprite id>-lights` at the sprite's size and anchor. The mask SHALL:
+
+1. draw each visible pane unlit in a warm colour (blue glass bands dimmer)
+2. draw the rest of the building to depth only, before the panes, so it hides the panes behind it and leaves no colour
+3. add no light to the scene
+
+A building whose panes are all hidden gets no lights file.
+
+#### Scenario: Night lights glow from the panes
+
+- **WHEN** IsoKit builds the lights of a hut with one window
+- **THEN** the window pane is the only coloured part, every other part writes depth only and draws before it, and a shed without a pane has no lights
+
+#### Scenario: Every house look ships its lights
+
+- **WHEN** the committed Kit atlas is checked
+- **THEN** each of the 60 house looks has `-lights` at both scales, and every lights file sits beside its sprite
+
 ### Requirement: Terrain and icon tiles come from SVG generators
 
 A generator under `scripts/art/` SHALL write the SVG sources for:

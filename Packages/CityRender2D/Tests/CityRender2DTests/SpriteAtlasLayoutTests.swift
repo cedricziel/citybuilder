@@ -245,7 +245,7 @@ private func facingSprites() -> (facings: Int, names: [String]) {
 
 /// Houses and workshops glow at night through `<stem>-lights`, added over the sprite: every house look
 /// ships one at both scales, and every lights file sits beside the sprite it lights.
-@Test("night lights cover every house look and sit beside their sprites")
+@Test("scenario: Every house look ships its lights")
 func nightLightsAreCommitted() throws {
     let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
     let files = try Set(FileManager.default.contentsOfDirectory(atPath: kit.path))
