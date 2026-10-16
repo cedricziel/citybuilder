@@ -59,6 +59,14 @@ func townSeedStartsInTheRequestedSeason() {
     #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
 }
 
+@Test("The town seed can be built in another culture, for culture-look shots")
+@MainActor
+func townSeedTakesACulture() {
+    #expect(UITestSeed.townWorld(culture: .mediterranean).culture == .mediterranean)
+    #expect(UITestSeed.culture(fromArguments: ["app", "-uiTestCulture", "east-asian"]) == .eastAsian)
+    #expect(UITestSeed.culture(fromArguments: ["app"]) == .northernEuropean)
+}
+
 @Test("The town seed stays solvent with a whole category on show")
 @MainActor
 func townSeedStaysSolvent() {
@@ -67,4 +75,22 @@ func townSeedStaysSolvent() {
         _ = world.tick()
     }
     #expect(!world.economy.gameOver)
+}
+
+@Test("The lived seed has inhabited houses and keeps the default camera")
+func livedSeedHasResidents() {
+    let world = UITestSeed.livedTownWorld()
+    let snapshot = world.snapshot()
+    #expect(snapshot.housePopulations.values.contains { $0.population > 0 })
+    #expect(world.camera == UITestSeed.townWorld().camera)
+}
+
+@Test("Launch arguments pick the seed, and no flag picks none")
+func argumentsPickTheSeed() {
+    #expect(UITestSeed.world(fromArguments: []) == nil)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestCulture", "mediterranean"])?.culture == .mediterranean)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedShore"])?.ships.count == 1)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedPort"])?.buildings.values.contains { $0.kind == .port } == true)
+    let town = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestShowcase", "craft"])
+    #expect(town?.buildings.values.contains { $0.kind == .bakery } == true)
 }

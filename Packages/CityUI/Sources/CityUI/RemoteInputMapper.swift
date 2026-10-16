@@ -86,7 +86,7 @@ public struct RemoteInputMapper {
         case .back:
             return back(session: session)
         case .menu:
-            session.isPaused = true
+            session.pauseByPlayer()
         case let .zoomAxis(value) where focus == .map:
             session.world.camera.multiplyZoom(by: 1 + Self.triggerZoomRate * value)
         default:

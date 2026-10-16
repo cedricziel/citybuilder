@@ -61,11 +61,24 @@ def _encode_sample(sample: int, predictor: int, index: int) -> tuple[int, int, i
     return code, predictor, index
 
 
+def _start_state(samples: list[int]) -> tuple[int, int]:
+    """Where the first packet starts: on the first sample's top 9 bits, with
+    the step size the signal settles to. Starting from silence instead makes
+    the decoder jump at the first sample, which clicks at every loop wrap."""
+    if not samples:
+        return 0, 0
+    predictor, index = 0, 0
+    for sample in samples[-1024:]:
+        _, predictor, index = _encode_sample(sample, predictor, index)
+    first = samples[0] & 0xFF80
+    return (first - 0x10000 if first >= 0x8000 else first), index
+
+
 def encode_ima4(samples: list[int]) -> bytes:
     """Encodes PCM16 samples, padding the last packet with silence."""
     padded = samples + [0] * (-len(samples) % FRAMES_PER_PACKET)
     out = bytearray()
-    predictor, index = 0, 0
+    predictor, index = _start_state(samples)
     for start in range(0, len(padded), FRAMES_PER_PACKET):
         # Apple's decoder keeps its running predictor while it agrees with the
         # header's top 9 bits, so the encoder carries its predictor on too.

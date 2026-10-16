@@ -23,6 +23,7 @@ struct CitybuilderMacApp: App {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         self.fullscreenTracker = MacFullscreenTracker()
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
@@ -55,6 +56,18 @@ struct CitybuilderMacApp: App {
             }
     }
 
+    /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
+    /// `-uiTestSeedLived`.
+    private static func uiTestWorld(replacing world: World) -> World {
+        #if DEBUG
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
+        }
+        #endif
+        return world
+    }
+
     var body: some Scene {
         WindowGroup {
             TitleScreenHost(
@@ -64,7 +77,7 @@ struct CitybuilderMacApp: App {
                 ),
                 sessionFactory: { [audio] world in
                     let session = GameSession(
-                        world: world,
+                        world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
                             audio.consume(events: events)
                         },

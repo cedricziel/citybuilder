@@ -62,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         if wanted != manifest:
             stale.append("manifest.json")
-    elif not args.only:
+    else:
         MANIFEST.write_text(json.dumps(wanted, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for path in stale:
         print(f"stale: {path} differs from its recipe; run `make audio`", file=sys.stderr)

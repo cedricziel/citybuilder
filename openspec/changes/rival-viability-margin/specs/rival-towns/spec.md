@@ -11,7 +11,7 @@ The threshold rules, in order:
 - food below 4 and farms × 2 < houses × 3 → farm;
 - no operational or constructing sawmill, at least one lumberjack hut and fewer than 4 planks in stock → sawmill;
 - once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill;
-- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut, unless the rival has a forester and already 2 + houses / 2 lumberjack huts, counting every hut;
+- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut, unless the rival has a forester and already at least 2 + houses / 2 lumberjack huts, counting every hut;
 - once the opening is complete and the rival has at least 4 houses, fewer foresters than lumberjack huts, counting every hut → forester.
 
 Huts with fewer than 4 forest tiles left in their catchment SHALL not count as huts in these rules.
@@ -25,7 +25,7 @@ A step SHALL be issued only when:
 
 Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut, forester and first sawmill SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
 
-House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. Lumberjack hut steps SHALL be skipped while the rival has a forester and 2 + houses / 2 lumberjack huts, counting every hut. Warehouse steps SHALL be skipped once the rival has a warehouse built or under construction. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
+House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. Lumberjack hut steps SHALL be skipped while the rival has a forester and at least 2 + houses / 2 lumberjack huts, counting every hut. Warehouse steps SHALL be skipped once the rival has a warehouse built or under construction. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
 
 #### Scenario: Opening step
 

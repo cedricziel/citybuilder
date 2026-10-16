@@ -73,6 +73,11 @@ public final class EngineCuePlayer {
         detach(player)
     }
 
+    /// Sets the volume of the path-keyed loop for `path`, if it plays.
+    public func setLoopVolume(path: String, volume: Float) {
+        loopPlayers[path]?.volume = volume
+    }
+
     /// Halts the building loop of `entity`; another wanted loop may take its place.
     public func stopLoop(entity: EntityID) {
         buildingLoops.stop(entity)
@@ -128,6 +133,8 @@ public final class EngineCuePlayer {
         if loopPlayers[cue.file] != nil { return }
         let player = startLoopPlayer(dispatched: dispatched, file: file)
         loopPlayers[cue.file] = player
+        // Two copies queued, so the next is waiting at the wrap.
+        scheduleLooped(player: player, file: file, path: cue.file)
         scheduleLooped(player: player, file: file, path: cue.file)
         player.play()
     }
@@ -214,10 +221,12 @@ public final class EngineCuePlayer {
         // AVAudioPlayerNode (which isn't Sendable). If `stopLoop(path:)` ran
         // before playback finished, the lookup returns nil and we don't
         // re-schedule — natural lifecycle.
+        // A restarted loop has a new player; the old one's completions stop here.
+        let id = ObjectIdentifier(player)
         player.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                guard let current = self.loopPlayers[path] else { return }
+                guard let current = self.loopPlayers[path], ObjectIdentifier(current) == id else { return }
                 self.scheduleLooped(player: current, file: file, path: path)
             }
         }
