@@ -33,13 +33,13 @@ extension World {
         let starvingAndFull = turn.storeFull && turn.stock[.food, default: 0] < 4
         if rival.treasury < RivalAI.debtThreshold || starvingAndFull {
             for good in RivalAI.saleOrder {
-                let units = min(turn.stock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))
+                let units = min(turn.ownStock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))
                 if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
             }
         }
         if turn.storeFreeSpace < RivalAI.crowdedStoreSpace {
             for good in RivalAI.surplusGoods {
-                let units = min(turn.stock[good, default: 0] - RivalAI.keepSurplus, rival.market.left(good, .sold))
+                let units = min(turn.ownStock[good, default: 0] - RivalAI.keepSurplus, rival.market.left(good, .sold))
                 if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
             }
         }

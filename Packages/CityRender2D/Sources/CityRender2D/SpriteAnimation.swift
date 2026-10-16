@@ -13,6 +13,8 @@ public enum SpriteAnimation {
         case buildingOperational(BuildingKind)
         case buildingConstructing(BuildingKind)
         case walker(SpriteAtlas.WalkerFacing)
+        /// A carrier holding a load; shares the walker's cycle.
+        case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
     }
 
     /// `.forever` arms `SKAction.repeatForever(animate(...))` on the node.
@@ -48,7 +50,7 @@ public enum SpriteAnimation {
             operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
-        case .walker:
+        case .walker, .carrier:
             Entry(frameCount: 2, timePerFrame: 0.15, loop: .forever)
         }
     }
@@ -82,6 +84,8 @@ public enum SpriteAnimation {
             "building-\(kind.rawValue)-constructing-\(frame)"
         case let .walker(facing):
             "walker-\(facing.rawValue)-\(frame)"
+        case let .carrier(load, facing):
+            "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
         }
     }
 

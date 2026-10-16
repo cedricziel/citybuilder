@@ -17,7 +17,9 @@ On `main` after #108 the sweep (archipelago seeds 0–9, 36,000 ticks) already m
 
 ### D1. Sell surplus planks and wood when the stores are crowded
 
-A rival whose goods buffers together have fewer than 40 units of room sells planks, then wood, above 60 units, one good per turn, within its seasonal sell limit of 20 per good. The 40-unit gate keeps young towns, whose only store is the 40-unit town center, out of the rule until they are crowded, so the early game does not change.
+A rival whose goods buffers together have fewer than 40 units of room sells planks, then wood, above 60 units, one good per turn, within its seasonal sell limit of 20 per good. Room and units count only the rival's own operational goods buffers; the island stock the build rules use also counts the player's stores on the island.
+
+What keeps young towns out of the rule is the 60-unit keep, not the room gate. A young town's only store is its 40-unit town center, so the gate opens as soon as it holds a single unit, but such a town can never hold more than 60 of anything. Once a town has a warehouse, the gate keeps it out until its stores are nearly full.
 
 ### D2. Alternatives tried
 
@@ -43,6 +45,8 @@ Year-5 and year-15 minimums, Easy / Normal / Hard, from the same sweep:
 See D2. Final numbers are in the PR, from the committed `RIVAL_SWEEP=1` scenario test.
 
 ## Risks / Trade-offs
+
+- **Surplus sales can delay food.** Sales come before the feed case and take the turn, so a crowded rival short of food first sells planks or wood, up to its seasonal limit of 20 per good, and buys food a turn or two later each season.
 
 - **The weakest Normal town is food-bound at the cap.** Its year-15 minimum stays at 28, above the target of 25 but not by much. Raising it needs more food per building slot, which is a balance change of its own.
 

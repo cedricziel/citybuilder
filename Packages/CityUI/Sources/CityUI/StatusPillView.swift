@@ -182,18 +182,41 @@ struct SpeedControlView: View {
     }
 }
 
+/// How many columns of good chips the stocks tray shows, and how wide it
+/// is, so it fits beside the minimap. Spec: `platform-shells` / Minimap
+/// layout.
+enum StocksTrayLayout {
+    static let columnWidth: CGFloat = 96
+    static let spacing: CGFloat = 14
+    static let padding: CGFloat = 14
+
+    static func columns(fitting width: CGFloat, isPhone: Bool, chips: Int) -> Int {
+        let fit = Int((width - padding * 2 + spacing) / (columnWidth + spacing))
+        return max(1, min(isPhone ? 3 : 6, chips, fit))
+    }
+
+    static func width(columns: Int) -> CGFloat {
+        CGFloat(columns) * columnWidth + CGFloat(max(columns - 1, 0)) * spacing + padding * 2
+    }
+}
+
 /// The current island's stocks under the pill. Spec: `platform-shells` /
 /// Status pill and stocks tray.
 struct StocksTrayView: View {
     let hud: HUDViewModel
     let layout: HUDLayout
+    /// The width the tray may take; it drops columns to fit.
+    let maxWidth: CGFloat
 
     var body: some View {
         let chips = hud.stocksTray
         if !chips.isEmpty {
+            let count = StocksTrayLayout.columns(fitting: maxWidth, isPhone: layout.isPhone, chips: chips.count)
             let columns = Array(
-                repeating: GridItem(.flexible(minimum: 96), spacing: 14, alignment: .leading),
-                count: min(layout.isPhone ? 3 : 6, chips.count)
+                repeating: GridItem(
+                    .fixed(StocksTrayLayout.columnWidth), spacing: StocksTrayLayout.spacing, alignment: .leading
+                ),
+                count: count
             )
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(hud.currentIslandName ?? "Island") stocks · \(chips.count) goods".uppercased())
@@ -211,9 +234,10 @@ struct StocksTrayView: View {
                     }
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, StocksTrayLayout.padding)
             .padding(.vertical, 10)
-            .fixedSize()
+            .frame(width: StocksTrayLayout.width(columns: count), alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Island stocks")

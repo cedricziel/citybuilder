@@ -30,9 +30,12 @@ public enum HUDIdiom: Equatable, Sendable {
 public struct HUDLayout: Equatable, Sendable {
     public let placement: HUDDock
     public let idiom: HUDIdiom
+    /// Narrower than 600 points, such as an iPad app in Slide Over: the
+    /// minimap takes the phone's size.
+    public var isCompactWidth = false
 
     public static func make(size: CGSize, idiom: HUDIdiom) -> HUDLayout {
-        HUDLayout(placement: HUDDock.placement(for: size), idiom: idiom)
+        HUDLayout(placement: HUDDock.placement(for: size), idiom: idiom, isCompactWidth: size.width < 600)
     }
 
     public var isPhone: Bool {
@@ -72,6 +75,11 @@ public struct HUDLayout: Equatable, Sendable {
 
     public var railWidth: CGFloat {
         isPhone ? 56 : 76
+    }
+
+    /// The room the rail and its gap take on the left, zero with the dock.
+    public var railInset: CGFloat {
+        placement == .leftRail ? railWidth + 8 : 0
     }
 
     /// Raises a control's height to `controlHeight` on Apple TV, so every

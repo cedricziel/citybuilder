@@ -133,15 +133,20 @@ func scenarioHoldingPlayPauseCyclesTheZoomLevels() {
     #expect(mapper.focus == .map)
 }
 
-@Test("Holding Play/Pause steps 1.0 to 0.5, 0.5 to 2.0, and any other zoom to 1.0")
+@Test("Holding Play/Pause steps 1.0 to 0.5, 0.5 to the overview, the overview to 2.0, and any other zoom to 1.0")
 @MainActor
 func holdingPlayPauseStepsThroughTheLevels() {
     let session = makeSession()
-    for (from, to) in [(1.0, 0.5), (0.5, 2.0), (3.0, 1.0)] {
+    for (from, to) in [(1.0, 0.5), (3.0, 1.0)] {
         session.world.camera.setZoom(from)
         session.cycleZoomLevel()
         #expect(session.world.camera.zoom == to)
     }
+    session.world.camera.setZoom(0.5)
+    session.cycleZoomLevel()
+    #expect(session.overview != nil && session.world.camera.zoom == 0.5)
+    session.cycleZoomLevel()
+    #expect(session.overview == nil && session.world.camera.zoom == 2.0)
 }
 
 @Test("scenario: Play/Pause enters the HUD")

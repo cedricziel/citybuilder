@@ -1,4 +1,4 @@
-.PHONY: help audio audio-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
+.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -15,6 +15,8 @@ SWIFT ?= xcrun swift
 DESTINATION_MAC := platform=macOS
 DESTINATION_TV := generic/platform=tvOS Simulator
 CITYCORE := Packages/CityCore
+# The Python the audio generators run on; the music renderer needs numpy.
+PYTHON ?= python3
 
 # AI sprite pipeline targets (see Resources/Sprites.style/world.md and
 # openspec/specs/sprite-style-catalog).
@@ -33,6 +35,8 @@ help:
 	@echo "  test-scenarios   Verify every spec scenario maps to a test"
 	@echo "  audio            Render the procedural sounds into Resources/Audio"
 	@echo "  audio-check      Fail when a committed sound differs from its recipe"
+	@echo "  music            Render the original music into Resources/Audio/music"
+	@echo "  music-check      Fail when committed music differs from its score"
 	@echo "  lint             Run SwiftLint in strict mode"
 	@echo "  format           Run SwiftFormat across the repo"
 	@echo "  hooks            Install pre-commit / commit-msg / pre-push hooks"
@@ -76,10 +80,17 @@ test-cli-no-audio:
 	./scripts/check-cli-no-audio.sh
 
 audio:
-	cd scripts && python3 -m audio.generate
+	cd scripts && $(PYTHON) -m audio.generate
 
 audio-check:
-	cd scripts && python3 -m audio.generate --check
+	cd scripts && $(PYTHON) -m audio.generate --check
+
+# The music renderer needs numpy (pinned in scripts/requirements.txt).
+music:
+	cd scripts && $(PYTHON) -m audio.music.render
+
+music-check:
+	cd scripts && $(PYTHON) -m audio.music.render --check
 
 test-audio-manifest:
 	$(SWIFT) ./scripts/check-audio-manifest.swift

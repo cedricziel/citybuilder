@@ -1,5 +1,6 @@
 import CityCore
 import Foundation
+import QuartzCore
 import SwiftUI
 
 /// The top-level view shown by every app shell. Composes a snapshot-driven
@@ -17,6 +18,7 @@ public struct CityRootView: View {
     @State var pauseMenuViewModel: PauseMenuViewModel?
     @State var buildRail = BuildRailModel()
     @State var inspectorExpanded = false
+    @AppStorage var showsMinimap: Bool
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
     #if os(macOS)
@@ -32,12 +34,14 @@ public struct CityRootView: View {
         @ViewBuilder settings: @escaping () -> some View
     ) {
         _session = State(initialValue: session)
+        _showsMinimap = MinimapPreference.storage(idiom: HUDMetrics.idiom)
         self.settingsContent = { AnyView(settings()) }
         self.pauseMenuConfig = pauseMenu
     }
 
     public init(session: GameSession = GameSession(), pauseMenu: PauseMenuConfig? = nil) {
         _session = State(initialValue: session)
+        _showsMinimap = MinimapPreference.storage(idiom: HUDMetrics.idiom)
         self.settingsContent = nil
         self.pauseMenuConfig = pauseMenu
     }
@@ -56,14 +60,22 @@ public struct CityRootView: View {
                 #endif
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
-                hudLayer(layout: layout)
-                    .padding(layout.margin)
-                    #if os(tvOS)
-                    .modifier(TVHUDCommands(root: self))
-                    #endif
+                let insets = proxy.safeAreaInsets
+                hudLayer(layout: layout, hudWidth: proxy.size.width - layout.margin * 2, worldViewSize: CGSize(
+                    width: proxy.size.width + insets.leading + insets.trailing,
+                    height: proxy.size.height + insets.top + insets.bottom
+                ))
+                .padding(layout.margin)
+                #if os(tvOS)
+                .modifier(TVHUDCommands(root: self))
+                #endif
             }
             touchPlacementHUD
                 .zIndex(1)
+            #if os(tvOS)
+            TVMapOverviewView(session: session)
+                .zIndex(2)
+            #endif
         }
         .onChange(of: isAnySheetPresented) { _, presented in
             if presented { buildRail.close() }
@@ -100,6 +112,7 @@ public struct CityRootView: View {
 @Observable
 public final class GameSession {
     public var world: World
+
     public let hud: HUDViewModel
     /// Optional sink for the per-tick `WorldEvent` stream. When non-nil,
     /// every tick's events are forwarded after the snapshot is applied.
@@ -120,6 +133,7 @@ public final class GameSession {
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
+
     /// Ticks per timer firing. Session state, never saved.
     public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
@@ -128,6 +142,10 @@ public final class GameSession {
     public let routeList = RouteListViewModel()
     /// The minimap's terrain image and markers. Spec: `platform-shells` / Minimap.
     public let minimap = MinimapModel()
+    /// A minimap tap's camera move in progress; a pan stops it.
+    public internal(set) var cameraGlide: CameraGlide?
+    /// The Apple TV map overview while it is open.
+    public internal(set) var overview: MapOverview?
 
     /// Ends the game: runs `onEnd` once. The title screen calls this when
     /// it drops the session.
@@ -148,6 +166,7 @@ public final class GameSession {
         self.audioSnapshotConsumer = audioSnapshotConsumer
         routeList.commandSink = { [weak self] in self?.enqueue($0) }
         minimap.apply(world.snapshot())
+        minimap.camera = world.camera
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -214,9 +233,25 @@ public final class GameSession {
         world.enqueue(command)
     }
 
+    /// The player pauses or resumes: the pause button, the pause hotkeys,
+    /// or the Apple TV Menu button. Only these make the toggle sound, not
+    /// a pause the game makes itself. Spec: `platform-shells` / Interface
+    /// actions make a sound.
+    public func togglePause() {
+        isPaused.toggle()
+        UISounds.play(.toggle)
+    }
+
+    /// The player pauses (the Apple TV Menu button); no-op when paused.
+    public func pauseByPlayer() {
+        guard !isPaused else { return }
+        togglePause()
+    }
+
     /// Toggle a tool: tap the same palette button twice to disarm.
     public func selectTool(_ tool: BuildTool) {
         guard !isGameOver || tool == .inspect else { return }
+        UISounds.play(.select)
         if selectedTool == tool {
             selectedTool = .inspect
         } else {
@@ -275,6 +310,7 @@ public final class GameSession {
     /// decreases, camera moves DOWN in scene, content shifts UP — which is
     /// "drag up → scroll down" in scroll-bar parlance.
     public func handlePanDelta(deltaX: CGFloat, deltaY: CGFloat) {
+        cameraGlide = nil
         let zoom = max(world.camera.zoom, 0.0001)
         let dxOverW = Double(deltaX) / Self.tileWidth
         let dyOverH = Double(deltaY) / Self.tileHeight
@@ -302,12 +338,14 @@ public final class GameSession {
         if routeAuthoring != nil { return handleRouteTap(at: tile) }
         switch activeTool {
         case .inspect:
+            UISounds.play(.tap)
             selectedTile = tile
         case let .place(kind) where needsConfirmation(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
                 hud.showRejection(reason, in: world, now: Date())
+                UISounds.play(.reject)
                 return
             }
             enqueue(.place(kind, at: tile))
@@ -386,8 +424,11 @@ public final class GameSession {
 
     @MainActor
     public var worldView: some View {
+        // The renderer pulls a snapshot every frame: the minimap's glide
+        // and camera follow on the same clock.
         let provider: @MainActor @Sendable () -> WorldSnapshot? = { [weak self] in
-            self?.world.snapshot()
+            self?.frameWillRender(now: CACurrentMediaTime())
+            return self?.world.snapshot()
         }
         let tapSink: @MainActor @Sendable (TileCoordinate) -> Void = { [weak self] tile in
             self?.handleTap(at: tile)

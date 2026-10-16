@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The Middle Eastern look of the first building placed on an island and the settle
 
 ## Visual identity
 
-Sandstone hall with a flat parapeted roof crowned by a large blue-tiled dome on a drum, an iwan portal framed in blue tile, and a slender minaret with a balcony and a small dome.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `middle-eastern` in `STYLES`) in the register pinned by `world.md` § Building register. Same 3×3 footprint and bottom anchor as
-`building-town-center`.
+Rendered by IsoKit in the shared light rig. A sandstone hall behind a parapet under a large blue-tiled dome on a drum, an iwan portal framed in blue tile, and a slender minaret with a balcony and a small dome. Same 3×3 footprint and bottom anchor as `building-town-center`.
 
 ## Sheet
 
@@ -28,13 +25,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Frames keep the
-  finished building pixel-identical and add a rising smoke plume.
+The operational frames repeat the finished building.
+
+- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 - Construction uses the shared `building-town-center-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-town-center-middle-eastern` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-town-center-middle-eastern` (IsoKit)
+- Cell: 3×3 footprint, 224 pt tall
 - Construction stages: 0
 - Operational frames: 2
