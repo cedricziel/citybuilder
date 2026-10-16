@@ -12,7 +12,7 @@ public enum TextureFiltering {
     /// States, frames, variants and transition masks are stripped before the lookup, so
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.
-    public static let kitRenderedStems: Set<String> = [
+    public static let kitRenderedStems: Set<String> = Set([
         "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
         "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
         "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
@@ -34,7 +34,14 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]
+    ]).union(houseAgeLooks)
+
+    /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).
+    static let houseAgeLooks: [String] = ["antiquity", "renaissance", "industrial", "modern"].flatMap { age in
+        ["", "-east-asian", "-mediterranean", "-middle-eastern"].flatMap { culture in
+            ["building-house", "building-house-tier2", "building-house-tier3"].map { "\($0)-\(age)\(culture)" }
+        }
+    }
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
         if spriteName.hasPrefix("good-") || spriteName.hasPrefix("overlay-") {

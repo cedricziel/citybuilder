@@ -35,8 +35,21 @@ func scenarioBuildingsAtlasExists() {
     var isDir: ObjCBool = false
     let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
     #expect(exists && isDir.boolValue, "Resources/Buildings.atlas must exist as a directory")
-    let contents = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
-    #expect(contents.contains(where: { $0.hasPrefix("building-") && $0.hasSuffix(".png") }))
+    let contents = Set((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? [])
+    // Every building sprite a brief still owns as legacy art (not `isokit` or `svg`) is committed here.
+    let catalog = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
+    let briefs = ((try? FileManager.default.contentsOfDirectory(at: catalog, includingPropertiesForKeys: nil)) ?? [])
+        .filter { $0.pathExtension == "md" }
+    var missing: [String] = []
+    for brief in briefs {
+        let text = (try? String(contentsOf: brief, encoding: .utf8)) ?? ""
+        guard !text.contains("source = \"isokit\""), !text.contains("source = \"svg\"") else { continue }
+        for line in text.split(separator: "\n") where line.hasPrefix("- (") {
+            guard let name = line.split(separator: "`").dropFirst().first, name.hasPrefix("building-") else { continue }
+            if !contents.contains("\(name).png") { missing.append(String(name)) }
+        }
+    }
+    #expect(missing.isEmpty, "legacy building sprites missing from Buildings.atlas: \(missing)")
 }
 
 @Test("scenario: units atlas exists")
@@ -135,8 +148,8 @@ func everyRequestedTerrainSpriteIsOnDisk() {
 }
 
 /// Every sprite the renderer can request for a kit-rendered building stem: the base, its three
-/// construction stages and every operational frame. Stems without a building kind (house tiers,
-/// road connection sets) are covered by their own tests.
+/// construction stages and every operational frame, plus the culture and age looks, the shore
+/// facings and the ship headings.
 @MainActor
 @Test("every building sprite the renderer can request is committed where it routes")
 func everyRequestedBuildingSpriteIsOnDisk() {
@@ -152,8 +165,29 @@ func everyRequestedBuildingSpriteIsOnDisk() {
         let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
         names += (0 ..< frames).map { SpriteAnimation.assetName(for: .buildingOperational(kind), frame: $0) }
     }
-    // Culture looks are finished-only: the base and, for kinds with a loop, its operational frames.
-    var looks = 0
+    let (looks, lookNames) = cultureLookSprites(), (ages, ageNames) = ageLookSprites(), (facings, facingNames) = facingSprites()
+    names += lookNames + ageNames + facingNames
+    // Every migrated kind contributes its base and three construction stages at least, so the walk
+    // can never pass by checking nothing.
+    #expect(!kinds.isEmpty)
+    #expect(looks == 18, "the house tiers, town center, warehouse and library looks of three cultures")
+    #expect(ages == 48, "three house tiers in four ages and four cultures")
+    #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
+    #expect(names.count >= kinds.count * 4 + looks + ages + facings * 2)
+    let missing = names.sorted().flatMap { name -> [String] in
+        let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
+        return ["\(name).png", "\(name)@2x.png"].compactMap { file in
+            let path = resources.appendingPathComponent("\(atlas).atlas/\(file)").path
+            return FileManager.default.fileExists(atPath: path) ? nil : "\(atlas).atlas/\(file)"
+        }
+    }
+    #expect(missing.isEmpty, "\(missing)")
+}
+
+/// Culture looks are finished-only: the base and, for kinds with a loop, its operational frames.
+@MainActor
+private func cultureLookSprites() -> (looks: Int, names: [String]) {
+    var looks = 0, names: [String] = []
     for kind in IsoWorldScene.cultureVariantKinds.sorted(by: { $0.rawValue < $1.rawValue }) {
         for culture in Culture.allCases {
             for tier in kind == .house ? HouseTier.allCases : [.peasants] {
@@ -167,8 +201,24 @@ func everyRequestedBuildingSpriteIsOnDisk() {
             }
         }
     }
-    // Shore buildings draw one look per facing (`-n/-e/-s/-w`), each with its stages and frames.
-    var facings = 0
+    return (looks, names)
+}
+
+/// Houses also follow the age: the most specific look name (age and culture) for every tier.
+@MainActor
+private func ageLookSprites() -> (looks: Int, names: [String]) {
+    let names = Age.allCases.filter { $0 != .medieval }.flatMap { age in
+        Culture.allCases.flatMap { culture in
+            HouseTier.allCases.compactMap { tier in IsoWorldScene.houseLookNames(houseTier: tier, culture: culture, age: age).first }
+        }
+    }.filter(TextureFiltering.kitRenderedStems.contains)
+    return (names.count, names)
+}
+
+/// Shore buildings draw one look per facing (`-n/-e/-s/-w`) with its stages and frames; ships one
+/// look per heading, two sail frames each.
+private func facingSprites() -> (facings: Int, names: [String]) {
+    var facings = 0, names: [String] = []
     for kind in BuildingKind.allCases where BuildingCatalog.spec(for: kind).shorePlacement != nil {
         for orientation in ShoreOrientation.allCases {
             let base = ShoreOrientationMath.textureName(kind: kind, orientation: orientation, state: nil, frame: nil)
@@ -187,25 +237,11 @@ func everyRequestedBuildingSpriteIsOnDisk() {
             }
         }
     }
-    // Ships draw one look per heading, two sail frames each.
     for facing in ShipFacing.allCases where TextureFiltering.kitRenderedStems.contains("ship-\(facing.rawValue)") {
         facings += 1
         names += (0 ..< 2).map { ShipRenderMath.textureName(facing: facing, frame: $0) }
     }
-    // Every migrated kind contributes its base and three construction stages at least, so the walk
-    // can never pass by checking nothing.
-    #expect(!kinds.isEmpty)
-    #expect(looks == 18, "the house tiers, town center, warehouse and library looks of three cultures")
-    #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
-    #expect(names.count >= kinds.count * 4 + looks + facings * 2)
-    let missing = names.sorted().flatMap { name -> [String] in
-        let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
-        return ["\(name).png", "\(name)@2x.png"].compactMap { file in
-            let path = resources.appendingPathComponent("\(atlas).atlas/\(file)").path
-            return FileManager.default.fileExists(atPath: path) ? nil : "\(atlas).atlas/\(file)"
-        }
-    }
-    #expect(missing.isEmpty, "\(missing)")
+    return (facings, names)
 }
 
 /// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
