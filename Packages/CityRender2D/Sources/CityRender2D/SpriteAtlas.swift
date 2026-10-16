@@ -82,6 +82,7 @@ public enum SpriteAtlas {
     /// Number of art variants per terrain kind. Kinds not listed render
     /// the single canonical sprite.
     public static let terrainVariantCounts: [TerrainType: Int] = [
+        .grass: 4,
         .mountain: 4
     ]
 
@@ -114,22 +115,6 @@ public enum SpriteAtlas {
     /// alone so existing single-sprite kinds keep their canonical name.
     public static func variantAssetName(stem: String, variant: Int) -> String {
         variant == 0 ? stem : "\(stem)-v\(variant)"
-    }
-
-    /// Variant-aware terrain texture lookup. Falls back to the magenta
-    /// placeholder + log-once when the asset is missing, same contract as
-    /// `textureOrPlaceholder(named:)`.
-    public static func terrainTextureOrPlaceholder(
-        for kind: TerrainType,
-        coord: TileCoordinate
-    ) -> SKTexture {
-        textureOrPlaceholder(named: terrainAssetName(for: kind, coord: coord))
-    }
-
-    /// The per-tile terrain sprite name, variant included (`terrain-mountain-v2`).
-    static func terrainAssetName(for kind: TerrainType, coord: TileCoordinate) -> String {
-        let count = terrainVariantCounts[kind] ?? 1
-        return variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variantIndex(coord: coord, count: count))
     }
 
     /// Variant-aware building texture lookup. Used for non-shore
@@ -232,7 +217,8 @@ public enum SpriteAtlas {
         return placeholderTexture
     }
 
-    private static func logMissOnce(_ name: String) {
+    /// Logs a missing sprite once per process; a fallback that draws something else still reports it.
+    static func logMissOnce(_ name: String) {
         var shouldLog = false
         cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
         guard shouldLog else { return }
@@ -289,13 +275,14 @@ public enum SpriteAtlas {
                     names.append(SpriteAnimation.assetName(for: .terrain(kind), frame: frame))
                 }
             }
-            // Art variants (mountain): variant 0 already added above as
-            // the canonical stem; variants 1..N-1 use the `-vN` suffix.
+            // Art variants (grass, rock): variant 0 already added above as
+            // the canonical stem; variants 1..N-1 use the `-vN` suffix, with their frames.
             if let variantCount = terrainVariantCounts[kind], variantCount > 1 {
+                let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
                 for variant in 1 ..< variantCount {
-                    names.append(
-                        variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
-                    )
+                    let name = variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
+                    names.append(name)
+                    names += (0 ..< frames).map { "\(name)-\($0)" }
                 }
             }
         }

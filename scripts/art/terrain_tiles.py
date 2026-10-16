@@ -41,7 +41,7 @@ def curve(edge_out: int, edge_in: int, rng: random.Random, steps: int = 20) -> l
     """From the midpoint of edge_out, through the tile, to the midpoint of edge_in; bleed points on both ends."""
     m0, m1 = MIDS[edge_out], MIDS[edge_in]
     adjacent = (edge_in - edge_out) % 4 in (1, 3)
-    k = 0.3 if adjacent else 0.36
+    k = 0.14 if adjacent else 0.36  # shallow corners line up into one coast along a diagonal
     c0 = (m0[0] + INWARD[edge_out][0] * k, m0[1] + INWARD[edge_out][1] * k)
     c1 = (m1[0] + INWARD[edge_in][0] * k, m1[1] + INWARD[edge_in][1] * k)
     amp, freq, phase = rng.uniform(0.02, 0.05), rng.choice([1, 2]), rng.uniform(0, math.tau)
@@ -140,12 +140,12 @@ def beach_water(mask: int) -> str:
     fill, edge = _path(outline, True), " ".join(_path(c, False) for c in curves)
     return _svg(
         FILL.format("water") + "\n"
-        f'<path d="{edge}" stroke="#4E968E" stroke-width="5" stroke-opacity="0.55" fill="none" filter="url(#b1)"/>\n'
-        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="3" stroke-opacity="0.25" fill="none" filter="url(#b1)"/>\n'
+        f'<path d="{edge}" stroke="#5FA89C" stroke-width="6" stroke-opacity="0.5" fill="none" filter="url(#b1)"/>\n'
+        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="3" stroke-opacity="0.3" fill="none" filter="url(#b1)"/>\n'
         f'<path d="{fill}" fill="url(#beach)"/>\n'
         f'<clipPath id="land"><path d="{fill}"/></clipPath>\n'
-        f'<path d="{edge}" stroke="#8C7A5C" stroke-width="5" stroke-opacity="0.6" fill="none" clip-path="url(#land)" filter="url(#b1)"/>\n'
-        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="1.2" stroke-opacity="0.85" fill="none"/>',
+        f'<path d="{edge}" stroke="#7E6E54" stroke-width="6" stroke-opacity="0.7" fill="none" clip-path="url(#land)" filter="url(#b1)"/>\n'
+        f'<path d="{edge}" stroke="#F4F1E4" stroke-width="1.5" stroke-opacity="0.9" fill="none"/>',
         {"water": "water", "beach": "beach"},
     )
 
@@ -158,8 +158,9 @@ def full(texture: str) -> str:
 # Grass changes with the season, so its shore transitions do too (`-t<mask>-<season>`).
 SEASONS = ("autumn", "winter")
 # Every terrain tile the atlas has today: base tiles, animation frames, seasons and rock variants.
-GROUND = ["grass", "grass-0", "grass-1", "grass-autumn", "grass-autumn-0", "grass-autumn-1",
-          "grass-winter", "grass-winter-0", "grass-winter-1", "beach", "beach-0", "beach-1",
+GRASS = [f"grass{season}{variant}{frame}" for season in ("", *(f"-{s}" for s in SEASONS))
+         for variant in [""] + [f"-v{n}" for n in range(1, ground.GRASS_VARIANTS)] for frame in ("", "-0", "-1")]
+GROUND = [*GRASS, "beach", "beach-0", "beach-1",
           "water", "water-0", "water-1", "water-2", "water-3",
           "forest", "forest-autumn", "forest-winter",
           "mountain", "mountain-v1", "mountain-v2", "mountain-v3"]
