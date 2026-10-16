@@ -16,6 +16,7 @@ The review of the music director and the original music found five problems:
 - **CI selection.** `changes` gains an `audio` output, true for changes to the audio sources, the renders, their tests, the Makefile, `requirements.txt` or the workflow. `audio-linux` runs on it. The full music render test is marked slow and runs only with `AUDIO_SLOW_TESTS` set.
 - **Pluck fraction.** It stays in [0.1, 1.1). Every piece is re-rendered once, in one commit.
 - **Size test.** It measures the committed files.
+- **`render.py --only`.** An unknown path is now an error, before anything renders or the manifest changes. The docstring no longer documents a `--preview` flag that doesn't exist.
 - **README.** `scripts/audio/README.md` asks for batched, piece-by-piece music renders, to keep the repository small.
 
 ## Capabilities
