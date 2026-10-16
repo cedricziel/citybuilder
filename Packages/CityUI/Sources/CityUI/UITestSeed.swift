@@ -41,10 +41,10 @@ public enum UITestSeed {
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
     /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
-    /// each listed kind at the nearest site the rules allow, for a family's before and after shots. A `culture`
-    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks, an `age` (`-uiTestAge modern`) in that age's. The title
-    /// backdrop draws
-    /// this town too (`TitleBackdrop.makeSnapshot`).
+    /// each listed kind at the nearest site the rules allow, for a family's before and after shots. A
+    /// `culture` (`-uiTestCulture mediterranean`) builds the town in that culture's looks, and an `age`
+    /// (`-uiTestAge modern`) in that age's. The title backdrop draws this town too
+    /// (`TitleBackdrop.makeSnapshot`).
     public static func townWorld(
         houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil, culture: Culture = .northernEuropean,
         age: Age = .medieval
@@ -75,8 +75,8 @@ public enum UITestSeed {
     }
 
     /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore`,
-    /// `-uiTestSeedPort` or `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in
-    /// that order.
+    /// `-uiTestSeedPort` or `-uiTestSeedTown` (with `-uiTestShowcase`, `-uiTestSeason`, `-uiTestCulture`
+    /// and `-uiTestAge`), checked in that order.
     public static func world(fromArguments arguments: [String]) -> World? {
         if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
