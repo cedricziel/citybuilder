@@ -8,10 +8,12 @@ import Foundation
 ///   such an atlas every `@1x` sprite needs a twin. Kit renders live in `Kit.atlas`, which keeps the
 ///   legacy atlases free of `@2x` art.
 /// - An `@2x` file without its `@1x` sprite is an orphan.
-/// - Migrated people (`walker-`, `carrier-`) are 24×30 points with eight gait frames per look and
-///   facing (realistic-walkers).
+/// - Migrated people (`walker-`, `carrier-`) are 32×32 points with eight gait frames per look and
+///   facing, and neither figure nor shadow touches the left, right or bottom edge (realistic-walkers).
 enum KitRules {
-    static let walkerSize = (width: 24, height: 30)
+    static let walkerSize = (width: 32, height: 32)
+    /// Alpha above this on an edge is a visible cut; the shadow's last penumbra stays below it.
+    static let edgeAlpha: UInt8 = 8
     static let walkerFacings = ["ne", "nw", "se", "sw"]
     static let walkerFrames = 8
 
@@ -34,6 +36,8 @@ enum KitRules {
                 looks.insert(file.stem.split(separator: "-").dropLast(2).joined(separator: "-"))
                 if image.width != walkerSize.width * file.scale || image.height != walkerSize.height * file.scale {
                     failures.append(.init(file: name, reason: .walkerSize))
+                } else if touchesEdge(image) {
+                    failures.append(.init(file: name, reason: .walkerClipped))
                 }
             }
         }
@@ -45,6 +49,13 @@ enum KitRules {
             }
         }
         return failures
+    }
+
+    /// Any pixel of the left or right column or the bottom row above `edgeAlpha`.
+    static func touchesEdge(_ image: RGBAImage) -> Bool {
+        let sides = (0 ..< image.height)
+            .contains { image.alpha(x: 0, y: $0) > edgeAlpha || image.alpha(x: image.width - 1, y: $0) > edgeAlpha }
+        return sides || (0 ..< image.width).contains { image.alpha(x: $0, y: image.height - 1) > edgeAlpha }
     }
 
     /// The `@2x` twin exists at exactly twice the size.

@@ -82,7 +82,7 @@ func scenarioCarrierStandsOnItsTile() throws {
     scene.reconcileCarriers(with: snapshot, now: 0)
     let node = try #require(scene.carrierVisuals[EntityID(raw: 7)]?.node)
     // SpriteKit stores the anchor as Float.
-    #expect(abs(node.anchorPoint.x - 0.5) < 0.0001 && abs(node.anchorPoint.y - 2.0 / 30.0) < 0.0001)
+    #expect(abs(node.anchorPoint.x - 12.0 / 32.0) < 0.0001 && abs(node.anchorPoint.y - 5.0 / 32.0) < 0.0001)
     #expect(node.xScale > 0)
 }
 

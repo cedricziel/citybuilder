@@ -70,9 +70,10 @@ public enum SpriteAtlas {
         }
     }
 
-    /// Walker sprites stand 2 pt above the bottom of their 30 pt cell, so the shadow under the feet
-    /// fits; nodes anchor there. Spec: `rendering-2_5d` / Figures stand on their feet.
-    public static let walkerAnchor = CGPoint(x: 0.5, y: 2.0 / 30.0)
+    /// Walker sprites stand 5 pt above the bottom of their 32 pt cell and 4 pt left of its centre, so the
+    /// stride and the shadow falling right fit; nodes anchor there. Spec: `rendering-2_5d` / Figures
+    /// stand on their feet.
+    public static let walkerAnchor = CGPoint(x: 12.0 / 32.0, y: 5.0 / 32.0)
 
     public static func terrainTexture(for kind: TerrainType) -> SKTexture? {
         texture(named: "terrain-\(kind.rawValue)")

@@ -7,7 +7,7 @@ Every person walking the town: residents strolling and gathering on the plaza (`
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig, with the cast shadow baked in. A walking figure built from primitives at storybook scale: 1.15x a 1.7 m adult with a 1.25x head and 1.2x limbs, about 21 pt tall, so the head reaches the 2 m door lintel. Period clothing in muted natural dyes (madder, woad, weld, walnut, undyed linen), picked greyer than the target because the warm sun saturates them. Hair over the back of the head tells walking away from walking toward the camera. Feet sit 2 pt above the cell's bottom edge; the renderer anchors at `SpriteAtlas.walkerAnchor`. Never mirrored: the light is baked in.
+Rendered by IsoKit in the shared light rig, with the cast shadow baked in. A walking figure built from primitives at storybook scale: 1.15x a 1.7 m adult with a 1.25x head and 1.2x limbs, about 21 pt tall, so the head reaches the 2 m door lintel. Period clothing in muted natural dyes (madder, woad, weld, walnut, undyed linen), picked greyer than the target because the warm sun saturates them. Hair over the back of the head tells walking away from walking toward the camera. Feet stand 5 pt above the cell's bottom edge and 4 pt left of its centre, so the stride and the whole shadow, which falls right, stay inside; the renderer anchors at `SpriteAtlas.walkerAnchor`, (12/32, 5/32). Never mirrored: the light is baked in.
 
 Looks:
 
@@ -217,12 +217,12 @@ Grid: 8 cols × 24 rows. All 192 cells used.
 
 ## Animation
 
-One 8-frame walk cycle per look and facing: the thigh swings, the knee bends on the forward swing, the arms counter-swing (a hand steadies a shouldered load or the basket) and the body bobs.
+One 8-frame walk cycle per look and facing: the thigh swings, the knee eases as the leg passes under the hips, the arms counter-swing with bent elbows (a hand steadies a shouldered load or the basket) and the body bobs. Frame 0 is a relaxed standing pose.
 
 ## Recipe
 
 - Recipe: `walker-<facing>`, `walker-woman-<facing>`, `carrier-<load>-<facing>` (IsoKit), one per look and facing
-- Cell: 24×30 pt, feet 2 pt up
+- Cell: 32×32 pt, feet at (12, 5) pt
 - Facings: ne, nw, se, sw
 - Frames per facing: 8
 - Moving part: gait
