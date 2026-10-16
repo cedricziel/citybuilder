@@ -35,7 +35,7 @@ def test_every_svg_entry_has_a_source() -> None:
     """SVG-sourced briefs name only sprites the generators can draw. (IsoKit-sourced briefs are
     checked against the recipe registry by Tools/IsoKit's tests.)"""
     wanted = svg_sprites.svg_entry_names(REPO / "Resources/Sprites.style/catalog")
-    drawable = svg_sprites.all_sources()
+    drawable = svg_sprites.drawable_names()
     missing = [name for name in wanted if name not in drawable]
     assert missing == []
 
