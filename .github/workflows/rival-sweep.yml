@@ -1,9 +1,11 @@
 name: rival-sweep
 
-# The full rival viability sweep (rival-ai-viability design D7): seeds
-# 0–9 at every difficulty over 36,000 ticks, with the year-5 floors.
-# Too slow for every PR, so it runs weekly and on demand. It is not a
-# required check and not part of `ci-ok`.
+# The long balance sweeps, too slow for every PR, so they run weekly and
+# on demand. They are not a required check and not part of `ci-ok`.
+# - Rival viability (rival-ai-viability design D7): seeds 0–9 at every
+#   difficulty over 36,000 ticks, with the year-5 floors.
+# - Solvency (hard-bankruptcy-grace design D2): a market-trading scripted
+#   town on Normal, seeds 0–9 on both layouts over 36,000 ticks.
 on:
   workflow_dispatch:
   schedule:
@@ -15,7 +17,7 @@ permissions:
 
 jobs:
   sweep:
-    name: rival viability sweep
+    name: balance sweeps
     runs-on: macos-26
     timeout-minutes: 90
     steps:
@@ -29,19 +31,38 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Run the sweep (release build)
+      # Each sweep step keeps the test's exit status, writes its per-game
+      # lines even when a seed fails, and fails if it printed none.
+      - name: Run the rival viability sweep (release build)
         env:
           RIVAL_SWEEP: "1"
         shell: bash
         run: |
           set -o pipefail
+          status=0
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
-            --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log
+            --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log || status=$?
           grep '^RIVAL_SWEEP' rival-sweep.log > rival-sweep.txt
+          exit "$status"
 
-      - name: Upload the sweep's per-rival lines
-        if: always()
+      - name: Run the solvency sweep (release build)
+        if: ${{ !cancelled() }}
+        env:
+          RIVAL_SWEEP: "1"
+        shell: bash
+        run: |
+          set -o pipefail
+          status=0
+          swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
+            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioWithoutTheMarketTheSameTownsGoBankrupt" 2>&1 | tee solvency-sweep.log || status=$?
+          grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
+          exit "$status"
+
+      - name: Upload the sweeps' per-game lines
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: rival-sweep
-          path: rival-sweep.txt
+          path: |
+            rival-sweep.txt
+            solvency-sweep.txt

@@ -352,7 +352,7 @@ func scenarioUpkeepAllowedToDriveNegative() {
 func scenarioPersistentDeficitTriggersBankruptcy() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
     world.economy.balance = -1
-    for _ in 0 ..< Int(Economy.bankruptcyGraceTicks) + 1 {
+    for _ in 0 ..< Int(world.difficulty.bankruptcyGraceTicks) + 1 {
         world.tick()
     }
     #expect(world.economy.gameOver)
@@ -363,7 +363,7 @@ func fundsPreventBankruptcy() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
     world.economy.balance = -1
     world.seedTestFunds()
-    for _ in 0 ..< Int(Economy.bankruptcyGraceTicks) + 1 {
+    for _ in 0 ..< Int(world.difficulty.bankruptcyGraceTicks) + 1 {
         world.tick()
     }
     #expect(world.economy.balance > 0)
