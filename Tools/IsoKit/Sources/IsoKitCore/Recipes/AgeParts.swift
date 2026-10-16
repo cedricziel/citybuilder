@@ -30,8 +30,8 @@ extension Builder {
 
     /// A stepped gable over the south face, for a roof whose ridge runs along z: each step stands
     /// above the roof slope and out past its overhang.
-    func steppedGable(_ box: AgeBox) {
-        let half = (box.hi.x - box.lo.x) / 2, steps = 4, rise = half * tan(56 * CGFloat.pi / 180) / CGFloat(steps)
+    func steppedGable(_ box: AgeBox, pitch: CGFloat) {
+        let half = (box.hi.x - box.lo.x) / 2, steps = 4, rise = half * tan(pitch * CGFloat.pi / 180) / CGFloat(steps)
         for step in 0 ..< steps {
             let inset = half * CGFloat(step) / CGFloat(steps), base = box.top + CGFloat(step) * rise
             block(

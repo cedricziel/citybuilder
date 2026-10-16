@@ -220,7 +220,7 @@ extension Recipes {
             ground: .ashlar, walls: .plasterPale, storeys: [2, 3, 4], roof: { _ in .gable(.tile, pitch: 56, alongX: false) },
             shutters: Palette.shutterGreen,
             extras: { kit, box in
-                kit.steppedGable(box)
+                kit.steppedGable(box, pitch: 56)
                 if box.tier == 3 { kit.cornice(box, finish: .ashlar) }
             }
         ),
