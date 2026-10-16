@@ -311,7 +311,8 @@ public final class IsoWorldScene: SKScene {
             yRange: yRange,
             transitions: transitionMap,
             roadLinks: roadLinkCache.links(for: snapshot),
-            objects: objectMap
+            objects: objectMap,
+            onScreen: Culling.screenBounds(camera: snapshot.camera, viewSize: size)
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),

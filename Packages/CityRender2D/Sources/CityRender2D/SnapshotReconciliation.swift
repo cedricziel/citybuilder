@@ -72,14 +72,17 @@ public enum SnapshotReconciler {
         yRange: ClosedRange<Int>,
         transitions: TerrainTransitionMap? = nil,
         roadLinks: [TileCoordinate: RoadLink]? = nil,
-        objects: TerrainObjectMap? = nil
+        objects: TerrainObjectMap? = nil,
+        onScreen: CGRect? = nil
     ) -> Set<SpriteSpec> {
         var result = Set<SpriteSpec>()
         result.reserveCapacity((xRange.count) * (yRange.count) * 2)
         for tileY in yRange {
             for tileX in xRange {
                 let coord = TileCoordinate(x: tileX, y: tileY)
-                guard let terrainHere = snapshot.terrain(at: coord) else { continue }
+                guard let terrainHere = snapshot.terrain(at: coord),
+                      onScreen.map({ $0.contains(IsoMath.screenPoint(forTile: coord)) }) ?? true
+                else { continue }
                 let transition = transitions.map { $0.transition(at: coord) }
                     ?? TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
                 result.insert(SpriteSpec(

@@ -153,3 +153,15 @@ func forestsTurnInAutumn() {
     let names = objectNodes(scene).compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
     #expect(names.count == 9 && names.allSatisfy { $0.contains("-autumn") })
 }
+
+@Test("Culling keeps the tiles the screen shows and drops the corners of the tile-space box")
+func cullingKeepsOnlyTheScreen() throws {
+    let camera = Camera(centerX: 50, centerY: 50, zoom: 1)
+    let view = CGSize(width: 1024, height: 768)
+    let bounds = Culling.screenBounds(camera: camera, viewSize: view)
+    #expect(bounds.contains(IsoMath.screenPoint(forTile: .init(x: 50, y: 50))))
+    // The box's corner tile (+col and -row far out) is off screen, though inside the tile range.
+    let range = Culling.visibleTileRange(camera: camera, viewSize: view, mapWidth: 200, mapHeight: 200)
+    let corner = try TileCoordinate(x: #require(range?.xRange.upperBound), y: #require(range?.yRange.lowerBound))
+    #expect(!bounds.contains(IsoMath.screenPoint(forTile: corner)))
+}
