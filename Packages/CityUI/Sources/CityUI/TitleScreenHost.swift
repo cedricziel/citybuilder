@@ -83,7 +83,12 @@ public struct TitleScreenHost: View {
                 TitleScreenView(viewModel: viewModel)
             }
         }
-        .task { await viewModel.prepareCloudSaves() }
+        .task {
+            #if DEBUG
+            viewModel.startGameIfRequested(arguments: ProcessInfo.processInfo.arguments)
+            #endif
+            await viewModel.prepareCloudSaves()
+        }
     }
 
     @ViewBuilder

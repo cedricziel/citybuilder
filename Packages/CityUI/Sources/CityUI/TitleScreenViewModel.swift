@@ -200,6 +200,13 @@ public final class TitleScreenViewModel {
         presentingSettings = true
     }
 
+    /// With `-uiTestStartGame` (Debug only) the game starts without the title: the app's session
+    /// factory swaps in the seed the other flags ask for.
+    public func startGameIfRequested(arguments: [String]) {
+        guard committedSession == nil, UITestSeed.startsGame(fromArguments: arguments) else { return }
+        commit(world: World.newGame(layout: .singleIsland, seed: 0))
+    }
+
     public func commit(world: World) {
         // End the old game before the factory starts the new one's sounds.
         committedSession?.end()
