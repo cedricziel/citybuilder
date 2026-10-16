@@ -139,6 +139,23 @@ func clearingTheStoreSellsFromTheTownCenterFirst() throws {
     #expect(world.stockpiles[warehouse]?.quantity(of: .planks) == 30)
 }
 
+@Test("scenario: rival sells surplus planks from crowded stores")
+func scenarioRivalSellsSurplusPlanksFromCrowdedStores() throws {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    // A full town center with food to spare, so the rival doesn't sell
+    // to clear it; 60 planks and filler iron in a warehouse beside it.
+    world.setRivalStock(1, [.planks: 30, .food: 10])
+    let rival = try #require(world.rival(1))
+    let center = try #require(world.buildings[rival.townCenterID])
+    let warehouse = world.testPlace(.warehouse, at: TileCoordinate(x: center.anchor.x + 5, y: center.anchor.y), owner: .rival(1))
+    var roomy = world
+    world.testSetStock([.planks: 60, .iron: 110], in: warehouse)
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
+    roomy.testSetStock([.planks: 60, .iron: 90], in: warehouse)
+    #expect(rivalTrades(roomy.takeTurn(1)).isEmpty)
+}
+
 @Test("wood bought for a step is in the same batch as the step, ahead of it")
 func boughtWoodComesInTheStepsBatch() throws {
     var world = normalWorld()

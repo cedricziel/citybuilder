@@ -168,6 +168,7 @@ public final class TitleScreenViewModel {
     }
 
     public func continueRequested() {
+        UISounds.play(.tap)
         guard !isPreparingCloudSaves, let summary = mostRecentSave else { return }
         let world: World
         do {
@@ -188,12 +189,14 @@ public final class TitleScreenViewModel {
     }
 
     public func newGameRequested() {
+        UISounds.play(.tap)
         guard !isPreparingCloudSaves else { return }
         loadFailure = nil
         presentingNewGameDialog = true
     }
 
     public func settingsRequested() {
+        UISounds.play(.tap)
         presentingSettings = true
     }
 
