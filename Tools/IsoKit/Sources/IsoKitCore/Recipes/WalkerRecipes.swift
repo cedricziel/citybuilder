@@ -4,10 +4,12 @@ import SceneKit
 
 extension Recipes {
     static let gaitFrames = 8
-    /// 24 x 30 pt: room for a hat, a shouldered load and the shadow falling to the right.
-    static let walkerCell = SpriteCell(footprint: 1, heightPx: 30, widthPx: 24)
-    /// Feet 2 pt above the cell's bottom edge (0.25 m up-screen of the bottom vertex), so the shadow under them fits.
-    static let walkerGround = SCNVector3(3.75, 0, 3.75)
+    /// 32 x 32 pt: room for a hat, a shouldered load and the whole baked shadow, which falls to the right.
+    static let walkerCell = SpriteCell(footprint: 1, heightPx: 32, widthPx: 32)
+    /// The feet stand 5 pt above the cell's bottom edge, so a full stride, a load reaching back and the
+    /// shadow under them stay in the cell, and 4 pt left of its centre (at 12 of 32 pt), so the shadow falling
+    /// right fits too. The renderer anchors walkers there: (12/32, 5/32).
+    static let walkerGround = SCNVector3(3.125, 0, 3.625)
     /// Storybook scale (design D1): 1.15x a 1.7 m adult, with a larger head and thicker limbs so they read at zoom 1.
     static let storybook = Figure(scale: 1.15, head: 1.25, limbs: 1.2)
 

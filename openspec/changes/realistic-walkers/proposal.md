@@ -8,7 +8,7 @@ The walkers are 8×12 pt pixel figures with two frames. Next to the lit, pre-ren
 - **Six people looks:** the worker (the default), a woman with a basket, and four carriers, one per good family (sack, crate, barrel, logs) under the `carrier-<load>` names of `add-carrier-glide`.
 - **Eight-frame walk cycle** at 0.1 s per frame in the four screen diagonals `ne`, `se`, `sw`, `nw`. Frame 0 is the idle pose.
 - **Animals** for ambient life: sheep and cows (8-frame walk, 4-frame graze) and hens (4-frame peck).
-- **Sprites move to `Kit.atlas`** (linear filtering, @1x and @2x). Walkers are 24×30 pt with their feet 2 pt above the bottom edge, so the shadow fits. The legacy `walker-*` PNGs are deleted and the empty `Units` atlas is retired.
+- **Sprites move to `Kit.atlas`** (linear filtering, @1x and @2x). Walkers are 32×32 pt, with their feet 5 pt above the bottom edge and 4 pt left of centre, so the stride and the whole shadow fit. The legacy `walker-*` PNGs are deleted and the empty `Units` atlas is retired.
 - **Renderer:**
   - `SpriteAtlas.walkerAnimation(facing:look:)` looks up the resident looks; `walkerAnimation(facing:)` stays the worker's, and `carrierAnimation(load:facing:)` (add-carrier-glide) finds the carrier art.
   - `SpriteAtlas.animalAnimation` looks up the animals.

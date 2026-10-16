@@ -25,11 +25,21 @@ struct WalkerRecipeTests {
         #expect(carrierNames == Self.names(["carrier-sack", "carrier-crate", "carrier-barrel", "carrier-logs"]))
     }
 
-    @Test("walkers stand 2 pt above the cell's bottom edge, at its centre")
-    func feetSitTwoPointsUp() {
+    @Test("walkers stand 5 pt above the cell's bottom edge and 12 pt from its left")
+    func feetSitFivePointsUp() {
         let feet = Projection.screen(Recipes.walkerGround, in: Recipes.walkerCell)
         #expect(abs(feet.x - 12) < 0.001)
-        #expect(abs(feet.y - 2) < 0.01)
+        #expect(abs(feet.y - 5) < 0.01)
+    }
+
+    @Test("the gait's two passing frames differ: each eases the other knee")
+    func passingFramesDiffer() {
+        func corners(_ phase: CGFloat) -> [String] {
+            let kit = Builder()
+            kit.figure(Recipes.storybook, phase: phase)
+            return CellFit.corners(of: kit.root).map { String(format: "%.3f %.3f %.3f", $0.x, $0.y, $0.z) }.sorted()
+        }
+        #expect(corners(0) != corners(0.5))
     }
 
     @Test("frame 0 is a standing pose: both feet under the hips")
@@ -37,7 +47,7 @@ struct WalkerRecipeTests {
         let kit = Builder()
         kit.figure(Recipes.storybook, phase: 0)
         let bounds = CellFit.worldBounds(of: kit.root)
-        // Walking, the stride spreads the feet 0.7 m along x; standing, the figure stays within its own depth.
+        // Walking, the stride spreads the feet 0.6 m along x; standing, the figure stays within its own depth.
         #expect(bounds.max.x - bounds.min.x < 0.5)
     }
 }

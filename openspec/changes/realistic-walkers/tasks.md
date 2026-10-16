@@ -1,6 +1,6 @@
 ## 1. People in IsoKit
 
-- [x] 1.1 Tests first: walker recipe names (6 variants × 4 facings × 8 frames), narrow `SpriteCell` width, cell fit and recipe rules for every walker recipe
+- [x] 1.1 Tests first: walker recipe names (6 variants × 4 facings × 8 frames), narrow `SpriteCell` width, cell fit and recipe rules for every walker recipe, and the unit bottom and shadow-reach checks in `CellFit`
 - [x] 1.2 `SpriteCell(widthPx:)`; `Figures.swift` (figure, loads, cloth palette); `WalkerRecipes.swift` (storybook scale, six variants)
 
 ## 2. People in the game

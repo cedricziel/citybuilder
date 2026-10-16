@@ -16,7 +16,7 @@
 
 ### Requirement: Animal lookup
 
-`SpriteAtlas.animalAnimation(_:facing:)` SHALL return the frames of an animal action: sheep and cow walk (8 frames) and graze (4 frames), and the hen's peck (4 frames). Each comes from its `SpriteAnimation` entry.
+`SpriteAtlas.animalAnimation(_:facing:)` SHALL return the frames of an animal action (`AnimalAction`): sheep and cow walk (8 frames) and graze (4 frames), and the hen's peck (4 frames). Each comes from its `SpriteAnimation` entry, and `SpriteAtlas.feetAnchor(for:)` gives the point under a figure's feet from its texture.
 
 #### Scenario: Sheep grazing has four frames
 

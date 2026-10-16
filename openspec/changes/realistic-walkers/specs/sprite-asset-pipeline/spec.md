@@ -21,12 +21,12 @@ Walker and animal sprites SHALL follow these grammars, and every one of them SHA
 
 ### Requirement: Walker and animal sprite inventory
 
-Walker sprites SHALL be 24×30 points (48×60 pixels @2x), with their feet 2 points above the bottom edge, at the horizontal centre. Every resident look and carrier load SHALL have 8 frames in each of the four facings. Each animal SHALL have its full frame set in each of the four facings. The sprites SHALL be rendered by IsoKit under the shared light rig, as the buildings are, and ship @1x and @2x. The `Units` atlas is retired: people and ships route to `Kit`.
+Walker sprites SHALL be 32×32 points (64×64 pixels @2x), with their feet 5 points above the bottom edge and 12 points from the left edge. No opaque pixel of a figure or its shadow SHALL touch the left, right or bottom edge. Every resident look and carrier load SHALL have 8 frames in each of the four facings. Each animal SHALL have its full frame set in each of the four facings. The sprites SHALL be rendered by IsoKit under the shared light rig, as the buildings are, and ship @1x and @2x. The `Units` atlas is retired: people and ships route to `Kit`.
 
 #### Scenario: Walker frames have the walker size
 
 - **WHEN** the content gate inspects `walker-woman-se-0.png` and `walker-woman-se-0@2x.png`
-- **THEN** they are 24×30 and 48×60 pixels
+- **THEN** they are 32×32 and 64×64 pixels, and their left, right and bottom edge rows are transparent
 
 #### Scenario: Every variant and facing has eight gait frames
 
