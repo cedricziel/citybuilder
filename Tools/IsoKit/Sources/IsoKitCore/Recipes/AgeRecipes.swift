@@ -234,7 +234,8 @@ extension Recipes {
             }
         ),
         "renaissance-mediterranean": AgeStyle(
-            ground: .ashlar, walls: .paint(Civic.ochre), storeys: [2, 3, 3], roof: { _ in .hip(.tile, pitch: 22) },
+            ground: .ashlar, walls: .paint(Civic.ochre), storeys: [2, 3, 3],
+            roof: { $0 == 3 ? .flat(deck: .tile) : .hip(.tile, pitch: 22) },
             shutters: Looks.blueShutter,
             extras: { kit, box in
                 kit.cornice(box, finish: .paint(Civic.travertine))
@@ -462,7 +463,7 @@ extension Builder {
         }
     }
 
-    /// A roof-top loggia tower at the back corner: open arches under a low tile hip.
+    /// A loggia tower on the back corner of a roof terrace: open arches under a low tile hip.
     func loggiaTower(_ box: AgeBox) {
         let lo = SCNVector3(box.lo.x + 0.5, box.top, box.lo.z + 0.5), hi = SCNVector3(box.lo.x + 2.9, box.top + 2.2, box.lo.z + 2.9)
         block(lo, hi, .paint(Civic.ochre))

@@ -128,7 +128,7 @@ enum ChimneyAnchors {
         "building-house-tier3-renaissance-east-asian": (0.519, 0.389),
         "building-house-renaissance-mediterranean": (0.537, 0.306),
         "building-house-tier2-renaissance-mediterranean": (0.537, 0.295),
-        "building-house-tier3-renaissance-mediterranean": (0.519, 0.306),
+        "building-house-tier3-renaissance-mediterranean": (0.519, 0.370),
         "building-house-renaissance-middle-eastern": (0.537, 0.308),
         "building-house-tier2-renaissance-middle-eastern": (0.537, 0.295),
         "building-house-tier3-renaissance-middle-eastern": (0.519, 0.307),
