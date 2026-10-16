@@ -179,3 +179,12 @@ func everySmokingSpriteHasAChimneyRow() throws {
     let missing = stems.filter { ChimneyAnchors.row(for: $0) == nil && !rooflessOnPurpose.contains($0) }
     #expect(missing.isEmpty, "no chimney row for \(missing.sorted())")
 }
+
+/// A kit-rendered house builds its own chimney, so the base stem's row would put the smoke
+/// somewhere else; each one needs a row of its own.
+@Test("every kit-rendered house has its own chimney row")
+func everyKitHouseHasItsOwnChimneyRow() {
+    let houses = TextureFiltering.kitRenderedStems.filter { $0.hasPrefix("building-house") }
+    #expect(houses.count >= 60)
+    #expect(houses.filter { ChimneyAnchors.table[$0] == nil }.sorted().isEmpty)
+}
