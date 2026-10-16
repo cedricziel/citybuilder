@@ -178,6 +178,8 @@ public final class GameSession {
 
     /// The banner on screen and the tick it hides at.
     var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
+    /// True once this session showed the deficit hint (`deficit-hint` D2).
+    var hasShownDeficitHint = false
     public var isWinSheetPresented = false
 
     /// Advance the simulation one tick. Drains the per-tick event stream
