@@ -48,14 +48,16 @@ public struct RemoteInputMapper {
     private var playPauseDownAt: TimeInterval?
     var selectDownAt: TimeInterval?
     var selectHoldFired = false
+    /// A select went down while the overview was open.
+    var overviewSelectArmed = false
     var tooltip = HoverTooltipController()
 
     public init() {}
 
     public mutating func handle(_ input: RemoteInput, at time: TimeInterval, session: GameSession) -> [RemoteEffect] {
         defer { updateTooltip(at: time, session: session) }
-        if handlesOverview(input, session: session) {
-            return []
+        if let effects = handleOverview(input, session: session) {
+            return effects
         }
         return handleOnMap(input, at: time, session: session)
     }
@@ -109,7 +111,7 @@ public struct RemoteInputMapper {
         guard playPauseDownAt != nil else { return [] }
         playPauseDownAt = nil
         // A short press does nothing while the overview is open; the rest
-        // of its input is `handlesOverview`'s.
+        // of its input is `handleOverview`'s.
         if session.overview != nil, focus == .map { return [] }
         switch focus {
         case .map:

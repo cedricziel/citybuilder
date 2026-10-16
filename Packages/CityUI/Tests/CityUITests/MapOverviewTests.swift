@@ -123,3 +123,63 @@ func swipeMovesCursorNotCamera() throws {
     #expect(cursor.cursorY < 10)
     #expect(session.world.camera.centerX == 10 && session.world.camera.centerY == 10)
 }
+
+@Test("A select release without a press in the overview does not jump")
+@MainActor
+func straySelectUpIsIgnored() {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    press(.overview, &mapper, session: session)
+    press(.click(.right), &mapper, session: session)
+    press(.selectUp, &mapper, session: session)
+    #expect(session.overview != nil, "the release of the press that opened the overview must not close it")
+    #expect(session.world.camera.centerX == 10)
+    press(.selectDown, &mapper, session: session)
+    press(.selectUp, &mapper, session: session)
+    #expect(session.overview == nil)
+    #expect(session.world.camera.centerX == 14)
+}
+
+@Test("Controller X toggles the overview and hands focus to the map")
+@MainActor
+func controllerXToggles() {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    #expect(mapper.handle(.overview, at: 0, session: session) == [.focusMap])
+    #expect(session.overview != nil)
+    _ = mapper.handle(.overview, at: 0.1, session: session)
+    #expect(session.overview == nil)
+}
+
+@Test("scenario: Map button hands the remote to the overview")
+@MainActor
+func mapButtonFocusesTheMap() {
+    let session = makeSession()
+    let remote = TVRemoteController(session: session)
+    var effects: [RemoteEffect] = []
+    remote.applyEffect = { effects.append($0) }
+    remote.send(.playPauseDown, at: 0)
+    remote.send(.playPauseUp, at: 0.1)
+    #expect(remote.focus == .hud)
+    effects.removeAll()
+    remote.openOverview(at: 1)
+    #expect(session.overview != nil)
+    #expect(remote.focus == .map)
+    #expect(effects == [.focusMap])
+    remote.send(.back, at: 2)
+    #expect(session.overview == nil, "Back closes the overview instead of leaving the app")
+    #expect(remote.focus == .map)
+}
+
+@Test("A swipe moves the cursor as far on screen as the finger travels")
+@MainActor
+func swipeScalesWithTheOverview() throws {
+    let session = makeSession()
+    var mapper = RemoteInputMapper()
+    press(.overview, &mapper, session: session)
+    let scale = MapOverview.pointsPerUnit(span: 48)
+    press(.swipe(dx: scale * 2, dy: 0), &mapper, session: session)
+    let cursor = try #require(session.overview)
+    // Two units of u right: one tile more x, one tile less y.
+    #expect(abs(cursor.cursorX - 11) < 1e-9 && abs(cursor.cursorY - 9) < 1e-9)
+}

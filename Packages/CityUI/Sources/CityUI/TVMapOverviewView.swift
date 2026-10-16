@@ -13,7 +13,7 @@ struct TVMapOverviewView: View {
     var body: some View {
         if let overview = session.overview {
             GeometryReader { proxy in
-                let width = min(proxy.size.width - 160, (proxy.size.height - 300) * 2)
+                let width = MapOverview.mapWidth(in: proxy.size)
                 let mapSize = CGSize(width: width, height: width / 2)
                 VStack(spacing: 28) {
                     header
@@ -28,7 +28,7 @@ struct TVMapOverviewView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .padding(.vertical, 60)
+            .padding(.vertical, MapOverview.verticalPadding)
             .background(Color(red: 0.06, green: 0.12, blue: 0.18))
             .ignoresSafeArea()
             .accessibilityElement(children: .contain)
@@ -98,8 +98,11 @@ struct TVMapButton: View {
 
     var body: some View {
         Button {
-            session.openOverview()
-            remote?.focusMoved(toMap: true, at: CACurrentMediaTime())
+            if let remote {
+                remote.openOverview(at: CACurrentMediaTime())
+            } else {
+                session.openOverview()
+            }
         } label: {
             Image(systemName: "map.fill")
                 .imageScale(.large)

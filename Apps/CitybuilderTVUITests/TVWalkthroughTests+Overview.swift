@@ -3,7 +3,8 @@ import XCTest
 /// The map overview with the remote. Spec: `platform-shells` / Apple TV map
 /// overview.
 extension TVWalkthroughTests {
-    func testMapOverviewFromTheTopBarJumpsAndCloses() {
+    /// Starts a game and opens the overview from the top bar's Map button.
+    private func openOverviewFromTopBar() -> XCUIElement {
         startGame()
         let mapButton = app.buttons["hud.mapOverview"]
         XCTAssertTrue(mapButton.waitForExistence(timeout: 5), "the top bar should offer Map")
@@ -11,6 +12,11 @@ extension TVWalkthroughTests {
         remote.press(.select)
         let overview = app.descendants(matching: .any)["tv.overview"]
         XCTAssertTrue(overview.waitForExistence(timeout: 5), "Map should open the overview")
+        return overview
+    }
+
+    func testMapOverviewFromTheTopBarJumpsAndCloses() {
+        let overview = openOverviewFromTopBar()
         snapshot("map-overview")
         remote.press(.right)
         remote.press(.right)
@@ -31,6 +37,15 @@ extension TVWalkthroughTests {
         snapshot("map-overview-from-zoom-cycle")
         remote.press(.menu)
         XCTAssertTrue(waitUntilGone(overview), "Back should close the overview")
+        XCTAssertFalse(app.buttons["pause.resume"].exists, "closing the overview must not pause")
+    }
+
+    func testBackClosesTheOverviewOpenedFromTheTopBar() {
+        let overview = openOverviewFromTopBar()
+        remote.press(.menu)
+        XCTAssertTrue(waitUntilGone(overview), "Back should close the overview")
+        XCTAssertEqual(app.state, .runningForeground, "Back must not leave the app")
+        waitForFocus(app.descendants(matching: .any)["tv.map"])
         XCTAssertFalse(app.buttons["pause.resume"].exists, "closing the overview must not pause")
     }
 }

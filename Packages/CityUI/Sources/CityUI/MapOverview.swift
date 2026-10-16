@@ -1,4 +1,5 @@
 import CityCore
+import CoreGraphics
 import Foundation
 
 /// The Apple TV map overview's cursor, in fractional tiles. Session state,
@@ -13,9 +14,24 @@ public struct MapOverview: Equatable, Sendable {
 
     /// Tiles a directional click steps the cursor.
     static let clickStep = 4.0
-    /// Screen points per unit of `u` a swipe travels, about the overview's
-    /// scale on a 1920-point screen.
-    static let pointsPerUnit = 8.0
+    /// The overview's padding above and below its content.
+    static let verticalPadding: CGFloat = 60
+
+    /// The overview map's width in an area of `size` points: room for the
+    /// side margins, the header and the hints, and 2:1 like the map.
+    static func mapWidth(in size: CGSize) -> CGFloat {
+        min(size.width - 160, (size.height - 300) * 2)
+    }
+
+    /// The map's width on Apple TV's 1920 by 1080 point screen.
+    static let mapWidthPoints = Double(mapWidth(in: CGSize(width: 1920, height: 1080 - verticalPadding * 2)))
+
+    /// Screen points per unit of `u` on the overview of a map whose sides
+    /// add up to `span` tiles, so a swipe moves the cursor as far as the
+    /// finger travels.
+    static func pointsPerUnit(span: Int) -> Double {
+        mapWidthPoints / Double(max(span, 1))
+    }
 }
 
 public extension GameSession {
@@ -32,9 +48,8 @@ public extension GameSession {
     /// Moves the cursor by a swipe of `dx`, `dy` screen points, y down,
     /// in the map's iso orientation.
     func moveOverviewCursor(dx: Double, dy: Double) {
-        let delta = MinimapProjection.tileOffset(
-            across: dx / MapOverview.pointsPerUnit, down: dy / (MapOverview.pointsPerUnit / 2)
-        )
+        let scale = MapOverview.pointsPerUnit(span: world.mapWidth + world.mapHeight)
+        let delta = MinimapProjection.tileOffset(across: dx / scale, down: dy / (scale / 2))
         overview?.cursorX += delta.x
         overview?.cursorY += delta.y
         clampOverviewCursor()
@@ -67,30 +82,37 @@ public extension GameSession {
 
 /// The remote's rules while the overview is open. Design D7.
 extension RemoteInputMapper {
-    /// Opens the overview on the controller's X while the map has focus,
-    /// and handles `input` while it is open. False when the input is not
-    /// the overview's, such as a Play/Pause press or a tick.
-    func handlesOverview(_ input: RemoteInput, session: GameSession) -> Bool {
-        guard focus == .map else { return false }
+    /// Toggles the overview on the controller's X while the map has focus,
+    /// and handles `input` while it is open. Nil when the input is not the
+    /// overview's, such as a Play/Pause press or a tick.
+    mutating func handleOverview(_ input: RemoteInput, session: GameSession) -> [RemoteEffect]? {
+        guard focus == .map else { return nil }
         guard session.overview != nil else {
-            if input == .overview { session.openOverview() }
-            return input == .overview
+            overviewSelectArmed = false
+            guard input == .overview else { return nil }
+            session.openOverview()
+            return [.focusMap]
         }
         switch input {
         case let .swipe(dx, dy):
             session.moveOverviewCursor(dx: dx, dy: dy)
         case let .click(direction):
             session.stepOverviewCursor(direction)
+        case .selectDown:
+            overviewSelectArmed = true
         case .selectUp:
-            session.jumpToOverviewCursor()
-        case .back:
+            // Only a press that began in the overview jumps: the release of
+            // the press that opened it, which UIKit and GameController can
+            // both report, must not.
+            if overviewSelectArmed { session.jumpToOverviewCursor() }
+            overviewSelectArmed = false
+        case .back, .overview:
             session.closeOverview()
-        case .selectDown, .overview, .zoomAxis, .menu:
-            // Select acts on release; the rest does nothing here.
+        case .zoomAxis, .menu:
             break
         case .playPauseDown, .playPauseUp, .tick, .focusChanged:
-            return false
+            return nil
         }
-        return true
+        return []
     }
 }
