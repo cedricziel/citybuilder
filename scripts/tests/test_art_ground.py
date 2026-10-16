@@ -46,3 +46,8 @@ def test_winter_twigs_stay_off_the_conifers() -> None:
     assert raised.any()
     red, green = surface.albedo[..., 0][raised], surface.albedo[..., 1][raised]
     assert (red <= green + 0.02).all()
+
+
+def test_noise_seeds_use_the_whole_name() -> None:
+    """Names that share their first eight characters still draw different noise: the grass sways."""
+    assert not np.allclose(ground.noise("grass-blades-0", 0.035), ground.noise("grass-blades-1", 0.035))

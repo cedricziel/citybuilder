@@ -9,6 +9,7 @@ Noise comes from filtering white noise in the frequency domain, which is periodi
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 from dataclasses import dataclass
 
@@ -34,7 +35,9 @@ class Surface:
 
 def noise(seed: str, wavelength: float, sharp: float = 2.0) -> np.ndarray:
     """Periodic band-limited noise with features about `wavelength` tiles across, scaled to -1..1."""
-    rng = np.random.default_rng(int.from_bytes(seed.encode(), "little") % 2**63)
+    # Hash the whole name: its raw bytes mod 2**63 kept only the first 8 characters, so
+    # `grass-blades-0` and `grass-blades-1` (and every rock variant) drew the same noise.
+    rng = np.random.default_rng(int.from_bytes(hashlib.sha256(seed.encode()).digest()[:8], "little"))
     white = rng.standard_normal((SIZE, SIZE))
     freq = np.fft.fftfreq(SIZE) * SIZE  # cycles per tile
     radius = np.hypot(*np.meshgrid(freq, freq, indexing="ij"))
