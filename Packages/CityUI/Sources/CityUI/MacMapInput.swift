@@ -53,6 +53,14 @@ public enum MacMapInput {
     }
 }
 
+public extension MacMapInput {
+    /// ⌘= zooms in, as ⌘+ does from the Game menu: on many layouts `+`
+    /// needs Shift.
+    static func commandKey(_ characters: String) -> MapCameraAction? {
+        characters == "=" ? .zoom(GameSession.zoomStep) : nil
+    }
+}
+
 public extension GameSession {
     /// Zooms by `factor`, within the camera's limits, keeping the map point
     /// under `offset` (screen points from the view's center, y down) in

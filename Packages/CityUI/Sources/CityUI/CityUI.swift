@@ -86,9 +86,9 @@ public struct CityRootView: View {
         )
     }
 
-    private var isAnySheetPresented: Bool {
+    var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
-            || session.isPaused
+            || session.isPaused || session.isWinSheetPresented
     }
 }
 
