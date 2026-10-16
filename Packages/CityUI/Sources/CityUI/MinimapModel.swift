@@ -19,6 +19,12 @@ public struct MinimapShipDot: Equatable, Sendable {
     public let colour: MinimapRGBA
 }
 
+/// A rival town as the Apple TV overview's legend names it.
+public struct MinimapRival: Equatable, Sendable {
+    public let name: String
+    public let colourHex: String
+}
+
 /// What the minimap draws, kept between frames: the terrain image,
 /// redrawn only when the terrain changes, and the building and ship
 /// markers, rebuilt at most every 3 ticks. Fed one snapshot per tick by
@@ -31,6 +37,7 @@ public final class MinimapModel {
     public private(set) var terrainImage: CGImage?
     public private(set) var buildings: [MinimapBuildingMarker] = []
     public private(set) var ships: [MinimapShipDot] = []
+    public private(set) var rivals: [MinimapRival] = []
     /// The world's camera, mirrored once per frame by `GameSession` so the
     /// camera rectangle redraws when the camera moves rather than every
     /// tick.
@@ -131,5 +138,7 @@ public final class MinimapModel {
         }
         if newBuildings != buildings { buildings = newBuildings }
         if newShips != ships { ships = newShips }
+        let newRivals = snapshot.rivals.map { MinimapRival(name: $0.name, colourHex: $0.colour.hex) }
+        if newRivals != rivals { rivals = newRivals }
     }
 }

@@ -8,7 +8,7 @@ import SwiftUI
 @main
 struct CitybuilderiOSApp: App {
     private let audio: AudioStack
-    private let saveStore = SaveStore()
+    private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
     /// Stable slot used by Continue + pause-menu Save. The title-screen
     /// flow reads this UUID when the player taps Continue; the in-game
     /// Save Game button writes to it. Spec
@@ -57,6 +57,15 @@ struct CitybuilderiOSApp: App {
     /// `-uiTestSeedShore` starts from
     /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
     /// `-uiTestSeedLived` starts from `UITestSeed.livedTownWorld()`, an inhabited town at work.
+    /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
+    private static var uiTestSaveDirectory: URL? {
+        #if DEBUG
+        UITestSeed.saveDirectory(fromArguments: ProcessInfo.processInfo.arguments)
+        #else
+        nil
+        #endif
+    }
+
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
         if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
@@ -85,6 +94,7 @@ struct CitybuilderiOSApp: App {
                     )
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
+                    audio.beginSession()
                     return session
                 },
                 pauseMenuFactory: { [saveStore] session in

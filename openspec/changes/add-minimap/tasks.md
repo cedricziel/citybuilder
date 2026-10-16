@@ -13,7 +13,7 @@
 
 ## 3. Apple TV overview
 
-- [ ] 3.1 Tests-first: the overview scenarios
-- [ ] 3.2 `MapOverview` state, the mapper's routing, the controller's X, the zoom-cycle stop
-- [ ] 3.3 Full-screen overview view and the Map button in the top bar
-- [ ] 3.4 Check on the tvOS simulator (slot from `main`)
+- [x] 3.1 Tests-first: the overview scenarios
+- [x] 3.2 `MapOverview` state, the mapper's routing, the controller's X, the zoom-cycle stop
+- [x] 3.3 Full-screen overview view and the Map button in the top bar
+- [x] 3.4 Check on the tvOS simulator (slot from `main`): `testMapOverviewFromTheTopBarJumpsAndCloses` and `testZoomCycleReachesTheOverviewAndBackCloses` pass

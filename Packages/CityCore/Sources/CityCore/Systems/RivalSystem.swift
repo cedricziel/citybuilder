@@ -93,6 +93,11 @@ struct RivalTurn {
     var centerFreeSpace = 0
     /// Room across the rival's operational goods buffers.
     var storeFreeSpace = 0
+    /// Goods in those buffers: what a sale draws on. The island stock
+    /// also counts the player's stores on the island.
+    var ownStock: [Good: Int] = [:]
+    /// The island stock: what the build rules, materials and food checks
+    /// read. Sales read `ownStock`.
     let stock: [Good: Int]
 
     /// The threshold rules that apply, in order (design D5). A town
@@ -266,8 +271,10 @@ extension World {
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
             turn.cappedBuildings += building.kind == .road || building.kind == .forester ? 0 : 1
-            if building.state == .operational, Self.logisticsBufferKinds.contains(building.kind) {
-                turn.storeFreeSpace += stockpiles[building.id]?.freeSpace ?? 0
+            let isStore = building.state == .operational && Self.logisticsBufferKinds.contains(building.kind)
+            if isStore, let pile = stockpiles[building.id] {
+                turn.storeFreeSpace += pile.freeSpace
+                turn.ownStock.merge(pile.contents) { $0 + $1 }
             }
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
