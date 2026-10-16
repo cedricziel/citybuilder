@@ -35,6 +35,8 @@ public final class IsoWorldScene: SKScene {
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
     private(set) var transitionMap: TerrainTransitionMap?
+    /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
     private(set) var roadLinkCache = RoadLinkCache()
     /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
@@ -273,8 +275,8 @@ public final class IsoWorldScene: SKScene {
         appliedSeason = season
         guard changesLook else { return }
         for (spec, node) in presentSprites {
-            guard case let .terrain(kind, transition) = spec.kind,
-                  Self.seasonalTerrain.contains(kind) || transition?.upper == .grass
+            guard case let .terrain(kind, transition, object) = spec.kind,
+                  Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil
             else { continue }
             node.removeFromParent()
             presentSprites.removeValue(forKey: spec)
@@ -293,12 +295,23 @@ public final class IsoWorldScene: SKScene {
         if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
             transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
         }
+        if objectMap?.matches(
+            width: snapshot.mapWidth,
+            height: snapshot.mapHeight,
+            grid: snapshot.terrainGrid,
+            occupancy: snapshot.occupiedTiles
+        ) != true {
+            objectMap = TerrainObjectMap(
+                width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid, occupancy: snapshot.occupiedTiles
+            )
+        }
         let desired = SnapshotReconciler.desiredSprites(
             in: snapshot,
             xRange: xRange,
             yRange: yRange,
             transitions: transitionMap,
-            roadLinks: roadLinkCache.links(for: snapshot)
+            roadLinks: roadLinkCache.links(for: snapshot),
+            objects: objectMap
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),

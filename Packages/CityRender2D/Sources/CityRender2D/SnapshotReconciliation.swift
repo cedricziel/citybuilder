@@ -8,7 +8,7 @@ public struct SpriteSpec: Hashable, Sendable {
     public enum Kind: Hashable, Sendable {
         /// A terrain tile, with the corner-mask transition its neighbours call for (nil when its
         /// corners agree). The renderer uses the transition sprite when the atlas has it.
-        case terrain(TerrainType, transition: TerrainTransition? = nil)
+        case terrain(TerrainType, transition: TerrainTransition? = nil, object: TerrainObject? = nil)
         /// One sprite per building, anchored at the building's anchor tile.
         /// The renderer is responsible for drawing the building large
         /// enough to cover its footprint.
@@ -71,7 +71,8 @@ public enum SnapshotReconciler {
         xRange: ClosedRange<Int>,
         yRange: ClosedRange<Int>,
         transitions: TerrainTransitionMap? = nil,
-        roadLinks: [TileCoordinate: RoadLink]? = nil
+        roadLinks: [TileCoordinate: RoadLink]? = nil,
+        objects: TerrainObjectMap? = nil
     ) -> Set<SpriteSpec> {
         var result = Set<SpriteSpec>()
         result.reserveCapacity((xRange.count) * (yRange.count) * 2)
@@ -81,7 +82,10 @@ public enum SnapshotReconciler {
                 guard let terrainHere = snapshot.terrain(at: coord) else { continue }
                 let transition = transitions.map { $0.transition(at: coord) }
                     ?? TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
-                result.insert(SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition)))
+                result.insert(SpriteSpec(
+                    coord: coord,
+                    kind: .terrain(terrainHere, transition: transition, object: objects?.object(at: coord))
+                ))
             }
         }
         let roadLinks = roadLinks ?? RoadLinks.links(in: snapshot)
