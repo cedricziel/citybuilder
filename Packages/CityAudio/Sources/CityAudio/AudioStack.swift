@@ -159,6 +159,17 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Plays the interface sound bound to `ui.<name>`, if any. Spec:
+    /// `audio-playback` / Interface sounds are bound by name.
+    public func playInterfaceSound(_ name: String) {
+        guard let cue = Self.interfaceCue(name, in: bindings) else { return }
+        player.play(DispatchedCue(cue: cue))
+    }
+
+    nonisolated static func interfaceCue(_ name: String, in bindings: Bindings) -> Bindings.Cue? {
+        bindings.bindings["ui.\(name)"]?.filter { $0.action == .start }.randomElement()
+    }
+
     /// Ends the game session's sounds: every building loop and seasonal
     /// bed stops. App shells call this when the player leaves a game.
     /// Music plays on.

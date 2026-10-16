@@ -367,6 +367,57 @@ def coast() -> list[float]:
     return out
 
 
+def tick(pitch: float, seed: int, length: float = 0.06) -> list[float]:
+    """A light tap on wood: a tiny knock with almost no body."""
+    rng = dsp.Rng(seed)
+    knock = wood_knock(SR, pitch, rng, length)
+    return dsp.fade_edges(knock, 0.0003, 0.02, SR)
+
+
+def parchment(rising: bool, seed: int) -> list[float]:
+    """A sheet of parchment unrolled (or rolled up): a papery swish sweeping in pitch."""
+    rng = dsp.Rng(seed)
+    n = int(0.22 * SR)
+    noise = dsp.white(n, rng)
+    out = []
+    low = 0.0
+    for i, x in enumerate(noise):
+        t = i / n
+        sweep = t if rising else 1 - t
+        a = dsp.onepole_coeff(1500 + 5000 * sweep, SR)
+        low += a * (x - low)
+        env = dsp.sin_turns(t / 2)
+        out.append((x - low) * env * env)
+    return out
+
+
+def ui_open() -> list[float]:
+    out = parchment(True, 211)
+    dsp.mix_into(out, tick(900, 213, 0.05), int(0.17 * SR), 0.6)
+    return dsp.fade_edges(out, 0.001, 0.02, SR)
+
+
+def ui_close() -> list[float]:
+    out = parchment(False, 217)
+    dsp.mix_into(out, tick(260, 219, 0.08), int(0.16 * SR), 0.8)
+    return dsp.fade_edges(out, 0.001, 0.02, SR)
+
+
+def ui_select() -> list[float]:
+    out = dsp.silence(int(0.12 * SR))
+    dsp.mix_into(out, tick(1300, 223), 0, 1.0)
+    dsp.mix_into(out, tick(1650, 227), int(0.045 * SR), 0.8)
+    return out
+
+
+def ui_toggle() -> list[float]:
+    """A wooden latch clicking over: a click, then the catch settling."""
+    out = dsp.silence(int(0.14 * SR))
+    dsp.mix_into(out, tick(1100, 229), 0, 1.0)
+    dsp.mix_into(out, tick(520, 233, 0.08), int(0.035 * SR), 0.9)
+    return out
+
+
 # Partials of a cast bronze bell (hum, prime, tierce, quint, nominal and up),
 # each with its share of the strike and how long it rings relative to the hum.
 BELL_PARTIALS = ((0.5, 0.5, 1.0), (1.0, 1.0, 0.7), (1.183, 0.6, 0.55), (1.506, 0.35, 0.45),
@@ -493,6 +544,11 @@ SOUNDS = [
     Sound("ambient/autumn-wind.caf", "Autumn: gusts through dry leaves, a distant crow", "ambient", autumn_wind),
     Sound("ambient/winter-wind.caf", "Winter: a cold wind whistling", "ambient", winter_wind),
     Sound("ambient/coast.caf", "Coast: waves on a beach and gulls", "ambient", coast),
+    Sound("ui/tap.caf", "A light wooden tick", "sfx", lambda: tick(1000, 239)),
+    Sound("ui/select.caf", "Two quick bright ticks", "sfx", ui_select),
+    Sound("ui/toggle.caf", "A latch clicking over", "sfx", ui_toggle),
+    Sound("ui/open.caf", "Parchment unfurling", "sfx", ui_open),
+    Sound("ui/close.caf", "Parchment rolled up", "sfx", ui_close),
 ]
 
 

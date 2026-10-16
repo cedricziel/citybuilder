@@ -81,6 +81,41 @@ struct RecipeRulesTests {
         #expect(abs(anchor.y) < 0.001)
     }
 
+    /// The game starts chimney smoke at this point, so it must follow the chimney the recipe builds.
+    @Test("a recipe's chimney anchor is its chimney top, as fractions of the sprite")
+    func chimneyAnchorIsTheChimneyTop() throws {
+        let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
+            kit.chimney(x: 8, depth: 8, from: 0, to: 4)
+        }
+        let anchor = try #require(hut.chimneyAnchor)
+        let top = Projection.screen(SCNVector3(8, 4, 8), in: hut.cell)
+        #expect(abs(anchor.x - 0.5) < 0.001)
+        #expect(abs(anchor.y - (1 - top.y / 128)) < 0.001)
+        #expect(Recipe(id: "building-test-shed", cell: SpriteCell(footprint: 1, heightPx: 64)) { _, _ in }.chimneyAnchor == nil)
+    }
+
+    /// Inhabited houses smoke, so every house look needs a chimney for the smoke to rise from.
+    @Test("every house tier and culture look has a chimney anchor")
+    func everyHouseHasAChimneyAnchor() {
+        let houses = Recipes.all.filter { $0.entry.hasPrefix("building-house") }
+        #expect(houses.count >= 12)
+        #expect(houses.filter { $0.chimneyAnchor == nil }.map(\.id).isEmpty)
+    }
+
+    /// With two chimneys the smoke rises from the one on the visible side.
+    @Test("the chimney anchor is the chimney nearest the viewer")
+    func chimneyAnchorPrefersTheVisibleChimney() throws {
+        let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
+            kit.chimney(x: 2, depth: 2, from: 0, to: 6)
+            kit.chimney(x: 6, depth: 6, from: 0, to: 4)
+        }
+        let expected = Projection.screen(SCNVector3(6, 4, 6), in: hut.cell)
+        let anchor = try #require(hut.chimneyAnchor)
+        // Both chimneys sit on the same screen column, so the height tells them apart.
+        #expect(abs(anchor.x - expected.x / 128) < 0.001)
+        #expect(abs(anchor.y - (1 - expected.y / 128)) < 0.001)
+    }
+
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
     @Test("a unit whose moving part crosses the cell edge does not fit")
     func unitCellFitIsStrict() {
@@ -91,6 +126,30 @@ struct RecipeRulesTests {
             plot: nil, unit: true
         ) { kit, _ in kit.block(SCNVector3(1.5, 0, 1.5), SCNVector3(2.5, 1, 2.5), .wood) }
         #expect(!CellFit.problems(in: ship).isEmpty)
+    }
+
+    /// A bare band in a texture shows as a stripe wherever it repeats (the slate courses left one).
+    /// Joints between blocks may be bare; a whole bare row may not.
+    @Test("no finish texture has a bare row")
+    func finishTexturesHaveNoBareRow() throws {
+        let textures: [(String, CGImage)] = [
+            ("plaster", Tex.plaster), ("timber", Tex.timber), ("rubble", Tex.rubble), ("ashlar", Tex.ashlar),
+            ("planks", Tex.planks), ("thatch", Tex.thatchStraw), ("tile", Tex.tile), ("slate", Tex.slate),
+            ("cobbles", Tex.cobbles), ("wood", Tex.wood), ("yard", Tex.yard), ("rock", Tex.rock), ("brick", Tex.brick)
+        ]
+        for (name, image) in textures {
+            let size = Tex.size
+            var pixels = [UInt8](repeating: 0, count: size * size * 4)
+            let ctx = try #require(CGContext(
+                data: &pixels, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ))
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+            let bareRows = (0 ..< size).filter { row in
+                (0 ..< size).allSatisfy { pixels[(row * size + $0) * 4 + 3] == 0 }
+            }
+            #expect(bareRows.isEmpty, "\(name) has bare rows \(bareRows)")
+        }
     }
 
     /// The renderer centres a W x H sprite on the footprint's width, level with its bottom vertex.
