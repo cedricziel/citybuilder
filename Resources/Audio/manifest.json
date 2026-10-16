@@ -217,6 +217,69 @@
       "author": "Citybuilder sound generator",
       "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
+    },
+    {
+      "path": "ambient/summer-meadow.caf",
+      "title": "Summer: crickets, cicadas and a lazy breeze",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/autumn-wind.caf",
+      "title": "Autumn: gusts through dry leaves, a distant crow",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/winter-wind.caf",
+      "title": "Winter: a cold wind whistling",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/coast.caf",
+      "title": "Coast: waves on a beach and gulls",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/tap.caf",
+      "title": "A light wooden tick",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/select.caf",
+      "title": "Two quick bright ticks",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/toggle.caf",
+      "title": "A latch clicking over",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/open.caf",
+      "title": "Parchment unfurling",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/close.caf",
+      "title": "Parchment rolled up",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
     }
   ]
 }

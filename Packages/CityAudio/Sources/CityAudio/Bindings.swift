@@ -115,10 +115,33 @@ public struct Bindings: Codable, Sendable, Equatable {
     public struct AmbientSection: Codable, Sendable, Equatable {
         public let tracks: [MusicTrack]
         public let crossfadeSeconds: Double?
+        /// A bed per season, keyed by the season's name (`"winter"`).
+        /// With these, `AmbientScene` mixes by season and shore instead
+        /// of looping `tracks`. Spec: `audio-playback` / Ambient beds
+        /// follow season and shore.
+        public let seasons: [String: String]?
+        /// The bed that swells near the sea.
+        public let coast: String?
 
-        public init(tracks: [MusicTrack] = [], crossfadeSeconds: Double? = nil) {
+        public init(
+            tracks: [MusicTrack] = [],
+            crossfadeSeconds: Double? = nil,
+            seasons: [String: String]? = nil,
+            coast: String? = nil
+        ) {
             self.tracks = tracks
             self.crossfadeSeconds = crossfadeSeconds
+            self.seasons = seasons
+            self.coast = coast
+        }
+
+        /// `seasons` keyed by `Season`; names that are no season are dropped.
+        public var seasonFiles: [Season: String] {
+            var files: [Season: String] = [:]
+            for season in Season.allCases {
+                if let file = seasons?["\(season)"] { files[season] = file }
+            }
+            return files
         }
     }
 
@@ -150,6 +173,8 @@ public struct Bindings: Codable, Sendable, Equatable {
         }
         if let ambient {
             paths.append(contentsOf: ambient.tracks.map(\.file))
+            paths.append(contentsOf: ambient.seasonFiles.values.sorted())
+            if let coast = ambient.coast { paths.append(coast) }
         }
         return paths
     }

@@ -10,10 +10,31 @@ import SwiftUI
 /// gesture. Events in a sheet, or over the HUD, pass through. Spec:
 /// `platform-shells` / Esc steps back on the Mac, Mac trackpad and mouse
 /// camera, Mac keyboard camera.
+extension MacMapInput {
+    /// Whether a scroll or pinch event continues a gesture already under
+    /// way, so it keeps the target found when the gesture began. A mouse
+    /// wheel notch has no phase and starts afresh.
+    static func continuesGesture(phase: NSEvent.Phase, momentumPhase: NSEvent.Phase) -> Bool {
+        if !momentumPhase.isEmpty { return true }
+        return !phase.isEmpty && phase.isDisjoint(with: [.began, .mayBegin])
+    }
+
+    /// The SpriteKit view a hit view belongs to, or nil when the hit lands
+    /// on the HUD. SwiftUI's hosting view answers for its own controls,
+    /// pills and lists, so only the map's bare area reaches the SKView.
+    static func map(containing hit: NSView?) -> SKView? {
+        var view = hit
+        while let current = view {
+            if let map = current as? SKView { return map }
+            view = current.superview
+        }
+        return nil
+    }
+}
+
 struct MacMapInputHost: NSViewRepresentable {
     let session: GameSession
-    @Binding var rail: BuildRailModel
-    @Binding var inspectorExpanded: Bool
+    @Binding var stepBack: StepBackState
 
     func makeNSView(context _: Context) -> MonitorView {
         MonitorView()
@@ -21,7 +42,7 @@ struct MacMapInputHost: NSViewRepresentable {
 
     func updateNSView(_ view: MonitorView, context _: Context) {
         view.session = session
-        view.onEscape = { CityRootView.stepBack(session: session, rail: $rail, inspectorExpanded: $inspectorExpanded) }
+        view.onEscape = { CityRootView.stepBack(session: session, state: &$stepBack.wrappedValue) }
     }
 
     static func dismantleNSView(_ view: MonitorView, coordinator _: ()) {
@@ -94,12 +115,17 @@ struct MacMapInputHost: NSViewRepresentable {
         }
 
         private func handleKey(_ event: NSEvent, session: GameSession) -> Bool {
-            guard event.modifierFlags.isDisjoint(with: [.command, .control, .option]),
-                  !(window?.firstResponder is NSText)
-            else { return false }
+            guard !(window?.firstResponder is NSText) else { return false }
             let characters = event.charactersIgnoringModifiers ?? ""
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
+            if modifiers == .command, let action = MacMapInput.commandKey(characters) {
+                session.apply(action)
+                return true
+            }
+            guard modifiers.isEmpty else { return false }
             if characters == "\u{1B}" {
-                onEscape?()
+                // Holding Esc must not run down the whole chain.
+                if !event.isARepeat { onEscape?() }
                 return true
             }
             guard let action = MacMapInput.key(characters, atZoom: session.world.camera.zoom) else { return false }
@@ -110,9 +136,7 @@ struct MacMapInputHost: NSViewRepresentable {
         /// A gesture's later and momentum events reuse the map found when
         /// it began; a mouse wheel has no phases, so each notch looks again.
         private func gestureMap(for event: NSEvent) -> SKView? {
-            let continues = event.phase.isDisjoint(with: [.began, .mayBegin])
-                && !(event.phase.isEmpty && event.momentumPhase.isEmpty)
-            if !continues {
+            if !MacMapInput.continuesGesture(phase: event.phase, momentumPhase: event.momentumPhase) {
                 gestureMap = mapView(under: event)
             }
             return gestureMap
@@ -122,12 +146,7 @@ struct MacMapInputHost: NSViewRepresentable {
         private func mapView(under event: NSEvent) -> SKView? {
             guard let content = window?.contentView else { return nil }
             let point = content.superview?.convert(event.locationInWindow, from: nil) ?? event.locationInWindow
-            var view = content.hitTest(point)
-            while let current = view {
-                if let map = current as? SKView { return map }
-                view = current.superview
-            }
-            return nil
+            return MacMapInput.map(containing: content.hitTest(point))
         }
 
         /// The event's distance from the map's center, y down.

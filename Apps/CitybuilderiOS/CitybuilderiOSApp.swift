@@ -18,6 +18,7 @@ struct CitybuilderiOSApp: App {
     init() {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
@@ -52,7 +53,8 @@ struct CitybuilderiOSApp: App {
 
     /// With `-uiTestSeedTown` (Debug only) a new game starts from `UITestSeed.townWorld()`: the
     /// default island with finished houses around the town center, for before/after art screenshots;
-    /// `-uiTestSeason winter` starts it in that season. `-uiTestSeedShore` starts from
+    /// `-uiTestSeason winter` starts it in that season and `-uiTestCulture mediterranean` in that culture.
+    /// `-uiTestSeedShore` starts from
     /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
     /// `-uiTestSeedLived` starts from `UITestSeed.livedTownWorld()`, an inhabited town at work.
     private static func uiTestWorld(replacing world: World) -> World {

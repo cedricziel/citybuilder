@@ -83,6 +83,18 @@ public struct Recipe {
 
     /// The recipe's own nodes, without lights or ground.
     public func build(stage: Stage) -> SCNNode {
+        builder(stage: stage).root
+    }
+
+    /// Where the finished sprite's chimney top sits, as fractions of the sprite: x from the left, y from
+    /// the top; nil when the recipe builds no chimney. The game starts its smoke there.
+    public var chimneyAnchor: CGPoint? {
+        guard let top = builder(stage: .finished).chimneyTop else { return nil }
+        let point = Projection.screen(top, in: cell)
+        return CGPoint(x: point.x / CGFloat(cell.widthPx), y: 1 - point.y / CGFloat(cell.heightPx))
+    }
+
+    func builder(stage: Stage) -> Builder {
         let kit = Builder()
         if let plot { kit.plot(width: cell.sizeMetres, depth: cell.depthMetres, plot) }
         if case let .constructing(index) = stage, !customStages {
@@ -91,7 +103,7 @@ public struct Recipe {
         } else {
             body(kit, stage)
         }
-        return kit.root
+        return kit
     }
 
     /// The recipe plus the shared light rig and the shadow-catching ground.
