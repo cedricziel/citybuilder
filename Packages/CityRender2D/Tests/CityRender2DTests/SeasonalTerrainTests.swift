@@ -121,4 +121,28 @@ func grassVariantsAreStablePerTile() {
     let second = renderedGrassTextureNames(season: .summer).compactMap(\.self).sorted()
     #expect(first == second)
     #expect(Set(first).count > 1)
+    // Across a season change every tile keeps its variant, in the season's look.
+    let winter = renderedGrassTextureNames(season: .winter).compactMap(\.self).sorted()
+    let summerAsWinter = first.map { $0.replacingOccurrences(of: "terrain-grass", with: "terrain-grass-winter") }.sorted()
+    #expect(winter == summerAsWinter)
+}
+
+/// A missing grass variant falls back to the plain tile and says so, once.
+@MainActor
+@Test("A missing grass variant falls back to the plain tile and is logged once")
+func missingGrassVariantIsLoggedOnce() {
+    SpriteAtlas.resetMissLogForTesting()
+    var logged: [String] = []
+    SpriteAtlas.missLogHook = { logged.append($0) }
+    defer { SpriteAtlas.missLogHook = nil }
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { !$0.contains("-v") }
+    scene.dataSource = FixedSnapshot(grassSnapshot(season: .summer))
+    scene.update(0)
+    let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+    #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
+    let variants = logged.filter { $0.hasPrefix("terrain-grass-v") }
+    #expect(!variants.isEmpty)
+    #expect(variants.count == Set(variants).count)
 }

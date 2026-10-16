@@ -211,7 +211,8 @@ public enum SpriteAtlas {
         return placeholderTexture
     }
 
-    private static func logMissOnce(_ name: String) {
+    /// Logs a missing sprite once per process; a fallback that draws something else still reports it.
+    static func logMissOnce(_ name: String) {
         var shouldLog = false
         cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
         guard shouldLog else { return }

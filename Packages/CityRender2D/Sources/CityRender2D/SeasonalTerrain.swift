@@ -26,7 +26,11 @@ extension IsoWorldScene {
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
         guard count > 1 else { return stem }
         let variant = SpriteAtlas.variantAssetName(stem: stem, variant: SpriteAtlas.variantIndex(coord: coord, count: count))
-        return hasSprite(variant) ? variant : stem
+        guard hasSprite(variant) else {
+            SpriteAtlas.logMissOnce(variant) // rendering-2_5d: Missing-sprite fallback in release
+            return stem
+        }
+        return variant
     }
 
     /// A tile drawn from its own terrain, looping `<name>-<frame>` when its kind animates.
