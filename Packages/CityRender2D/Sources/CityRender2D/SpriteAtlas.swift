@@ -81,6 +81,7 @@ public enum SpriteAtlas {
     /// Number of art variants per terrain kind. Kinds not listed render
     /// the single canonical sprite.
     public static let terrainVariantCounts: [TerrainType: Int] = [
+        .grass: 4,
         .mountain: 4
     ]
 
@@ -286,10 +287,11 @@ public enum SpriteAtlas {
             // Art variants (mountain): variant 0 already added above as
             // the canonical stem; variants 1..N-1 use the `-vN` suffix.
             if let variantCount = terrainVariantCounts[kind], variantCount > 1 {
+                let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
                 for variant in 1 ..< variantCount {
-                    names.append(
-                        variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
-                    )
+                    let name = variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
+                    names.append(name)
+                    names += (0 ..< frames).map { "\(name)-\($0)" }
                 }
             }
         }

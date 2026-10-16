@@ -48,6 +48,17 @@ def test_winter_twigs_stay_off_the_conifers() -> None:
     assert (red <= green + 0.02).all()
 
 
+@pytest.mark.scenario("Variants share their edges")
+def test_grass_variants_share_their_edges() -> None:
+    """A variant differs only inside a window that vanishes on the tile edges, so any two join."""
+    base = ground.texture("grass")
+    for variant in range(1, ground.GRASS_VARIANTS):
+        other = ground.texture(f"grass-v{variant}")
+        assert np.abs(other - base).max() > 0.03  # it is a different tile
+        for edge in (other[0] - base[0], other[-1] - base[-1], other[:, 0] - base[:, 0], other[:, -1] - base[:, -1]):
+            assert np.abs(edge).max() < 1 / 255
+
+
 def test_noise_seeds_use_the_whole_name() -> None:
     """Names that share their first eight characters still draw different noise: the grass sways."""
     assert not np.allclose(ground.noise("grass-blades-0", 0.035), ground.noise("grass-blades-1", 0.035))

@@ -96,11 +96,26 @@ GRASS = {
 }
 
 
-def grass(season: str = "spring", frame: int = 0) -> Surface:
-    """Meadow: broad light and dark patches, clumps, and blade stipple that sways between frames."""
+def window() -> np.ndarray:
+    """(sin pi u * sin pi v)^2: zero on every tile edge, so what it scales never reaches a neighbour."""
+    uu, vv = _grid()
+    return (np.sin(np.pi * uu) * np.sin(np.pi * vv)) ** 2
+
+
+GRASS_VARIANTS = 4
+
+
+def grass(season: str = "spring", frame: int = 0, variant: int = 0) -> Surface:
+    """Meadow: clumps and blade stipple that sways between frames. Broad light and dark patches come
+    from the renderer's macro field, across tiles, so here they stay faint. Variants add their own
+    clumps inside a window that vanishes on the tile edges, so any variant joins any other."""
     broad, clumps = noise("grass-broad", 0.7), noise("grass-clumps", 0.18)
+    if variant:
+        own = window()
+        broad = broad + own * noise(f"grass-broad-v{variant}", 0.45)
+        clumps = clumps + own * noise(f"grass-clumps-v{variant}", 0.18)
     blades = noise(f"grass-blades-{frame}", 0.035, sharp=1.0)
-    tone = 0.5 + 0.32 * broad + 0.16 * clumps + 0.1 * blades + (0.22 if season == "winter" else 0)
+    tone = 0.5 + 0.1 * broad + 0.18 * clumps + 0.1 * blades + (0.22 if season == "winter" else 0)
     albedo = mix(GRASS[season], tone)
     height = 0.05 * clumps + 0.015 * blades
     return Surface(height, albedo)
@@ -215,8 +230,9 @@ def texture(name: str) -> np.ndarray:
     parts = name.split("-")
     frame = int(parts[-1]) if parts[-1].isdigit() else 0
     season = next((p for p in parts if p in GRASS), "spring")
+    variant = next((int(p[1:]) for p in parts if p[:1] == "v" and p[1:].isdigit()), 0)
     if parts[0] == "grass":
-        return shade(grass(season, frame))
+        return shade(grass(season, frame, variant))
     if parts[0] == "beach":
         return shade(beach(frame))
     if parts[0] == "water":
@@ -224,5 +240,5 @@ def texture(name: str) -> np.ndarray:
     if parts[0] == "forest":
         return shade(forest(season))
     if parts[0] == "mountain":
-        return shade(rock(int(parts[-1][1:]) if parts[-1].startswith("v") else 0))
+        return shade(rock(variant))
     raise ValueError(f"no ground texture {name}")

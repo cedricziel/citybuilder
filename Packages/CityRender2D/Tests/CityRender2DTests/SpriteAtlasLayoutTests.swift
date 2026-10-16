@@ -93,15 +93,14 @@ private func terrainNamesTheRendererRequests() -> Set<String> {
     var names: Set<String> = []
     for kind in TerrainType.allCases {
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
-        for variant in 0 ..< count {
-            names.insert(SpriteAtlas.variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant))
-        }
         let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
-        names.formUnion((0 ..< frames).map { SpriteAnimation.assetName(for: .terrain(kind), frame: $0) })
-        for season in Season.allCases {
-            guard let seasonal = IsoWorldScene.seasonalTerrainName(kind: kind, season: season) else { continue }
-            names.insert(seasonal)
-            names.formUnion((0 ..< frames).map { "\(seasonal)-\($0)" })
+        let looks = ["terrain-\(kind.rawValue)"] + Season.allCases.compactMap { IsoWorldScene.seasonalTerrainName(kind: kind, season: $0) }
+        for look in looks {
+            for variant in 0 ..< count {
+                let name = SpriteAtlas.variantAssetName(stem: look, variant: variant)
+                names.insert(name)
+                names.formUnion((0 ..< frames).map { "\(name)-\($0)" })
+            }
         }
     }
     for pair in SpriteName.transitionPairs {

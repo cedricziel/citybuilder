@@ -86,3 +86,11 @@ def test_neighbouring_tiles_join_without_a_seam(tmp_path: Path) -> None:
                         faults.append((pair, here, there, offset, gaps, jumps))
     assert checked == 200
     assert faults == []
+
+
+def test_every_grass_variant_has_its_seasons_and_frames() -> None:
+    names = set(terrain_tiles.sources())
+    for season in ("", "-autumn", "-winter"):
+        for variant in ("", "-v1", "-v2", "-v3"):
+            for frame in ("", "-0", "-1"):
+                assert f"terrain-grass{season}{variant}{frame}" in names

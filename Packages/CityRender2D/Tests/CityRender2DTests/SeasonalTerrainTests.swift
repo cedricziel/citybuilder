@@ -47,7 +47,7 @@ private func renderedGrassTextureNames(season: Season) -> [String?] {
 func scenarioWinterTintsGrass() {
     let names = renderedGrassTextureNames(season: .winter)
     #expect(!names.isEmpty)
-    #expect(names.allSatisfy { $0 == "terrain-grass-winter" })
+    #expect(names.allSatisfy { $0?.hasPrefix("terrain-grass-winter") == true })
 }
 
 @MainActor
@@ -55,7 +55,7 @@ func scenarioWinterTintsGrass() {
 func scenarioSummerHasNoTint() {
     let names = renderedGrassTextureNames(season: .summer)
     #expect(!names.isEmpty)
-    #expect(names.allSatisfy { $0 == "terrain-grass" })
+    #expect(names.allSatisfy { $0 == "terrain-grass" || $0?.hasPrefix("terrain-grass-v") == true })
 }
 
 /// Grass changes with the season, so the shore that blends it does too, and a season change
@@ -112,4 +112,13 @@ func shoreWithoutSeasonalSetKeepsPlainTransition() {
     #expect(node.userData?[IsoWorldScene.textureNameKey] as? String == "terrain-grass-beach-t3")
     #expect(transition.assetName(in: .winter) == "terrain-grass-beach-t3-winter")
     #expect(TerrainTransition(upper: .beach, lower: .water, mask: 3).assetName(in: .winter) == "terrain-beach-water-t3")
+}
+
+@MainActor
+@Test("scenario: Grass variants are stable per tile")
+func grassVariantsAreStablePerTile() {
+    let first = renderedGrassTextureNames(season: .summer).compactMap(\.self).sorted()
+    let second = renderedGrassTextureNames(season: .summer).compactMap(\.self).sorted()
+    #expect(first == second)
+    #expect(Set(first).count > 1)
 }
