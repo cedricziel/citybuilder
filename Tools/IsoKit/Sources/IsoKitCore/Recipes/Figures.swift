@@ -84,12 +84,13 @@ extension Builder {
         let angle = phase * 2 * .pi
         let bob = 0.025 * cos(2 * angle)
         let hip: CGFloat = 0.86, shoulder: CGFloat = 1.40, limbR = 0.062 * fig.limbs
-        // Legs: the thigh swings with the phase and the knee bends on the forward swing. Phase 0 has both
-        // legs straight under the hips and the arms hanging, so frame 0 doubles as the standing pose.
+        // Legs: the thigh swings with the phase and the knee bends most as the leg passes under the hips on
+        // its forward swing. At phase 0 the legs are together and the arms hang, the right knee eased, so
+        // frame 0 doubles as a relaxed standing pose; at phase 1/2 the left knee eases instead.
         for (side, offset) in [(CGFloat(1), CGFloat(0)), (-1, .pi)] {
             let legPhase = angle + offset
-            let thigh = 0.42 * sin(legPhase)
-            let knee = thigh - 0.9 * max(0, cos(legPhase)) * abs(sin(legPhase))
+            let thigh = 0.36 * sin(legPhase)
+            let knee = thigh - 0.5 * max(0, cos(legPhase))
             let hipPoint = SCNVector3(0, hip + bob, side * 0.1)
             let kneePoint = hipPoint + SCNVector3(sin(thigh) * 0.44, -cos(thigh) * 0.44, 0)
             let ankle = kneePoint + SCNVector3(sin(knee) * 0.40, -cos(knee) * 0.40, 0)
@@ -125,12 +126,13 @@ extension Builder {
         } else {
             limb(SCNVector3(0, hip + 0.02 + bob, 0), SCNVector3(0, hip + 0.06 + bob, 0), radius: 0.17 * fig.limbs, Cloth.leather)
         }
-        // Arms swing against the legs unless the load needs them.
+        // Arms swing against the legs, forearms carried a little forward, unless the load needs them.
         let swing = -0.38 * sin(angle)
         for side in [CGFloat(1), -1] {
             let top = SCNVector3(0, shoulder + bob, side * 0.21 * fig.limbs)
-            let hand = armHand(fig, side: side, top: top, swing: swing * side)
-            limb(top, hand, radius: limbR * 0.9, fig.tunic)
+            let (elbow, hand) = arm(fig, side: side, top: top, swing: swing * side)
+            limb(top, elbow, radius: limbR * 0.9, fig.tunic)
+            limb(elbow, hand, radius: limbR * 0.85, fig.tunic)
             ball(hand, radius: limbR * 0.95, Cloth.skin)
         }
         // Head.
@@ -143,17 +145,20 @@ extension Builder {
         carry(fig, shoulder: SCNVector3(0, shoulder + bob, 0), headTop: headCentre.y + headRadius)
     }
 
-    private func armHand(_ fig: Figure, side: CGFloat, top: SCNVector3, swing: CGFloat) -> SCNVector3 {
-        let length: CGFloat = 0.62
+    /// Elbow and hand of one arm hanging from the shoulder at `top`.
+    private func arm(_ fig: Figure, side: CGFloat, top: SCNVector3, swing: CGFloat) -> (SCNVector3, SCNVector3) {
+        let upper: CGFloat = 0.31, fore: CGFloat = 0.30
         switch (fig.load, side > 0) {
         case (.sack, true), (.crate, true), (.barrel, true), (.logs, true):
-            // Right hand up on the shouldered load.
-            return top + SCNVector3(0.08, 0.30, 0.02)
+            // Right elbow out in front, the hand up on the shouldered load.
+            return (top + SCNVector3(0.18, -0.10, 0.08), top + SCNVector3(0.08, 0.28, 0.02))
         case (.basket, false):
-            // Left hand up, steadying the basket on the head.
-            return top + SCNVector3(0.06, 0.36, 0.04)
+            // Left elbow out to the side, the hand up steadying the basket on the head.
+            return (top + SCNVector3(0.10, 0.04, -0.14), top + SCNVector3(0.06, 0.36, 0.04))
         default:
-            return top + SCNVector3(sin(swing) * length, -cos(swing) * length, side * 0.04)
+            let elbow = top + SCNVector3(sin(swing) * upper, -cos(swing) * upper, side * 0.02)
+            let forearm = swing + 0.35
+            return (elbow, elbow + SCNVector3(sin(forearm) * fore, -cos(forearm) * fore, side * 0.02))
         }
     }
 
@@ -209,10 +214,10 @@ extension Builder {
                 )
             }
         case .logs:
-            let logs = [SCNVector3(-0.15, 0.1, -0.05), SCNVector3(-0.15, 0.1, 0.11), SCNVector3(-0.15, 0.23, 0.03)]
+            let logs = [SCNVector3(-0.05, 0.1, -0.05), SCNVector3(-0.05, 0.1, 0.11), SCNVector3(-0.05, 0.23, 0.03)]
             for (index, offset) in logs.enumerated() {
                 add(
-                    SCNCylinder(radius: 0.075, height: 1.3 - CGFloat(index) * 0.15),
+                    SCNCylinder(radius: 0.075, height: 1.1 - CGFloat(index) * 0.12),
                     Finish.paint(Cloth.bark).material(),
                     at: right + offset,
                     euler: SCNVector3(0, 0, CGFloat.pi / 2 - 0.12)
