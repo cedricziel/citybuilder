@@ -71,6 +71,8 @@ public final class IsoWorldScene: SKScene {
     var smokeSources: [SmokeSource] = []
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
+    /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
+    let birdLayer = BirdLayerNode()
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -176,6 +178,7 @@ public final class IsoWorldScene: SKScene {
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
         reconcileAmbient(with: snapshot)
+        reconcileBirds(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
