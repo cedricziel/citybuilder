@@ -28,6 +28,27 @@ func scenarioHardGraceSpansATaxInterval() {
     #expect(Difficulty.allCases.allSatisfy { $0.bankruptcyGraceTicks >= Economy.taxIntervalTicks })
 }
 
+@Test("scenario: a dip on a collection tick sees the next collection")
+func scenarioADipOnACollectionTickSeesTheNextCollection() {
+    var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
+    world.difficulty = .hard
+    let interval = Economy.taxIntervalTicks
+    while world.tickCount + 1 < interval {
+        world.tick()
+    }
+    // Below zero from the collection at tick 50 on.
+    world.economy.balance = -1
+    while world.tickCount < 2 * interval - 1 {
+        world.tick()
+    }
+    #expect(!world.economy.gameOver)
+    // The tick-100 collection: the town's tax, credited ahead of it here.
+    world.economy.balance += 10
+    world.tick()
+    #expect(!world.economy.gameOver)
+    #expect(world.economy.bankruptcyDeficitTicks == 0)
+}
+
 @Test("scenario: easy has no rats")
 func scenarioEasyHasNoRats() {
     var world = World.newGame(layout: .singleIsland, seed: 7, difficulty: .easy)
