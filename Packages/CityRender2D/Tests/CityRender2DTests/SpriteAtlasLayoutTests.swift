@@ -243,6 +243,27 @@ private func facingSprites() -> (facings: Int, names: [String]) {
     return (facings, names)
 }
 
+/// Houses and workshops glow at night through `<stem>-lights`, added over the sprite: every house look
+/// ships one at both scales, and every lights file sits beside the sprite it lights.
+@Test("night lights cover every house look and sit beside their sprites")
+func nightLightsAreCommitted() throws {
+    let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
+    let files = try Set(FileManager.default.contentsOfDirectory(atPath: kit.path))
+    let houses = TextureFiltering.kitRenderedStems.filter { $0.hasPrefix("building-house") }
+    #expect(houses.count == 60, "three base tiers, nine culture looks, 48 age looks")
+    let unlit = houses.filter { !files.contains("\($0)-lights.png") || !files.contains("\($0)-lights@2x.png") }
+    #expect(unlit.isEmpty, "house looks without night lights: \(unlit.sorted())")
+    let lights = files.filter { $0.hasSuffix("-lights.png") }
+    #expect(lights.count > houses.count, "the workshops have lights too")
+    let orphans = lights.filter { name in
+        let sprite = String(name.dropLast("-lights.png".count))
+        return !files.contains("\(sprite).png") || !files.contains("\(sprite)-lights@2x.png")
+    }
+    #expect(orphans.isEmpty, "lights without their sprite or @2x twin: \(orphans.sorted())")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-bakery-lights") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-house-tier2-modern-east-asian-lights") == "Kit")
+}
+
 /// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
 /// Buildings, or a render written to Kit.atlas without its stem listed, would pass every other test
 /// and then draw the placeholder or never blend.
