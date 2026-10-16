@@ -16,8 +16,8 @@ Rendered by IsoKit in the shared light rig. A whitewashed stucco town house on a
 Grid: 4 cols × 2 rows. Default sheet size.
 
 - (0, 0): `building-house-renaissance` — a two-storey town house
-- (0, 1): `building-house-tier2-renaissance` — a broader merchant's house
-- (0, 2): `building-house-tier3-renaissance` — a three-storey guild house
+- (0, 1): `building-house-tier2-renaissance` — a three-storey merchant's house
+- (0, 2): `building-house-tier3-renaissance` — a four-storey guild house with a cornice at every storey
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -32,6 +32,6 @@ None: finished sprites only. Construction uses the shared `building-house-constr
 
 - Recipe: `building-house-renaissance` (IsoKit)
 - Also renders: `building-house-tier2-renaissance`, `building-house-tier3-renaissance`
-- Cell: 2×2 footprint, 160 pt tall (tier 2 176 pt, tier 3 208 pt)
+- Cell: 2×2 footprint, 160 pt tall (tier 2 192 pt, tier 3 224 pt)
 - Construction stages: 0
 - Operational frames: 0

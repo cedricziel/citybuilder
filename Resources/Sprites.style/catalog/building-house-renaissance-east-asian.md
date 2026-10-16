@@ -16,7 +16,7 @@ Rendered by IsoKit in the shared light rig. A town house with a dark lattice sho
 Grid: 4 cols × 2 rows. Default sheet size.
 
 - (0, 0): `building-house-renaissance-east-asian` — a two-storey town house
-- (0, 1): `building-house-tier2-renaissance-east-asian` — a broader town house
+- (0, 1): `building-house-tier2-renaissance-east-asian` — a broader town house with an upper balcony
 - (0, 2): `building-house-tier3-renaissance-east-asian` — a merchant's residence under a large slate hip roof
 - (0, 3): spare
 - (1, 0): spare

@@ -17,7 +17,7 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 - (0, 0): `building-house-renaissance-mediterranean` — a two-storey palazzetto
 - (0, 1): `building-house-tier2-renaissance-mediterranean` — a three-storey palazzo
-- (0, 2): `building-house-tier3-renaissance-mediterranean` — a broader three-storey palazzo
+- (0, 2): `building-house-tier3-renaissance-mediterranean` — a palazzo with a roof-top loggia tower
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare

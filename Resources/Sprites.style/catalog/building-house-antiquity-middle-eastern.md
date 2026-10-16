@@ -9,15 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A mud-brick house with roof-beam ends under a flat roof behind a parapet. Same 2×2 footprint and bottom anchor as `building-house`.
+Rendered by IsoKit in the shared light rig. Three steps up: a mud-brick hut with a reed roof deck, a rendered house behind a parapet and a yard wall with a date palm, and a courtyard house with a columned porch; roof-beam ends show under the parapets. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-antiquity-middle-eastern` — a one-storey house
-- (0, 1): `building-house-tier2-antiquity-middle-eastern` — a house with a date palm
-- (0, 2): `building-house-tier3-antiquity-middle-eastern` — a two-storey house with a date palm
+- (0, 0): `building-house-antiquity-middle-eastern` — a mud-brick hut with a reed roof
+- (0, 1): `building-house-tier2-antiquity-middle-eastern` — a rendered house behind a yard wall, with a palm
+- (0, 2): `building-house-tier3-antiquity-middle-eastern` — a courtyard house with a columned porch and a palm
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -32,6 +32,6 @@ None: finished sprites only. Construction uses the shared `building-house-constr
 
 - Recipe: `building-house-antiquity-middle-eastern` (IsoKit)
 - Also renders: `building-house-tier2-antiquity-middle-eastern`, `building-house-tier3-antiquity-middle-eastern`
-- Cell: 2×2 footprint, 96 pt tall (tier 2 112 pt, tier 3 128 pt)
+- Cell: 2×2 footprint, 96 pt tall (tier 2 112 pt, tier 3 112 pt)
 - Construction stages: 0
 - Operational frames: 0

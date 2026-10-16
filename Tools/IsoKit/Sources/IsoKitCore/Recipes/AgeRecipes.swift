@@ -49,7 +49,15 @@ struct AgeStyle {
     var shutters: NSColor?
     var bands = false
     var chimney: Finish = .rubble
+    /// Walls for a tier that builds in another material than the rest (the hut, the stone house).
+    var tierWalls: [Int: Finish] = [:]
+    /// Tier 1 is a small hut on a smaller footprint.
+    var smallHut = false
     var extras: (Builder, AgeBox) -> Void = { _, _ in }
+
+    func walls(_ tier: Int) -> Finish {
+        tierWalls[tier] ?? walls
+    }
 }
 
 extension Recipes {
@@ -84,12 +92,12 @@ extension Recipes {
     /// Plinth, a ground floor and the upper storeys, windows on the two visible faces, a door, the roof,
     /// and a chimney through the visible side of it.
     static func ageHouse(_ kit: Builder, _ style: AgeStyle, tier: Int) {
-        let (lo, hi) = ageFootprint(tier)
+        let (lo, hi) = style.smallHut && tier == 1 ? (SCNVector3(2.0, 0, 2.2), SCNVector3(6.2, 0, 5.8)) : ageFootprint(tier)
         let storeys = style.storeys[tier - 1], storey: CGFloat = style.bands ? 3.0 : 2.8
         let box = AgeBox(lo: lo, hi: hi, top: 0.3 + CGFloat(storeys) * storey, storey: storey, tier: tier)
         kit.block(SCNVector3(lo.x - 0.1, 0, lo.z - 0.1), SCNVector3(hi.x + 0.1, 0.3, hi.z + 0.1), .rubble)
-        kit.block(SCNVector3(lo.x, 0.3, lo.z), SCNVector3(hi.x, box.floor(1), hi.z), style.ground)
-        if storeys > 1 { kit.block(SCNVector3(lo.x, box.floor(1), lo.z), SCNVector3(hi.x, box.top, hi.z), style.walls) }
+        kit.block(SCNVector3(lo.x, 0.3, lo.z), SCNVector3(hi.x, box.floor(1), hi.z), style.tierWalls[tier] ?? style.ground)
+        if storeys > 1 { kit.block(SCNVector3(lo.x, box.floor(1), lo.z), SCNVector3(hi.x, box.top, hi.z), style.walls(tier)) }
         for index in 0 ..< storeys {
             let sill = box.floor(index) + storey * 0.55
             if style.bands {
@@ -122,7 +130,7 @@ extension Recipes {
         switch style.roof(box.tier) {
         case let .gable(finish, pitch, alongX):
             let ridge = kit.gableRoof(RoofSpec(
-                lo: SCNVector3(lo.x, box.top, lo.z), hi: hi, pitchDegrees: pitch, finish: finish, gableFinish: style.walls,
+                lo: SCNVector3(lo.x, box.top, lo.z), hi: hi, pitchDegrees: pitch, finish: finish, gableFinish: style.walls(box.tier),
                 ridgeAlongX: alongX
             ))
             if alongX {
@@ -161,45 +169,39 @@ extension Recipes {
 
 extension Recipes {
     static let ageStyles: [String: AgeStyle] = [
-        // Antiquity: stone and thatch, earth and timber, a Roman domus, mud brick.
+        // Antiquity: a wattle or mud hut under thatch or reed (tier 1), a rendered stone house under fired
+        // roofing behind a yard wall (tier 2), a courtyard house with a columned portico (tier 3).
         "antiquity": AgeStyle(
-            ground: .rubble,
-            walls: .rubble,
-            storeys: [1, 1, 1],
-            roof: { _ in .hip(.thatch, pitch: 44) },
-            extras: { kit, box in
-                kit.logStack(at: SCNVector3(box.hi.x + 0.2, 0, box.lo.z + 1.0), length: 1.6, rows: 2, alongX: false)
-                if box.tier == 3 { kit.porch(alongX: (box.lo.x + 0.4) ... (box.lo.x + 2.0), wallZ: box.hi.z, depth: 1.0, height: 2.4) }
-            }
+            ground: .plaster, walls: .plaster, storeys: [1, 1, 1],
+            roof: { $0 == 1 ? .hip(.thatch, pitch: 46) : $0 == 2 ? .gable(.tile, pitch: 34) : .hip(.tile, pitch: 26) },
+            tierWalls: [1: .paint(AgePalette.daub)], smallHut: true,
+            extras: { kit, box in kit.antiquityYard(box) }
         ),
         "antiquity-east-asian": AgeStyle(
-            ground: .paint(AgePalette.daub), walls: .paint(AgePalette.daub), storeys: [1, 1, 1],
-            roof: { $0 == 3 ? .hip(.slate, pitch: 30) : .hip(.thatch, pitch: 48) },
-            extras: { kit, box in kit.posts(box, finish: box.tier == 3 ? .paint(Civic.lacquer) : .timber) }
+            ground: .plasterPale, walls: .plasterPale, storeys: [1, 1, 1],
+            roof: { $0 == 1 ? .hip(.thatch, pitch: 48) : $0 == 2 ? .gable(.slate, pitch: 34) : .hip(.slate, pitch: 30) },
+            tierWalls: [1: .paint(AgePalette.daub)], smallHut: true,
+            extras: { kit, box in
+                kit.posts(box, finish: box.tier == 3 ? .paint(Civic.lacquer) : .timber)
+                kit.antiquityYard(box)
+            }
         ),
         "antiquity-mediterranean": AgeStyle(
-            ground: .plasterPale,
-            walls: .plasterPale,
-            storeys: [1, 1, 1],
-            roof: { _ in .hip(.tile, pitch: 22) },
+            ground: .plasterPale, walls: .plasterPale, storeys: [1, 1, 1],
+            roof: { $0 == 1 ? .hip(.thatch, pitch: 40) : .hip(.tile, pitch: 22) },
+            tierWalls: [1: .paint(AgePalette.daub)], smallHut: true,
             extras: { kit, box in
-                kit.onFace(
-                    box.south,
-                    FaceRect(along: (box.lo.x + box.hi.x) / 2, y: 0.7, width: box.hi.x - box.lo.x, height: 0.8),
-                    depth: 0.04,
-                    finish: .paint(AgePalette.dado)
-                )
-                if box.tier == 3 { kit.colonnade(
-                    from: SCNVector3(box.lo.x + 0.4, 0, box.hi.z + 0.8),
-                    to: SCNVector3(box.hi.x - 0.4, 0, box.hi.z + 0.8)
-                ) }
+                if box.tier > 1 {
+                    let rect = FaceRect(along: (box.lo.x + box.hi.x) / 2, y: 0.7, width: box.hi.x - box.lo.x, height: 0.8)
+                    kit.onFace(box.south, rect, depth: 0.04, finish: .paint(AgePalette.dado))
+                }
+                kit.antiquityYard(box)
             }
         ),
         "antiquity-middle-eastern": AgeStyle(
-            ground: .paint(AgePalette.mud),
-            walls: .paint(AgePalette.mud),
-            storeys: [1, 1, 2],
-            roof: { _ in .flat(deck: .yard) },
+            ground: .plaster, walls: .plaster, storeys: [1, 1, 1],
+            roof: { $0 == 1 ? .flat(deck: .thatch) : .flat(deck: .yard) },
+            chimney: .ashlar, tierWalls: [1: .paint(AgePalette.mud)], smallHut: true,
             extras: { kit, box in
                 for along in stride(from: box.lo.x + 0.6, to: box.hi.x, by: 0.9) {
                     kit.block(
@@ -208,29 +210,36 @@ extension Recipes {
                         .timber
                     )
                 }
-                if box.tier >= 2 { kit.palm(at: SCNVector3(box.hi.x + 0.4, 0, box.hi.z + 0.4)) }
+                if box.tier >= 2 { kit.palm(at: SCNVector3(box.hi.x + 0.5, 0, box.lo.z + 0.8)) }
+                kit.antiquityYard(box)
             }
         ),
-        // Renaissance: stepped gables, lattice shopfronts, ochre palazzi, carved stone and lattice bays.
+        // Renaissance: a narrow gable-fronted house (tier 1), a broader house of three storeys (tier 2), a
+        // guild house or palazzo with its own mark (tier 3): cornices, a balcony, a loggia tower.
         "renaissance": AgeStyle(
-            ground: .ashlar, walls: .plasterPale, storeys: [2, 2, 3], roof: { _ in .gable(.tile, pitch: 56, alongX: false) },
+            ground: .ashlar, walls: .plasterPale, storeys: [2, 3, 4], roof: { _ in .gable(.tile, pitch: 56, alongX: false) },
             shutters: Palette.shutterGreen,
-            extras: { kit, box in kit.steppedGable(box) }
+            extras: { kit, box in
+                kit.steppedGable(box)
+                if box.tier == 3 { kit.cornice(box, finish: .ashlar) }
+            }
         ),
         "renaissance-east-asian": AgeStyle(
-            ground: .timber,
-            walls: .plasterPale,
-            storeys: [2, 2, 2],
+            ground: .timber, walls: .plasterPale, storeys: [2, 2, 2],
             roof: { $0 == 3 ? .hip(.slate, pitch: 32) : .gable(.slate, pitch: 34) },
             chimney: .brick,
             extras: { kit, box in
                 kit.pent(SCNVector3(box.lo.x, box.floor(1), box.lo.z), box.hi)
+                if box.tier == 2 { kit.balconies(box) }
             }
         ),
         "renaissance-mediterranean": AgeStyle(
             ground: .ashlar, walls: .paint(Civic.ochre), storeys: [2, 3, 3], roof: { _ in .hip(.tile, pitch: 22) },
             shutters: Looks.blueShutter,
-            extras: { kit, box in kit.cornice(box, finish: .paint(Civic.travertine)) }
+            extras: { kit, box in
+                kit.cornice(box, finish: .paint(Civic.travertine))
+                if box.tier == 3 { kit.loggiaTower(box) }
+            }
         ),
         "renaissance-middle-eastern": AgeStyle(
             ground: .ashlar,
@@ -437,6 +446,29 @@ extension Builder {
             }
             floor += 1
         }
+    }
+
+    /// The antiquity yard: a log pile by the hut (tier 1), a low rubble wall round the front yard
+    /// (tier 2), and a columned portico along the courtyard front (tier 3).
+    func antiquityYard(_ box: AgeBox) {
+        switch box.tier {
+        case 1:
+            logStack(at: SCNVector3(box.hi.x + 0.3, 0, box.lo.z + 0.6), length: 1.4, rows: 2, alongX: false)
+        case 2:
+            block(SCNVector3(0.4, 0, box.hi.z + 0.9), SCNVector3(7.6, 0.9, box.hi.z + 1.15), .rubble)
+            block(SCNVector3(7.35, 0, 0.6), SCNVector3(7.6, 0.9, box.hi.z + 1.15), .rubble)
+        default:
+            colonnade(from: SCNVector3(box.lo.x + 0.4, 0, box.hi.z + 0.8), to: SCNVector3(box.hi.x - 0.4, 0, box.hi.z + 0.8))
+        }
+    }
+
+    /// A roof-top loggia tower at the back corner: open arches under a low tile hip.
+    func loggiaTower(_ box: AgeBox) {
+        let lo = SCNVector3(box.lo.x + 0.5, box.top, box.lo.z + 0.5), hi = SCNVector3(box.lo.x + 2.9, box.top + 2.2, box.lo.z + 2.9)
+        block(lo, hi, .paint(Civic.ochre))
+        arcade(Face.south(wallZ: hi.z), from: lo.x + 0.2, to: hi.x - 0.2, base: lo.y + 0.1)
+        arcade(Face.east(wallX: hi.x), from: lo.z + 0.2, to: hi.z - 0.2, base: lo.y + 0.1)
+        hipRoof(RoofSpec(lo: SCNVector3(lo.x, hi.y, lo.z), hi: hi, pitchDegrees: 22, overhang: 0.3, finish: .tile))
     }
 
     /// Two rows of tilted solar panels on a flat roof.

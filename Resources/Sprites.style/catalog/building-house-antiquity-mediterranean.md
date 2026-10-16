@@ -9,14 +9,14 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A domus of pale stucco over a Pompeian-red dado under a low tile hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
+Rendered by IsoKit in the shared light rig. Three steps up: a daub hut under reed thatch, a domus of pale stucco over a Pompeian-red dado under tile behind a yard wall, and a domus with a columned portico. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-antiquity-mediterranean` — a small domus
-- (0, 1): `building-house-tier2-antiquity-mediterranean` — a larger domus
+- (0, 0): `building-house-antiquity-mediterranean` — a daub hut under reed thatch
+- (0, 1): `building-house-tier2-antiquity-mediterranean` — a domus with a red dado behind a yard wall
 - (0, 2): `building-house-tier3-antiquity-mediterranean` — a domus with a columned portico under tile
 - (0, 3): spare
 - (1, 0): spare
