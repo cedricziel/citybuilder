@@ -252,6 +252,7 @@ final class TVMapInputController: GCEventViewController {
             dpad: dpad,
             buttonA: gamepad.buttonA.isPressed,
             buttonB: gamepad.buttonB.isPressed,
+            buttonX: gamepad.buttonX.isPressed,
             buttonY: gamepad.buttonY.isPressed,
             menu: gamepad.buttonMenu.isPressed,
             leftTrigger: Double(gamepad.leftTrigger.value),

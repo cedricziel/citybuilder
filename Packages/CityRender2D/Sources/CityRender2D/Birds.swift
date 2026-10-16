@@ -113,8 +113,7 @@ final class BirdLayerNode: SKNode {
     }
 
     func reconcile(snapshot: WorldSnapshot, viewSize: CGSize, reduceMotion: Bool, now: TimeInterval) {
-        let phase = TimeOfDay(tick: snapshot.tickCount).phase
-        guard phase == .day || phase == .dusk, !reduceMotion else {
+        guard StrollerPlanner.residentsOut(atTick: snapshot.tickCount), !reduceMotion else {
             removeAllChildren()
             nextFlockAt = nil
             gullTile = nil

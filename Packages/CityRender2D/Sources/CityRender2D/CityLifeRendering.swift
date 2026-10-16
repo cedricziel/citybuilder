@@ -78,6 +78,8 @@ extension IsoWorldScene {
             let along = CGFloat(stroller.progress)
             node.position = CGPoint(x: from.x + (to.x - from.x) * along, y: from.y + (to.y - from.y) * along)
             node.xScale = stroller.to.x < stroller.from.x || stroller.to.y > stroller.from.y ? -1 : 1
+            let depth = Double(max(stroller.from.x + stroller.from.y, stroller.to.x + stroller.to.y) + 1)
+            node.zPosition = Self.depthZ(depth) + Self.figureLift
         }
     }
 
@@ -85,7 +87,6 @@ extension IsoWorldScene {
         let frames = SpriteAtlas.walkerAnimation(facing: .se) ?? []
         let node = SKSpriteNode(texture: frames.first)
         node.anchorPoint = CGPoint(x: 0.5, y: 0)
-        node.zPosition = 50
         if frames.count > 1 {
             node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.2)), withKey: "walk")
         }

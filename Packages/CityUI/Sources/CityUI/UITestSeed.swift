@@ -41,10 +41,13 @@ public enum UITestSeed {
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
     /// ticks on until that season starts. A `showcase` (`-uiTestShowcase gather`) also places one of
-    /// each listed kind at the nearest site the rules allow, for a family's before and after shots.
-    /// The title backdrop draws this town too (`TitleBackdrop.makeSnapshot`).
-    public static func townWorld(houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil) -> World {
-        var world = World.newGame(layout: .singleIsland, seed: 0)
+    /// each listed kind at the nearest site the rules allow, for a family's before and after shots. A `culture`
+    /// (`-uiTestCulture mediterranean`) builds the town in that culture's looks. The title backdrop draws
+    /// this town too (`TitleBackdrop.makeSnapshot`).
+    public static func townWorld(
+        houses: Int = 4, showcase: [BuildingKind] = [], season: Season? = nil, culture: Culture = .northernEuropean
+    ) -> World {
+        var world = World.newGame(layout: .singleIsland, seed: 0, culture: culture)
         world.seedUnlimitedTestInventory()
         world.seedTestFunds()
         guard let center = playerTownCenter(in: world) else {
@@ -69,13 +72,54 @@ public enum UITestSeed {
         return world
     }
 
-    /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore` or
-    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in that order.
+    /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore`,
+    /// `-uiTestSeedPort` or `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in
+    /// that order. `-uiTestCamera x,y,zoom` then moves its camera.
     public static func world(fromArguments arguments: [String]) -> World? {
+        guard var world = seededWorld(fromArguments: arguments) else { return nil }
+        if let camera = camera(fromArguments: arguments) {
+            world.camera = camera
+        }
+        return world
+    }
+
+    private static func seededWorld(fromArguments arguments: [String]) -> World? {
         if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
+        if arguments.contains("-uiTestSeedPort") { return portWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
-        return townWorld(showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments))
+        return townWorld(
+            showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
+            culture: culture(fromArguments: arguments)
+        )
+    }
+
+    /// Whether the app was launched for a test or a shot: any `-uiTest…` flag.
+    public static func isActive(fromArguments arguments: [String]) -> Bool {
+        arguments.contains { $0.hasPrefix("-uiTest") }
+    }
+
+    /// Where such a launch keeps its saves: a folder of its own under the temporary directory, so a
+    /// test or a shot never autosaves over the player's games or fills their Continue slot. Nil for a
+    /// regular launch, which `SaveStore(baseDirectory:)` reads as the player's folder.
+    public static func saveDirectory(fromArguments arguments: [String]) -> URL? {
+        guard isActive(fromArguments: arguments) else { return nil }
+        return FileManager.default.temporaryDirectory
+            .appendingPathComponent("citybuilder-ui-test-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
+    }
+
+    /// `-uiTestStartGame`: skip the title and start a game at once, from the seed the other flags ask
+    /// for (or a regular new game), so in-game shots need no clicks.
+    public static func startsGame(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestStartGame")
+    }
+
+    /// The camera after `-uiTestCamera x,y,zoom` (tile coordinates and zoom), if any.
+    public static func camera(fromArguments arguments: [String]) -> Camera? {
+        guard let flag = arguments.firstIndex(of: "-uiTestCamera"), arguments.indices.contains(flag + 1) else { return nil }
+        let values = arguments[flag + 1].split(separator: ",").compactMap { Double($0) }
+        guard values.count == 3 else { return nil }
+        return Camera(centerX: values[0], centerY: values[1], zoom: values[2])
     }
 
     /// `-uiTestSeedLived`: the town seed with two farms and the fire trades, every free tile within
@@ -135,6 +179,12 @@ public enum UITestSeed {
             }
         }
         return nil
+    }
+
+    /// The culture after `-uiTestCulture` in the launch arguments, Northern European if none.
+    public static func culture(fromArguments arguments: [String]) -> Culture {
+        guard let flag = arguments.firstIndex(of: "-uiTestCulture"), arguments.indices.contains(flag + 1) else { return .northernEuropean }
+        return Culture(rawValue: arguments[flag + 1]) ?? .northernEuropean
     }
 
     /// The season after `-uiTestSeason` in the launch arguments, if any.
