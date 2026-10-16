@@ -9,11 +9,12 @@ public enum CarrierLoad: String, CaseIterable, Sendable {
     case logs, sack, barrel, crate
 
     public static func family(of good: Good) -> CarrierLoad {
+        // Goods added in a pack need no Swift edit: they travel in crates.
         switch good {
         case .wood, .planks: .logs
         case .beer, .wine: .barrel
-        case .ore, .charcoal, .iron, .tools: .crate
         case .food, .bread, .grain, .flour, .hops, .grapes, .teaLeaves, .tea, .coffeeCherries, .coffee: .sack
+        default: .crate
         }
     }
 }
