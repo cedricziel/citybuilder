@@ -108,13 +108,18 @@ public enum SpriteAtlas {
     /// reconciler doesn't see flicker between frames.
     public static func variantIndex(coord: TileCoordinate, count: Int) -> Int {
         guard count > 1 else { return 0 }
-        let xu = UInt32(bitPattern: Int32(truncatingIfNeeded: coord.x))
-        let yu = UInt32(bitPattern: Int32(truncatingIfNeeded: coord.y))
-        var hash: UInt32 = xu &* 0x9E37_79B1 &+ yu &* 0x6D2B_79F5
+        let hash = tileHash(Int32(truncatingIfNeeded: coord.x), Int32(truncatingIfNeeded: coord.y))
+        return Int(hash % UInt32(count))
+    }
+
+    /// A well-mixed 32-bit hash of a lattice point, stable across runs and platforms. `salt` picks
+    /// an independent stream; salt 0 is the variant hash.
+    static func tileHash(_ x: Int32, _ y: Int32, salt: UInt32 = 0) -> UInt32 {
+        var hash = UInt32(bitPattern: x) &* 0x9E37_79B1 &+ UInt32(bitPattern: y) &* 0x6D2B_79F5 &+ salt &* 0x85EB_CA6B
         hash ^= hash >> 16
         hash &*= 0x7FEB_352D
         hash ^= hash >> 15
-        return Int(hash % UInt32(count))
+        return hash
     }
 
     /// Resolves the asset name for a variant. Variant 0 uses the stem

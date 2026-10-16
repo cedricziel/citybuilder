@@ -90,15 +90,26 @@ public enum ChimneyPlanner {
 /// renders; a chimney often overlaps its roof in silhouette, so it
 /// cannot be found from the alpha mask (design D2).
 enum ChimneyAnchors {
+    /// Rows from `isokit chimneys` (each recipe's chimney top), plus the charcoal burner's mound and the
+    /// smelter's stack, which IsoKit builds without a chimney part and are measured by hand.
     static let table: [String: (x: CGFloat, y: CGFloat)] = [
-        "building-bakery": (0.716, 0.37),
-        "building-brewery": (0.674, 0.311),
+        "building-house": (0.556, 0.276),
+        "building-house-tier2": (0.538, 0.217),
+        "building-house-tier3": (0.637, 0.293),
+        "building-bakery": (0.719, 0.376),
+        "building-toolsmith": (0.500, 0.202),
+        "building-brewery": (0.675, 0.314),
+        "building-house-east-asian": (0.538, 0.367),
+        "building-house-tier2-east-asian": (0.531, 0.349),
+        "building-house-tier3-east-asian": (0.519, 0.329),
+        "building-house-mediterranean": (0.550, 0.359),
+        "building-house-tier2-mediterranean": (0.562, 0.369),
+        "building-house-tier3-mediterranean": (0.550, 0.414),
+        "building-house-middle-eastern": (0.525, 0.420),
+        "building-house-tier2-middle-eastern": (0.525, 0.444),
+        "building-house-tier3-middle-eastern": (0.525, 0.431),
         "building-charcoal-burner": (0.486, 0.63),
-        "building-smelter": (0.71, 0.384),
-        "building-toolsmith": (0.5, 0.194),
-        "building-house": (0.36, 0.165),
-        "building-house-tier2": (0.656, 0.146),
-        "building-house-tier3": (0.504, 0.148)
+        "building-smelter": (0.71, 0.384)
     ]
     /// Top centre of the roof, for sprites neither the table nor a base
     /// stem knows.

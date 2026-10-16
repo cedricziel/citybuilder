@@ -20,13 +20,22 @@ extension IsoWorldScene {
     /// offset (a building's footprint offset) is added to the anchor
     /// tile's screen point, and buildings are depth-sorted by the
     /// iso depth of their footprint centre so nearer ones draw on top.
+    /// A building's z for its iso depth (anchor x + y plus half its
+    /// footprint), so nearer buildings draw on top.
+    static func depthZ(_ depth: Double) -> CGFloat {
+        10 + CGFloat(depth) * 0.01
+    }
+
+    /// Lifts a figure just above the building at its depth, below the next.
+    static let figureLift: CGFloat = 0.004
+
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
         node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
         if case let .building(_, _, footprint, _, _, _, _, _, _, _) = spec.kind {
             let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
-            node.zPosition = 10 + CGFloat(depth) * 0.01
+            node.zPosition = Self.depthZ(depth)
         }
         return node
     }

@@ -37,6 +37,13 @@ public final class IsoWorldScene: SKScene {
     private(set) var transitionMap: TerrainTransitionMap?
     /// Road links, worked out again only when a building is placed or removed.
     private(set) var roadLinkCache = RoadLinkCache()
+    /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
+    var groundMacroCache = GroundMacroCache()
+    /// Whether a macro field is building off the main thread, and the latest request waiting for it.
+    var groundMacroBuilding = false
+    var groundMacroPending: GroundMacroInputs?
+    /// What the macro field on screen was built from.
+    var groundMacroShown: GroundMacroInputs?
     /// Carrier nodes keyed by carrier id. Spec: `rendering-2_5d` /
     /// Carriers glide and show their load.
     var carrierVisuals: [EntityID: CarrierVisual] = [:]
@@ -69,6 +76,7 @@ public final class IsoWorldScene: SKScene {
     /// / Residents gather on the plaza.
     var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
     var lastPlazaPass: PlazaPass?
+    var plazaTickAt: TimeInterval = 0
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -165,6 +173,7 @@ public final class IsoWorldScene: SKScene {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
         applySeason(snapshot.date.season)
+        reconcileGround(with: snapshot)
         applyLook(culture: snapshot.culture, age: snapshot.age)
         applyTimeOfDay(TimeOfDay(tick: snapshot.tickCount))
         reconcileSprites(with: snapshot)
@@ -173,7 +182,7 @@ public final class IsoWorldScene: SKScene {
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
-        reconcilePlazaCrowd(with: snapshot)
+        reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)

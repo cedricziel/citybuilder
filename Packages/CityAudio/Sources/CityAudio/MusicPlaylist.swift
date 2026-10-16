@@ -29,19 +29,20 @@ public final class MusicPlaylist: @unchecked Sendable {
     }
 
     /// Returns the next track to play, or nil if the playlist is empty.
-    public func nextTrack() -> Bindings.MusicTrack? {
+    /// Only tracks passing `allowed` are picked, unless none does.
+    public func nextTrack(where allowed: (Bindings.MusicTrack) -> Bool = { _ in true }) -> Bindings.MusicTrack? {
         guard !tracks.isEmpty else { return nil }
         if tracks.count == 1 {
             return tracks[0]
         }
+        let fitting = tracks.indices.filter { allowed(tracks[$0]) }
+        let pool = fitting.isEmpty ? Array(tracks.indices) : fitting
         // No-repeat-within-last-two: avoid indices that appear in the
-        // last two picks. Fall back to all indices if the constraint
-        // would leave no candidates (only possible when tracks.count < 3
-        // — handled separately above for the count == 1 case).
+        // last two picks, unless that leaves none of the pool.
         let recent = Set(lastPicks.suffix(2))
-        var candidates = tracks.indices.filter { !recent.contains($0) }
+        var candidates = pool.filter { !recent.contains($0) }
         if candidates.isEmpty {
-            candidates = Array(tracks.indices)
+            candidates = pool
         }
         let pick = candidates.randomElement(using: &rng) ?? 0
         lastPicks.append(pick)

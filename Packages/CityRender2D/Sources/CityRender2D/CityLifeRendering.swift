@@ -85,6 +85,8 @@ extension IsoWorldScene {
             let to = IsoMath.screenPoint(forTile: stroller.to)
             let along = CGFloat(stroller.progress)
             node.position = CGPoint(x: from.x + (to.x - from.x) * along, y: from.y + (to.y - from.y) * along)
+            let depth = Double(max(stroller.from.x + stroller.from.y, stroller.to.x + stroller.to.y) + 1)
+            node.zPosition = Self.depthZ(depth) + Self.figureLift
         }
     }
 }

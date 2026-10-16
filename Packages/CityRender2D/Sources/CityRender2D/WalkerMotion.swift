@@ -16,11 +16,10 @@ public extension SpriteAtlas.WalkerFacing {
 extension SKSpriteNode {
     static let walkKey = "walk"
 
-    /// A person or animal node: anchored at the feet, above terrain and below tall buildings.
+    /// A person node, anchored at the feet; the caller sorts it by depth (`IsoWorldScene.depthZ`).
     static func walker() -> SKSpriteNode {
         let node = SKSpriteNode()
         node.anchorPoint = SpriteAtlas.walkerAnchor
-        node.zPosition = 50
         return node
     }
 

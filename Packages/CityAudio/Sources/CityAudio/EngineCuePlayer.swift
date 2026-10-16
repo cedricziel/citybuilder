@@ -25,6 +25,8 @@ public final class EngineCuePlayer {
     private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
+    /// Music tracks playing once, by path.
+    private var musicVoices: [String: PlayerVoice] = [:]
     /// Building loops, one voice per entity, nearest the listener.
     private lazy var buildingLoops = EntityLoopMixer { [unowned self] dispatched in
         self.makeVoice(for: dispatched)
@@ -73,6 +75,29 @@ public final class EngineCuePlayer {
         detach(player)
     }
 
+    /// Starts `path` once on the music bus, fading in over `fade` seconds.
+    public func playMusic(_ path: String, fade: Double) {
+        guard let file = loadFile(at: path), (try? engine.start()) != nil else { return }
+        musicVoices.removeValue(forKey: path)?.stop(fade: 0)
+        let node = AVAudioPlayerNode()
+        engine.underlyingEngine.attach(node)
+        engine.underlyingEngine.connect(node, to: engine.bus(.music), format: file.processingFormat)
+        let voice = PlayerVoice(node: node, file: file, engine: engine.underlyingEngine, volume: 1, loops: false)
+        musicVoices[path] = voice
+        voice.start(fade: fade)
+    }
+
+    /// Fades the music track `path` out over `fade` seconds and releases it.
+    public func fadeOutMusic(_ path: String, fade: Double) {
+        musicVoices.removeValue(forKey: path)?.stop(fade: fade)
+    }
+
+    /// The length of the bundled file at `path`, in seconds.
+    public func duration(of path: String) -> Double? {
+        guard let file = loadFile(at: path) else { return nil }
+        return Double(file.length) / file.processingFormat.sampleRate
+    }
+
     /// Sets the volume of the path-keyed loop for `path`, if it plays.
     public func setLoopVolume(path: String, volume: Float) {
         loopPlayers[path]?.volume = volume
@@ -96,7 +121,7 @@ public final class EngineCuePlayer {
     private func makeVoice(for dispatched: DispatchedCue) -> LoopVoice? {
         guard let file = loadFile(at: dispatched.cue.file) else { return nil }
         let node = startLoopPlayer(dispatched: dispatched, file: file)
-        return PlayerLoopVoice(
+        return PlayerVoice(
             node: node,
             file: file,
             engine: engine.underlyingEngine,
