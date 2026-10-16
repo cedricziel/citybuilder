@@ -28,6 +28,7 @@ jobs:
       gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
+      audio: ${{ steps.audio.outputs.audio }}
 
     steps:
       - name: Checkout
@@ -70,13 +71,27 @@ jobs:
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
 
+      # The audio renders only need checking when their sources, their
+      # outputs or the way they're checked change.
+      - name: Select the audio check
+        id: audio
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ] || git diff --no-renames --name-only "$BASE_SHA" HEAD \
+              | grep -qE '^(scripts/audio/|scripts/tests/test_(audio_generator|music)\.py$|Resources/Audio/|Makefile$|scripts/requirements\.txt$|\.github/workflows/ci\.yml$)'; then
+            echo "audio=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "audio=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # The sound generator and the music renderer promise the same bytes on
   # every machine; the sprite pipeline's pytest job checks them on macOS,
   # this checks them on Linux.
   audio-linux:
     name: audio renders match on Linux
     needs: changes
-    if: needs.changes.outputs.sprites == 'true'
+    if: needs.changes.outputs.audio == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
