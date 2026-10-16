@@ -201,9 +201,10 @@ public final class TitleScreenViewModel {
     }
 
     public func commit(world: World) {
+        // End the old game before the factory starts the new one's sounds.
+        committedSession?.end()
         let session = sessionFactory(world)
         presentingNewGameDialog = false
-        committedSession?.end()
         committedSession = session
     }
 

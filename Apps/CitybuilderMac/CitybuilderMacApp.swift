@@ -87,6 +87,7 @@ struct CitybuilderMacApp: App {
                     )
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
+                    audio.beginSession()
                     return session
                 },
                 pauseMenuFactory: { [saveStore] session in
