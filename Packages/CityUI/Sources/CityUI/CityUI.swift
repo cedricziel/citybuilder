@@ -120,6 +120,7 @@ public final class GameSession {
     /// music keeps playing. Spec: `add-game-pause-menu` / `pause-menu`
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
+
     /// Ticks per timer firing. Session state, never saved.
     public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
@@ -214,9 +215,25 @@ public final class GameSession {
         world.enqueue(command)
     }
 
+    /// The player pauses or resumes: the pause button, the pause hotkeys,
+    /// or the Apple TV Menu button. Only these make the toggle sound, not
+    /// a pause the game makes itself. Spec: `platform-shells` / Interface
+    /// actions make a sound.
+    public func togglePause() {
+        isPaused.toggle()
+        UISounds.play(.toggle)
+    }
+
+    /// The player pauses (the Apple TV Menu button); no-op when paused.
+    public func pauseByPlayer() {
+        guard !isPaused else { return }
+        togglePause()
+    }
+
     /// Toggle a tool: tap the same palette button twice to disarm.
     public func selectTool(_ tool: BuildTool) {
         guard !isGameOver || tool == .inspect else { return }
+        UISounds.play(.select)
         if selectedTool == tool {
             selectedTool = .inspect
         } else {
@@ -302,12 +319,14 @@ public final class GameSession {
         if routeAuthoring != nil { return handleRouteTap(at: tile) }
         switch activeTool {
         case .inspect:
+            UISounds.play(.tap)
             selectedTile = tile
         case let .place(kind) where needsConfirmation(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
             if case let .rejected(reason) = world.canPlace(kind, at: tile) {
                 hud.showRejection(reason, in: world, now: Date())
+                UISounds.play(.reject)
                 return
             }
             enqueue(.place(kind, at: tile))

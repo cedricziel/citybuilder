@@ -19,6 +19,7 @@ struct CitybuilderTVApp: App {
         saveSync = Self.makeSaveSync(store: saveStore)
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, _, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(

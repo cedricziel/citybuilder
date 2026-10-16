@@ -65,8 +65,10 @@ public struct BuildRailModel: Equatable, Sendable {
 
     public init() {}
 
+    @MainActor
     public mutating func toggle(_ category: BuildCategory) {
         openDrawer = openDrawer == category ? nil : category
+        UISounds.play(openDrawer == nil ? .close : .open)
     }
 
     public mutating func close() {
