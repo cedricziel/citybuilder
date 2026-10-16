@@ -41,17 +41,24 @@ public struct MinimapProjection: Equatable, Sendable {
     public func tile(at point: CGPoint) -> (x: Double, y: Double) {
         let across = Double(point.x) / scale.across - Double(mapHeight)
         let down = Double(point.y) / scale.down - 1
-        return ((across + down) / 2, (down - across) / 2)
+        return Self.tileOffset(across: across, down: down)
+    }
+
+    /// The tile offset of a move by `across` units of `u` and `down` of `v`.
+    static func tileOffset(across: Double, down: Double) -> (x: Double, y: Double) {
+        ((across + down) / 2, (down - across) / 2)
+    }
+
+    /// A fractional tile moved onto a map `mapWidth` by `mapHeight` tiles.
+    static func clamp(x: Double, y: Double, mapWidth: Int, mapHeight: Int) -> (x: Double, y: Double) {
+        (min(max(x, 0), Double(max(mapWidth - 1, 0))), min(max(y, 0), Double(max(mapHeight - 1, 0))))
     }
 
     /// The tile under a minimap point, moved onto the map when the point is
     /// off it.
     public func clampedTile(at point: CGPoint) -> (x: Double, y: Double) {
         let (x, y) = tile(at: point)
-        return (
-            min(max(x, 0), Double(max(mapWidth - 1, 0))),
-            min(max(y, 0), Double(max(mapHeight - 1, 0)))
-        )
+        return Self.clamp(x: x, y: y, mapWidth: mapWidth, mapHeight: mapHeight)
     }
 
     /// The camera's visible area in `u` and `v`, for a world view of
