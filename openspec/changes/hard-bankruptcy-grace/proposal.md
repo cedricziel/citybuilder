@@ -7,7 +7,8 @@ The #72 re-measurement also found that the market keeps a scripted town solvent 
 ## What Changes
 
 - **BREAKING (balance):** Hard's bankruptcy grace rises from 30 to 50 ticks. No difficulty's grace is shorter than the tax interval. Upkeep and costs are unchanged.
-- A solvency requirement: a town built by the rival AI's rules that trades at its market stays solvent on Normal. A short check runs in every CI build; the 10-seed, 15-year sweep runs with `RIVAL_SWEEP=1` in the weekly `rival-sweep` workflow.
+- **BREAKING (balance):** the game ends once the balance has been below zero for more ticks than the grace, not for exactly the grace, so a dip that starts on a collection tick sees the next collection.
+- A solvency requirement: a scripted town that trades at its market stays solvent on Normal. The 10-seed, 15-year sweep and a no-market control run with `RIVAL_SWEEP=1` in the weekly `rival-sweep` workflow.
 
 ## Capabilities
 
@@ -20,6 +21,6 @@ The #72 re-measurement also found that the market keeps a scripted town solvent 
 
 ## Impact
 
-- **CityCore**: `Difficulty.swift` (one value). A scripted player bot in the test target.
-- **CI**: the default suite gains a short solvency test; `.github/workflows/rival-sweep.yml` gains the long sweep.
+- **CityCore**: `Difficulty.swift` (grace in tax intervals), `World+Economy.swift` (the bankruptcy check), and `Economy.bankruptcyGraceTicks`, read only by tests, removed. A scripted player bot in the test target.
+- **CI**: `.github/workflows/rival-sweep.yml` gains the solvency sweep and its control.
 - **Determinism**: the `DeterminismFixture` plays Normal, so its output does not change.
