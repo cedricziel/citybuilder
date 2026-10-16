@@ -71,6 +71,12 @@ public final class IsoWorldScene: SKScene {
     var smokeSources: [SmokeSource] = []
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
+    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
+    var lightsNames: [String: String?] = [:]
+    /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
+    /// trades glow at night.
+    var fireGlows: [EntityID: SKNode] = [:]
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -176,6 +182,7 @@ public final class IsoWorldScene: SKScene {
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
         reconcileAmbient(with: snapshot)
+        reconcileFireGlow(with: snapshot)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
