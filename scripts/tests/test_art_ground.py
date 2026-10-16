@@ -62,3 +62,15 @@ def test_grass_variants_share_their_edges() -> None:
 def test_noise_seeds_use_the_whole_name() -> None:
     """Names that share their first eight characters still draw different noise: the grass sways."""
     assert not np.allclose(ground.noise("grass-blades-0", 0.035), ground.noise("grass-blades-1", 0.035))
+
+
+@pytest.mark.parametrize("base,frames", [("grass", 2), ("grass-autumn", 2), ("grass-winter-v2", 2), ("beach", 2), ("water", 4)])
+def test_animated_ground_keeps_its_edges_in_every_frame(base: str, frames: int) -> None:
+    """Frames differ inside the tile only, so out-of-phase neighbours and the static shore tiles
+    (baked from frame 0) always meet the same edge."""
+    still = ground.texture(f"{base}-0")
+    for frame in range(1, frames):
+        moving = ground.texture(f"{base}-{frame}")
+        assert np.abs(moving - still).max() > 0.01  # it does animate
+        for edge in (moving[0] - still[0], moving[-1] - still[-1], moving[:, 0] - still[:, 0], moving[:, -1] - still[:, -1]):
+            assert np.abs(edge).max() < 2 / 255
