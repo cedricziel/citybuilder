@@ -70,7 +70,7 @@ The rules work together: D3 lets food reach the houses, D1 grows enough of it, a
 
 - **Easy rivals grow a little.** The Easy median at year 5 rises from 20.5 to 22 and the minimum stays at 15. Easy is still the smallest by far, so the "outgrow every rival" goal stays easy there.
 - **Hard rivals are larger.** The Hard median at year 5 rises from 43 to 62, so outgrowing every Hard rival takes longer. That is what Hard is for.
-- **Planks pile up by year 15.** A rival's sawmills keep turning wood into planks it no longer needs, and by year 15 the median town holds about 200 planks, filling its one warehouse. In the weakest Normal town this shuts food out again and residents fall to 28 by year 15. The floors are checked at year 5, so the sweep stays green, but a later change should stop the surplus, for example by skipping sawmill steps while planks are plentiful.
+- **Year-15 tails move per seed.** After the script skips, the year-15 medians rose (Normal 49.5 → 50.5, Hard 58 → 62), while the weakest towns moved the other way (Normal 35 → 28, Hard 46 → 37). The plank pile was already there after #105: by year 15 the median town holds about 200 planks, which fill its one warehouse and can shut food out of the weakest towns. #112 tackles the surplus.
 - **Margins are per seed.** A balance change elsewhere can still move single seeds by 10 residents or more. The weekly `rival-sweep` workflow catches that.
 
 ## Migration Plan

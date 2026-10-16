@@ -1,6 +1,24 @@
 {
   "version": 1,
   "bindings": {
+    "ui.tap": [
+      { "file": "ui/tap.caf", "bus": "sfx", "volume": 0.35 }
+    ],
+    "ui.select": [
+      { "file": "ui/select.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.toggle": [
+      { "file": "ui/toggle.caf", "bus": "sfx", "volume": 0.45 }
+    ],
+    "ui.open": [
+      { "file": "ui/open.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.close": [
+      { "file": "ui/close.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.reject": [
+      { "file": "sfx/rejected.caf", "bus": "sfx", "volume": 0.7 }
+    ],
     "buildingDemolished": [
       { "file": "sfx/demolish.caf", "bus": "sfx", "volume": 0.8 }
     ],
@@ -116,15 +134,26 @@
     ]
   },
   "music": {
+    "title": { "file": "music/bridge-at-dawn.caf" },
     "tracks": [
-      { "file": "music/bards-tale.m4a" }
+      { "file": "music/hearth-and-harvest.caf" },
+      { "file": "music/bards-tale.m4a" },
+      { "file": "music/market-day.caf", "seasons": ["summer"] },
+      { "file": "music/long-night.caf", "seasons": ["winter"] },
+      { "file": "music/ships-on-the-sound.caf", "seasons": ["spring", "autumn"] }
     ],
+    "crossfadeSeconds": 3.0,
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
   },
   "ambient": {
-    "tracks": [
-      { "file": "ambient/forest-birds.caf" }
-    ]
+    "tracks": [],
+    "seasons": {
+      "spring": "ambient/forest-birds.caf",
+      "summer": "ambient/summer-meadow.caf",
+      "autumn": "ambient/autumn-wind.caf",
+      "winter": "ambient/winter-wind.caf"
+    },
+    "coast": "ambient/coast.caf"
   }
 }

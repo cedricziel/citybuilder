@@ -57,11 +57,11 @@ A tap or click on the minimap SHALL center the camera on the map point under it.
 
 ### Requirement: Minimap toggle
 
-The HUD SHALL offer a Minimap button among its menu buttons, and in the More menu when the menus fold. It SHALL show and hide the minimap. On the Mac, `M` SHALL do the same. The choice SHALL be stored in user defaults and SHALL hold across launches. The minimap SHALL be shown when nothing is stored.
+The HUD SHALL offer a Minimap button among its menu buttons, and in the More menu when the menus fold. It SHALL show and hide the minimap. On the Mac, `M` SHALL do the same. The choice SHALL be stored in user defaults and SHALL hold across launches. When nothing is stored, the minimap SHALL be shown on iPad and Mac and hidden on iPhone, whose screen is tight.
 
-#### Scenario: Minimap shown by default
-- **WHEN** the minimap preference is read from empty user defaults
-- **THEN** the minimap is shown
+#### Scenario: Minimap shown by default on iPad and Mac
+- **WHEN** the minimap preference is read from empty user defaults on an iPad, a Mac and an iPhone
+- **THEN** the minimap is shown on the iPad and the Mac and hidden on the iPhone
 
 #### Scenario: Hiding the minimap persists
 - **WHEN** the player hides the minimap and the preference is read again from the same user defaults
@@ -73,7 +73,7 @@ The HUD SHALL offer a Minimap button among its menu buttons, and in the More men
 
 ### Requirement: Minimap layout
 
-The minimap SHALL keep the HUD's margin inside the safe area. When the build controls sit in the left rail, it SHALL sit in the bottom-right corner, and the tool strip and the placement rejection banner SHALL stay left of it. When the build controls sit in the bottom dock, it SHALL sit in the top-right corner below the menu buttons, and the stocks tray and the session banner SHALL stay left of it. The inspector callout's free area SHALL leave out the minimap's band: in the rail layout, the area level with or below the minimap; in the dock layout, the area level with or above it. The map image SHALL be 144 by 72 points on a phone, 224 by 112 on an iPad and 240 by 120 on a Mac.
+The minimap SHALL keep the HUD's margin inside the safe area. When the build controls sit in the left rail, it SHALL sit in the bottom-right corner, and the tool strip and the placement rejection banner SHALL stay left of it. When the build controls sit in the bottom dock, it SHALL sit in the top-right corner below the menu buttons, and the stocks tray and the session banner SHALL stay left of it: the tray SHALL drop columns of goods until it fits. The inspector callout's free area SHALL leave out the minimap's band: in the rail layout, the area level with or below the minimap; in the dock layout, the area level with or above it. The map image SHALL be 144 by 72 points on a phone, 224 by 112 on an iPad and 240 by 120 on a Mac, and 144 by 72 in any view narrower than 600 points, such as Slide Over.
 
 #### Scenario: Minimap corner per dock
 - **WHEN** the minimap is placed for a landscape view and for a portrait view
@@ -82,6 +82,10 @@ The minimap SHALL keep the HUD's margin inside the safe area. When the build con
 #### Scenario: Minimap size per idiom
 - **WHEN** the minimap size is queried for a phone, an iPad and a Mac
 - **THEN** it is 144 by 72, 224 by 112 and 240 by 120 points
+
+#### Scenario: Stocks tray stays clear of the minimap
+- **WHEN** the dock layout is made with the minimap shown at iPhone, iPad portrait and Slide Over widths, with 1, 4 and 18 goods in the tray
+- **THEN** the tray's right edge never passes the minimap card's left edge
 
 #### Scenario: Callout avoids the minimap
 - **WHEN** the inspector callout's free area is computed in the rail layout with the minimap shown

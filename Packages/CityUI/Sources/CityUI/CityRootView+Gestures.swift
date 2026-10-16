@@ -29,8 +29,9 @@ extension CityRootView {
             .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
         #if os(macOS)
         panned
-            .background { MacMapInputHost(session: session, rail: $buildRail, inspectorExpanded: $inspectorExpanded) }
+            .background { MacMapInputHost(session: session, stepBack: stepBackState) }
             .focusedSceneValue(\.gameSession, session)
+            .focusedSceneValue(\.gameHasSheet, isAnySheetPresented)
         #else
         panned.simultaneousGesture(zoomGesture)
         #endif

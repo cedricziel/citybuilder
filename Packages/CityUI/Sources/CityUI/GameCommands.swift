@@ -37,10 +37,16 @@ public enum GameMenuCommand: Hashable, CaseIterable, Sendable {
         }
     }
 
+    /// Space would reach the open sheet's buttons, so Pause waits until
+    /// the sheet closes.
+    public func isEnabled(hasSession: Bool, hasSheet: Bool) -> Bool {
+        hasSession && !(self == .togglePause && hasSheet)
+    }
+
     @MainActor
     public func perform(on session: GameSession) {
         switch self {
-        case .togglePause: session.isPaused.toggle()
+        case .togglePause: session.togglePause()
         case let .speed(speed): session.choose(speed: speed)
         case .zoomIn: session.zoomIn()
         case .zoomOut: session.zoomOut()
@@ -52,11 +58,21 @@ struct GameSessionFocusKey: FocusedValueKey {
     typealias Value = GameSession
 }
 
+struct GameHasSheetFocusKey: FocusedValueKey {
+    typealias Value = Bool
+}
+
 extension FocusedValues {
     /// The open game, published by `CityRootView` for the Game menu.
     var gameSession: GameSession? {
         get { self[GameSessionFocusKey.self] }
         set { self[GameSessionFocusKey.self] = newValue }
+    }
+
+    /// Whether the open game shows a sheet.
+    var gameHasSheet: Bool? {
+        get { self[GameHasSheetFocusKey.self] }
+        set { self[GameHasSheetFocusKey.self] = newValue }
     }
 }
 
@@ -64,6 +80,7 @@ extension FocusedValues {
 /// are disabled while no game is open.
 public struct GameCommands: Commands {
     @FocusedValue(\.gameSession) private var session
+    @FocusedValue(\.gameHasSheet) private var hasSheet
 
     public init() {}
 
@@ -81,7 +98,7 @@ public struct GameCommands: Commands {
             if let session { command.perform(on: session) }
         }
         .keyboardShortcut(command.key, modifiers: command.modifiers)
-        .disabled(session == nil)
+        .disabled(!command.isEnabled(hasSession: session != nil, hasSheet: hasSheet ?? false))
     }
 }
 #endif

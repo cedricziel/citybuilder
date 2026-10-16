@@ -6,8 +6,8 @@ import SwiftUI
 /// Split out of `CityRootView` to keep the main file under SwiftLint's
 /// 500-line ceiling. Spec: `platform-shells` / Adaptive HUD per idiom.
 extension CityRootView {
-    func hudLayer(layout: HUDLayout) -> some View {
-        let railInset = layout.placement == .leftRail ? layout.railWidth + 8 : 0
+    func hudLayer(layout: HUDLayout, hudWidth: CGFloat, worldViewSize: CGSize) -> some View {
+        let railInset = layout.railInset
         return ZStack {
             VStack(spacing: 8) {
                 // The section includes the inset, so its frame spans the
@@ -15,13 +15,25 @@ extension CityRootView {
                 topBar(layout: layout)
                     .padding(.leading, railInset)
                     .tvFocusSection()
-                VStack(spacing: 8) {
-                    StocksTrayView(hud: session.hud, layout: layout)
-                    SessionBannerView(banner: session.banner)
-                        .padding(.top, 4)
-                    Spacer(minLength: 0)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(spacing: 8) {
+                        StocksTrayView(
+                            hud: session.hud,
+                            layout: layout,
+                            maxWidth: MinimapLayout.trayColumnWidth(
+                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap
+                            )
+                        )
+                        SessionBannerView(banner: session.banner)
+                            .padding(.top, 4)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .panelAnimation(value: session.banner)
+                    if MinimapLayout.corner(for: layout) == .topTrailing {
+                        minimap(layout: layout, worldViewSize: worldViewSize)
+                    }
                 }
-                .panelAnimation(value: session.banner)
                 .padding(.leading, railInset)
             }
             if let authoring = session.routeAuthoring {
@@ -32,7 +44,7 @@ extension CityRootView {
                 }
                 .panelTransition(.slide(.bottom))
             } else {
-                buildControls(layout: layout, railInset: railInset)
+                buildControls(layout: layout, railInset: railInset, worldViewSize: worldViewSize)
                     .panelAnimation(value: buildRail.openDrawer)
             }
         }
@@ -41,7 +53,7 @@ extension CityRootView {
 
     @ViewBuilder
     private func topBar(layout: HUDLayout) -> some View {
-        let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.isPaused.toggle() }
+        let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.togglePause() }
             .fixedSize()
         if layout.foldsMenus {
             HStack(alignment: .top, spacing: 8) {
@@ -70,7 +82,7 @@ extension CityRootView {
     }
 
     @ViewBuilder
-    private func buildControls(layout: HUDLayout, railInset: CGFloat) -> some View {
+    private func buildControls(layout: HUDLayout, railInset: CGFloat, worldViewSize: CGSize) -> some View {
         switch layout.placement {
         case .leftRail:
             HStack(alignment: .center, spacing: 8) {
@@ -82,7 +94,12 @@ extension CityRootView {
             .frame(maxHeight: .infinity)
             VStack {
                 Spacer()
-                bottomStack(layout: layout)
+                // The minimap shares the bottom row, so the tool strip and
+                // the rejection banner stay left of it.
+                HStack(alignment: .bottom, spacing: 8) {
+                    bottomStack(layout: layout).frame(maxWidth: .infinity)
+                    minimap(layout: layout, worldViewSize: worldViewSize)
+                }
             }
             .padding(.leading, railInset)
         case .bottomDock:
@@ -94,6 +111,26 @@ extension CityRootView {
                     .tvFocusSection()
             }
         }
+    }
+
+    /// Whether the corner minimap shows: never on Apple TV, which has the
+    /// overview instead. Spec: `platform-shells` / Minimap toggle.
+    var showsCornerMinimap: Bool {
+        #if os(tvOS)
+        false
+        #else
+        showsMinimap
+        #endif
+    }
+
+    @ViewBuilder
+    private func minimap(layout: HUDLayout, worldViewSize: CGSize) -> some View {
+        #if !os(tvOS)
+        if showsCornerMinimap {
+            MinimapCard(session: session, layout: layout, worldViewSize: worldViewSize)
+                .panelTransition(.fade)
+        }
+        #endif
     }
 
     /// The inspector callout for the selected building, while inspecting.
@@ -114,6 +151,7 @@ extension CityRootView {
                         viewModel: inspector,
                         tile: tile,
                         layout: HUDMetrics.layout(for: proxy.size),
+                        showsMinimap: showsCornerMinimap,
                         isExpanded: $inspectorExpanded
                     ) {
                         inspectorActionsButton
