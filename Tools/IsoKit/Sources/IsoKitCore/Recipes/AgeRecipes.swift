@@ -267,7 +267,10 @@ extension Recipes {
             roof: { $0 == 3 ? .mansard : .gable(.slate, pitch: 36) },
             chimney: .brick,
             extras: { kit, box in
-                kit.chimney(x: box.lo.x + 1.4, depth: (box.lo.z + box.hi.z) / 2 + 0.7, from: box.top, to: box.top + 2.6, finish: .brick)
+                // A second stack at the far gable end; the mansard has its own.
+                guard box.tier < 3 else { return }
+                let ridge = box.top + (box.hi.z - box.lo.z) / 2 * tan(36 * CGFloat.pi / 180)
+                kit.chimney(x: box.lo.x + 1.4, depth: (box.lo.z + box.hi.z) / 2 + 0.7, from: box.top, to: ridge + 0.3, finish: .brick)
             }
         ),
         "industrial-east-asian": AgeStyle(
