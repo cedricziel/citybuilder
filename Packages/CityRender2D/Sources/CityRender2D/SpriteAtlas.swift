@@ -31,6 +31,7 @@ public enum SpriteAtlasRouting {
         if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
         if spriteName.hasPrefix("walker-") { return unitsAtlasName }
         if spriteName.hasPrefix("ship-") { return unitsAtlasName }
+        if spriteName.hasPrefix("carrier-") { return unitsAtlasName }
         if spriteName.hasPrefix("good-") { return iconsAtlasName }
         return nil
     }

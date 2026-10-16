@@ -134,9 +134,15 @@
     ]
   },
   "music": {
+    "title": { "file": "music/bridge-at-dawn.caf" },
     "tracks": [
-      { "file": "music/bards-tale.m4a" }
+      { "file": "music/hearth-and-harvest.caf" },
+      { "file": "music/bards-tale.m4a" },
+      { "file": "music/market-day.caf", "seasons": ["summer"] },
+      { "file": "music/long-night.caf", "seasons": ["winter"] },
+      { "file": "music/ships-on-the-sound.caf", "seasons": ["spring", "autumn"] }
     ],
+    "crossfadeSeconds": 3.0,
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
   },
