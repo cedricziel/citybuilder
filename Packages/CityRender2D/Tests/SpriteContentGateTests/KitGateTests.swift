@@ -98,6 +98,23 @@ struct KitGateTests {
         #expect(failures == [.init(file: "terrain-beach.png", reason: .terrainOutsideDiamond)])
     }
 
+    @Test("trees and outcrops stand over their tile, so the diamond rules skip them")
+    func terrainObjectsSkipTheDiamondRules() throws {
+        let root = temporaryResources()
+        let tree = image { x, y in abs(x - 32) < 6 && y < 28 ? water : nil } // tall, narrow, off the diamond
+        try writePNG(tree, to: root.appendingPathComponent("Kit.atlas/terrain-forest-single.png"))
+        let spruce = image { x, y in abs(x - 32) < 6 && y < 28 ? glint : nil }
+        try writePNG(spruce, to: root.appendingPathComponent("Kit.atlas/terrain-forest-single-v1.png"))
+        try writePNG(tree, to: root.appendingPathComponent("Kit.atlas/terrain-grass.png"))
+
+        let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.9)
+
+        #expect(!failures.contains { $0.file.hasPrefix("terrain-forest-single") })
+        #expect(failures.contains { $0.file == "terrain-grass.png" && $0.reason == .terrainCoverageBelowThreshold })
+        #expect(SpriteContentGate.isTerrainObject("terrain-mountain-peak-winter-v3@2x.png"))
+        #expect(!SpriteContentGate.isTerrainObject("terrain-forest-autumn.png"))
+    }
+
     @Test("scenario: Every atlas PNG has an @2x twin")
     func everyMigratedPNGHasATwin() throws {
         let root = temporaryResources()
