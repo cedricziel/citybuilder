@@ -47,6 +47,9 @@ public enum Recipes {
         }
     ] + gather + craft + civic + shore + culture + ages
 
+    /// Recipes that get night lights: every house look and the workshops.
+    public static let lit: Set<String> = Set((all.filter { $0.entry.hasPrefix("building-house") } + craft).map(\.id))
+
     /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {
         switch stage {

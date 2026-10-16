@@ -56,6 +56,11 @@ public struct RenderJob {
             let frame = try overlays[index].map { try Renderer.composite(base, $0) } ?? idle
             images.append(("\(recipe.id)-operational-\(index)", frame))
         }
+        // A building whose panes are all hidden behind its own walls gets no lights.
+        if Recipes.lit.contains(recipe.id), let scene = recipe.lightsScene() {
+            let lights = try Renderer.image(scene, cell: recipe.cell, scale: scale)
+            if Renderer.hasVisiblePixel(lights) { images.append(("\(recipe.id)-lights", lights)) }
+        }
         return try write(images, scale: scale)
     }
 

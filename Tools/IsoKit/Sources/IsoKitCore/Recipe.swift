@@ -115,6 +115,39 @@ public struct Recipe {
         return root
     }
 
+    /// The night lights: the finished building with every window pane glowing warm and unlit, and
+    /// everything else drawn to depth only, so it hides the panes behind it but leaves no colour. Nil
+    /// when the building has no pane. The game adds it over the sprite at night (`<id>-lights`).
+    public func lightsScene() -> SCNNode? {
+        let root = build(stage: .finished)
+        var panes = 0
+        root.enumerateHierarchy { node, _ in
+            // Depth-only parts cannot clear a pane drawn before them, so they draw first.
+            let hasPane = node.geometry?.materials.contains(where: Finish.isPane) ?? false
+            node.renderingOrder = hasPane ? 1 : -1
+            node.geometry?.materials = (node.geometry?.materials ?? []).map { material in
+                guard Finish.isPane(material) else {
+                    let hidden = material.copy() as? SCNMaterial ?? material
+                    hidden.colorBufferWriteMask = []
+                    return hidden
+                }
+                panes += 1
+                let glow = SCNMaterial()
+                glow.lightingModel = .constant
+                // Glass bands span whole storeys; a dimmer glow keeps a lit block from reading as a lamp.
+                let band = material.name == Finish.namePrefix + "\(Finish.glazing)"
+                glow.diffuse.contents = band ? NSColor(red: 0.62, green: 0.45, blue: 0.24, alpha: 1) : NSColor(
+                    red: 1.0,
+                    green: 0.72,
+                    blue: 0.36,
+                    alpha: 1
+                )
+                return glow
+            }
+        }
+        return panes > 0 ? root : nil
+    }
+
     /// A unit frame: the whole scene with the moving part in it. A unit is small and its parts sit
     /// close together (a sail just ahead of the mast), so a depth-only overlay would not reliably
     /// keep them in order.
