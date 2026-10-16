@@ -90,15 +90,14 @@ private func terrainNamesTheRendererRequests() -> Set<String> {
     var names: Set<String> = []
     for kind in TerrainType.allCases {
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
-        for variant in 0 ..< count {
-            names.insert(SpriteAtlas.variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant))
-        }
         let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
-        names.formUnion((0 ..< frames).map { SpriteAnimation.assetName(for: .terrain(kind), frame: $0) })
-        for season in Season.allCases {
-            guard let seasonal = IsoWorldScene.seasonalTerrainName(kind: kind, season: season) else { continue }
-            names.insert(seasonal)
-            names.formUnion((0 ..< frames).map { "\(seasonal)-\($0)" })
+        let looks = ["terrain-\(kind.rawValue)"] + Season.allCases.compactMap { IsoWorldScene.seasonalTerrainName(kind: kind, season: $0) }
+        for look in looks {
+            for variant in 0 ..< count {
+                let name = SpriteAtlas.variantAssetName(stem: look, variant: variant)
+                names.insert(name)
+                names.formUnion((0 ..< frames).map { "\(name)-\($0)" })
+            }
         }
     }
     for pair in SpriteName.transitionPairs {
@@ -119,7 +118,9 @@ func everyRequestedTerrainSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
     let roads = RoadLinks.allMasks.flatMap { mask in [false, true].map { RoadLink(mask: mask, plaza: $0).assetName } }
     let names = terrainNamesTheRendererRequests().union(roads)
-    #expect(names.count >= 80 + 94) // terrain: 16 tiles and frames, 8 seasonal, 56 transitions; roads: 47 masks x 2
+    // terrain: 36 grass looks (3 seasons x 4 variants x base and 2 frames), 15 other tiles and frames,
+    // 56 transitions; roads: 47 masks x 2
+    #expect(names.count >= 107 + 94)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in

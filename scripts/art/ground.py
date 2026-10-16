@@ -9,6 +9,7 @@ Noise comes from filtering white noise in the frequency domain, which is periodi
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 from dataclasses import dataclass
 
@@ -34,7 +35,9 @@ class Surface:
 
 def noise(seed: str, wavelength: float, sharp: float = 2.0) -> np.ndarray:
     """Periodic band-limited noise with features about `wavelength` tiles across, scaled to -1..1."""
-    rng = np.random.default_rng(int.from_bytes(seed.encode(), "little") % 2**63)
+    # Hash the whole name: its raw bytes mod 2**63 kept only the first 8 characters, so
+    # `grass-blades-0` and `grass-blades-1` (and every rock variant) drew the same noise.
+    rng = np.random.default_rng(int.from_bytes(hashlib.sha256(seed.encode()).digest()[:8], "little"))
     white = rng.standard_normal((SIZE, SIZE))
     freq = np.fft.fftfreq(SIZE) * SIZE  # cycles per tile
     radius = np.hypot(*np.meshgrid(freq, freq, indexing="ij"))
@@ -93,11 +96,33 @@ GRASS = {
 }
 
 
-def grass(season: str = "spring", frame: int = 0) -> Surface:
-    """Meadow: broad light and dark patches, clumps, and blade stipple that sways between frames."""
+def window() -> np.ndarray:
+    """(sin pi u * sin pi v)^2: zero on every tile edge, so what it scales never reaches a neighbour."""
+    uu, vv = _grid()
+    return (np.sin(np.pi * uu) * np.sin(np.pi * vv)) ** 2
+
+
+GRASS_VARIANTS = 4
+
+
+def framed(seed: str, frame: int, wavelength: float, sharp: float = 2.0) -> np.ndarray:
+    """Noise that changes from frame to frame only inside the tile: its edges always hold frame 0,
+    so an animated tile joins neighbours in any frame and the static transitions baked from frame 0."""
+    still = noise(f"{seed}-0", wavelength, sharp)
+    return still if frame == 0 else still + window() * (noise(f"{seed}-{frame}", wavelength, sharp) - still)
+
+
+def grass(season: str = "spring", frame: int = 0, variant: int = 0) -> Surface:
+    """Meadow: clumps and blade stipple that sways between frames. Broad light and dark patches come
+    from the renderer's macro field, across tiles, so here they stay faint. Variants add their own
+    clumps inside a window that vanishes on the tile edges, so any variant joins any other."""
     broad, clumps = noise("grass-broad", 0.7), noise("grass-clumps", 0.18)
-    blades = noise(f"grass-blades-{frame}", 0.035, sharp=1.0)
-    tone = 0.5 + 0.32 * broad + 0.16 * clumps + 0.1 * blades + (0.22 if season == "winter" else 0)
+    if variant:
+        own = window()
+        broad = broad + own * noise(f"grass-broad-v{variant}", 0.45)
+        clumps = clumps + own * noise(f"grass-clumps-v{variant}", 0.18)
+    blades = framed("grass-blades", frame, 0.035, sharp=1.0)
+    tone = 0.5 + 0.1 * broad + 0.18 * clumps + 0.1 * blades + (0.22 if season == "winter" else 0)
     albedo = mix(GRASS[season], tone)
     height = 0.05 * clumps + 0.015 * blades
     return Surface(height, albedo)
@@ -109,7 +134,7 @@ def beach(frame: int = 0) -> Surface:
     uu, vv = np.meshgrid(u, u, indexing="ij")
     ripples = np.sin(2 * np.pi * (6 * uu + 9 * vv) + 1.5 * noise("sand-warp", 0.3))
     damp = noise("sand-damp", 0.6)
-    tone = 0.55 + 0.25 * damp + 0.05 * ripples + 0.06 * noise(f"sand-grain-{frame}", 0.03, sharp=1.0)
+    tone = 0.55 + 0.25 * damp + 0.05 * ripples + 0.06 * framed("sand-grain", frame, 0.03, sharp=1.0)
     albedo = mix([(0.60, 0.56, 0.47), (0.73, 0.68, 0.57), (0.84, 0.79, 0.68)], tone)
     pebbles = noise("sand-pebbles", 0.05) > 0.8
     albedo[pebbles] = (0.55, 0.52, 0.47)
@@ -123,8 +148,13 @@ def water(frame: int = 0, frames: int = 4) -> Surface:
     phase = 2 * np.pi * frame / frames
     waves = [((2, 1), 0.03, 1), ((-1, 3), 0.018, 2), ((5, -2), 0.008, 1), ((4, 7), 0.004, 3)]
     warp = 0.6 * noise("water-warp", 0.4)
-    height = sum(amp * np.sin(2 * np.pi * (ku * uu + kv * vv) + warp - speed * phase) for (ku, kv), amp, speed in waves)
-    height = height + 0.006 * noise(f"water-chop-{frame % frames}", 0.06)
+    def swell(phase: float) -> np.ndarray:
+        return sum(amp * np.sin(2 * np.pi * (ku * uu + kv * vv) + warp - speed * phase) for (ku, kv), amp, speed in waves)
+
+    # The swell moves inside the tile only: its edges hold frame 0, like every animated ground, so
+    # neighbours in other frames and the static shore tiles (baked from frame 0) always join.
+    height = swell(0) + window() * (swell(phase) - swell(0))
+    height = height + 0.006 * framed("water-chop", frame % frames, 0.06)
     depth = 0.5 + 0.3 * noise("water-depth", 0.8)
     albedo = mix([(0.10, 0.27, 0.33), (0.16, 0.38, 0.44), (0.24, 0.48, 0.52)], depth)
     return Surface(height, albedo, gloss=0.5)
@@ -212,8 +242,9 @@ def texture(name: str) -> np.ndarray:
     parts = name.split("-")
     frame = int(parts[-1]) if parts[-1].isdigit() else 0
     season = next((p for p in parts if p in GRASS), "spring")
+    variant = next((int(p[1:]) for p in parts if p[:1] == "v" and p[1:].isdigit()), 0)
     if parts[0] == "grass":
-        return shade(grass(season, frame))
+        return shade(grass(season, frame, variant))
     if parts[0] == "beach":
         return shade(beach(frame))
     if parts[0] == "water":
@@ -221,5 +252,5 @@ def texture(name: str) -> np.ndarray:
     if parts[0] == "forest":
         return shade(forest(season))
     if parts[0] == "mountain":
-        return shade(rock(int(parts[-1][1:]) if parts[-1].startswith("v") else 0))
+        return shade(rock(variant))
     raise ValueError(f"no ground texture {name}")
