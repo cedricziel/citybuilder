@@ -69,11 +69,13 @@ public enum UITestSeed {
         return world
     }
 
-    /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore` or
-    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in that order.
+    /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore`,
+    /// `-uiTestSeedPort` or `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), checked in
+    /// that order.
     public static func world(fromArguments arguments: [String]) -> World? {
         if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
+        if arguments.contains("-uiTestSeedPort") { return portWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments))
     }
