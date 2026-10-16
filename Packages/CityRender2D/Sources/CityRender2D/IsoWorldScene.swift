@@ -74,7 +74,13 @@ public final class IsoWorldScene: SKScene {
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
-    /// Residents on the town center plazas, pooled. Spec: `rendering-2_5d`
+    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
+    var lightsNames: [String: String?] = [:]
+    /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
+    /// trades glow at night.
+    var fireGlows: [EntityID: SKNode] = [:]
+    /// Residents on the town center plazas. Spec: `rendering-2_5d`
     /// / Residents gather on the plaza.
     var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
     var lastPlazaPass: PlazaPass?
@@ -186,6 +192,7 @@ public final class IsoWorldScene: SKScene {
         reconcileStrollers(with: snapshot)
         reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
+        reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
