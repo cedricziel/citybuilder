@@ -5,6 +5,8 @@
 //       to RGBA PNGs in <dir>. `make sprites` quantizes them into the atlases.
 //   isokit check --catalog <dir>
 //       Recipe/catalog agreement and cell fit. Needs no GPU.
+//   isokit chimneys --catalog <dir>
+//       The chimney top of every migrated recipe that builds one, as `ChimneyAnchors` rows. Needs no GPU.
 import Foundation
 import IsoKitCore
 
@@ -53,6 +55,12 @@ func run() throws -> Int32 {
         problems.forEach { print($0) }
         print(problems.isEmpty ? "isokit check: \(Recipes.all.count) recipes ok" : "isokit check: \(problems.count) problem(s)")
         return problems.isEmpty ? 0 : 1
+    case "chimneys":
+        for recipe in RenderSelection.recipes(Recipes.all, migratedIn: catalog) {
+            guard let anchor = recipe.chimneyAnchor else { continue }
+            print(String(format: "\"%@\": (%.3f, %.3f),", recipe.id, anchor.x, anchor.y))
+        }
+        return 0
     case "render":
         guard problems.isEmpty else {
             problems.forEach { print($0) }
@@ -70,7 +78,7 @@ func run() throws -> Int32 {
         ))
         return 0
     default:
-        throw UsageError("usage: isokit render --catalog <dir> --out <dir> [--all] [--scales 1,2] | isokit check --catalog <dir>")
+        throw UsageError("usage: isokit render --catalog <dir> --out <dir> [--all] [--scales 1,2] | isokit check|chimneys --catalog <dir>")
     }
 }
 

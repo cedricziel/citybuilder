@@ -82,7 +82,9 @@ enum Tex {
     /// Courses of blocks (ashlar) or staggered roof tiles; rows run along texture x.
     static func courses(_ base: RGB, rowHeight: Int, blockWidth: Int, joint: RGB, seed: UInt64) -> CGImage {
         bitmap(seed: seed) { ctx, rng in
-            for row in 0 ..< size / rowHeight {
+            // Round up: a row height that doesn't divide the texture would leave a bare band that
+            // shows as a pale stripe wherever the texture repeats.
+            for row in 0 ..< (size + rowHeight - 1) / rowHeight {
                 let offset = row % 2 == 0 ? 0 : blockWidth / 2
                 for col in -1 ... size / blockWidth {
                     let rect = CGRect(x: col * blockWidth + offset, y: row * rowHeight, width: blockWidth - 1, height: rowHeight)
