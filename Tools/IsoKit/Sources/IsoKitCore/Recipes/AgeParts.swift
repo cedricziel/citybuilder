@@ -109,13 +109,22 @@ extension Builder {
         hipRoof(RoofSpec(lo: SCNVector3(lo.x, hi.y, lo.z), hi: hi, pitchDegrees: 22, overhang: 0.3, finish: .tile))
     }
 
-    /// Two rows of tilted solar panels on a flat roof.
+    /// Two rows of solar panels on a flat roof, the low edge on the deck and the high edge on legs.
     func solarPanels(_ box: AgeBox) {
+        let tilt: CGFloat = 0.4, rise = 0.5 * sin(tilt)
         for row in 0 ..< 2 {
+            let depth = box.lo.z + 1.4 + CGFloat(row) * 1.4, centre = box.top + 0.04 + rise
             add(
                 SCNBox(width: 2.6, height: 0.06, length: 1.0, chamferRadius: 0), Finish.paint(AgePalette.solar).material(),
-                at: SCNVector3(box.lo.x + 2.4, box.top + 0.5, box.lo.z + 1.4 + CGFloat(row) * 1.4), euler: SCNVector3(-0.4, 0, 0)
+                at: SCNVector3(box.lo.x + 2.4, centre, depth), euler: SCNVector3(-tilt, 0, 0)
             )
+            for along in [box.lo.x + 1.3, box.lo.x + 3.5] {
+                block(
+                    SCNVector3(along - 0.04, box.top, depth + 0.38),
+                    SCNVector3(along + 0.04, centre + rise * 0.8, depth + 0.44),
+                    .paint(Trade.iron)
+                )
+            }
         }
     }
 
