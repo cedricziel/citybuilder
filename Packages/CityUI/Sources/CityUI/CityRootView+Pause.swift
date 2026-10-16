@@ -11,15 +11,36 @@ extension CityRootView {
         HStack(spacing: 6) {
             #if os(tvOS)
             TVZoomButtons(session: session)
+            TVMapButton(session: session, remote: tvRemote)
             #endif
             goalsButton
             researchButton
             standingsButton
             routesButton
+            #if !os(tvOS)
+            minimapButton
+            #endif
             if settingsContent != nil {
                 settingsButton
             }
         }
+    }
+
+    /// Shows and hides the corner minimap; M on the Mac. Spec:
+    /// `platform-shells` / Minimap toggle.
+    var minimapButton: some View {
+        Button {
+            showsMinimap.toggle()
+        } label: {
+            Image(systemName: showsMinimap ? "map.fill" : "map")
+                .imageScale(.large)
+                .padding(8)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .hotkey(KeyEquivalent(MinimapLayout.hotkey))
+        .accessibilityLabel(showsMinimap ? "Hide Minimap" : "Show Minimap")
+        .accessibilityIdentifier("hud.minimapToggle")
     }
 
     /// The same buttons folded into one More menu, for a phone in
@@ -37,6 +58,9 @@ extension CityRootView {
             if session.showsRoutesButton {
                 Button("Routes", systemImage: "ferry.fill") { routesPresented = true }
             }
+            #if !os(tvOS)
+            Button(showsMinimap ? "Hide Minimap" : "Show Minimap", systemImage: "map") { showsMinimap.toggle() }
+            #endif
             if settingsContent != nil {
                 Button("Settings", systemImage: "gearshape.fill") { settingsPresented = true }
             }

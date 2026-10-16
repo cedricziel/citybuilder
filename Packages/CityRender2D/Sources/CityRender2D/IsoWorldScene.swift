@@ -37,16 +37,17 @@ public final class IsoWorldScene: SKScene {
     private(set) var transitionMap: TerrainTransitionMap?
     /// Road links, worked out again only when a building is placed or removed.
     private(set) var roadLinkCache = RoadLinkCache()
-    /// Carrier nodes keyed by carrier EntityID raw, with the last-known
-    /// path index so we can interpolate movement.
-    private struct CarrierVisual {
-        var node: SKSpriteNode
-        var lastPathIndex: Int
-        var lastTickCount: UInt64
-        var facing: SpriteAtlas.WalkerFacing
-    }
-
-    private var carrierVisuals: [UInt32: CarrierVisual] = [:]
+    /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
+    var groundMacroCache = GroundMacroCache()
+    /// Whether a macro field is building off the main thread, and the latest request waiting for it.
+    var groundMacroBuilding = false
+    var groundMacroPending: GroundMacroInputs?
+    /// What the macro field on screen was built from.
+    var groundMacroShown: GroundMacroInputs?
+    /// Carrier nodes keyed by carrier id. Spec: `rendering-2_5d` /
+    /// Carriers glide and show their load.
+    var carrierVisuals: [EntityID: CarrierVisual] = [:]
+    var lastCarrierTick: UInt64?
     private let cameraNode = SKCameraNode()
 
     /// Ghost preview node shown at the hovered tile when a build tool is
@@ -71,6 +72,17 @@ public final class IsoWorldScene: SKScene {
     var smokeSources: [SmokeSource] = []
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
+    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
+    var lightsNames: [String: String?] = [:]
+    /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
+    /// trades glow at night.
+    var fireGlows: [EntityID: SKNode] = [:]
+    /// Residents on the town center plazas. Spec: `rendering-2_5d`
+    /// / Residents gather on the plaza.
+    var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
+    var lastPlazaPass: PlazaPass?
+    var plazaTickAt: TimeInterval = 0
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -167,15 +179,18 @@ public final class IsoWorldScene: SKScene {
         guard let snapshot = dataSource?.currentSnapshot() else { return }
         applyCamera(snapshot.camera)
         applySeason(snapshot.date.season)
+        reconcileGround(with: snapshot)
         applyLook(culture: snapshot.culture, age: snapshot.age)
         applyTimeOfDay(TimeOfDay(tick: snapshot.tickCount))
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
-        reconcileCarriers(with: snapshot)
+        reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
         reconcileStrollers(with: snapshot)
+        reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
+        reconcileFireGlow(with: snapshot)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
@@ -222,72 +237,6 @@ public final class IsoWorldScene: SKScene {
             ghostNode = node
             addChild(node)
         }
-    }
-
-    private func reconcileCarriers(with snapshot: WorldSnapshot) {
-        let currentIDs = Set(snapshot.carriers.map(\.id.raw))
-        // Despawn nodes for carriers that no longer exist.
-        for staleID in carrierVisuals.keys where !currentIDs.contains(staleID) {
-            carrierVisuals[staleID]?.node.removeFromParent()
-            carrierVisuals.removeValue(forKey: staleID)
-        }
-        // Add / update nodes for each live carrier.
-        for carrier in snapshot.carriers {
-            let facing = walkerFacing(for: carrier)
-            if var visual = carrierVisuals[carrier.id.raw] {
-                // Update facing if it changed (new path segment direction).
-                if visual.facing != facing {
-                    if let frames = SpriteAtlas.walkerAnimation(facing: facing) {
-                        visual.facing = facing
-                        visual.node.removeAction(forKey: "walk")
-                        visual.node.run(
-                            SKAction.repeatForever(SKAction.animate(with: frames, timePerFrame: 0.15)),
-                            withKey: "walk"
-                        )
-                    }
-                }
-                visual.lastPathIndex = carrier.pathIndex
-                visual.lastTickCount = snapshot.tickCount
-                visual.node.position = position(forCarrier: carrier)
-                carrierVisuals[carrier.id.raw] = visual
-            } else if let frames = SpriteAtlas.walkerAnimation(facing: facing) {
-                let node = SKSpriteNode(texture: frames.first)
-                node.anchorPoint = CGPoint(x: 0.5, y: 0)
-                node.position = position(forCarrier: carrier)
-                node.zPosition = 50 // above terrain, below tall buildings
-                node.run(
-                    SKAction.repeatForever(SKAction.animate(with: frames, timePerFrame: 0.15)),
-                    withKey: "walk"
-                )
-                addChild(node)
-                carrierVisuals[carrier.id.raw] = CarrierVisual(
-                    node: node,
-                    lastPathIndex: carrier.pathIndex,
-                    lastTickCount: snapshot.tickCount,
-                    facing: facing
-                )
-            }
-        }
-    }
-
-    private func walkerFacing(for carrier: Carrier) -> SpriteAtlas.WalkerFacing {
-        // Determine facing from the next path segment direction.
-        let idx = carrier.pathIndex
-        guard idx >= 0, idx < carrier.path.count - 1 else { return .se }
-        let from = carrier.path[idx]
-        let to = carrier.path[idx + 1]
-        if to.x > from.x { return .se }
-        if to.x < from.x { return .nw }
-        if to.y > from.y { return .sw }
-        return .ne
-    }
-
-    private func position(forCarrier carrier: Carrier) -> CGPoint {
-        guard let current = carrier.currentTile else { return .zero }
-        // Carrier sprite is drawn at the tile's iso position, slightly
-        // above the tile center so the figure appears to stand on it.
-        let basePoint = IsoMath.screenPoint(forTile: current)
-        return CGPoint(x: basePoint.x, y: basePoint.y - IsoMath.tileHeight / 2)
     }
 
     private func applyCamera(_ stateCamera: Camera) {

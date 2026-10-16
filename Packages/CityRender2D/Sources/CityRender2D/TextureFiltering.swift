@@ -33,7 +33,11 @@ public enum TextureFiltering {
         "building-library-east-asian", "building-library-mediterranean", "building-library-middle-eastern",
         "building-port-n", "building-port-e", "building-port-s", "building-port-w",
         "building-shipyard-n", "building-shipyard-e", "building-shipyard-s", "building-shipyard-w",
-        "ship-n", "ship-ne", "ship-e", "ship-se", "ship-s", "ship-sw", "ship-w", "ship-nw"
+        "ship-n", "ship-ne", "ship-e", "ship-se", "ship-s", "ship-sw", "ship-w", "ship-nw",
+        "building-house-east-asian", "building-house-tier2-east-asian", "building-house-tier3-east-asian",
+        "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
+        "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
+        "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
     ]
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {

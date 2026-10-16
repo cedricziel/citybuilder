@@ -59,6 +59,14 @@ func townSeedStartsInTheRequestedSeason() {
     #expect(UITestSeed.season(fromArguments: ["app"]) == nil)
 }
 
+@Test("The town seed can be built in another culture, for culture-look shots")
+@MainActor
+func townSeedTakesACulture() {
+    #expect(UITestSeed.townWorld(culture: .mediterranean).culture == .mediterranean)
+    #expect(UITestSeed.culture(fromArguments: ["app", "-uiTestCulture", "east-asian"]) == .eastAsian)
+    #expect(UITestSeed.culture(fromArguments: ["app"]) == .northernEuropean)
+}
+
 @Test("The town seed stays solvent with a whole category on show")
 @MainActor
 func townSeedStaysSolvent() {
@@ -80,7 +88,50 @@ func livedSeedHasResidents() {
 @Test("Launch arguments pick the seed, and no flag picks none")
 func argumentsPickTheSeed() {
     #expect(UITestSeed.world(fromArguments: []) == nil)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestCulture", "mediterranean"])?.culture == .mediterranean)
     #expect(UITestSeed.world(fromArguments: ["-uiTestSeedShore"])?.ships.count == 1)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedPort"])?.buildings.values.contains { $0.kind == .port } == true)
     let town = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestShowcase", "craft"])
     #expect(town?.buildings.values.contains { $0.kind == .bakery } == true)
+}
+
+@Test("The camera flag places the seeded game's camera, and odd values are ignored")
+@MainActor
+func cameraFlagPlacesTheSeededCamera() {
+    #expect(UITestSeed.camera(fromArguments: ["-uiTestCamera", "40.5,61.5,0.5"]) == Camera(centerX: 40.5, centerY: 61.5, zoom: 0.5))
+    #expect(UITestSeed.camera(fromArguments: ["-uiTestCamera", "40.5,61.5"]) == nil)
+    #expect(UITestSeed.camera(fromArguments: ["-uiTestCamera"]) == nil)
+    let world = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestCamera", "12,20,0.25"])
+    #expect(world?.camera == Camera(centerX: 12, centerY: 20, zoom: 0.25))
+}
+
+private struct NoSaves: SaveStoreFacade {
+    func mostRecentSave() throws -> SaveSummary? {
+        nil
+    }
+
+    func load(gameID _: UUID) throws -> World {
+        throw CocoaError(.fileNoSuchFile)
+    }
+}
+
+@Test("The start-game flag skips the title, and without it the title stays")
+@MainActor
+func startGameFlagSkipsTheTitle() {
+    let plain = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    plain.startGameIfRequested(arguments: ["Citybuilder"])
+    #expect(plain.committedSession == nil)
+    let started = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    started.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
+    #expect(started.committedSession != nil)
+}
+
+@Test("A test or shot launch saves into a folder of its own, a regular launch into the player's")
+func uiTestLaunchesKeepTheirOwnSaves() throws {
+    #expect(UITestSeed.saveDirectory(fromArguments: ["Citybuilder"]) == nil)
+    #expect(UITestSeed.saveDirectory(fromArguments: ["Citybuilder", "-NSDocumentRevisionsDebugMode", "YES"]) == nil)
+    for flag in ["-uiTestSeedTown", "-uiTestStartGame", "-uiTestResetSaves", "-uiTestCamera"] {
+        let directory = try #require(UITestSeed.saveDirectory(fromArguments: ["Citybuilder", flag]))
+        #expect(directory.path.hasPrefix(FileManager.default.temporaryDirectory.path))
+    }
 }

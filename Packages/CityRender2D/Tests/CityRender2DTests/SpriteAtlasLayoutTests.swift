@@ -155,13 +155,15 @@ func everyRequestedBuildingSpriteIsOnDisk() {
     var looks = 0
     for kind in IsoWorldScene.cultureVariantKinds.sorted(by: { $0.rawValue < $1.rawValue }) {
         for culture in Culture.allCases {
-            guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: .peasants, culture: culture),
-                  TextureFiltering.kitRenderedStems.contains(look)
-            else { continue }
-            looks += 1
-            names.append(look)
-            let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
-            names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+            for tier in kind == .house ? HouseTier.allCases : [.peasants] {
+                guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: tier, culture: culture),
+                      TextureFiltering.kitRenderedStems.contains(look)
+                else { continue }
+                looks += 1
+                names.append(look)
+                let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+                names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+            }
         }
     }
     // Shore buildings draw one look per facing (`-n/-e/-s/-w`), each with its stages and frames.
@@ -192,7 +194,7 @@ func everyRequestedBuildingSpriteIsOnDisk() {
     // Every migrated kind contributes its base and three construction stages at least, so the walk
     // can never pass by checking nothing.
     #expect(!kinds.isEmpty)
-    #expect(looks >= 6, "the warehouse and library looks of three cultures")
+    #expect(looks == 18, "the house tiers, town center, warehouse and library looks of three cultures")
     #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
     #expect(names.count >= kinds.count * 4 + looks + facings * 2)
     let missing = names.sorted().flatMap { name -> [String] in

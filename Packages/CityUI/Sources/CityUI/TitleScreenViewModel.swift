@@ -168,6 +168,7 @@ public final class TitleScreenViewModel {
     }
 
     public func continueRequested() {
+        UISounds.play(.tap)
         guard !isPreparingCloudSaves, let summary = mostRecentSave else { return }
         let world: World
         do {
@@ -188,19 +189,29 @@ public final class TitleScreenViewModel {
     }
 
     public func newGameRequested() {
+        UISounds.play(.tap)
         guard !isPreparingCloudSaves else { return }
         loadFailure = nil
         presentingNewGameDialog = true
     }
 
     public func settingsRequested() {
+        UISounds.play(.tap)
         presentingSettings = true
     }
 
+    /// With `-uiTestStartGame` (Debug only) the game starts without the title: the app's session
+    /// factory swaps in the seed the other flags ask for.
+    public func startGameIfRequested(arguments: [String]) {
+        guard committedSession == nil, UITestSeed.startsGame(fromArguments: arguments) else { return }
+        commit(world: World.newGame(layout: .singleIsland, seed: 0))
+    }
+
     public func commit(world: World) {
+        // End the old game before the factory starts the new one's sounds.
+        committedSession?.end()
         let session = sessionFactory(world)
         presentingNewGameDialog = false
-        committedSession?.end()
         committedSession = session
     }
 
