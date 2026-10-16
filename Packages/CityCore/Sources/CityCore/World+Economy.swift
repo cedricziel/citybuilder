@@ -18,14 +18,11 @@ extension World {
             }
         }
         if tickCount > 0, tickCount.isMultiple(of: Economy.upkeepIntervalTicks) {
-            var upkeepByOwner: [Owner: Int64] = [:]
-            for building in buildings.values where building.state == .operational {
-                upkeepByOwner[building.owner, default: 0] += upkeep(of: building, sources: sources)
-            }
+            var owed = upkeepByOwner(sources: sources)
             // Difficulty scaling applies to the player only.
-            let totalUpkeep = difficulty.scaledUpkeep(upkeepByOwner.removeValue(forKey: .player) ?? 0)
+            let totalUpkeep = difficulty.scaledUpkeep(owed.removeValue(forKey: .player) ?? 0)
             economy.deduct(totalUpkeep)
-            creditRivals(upkeepByOwner.mapValues { -$0 })
+            creditRivals(owed.mapValues { -$0 })
             // Same as above — empty cities and free-upkeep buildings shouldn't
             // generate a per-interval no-op event.
             if totalUpkeep > 0 {
@@ -54,6 +51,15 @@ extension World {
         }
     }
 
+    /// Upkeep of every owner's operational buildings, unscaled.
+    private func upkeepByOwner(sources: [Building]) -> [Owner: Int64] {
+        var totals: [Owner: Int64] = [:]
+        for building in buildings.values where building.state == .operational {
+            totals[building.owner, default: 0] += upkeep(of: building, sources: sources)
+        }
+        return totals
+    }
+
     /// Spec: `population-and-needs` / Taxes scale with tier; each house
     /// pays its owner (spec `economy` / Each owner has its own purse),
     /// with the owner's monument bonus.
@@ -74,5 +80,18 @@ extension World {
         for (owner, amount) in amounts.sorted(by: { ($0.key.rivalID ?? 0) < ($1.key.rivalID ?? 0) }) {
             credit(amount, to: owner)
         }
+    }
+}
+
+public extension World {
+    /// The player's tax and difficulty-scaled upkeep for one collection as
+    /// the world stands: what the next collection would credit and deduct
+    /// if nothing changed. Spec: `platform-shells` / Deficit hint.
+    var playerTaxAndUpkeep: (tax: Int64, upkeep: Int64) {
+        let sources = activeSignatureSources()
+        return (
+            taxesByOwner(sources: sources)[.player] ?? 0,
+            difficulty.scaledUpkeep(upkeepByOwner(sources: sources)[.player] ?? 0)
+        )
     }
 }
