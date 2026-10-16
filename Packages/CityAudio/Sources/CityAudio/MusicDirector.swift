@@ -18,12 +18,13 @@ public final class MusicDirector {
     private let title: Bindings.MusicTrack?
     private let playlist: MusicPlaylist
     private let crossfade: Double
-    private let play: (String, Double) -> Void
+    /// Starts a track: its path, fade-in seconds, and whether it loops.
+    private let play: (String, Double, Bool) -> Void
     private let fadeOut: (String, Double) -> Void
     private let duration: (String) -> Double?
 
     private var context = Context.title
-    private var season: Season?
+    private(set) var season: Season?
     private var switching = false
     private var clock = 0.0
     private var current: (path: String, endsAt: Double)?
@@ -32,7 +33,7 @@ public final class MusicDirector {
     init(
         section: Bindings.MusicSection?,
         rng: any RandomNumberGenerator = SystemRandomNumberGenerator(),
-        play: @escaping (String, Double) -> Void,
+        play: @escaping (String, Double, Bool) -> Void,
         fadeOut: @escaping (String, Double) -> Void,
         duration: @escaping (String) -> Double?
     ) {
@@ -48,9 +49,12 @@ public final class MusicDirector {
         self.duration = duration
     }
 
+    /// Switches between the title and a game. Leaving a game forgets its
+    /// season, so the next game's first pick follows its own season.
     public func setContext(_ newContext: Context) {
         guard newContext != context else { return }
         context = newContext
+        if newContext == .title { season = nil }
         switching = true
     }
 
@@ -89,8 +93,10 @@ public final class MusicDirector {
             nextStartAt = nil
             return
         }
-        play(path, fade)
-        current = (path, clock + (duration(path) ?? Self.fallbackDuration))
+        // The title theme loops in the player, gaplessly; game tracks play once.
+        let loops = repeatsTitle
+        play(path, fade, loops)
+        current = (path, loops ? .infinity : clock + (duration(path) ?? Self.fallbackDuration))
         nextStartAt = nil
     }
 }

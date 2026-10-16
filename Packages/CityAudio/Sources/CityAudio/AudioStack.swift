@@ -35,6 +35,7 @@ public final class AudioStack {
     /// either way — the sync layer only mirrors to iCloud.
     public let settingsSync: AudioSettingsSync?
     private var clock: Timer?
+    private var lastTick = ContinuousClock.now
 
     public init(
         bundle: Bundle = .main,
@@ -90,7 +91,7 @@ public final class AudioStack {
 
         let music = MusicDirector(
             section: bindings.music,
-            play: { [weak player] path, fade in player?.playMusic(path, fade: fade) },
+            play: { [weak player] path, fade, loops in player?.playMusic(path, fade: fade, loops: loops) },
             fadeOut: { [weak player] path, fade in player?.fadeOutMusic(path, fade: fade) },
             duration: { [weak player] path in player?.duration(of: path) }
         )
@@ -125,12 +126,24 @@ public final class AudioStack {
     /// Ticks the music and the ambient crossfades by wall-clock time,
     /// apart from the game's speed and pause.
     private func startClock() {
-        clock = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.music.tick(dt: 0.1)
-                self?.ambientScene?.tick(dt: 0.1)
-            }
+        lastTick = .now
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.tickClock() }
         }
+        // Common modes keep it firing while the player scrolls or holds a menu open.
+        RunLoop.main.add(timer, forMode: .common)
+        clock = timer
+    }
+
+    /// Advances the music and ambience by the time that really passed: a
+    /// timer firing late, under load, must not slow them down.
+    private func tickClock() {
+        let now = ContinuousClock.now
+        let elapsed = now - lastTick
+        lastTick = now
+        let dt = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) * 1e-18
+        music.tick(dt: dt)
+        ambientScene?.tick(dt: dt)
     }
 
     /// Applies the persisted bus volumes and mute to the engine.
