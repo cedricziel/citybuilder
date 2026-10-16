@@ -23,6 +23,7 @@ struct CitybuilderMacApp: App {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         self.fullscreenTracker = MacFullscreenTracker()
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
@@ -86,6 +87,7 @@ struct CitybuilderMacApp: App {
                     )
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
+                    audio.beginSession()
                     return session
                 },
                 pauseMenuFactory: { [saveStore] session in

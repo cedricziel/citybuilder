@@ -25,7 +25,7 @@ public final class AudioStack {
     public let bindings: Bindings
     public let player: EngineCuePlayer
     public let coordinator: AudioCoordinator
-    public let playlist: MusicPlaylist
+    public let music: MusicDirector
     public let ambientBed: AmbientBed
     /// Seasonal and coastal beds, when the bindings name them.
     public let ambientScene: AmbientScene?
@@ -34,10 +34,7 @@ public final class AudioStack {
     /// production). The settings model writes through to UserDefaults
     /// either way — the sync layer only mirrors to iCloud.
     public let settingsSync: AudioSettingsSync?
-    private var musicStarted = false
-    /// Drives the ambient crossfades by wall-clock time, apart from the
-    /// game's speed and pause.
-    private var ambientTimer: Timer?
+    private var clock: Timer?
 
     public init(
         bundle: Bundle = .main,
@@ -91,10 +88,11 @@ public final class AudioStack {
             player?.stopLoop(entity: entity)
         }
 
-        let playlist = MusicPlaylist(
-            tracks: bindings.music?.tracks ?? [],
-            gapSecondsBetweenTracks: bindings.music?.gapSecondsBetweenTracks
-                ?? MusicPlaylist.defaultGapSeconds
+        let music = MusicDirector(
+            section: bindings.music,
+            play: { [weak player] path, fade in player?.playMusic(path, fade: fade) },
+            fadeOut: { [weak player] path, fade in player?.fadeOutMusic(path, fade: fade) },
+            duration: { [weak player] path in player?.duration(of: path) }
         )
         let ambientBed = AmbientBed(section: bindings.ambient) { [weak player] dispatched in
             player?.play(dispatched)
@@ -107,7 +105,7 @@ public final class AudioStack {
         self.session = session
         self.player = player
         self.coordinator = coordinator
-        self.playlist = playlist
+        self.music = music
         self.ambientBed = ambientBed
         self.ambientScene = AmbientScene(section: bindings.ambient, player: player)
         self.settingsSync = cloudStore.map { AudioSettingsSync(store: $0, defaults: userDefaults) }
@@ -121,18 +119,17 @@ public final class AudioStack {
         // the heavy lifting; this just brings PlatformAudioSession's
         // bookkeeping in sync.
         try? session.activate()
-        startAmbientClock()
-        // Start music immediately if a track is bound. The previous "wait
-        // for first event" gate didn't survive contact with iOS — without
-        // engine warmup, no audio plays until the player triggers an event,
-        // which on a fresh empty island can take ~5 seconds (tax interval).
-        startMusicIfAvailable()
+        startClock()
     }
 
-    private func startAmbientClock() {
-        guard let scene = ambientScene else { return }
-        ambientTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak scene] _ in
-            MainActor.assumeIsolated { scene?.tick(dt: 0.1) }
+    /// Ticks the music and the ambient crossfades by wall-clock time,
+    /// apart from the game's speed and pause.
+    private func startClock() {
+        clock = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.music.tick(dt: 0.1)
+                self?.ambientScene?.tick(dt: 0.1)
+            }
         }
     }
 
@@ -159,10 +156,28 @@ public final class AudioStack {
         coordinator.consume(events: events)
     }
 
+    /// Plays the interface sound bound to `ui.<name>`, if any. Spec:
+    /// `audio-playback` / Interface sounds are bound by name.
+    public func playInterfaceSound(_ name: String) {
+        guard let cue = Self.interfaceCue(name, in: bindings) else { return }
+        player.play(DispatchedCue(cue: cue))
+    }
+
+    nonisolated static func interfaceCue(_ name: String, in bindings: Bindings) -> Bindings.Cue? {
+        bindings.bindings["ui.\(name)"]?.filter { $0.action == .start }.randomElement()
+    }
+
+    /// Starts a game's music: the title theme crossfades to game pieces.
+    /// App shells call this when a game session starts.
+    public func beginSession() {
+        music.setContext(.game)
+    }
+
     /// Ends the game session's sounds: every building loop and seasonal
-    /// bed stops. App shells call this when the player leaves a game.
-    /// Music plays on.
+    /// bed stops, and the music crossfades back to the title theme. App
+    /// shells call this when the player leaves a game.
     public func endSession() {
+        music.setContext(.title)
         coordinator.endSession()
         player.stopAllBuildingLoops()
         ambientScene?.endSession()
@@ -175,6 +190,7 @@ public final class AudioStack {
     /// snapshot is just used for entity lookups.
     public func consumeSnapshot(_ snapshot: WorldSnapshot) {
         ambientScene?.consumeSnapshot(snapshot)
+        music.setSeason(snapshot.date.season)
         coordinator.consumeSnapshot(snapshot)
     }
 
@@ -188,15 +204,5 @@ public final class AudioStack {
         ambientScene?.setListener(tile)
         guard let env = engine.environmentNode, let tile else { return }
         env.listenerPosition = AVAudio3DPoint(x: Float(tile.x), y: 0, z: Float(tile.y))
-    }
-
-    /// Picks the next track from the playlist (if any) and starts looping
-    /// it on the music bus. Idempotent — calling more than once during a
-    /// single track's lifetime is a no-op.
-    public func startMusicIfAvailable() {
-        guard !musicStarted, let track = playlist.nextTrack() else { return }
-        musicStarted = true
-        let cue = Bindings.Cue(file: track.file, bus: .music, volume: nil, loop: true)
-        player.play(DispatchedCue(cue: cue, position: nil))
     }
 }
