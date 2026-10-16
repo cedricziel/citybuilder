@@ -9,6 +9,8 @@ public struct SessionBanner: Equatable, Sendable {
 
 extension GameSession {
     static let bannerTicks: UInt64 = 60
+    /// Long enough to read three fixes (`deficit-hint` D1).
+    static let deficitHintTicks: UInt64 = 150
     static let gameOverBanner = SessionBanner(
         title: "Bankrupt",
         description: "The treasury stayed in the red too long and the town is lost. "
@@ -29,6 +31,7 @@ extension GameSession {
     }
 
     func noteBannerEvents(in events: [WorldEvent]) {
+        noteDeficitHint(in: events)
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -88,8 +91,25 @@ extension GameSession {
         enqueue(.setExport(id, good))
     }
 
-    private func show(_ banner: SessionBanner) {
-        bannerState = (banner, world.tickCount + Self.bannerTicks)
+    /// The first `bankruptcyWarning` of the session shows the deficit hint.
+    private func noteDeficitHint(in events: [WorldEvent]) {
+        let warned = events.contains { if case .bankruptcyWarning = $0 { true } else { false } }
+        guard warned, !hasShownDeficitHint else { return }
+        hasShownDeficitHint = true
+        let figures = world.playerTaxAndUpkeep
+        show(Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax), ticks: Self.deficitHintTicks)
+    }
+
+    /// Spec: `platform-shells` / Deficit hint.
+    private static func deficitHint(upkeep: Int64, tax: Int64) -> SessionBanner {
+        SessionBanner(
+            title: "In the red: upkeep $\(upkeep) vs tax $\(tax)",
+            description: "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts."
+        )
+    }
+
+    private func show(_ banner: SessionBanner, ticks: UInt64 = bannerTicks) {
+        bannerState = (banner, world.tickCount + ticks)
     }
 }
 
