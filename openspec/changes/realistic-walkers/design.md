@@ -22,11 +22,22 @@ The figure is a 1.7 m adult built from primitives: capsule limbs, a tapered tuni
 
 ### D2. A narrow cell
 
-A walker cell is 24×30 pt, much narrower than a 1×1 footprint (64 pt). `SpriteCell` gains an optional `widthPx`, centred on the same anchor, so the camera, light rig and cell-fit check stay unchanged. The feet sit 2 pt above the bottom edge (0.25 m up-screen of the footprint's bottom vertex), so the shadow under them stays in the cell. The renderer anchors walkers at `(0.5, 2/30)`.
+A walker cell is 32×32 pt, narrower than a 1×1 footprint (64 pt). `SpriteCell` gains an optional `widthPx`, centred on the same anchor, so the camera and light rig stay unchanged.
+
+- **Feet 5 pt up.** A full stride, a load reaching back and the contact shadow stay above the bottom edge.
+- **Feet 4 pt left of centre.** They stand at 12 of 32 pt, because the sun from the upper left throws every shadow to the right. A centred cell would have to be wider to fit it.
+- **Anchor.** The renderer anchors walkers at `(12/32, 5/32)`, the point under the feet.
+
+For units, `CellFit` also checks the bottom edge with no tolerance. It estimates where the sun casts every corner onto the ground (`Rig.sunOffset`), and requires that shadow to stay half a point inside the left, right and bottom edges. A unit has no plot to hide a cut, so a clipped shadow shows as a hard vertical edge on the grass.
 
 ### D3. Four facings, eight frames
 
-Carriers step along the road grid, so every move is one of the four screen diagonals. With 8 facings, half the frames would never show and the atlas would double. Free-roaming figures snap to the nearest diagonal. The gait has 8 frames at 0.1 s per frame. The thigh swings ±0.42 rad, the knee bends on the forward swing, the arms counter-swing and the body bobs 2.5 cm. Loads hold the right arm up on the shoulder.
+Carriers step along the road grid, so every move is one of the four screen diagonals. With 8 facings, half the frames would never show and the atlas would double. Free-roaming figures snap to the nearest diagonal. The gait has 8 frames at 0.1 s per frame:
+
+- The thigh swings ±0.36 rad.
+- The knee bends most as the leg passes under the hips on its forward swing. Frame 0 is a relaxed standing pose with one knee eased, and frame 4 mirrors it with the other knee.
+- The arms counter-swing with the elbows a little bent, and the body bobs 2.5 cm.
+- Loads hold the right elbow out and the hand up on the shoulder.
 
 ### D4. No mirroring
 
@@ -36,19 +47,20 @@ The sun comes from the screen's upper left. If a sprite is flipped with `xScale 
 
 | Family | Goods |
 |---|---|
-| sack | grain, flour, food, hops, grapes, tea leaves, tea, coffee cherries, coffee |
-| crate | bread, ore, charcoal, iron, tools |
+| sack | grain, flour, food, bread, hops, grapes, tea leaves, tea, coffee cherries, coffee |
+| crate | ore, charcoal, iron, tools |
 | barrel | beer, wine |
 | logs | wood, planks |
 
-`SpriteAtlas.WalkerVariant.carrying(_:)` maps a good to its family, and the default branch maps any new good to the sack. The life agent's carrier node calls it.
+`CarrierLoad.family(of:)` from `add-carrier-glide` maps a good to its family (bread travels as a sack there), and the carrier node looks the frames up with `carrierAnimation(load:facing:)`.
 
 ### D6. Names and atlas
 
-- People: `walker-<facing>-<frame>` (the worker) and `walker-<variant>-<facing>-<frame>`. The variants are `woman`, `carrier-sack`, `carrier-crate`, `carrier-barrel` and `carrier-logs`.
+- Residents: `walker-<facing>-<frame>` (the worker) and `walker-woman-<facing>-<frame>`.
+- Carriers: `carrier-<load>-<facing>-<frame>` for `sack`, `crate`, `barrel` and `logs`, the names `add-carrier-glide` reads.
 - Animals: `animal-<kind>-<action>-<facing>-<frame>` for `sheep` and `cow` with `walk` (8 frames) and `graze` (4 frames). Hens are `animal-hen-<facing>-<frame>`, 4 peck frames.
 
-Every stem is kit-rendered, so routing sends all of them to `Kit` (linear filtering, @2x twins). `Units.atlas` keeps no walker art.
+Every stem is kit-rendered, so routing sends all of them to `Kit` (linear filtering, @2x twins). With the walkers gone, `Units.atlas` is empty and retires; the `walker-`, `carrier-` and `ship-` prefixes fall back to `Kit`.
 
 ### D7. Budget
 

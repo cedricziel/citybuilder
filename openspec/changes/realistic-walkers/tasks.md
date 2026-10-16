@@ -1,13 +1,13 @@
 ## 1. People in IsoKit
 
-- [ ] 1.1 Tests first: walker recipe names (6 variants × 4 facings × 8 frames), narrow `SpriteCell` width, cell fit and recipe rules for every walker recipe
-- [ ] 1.2 `SpriteCell(widthPx:)`; `Figures.swift` (figure, loads, cloth palette); `WalkerRecipes.swift` (storybook scale, six variants)
+- [x] 1.1 Tests first: walker recipe names (6 variants × 4 facings × 8 frames), narrow `SpriteCell` width, cell fit and recipe rules for every walker recipe, and the unit bottom and shadow-reach checks in `CellFit`
+- [x] 1.2 `SpriteCell(widthPx:)`; `Figures.swift` (figure, loads, cloth palette); `WalkerRecipes.swift` (storybook scale, six variants)
 
 ## 2. People in the game
 
-- [ ] 2.1 Tests first: walker lookup by variant, 8-frame entry, good → carrier family, routing to `Kit`, filtering stems equal the catalog, reverse coverage of every variant, facing and frame, the content gate's walker size and frames
-- [ ] 2.2 `walker.md` → `source = "isokit"` with the full sheet; `make sprites`; delete `Units.atlas/walker-*`
-- [ ] 2.3 `SpriteAnimation`/`SpriteAtlas` variants, `WalkerVariant.carrying`, `walkerAnchor`; carrier and stroller nodes use the anchor and the real facing (no `xScale` mirroring)
+- [ ] 2.1 Tests first: walker lookup by look, 8-frame entry, routing to `Kit`, filtering stems equal the catalog, reverse coverage of every look, load, facing and frame, the content gate's walker size and frames
+- [ ] 2.2 `walker.md` → `source = "isokit"` with the full sheet; `make sprites`; delete `Units.atlas/walker-*` and retire the atlas
+- [ ] 2.3 `SpriteAnimation`/`SpriteAtlas` looks and the 8-frame gait, `walkerAnchor`; carrier, plaza and stroller nodes use the anchor and the real facing (no `xScale` mirroring)
 - [ ] 2.4 In-game before/after (Mac, window-only capture); tell the life agent the lookup and names
 
 ## 3. Animals
