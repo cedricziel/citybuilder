@@ -41,15 +41,19 @@ public enum MinimapPalette {
         }
     }
 
+    /// A rival the snapshot does not know, which should not happen.
+    static let unknownOwner = MinimapRGBA(hex: "#8E8E93")
+
     public static func colour(for owner: Owner, in snapshot: WorldSnapshot) -> MinimapRGBA {
-        guard let rivalID = owner.rivalID, let rival = snapshot.rival(rivalID) else { return player }
-        return MinimapRGBA(hex: rival.colour.hex)
+        guard let rivalID = owner.rivalID else { return player }
+        return snapshot.rival(rivalID).map { MinimapRGBA(hex: $0.colour.hex) } ?? unknownOwner
     }
 }
 
 /// The terrain drawn as pixels, 2 per unit of `u` across and 1 per unit of
-/// `v` down, so the image is `2(W + H)` by `W + H` pixels. Pixels off the
-/// map are clear. Pure, so tests read the bytes. Design D2.
+/// `v` down, so the image is `2(W + H)` by `W + H` pixels, capped at
+/// `maxWidth` pixels across, about the largest the minimap shows. Pixels
+/// off the map are clear. Pure, so tests read the bytes. Design D2.
 public struct MinimapTerrainRaster: Equatable, Sendable {
     public let width: Int
     public let height: Int
@@ -59,10 +63,18 @@ public struct MinimapTerrainRaster: Equatable, Sendable {
 
     static let pixelsPerUnit = 2
 
-    public init(terrain: [TerrainType], mapWidth: Int, mapHeight: Int) {
+    // The corner minimap is at most 240 points, 480 pixels on a Retina
+    // screen; the Apple TV overview is about 1,700 points at 1x.
+    #if os(tvOS)
+    public static let maxWidth = 1024
+    #else
+    public static let maxWidth = 512
+    #endif
+
+    public init(terrain: [TerrainType], mapWidth: Int, mapHeight: Int, maxWidth: Int = Self.maxWidth) {
         let span = max(mapWidth + mapHeight, 1)
-        width = span * Self.pixelsPerUnit
-        height = span
+        width = max(2, min(span * Self.pixelsPerUnit, maxWidth - maxWidth % 2))
+        height = width / 2
         projection = MinimapProjection(mapWidth: mapWidth, mapHeight: mapHeight, size: CGSize(width: width, height: height))
         bytes = [UInt8](repeating: 0, count: width * height * 4)
         for row in 0 ..< height {
@@ -76,15 +88,21 @@ public struct MinimapTerrainRaster: Equatable, Sendable {
     /// forest felled or planted. Both grids are for this raster's map size.
     public mutating func repaint(from old: [TerrainType], to new: [TerrainType]) {
         let mapWidth = projection.mapWidth
+        // A tile's diamond spans one unit of `u` and `v` each way.
+        let reachX = Int(pixelsPerUnitAcross.rounded(.up)) + 1
+        let reachY = Int((pixelsPerUnitAcross / 2).rounded(.up)) + 1
         for index in new.indices where new[index] != old[index] {
             let center = pixelCenter(tileX: index % mapWidth, tileY: index / mapWidth)
-            // A tile's diamond spans ±2 columns and ±1 row around its center.
-            for row in max(center.row - 1, 0) ... min(center.row + 1, height - 1) {
-                for column in max(center.column - 2, 0) ... min(center.column + 2, width - 1) {
+            for row in max(center.row - reachY, 0) ... min(center.row + reachY, height - 1) {
+                for column in max(center.column - reachX, 0) ... min(center.column + reachX, width - 1) {
                     paint(column: column, row: row, terrain: new)
                 }
             }
         }
+    }
+
+    private var pixelsPerUnitAcross: Double {
+        Double(width) / Double(max(projection.mapWidth + projection.mapHeight, 1))
     }
 
     private mutating func paint(column: Int, row: Int, terrain: [TerrainType]) {
