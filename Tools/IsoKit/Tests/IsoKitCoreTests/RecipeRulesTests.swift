@@ -116,6 +116,27 @@ struct RecipeRulesTests {
         #expect(abs(anchor.y - (1 - expected.y / 128)) < 0.001)
     }
 
+    /// A unit's feet and baked shadow have no plot to hide a cut, so both must stay inside the cell.
+    @Test("a unit whose feet or shadow cross the bottom or side edge does not fit")
+    func unitFeetAndShadowStayInTheCell() {
+        func post(_ base: SCNVector3, height: CGFloat) -> Recipe {
+            Recipe(
+                id: "walker-test", entry: "walker", cell: SpriteCell(footprint: 1, heightPx: 40, widthPx: 32),
+                constructionFrames: 0, operationalFrames: 1,
+                moving: MovingPart(name: "gait") { kit, _ in
+                    kit.block(base, base + SCNVector3(0.1, height, 0.1), .wood)
+                },
+                plot: nil, unit: true
+            ) { _, _ in }
+        }
+        // Standing 5 pt up at the centre, a 1 m post and its shadow fit.
+        #expect(CellFit.problems(in: post(SCNVector3(3.33, 0, 3.33), height: 1)).isEmpty)
+        // At the bottom vertex its foot is on the bottom edge's far side.
+        #expect(!CellFit.problems(in: post(SCNVector3(4.0, 0, 4.0), height: 1)).isEmpty)
+        // A 3.5 m post throws its shadow past the right edge, though the post itself fits.
+        #expect(!CellFit.problems(in: post(SCNVector3(3.33, 0, 3.33), height: 3.5)).isEmpty)
+    }
+
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.
     @Test("a unit whose moving part crosses the cell edge does not fit")
     func unitCellFitIsStrict() {
