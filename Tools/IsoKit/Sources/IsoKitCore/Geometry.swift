@@ -44,23 +44,22 @@ public enum Iso {
     static let up = SCNVector3(-0.5 * invRoot2, cos30, -0.5 * invRoot2)
 }
 
-/// One atlas cell: a `footprint` x `rows` footprint (columns along x, rows along z), 32 points
-/// wide per column and per row, `heightPx` points tall. The cell's bottom-centre (SpriteKit anchor
+/// One atlas cell: a `footprint` x `rows` footprint (columns along x, rows along z), `heightPx` points
+/// tall and by default 32 points wide per column and per row; walkers ask for a narrower cell. The cell's bottom-centre (SpriteKit anchor
 /// (0.5, 0)) sits level with the footprint's bottom vertex, centred on the footprint's width; the
 /// renderer places non-square footprints the same way.
 public struct SpriteCell: Equatable {
     public let footprint: Int
     public let rows: Int
     public let heightPx: Int
+    /// Defaults to the footprint's width; a narrower cell stays centred on the same anchor.
+    public let widthPx: Int
 
-    public init(footprint: Int, rows: Int? = nil, heightPx: Int) {
+    public init(footprint: Int, rows: Int? = nil, heightPx: Int, widthPx: Int? = nil) {
         self.footprint = footprint
         self.rows = rows ?? footprint
         self.heightPx = heightPx
-    }
-
-    public var widthPx: Int {
-        32 * (footprint + rows)
+        self.widthPx = widthPx ?? 32 * (footprint + self.rows)
     }
 
     /// Extent along x (columns).
