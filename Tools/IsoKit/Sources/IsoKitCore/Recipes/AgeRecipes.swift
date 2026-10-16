@@ -11,7 +11,6 @@ enum AgePalette {
     static let panel = NSColor(red: 0.25, green: 0.22, blue: 0.20, alpha: 1)
     static let solar = NSColor(red: 0.14, green: 0.18, blue: 0.30, alpha: 1)
     static let pool = NSColor(red: 0.30, green: 0.56, blue: 0.70, alpha: 1)
-    static let glazing = NSColor(red: 0.34, green: 0.50, blue: 0.62, alpha: 1)
 }
 
 /// A house roof: a gable (ridge along x, or along z so the gable faces south), a hip, a mansard (steep
@@ -108,7 +107,7 @@ extension Recipes {
                         width: span.upperBound - span.lowerBound - 1.0,
                         height: 1.1
                     )
-                    kit.onFace(face, rect, depth: 0.06, finish: .paint(AgePalette.glazing))
+                    kit.onFace(face, rect, depth: 0.06, finish: .glazing)
                 }
                 continue
             }
