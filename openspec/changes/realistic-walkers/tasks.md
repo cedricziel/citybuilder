@@ -5,9 +5,9 @@
 
 ## 2. People in the game
 
-- [ ] 2.1 Tests first: walker lookup by variant, 8-frame entry, good → carrier family, routing to `Kit`, filtering stems equal the catalog, reverse coverage of every variant, facing and frame, the content gate's walker size and frames
-- [ ] 2.2 `walker.md` → `source = "isokit"` with the full sheet; `make sprites`; delete `Units.atlas/walker-*`
-- [ ] 2.3 `SpriteAnimation`/`SpriteAtlas` variants, `WalkerVariant.carrying`, `walkerAnchor`; carrier and stroller nodes use the anchor and the real facing (no `xScale` mirroring)
+- [ ] 2.1 Tests first: walker lookup by look, 8-frame entry, routing to `Kit`, filtering stems equal the catalog, reverse coverage of every look, load, facing and frame, the content gate's walker size and frames
+- [ ] 2.2 `walker.md` → `source = "isokit"` with the full sheet; `make sprites`; delete `Units.atlas/walker-*` and retire the atlas
+- [ ] 2.3 `SpriteAnimation`/`SpriteAtlas` looks and the 8-frame gait, `walkerAnchor`; carrier, plaza and stroller nodes use the anchor and the real facing (no `xScale` mirroring)
 - [ ] 2.4 In-game before/after (Mac, window-only capture); tell the life agent the lookup and names
 
 ## 3. Animals

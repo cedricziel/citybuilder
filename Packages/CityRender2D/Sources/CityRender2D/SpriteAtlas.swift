@@ -14,7 +14,6 @@ import AppKit
 /// `add-archipelago-and-sea` lands) extend this table.
 public enum SpriteAtlasRouting {
     public static let buildingsAtlasName = "Buildings"
-    public static let unitsAtlasName = "Units"
     public static let iconsAtlasName = "Icons"
     /// Art-kit renders, filtered linearly. SpriteKit applies one filtering mode to a whole atlas
     /// page, so they cannot share a page with nearest-filtered pixel art (design D7).
@@ -29,9 +28,8 @@ public enum SpriteAtlasRouting {
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         // Status badges drawn over buildings live in the Buildings atlas.
         if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
-        if spriteName.hasPrefix("walker-") { return unitsAtlasName }
-        if spriteName.hasPrefix("ship-") { return unitsAtlasName }
-        if spriteName.hasPrefix("carrier-") { return unitsAtlasName }
+        // People and ships are kit renders; the Units atlas is retired (realistic-walkers).
+        if ["walker-", "carrier-", "ship-"].contains(where: spriteName.hasPrefix) { return kitAtlasName }
         if spriteName.hasPrefix("good-") { return iconsAtlasName }
         return nil
     }
@@ -39,13 +37,13 @@ public enum SpriteAtlasRouting {
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        buildingsAtlasName, unitsAtlasName, iconsAtlasName, kitAtlasName
+        buildingsAtlasName, iconsAtlasName, kitAtlasName
     ]
 }
 
 /// Resolves terrain, building, and walker textures from the host app's
 /// main bundle. Sprites live in three category atlases under
-/// `Resources/` (`Terrain.atlas/`, `Buildings.atlas/`, `Units.atlas/`),
+/// `Resources/` (`Kit.atlas/`, `Buildings.atlas/`, `Icons.atlas/`),
 /// which Xcode packs into single GPU textures at build time. Lookups go
 /// through `SKTextureAtlas(named:)` — never `SKTexture(imageNamed:)`.
 ///
@@ -61,6 +59,20 @@ public enum SpriteAtlas {
     public enum WalkerFacing: String, CaseIterable, Hashable, Sendable {
         case ne, se, sw, nw
     }
+
+    /// A resident's look. Carriers have their own looks, by load (`carrierAnimation`).
+    public enum WalkerLook: String, CaseIterable, Hashable, Sendable {
+        case worker, woman
+
+        /// `walker` for the worker, `walker-woman` for the woman.
+        var stem: String {
+            self == .worker ? "walker" : "walker-\(rawValue)"
+        }
+    }
+
+    /// Walker sprites stand 2 pt above the bottom of their 30 pt cell, so the shadow under the feet
+    /// fits; nodes anchor there. Spec: `rendering-2_5d` / Figures stand on their feet.
+    public static let walkerAnchor = CGPoint(x: 0.5, y: 2.0 / 30.0)
 
     public static func terrainTexture(for kind: TerrainType) -> SKTexture? {
         texture(named: "terrain-\(kind.rawValue)")
@@ -140,10 +152,15 @@ public enum SpriteAtlas {
         return textureOrPlaceholder(named: name)
     }
 
-    /// Two-frame walk cycle for a given facing. Backed by `frames(for:)`
-    /// so all multi-frame lookups share one code path.
+    /// The walk cycle of a resident look in a facing; frame 0 is the standing pose. Backed by
+    /// `frames(for:)` so all multi-frame lookups share one code path.
+    public static func walkerAnimation(facing: WalkerFacing, look: WalkerLook) -> [SKTexture]? {
+        frames(for: .walker(facing, look))
+    }
+
+    /// The worker's walk cycle.
     public static func walkerAnimation(facing: WalkerFacing) -> [SKTexture]? {
-        frames(for: .walker(facing))
+        walkerAnimation(facing: facing, look: .worker)
     }
 
     /// Multi-frame lookup for any `AnimationKey`. Returns `nil` if any
@@ -345,12 +362,9 @@ public enum SpriteAtlas {
             }
         }
 
-        for facing in WalkerFacing.allCases {
-            if let entry = SpriteAnimation.entry(for: .walker(facing)) {
-                for frame in 0 ..< entry.frameCount {
-                    names.append(SpriteAnimation.assetName(for: .walker(facing), frame: frame))
-                }
-            }
+        for key in SpriteAnimation.AnimationKey.people {
+            let frames = SpriteAnimation.entry(for: key)?.frameCount ?? 0
+            names += (0 ..< frames).map { SpriteAnimation.assetName(for: key, frame: $0) }
         }
 
         // Ship sprites: 8 facings × 2 frames = 16 entries.

@@ -36,19 +36,20 @@ The sun comes from the screen's upper left. If a sprite is flipped with `xScale 
 
 | Family | Goods |
 |---|---|
-| sack | grain, flour, food, hops, grapes, tea leaves, tea, coffee cherries, coffee |
-| crate | bread, ore, charcoal, iron, tools |
+| sack | grain, flour, food, bread, hops, grapes, tea leaves, tea, coffee cherries, coffee |
+| crate | ore, charcoal, iron, tools |
 | barrel | beer, wine |
 | logs | wood, planks |
 
-`SpriteAtlas.WalkerVariant.carrying(_:)` maps a good to its family, and the default branch maps any new good to the sack. The life agent's carrier node calls it.
+`CarrierLoad.family(of:)` from `add-carrier-glide` maps a good to its family (bread travels as a sack there), and the carrier node looks the frames up with `carrierAnimation(load:facing:)`.
 
 ### D6. Names and atlas
 
-- People: `walker-<facing>-<frame>` (the worker) and `walker-<variant>-<facing>-<frame>`. The variants are `woman`, `carrier-sack`, `carrier-crate`, `carrier-barrel` and `carrier-logs`.
+- Residents: `walker-<facing>-<frame>` (the worker) and `walker-woman-<facing>-<frame>`.
+- Carriers: `carrier-<load>-<facing>-<frame>` for `sack`, `crate`, `barrel` and `logs`, the names `add-carrier-glide` reads.
 - Animals: `animal-<kind>-<action>-<facing>-<frame>` for `sheep` and `cow` with `walk` (8 frames) and `graze` (4 frames). Hens are `animal-hen-<facing>-<frame>`, 4 peck frames.
 
-Every stem is kit-rendered, so routing sends all of them to `Kit` (linear filtering, @2x twins). `Units.atlas` keeps no walker art.
+Every stem is kit-rendered, so routing sends all of them to `Kit` (linear filtering, @2x twins). With the walkers gone, `Units.atlas` is empty and retires; the `walker-`, `carrier-` and `ship-` prefixes fall back to `Kit`.
 
 ### D7. Budget
 

@@ -148,42 +148,42 @@ struct KitGateTests {
     func walkerFramesHaveTheWalkerSize() throws {
         let root = temporaryResources()
         try writeBrief(root, id: "walker", source: "isokit")
-        let atlas = root.appendingPathComponent("Units.atlas")
-        let figure = { (scale: Int) in image(width: 10 * scale, height: 16 * scale) { x, _ in x % 2 == 0 ? wall : roof } }
+        let atlas = root.appendingPathComponent("Kit.atlas")
+        let figure = { (scale: Int) in image(width: 24 * scale, height: 30 * scale) { x, _ in x % 2 == 0 ? wall : roof } }
         for facing in ["ne", "nw", "se", "sw"] {
-            for frame in 0 ..< 4 {
-                try writePNG(figure(1), to: atlas.appendingPathComponent("walker-\(facing)-\(frame).png"))
-                try writePNG(figure(2), to: atlas.appendingPathComponent("walker-\(facing)-\(frame)@2x.png"))
+            for frame in 0 ..< 8 {
+                try writePNG(figure(1), to: atlas.appendingPathComponent("walker-woman-\(facing)-\(frame).png"))
+                try writePNG(figure(2), to: atlas.appendingPathComponent("walker-woman-\(facing)-\(frame)@2x.png"))
             }
         }
         #expect(try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.9).isEmpty)
 
-        try writePNG(image(width: 8, height: 12) { _, _ in wall }, to: atlas.appendingPathComponent("walker-se-0.png"))
+        try writePNG(image(width: 10, height: 16) { _, _ in wall }, to: atlas.appendingPathComponent("walker-woman-se-0.png"))
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.9)
-        #expect(failures.contains(.init(file: "walker-se-0.png", reason: .walkerSize)))
+        #expect(failures.contains(.init(file: "walker-woman-se-0.png", reason: .walkerSize)))
     }
 
-    @Test("scenario: Every facing has four gait frames")
-    func everyFacingHasFourGaitFrames() throws {
+    @Test("scenario: A missing gait frame fails the gate")
+    func aMissingGaitFrameFailsTheGate() throws {
         let root = temporaryResources()
-        try writeBrief(root, id: "walker", source: "isokit")
-        let atlas = root.appendingPathComponent("Units.atlas")
+        try writeBrief(root, id: "carrier", source: "isokit")
+        let atlas = root.appendingPathComponent("Kit.atlas")
         for facing in ["ne", "nw", "se", "sw"] {
-            for frame in 0 ..< (facing == "nw" ? 3 : 4) {
+            for frame in 0 ..< 8 where !(facing == "nw" && frame == 5) {
                 try writePNG(
-                    image(width: 10, height: 16) { _, _ in wall },
-                    to: atlas.appendingPathComponent("walker-\(facing)-\(frame).png")
+                    image(width: 24, height: 30) { _, _ in wall },
+                    to: atlas.appendingPathComponent("carrier-sack-\(facing)-\(frame).png")
                 )
                 try writePNG(
-                    image(width: 20, height: 32) { _, _ in wall },
-                    to: atlas.appendingPathComponent("walker-\(facing)-\(frame)@2x.png")
+                    image(width: 48, height: 60) { _, _ in wall },
+                    to: atlas.appendingPathComponent("carrier-sack-\(facing)-\(frame)@2x.png")
                 )
             }
         }
 
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.9)
 
-        #expect(failures == [.init(file: "walker-nw-3.png", reason: .walkerFramesMissing)])
+        #expect(failures == [.init(file: "carrier-sack-nw-5.png", reason: .walkerFramesMissing)])
     }
 
     @Test("scenario: Verification fails on a content defect")
