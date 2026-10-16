@@ -178,3 +178,19 @@ func beachesKeepTheirColourBesideTheSea() {
     let shore = field.multiplier(atVertex: TileCoordinate(x: 10, y: 10))
     #expect(shore.y <= shore.x * 1.03, "beach edge tinted \(shore)")
 }
+
+@Test("A map of another shape rebuilds the field, even with the same tiles")
+func anotherMapShapeRebuildsTheField() throws {
+    var cache = GroundMacroCache()
+    let base = snapshot(season: .spring)
+    _ = cache.inputs(for: base)
+    let reshaped = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 4,
+        mapHeight: 16, terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles,
+        buildings: base.buildings, carriers: base.carriers, economy: base.economy,
+        totalPopulation: base.totalPopulation, camera: base.camera, date: base.date
+    )
+    let rebuilt = cache.inputs(for: reshaped)
+    let inputs = try #require(rebuilt)
+    #expect(inputs.width == 4 && inputs.height == 16)
+}

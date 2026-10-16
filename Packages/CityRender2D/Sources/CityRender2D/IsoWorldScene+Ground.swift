@@ -17,6 +17,7 @@ public struct GroundMacroInputs: Sendable {
 /// Tells the scene when to rebuild the macro field: only when the terrain, the occupied tiles or the
 /// season's look changed. Spring and summer share a look.
 public struct GroundMacroCache {
+    private var size: (width: Int, height: Int)?
     private var grid: [TerrainType]?
     private var occupancy: [TileCoordinate: EntityID]?
     private var look: Season?
@@ -27,7 +28,11 @@ public struct GroundMacroCache {
     /// The inputs of a new field when something it depends on changed since the last call, else nil.
     public mutating func inputs(for snapshot: WorldSnapshot) -> GroundMacroInputs? {
         let look = GroundMacroField.Look.season(of: snapshot.date.season)
-        guard grid != snapshot.terrainGrid || occupancy != snapshot.occupiedTiles || self.look != look else { return nil }
+        let mapSize = (width: snapshot.mapWidth, height: snapshot.mapHeight)
+        guard size.map({ $0 != mapSize }) ?? true || grid != snapshot.terrainGrid || occupancy != snapshot.occupiedTiles
+            || self.look != look
+        else { return nil }
+        size = mapSize
         grid = snapshot.terrainGrid
         occupancy = snapshot.occupiedTiles
         self.look = look
