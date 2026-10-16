@@ -2,7 +2,7 @@
 
     cd scripts && python3 -m audio.music.render            # write
     cd scripts && python3 -m audio.music.render --check    # compare
-    cd scripts && python3 -m audio.music.render --preview 30 --only music/x.caf  # first 30 s
+    cd scripts && python3 -m audio.music.render --only music/x.caf  # one piece
 """
 
 from __future__ import annotations
@@ -27,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--only")
     args = parser.parse_args(argv)
+    if args.only and args.only not in {piece.path for piece in pieces.PIECES}:
+        parser.error(f"no piece renders to {args.only}")
     stale = []
     for piece in pieces.PIECES:
         if args.only and piece.path != args.only:

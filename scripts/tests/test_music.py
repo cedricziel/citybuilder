@@ -60,3 +60,9 @@ def test_pieces_fit_the_size_cap():
 @pytest.mark.scenario("Regenerating reproduces the committed music")
 def test_committed_music_matches_its_scores():
     assert render.main(["--check"]) == 0
+
+
+def test_only_with_an_unknown_path_is_an_error():
+    with pytest.raises(SystemExit) as exit_info:
+        render.main(["--only", "music/no-such-piece.caf"])
+    assert exit_info.value.code == 2
