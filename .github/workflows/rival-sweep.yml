@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   sweep:
-    name: rival viability sweep
+    name: balance sweeps
     runs-on: macos-26
     timeout-minutes: 90
     steps:
@@ -31,29 +31,35 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Run the sweep (release build)
+      # Each sweep step keeps the test's exit status, writes its per-game
+      # lines even when a seed fails, and fails if it printed none.
+      - name: Run the rival viability sweep (release build)
         env:
           RIVAL_SWEEP: "1"
         shell: bash
         run: |
           set -o pipefail
+          status=0
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
-            --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log
+            --filter scenarioRivalsAreViableAcrossSeeds 2>&1 | tee rival-sweep.log || status=$?
           grep '^RIVAL_SWEEP' rival-sweep.log > rival-sweep.txt
+          exit "$status"
 
       - name: Run the solvency sweep (release build)
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           RIVAL_SWEEP: "1"
         shell: bash
         run: |
           set -o pipefail
+          status=0
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
-            --filter scenarioMarketTradingTownsStaySolventAcrossSeeds 2>&1 | tee solvency-sweep.log
+            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioWithoutTheMarketTheSameTownsGoBankrupt" 2>&1 | tee solvency-sweep.log || status=$?
           grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
+          exit "$status"
 
       - name: Upload the sweeps' per-game lines
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7.0.2
         with:
           name: rival-sweep
