@@ -68,23 +68,14 @@ struct CitybuilderTVApp: App {
         return TVSaveSync(store: store, client: CloudKitDatabaseClient(), deviceID: "Apple TV")
     }
 
-    /// With `-uiTestSeedPort` (Debug only) a new game starts from
-    /// `UITestSeed.portWorld()`, so the walk-throughs can reach Routes and
-    /// the manifest editor.
+    /// Debug builds start a new game from a `UITestSeed` world when launched with its flag
+    /// (`-uiTestSeedTown`, `-uiTestSeedShore`, `-uiTestSeedPort`), for UI tests and art reviews.
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedPort") {
-            return UITestSeed.portWorld()
-        }
-        if ProcessInfo.processInfo.arguments.contains("-uiTestSeedTown") {
-            let arguments = ProcessInfo.processInfo.arguments
-            return UITestSeed.townWorld(
-                showcase: UITestSeed.showcase(fromArguments: arguments),
-                season: UITestSeed.season(fromArguments: arguments)
-            )
-        }
-        #endif
+        return UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) ?? world
+        #else
         return world
+        #endif
     }
 
     var body: some Scene {

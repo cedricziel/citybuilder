@@ -31,6 +31,10 @@ public final class MinimapModel {
     public private(set) var terrainImage: CGImage?
     public private(set) var buildings: [MinimapBuildingMarker] = []
     public private(set) var ships: [MinimapShipDot] = []
+    /// The world's camera, mirrored once per frame by `GameSession` so the
+    /// camera rectangle redraws when the camera moves rather than every
+    /// tick.
+    public internal(set) var camera = Camera()
 
     static let markerInterval: UInt64 = 3
 
@@ -40,8 +44,15 @@ public final class MinimapModel {
     /// comparison returns at once. Design D2.
     @ObservationIgnored private var drawnTerrain: [TerrainType]?
     @ObservationIgnored private var markersTick: UInt64?
+    /// The raster changed since `terrainImage` was made from it.
+    @ObservationIgnored private var imageIsStale = false
 
     public init() {}
+
+    /// The projection of this map onto a minimap of `size` points.
+    public func projection(size: CGSize) -> MinimapProjection {
+        MinimapProjection(mapWidth: mapWidth, mapHeight: mapHeight, size: size)
+    }
 
     public func apply(_ snapshot: WorldSnapshot) {
         if let drawnTerrain, drawnTerrain != snapshot.terrainGrid {
@@ -54,9 +65,20 @@ public final class MinimapModel {
         } else if drawnTerrain == nil {
             drawTerrain(snapshot)
         }
+        if terrainImage == nil {
+            makeImage()
+        }
         if !markersAreDue(at: snapshot.tickCount) { return }
         markersTick = snapshot.tickCount
         rebuildMarkers(snapshot)
+        // A terrain change shows at the markers' cadence, so a forester
+        // planting every tick makes an image at most every 3 ticks.
+        if imageIsStale { makeImage() }
+    }
+
+    private func makeImage() {
+        terrainImage = terrainRaster.makeImage()
+        imageIsStale = false
     }
 
     private func markersAreDue(at tick: UInt64) -> Bool {
@@ -75,7 +97,7 @@ public final class MinimapModel {
 
     private func finishTerrain(_ snapshot: WorldSnapshot) {
         drawnTerrain = snapshot.terrainGrid
-        terrainImage = terrainRaster.makeImage()
+        imageIsStale = true
         terrainDrawCount += 1
     }
 

@@ -20,8 +20,7 @@ public enum StrollerPlanner {
     static let ticksPerTile: UInt64 = 12
 
     public static func strollers(in snapshot: WorldSnapshot) -> [Stroller] {
-        let phase = TimeOfDay(tick: snapshot.tickCount).phase
-        guard phase == .day || phase == .dusk else { return [] }
+        guard residentsOut(atTick: snapshot.tickCount) else { return [] }
         let roads = Set(snapshot.buildings.values.filter { $0.kind == .road && $0.state == .operational }.map(\.anchor))
         var result: [Stroller] = []
         for (id, pop) in snapshot.housePopulations.sorted(by: { $0.key.raw < $1.key.raw }) {

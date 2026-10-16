@@ -59,9 +59,11 @@ extension RivalAIState {
         scriptIndex >= RivalAI.opening.count
     }
 
-    /// Next script step; the growth loop wraps back to its start.
+    /// Next script step, with a fresh wait count; the growth loop wraps
+    /// back to its start.
     mutating func advance() {
         scriptIndex += 1
+        waitTurns = 0
         if scriptIndex >= RivalAI.opening.count + RivalAI.growthLoop.count {
             scriptIndex = RivalAI.opening.count
         }
@@ -89,6 +91,8 @@ struct RivalTurn {
     var hasHouseShortOfFood = false
     /// Room in the town center, where market purchases go.
     var centerFreeSpace = 0
+    /// Room across the rival's operational goods buffers.
+    var storeFreeSpace = 0
     let stock: [Good: Int]
 
     /// The threshold rules that apply, in order (design D5). A town
@@ -235,12 +239,10 @@ extension World {
         if let commands = rivalCommands(kind, turn: turn, plan: &plan) {
             pendingCommands += commands
             ai.advance()
-            ai.waitTurns = 0
         } else {
             ai.waitTurns += 1
             if ai.waitTurns >= RivalAI.waitLimit {
                 ai.advance()
-                ai.waitTurns = 0
             }
         }
         rivals[index].ai = ai
@@ -264,6 +266,9 @@ extension World {
         let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
             turn.cappedBuildings += building.kind == .road || building.kind == .forester ? 0 : 1
+            if building.state == .operational, Self.logisticsBufferKinds.contains(building.kind) {
+                turn.storeFreeSpace += stockpiles[building.id]?.freeSpace ?? 0
+            }
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
                 turn.waiting.insert(building.kind)
             }

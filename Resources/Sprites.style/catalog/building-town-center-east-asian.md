@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -8,10 +8,7 @@ The East Asian look of the first building placed on an island and the settlement
 
 ## Visual identity
 
-A three-storey pagoda on a stone platform: pale plaster storeys between red-lacquered posts, each under a flared slate roof that shrinks toward a finial. Stone lanterns at the platform's front corners.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, style `east-asian` in `STYLES`) in the register pinned by `world.md` § Building register. Same 3×3 footprint and bottom anchor as
-`building-town-center`.
+Rendered by IsoKit in the shared light rig. A three-storey pagoda on a stone platform: pale plaster storeys between red-lacquered posts, each under a slate hip roof that shrinks toward a bronze finial, with stone lanterns at the platform's front corners. Same 3×3 footprint and bottom anchor as `building-town-center`.
 
 ## Sheet
 
@@ -28,13 +25,14 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Frames keep the
-  finished building pixel-identical and add a rising smoke plume.
+The operational frames repeat the finished building.
+
+- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
 - Construction uses the shared `building-town-center-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-town-center-east-asian` (IsoKit), planned
-- Cell: set when the recipe lands
+- Recipe: `building-town-center-east-asian` (IsoKit)
+- Cell: 3×3 footprint, 224 pt tall
 - Construction stages: 0
 - Operational frames: 2
