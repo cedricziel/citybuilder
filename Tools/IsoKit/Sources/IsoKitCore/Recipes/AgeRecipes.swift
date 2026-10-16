@@ -335,8 +335,8 @@ extension Recipes {
             chimney: .plasterPale,
             extras: { kit, box in
                 if box.tier == 2 { kit.block(
-                    SCNVector3(box.lo.x + 1.0, box.top, box.lo.z + 1.0),
-                    SCNVector3(box.lo.x + 3.4, box.top + 0.08, box.lo.z + 3.4),
+                    SCNVector3(box.lo.x + 3.4, box.top, box.lo.z + 0.8),
+                    SCNVector3(box.hi.x - 0.6, box.top + 0.08, box.lo.z + 3.0),
                     .paint(AgePalette.pool)
                 ) }
                 if box.tier == 3 { kit.balconies(box) } else { kit.colonnadePergola(box) }
