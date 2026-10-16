@@ -46,8 +46,6 @@ targets:
         buildPhase: resources
       - path: Resources/Kit.atlas
         buildPhase: resources
-      - path: Resources/Units.atlas
-        buildPhase: resources
       - path: Resources/Icons.atlas
         buildPhase: resources
         excludes:
@@ -121,8 +119,6 @@ targets:
         buildPhase: resources
       - path: Resources/Kit.atlas
         buildPhase: resources
-      - path: Resources/Units.atlas
-        buildPhase: resources
       - path: Resources/Icons.atlas
         buildPhase: resources
         excludes:
@@ -180,8 +176,6 @@ targets:
       - path: Resources/Buildings.atlas
         buildPhase: resources
       - path: Resources/Kit.atlas
-        buildPhase: resources
-      - path: Resources/Units.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas
         buildPhase: resources

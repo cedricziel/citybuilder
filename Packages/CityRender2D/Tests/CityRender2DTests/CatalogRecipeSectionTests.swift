@@ -28,7 +28,7 @@ struct CatalogRecipeSectionTests {
     func unitBriefsNameFacingsAndFrames() throws {
         let walker = try recipeSection("walker")
         #expect(walker.contains("- Facings: ne, nw, se, sw"))
-        #expect(walker.contains("- Frames per facing: 4"))
+        #expect(walker.contains("- Frames per facing: 8"))
         #expect(!walker.contains { $0.hasPrefix("- Construction stages") })
     }
 }

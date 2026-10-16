@@ -56,5 +56,5 @@ func scenarioCarrierSpriteFallsBackToTheWalker() {
     #expect(SpriteAtlas.carrierAnimation(load: .sack, facing: .se) == SpriteAtlas.walkerAnimation(facing: .se))
     #expect(SpriteAnimation.assetName(for: .carrier(.sack, .se), frame: 1) == "carrier-sack-se-1")
     #expect(SpriteAnimation.entry(for: .carrier(.sack, .se)) == SpriteAnimation.entry(for: .walker(.se)))
-    #expect(SpriteAtlasRouting.atlasName(for: "carrier-sack-se-0") == SpriteAtlasRouting.unitsAtlasName)
+    #expect(SpriteAtlasRouting.atlasName(for: "carrier-sack-se-0") == SpriteAtlasRouting.kitAtlasName)
 }
