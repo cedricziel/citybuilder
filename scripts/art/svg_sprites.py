@@ -16,14 +16,21 @@ import sys
 import tempfile
 from pathlib import Path
 
-from art import roads, terrain_tiles
+from art import roads, terrain_objects, terrain_tiles
 
 SHEET_LINE = re.compile(r"^- \(\d+, *\d+\): `([a-z0-9-]+)`", re.MULTILINE)
 SOURCE_LINE = re.compile(r'^source\s*=\s*"([a-z]+)"', re.MULTILINE)
 
 
-def all_sources() -> dict[str, str]:
-    return {**terrain_tiles.sources(), **roads.sources()}
+def all_sources(wanted: set[str] | None = None) -> dict[str, str]:
+    """Every SVG source, or every tile and road plus the `wanted` terrain objects: objects are
+    ray-cast, so only the ones asked for are drawn."""
+    return {**terrain_tiles.sources(), **roads.sources(), **terrain_objects.sources(wanted)}
+
+
+def drawable_names() -> set[str]:
+    """Every sprite name an SVG source exists for, without ray-casting any object."""
+    return {*terrain_tiles.sources(), *roads.sources(), *terrain_objects.names()}
 
 
 def svg_entry_names(catalog: Path) -> list[str]:
@@ -60,9 +67,9 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--all", action="store_true")
     args = parser.parse_args(argv)
-    sources = all_sources()
-    if not args.all:
-        wanted = svg_entry_names(args.catalog)
+    wanted = None if args.all else svg_entry_names(args.catalog)
+    sources = all_sources(None if wanted is None else set(wanted))
+    if wanted is not None:
         missing = [name for name in wanted if name not in sources]
         if missing:
             print(f"[art.svg_sprites] no SVG source for: {', '.join(missing)}", file=sys.stderr)
