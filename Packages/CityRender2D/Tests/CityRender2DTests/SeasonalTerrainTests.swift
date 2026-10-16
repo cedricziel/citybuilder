@@ -47,7 +47,7 @@ private func renderedGrassTextureNames(season: Season) -> [String?] {
 func scenarioWinterTintsGrass() {
     let names = renderedGrassTextureNames(season: .winter)
     #expect(!names.isEmpty)
-    #expect(names.allSatisfy { $0 == "terrain-grass-winter" })
+    #expect(names.allSatisfy { $0?.hasPrefix("terrain-grass-winter") == true })
 }
 
 @MainActor
@@ -55,7 +55,7 @@ func scenarioWinterTintsGrass() {
 func scenarioSummerHasNoTint() {
     let names = renderedGrassTextureNames(season: .summer)
     #expect(!names.isEmpty)
-    #expect(names.allSatisfy { $0 == "terrain-grass" })
+    #expect(names.allSatisfy { $0 == "terrain-grass" || $0?.hasPrefix("terrain-grass-v") == true })
 }
 
 /// Grass changes with the season, so the shore that blends it does too, and a season change
@@ -112,4 +112,37 @@ func shoreWithoutSeasonalSetKeepsPlainTransition() {
     #expect(node.userData?[IsoWorldScene.textureNameKey] as? String == "terrain-grass-beach-t3")
     #expect(transition.assetName(in: .winter) == "terrain-grass-beach-t3-winter")
     #expect(TerrainTransition(upper: .beach, lower: .water, mask: 3).assetName(in: .winter) == "terrain-beach-water-t3")
+}
+
+@MainActor
+@Test("scenario: Grass variants are stable per tile")
+func grassVariantsAreStablePerTile() {
+    let first = renderedGrassTextureNames(season: .summer).compactMap(\.self).sorted()
+    let second = renderedGrassTextureNames(season: .summer).compactMap(\.self).sorted()
+    #expect(first == second)
+    #expect(Set(first).count > 1)
+    // Across a season change every tile keeps its variant, in the season's look.
+    let winter = renderedGrassTextureNames(season: .winter).compactMap(\.self).sorted()
+    let summerAsWinter = first.map { $0.replacingOccurrences(of: "terrain-grass", with: "terrain-grass-winter") }.sorted()
+    #expect(winter == summerAsWinter)
+}
+
+/// A missing grass variant falls back to the plain tile and says so, once.
+@MainActor
+@Test("A missing grass variant falls back to the plain tile and is logged once")
+func missingGrassVariantIsLoggedOnce() {
+    SpriteAtlas.resetMissLogForTesting()
+    var logged: [String] = []
+    SpriteAtlas.missLogHook = { logged.append($0) }
+    defer { SpriteAtlas.missLogHook = nil }
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { !$0.contains("-v") }
+    scene.dataSource = FixedSnapshot(grassSnapshot(season: .summer))
+    scene.update(0)
+    let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+    #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
+    let variants = logged.filter { $0.hasPrefix("terrain-grass-v") }
+    #expect(!variants.isEmpty)
+    #expect(variants.count == Set(variants).count)
 }

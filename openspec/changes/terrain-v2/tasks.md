@@ -13,8 +13,8 @@
 
 ## 3. Grass variants and shores (D2, D7)
 
-- [ ] 3.1 Tests first: grass variants share their edges; the scene picks grass variants per tile; routing for `-v<n>` grass names
-- [ ] 3.2 `art.ground` variants; drop the per-tile broad patch; straighter adjacent chords and the shore bands in `art.terrain_tiles`
+- [x] 3.1 Tests first: grass variants share their edges; the scene picks grass variants per tile; routing for `-v<n>` grass names
+- [x] 3.2 `art.ground` variants; drop the per-tile broad patch; straighter adjacent chords and the shore bands in `art.terrain_tiles`
 - [ ] 3.3 Catalog, `TextureFiltering`, `make sprites`, `make sprites-verify`; in-game before and after; PR
 
 ## 4. Trees (D3–D6, D9)

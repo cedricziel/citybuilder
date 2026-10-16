@@ -1,8 +1,8 @@
 import CityCore
 import SpriteKit
 
-/// Autumn and winter looks for vegetation. Spec: `rendering-2_5d` /
-/// Terrain shows the season (design D7).
+/// Autumn and winter looks for vegetation, and per-tile variants. Spec: `rendering-2_5d` /
+/// Terrain shows the season (design D7), Grass picks a variant per tile (terrain-v2, D2).
 extension IsoWorldScene {
     static let seasonalTerrain: Set<TerrainType> = [.grass, .forest]
 
@@ -16,29 +16,41 @@ extension IsoWorldScene {
         }
     }
 
-    private static var seasonalActionCache: [String: SKAction] = [:]
+    private static var terrainActionCache: [String: SKAction] = [:]
 
-    /// The seasonal sprite for a terrain tile, with its looping frames
-    /// when the kind animates, or nil to use the regular sprite.
-    func seasonalTerrainNode(kind: TerrainType) -> SKSpriteNode? {
-        guard let name = Self.seasonalTerrainName(kind: kind, season: appliedSeason),
-              hasSprite(name)
-        else { return nil }
+    /// The sprite for a tile drawn from its own terrain: the season's look when the atlas has it,
+    /// then the tile's variant of that look when the atlas has it (grass and rock come in variants).
+    func terrainSpriteName(kind: TerrainType, coord: TileCoordinate) -> String {
+        let seasonal = Self.seasonalTerrainName(kind: kind, season: appliedSeason).flatMap { hasSprite($0) ? $0 : nil }
+        let stem = seasonal ?? "terrain-\(kind.rawValue)"
+        let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
+        guard count > 1 else { return stem }
+        let variant = SpriteAtlas.variantAssetName(stem: stem, variant: SpriteAtlas.variantIndex(coord: coord, count: count))
+        guard hasSprite(variant) else {
+            SpriteAtlas.logMissOnce(variant) // rendering-2_5d: Missing-sprite fallback in release
+            return stem
+        }
+        return variant
+    }
+
+    /// A tile drawn from its own terrain, looping `<name>-<frame>` when its kind animates.
+    func plainTerrainNode(kind: TerrainType, coord: TileCoordinate) -> SKSpriteNode {
+        let name = terrainSpriteName(kind: kind, coord: coord)
         let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
         node.userData = [Self.textureNameKey: name]
-        if let action = Self.seasonalLoop(name: name, kind: kind) {
+        if let action = Self.terrainLoop(name: name, kind: kind) {
             node.run(action, withKey: "anim")
         }
         return node
     }
 
-    private static func seasonalLoop(name: String, kind: TerrainType) -> SKAction? {
-        if let hit = seasonalActionCache[name] { return hit }
+    private static func terrainLoop(name: String, kind: TerrainType) -> SKAction? {
+        if let hit = terrainActionCache[name] { return hit }
         guard let entry = SpriteAnimation.entry(for: .terrain(kind)), entry.loop == .forever else { return nil }
         let frames = (0 ..< entry.frameCount).compactMap { SpriteAtlas.texture(named: "\(name)-\($0)") }
         guard frames.count == entry.frameCount, frames.count > 1 else { return nil }
         let action = SKAction.repeatForever(.animate(with: frames, timePerFrame: entry.timePerFrame))
-        seasonalActionCache[name] = action
+        terrainActionCache[name] = action
         return action
     }
 }
