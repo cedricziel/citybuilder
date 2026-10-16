@@ -111,22 +111,6 @@ public enum SpriteAtlas {
         variant == 0 ? stem : "\(stem)-v\(variant)"
     }
 
-    /// Variant-aware terrain texture lookup. Falls back to the magenta
-    /// placeholder + log-once when the asset is missing, same contract as
-    /// `textureOrPlaceholder(named:)`.
-    public static func terrainTextureOrPlaceholder(
-        for kind: TerrainType,
-        coord: TileCoordinate
-    ) -> SKTexture {
-        textureOrPlaceholder(named: terrainAssetName(for: kind, coord: coord))
-    }
-
-    /// The per-tile terrain sprite name, variant included (`terrain-mountain-v2`).
-    static func terrainAssetName(for kind: TerrainType, coord: TileCoordinate) -> String {
-        let count = terrainVariantCounts[kind] ?? 1
-        return variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variantIndex(coord: coord, count: count))
-    }
-
     /// Variant-aware building texture lookup. Used for non-shore
     /// buildings whose idle sprite has variants (currently: road). Shore
     /// orientations are resolved separately via `ShoreOrientationMath`.
@@ -284,8 +268,8 @@ public enum SpriteAtlas {
                     names.append(SpriteAnimation.assetName(for: .terrain(kind), frame: frame))
                 }
             }
-            // Art variants (mountain): variant 0 already added above as
-            // the canonical stem; variants 1..N-1 use the `-vN` suffix.
+            // Art variants (grass, rock): variant 0 already added above as
+            // the canonical stem; variants 1..N-1 use the `-vN` suffix, with their frames.
             if let variantCount = terrainVariantCounts[kind], variantCount > 1 {
                 let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
                 for variant in 1 ..< variantCount {

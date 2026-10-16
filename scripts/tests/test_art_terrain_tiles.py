@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from art import svg_sprites, terrain_tiles
+from art import ground, svg_sprites, terrain_tiles
 
 needs_rsvg = pytest.mark.skipif(shutil.which("rsvg-convert") is None, reason="rsvg-convert not installed")
 
@@ -90,7 +90,7 @@ def test_neighbouring_tiles_join_without_a_seam(tmp_path: Path) -> None:
 
 def test_every_grass_variant_has_its_seasons_and_frames() -> None:
     names = set(terrain_tiles.sources())
-    for season in ("", "-autumn", "-winter"):
-        for variant in ("", "-v1", "-v2", "-v3"):
+    for season in ("", *(f"-{s}" for s in terrain_tiles.SEASONS)):
+        for variant in ("", *(f"-v{n}" for n in range(1, ground.GRASS_VARIANTS))):
             for frame in ("", "-0", "-1"):
                 assert f"terrain-grass{season}{variant}{frame}" in names

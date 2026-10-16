@@ -158,7 +158,7 @@ def full(texture: str) -> str:
 # Grass changes with the season, so its shore transitions do too (`-t<mask>-<season>`).
 SEASONS = ("autumn", "winter")
 # Every terrain tile the atlas has today: base tiles, animation frames, seasons and rock variants.
-GRASS = [f"grass{season}{variant}{frame}" for season in ("", "-autumn", "-winter")
+GRASS = [f"grass{season}{variant}{frame}" for season in ("", *(f"-{s}" for s in SEASONS))
          for variant in [""] + [f"-v{n}" for n in range(1, ground.GRASS_VARIANTS)] for frame in ("", "-0", "-1")]
 GROUND = [*GRASS, "beach", "beach-0", "beach-1",
           "water", "water-0", "water-1", "water-2", "water-3",

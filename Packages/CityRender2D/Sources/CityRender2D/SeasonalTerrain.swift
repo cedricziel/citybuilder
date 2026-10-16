@@ -24,6 +24,7 @@ extension IsoWorldScene {
         let seasonal = Self.seasonalTerrainName(kind: kind, season: appliedSeason).flatMap { hasSprite($0) ? $0 : nil }
         let stem = seasonal ?? "terrain-\(kind.rawValue)"
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
+        guard count > 1 else { return stem }
         let variant = SpriteAtlas.variantAssetName(stem: stem, variant: SpriteAtlas.variantIndex(coord: coord, count: count))
         return hasSprite(variant) ? variant : stem
     }
