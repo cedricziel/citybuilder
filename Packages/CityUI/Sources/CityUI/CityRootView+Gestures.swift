@@ -13,7 +13,8 @@ extension CityRootView {
     }
 
     /// Apple TV has neither drag nor pinch; its remote input arrives
-    /// separately.
+    /// separately. On the Mac, pinch, scroll and keys go through
+    /// `MacMapInputHost`, which zooms around the cursor.
     ///
     /// simultaneousGesture (vs .gesture) so the underlying SpriteKit scene
     /// still receives touch / mouse events for tap-tile selection. A bare
@@ -24,9 +25,16 @@ extension CityRootView {
         #if os(tvOS)
         tvMapLayer(content)
         #else
-        content
+        let panned = content
             .simultaneousGesture(panGesture, including: Self.panGestureMask(allowsPan: session.allowsCameraPan))
-            .simultaneousGesture(zoomGesture)
+        #if os(macOS)
+        panned
+            .background { MacMapInputHost(session: session, stepBack: stepBackState) }
+            .focusedSceneValue(\.gameSession, session)
+            .focusedSceneValue(\.gameHasSheet, isAnySheetPresented)
+        #else
+        panned.simultaneousGesture(zoomGesture)
+        #endif
         #endif
     }
 
@@ -54,7 +62,10 @@ extension CityRootView {
             }
     }
 
-    /// Pinch on iOS / two-finger trackpad on Mac. SwiftUI's
+    #endif
+
+    #if os(iOS)
+    /// Pinch on iOS. SwiftUI's
     /// MagnificationGesture reports a cumulative scale factor; we apply
     /// the delta since the last reading.
     var zoomGesture: some Gesture {

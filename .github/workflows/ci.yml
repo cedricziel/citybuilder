@@ -70,11 +70,26 @@ jobs:
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
 
-      # The sound generator promises the same bytes on every machine; the
-      # pytest job checks them on macOS, this checks them on Linux. Stdlib
-      # Python only, about two seconds.
-      - name: Procedural sounds match their recipes on Linux
-        run: make audio-check
+  # The sound generator and the music renderer promise the same bytes on
+  # every machine; the sprite pipeline's pytest job checks them on macOS,
+  # this checks them on Linux.
+  audio-linux:
+    name: audio renders match on Linux
+    needs: changes
+    if: needs.changes.outputs.sprites == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install numpy (pinned)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/audio"
+          "$RUNNER_TEMP/audio/bin/pip" install --quiet "numpy==$(sed -n 's/^numpy==//p' scripts/requirements.txt)"
+      - name: Sounds and music match their recipes
+        run: make audio-check music-check PYTHON="$RUNNER_TEMP/audio/bin/python"
 
   lint:
     name: lint
@@ -181,7 +196,7 @@ jobs:
 
       - name: Upload regenerated atlases
         if: failure() && matrix.package == 'CityRender2D'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: regenerated-atlases
           path: Resources/*.atlas/
@@ -222,14 +237,14 @@ jobs:
 
       - name: Upload macOS determinism JSON
         if: matrix.package == 'CityCore'
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
         if: always() && matrix.package == 'CityCore'
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/
@@ -401,7 +416,7 @@ jobs:
           sha256sum determinism/linux.json determinism/linux-36k.json
 
       - name: Upload Linux determinism JSON
-        uses: actions/upload-artifact@v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: determinism-linux
           path: determinism/linux*.json
@@ -436,7 +451,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [changes, lint, test, sprites, build, gamedata-fixture, determinism-linux, determinism-compare]
+    needs: [changes, lint, test, sprites, audio-linux, build, gamedata-fixture, determinism-linux, determinism-compare]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

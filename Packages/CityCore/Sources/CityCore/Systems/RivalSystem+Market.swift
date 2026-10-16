@@ -14,11 +14,17 @@ extension RivalAI {
     static let feedUnits = 5
     /// Goods a rival in need sells, in this order.
     static let saleOrder: [Good] = [.planks, .wood, .food]
+    /// Below this much room across its stores a rival sells surplus
+    /// planks and wood, keeping this many of each (`rival-surplus-sales` D1).
+    static let crowdedStoreSpace = 40
+    static let keepSurplus = 60
+    static let surplusGoods: [Good] = [.planks, .wood]
 }
 
 extension World {
     /// The trades a rival makes this turn instead of building, if any:
-    /// pay debts, or feed its houses. Buying what a step lacks happens
+    /// pay debts, sell surplus from crowded stores, or feed its houses.
+    /// Buying what a step lacks happens
     /// with the step itself (`shortfallBuys`).
     func rivalMarketCommands(turn: RivalTurn) -> [Command]? {
         let rival = turn.rival
@@ -27,7 +33,13 @@ extension World {
         let starvingAndFull = turn.storeFull && turn.stock[.food, default: 0] < 4
         if rival.treasury < RivalAI.debtThreshold || starvingAndFull {
             for good in RivalAI.saleOrder {
-                let units = min(turn.stock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))
+                let units = min(turn.ownStock[good, default: 0] - RivalAI.keepOnSale, rival.market.left(good, .sold))
+                if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
+            }
+        }
+        if turn.storeFreeSpace < RivalAI.crowdedStoreSpace {
+            for good in RivalAI.surplusGoods {
+                let units = min(turn.ownStock[good, default: 0] - RivalAI.keepSurplus, rival.market.left(good, .sold))
                 if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
             }
         }

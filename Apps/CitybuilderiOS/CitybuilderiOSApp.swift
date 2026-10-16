@@ -8,7 +8,7 @@ import SwiftUI
 @main
 struct CitybuilderiOSApp: App {
     private let audio: AudioStack
-    private let saveStore = SaveStore()
+    private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
     /// Stable slot used by Continue + pause-menu Save. The title-screen
     /// flow reads this UUID when the player taps Continue; the in-game
     /// Save Game button writes to it. Spec
@@ -18,6 +18,7 @@ struct CitybuilderiOSApp: App {
     init() {
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
+        UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
             .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeProvider in
                 AnyView(
@@ -52,19 +53,23 @@ struct CitybuilderiOSApp: App {
 
     /// With `-uiTestSeedTown` (Debug only) a new game starts from `UITestSeed.townWorld()`: the
     /// default island with finished houses around the town center, for before/after art screenshots;
-    /// `-uiTestSeason winter` starts it in that season. `-uiTestSeedShore` starts from
+    /// `-uiTestSeason winter` starts it in that season and `-uiTestCulture mediterranean` in that culture.
+    /// `-uiTestSeedShore` starts from
     /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
+    /// `-uiTestSeedLived` starts from `UITestSeed.livedTownWorld()`, an inhabited town at work.
+    /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
+    private static var uiTestSaveDirectory: URL? {
+        #if DEBUG
+        UITestSeed.saveDirectory(fromArguments: ProcessInfo.processInfo.arguments)
+        #else
+        nil
+        #endif
+    }
+
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-uiTestSeedShore") {
-            return UITestSeed.shoreWorld()
-        }
-        if arguments.contains("-uiTestSeedTown") {
-            return UITestSeed.townWorld(
-                showcase: UITestSeed.showcase(fromArguments: arguments),
-                season: UITestSeed.season(fromArguments: arguments)
-            )
+        if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {
+            return seeded
         }
         #endif
         return world
@@ -89,6 +94,7 @@ struct CitybuilderiOSApp: App {
                     )
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
+                    audio.beginSession()
                     return session
                 },
                 pauseMenuFactory: { [saveStore] session in

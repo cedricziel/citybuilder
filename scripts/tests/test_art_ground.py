@@ -46,3 +46,31 @@ def test_winter_twigs_stay_off_the_conifers() -> None:
     assert raised.any()
     red, green = surface.albedo[..., 0][raised], surface.albedo[..., 1][raised]
     assert (red <= green + 0.02).all()
+
+
+@pytest.mark.scenario("Variants share their edges")
+def test_grass_variants_share_their_edges() -> None:
+    """A variant differs only inside a window that vanishes on the tile edges, so any two join."""
+    base = ground.texture("grass")
+    for variant in range(1, ground.GRASS_VARIANTS):
+        other = ground.texture(f"grass-v{variant}")
+        assert np.abs(other - base).max() > 0.03  # it is a different tile
+        for edge in (other[0] - base[0], other[-1] - base[-1], other[:, 0] - base[:, 0], other[:, -1] - base[:, -1]):
+            assert np.abs(edge).max() < 1 / 255
+
+
+def test_noise_seeds_use_the_whole_name() -> None:
+    """Names that share their first eight characters still draw different noise: the grass sways."""
+    assert not np.allclose(ground.noise("grass-blades-0", 0.035), ground.noise("grass-blades-1", 0.035))
+
+
+@pytest.mark.parametrize("base,frames", [("grass", 2), ("grass-autumn", 2), ("grass-winter-v2", 2), ("beach", 2), ("water", 4)])
+def test_animated_ground_keeps_its_edges_in_every_frame(base: str, frames: int) -> None:
+    """Frames differ inside the tile only, so out-of-phase neighbours and the static shore tiles
+    (baked from frame 0) always meet the same edge."""
+    still = ground.texture(f"{base}-0")
+    for frame in range(1, frames):
+        moving = ground.texture(f"{base}-{frame}")
+        assert np.abs(moving - still).max() > 0.01  # it does animate
+        for edge in (moving[0] - still[0], moving[-1] - still[-1], moving[:, 0] - still[:, 0], moving[:, -1] - still[:, -1]):
+            assert np.abs(edge).max() < 2 / 255

@@ -93,15 +93,14 @@ private func terrainNamesTheRendererRequests() -> Set<String> {
     var names: Set<String> = []
     for kind in TerrainType.allCases {
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
-        for variant in 0 ..< count {
-            names.insert(SpriteAtlas.variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant))
-        }
         let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
-        names.formUnion((0 ..< frames).map { SpriteAnimation.assetName(for: .terrain(kind), frame: $0) })
-        for season in Season.allCases {
-            guard let seasonal = IsoWorldScene.seasonalTerrainName(kind: kind, season: season) else { continue }
-            names.insert(seasonal)
-            names.formUnion((0 ..< frames).map { "\(seasonal)-\($0)" })
+        let looks = ["terrain-\(kind.rawValue)"] + Season.allCases.compactMap { IsoWorldScene.seasonalTerrainName(kind: kind, season: $0) }
+        for look in looks {
+            for variant in 0 ..< count {
+                let name = SpriteAtlas.variantAssetName(stem: look, variant: variant)
+                names.insert(name)
+                names.formUnion((0 ..< frames).map { "\(name)-\($0)" })
+            }
         }
     }
     for pair in SpriteName.transitionPairs {
@@ -122,7 +121,9 @@ func everyRequestedTerrainSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
     let roads = RoadLinks.allMasks.flatMap { mask in [false, true].map { RoadLink(mask: mask, plaza: $0).assetName } }
     let names = terrainNamesTheRendererRequests().union(roads)
-    #expect(names.count >= 80 + 94) // terrain: 16 tiles and frames, 8 seasonal, 56 transitions; roads: 47 masks x 2
+    // terrain: 36 grass looks (3 seasons x 4 variants x base and 2 frames), 15 other tiles and frames,
+    // 56 transitions; roads: 47 masks x 2
+    #expect(names.count >= 107 + 94)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
@@ -155,13 +156,15 @@ func everyRequestedBuildingSpriteIsOnDisk() {
     var looks = 0
     for kind in IsoWorldScene.cultureVariantKinds.sorted(by: { $0.rawValue < $1.rawValue }) {
         for culture in Culture.allCases {
-            guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: .peasants, culture: culture),
-                  TextureFiltering.kitRenderedStems.contains(look)
-            else { continue }
-            looks += 1
-            names.append(look)
-            let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
-            names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+            for tier in kind == .house ? HouseTier.allCases : [.peasants] {
+                guard let look = IsoWorldScene.cultureTextureName(kind: kind, houseTier: tier, culture: culture),
+                      TextureFiltering.kitRenderedStems.contains(look)
+                else { continue }
+                looks += 1
+                names.append(look)
+                let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
+                names += (0 ..< frames).map { "\(look)-operational-\($0)" }
+            }
         }
     }
     // Shore buildings draw one look per facing (`-n/-e/-s/-w`), each with its stages and frames.
@@ -192,7 +195,7 @@ func everyRequestedBuildingSpriteIsOnDisk() {
     // Every migrated kind contributes its base and three construction stages at least, so the walk
     // can never pass by checking nothing.
     #expect(!kinds.isEmpty)
-    #expect(looks >= 6, "the warehouse and library looks of three cultures")
+    #expect(looks == 18, "the house tiers, town center, warehouse and library looks of three cultures")
     #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
     #expect(names.count >= kinds.count * 4 + looks + facings * 2)
     let missing = names.sorted().flatMap { name -> [String] in

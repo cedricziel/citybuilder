@@ -23,7 +23,7 @@ public enum RemoteDirection: Hashable, Sendable, CaseIterable {
 /// so every tile can be the reticle tile. Spec: `tv-remote-controls` /
 /// Reticle marks the target tile, Zoom without pinch. Design D1.
 public extension GameSession {
-    static let zoomStep = 1.5
+    nonisolated static let zoomStep = 1.5
 
     /// Switches the session to the Apple TV input rules.
     func useAppleTVInput() {
@@ -55,16 +55,21 @@ public extension GameSession {
         world.camera.multiplyZoom(by: 1 / Self.zoomStep)
     }
 
-    /// Steps the zoom through 2.0, 1.0 and 0.5, wrapping; any other zoom
-    /// goes to 1.0.
+    /// Steps the zoom through 2.0, 1.0, 0.5 and the map overview, wrapping
+    /// back to 2.0; any other zoom goes to 1.0. Spec: `platform-shells` /
+    /// Apple TV map overview.
     func cycleZoomLevel() {
-        let next = switch world.camera.zoom {
-        case 2.0: 1.0
-        case 1.0: 0.5
-        case 0.5: 2.0
-        default: 1.0
+        if overview != nil {
+            closeOverview()
+            world.camera.setZoom(2.0)
+            return
         }
-        world.camera.setZoom(next)
+        switch world.camera.zoom {
+        case 2.0: world.camera.setZoom(1.0)
+        case 1.0: world.camera.setZoom(0.5)
+        case 0.5: openOverview()
+        default: world.camera.setZoom(1.0)
+        }
     }
 
     /// Runs after every camera move.

@@ -20,13 +20,22 @@ extension IsoWorldScene {
     /// offset (a building's footprint offset) is added to the anchor
     /// tile's screen point, and buildings are depth-sorted by the
     /// iso depth of their footprint centre so nearer ones draw on top.
+    /// A building's z for its iso depth (anchor x + y plus half its
+    /// footprint), so nearer buildings draw on top.
+    static func depthZ(_ depth: Double) -> CGFloat {
+        10 + CGFloat(depth) * 0.01
+    }
+
+    /// Lifts a figure just above the building at its depth, below the next.
+    static let figureLift: CGFloat = 0.004
+
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
         node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
         if case let .building(_, _, footprint, _, _, _, _, _, _, _) = spec.kind {
             let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
-            node.zPosition = 10 + CGFloat(depth) * 0.01
+            node.zPosition = Self.depthZ(depth)
         }
         return node
     }
@@ -51,21 +60,10 @@ extension IsoWorldScene {
             node.zPosition = 0
             return node
         }
-        if let seasonal = seasonalTerrainNode(kind: kind) {
-            seasonal.zPosition = 0
-            return seasonal
-        }
-        // Variant-aware lookup picks a deterministic per-tile sprite for
-        // kinds with multiple variants (mountain); falls through to the
-        // canonical sprite for all others. Placeholder path satisfies the
-        // rendering-2_5d `Missing-sprite fallback in release` requirement.
-        let name = SpriteAtlas.terrainAssetName(for: kind, coord: coord)
-        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
-        node.userData = [Self.textureNameKey: name]
+        // The season's look, in the tile's variant; a missing sprite draws the placeholder
+        // (rendering-2_5d `Missing-sprite fallback in release`).
+        let node = plainTerrainNode(kind: kind, coord: coord)
         node.zPosition = 0
-        if let action = SpriteAnimation.loopingAction(for: .terrain(kind)) {
-            node.run(action, withKey: "anim")
-        }
         return node
     }
 

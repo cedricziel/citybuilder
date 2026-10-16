@@ -61,6 +61,30 @@ public enum InspectorCalloutLayout {
         return (origin, side)
     }
 
+    /// Where the HUD's top bar ends: the minimap's top in the dock layout
+    /// and the callout's highest edge.
+    static func topBarBottom(topInset: CGFloat, layout: HUDLayout) -> CGFloat {
+        topInset + layout.margin + layout.controlHeight + 8
+    }
+
+    /// The safe area minus the pill row, rail and dock, and the minimap's
+    /// band while it shows. Spec: `platform-shells` / Minimap layout.
+    public static func freeArea(size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool) -> CGRect {
+        let margin = layout.margin
+        var top = topBarBottom(topInset: insets.top, layout: layout)
+        let left = insets.leading + margin + layout.railInset
+        let right = size.width - insets.trailing - margin
+        var bottom = size.height - insets.bottom - margin - (layout.placement == .bottomDock ? 74 : 0)
+        if showsMinimap {
+            let minimap = MinimapLayout.frame(in: size, insets: insets, layout: layout)
+            switch MinimapLayout.corner(for: layout) {
+            case .bottomTrailing: bottom = min(bottom, minimap.minY - MinimapLayout.gap)
+            case .topTrailing: top = max(top, minimap.maxY + MinimapLayout.gap)
+            }
+        }
+        return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
+    }
+
     private static func clamp(_ value: CGFloat, length: CGFloat, from low: CGFloat, to high: CGFloat) -> CGFloat {
         max(low, min(value, high - length))
     }
@@ -89,6 +113,7 @@ struct InspectorCalloutView<Actions: View>: View {
     let viewModel: InspectorViewModel
     let tile: TileCoordinate
     let layout: HUDLayout
+    let showsMinimap: Bool
     @Binding var isExpanded: Bool
     @ViewBuilder let actions: () -> Actions
     @State private var size = CGSize(width: InspectorCalloutLayout.width, height: 120)
@@ -110,7 +135,9 @@ struct InspectorCalloutView<Actions: View>: View {
         // Full-screen coordinates, the same space the world view projects into.
         GeometryReader { proxy in
             let (anchor, half) = projection(viewSize: proxy.size)
-            let bounds = freeArea(size: proxy.size, insets: insets)
+            let bounds = InspectorCalloutLayout.freeArea(
+                size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap
+            )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,
                 buildingHalfSize: half,
@@ -146,16 +173,6 @@ struct InspectorCalloutView<Actions: View>: View {
             CGPoint(x: (first.x + last.x) / 2, y: (first.y + last.y) / 2),
             CGSize(width: span * 32, height: span * 16)
         )
-    }
-
-    /// The safe area minus the pill row, rail and dock.
-    private func freeArea(size: CGSize, insets: EdgeInsets) -> CGRect {
-        let margin = layout.margin
-        let top = insets.top + margin + layout.controlHeight + 8
-        let left = insets.leading + margin + (layout.placement == .leftRail ? layout.railWidth + 8 : 0)
-        let right = size.width - insets.trailing - margin
-        let bottom = size.height - insets.bottom - margin - (layout.placement == .bottomDock ? 74 : 0)
-        return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
     }
 
     /// The details, such as the town center market, scroll when the

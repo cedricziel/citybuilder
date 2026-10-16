@@ -27,13 +27,45 @@ xcodebuild -project Citybuilder.xcodeproj -scheme CitybuilderMac \
 ## Flows worth driving
 
 - **Title:** New Game… → Single Island / Default seed → Start.
-- **Town for art shots:** launch with `-uiTestSeedTown` (Debug only); New Game then starts on the seed-0 island with four finished houses beside the town center. The `iso-sprite-authoring` skill covers before/after shots.
+- **Town for art shots:** launch with `-uiTestSeedTown` (Debug only); New Game then starts on the seed-0 island with four finished houses beside the town center. Add `-uiTestStartGame` to skip the title (see "In-game shots without input"). The `iso-sprite-authoring` skill covers before/after shots.
 - **Build:** Arm a palette button, then tap a grass tile.
   - Starting stock is wood 6 / planks 5 / food 2.
   - Lumberjack (2 wood, $80) succeeds; a house (4 planks) fits too.
   - Locked buildings show a lock and are rejected with "Needs <Tech> research".
 - **Camera:** Pinch with two fingers (`touch2_path`) to zoom out and read the whole island.
 - **Pause:** The pause button opens the menu. Tap Save Game ("Saved" appears), then Quit to Title. The title screen should now offer Continue, which restores money, buildings, and camera.
+
+## In-game shots without input (Mac app)
+
+Debug builds take launch flags that set up a scene, so a shot needs no clicks and no simulator:
+
+| Flag                     | Effect                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-uiTestSeedTown`        | The seed-0 island with four finished houses by the town center. Add `-uiTestShowcase <category>` (`gather`, `craft`, `town`) and `-uiTestSeason <season>`. |
+| `-uiTestSeedShore`       | A port, a shipyard and a ship on the coast, camera on the port.                                                                                            |
+| `-uiTestSeedPort`        | A Renaissance game with a player port, camera on it.                                                                                                       |
+| `-uiTestSeedLived`       | The town with farms and workshops working and residents in the houses.                                                                                     |
+| `-uiTestStartGame`       | Skips the title and starts the game at once, from the seed above (or a regular new game).                                                                  |
+| `-uiTestCamera x,y,zoom` | Puts the seeded game's camera on tile (x, y) at that zoom (0.25 to 4).                                                                                     |
+
+1. Build `CitybuilderMac` into your own derived-data folder (above).
+2. Launch your binary, never the bundle id, so you never touch an instance someone else is running:
+
+   ```bash
+   open -g -n <scratch>/dd-mac/Build/Products/Debug/Citybuilder.app --args \
+     -Citybuilder.macLaunchFullscreen NO -ApplePersistenceIgnoreState YES \
+     -uiTestSeedTown -uiTestStartGame [-uiTestSeason autumn] [-uiTestCamera 40.5,61.5,0.5]
+   ```
+
+   A background launch sometimes opens no window. `open -g <app>` again sends a reopen event, and SwiftUI opens one.
+
+3. Find your window by your process: `pgrep -f '<scratch>/dd-mac/.*/Citybuilder'`, then the window whose owner PID matches in `CGWindowListCopyWindowInfo`.
+4. `screencapture -x -o -l<windowid> shot.png` captures only that window, even behind others.
+5. Quit your instance (`kill <pid>`).
+
+Any `-uiTest…` flag also gives the launch a save folder of its own under the temporary directory (and, on Apple TV, an in-memory iCloud), so pause-menu and quit-to-title saves never touch the player's games or Continue slot.
+
+Never click, type or use accessibility actions in a Citybuilder window: another session, or the owner, may be playing a build with the same bundle id.
 
 ## Apple TV
 

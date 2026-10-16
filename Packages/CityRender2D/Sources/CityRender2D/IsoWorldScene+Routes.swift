@@ -32,8 +32,9 @@ extension IsoWorldScene {
     func reconcileShips(with snapshot: WorldSnapshot) {
         if shipLayer.parent == nil {
             addChild(shipLayer)
+            addChild(shipLayer.wakeLayer)
         }
-        shipLayer.reconcile(snapshot: snapshot, viewSize: size)
+        shipLayer.reconcile(snapshot: snapshot, viewSize: size, reduceMotion: reduceMotion)
     }
 }
 
@@ -126,13 +127,17 @@ final class ShipLayerNode: SKNode {
         let tick: UInt64
         let camera: Camera
         let viewSize: CGSize
+        let reduceMotion: Bool
     }
 
     private var lastPass: PassKey?
+    /// Where wake foam is left; the scene adds it under the buildings.
+    let wakeLayer = SKNode()
 
     override init() {
         super.init()
         zPosition = RouteLayerZPosition.ships
+        wakeLayer.zPosition = ShipWake.layerZ
     }
 
     @available(*, unavailable)
@@ -145,8 +150,13 @@ final class ShipLayerNode: SKNode {
         visuals[id]?.texture
     }
 
-    func reconcile(snapshot: WorldSnapshot, viewSize: CGSize) {
-        let pass = PassKey(tick: snapshot.tickCount, camera: snapshot.camera, viewSize: viewSize)
+    /// The wake emitter of a ship, for tests.
+    func wake(of id: EntityID) -> SKEmitterNode? {
+        visuals[id]?.node.childNode(withName: ShipWake.emitterName) as? SKEmitterNode
+    }
+
+    func reconcile(snapshot: WorldSnapshot, viewSize: CGSize, reduceMotion: Bool = false) {
+        let pass = PassKey(tick: snapshot.tickCount, camera: snapshot.camera, viewSize: viewSize, reduceMotion: reduceMotion)
         guard pass != lastPass else { return }
         lastPass = pass
         let visible = snapshot.ships.filter {
@@ -157,12 +167,13 @@ final class ShipLayerNode: SKNode {
             visual.node.removeFromParent()
             visuals.removeValue(forKey: id)
         }
+        let zoomedOut = snapshot.camera.zoom < 0.5
         for ship in visible {
-            update(ship, tick: snapshot.tickCount)
+            update(ship, tick: snapshot.tickCount, reduceMotion: reduceMotion, zoomedOut: zoomedOut)
         }
     }
 
-    private func update(_ ship: Ship, tick: UInt64) {
+    private func update(_ ship: Ship, tick: UInt64, reduceMotion: Bool, zoomedOut: Bool) {
         let frame = ship.state == .sailing ? Int(tick / 5 % 2) : 0
         let texture = ShipRenderMath.textureName(facing: ShipRenderMath.facing(forHeading: ship.heading), frame: frame)
         let target = ShipRenderMath.screenPoint(for: ship.position)
@@ -171,6 +182,7 @@ final class ShipLayerNode: SKNode {
             node.name = "ship-\(ship.id.raw)"
             node.anchorPoint = CGPoint(x: 0.5, y: 0.3)
             node.position = target
+            node.addChild(ShipWake.makeEmitter(in: wakeLayer))
             visuals[ship.id] = ShipVisual(node: node, texture: texture, target: target)
             addChild(node)
             return
@@ -185,6 +197,9 @@ final class ShipLayerNode: SKNode {
             visual.target = target
             visual.node.removeAction(forKey: "move")
             visual.node.run(.move(to: target, duration: 0.1), withKey: "move")
+            if let wake = visual.node.childNode(withName: ShipWake.emitterName) as? SKEmitterNode {
+                ShipWake.lay(wake, heading: ship.heading, reduceMotion: reduceMotion, zoomedOut: zoomedOut)
+            }
         }
         visuals[ship.id] = visual
     }

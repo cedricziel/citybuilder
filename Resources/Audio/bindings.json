@@ -1,6 +1,75 @@
 {
   "version": 1,
   "bindings": {
+    "ui.tap": [
+      { "file": "ui/tap.caf", "bus": "sfx", "volume": 0.35 }
+    ],
+    "ui.select": [
+      { "file": "ui/select.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.toggle": [
+      { "file": "ui/toggle.caf", "bus": "sfx", "volume": 0.45 }
+    ],
+    "ui.open": [
+      { "file": "ui/open.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.close": [
+      { "file": "ui/close.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "ui.reject": [
+      { "file": "sfx/rejected.caf", "bus": "sfx", "volume": 0.7 }
+    ],
+    "buildingDemolished": [
+      { "file": "sfx/demolish.caf", "bus": "sfx", "volume": 0.8 }
+    ],
+    "placementRejected": [
+      { "file": "sfx/rejected.caf", "bus": "sfx", "volume": 0.7 }
+    ],
+    "bankruptcyWarning": [
+      { "file": "sfx/warning-bell.caf", "bus": "sfx", "volume": 0.9 }
+    ],
+    "bankruptcyResolved": [
+      { "file": "sfx/relief.caf", "bus": "sfx", "volume": 0.7 }
+    ],
+    "seasonChanged": [
+      { "file": "sfx/season.caf", "bus": "sfx", "volume": 0.6 }
+    ],
+    "historyEvent": [
+      { "file": "sfx/handbell.caf", "bus": "sfx", "volume": 0.7 }
+    ],
+    "ageAdvanced": [
+      { "file": "sfx/age-peal.caf", "bus": "sfx", "volume": 0.9 }
+    ],
+    "rivalAgeAdvanced": [
+      { "file": "sfx/age-peal.caf", "bus": "sfx", "volume": 0.4 }
+    ],
+    "scenarioWon": [
+      { "file": "sfx/victory-peal.caf", "bus": "sfx", "volume": 1.0 }
+    ],
+    "monumentCompleted": [
+      { "file": "sfx/great-bell.caf", "bus": "sfx", "volume": 0.9 }
+    ],
+    "fuelRanOut": [
+      { "file": "sfx/embers.caf", "bus": "sfx", "volume": 0.5 }
+    ],
+    "commissionStarted": [
+      { "file": "sfx/commission.caf", "bus": "sfx", "volume": 0.6 }
+    ],
+    "marketTraded": [
+      { "file": "sfx/coins-1.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-3.caf", "bus": "sfx", "volume": 0.6 }
+    ],
+    "tradeCompleted": [
+      { "file": "sfx/coins-1.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-3.caf", "bus": "sfx", "volume": 0.6 }
+    ],
+    "caravanSold": [
+      { "file": "sfx/coins-1.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-3.caf", "bus": "sfx", "volume": 0.6 }
+    ],
     "buildingPlaced": [
       { "file": "ui/place-thunk.caf", "bus": "sfx", "volume": 0.9 }
     ],
@@ -65,15 +134,26 @@
     ]
   },
   "music": {
+    "title": { "file": "music/bridge-at-dawn.caf" },
     "tracks": [
-      { "file": "music/bards-tale.m4a" }
+      { "file": "music/hearth-and-harvest.caf" },
+      { "file": "music/bards-tale.m4a" },
+      { "file": "music/market-day.caf", "seasons": ["summer"] },
+      { "file": "music/long-night.caf", "seasons": ["winter"] },
+      { "file": "music/ships-on-the-sound.caf", "seasons": ["spring", "autumn"] }
     ],
+    "crossfadeSeconds": 3.0,
     "shuffle": "no-repeat-within-last-two",
     "gapSecondsBetweenTracks": 30.0
   },
   "ambient": {
-    "tracks": [
-      { "file": "ambient/forest-birds.caf" }
-    ]
+    "tracks": [],
+    "seasons": {
+      "spring": "ambient/forest-birds.caf",
+      "summer": "ambient/summer-meadow.caf",
+      "autumn": "ambient/autumn-wind.caf",
+      "winter": "ambient/winter-wind.caf"
+    },
+    "coast": "ambient/coast.caf"
   }
 }

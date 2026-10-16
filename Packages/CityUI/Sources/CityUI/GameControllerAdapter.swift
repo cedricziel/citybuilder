@@ -5,18 +5,19 @@ import Foundation
 public struct ControllerSnapshot: Sendable {
     public var leftStick: (x: Double, y: Double)
     public var dpad: RemoteDirection?
-    public var buttonA, buttonB, buttonY, menu: Bool
+    public var buttonA, buttonB, buttonX, buttonY, menu: Bool
     public var leftTrigger, rightTrigger: Double
 
     public init(
         leftStick: (x: Double, y: Double) = (0, 0), dpad: RemoteDirection? = nil,
-        buttonA: Bool = false, buttonB: Bool = false, buttonY: Bool = false, menu: Bool = false,
+        buttonA: Bool = false, buttonB: Bool = false, buttonX: Bool = false, buttonY: Bool = false, menu: Bool = false,
         leftTrigger: Double = 0, rightTrigger: Double = 0
     ) {
         self.leftStick = leftStick
         self.dpad = dpad
         self.buttonA = buttonA
         self.buttonB = buttonB
+        self.buttonX = buttonX
         self.buttonY = buttonY
         self.menu = menu
         self.leftTrigger = leftTrigger
@@ -68,6 +69,7 @@ public struct GameControllerAdapter: Sendable {
         }
         inputs += Self.edges(controller.buttonA, next.buttonA, down: .selectDown, up: .selectUp)
         if next.buttonB, !controller.buttonB { inputs.append(.back) }
+        if next.buttonX, !controller.buttonX { inputs.append(.overview) }
         inputs += Self.edges(controller.buttonY, next.buttonY, down: .playPauseDown, up: .playPauseUp)
         if next.menu, !controller.menu { inputs.append(.menu) }
         let (stickX, stickY) = next.leftStick

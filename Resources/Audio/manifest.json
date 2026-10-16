@@ -119,6 +119,202 @@
       "author": "Citybuilder sound generator",
       "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
       "license": "CC0"
+    },
+    {
+      "path": "sfx/demolish.caf",
+      "title": "Timber collapsing",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/rejected.caf",
+      "title": "Two dull knocks",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/warning-bell.caf",
+      "title": "A low warning bell",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/relief.caf",
+      "title": "Two rising chimes",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/season.caf",
+      "title": "A wind chime stirs",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/handbell.caf",
+      "title": "A handbell rung three times",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/age-peal.caf",
+      "title": "A peal of four bells",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/victory-peal.caf",
+      "title": "A rising peal",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/great-bell.caf",
+      "title": "A deep great bell",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/embers.caf",
+      "title": "Embers hissing out",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/commission.caf",
+      "title": "A soft two-note chime",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/coins-1.caf",
+      "title": "A few coins",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/coins-2.caf",
+      "title": "A handful of coins",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "sfx/coins-3.caf",
+      "title": "A purse emptied",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/summer-meadow.caf",
+      "title": "Summer: crickets, cicadas and a lazy breeze",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/autumn-wind.caf",
+      "title": "Autumn: gusts through dry leaves, a distant crow",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/winter-wind.caf",
+      "title": "Winter: a cold wind whistling",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ambient/coast.caf",
+      "title": "Coast: waves on a beach and gulls",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/tap.caf",
+      "title": "A light wooden tick",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/select.caf",
+      "title": "Two quick bright ticks",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/toggle.caf",
+      "title": "A latch clicking over",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/open.caf",
+      "title": "Parchment unfurling",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "ui/close.caf",
+      "title": "Parchment rolled up",
+      "author": "Citybuilder sound generator",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
+      "license": "CC0"
+    },
+    {
+      "path": "music/bridge-at-dawn.caf",
+      "title": "The Bridge at Dawn (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/hearth-and-harvest.caf",
+      "title": "Hearth and Harvest (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/market-day.caf",
+      "title": "Market Day (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/long-night.caf",
+      "title": "The Long Night (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
+    },
+    {
+      "path": "music/ships-on-the-sound.caf",
+      "title": "Ships on the Sound (original, generated in-repo)",
+      "author": "Citybuilder original score",
+      "source": "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio/music",
+      "license": "CC0"
     }
   ]
 }

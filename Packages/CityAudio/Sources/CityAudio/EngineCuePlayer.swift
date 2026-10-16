@@ -21,8 +21,12 @@ public final class EngineCuePlayer {
     /// upfront and round-robin through them.
     private var oneShotPool: [AudioBus: [AVAudioPlayerNode]] = [:]
     private var nextPoolIndex: [AudioBus: Int] = [:]
+    /// When each pooled node's cue ends, so a new one-shot doesn't cut it off.
+    private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
+    /// Music tracks playing once, by path.
+    private var musicVoices: [String: PlayerVoice] = [:]
     /// Building loops, one voice per entity, nearest the listener.
     private lazy var buildingLoops = EntityLoopMixer { [unowned self] dispatched in
         self.makeVoice(for: dispatched)
@@ -39,6 +43,7 @@ public final class EngineCuePlayer {
             }
             oneShotPool[bus] = nodes
             nextPoolIndex[bus] = 0
+            poolSlots[bus] = Array(repeating: OneShotPool.Slot(endsAt: 0, isLong: false), count: oneShotPoolSize)
         }
     }
 
@@ -70,6 +75,34 @@ public final class EngineCuePlayer {
         detach(player)
     }
 
+    /// Starts `path` once on the music bus, fading in over `fade` seconds.
+    public func playMusic(_ path: String, fade: Double) {
+        guard let file = loadFile(at: path), (try? engine.start()) != nil else { return }
+        musicVoices.removeValue(forKey: path)?.stop(fade: 0)
+        let node = AVAudioPlayerNode()
+        engine.underlyingEngine.attach(node)
+        engine.underlyingEngine.connect(node, to: engine.bus(.music), format: file.processingFormat)
+        let voice = PlayerVoice(node: node, file: file, engine: engine.underlyingEngine, volume: 1, loops: false)
+        musicVoices[path] = voice
+        voice.start(fade: fade)
+    }
+
+    /// Fades the music track `path` out over `fade` seconds and releases it.
+    public func fadeOutMusic(_ path: String, fade: Double) {
+        musicVoices.removeValue(forKey: path)?.stop(fade: fade)
+    }
+
+    /// The length of the bundled file at `path`, in seconds.
+    public func duration(of path: String) -> Double? {
+        guard let file = loadFile(at: path) else { return nil }
+        return Double(file.length) / file.processingFormat.sampleRate
+    }
+
+    /// Sets the volume of the path-keyed loop for `path`, if it plays.
+    public func setLoopVolume(path: String, volume: Float) {
+        loopPlayers[path]?.volume = volume
+    }
+
     /// Halts the building loop of `entity`; another wanted loop may take its place.
     public func stopLoop(entity: EntityID) {
         buildingLoops.stop(entity)
@@ -88,7 +121,7 @@ public final class EngineCuePlayer {
     private func makeVoice(for dispatched: DispatchedCue) -> LoopVoice? {
         guard let file = loadFile(at: dispatched.cue.file) else { return nil }
         let node = startLoopPlayer(dispatched: dispatched, file: file)
-        return PlayerLoopVoice(
+        return PlayerVoice(
             node: node,
             file: file,
             engine: engine.underlyingEngine,
@@ -103,7 +136,7 @@ public final class EngineCuePlayer {
     }
 
     private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let player = nextOneShotPlayer(on: cue.bus) else { return }
+        guard let player = nextOneShotPlayer(on: cue.bus, file: file) else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
@@ -125,6 +158,8 @@ public final class EngineCuePlayer {
         if loopPlayers[cue.file] != nil { return }
         let player = startLoopPlayer(dispatched: dispatched, file: file)
         loopPlayers[cue.file] = player
+        // Two copies queued, so the next is waiting at the wrap.
+        scheduleLooped(player: player, file: file, path: cue.file)
         scheduleLooped(player: player, file: file, path: cue.file)
         player.play()
     }
@@ -211,22 +246,26 @@ public final class EngineCuePlayer {
         // AVAudioPlayerNode (which isn't Sendable). If `stopLoop(path:)` ran
         // before playback finished, the lookup returns nil and we don't
         // re-schedule — natural lifecycle.
+        // A restarted loop has a new player; the old one's completions stop here.
+        let id = ObjectIdentifier(player)
         player.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                guard let current = self.loopPlayers[path] else { return }
+                guard let current = self.loopPlayers[path], ObjectIdentifier(current) == id else { return }
                 self.scheduleLooped(player: current, file: file, path: path)
             }
         }
     }
 
-    private func nextOneShotPlayer(on bus: AudioBus) -> AVAudioPlayerNode? {
-        guard var nodes = oneShotPool[bus], !nodes.isEmpty else { return nil }
-        let index = nextPoolIndex[bus] ?? 0
-        let player = nodes[index]
+    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> AVAudioPlayerNode? {
+        guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
+        let now = ProcessInfo.processInfo.systemUptime
+        let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
+        let seconds = Double(file.length) / file.processingFormat.sampleRate
+        slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
+        poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count
-        oneShotPool[bus] = nodes
-        return player
+        return nodes[index]
     }
 
     private func loadFile(at path: String) -> AVAudioFile? {

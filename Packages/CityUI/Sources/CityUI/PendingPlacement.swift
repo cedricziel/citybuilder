@@ -79,6 +79,7 @@ public extension GameSession {
         guard let pending = pendingPlacement else { return }
         if case let .rejected(reason) = world.canPlace(pending.kind, at: pending.anchor) {
             hud.showRejection(reason, in: world, now: Date())
+            UISounds.play(.reject)
             return
         }
         enqueue(.place(pending.kind, at: pending.anchor))

@@ -139,6 +139,74 @@ func clearingTheStoreSellsFromTheTownCenterFirst() throws {
     #expect(world.stockpiles[warehouse]?.quantity(of: .planks) == 30)
 }
 
+@Test("scenario: rival sells surplus planks from crowded stores")
+func scenarioRivalSellsSurplusPlanksFromCrowdedStores() throws {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    // A full town center with food to spare, so the rival doesn't sell
+    // to clear it; 60 planks and filler iron in a warehouse beside it.
+    world.setRivalStock(1, [.planks: 30, .food: 10])
+    let rival = try #require(world.rival(1))
+    let center = try #require(world.buildings[rival.townCenterID])
+    let warehouse = world.testPlace(.warehouse, at: TileCoordinate(x: center.anchor.x + 5, y: center.anchor.y), owner: .rival(1))
+    var roomy = world
+    world.testSetStock([.planks: 60, .iron: 110], in: warehouse)
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
+    roomy.testSetStock([.planks: 60, .iron: 90], in: warehouse)
+    #expect(rivalTrades(roomy.takeTurn(1)).isEmpty)
+}
+
+/// Rival 1 with $5,000, a full town center (10 food, 30 iron) and a
+/// warehouse beside it holding `planks`, `wood` and filler iron, so the
+/// rival's stores have `room` units free.
+private func crowdedRival(planks: Int, wood: Int = 0, room: Int) throws -> (world: World, warehouse: EntityID) {
+    var world = normalWorld()
+    world.setRival(1) { $0.treasury = 5000 }
+    world.setRivalStock(1, [.food: 10, .iron: 30])
+    let rival = try #require(world.rival(1))
+    let center = try #require(world.buildings[rival.townCenterID])
+    let warehouse = world.testPlace(.warehouse, at: TileCoordinate(x: center.anchor.x + 5, y: center.anchor.y), owner: .rival(1))
+    world.testSetStock([.planks: planks, .wood: wood, .iron: 200 - planks - wood - room], in: warehouse)
+    return (world, warehouse)
+}
+
+@Test("surplus sales start below 40 units of room")
+func surplusSalesStartBelow40UnitsOfRoom() throws {
+    var crowded = try crowdedRival(planks: 61, room: 39).world
+    #expect(crowded.takeTurn(1) == [.rivalMarketSell(1, .planks, 1)])
+    var roomy = try crowdedRival(planks: 61, room: 40).world
+    #expect(rivalTrades(roomy.takeTurn(1)).isEmpty)
+}
+
+@Test("surplus sales keep 60 units")
+func surplusSalesKeep60Units() throws {
+    var kept = try crowdedRival(planks: 60, room: 30).world
+    #expect(rivalTrades(kept.takeTurn(1)).isEmpty)
+    var surplus = try crowdedRival(planks: 61, room: 30).world
+    #expect(surplus.takeTurn(1) == [.rivalMarketSell(1, .planks, 1)])
+}
+
+@Test("a rival with surplus wood only sells wood")
+func surplusWoodOnlySellsWood() throws {
+    var world = try crowdedRival(planks: 50, wood: 70, room: 30).world
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .wood, 10)])
+}
+
+@Test("scenario: rival sales count only its own stores")
+func scenarioRivalSalesCountOnlyItsOwnStores() throws {
+    var (world, warehouse) = try crowdedRival(planks: 70, room: 30)
+    let site = try #require(world.buildings[warehouse]).anchor
+    let players = world.testPlace(.warehouse, at: TileCoordinate(x: site.x + 4, y: site.y), owner: .player)
+    world.testSetStock([.planks: 100], in: players)
+    var crowded = world
+    #expect(crowded.takeTurn(1) == [.rivalMarketSell(1, .planks, 10)])
+    // In debt, the rival keeps 12 of its own 70 planks, whatever the
+    // player stores beside it.
+    world.setRival(1) { $0.treasury = -20 }
+    world.testSetStock([.planks: 15, .iron: 155], in: warehouse)
+    #expect(world.takeTurn(1) == [.rivalMarketSell(1, .planks, 3)])
+}
+
 @Test("wood bought for a step is in the same batch as the step, ahead of it")
 func boughtWoodComesInTheStepsBatch() throws {
     var world = normalWorld()

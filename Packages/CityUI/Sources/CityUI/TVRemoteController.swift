@@ -92,6 +92,17 @@ public final class TVRemoteController {
         }
     }
 
+    /// Opens the map overview from the HUD and hands the remote to the
+    /// map, so the overview gets its input and Back closes it instead of
+    /// leaving the app. Spec: `platform-shells` / Apple TV map overview.
+    public func openOverview(at time: TimeInterval) {
+        guard session.overview == nil else { return }
+        focusMoved(toMap: true, at: time)
+        // The mapper opens it, as for a controller's X, and asks the host
+        // to focus the map.
+        send(.overview, at: time)
+    }
+
     /// The inspector callout holds focus, so the HUD can take part again.
     public func inspectorTookFocus() {
         focusesInspector = false
