@@ -13,6 +13,30 @@ public extension SpriteAtlas.WalkerFacing {
     }
 }
 
+extension SKSpriteNode {
+    static let walkKey = "walk"
+
+    /// A person or animal node: anchored at the feet, above terrain and below tall buildings.
+    static func walker() -> SKSpriteNode {
+        let node = SKSpriteNode()
+        node.anchorPoint = SpriteAtlas.walkerAnchor
+        node.zPosition = 50
+        return node
+    }
+
+    /// Shows the first of `frames` and, while `moving`, loops them at `key`'s pace. The loop comes from
+    /// the shared action cache when the frames are `key`'s own.
+    func playWalkCycle(_ key: SpriteAnimation.AnimationKey, frames: [SKTexture]?, moving: Bool = true) {
+        removeAction(forKey: Self.walkKey)
+        guard let frames, let first = frames.first else { return }
+        texture = first
+        size = first.size()
+        guard moving, frames.count > 1, let entry = SpriteAnimation.entry(for: key) else { return }
+        let loop = SpriteAnimation.loopingAction(for: key) ?? .repeatForever(.animate(with: frames, timePerFrame: entry.timePerFrame))
+        run(loop, withKey: Self.walkKey)
+    }
+}
+
 extension SKNode {
     static let glideKey = "glide"
 

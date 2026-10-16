@@ -19,7 +19,7 @@ public final class IsoWorldScene: SKScene {
     var presentSprites: [SpriteSpec: SKNode] = [:]
     /// City life (`add-city-life`): night shade and strolling residents.
     let nightOverlay = SKSpriteNode()
-    var strollerNodes: [StrollerKey: SKSpriteNode] = [:]
+    var strollerNodes: [StrollerKey: (node: SKSpriteNode, facing: SpriteAtlas.WalkerFacing)] = [:]
     /// Season whose terrain tint is on screen. Spec: `rendering-2_5d` /
     /// Terrain shows the season.
     var appliedSeason: Season = .spring

@@ -63,3 +63,37 @@ func scenarioEveryPeopleFrameIsOnDisk() {
     #expect(missing.isEmpty, "\(missing)")
     #expect(!FileManager.default.fileExists(atPath: resources.appendingPathComponent("Units.atlas").path))
 }
+
+@MainActor
+@Test("scenario: A carrier stands on its tile")
+func scenarioCarrierStandsOnItsTile() throws {
+    let base = World.fixtureWithTerrain(width: 10, height: 10, fill: .grass, seed: 1).snapshot()
+    let carrier = Carrier(
+        id: EntityID(raw: 7),
+        path: [TileCoordinate(x: 2, y: 1), TileCoordinate(x: 1, y: 1)],
+        mission: .deliver(good: .wine, amount: 1, fromProducer: EntityID(raw: 1), toWarehouse: EntityID(raw: 2))
+    )
+    let snapshot = WorldSnapshot(
+        tickCount: 1, simulatedTime: base.simulatedTime, mapWidth: 10, mapHeight: 10,
+        terrainGrid: base.terrainGrid, occupiedTiles: [:], buildings: [:], carriers: [carrier],
+        economy: base.economy, totalPopulation: 0, camera: base.camera
+    )
+    let scene = IsoWorldScene()
+    scene.reconcileCarriers(with: snapshot, now: 0)
+    let node = try #require(scene.carrierVisuals[EntityID(raw: 7)]?.node)
+    // SpriteKit stores the anchor as Float.
+    #expect(abs(node.anchorPoint.x - 0.5) < 0.0001 && abs(node.anchorPoint.y - 2.0 / 30.0) < 0.0001)
+    #expect(node.xScale > 0)
+}
+
+@Test("scenario: A stroller heading down-left faces south-west")
+func scenarioStrollerFacesItsWay() {
+    let stroller = StrollerPlanner.Stroller(
+        house: EntityID(raw: 1), slot: 0, from: TileCoordinate(x: 3, y: 3), to: TileCoordinate(x: 3, y: 4), progress: 0.5
+    )
+    #expect(stroller.facing == .sw)
+    let back = StrollerPlanner.Stroller(
+        house: EntityID(raw: 1), slot: 0, from: TileCoordinate(x: 3, y: 3), to: TileCoordinate(x: 2, y: 3), progress: 0.5
+    )
+    #expect(back.facing == .nw)
+}

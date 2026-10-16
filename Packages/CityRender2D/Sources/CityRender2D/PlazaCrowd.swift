@@ -157,9 +157,7 @@ extension IsoWorldScene {
                 }
                 continue
             }
-            let node = SKSpriteNode()
-            node.anchorPoint = CGPoint(x: 0.5, y: 0)
-            node.zPosition = 50
+            let node = SKSpriteNode.walker()
             node.color = PlazaCrowdPlanner.tint(center: figure.townCenter, slot: figure.slot)
             node.colorBlendFactor = 0.35
             node.position = target
@@ -173,13 +171,6 @@ extension IsoWorldScene {
     /// from `SpriteAtlas.walkerAnimation`, the one walker lookup, so
     /// redrawn walkers show up here unchanged.
     private static func apply(_ pose: PlazaPose, to node: SKSpriteNode) {
-        node.removeAction(forKey: "walk")
-        guard let frames = SpriteAtlas.walkerAnimation(facing: pose.facing), let first = frames.first else { return }
-        node.texture = first
-        node.size = first.size()
-        if pose.walking, frames.count > 1 {
-            let perFrame = SpriteAnimation.entry(for: .walker(pose.facing))?.timePerFrame ?? 0.15
-            node.run(.repeatForever(.animate(with: frames, timePerFrame: perFrame)), withKey: "walk")
-        }
+        node.playWalkCycle(.walker(pose.facing), frames: SpriteAtlas.walkerAnimation(facing: pose.facing), moving: pose.walking)
     }
 }

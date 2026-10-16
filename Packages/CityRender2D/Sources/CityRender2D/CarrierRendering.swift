@@ -62,10 +62,8 @@ extension IsoWorldScene {
             let look = CarrierLook(load: CarrierLoad.family(of: carrier.good), facing: Self.facing(of: carrier))
             let target = Self.position(of: carrier)
             guard var visual = carrierVisuals[carrier.id] else {
-                let node = SKSpriteNode()
-                node.anchorPoint = CGPoint(x: 0.5, y: 0)
+                let node = SKSpriteNode.walker()
                 node.position = target
-                node.zPosition = 50 // above terrain, below tall buildings
                 Self.animate(node, look: look)
                 addChild(node)
                 carrierVisuals[carrier.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now)
@@ -86,12 +84,7 @@ extension IsoWorldScene {
     }
 
     private static func animate(_ node: SKSpriteNode, look: CarrierLook) {
-        node.removeAction(forKey: "walk")
-        guard let frames = SpriteAtlas.carrierAnimation(load: look.load, facing: look.facing), let first = frames.first else { return }
-        node.texture = first
-        node.size = first.size()
-        let perFrame = SpriteAnimation.entry(for: .carrier(look.load, look.facing))?.timePerFrame ?? 0.15
-        node.run(.repeatForever(.animate(with: frames, timePerFrame: perFrame)), withKey: "walk")
+        node.playWalkCycle(.carrier(look.load, look.facing), frames: SpriteAtlas.carrierAnimation(load: look.load, facing: look.facing))
     }
 
     /// Facing from the next path segment.

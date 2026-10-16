@@ -62,34 +62,30 @@ extension IsoWorldScene {
     func reconcileStrollers(with snapshot: WorldSnapshot) {
         let wanted = StrollerPlanner.strollers(in: snapshot)
         let keys = Set(wanted.map { StrollerKey(house: $0.house, slot: $0.slot) })
-        for (key, node) in strollerNodes where !keys.contains(key) {
-            node.removeFromParent()
+        for (key, shown) in strollerNodes where !keys.contains(key) {
+            shown.node.removeFromParent()
             strollerNodes.removeValue(forKey: key)
         }
         for stroller in wanted {
             let key = StrollerKey(house: stroller.house, slot: stroller.slot)
-            let node = strollerNodes[key] ?? makeStrollerNode()
-            if strollerNodes[key] == nil {
+            let facing = stroller.facing
+            let node: SKSpriteNode
+            if let shown = strollerNodes[key] {
+                node = shown.node
+            } else {
+                node = SKSpriteNode.walker()
                 addChild(node)
-                strollerNodes[key] = node
+            }
+            if strollerNodes[key]?.facing != facing {
+                // Lit sprites are never mirrored: each facing plays its own frames.
+                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing))
+                strollerNodes[key] = (node, facing)
             }
             let from = IsoMath.screenPoint(forTile: stroller.from)
             let to = IsoMath.screenPoint(forTile: stroller.to)
             let along = CGFloat(stroller.progress)
             node.position = CGPoint(x: from.x + (to.x - from.x) * along, y: from.y + (to.y - from.y) * along)
-            node.xScale = stroller.to.x < stroller.from.x || stroller.to.y > stroller.from.y ? -1 : 1
         }
-    }
-
-    private func makeStrollerNode() -> SKSpriteNode {
-        let frames = SpriteAtlas.walkerAnimation(facing: .se) ?? []
-        let node = SKSpriteNode(texture: frames.first)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0)
-        node.zPosition = 50
-        if frames.count > 1 {
-            node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.2)), withKey: "walk")
-        }
-        return node
     }
 }
 
