@@ -29,7 +29,7 @@ public enum SpriteAtlasRouting {
         // Status badges drawn over buildings live in the Buildings atlas.
         if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
         // People and ships are kit renders; the Units atlas is retired (realistic-walkers).
-        if ["walker-", "carrier-", "ship-"].contains(where: spriteName.hasPrefix) { return kitAtlasName }
+        if ["walker-", "carrier-", "animal-", "ship-"].contains(where: spriteName.hasPrefix) { return kitAtlasName }
         if spriteName.hasPrefix("good-") { return iconsAtlasName }
         return nil
     }
@@ -67,6 +67,28 @@ public enum SpriteAtlas {
         /// `walker` for the worker, `walker-woman` for the woman.
         var stem: String {
             self == .worker ? "walker" : "walker-\(rawValue)"
+        }
+    }
+
+    /// An animal's sprite family: what it is and what it does. Spec: realistic-walkers.
+    public enum AnimalAction: String, CaseIterable, Hashable, Sendable {
+        case sheepWalk = "sheep-walk", sheepGraze = "sheep-graze", cowWalk = "cow-walk", cowGraze = "cow-graze"
+        /// A hen pecking.
+        case hen
+
+        var stem: String {
+            "animal-\(rawValue)"
+        }
+
+        /// The point under the animal's feet, where its node anchors: the feet stand off the cell's
+        /// bottom and left of its centre, so the stride and the shadow falling right fit. The animal
+        /// brief lists the same points (`Anchor:` lines) and a test keeps them equal.
+        public var anchor: CGPoint {
+            switch self {
+            case .sheepWalk, .sheepGraze: CGPoint(x: 14.0 / 34.0, y: 7.0 / 26.0)
+            case .cowWalk, .cowGraze: CGPoint(x: 21.0 / 52.0, y: 11.0 / 44.0)
+            case .hen: CGPoint(x: 8.0 / 18.0, y: 4.0 / 14.0)
+            }
         }
     }
 
@@ -147,6 +169,11 @@ public enum SpriteAtlas {
     /// `frames(for:)` so all multi-frame lookups share one code path.
     public static func walkerAnimation(facing: WalkerFacing, look: WalkerLook) -> [SKTexture]? {
         frames(for: .walker(facing, look))
+    }
+
+    /// An animal's cycle in a facing: walking, grazing or pecking. Frame 0 doubles as standing still.
+    public static func animalAnimation(_ action: AnimalAction, facing: WalkerFacing) -> [SKTexture]? {
+        frames(for: .animal(action, facing))
     }
 
     /// The worker's walk cycle.
@@ -355,7 +382,7 @@ public enum SpriteAtlas {
             }
         }
 
-        for key in SpriteAnimation.AnimationKey.people {
+        for key in SpriteAnimation.AnimationKey.figures {
             let frames = SpriteAnimation.entry(for: key)?.frameCount ?? 0
             names += (0 ..< frames).map { SpriteAnimation.assetName(for: key, frame: $0) }
         }

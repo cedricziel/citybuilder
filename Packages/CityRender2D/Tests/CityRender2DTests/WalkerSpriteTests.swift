@@ -15,9 +15,9 @@ private func worktreeRoot() -> URL {
         .deletingLastPathComponent().deletingLastPathComponent()
 }
 
-/// Every people frame the renderer can request: each resident look and carrier load, in every facing.
-private func peopleNamesTheRendererRequests() -> [String] {
-    SpriteAnimation.AnimationKey.people.flatMap { key in
+/// Every frame the renderer can request for `keys`.
+private func names(_ keys: [SpriteAnimation.AnimationKey]) -> [String] {
+    keys.flatMap { key in
         (0 ..< (SpriteAnimation.entry(for: key)?.frameCount ?? 0)).map { SpriteAnimation.assetName(for: key, frame: $0) }
     }
 }
@@ -43,17 +43,17 @@ func scenarioDefaultVariantIsTheWorker() {
 
 @Test("scenario: Every walker frame is catalogued")
 func scenarioEveryWalkerFrameIsCatalogued() {
-    let names = peopleNamesTheRendererRequests()
-    #expect(names.count == (looks.count + CarrierLoad.allCases.count) * 4 * 8)
+    #expect(names(SpriteAnimation.AnimationKey.people).count == (looks.count + CarrierLoad.allCases.count) * 4 * 8)
+    #expect(names(SpriteAnimation.AnimationKey.animals).count == 4 * (8 + 4 + 8 + 4 + 4))
     let catalogued = Set(SpriteAtlas.catalogSpriteNames)
-    #expect(names.filter { !catalogued.contains($0) }.isEmpty)
+    #expect(names(SpriteAnimation.AnimationKey.figures).filter { !catalogued.contains($0) }.isEmpty)
 }
 
-/// The reverse of the catalog check: every people frame is committed, at both scales, where it routes.
+/// The reverse of the catalog check: every people and animal frame is committed, at both scales, where it routes.
 @Test("scenario: Every variant and facing has eight gait frames")
 func scenarioEveryPeopleFrameIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
-    let missing = peopleNamesTheRendererRequests().flatMap { name -> [String] in
+    let missing = names(SpriteAnimation.AnimationKey.figures).flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in
             let path = resources.appendingPathComponent("\(atlas).atlas/\(file)").path

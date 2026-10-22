@@ -38,10 +38,11 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]).union(peopleStems)
+    ]).union(figureStems)
 
-    /// One stem per resident look or carrier load and facing (`walker-woman-se`, `carrier-logs-nw`).
-    static let peopleStems: Set<String> = Set(SpriteAnimation.AnimationKey.people.map {
+    /// One stem per resident look, carrier load or animal action and facing (`walker-woman-se`,
+    /// `carrier-logs-nw`, `animal-sheep-graze-sw`).
+    static let figureStems: Set<String> = Set(SpriteAnimation.AnimationKey.figures.map {
         stem(of: SpriteAnimation.assetName(for: $0, frame: 0))
     })
 
