@@ -4,3 +4,8 @@
 - [x] 1.2 Implement to green: `World.playerTaxAndUpkeep`, sharing the economy system's tax and upkeep code (design D3)
 - [x] 1.3 Implement to green: the hint in `SessionBanner`, once per session, for 150 ticks (design D1, D2)
 - [x] 1.4 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
+
+## 2. Review fixes (#162)
+
+- [x] 2.1 Tests-first: "Deficit hint pauses until dismissed", "Deficit hint wins its tick" and "Deficit hint on loading a save in the red"; confirm red
+- [x] 2.2 Implement to green: the hint's own pause, Resume, the pause control and Esc dismissing it, Apple TV focus, the hint winning its tick, and the hint on load (design D1, D2)
