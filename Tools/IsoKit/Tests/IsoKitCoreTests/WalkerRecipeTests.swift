@@ -50,4 +50,16 @@ struct WalkerRecipeTests {
         // Walking, the stride spreads the feet 0.6 m along x; standing, the figure stays within its own depth.
         #expect(bounds.max.x - bounds.min.x < 0.5)
     }
+
+    @Test("animals render walk, graze and peck cycles in four facings")
+    func animalNames() {
+        func names(_ stem: String, _ frames: Int) -> Set<String> {
+            Set(WalkerFacing.allCases.flatMap { facing in (0 ..< frames).map { "\(stem)-\(facing.rawValue)-\($0)" } })
+        }
+        let animals = Recipes.all.filter { $0.entry == "animal" }
+        let rendered = Set(animals.flatMap(\.spriteNames))
+        let expected = names("animal-sheep-walk", 8).union(names("animal-sheep-graze", 4))
+            .union(names("animal-cow-walk", 8)).union(names("animal-cow-graze", 4)).union(names("animal-hen", 4))
+        #expect(rendered == expected)
+    }
 }
