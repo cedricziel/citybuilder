@@ -37,7 +37,9 @@ extension World {
             if priorDeficitTicks == 0 {
                 events.append(.bankruptcyWarning(deficitTicks: economy.bankruptcyDeficitTicks))
             }
-            if economy.bankruptcyDeficitTicks >= difficulty.bankruptcyGraceTicks {
+            // More ticks than the grace: a dip that starts on a collection
+            // tick sees the next one (`hard-bankruptcy-grace` D1).
+            if economy.bankruptcyDeficitTicks > difficulty.bankruptcyGraceTicks {
                 economy.gameOver = true
                 if !priorGameOver {
                     events.append(.gameOver)

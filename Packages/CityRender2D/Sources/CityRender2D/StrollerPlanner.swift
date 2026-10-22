@@ -12,6 +12,11 @@ public enum StrollerPlanner {
         public let from: TileCoordinate
         public let to: TileCoordinate
         public let progress: Double
+
+        /// The diagonal it walks along; sprites carry their light, so they are never mirrored.
+        public var facing: SpriteAtlas.WalkerFacing {
+            SpriteAtlas.WalkerFacing(stepX: Double(to.x - from.x), stepY: Double(to.y - from.y))
+        }
     }
 
     static let maxPerHouse = 3

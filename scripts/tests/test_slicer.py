@@ -33,6 +33,8 @@ CATALOG_DIR = REPO_ROOT / "Resources" / "Sprites.style" / "catalog"
 NAME_PATTERNS = [
     # Terrain: terrain-<kind>[-<season>][-v<n>][-<frame>] (terrain-v2, design D2)
     re.compile(r"^terrain-[a-z]+(?:-(?:autumn|winter))?(?:-v\d+)?(?:-\d+)?$"),
+    # Terrain object: terrain-<kind>-<density>[-<season>][-v<n>] (terrain-v2, design D6)
+    re.compile(r"^terrain-(?:forest|mountain)-(?:single|sparse|medium|dense|peak)(?:-(?:autumn|winter))?(?:-v\d+)?$"),
     # Terrain transition: terrain-<upper>-<lower>-t<mask>[-<season>][-<frame>]
     re.compile(r"^terrain-[a-z]+-[a-z]+-t\d+(?:-(?:autumn|winter))?(?:-\d+)?$"),
     # Land building: building-<kind>[-v<n>][-(constructing|operational)-<n>]
@@ -45,8 +47,10 @@ NAME_PATTERNS = [
         r"^building-(?:port|shipyard)-[nsew]"
         r"(?:-(?:constructing|operational)-\d+)?$"
     ),
-    # Walker
-    re.compile(r"^walker-(?:ne|nw|se|sw)-\d+$"),
+    # Resident: walker-[woman-]<facing>-<frame>
+    re.compile(r"^walker-(?:woman-)?(?:ne|nw|se|sw)-\d+$"),
+    # Carrier: carrier-<load>-<facing>-<frame>
+    re.compile(r"^carrier-(?:sack|crate|barrel|logs)-(?:ne|nw|se|sw)-\d+$"),
     # Ship
     re.compile(r"^ship-(?:n|ne|e|se|s|sw|w|nw)-\d+$"),
     # Goods icon

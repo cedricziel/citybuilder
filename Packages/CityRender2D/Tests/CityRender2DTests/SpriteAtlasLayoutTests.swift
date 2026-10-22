@@ -39,14 +39,11 @@ func scenarioBuildingsAtlasExists() {
     #expect(contents.contains(where: { $0.hasPrefix("building-") && $0.hasSuffix(".png") }))
 }
 
-@Test("scenario: units atlas exists")
-func scenarioUnitsAtlasExists() {
+@Test("scenario: units atlas retired")
+func scenarioUnitsAtlasRetired() {
+    // realistic-walkers: people and ships are kit renders in Kit.atlas.
     let url = worktreeRoot().appendingPathComponent("Resources/Units.atlas")
-    var isDir: ObjCBool = false
-    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-    #expect(exists && isDir.boolValue, "Resources/Units.atlas must exist as a directory")
-    let contents = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
-    #expect(contents.contains(where: { $0.hasPrefix("walker-") && $0.hasSuffix(".png") }))
+    #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/Units.atlas must not exist")
 }
 
 @Test("scenario: legacy sprite directory removed")

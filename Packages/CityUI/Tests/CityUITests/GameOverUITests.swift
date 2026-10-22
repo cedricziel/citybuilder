@@ -44,7 +44,7 @@ func scenarioBuildToolsStayOffAfterGameOver() throws {
 func scenarioGameOverDisarmsTheArmedTool() throws {
     var world = World.newGame()
     world.economy.balance = -1
-    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
+    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks
     let session = GameSession(world: world)
     // The deficit hint holds a session that starts in the red.
     session.dismissDeficitHint()
@@ -131,7 +131,7 @@ func scenarioInspectorAndRouteActionsAreOffAfterGameOver() {
 func scenarioGameOverEndsRouteMode() {
     var world = World.newGame()
     world.economy.balance = -1
-    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
+    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks
     let session = GameSession(world: world)
     // The deficit hint holds a session that starts in the red.
     session.dismissDeficitHint()

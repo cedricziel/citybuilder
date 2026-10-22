@@ -362,9 +362,9 @@ func scenarioBankruptcyWarningEmitsOnceAtDeficitStart() {
 func scenarioGameOverEmitsExactlyOnce() {
     var world = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
     world.economy.balance = -1
-    // Need bankruptcyGraceTicks (50) consecutive deficit ticks for gameOver.
+    // The game ends after more deficit ticks than the grace.
     var gameOverCount = 0
-    for _ in 0 ..< Int(Economy.bankruptcyGraceTicks) {
+    for _ in 0 ..< Int(world.difficulty.bankruptcyGraceTicks) + 1 {
         gameOverCount += world.tick().events.count(where: {
             if case .gameOver = $0 { return true }
             return false

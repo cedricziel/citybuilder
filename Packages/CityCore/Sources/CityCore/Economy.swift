@@ -8,7 +8,6 @@ public struct Economy: Hashable, Codable, Sendable {
     public static let startingBalance: Int64 = 1000
     public static let taxIntervalTicks: UInt64 = 50 // every 5 sim-seconds
     public static let upkeepIntervalTicks: UInt64 = 50
-    public static let bankruptcyGraceTicks: UInt64 = 50 // ~5 sim-seconds
     public static let taxPerPopUnit: Int64 = 1
 
     public var balance: Int64 = startingBalance
