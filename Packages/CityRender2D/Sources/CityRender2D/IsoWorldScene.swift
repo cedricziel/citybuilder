@@ -352,8 +352,10 @@ public struct IsoWorldView: View {
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
         routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
-        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
+        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil,
+        showsStats: Bool = false
     ) {
+        debugOptions = showsStats ? [.showsFPS, .showsNodeCount, .showsDrawCount] : []
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
         prepared.scaleMode = .resizeFill
@@ -383,8 +385,10 @@ public struct IsoWorldView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private let debugOptions: SpriteView.DebugOptions
+
     public var body: some View {
-        SpriteView(scene: scene)
+        SpriteView(scene: scene, debugOptions: debugOptions)
             .ignoresSafeArea()
             .onChange(of: reduceMotion, initial: true) { _, isOn in
                 scene.reduceMotion = isOn
