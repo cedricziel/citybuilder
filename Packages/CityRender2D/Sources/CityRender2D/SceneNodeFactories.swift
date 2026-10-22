@@ -60,21 +60,10 @@ extension IsoWorldScene {
             node.zPosition = 0
             return node
         }
-        if let seasonal = seasonalTerrainNode(kind: kind) {
-            seasonal.zPosition = 0
-            return seasonal
-        }
-        // Variant-aware lookup picks a deterministic per-tile sprite for
-        // kinds with multiple variants (mountain); falls through to the
-        // canonical sprite for all others. Placeholder path satisfies the
-        // rendering-2_5d `Missing-sprite fallback in release` requirement.
-        let name = SpriteAtlas.terrainAssetName(for: kind, coord: coord)
-        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
-        node.userData = [Self.textureNameKey: name]
+        // The season's look, in the tile's variant; a missing sprite draws the placeholder
+        // (rendering-2_5d `Missing-sprite fallback in release`).
+        let node = plainTerrainNode(kind: kind, coord: coord)
         node.zPosition = 0
-        if let action = SpriteAnimation.loopingAction(for: .terrain(kind)) {
-            node.run(action, withKey: "anim")
-        }
         return node
     }
 

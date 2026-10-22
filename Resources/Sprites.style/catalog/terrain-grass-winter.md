@@ -12,7 +12,7 @@ Painted by `scripts/art/ground.py`. The meadow under snow: cool white cover with
 
 ## Sheet
 
-Grid: 17 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
+Grid: 26 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 
 - (0, 0): `terrain-grass-winter` — canonical static base
 - (0, 1): `terrain-grass-winter-0` — animation frame 0
@@ -31,6 +31,15 @@ Grid: 17 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
 - (0, 14): `terrain-grass-beach-t12-winter` — transition, mask 12
 - (0, 15): `terrain-grass-beach-t13-winter` — transition, mask 13
 - (0, 16): `terrain-grass-beach-t14-winter` — transition, mask 14
+- (0, 17): `terrain-grass-winter-v1` — variant 1, its own clumps inside the tile; joins any variant
+- (0, 18): `terrain-grass-winter-v1-0` — variant 1, animation frame 0
+- (0, 19): `terrain-grass-winter-v1-1` — variant 1, animation frame 1
+- (0, 20): `terrain-grass-winter-v2` — variant 2, its own clumps inside the tile; joins any variant
+- (0, 21): `terrain-grass-winter-v2-0` — variant 2, animation frame 0
+- (0, 22): `terrain-grass-winter-v2-1` — variant 2, animation frame 1
+- (0, 23): `terrain-grass-winter-v3` — variant 3, its own clumps inside the tile; joins any variant
+- (0, 24): `terrain-grass-winter-v3-0` — variant 3, animation frame 0
+- (0, 25): `terrain-grass-winter-v3-1` — variant 3, animation frame 1
 
 ## Animation
 

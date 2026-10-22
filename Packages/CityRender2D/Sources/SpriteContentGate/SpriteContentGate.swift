@@ -22,9 +22,11 @@ public enum SpriteContentGate {
         case scaleTwinMismatch = "scale_twin_mismatch"
         /// An `@2x` file has no `@1x` sprite.
         case scaleTwinOrphan = "scale_twin_orphan"
-        /// A migrated walker frame is not 10×16 points.
+        /// A migrated walker or carrier frame is not 32×32 points.
         case walkerSize = "walker_size"
-        /// A migrated walker facing lacks one of its four gait frames.
+        /// A migrated walker or carrier frame, or its baked shadow, touches the left, right or bottom edge.
+        case walkerClipped = "walker_clipped"
+        /// A migrated walker or carrier facing lacks one of its eight gait frames.
         case walkerFramesMissing = "walker_frames_missing"
     }
 
@@ -55,7 +57,7 @@ public enum SpriteContentGate {
                     failures.append(.init(file: name, reason: .frameEmpty))
                     continue
                 }
-                if name.hasPrefix("terrain-") {
+                if name.hasPrefix("terrain-"), !isTerrainObject(name) {
                     failures += terrainFailures(name, image)
                 }
                 if isIncoherent(name, image, in: images, maxDistance: coherenceMaxDistance) {
@@ -71,6 +73,15 @@ public enum SpriteContentGate {
             failures += KitRules.failures(images: images, catalog: catalog)
         }
         return failures.sorted { ($0.file, $0.reason.rawValue) < ($1.file, $1.reason.rawValue) }
+    }
+
+    /// Trees and outcrops (`terrain-forest-dense-v1`, change `terrain-v2`) stand over their tile
+    /// instead of filling its diamond, and their variants are different objects, so neither the
+    /// diamond rules nor frame coherence apply to them.
+    public static func isTerrainObject(_ fileName: String) -> Bool {
+        let parts = SpriteFile(fileName).stem.split(separator: "-")
+        return parts.count >= 3 && ["forest", "mountain"].contains(parts[1])
+            && ["single", "sparse", "medium", "dense", "peak"].contains(parts[2])
     }
 
     /// No transparent pixel inside the diamond, and nothing opaque beyond its 1-point bleed.
@@ -135,7 +146,8 @@ public enum SpriteContentGate {
         in images: [String: RGBAImage],
         maxDistance: Double
     ) -> Bool {
-        guard let baseName = coherenceBase(for: name), let base = images[baseName],
+        // A clump's variants are different trees (a bare oak beside a snowy spruce), not frames.
+        guard !isTerrainObject(name), let baseName = coherenceBase(for: name), let base = images[baseName],
               base.opaquePixelCount > 0
         else { return false }
         return PaletteHistogram(of: image).distance(to: PaletteHistogram(of: base)) > maxDistance

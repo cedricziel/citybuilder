@@ -5,7 +5,7 @@
 A Swift package at `Tools/IsoKit` SHALL provide an `isokit` executable that renders sprites offline from recipes written in code:
 
 - **Buildings:** for every building kind in the sprite catalog, the idle sprite, the construction frames and the operational frames (or the orientations, for shore buildings).
-- **Units:** the facing and frame set their grammar defines, with no construction or operational states. Walkers have 4 facings × 4 gait frames; ships have 8 facings × their frame count.
+- **Units:** the facing and frame set their grammar defines, with no construction or operational states. Walkers and animals have the facings and frames `realistic-walkers` defines; ships have 8 facings × their frame count.
 
 The package MUST NOT be linked into any app target, and MUST NOT make network requests.
 
