@@ -145,8 +145,8 @@ func chimneyAnchorsSitInsideTheSprite() {
     #expect(bakery.x > 0 && bakery.y > 64 && bakery.y < 128)
     let unknown = ChimneyAnchors.offset(stem: "building-mead-hall", spriteSize: size)
     #expect(unknown.x == 0 && unknown.y > 100)
-    let variant = ChimneyAnchors.offset(stem: "building-house-tier2-modern-east-asian", spriteSize: size)
-    #expect(variant == ChimneyAnchors.offset(stem: "building-house-tier2", spriteSize: size))
+    let variant = ChimneyAnchors.offset(stem: "building-bakery-mediterranean", spriteSize: size)
+    #expect(variant == ChimneyAnchors.offset(stem: "building-bakery", spriteSize: size))
     #expect(TextureFiltering.stem(of: "building-house-tier2") == "building-house-tier2")
 }
 
@@ -178,4 +178,13 @@ func everySmokingSpriteHasAChimneyRow() throws {
     #expect(stems.count > 20)
     let missing = stems.filter { ChimneyAnchors.row(for: $0) == nil && !rooflessOnPurpose.contains($0) }
     #expect(missing.isEmpty, "no chimney row for \(missing.sorted())")
+}
+
+/// A kit-rendered house builds its own chimney, so the base stem's row would put the smoke
+/// somewhere else; each one needs a row of its own.
+@Test("every kit-rendered house has its own chimney row")
+func everyKitHouseHasItsOwnChimneyRow() {
+    let houses = TextureFiltering.kitRenderedStems.filter { $0.hasPrefix("building-house") }
+    #expect(houses.count >= 60)
+    #expect(houses.filter { ChimneyAnchors.table[$0] == nil }.sorted().isEmpty)
 }

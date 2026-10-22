@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,18 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Ochre stucco palazzi: a rusticated stone base, a pale cornice under a low terracotta hip roof and regular rows of shuttered windows. Palette anchors: `#D4A86A`/`#A07C50` stucco, `#A89884`/`#7A6B59` base, `#3F6E94` shutters.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, `age_style("mediterranean", "renaissance")`: the `mediterranean` culture style with the renaissance age's materials and shapes) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. An ochre stucco palazzo on a stone base with pale cornices, blue shutters and a low tile hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-renaissance-mediterranean` — canonical operational base: two-storey palazzetto with a stone base and cornice
-- (0, 1): `building-house-tier2-renaissance-mediterranean` — tier 2: three storeys over an arcaded ground floor
-- (0, 2): `building-house-tier3-renaissance-mediterranean` — tier 3: palazzo with pilasters, an arched portal and a roof-top loggia tower
+- (0, 0): `building-house-renaissance-mediterranean` — a two-storey palazzetto
+- (0, 1): `building-house-tier2-renaissance-mediterranean` — a three-storey palazzo
+- (0, 2): `building-house-tier3-renaissance-mediterranean` — a palazzo with a roof-top loggia tower
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -29,13 +26,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-renaissance-mediterranean` (IsoKit), planned
+- Recipe: `building-house-renaissance-mediterranean` (IsoKit)
 - Also renders: `building-house-tier2-renaissance-mediterranean`, `building-house-tier3-renaissance-mediterranean`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 144 pt tall (tier 2 176 pt, tier 3 176 pt)
 - Construction stages: 0
 - Operational frames: 0

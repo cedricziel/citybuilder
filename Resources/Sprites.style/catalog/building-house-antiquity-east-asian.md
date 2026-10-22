@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,18 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-A simple timber hall on a stone base: earthen walls between dark posts under a steep thatched roof whose eaves turn up. Palette anchors: `#8C6A45`/`#5C3F28` daub, `#4A2F1A` posts, `#D2C094`/`#8B5A2B` thatch.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, `age_style("east-asian", "antiquity")`: the `east-asian` culture style with the antiquity age's materials and shapes) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. Three steps up: a daub hut under thatch, a plastered hall between dark posts under a slate gable behind a yard wall, and a hall with red posts and a portico under a slate hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-antiquity-east-asian` — canonical operational base: thatched hall on a low stone base
-- (0, 1): `building-house-tier2-antiquity-east-asian` — tier 2: larger hall beside a granary raised on stilts
-- (0, 2): `building-house-tier3-antiquity-east-asian` — tier 3: great hall on a tall stone podium with red columns under a wide dark-tiled roof
+- (0, 0): `building-house-antiquity-east-asian` — a daub hut under thatch
+- (0, 1): `building-house-tier2-antiquity-east-asian` — a plastered hall under slate behind a yard wall
+- (0, 2): `building-house-tier3-antiquity-east-asian` — a hall with red posts and a columned portico under slate
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -29,13 +26,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-antiquity-east-asian` (IsoKit), planned
+- Recipe: `building-house-antiquity-east-asian` (IsoKit)
 - Also renders: `building-house-tier2-antiquity-east-asian`, `building-house-tier3-antiquity-east-asian`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 112 pt tall (tier 2 112 pt, tier 3 128 pt)
 - Construction stages: 0
 - Operational frames: 0
