@@ -89,13 +89,14 @@ extension IsoWorldScene {
         return glow
     }
 
-    func reconcileStrollers(with snapshot: WorldSnapshot) {
+    func reconcileStrollers(with snapshot: WorldSnapshot, now: TimeInterval) {
         let wanted = StrollerPlanner.strollers(in: snapshot)
         let keys = Set(wanted.map { StrollerKey(house: $0.house, slot: $0.slot) })
         for (key, shown) in strollerNodes where !keys.contains(key) {
             shown.node.removeFromParent()
             strollerNodes.removeValue(forKey: key)
         }
+        let walking = !simulationIsStill(now: now)
         for stroller in wanted {
             let key = StrollerKey(house: stroller.house, slot: stroller.slot)
             let facing = stroller.facing
@@ -106,9 +107,9 @@ extension IsoWorldScene {
                 node = SKSpriteNode.walker()
                 addChild(node)
             }
-            if strollerNodes[key]?.facing != facing {
-                // Lit sprites are never mirrored: each facing plays its own frames.
-                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing))
+            // Lit sprites are never mirrored: each facing plays its own frames. Paused, they stand.
+            if strollerNodes[key]?.facing != facing || node.isWalking != walking {
+                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing), moving: walking)
                 strollerNodes[key] = (node, facing)
             }
             let from = IsoMath.screenPoint(forTile: stroller.from)

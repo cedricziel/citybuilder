@@ -68,3 +68,19 @@ func scenarioNightOverlay() throws {
     scene.applyTimeOfDay(TimeOfDay(tick: 180))
     #expect(scene.nightOverlay.alpha == 0)
 }
+
+@MainActor
+@Test("scenario: A stroller heading down-left faces south-west, anchored at its feet")
+func strollerNodesStandOnTheirFeetUnmirrored() throws {
+    let (base, house) = try houseOnRoad()
+    var pop = HousePopulation()
+    pop.population = 9
+    let scene = IsoWorldScene()
+    scene.reconcileStrollers(with: snapshot(base, tick: 180, pops: [house: pop]), now: 0)
+    #expect(!scene.strollerNodes.isEmpty)
+    for shown in scene.strollerNodes.values {
+        #expect(abs(shown.node.anchorPoint.x - SpriteAtlas.walkerAnchor.x) < 0.0001)
+        #expect(abs(shown.node.anchorPoint.y - SpriteAtlas.walkerAnchor.y) < 0.0001)
+        #expect(shown.node.xScale > 0)
+    }
+}

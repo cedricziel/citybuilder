@@ -145,7 +145,6 @@ extension IsoWorldScene {
             standStillIfPaused(now: now)
             return
         }
-        if pass.tick != lastPlazaPass?.tick { plazaTickAt = now }
         lastPlazaPass = pass
         let figures = range.map {
             PlazaCrowdPlanner.figures(in: snapshot, xRange: $0.xRange, yRange: $0.yRange, reduceMotion: reduceMotion)
@@ -182,7 +181,7 @@ extension IsoWorldScene {
     /// No new tick for a while means the game is paused (or the title
     /// screen is showing a still town): stop walk cycles mid-stride.
     private func standStillIfPaused(now: TimeInterval) {
-        guard now - plazaTickAt > 0.3 else { return }
+        guard simulationIsStill(now: now) else { return }
         for (key, shown) in plazaNodes where shown.pose.walking {
             let standing = PlazaPose(walking: false, facing: shown.pose.facing)
             Self.apply(standing, to: shown.node)

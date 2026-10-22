@@ -12,10 +12,16 @@
 
 ## 3. Animals
 
-- [ ] 3.1 Tests first: animal recipe names and frame counts, lookup, routing, coverage
-- [ ] 3.2 `Animals.swift` and animal recipes; `animal.md` brief; `make sprites`
-- [ ] 3.3 `SpriteAtlas.animalAnimation(_:action:facing:)`; hand the names to the life agent
+- [x] 3.1 Tests first: animal recipe names and frame counts, lookup, routing, coverage
+- [x] 3.2 `Animals.swift` and animal recipes; `animal.md` brief; `make sprites`
+- [x] 3.3 `SpriteAtlas.animalAnimation(_:action:facing:)`; hand the names to the life agent
 
-## 4. Close out
+## 4. Follow-ups from the #155 review
 
-- [ ] 4.1 Mark `replace-generative-sprites-with-isokit` task 4.7 done by this change; `make lint`, `make format`, `make sprites-verify`
+- [x] 4.1 Retire `Units` in the `sprite-asset-pipeline` deltas (layout and routing), and route `walker-`, `carrier-`, `animal-` and `ship-` to Kit in `scripts/generate_sprites_ai/paths.py`
+- [x] 4.2 Carriers and strollers stand on frame 0 while the game is paused; `playWalkCycle` keeps a running cycle and shares the cached loop only for a key's own frames
+- [x] 4.3 Tests for the stroller and plaza anchors and for `playWalkCycle`
+
+## 5. Close out
+
+- [ ] 5.1 Mark `replace-generative-sprites-with-isokit` task 4.7 done by this change; `make lint`, `make format`, `make sprites-verify`
