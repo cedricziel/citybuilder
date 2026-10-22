@@ -22,7 +22,7 @@ A scan of new games (seeds 0–49, Normal) found:
 
 ### D1. Raise one tile beside a mountain
 
-Like the starter grove, the fix changes terrain after the town center is placed and touches no island that is already fine. Every home island in the scan has at least 27 mountain tiles, so a grass or forest neighbour of the mountain nearest the town center almost always works. The candidate order is fixed (distance, then `y`, then `x`, then right, lower, left, upper), so generation stays deterministic. "Mine site" means the real placement rule for a mine once Mining is researched, so the guarantee can't drift from it.
+Like the starter grove, the fix changes terrain after each town center is placed, before rivals take their islands, and touches no island that is already fine. Every home island in the scan has at least 27 mountain tiles, so a grass or forest neighbour of the mountain nearest the town center almost always works. The candidate order is fixed (distance, then `y`, then `x`, then right, lower, left, upper), so generation stays deterministic. "Mine site" means the real placement rule for a mine once Mining is researched, so the guarantee can't drift from it.
 
 Alternatives: selling tools at the market changes the economy and the market spec. Rejecting start sites without a mine site would move the town center, which the fair-start rules already constrain tightly.
 
