@@ -9,8 +9,6 @@ public struct SessionBanner: Equatable, Sendable {
 
 extension GameSession {
     static let bannerTicks: UInt64 = 60
-    /// Long enough to read three fixes (`deficit-hint` D1).
-    static let deficitHintTicks: UInt64 = 150
     static let gameOverBanner = SessionBanner(
         title: "Bankrupt",
         description: "The treasury stayed in the red too long and the town is lost. "
@@ -26,12 +24,13 @@ extension GameSession {
     /// and tools.
     public var banner: SessionBanner? {
         if isGameOver { return Self.gameOverBanner }
+        if let deficitHint { return deficitHint }
         guard let state = bannerState, world.tickCount < state.hidesAtTick else { return nil }
         return state.banner
     }
 
     func noteBannerEvents(in events: [WorldEvent]) {
-        noteDeficitHint(in: events)
+        defer { noteDeficitHint(in: events) }
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -91,13 +90,25 @@ extension GameSession {
         enqueue(.setExport(id, good))
     }
 
-    /// The first `bankruptcyWarning` of the session shows the deficit hint.
+    /// The first `bankruptcyWarning` of the session shows the deficit
+    /// hint, after the tick's other banners so it takes their place.
     private func noteDeficitHint(in events: [WorldEvent]) {
-        let warned = events.contains { if case .bankruptcyWarning = $0 { true } else { false } }
-        guard warned, !hasShownDeficitHint else { return }
+        if events.contains(where: { if case .bankruptcyWarning = $0 { true } else { false } }) {
+            showDeficitHint()
+        }
+    }
+
+    /// Shows the deficit hint once per session and holds the simulation.
+    func showDeficitHint() {
+        guard !hasShownDeficitHint else { return }
         hasShownDeficitHint = true
         let figures = world.playerTaxAndUpkeep
-        show(Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax), ticks: Self.deficitHintTicks)
+        deficitHint = Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax)
+    }
+
+    /// Resume, the pause control or Esc: the simulation runs again.
+    public func dismissDeficitHint() {
+        deficitHint = nil
     }
 
     /// Spec: `platform-shells` / Deficit hint.
@@ -108,14 +119,17 @@ extension GameSession {
         )
     }
 
-    private func show(_ banner: SessionBanner, ticks: UInt64 = bannerTicks) {
-        bannerState = (banner, world.tickCount + ticks)
+    private func show(_ banner: SessionBanner) {
+        bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
 }
 
-/// Parchment-coloured card announcing a history event or a new age.
+/// Parchment-coloured card announcing a history event or a new age. With
+/// `onResume` it holds the game and offers Resume (`deficit-hint` D1).
 struct SessionBannerView: View {
     let banner: SessionBanner?
+    var onResume: (() -> Void)?
+    @FocusState private var resumeFocused: Bool
 
     var body: some View {
         if let banner {
@@ -125,6 +139,14 @@ struct SessionBannerView: View {
                 Text(banner.description)
                     .font(.caption)
                     .multilineTextAlignment(.center)
+                if let onResume {
+                    Button("Resume", action: onResume)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.42, green: 0.29, blue: 0.16))
+                        .padding(.top, 4)
+                        .focused($resumeFocused)
+                        .onAppear { resumeFocused = true }
+                }
             }
             .foregroundStyle(Color(red: 0.24, green: 0.16, blue: 0.08))
             .padding(.horizontal, 14)
@@ -133,7 +155,7 @@ struct SessionBannerView: View {
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.42, green: 0.29, blue: 0.16), lineWidth: 2))
             .padding(.horizontal, 24)
             .panelTransition(.slide(.top))
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: onResume == nil ? .combine : .contain)
         }
     }
 }

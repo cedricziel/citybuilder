@@ -22,36 +22,89 @@ private func townAboutToGoRed() -> GameSession {
     return GameSession(world: world)
 }
 
+/// `townAboutToGoRed` stepped to its first collection.
 @MainActor
-@Test("scenario: deficit hint names the cause")
-func scenarioDeficitHintNamesTheCause() {
+private func townInTheRed() -> GameSession {
     let session = townAboutToGoRed()
     while session.world.tickCount < Economy.taxIntervalTicks {
         session.step()
     }
+    return session
+}
+
+@MainActor
+private func showsDeficitHint(_ session: GameSession) -> Bool {
+    session.banner?.title.hasPrefix("In the red") == true
+}
+
+@MainActor
+@Test("scenario: deficit hint names the cause")
+func scenarioDeficitHintNamesTheCause() {
+    let session = townInTheRed()
     let figures = session.world.playerTaxAndUpkeep
     #expect(figures.upkeep > figures.tax)
     #expect(session.world.economy.balance < 0)
     #expect(session.banner?.title == "In the red: upkeep $\(figures.upkeep) vs tax $\(figures.tax)")
     #expect(session.banner?.description
         == "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts.")
-    // Funds keep the game going; the hint stays up for 150 ticks.
-    session.world.economy.balance = 10000
-    for _ in 0 ..< 149 {
+}
+
+@MainActor
+@Test("scenario: deficit hint pauses until dismissed")
+func scenarioDeficitHintPausesUntilDismissed() {
+    let session = townInTheRed()
+    let tick = session.world.tickCount
+    for _ in 0 ..< 100 {
         session.step()
     }
-    #expect(session.banner?.title.hasPrefix("In the red") == true)
+    #expect(session.world.tickCount == tick)
+    #expect(showsDeficitHint(session))
+    #expect(!session.isPaused, "the hint pauses without the pause menu")
+    session.dismissDeficitHint()
     session.step()
-    #expect(session.banner == nil)
+    #expect(session.world.tickCount == tick + 1)
+    #expect(!showsDeficitHint(session))
+}
+
+@MainActor
+@Test("the pause control and Esc dismiss the deficit hint")
+func pauseControlAndEscDismissTheDeficitHint() {
+    let toggled = townInTheRed()
+    toggled.togglePause()
+    #expect(!showsDeficitHint(toggled))
+    #expect(!toggled.isPaused)
+    let escaped = townInTheRed()
+    var state = StepBackState()
+    CityRootView.stepBack(session: escaped, state: &state)
+    #expect(!showsDeficitHint(escaped))
+    #expect(!escaped.isPaused)
+}
+
+@MainActor
+@Test("scenario: deficit hint wins its tick")
+func scenarioDeficitHintWinsItsTick() {
+    let session = GameSession(world: World.newGame())
+    session.noteBannerEvents(in: [.bankruptcyWarning(deficitTicks: 1), .historyEvent(.tradeCaravan)])
+    #expect(showsDeficitHint(session))
+}
+
+@MainActor
+@Test("scenario: deficit hint on loading a save in the red")
+func scenarioDeficitHintOnLoadingASaveInTheRed() {
+    var world = World.newGame()
+    world.economy.balance = -5
+    let session = GameSession(world: world)
+    #expect(showsDeficitHint(session))
+    let tick = session.world.tickCount
+    session.step()
+    #expect(session.world.tickCount == tick)
 }
 
 @MainActor
 @Test("scenario: deficit hint shows once")
 func scenarioDeficitHintShowsOnce() {
-    let session = GameSession(world: World.newGame())
+    let session = townInTheRed()
+    session.dismissDeficitHint()
     session.noteBannerEvents(in: [.bankruptcyWarning(deficitTicks: 1)])
-    #expect(session.banner?.title.hasPrefix("In the red") == true)
-    session.bannerState = nil
-    session.noteBannerEvents(in: [.bankruptcyWarning(deficitTicks: 1)])
-    #expect(session.banner == nil)
+    #expect(!showsDeficitHint(session))
 }

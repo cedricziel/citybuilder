@@ -46,6 +46,8 @@ func scenarioGameOverDisarmsTheArmedTool() throws {
     world.economy.balance = -1
     world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
     let session = GameSession(world: world)
+    // The deficit hint holds a session that starts in the red.
+    session.dismissDeficitHint()
     session.confirmsBuildingPlacement = true
     session.selectTool(.place(.sawmill))
     let center = try #require(session.world.goodsBuffers(of: .player).first).anchor
@@ -131,6 +133,8 @@ func scenarioGameOverEndsRouteMode() {
     world.economy.balance = -1
     world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
     let session = GameSession(world: world)
+    // The deficit hint holds a session that starts in the red.
+    session.dismissDeficitHint()
     session.beginRouteAuthoring()
     #expect(session.routeAuthoring != nil)
     session.step()

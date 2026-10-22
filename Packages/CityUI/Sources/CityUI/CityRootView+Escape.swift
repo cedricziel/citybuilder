@@ -23,7 +23,9 @@ extension CityRootView {
     /// with nothing open, pauses. Sheets take their own Esc.
     @MainActor
     static func stepBack(session: GameSession, state: inout StepBackState) {
-        if state.overviewOpen {
+        if session.deficitHint != nil {
+            session.dismissDeficitHint()
+        } else if state.overviewOpen {
             state.overviewOpen = false
         } else if session.pendingPlacement != nil {
             session.cancelPendingPlacement()
