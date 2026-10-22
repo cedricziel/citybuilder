@@ -140,7 +140,10 @@ func scenarioCompleteVariantInventoryPassesTheDebugCatalogCheck() {
 // MARK: - Renderer texture lookup uses the variant selector
 
 @Test("scenario: placed mountain tile picks its variant from its coord")
+@MainActor
 func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
+    let scene = IsoWorldScene()
+    scene.hasSprite = { _ in true }
     // The variant-aware lookup MUST be functionally equivalent to:
     //   textureOrPlaceholder(named: variantAssetName(stem, variantIndex(coord, count)))
     // Identity (`===`) holds because the named-texture cache returns
@@ -158,7 +161,7 @@ func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
         let expected = SpriteAtlas.textureOrPlaceholder(
             named: SpriteAtlas.variantAssetName(stem: "terrain-mountain", variant: variant)
         )
-        let actual = SpriteAtlas.terrainTextureOrPlaceholder(for: .mountain, coord: coord)
+        let actual = SpriteAtlas.textureOrPlaceholder(named: scene.terrainSpriteName(kind: .mountain, coord: coord))
         #expect(actual === expected, "mountain at \(coord) must resolve via variant index \(variant)")
     }
 }

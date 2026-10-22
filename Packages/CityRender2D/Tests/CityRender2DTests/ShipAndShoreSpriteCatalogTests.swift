@@ -71,9 +71,9 @@ func scenarioShipNameWithUnknownFacingRejected() {
 
 // MARK: - Atlas routing by sprite-name prefix
 
-@Test("scenario: ship name routes to units atlas")
-func scenarioShipNameRoutesToUnitsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "ship-x-0") == "Units")
+@Test("scenario: an unknown ship stem falls back to the kit atlas")
+func scenarioUnknownShipStemFallsBackToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "ship-x-0") == "Kit")
 }
 
 @Test("scenario: shore-building name routes to buildings atlas")

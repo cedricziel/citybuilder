@@ -14,7 +14,6 @@ import AppKit
 /// `add-archipelago-and-sea` lands) extend this table.
 public enum SpriteAtlasRouting {
     public static let buildingsAtlasName = "Buildings"
-    public static let unitsAtlasName = "Units"
     public static let iconsAtlasName = "Icons"
     /// Art-kit renders, filtered linearly. SpriteKit applies one filtering mode to a whole atlas
     /// page, so they cannot share a page with nearest-filtered pixel art (design D7).
@@ -29,8 +28,8 @@ public enum SpriteAtlasRouting {
         if spriteName.hasPrefix("building-") { return buildingsAtlasName }
         // Status badges drawn over buildings live in the Buildings atlas.
         if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
-        if spriteName.hasPrefix("walker-") { return unitsAtlasName }
-        if spriteName.hasPrefix("ship-") { return unitsAtlasName }
+        // People and ships are kit renders; the Units atlas is retired (realistic-walkers).
+        if ["walker-", "carrier-", "ship-"].contains(where: spriteName.hasPrefix) { return kitAtlasName }
         if spriteName.hasPrefix("good-") { return iconsAtlasName }
         return nil
     }
@@ -38,13 +37,13 @@ public enum SpriteAtlasRouting {
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        buildingsAtlasName, unitsAtlasName, iconsAtlasName, kitAtlasName
+        buildingsAtlasName, iconsAtlasName, kitAtlasName
     ]
 }
 
 /// Resolves terrain, building, and walker textures from the host app's
 /// main bundle. Sprites live in three category atlases under
-/// `Resources/` (`Terrain.atlas/`, `Buildings.atlas/`, `Units.atlas/`),
+/// `Resources/` (`Kit.atlas/`, `Buildings.atlas/`, `Icons.atlas/`),
 /// which Xcode packs into single GPU textures at build time. Lookups go
 /// through `SKTextureAtlas(named:)` — never `SKTexture(imageNamed:)`.
 ///
@@ -60,6 +59,21 @@ public enum SpriteAtlas {
     public enum WalkerFacing: String, CaseIterable, Hashable, Sendable {
         case ne, se, sw, nw
     }
+
+    /// A resident's look. Carriers have their own looks, by load (`carrierAnimation`).
+    public enum WalkerLook: String, CaseIterable, Hashable, Sendable {
+        case worker, woman
+
+        /// `walker` for the worker, `walker-woman` for the woman.
+        var stem: String {
+            self == .worker ? "walker" : "walker-\(rawValue)"
+        }
+    }
+
+    /// Walker sprites stand 5 pt above the bottom of their 32 pt cell and 4 pt left of its centre, so the
+    /// stride and the shadow falling right fit; nodes anchor there. Spec: `rendering-2_5d` / Figures
+    /// stand on their feet.
+    public static let walkerAnchor = CGPoint(x: 12.0 / 32.0, y: 5.0 / 32.0)
 
     public static func terrainTexture(for kind: TerrainType) -> SKTexture? {
         texture(named: "terrain-\(kind.rawValue)")
@@ -81,6 +95,7 @@ public enum SpriteAtlas {
     /// Number of art variants per terrain kind. Kinds not listed render
     /// the single canonical sprite.
     public static let terrainVariantCounts: [TerrainType: Int] = [
+        .grass: 4,
         .mountain: 4
     ]
 
@@ -115,22 +130,6 @@ public enum SpriteAtlas {
         variant == 0 ? stem : "\(stem)-v\(variant)"
     }
 
-    /// Variant-aware terrain texture lookup. Falls back to the magenta
-    /// placeholder + log-once when the asset is missing, same contract as
-    /// `textureOrPlaceholder(named:)`.
-    public static func terrainTextureOrPlaceholder(
-        for kind: TerrainType,
-        coord: TileCoordinate
-    ) -> SKTexture {
-        textureOrPlaceholder(named: terrainAssetName(for: kind, coord: coord))
-    }
-
-    /// The per-tile terrain sprite name, variant included (`terrain-mountain-v2`).
-    static func terrainAssetName(for kind: TerrainType, coord: TileCoordinate) -> String {
-        let count = terrainVariantCounts[kind] ?? 1
-        return variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variantIndex(coord: coord, count: count))
-    }
-
     /// Variant-aware building texture lookup. Used for non-shore
     /// buildings whose idle sprite has variants (currently: road). Shore
     /// orientations are resolved separately via `ShoreOrientationMath`.
@@ -144,10 +143,15 @@ public enum SpriteAtlas {
         return textureOrPlaceholder(named: name)
     }
 
-    /// Two-frame walk cycle for a given facing. Backed by `frames(for:)`
-    /// so all multi-frame lookups share one code path.
+    /// The walk cycle of a resident look in a facing; frame 0 is the standing pose. Backed by
+    /// `frames(for:)` so all multi-frame lookups share one code path.
+    public static func walkerAnimation(facing: WalkerFacing, look: WalkerLook) -> [SKTexture]? {
+        frames(for: .walker(facing, look))
+    }
+
+    /// The worker's walk cycle.
     public static func walkerAnimation(facing: WalkerFacing) -> [SKTexture]? {
-        frames(for: .walker(facing))
+        walkerAnimation(facing: facing, look: .worker)
     }
 
     /// Multi-frame lookup for any `AnimationKey`. Returns `nil` if any
@@ -231,7 +235,8 @@ public enum SpriteAtlas {
         return placeholderTexture
     }
 
-    private static func logMissOnce(_ name: String) {
+    /// Logs a missing sprite once per process; a fallback that draws something else still reports it.
+    static func logMissOnce(_ name: String) {
         var shouldLog = false
         cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
         guard shouldLog else { return }
@@ -288,13 +293,14 @@ public enum SpriteAtlas {
                     names.append(SpriteAnimation.assetName(for: .terrain(kind), frame: frame))
                 }
             }
-            // Art variants (mountain): variant 0 already added above as
-            // the canonical stem; variants 1..N-1 use the `-vN` suffix.
+            // Art variants (grass, rock): variant 0 already added above as
+            // the canonical stem; variants 1..N-1 use the `-vN` suffix, with their frames.
             if let variantCount = terrainVariantCounts[kind], variantCount > 1 {
+                let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
                 for variant in 1 ..< variantCount {
-                    names.append(
-                        variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
-                    )
+                    let name = variantAssetName(stem: "terrain-\(kind.rawValue)", variant: variant)
+                    names.append(name)
+                    names += (0 ..< frames).map { "\(name)-\($0)" }
                 }
             }
         }
@@ -349,12 +355,9 @@ public enum SpriteAtlas {
             }
         }
 
-        for facing in WalkerFacing.allCases {
-            if let entry = SpriteAnimation.entry(for: .walker(facing)) {
-                for frame in 0 ..< entry.frameCount {
-                    names.append(SpriteAnimation.assetName(for: .walker(facing), frame: frame))
-                }
-            }
+        for key in SpriteAnimation.AnimationKey.people {
+            let frames = SpriteAnimation.entry(for: key)?.frameCount ?? 0
+            names += (0 ..< frames).map { SpriteAnimation.assetName(for: key, frame: $0) }
         }
 
         // Ship sprites: 8 facings × 2 frames = 16 entries.

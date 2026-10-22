@@ -9,7 +9,7 @@ A rival SHALL trade at its own town center's market in four cases.
 3. **Sell surplus.** On its turn, before the threshold rules, while its goods buffers together have fewer than 40 units of room, the rival SHALL sell every unit above 60 of planks, then wood, one good per turn. The trade takes the turn.
 4. **Feed.** On its turn, before the threshold rules, while food is below 4, one of the rival's houses is short of food and the treasury is at least $300, the rival SHALL buy up to 5 food. The trade takes the turn.
 
-Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
+Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. The units a sale keeps or sells SHALL be counted in the rival's own operational goods buffers, not in the player's stores on the same island. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
 
 #### Scenario: Rival buys the planks it is missing
 
@@ -30,6 +30,11 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 - **WHEN** a rival with $5,000, 10 food and 90 planks, whose town center and warehouse together have 30 units of room, takes a turn
 - **THEN** it sells 20 planks, the seasonal limit, while with 50 units of room it sells none
+
+#### Scenario: Rival sales count only its own stores
+
+- **WHEN** a rival with $5,000, crowded stores holding 70 of its own planks, and a player warehouse on its island holding 100 planks takes a turn
+- **THEN** it sells 10 planks
 
 #### Scenario: Rival buys food for short houses
 

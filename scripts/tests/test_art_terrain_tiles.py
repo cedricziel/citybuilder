@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from art import svg_sprites, terrain_tiles
+from art import ground, svg_sprites, terrain_tiles
 
 needs_rsvg = pytest.mark.skipif(shutil.which("rsvg-convert") is None, reason="rsvg-convert not installed")
 
@@ -65,24 +65,52 @@ def seam_faults(west: Image.Image, east: Image.Image, offset: tuple[int, int]) -
     return gaps, jumps
 
 
+def tile_sets() -> list[tuple[str, dict[int, list[str]]]]:
+    """Per transition set, the tiles for each corner mask: 1..14 are the transitions, 0 and 15 the
+    full lower and upper tiles in every variant and frame, which must join them as well."""
+    grass_looks = ["", *(f"-{season}" for season in terrain_tiles.SEASONS)]
+    sets = []
+    for look in grass_looks:
+        grass = [f"terrain-grass{look}{variant}{frame}" for variant in ["", *(f"-v{n}" for n in range(1, ground.GRASS_VARIANTS))]
+                 for frame in ("", "-0", "-1")]
+        masks = {m: [f"terrain-grass-beach-t{m}{look}"] for m in range(1, 15)}
+        sets.append((f"grass-beach{look}", {0: ["terrain-beach", "terrain-beach-1"], 15: grass, **masks}))
+    masks = {m: [f"terrain-beach-water-t{m}"] for m in range(1, 15)}
+    sets.append(("beach-water", {0: ["terrain-water", "terrain-water-2"], 15: ["terrain-beach", "terrain-beach-1"], **masks}))
+    return sets
+
+
 @needs_rsvg
 @pytest.mark.scenario("Neighbouring transition tiles join without a seam")
 def test_neighbouring_tiles_join_without_a_seam(tmp_path: Path) -> None:
+    """Every transition set in every season, and the full tiles in every variant and frame beside them."""
     sources = terrain_tiles.sources()
     svg_sprites.render_sources(sources, tmp_path, scales=(1,))
     tiles = {name: Image.open(tmp_path / f"{name}.png").convert("RGBA") for name in sources}
     checked, faults = 0, []
-    for pair in ("grass-beach", "beach-water"):
-        for here in range(1, 15):
-            for there in range(1, 15):
+    for label, by_mask in tile_sets():
+        for here in range(16):
+            for there in range(16):
+                if here in (0, 15) and there in (0, 15):
+                    continue  # two full tiles: no transition between them
                 for offset, corners in NEIGHBOURS.items():
                     if any(bool(here & mine) != bool(there & theirs) for mine, theirs in corners):
                         continue
-                    gaps, jumps = seam_faults(tiles[f"terrain-{pair}-t{here}"], tiles[f"terrain-{pair}-t{there}"], offset)
-                    checked += 1
-                    # Colour may change along an edge only where the boundary crosses it (its two corners differ).
+                    # Colour may change along an edge only where the boundary crosses it.
                     crossed = len({bool(here & mine) for mine, _ in corners}) == 2
-                    if gaps or jumps > (6 if crossed else 0):
-                        faults.append((pair, here, there, offset, gaps, jumps))
-    assert checked == 200
+                    for west in by_mask[here]:
+                        for east in by_mask[there]:
+                            gaps, jumps = seam_faults(tiles[west], tiles[east], offset)
+                            checked += 1
+                            if gaps or jumps > (6 if crossed else 0):
+                                faults.append((label, west, east, offset, gaps, jumps))
+    assert checked > 200 * len(tile_sets())
     assert faults == []
+
+
+def test_every_grass_variant_has_its_seasons_and_frames() -> None:
+    names = set(terrain_tiles.sources())
+    for season in ("", *(f"-{s}" for s in terrain_tiles.SEASONS)):
+        for variant in ("", *(f"-v{n}" for n in range(1, ground.GRASS_VARIANTS))):
+            for frame in ("", "-0", "-1"):
+                assert f"terrain-grass{season}{variant}{frame}" in names

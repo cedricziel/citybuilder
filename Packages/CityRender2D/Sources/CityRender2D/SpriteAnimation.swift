@@ -12,7 +12,14 @@ public enum SpriteAnimation {
         case terrain(TerrainType)
         case buildingOperational(BuildingKind)
         case buildingConstructing(BuildingKind)
-        case walker(SpriteAtlas.WalkerFacing)
+        case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
+        /// A carrier holding a load; shares the walker's cycle.
+        case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
+
+        /// Every resident look and carrier load in every facing (realistic-walkers).
+        public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
+            SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
+        }
     }
 
     /// `.forever` arms `SKAction.repeatForever(animate(...))` on the node.
@@ -48,8 +55,9 @@ public enum SpriteAnimation {
             operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
-        case .walker:
-            Entry(frameCount: 2, timePerFrame: 0.15, loop: .forever)
+        case .walker, .carrier:
+            // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
+            Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
         }
     }
 
@@ -71,7 +79,7 @@ public enum SpriteAnimation {
     ///   terrain-water-0.png, terrain-water-1.png, …
     ///   building-sawmill-operational-0.png, …
     ///   building-house-constructing-0.png, …
-    ///   walker-se-0.png, walker-se-1.png (unchanged from M5)
+    ///   walker-se-0.png, walker-woman-se-7.png, carrier-logs-nw-3.png
     static func assetName(for key: AnimationKey, frame: Int) -> String {
         switch key {
         case let .terrain(kind):
@@ -80,8 +88,10 @@ public enum SpriteAnimation {
             "building-\(kind.rawValue)-operational-\(frame)"
         case let .buildingConstructing(kind):
             "building-\(kind.rawValue)-constructing-\(frame)"
-        case let .walker(facing):
-            "walker-\(facing.rawValue)-\(frame)"
+        case let .walker(facing, look):
+            "\(look.stem)-\(facing.rawValue)-\(frame)"
+        case let .carrier(load, facing):
+            "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
         }
     }
 

@@ -46,7 +46,7 @@ The minimap is laid out inside the existing HUD stacks rather than floating abov
 - Back closes it
 - a Play/Pause hold closes it and sets the zoom to 2.0
 
-The Play/Pause hold cycle opens the overview from 0.5. `ControllerSnapshot` gains `buttonX`, which emits a new `RemoteInput.overview`. The TV view draws the same `MinimapCanvas` full screen, plus the cursor. All of the rules run in the macOS test run.
+`GameSession.cycleZoomLevel()`, which the Play/Pause hold runs, opens the overview from 0.5 and closes it to 2.0. `ControllerSnapshot` gains `buttonX`, which emits a new `RemoteInput.overview`. The TV view draws the same `MinimapCanvas` full screen, plus the cursor. All of the rules run in the macOS test run.
 
 ## Risks / Trade-offs
 

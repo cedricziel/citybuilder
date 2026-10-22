@@ -33,12 +33,14 @@ public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
+    /// Ticks below zero before the game ends: whole tax intervals, so a
+    /// dip always sees the next collection (`hard-bankruptcy-grace` D1).
     public var bankruptcyGraceTicks: UInt64 {
-        switch self {
-        case .easy: 150
-        case .normal: 50
-        case .hard: 30
+        let intervals: UInt64 = switch self {
+        case .easy: 3
+        case .normal, .hard: 1
         }
+        return intervals * Economy.taxIntervalTicks
     }
 
     /// Chance in percent that a history event fires at the turn of a year.

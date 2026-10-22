@@ -14,7 +14,7 @@ struct CitybuilderMacApp: App {
     /// `add-fullscreen-launch` / `platform-shells` — Mac launches
     /// fullscreen by default + remembers user-driven transitions.
     private let fullscreenTracker: MacFullscreenTracker
-    private let saveStore = SaveStore()
+    private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
     /// Stable slot used by Continue + pause-menu Save. Spec
     /// `add-title-screen-and-new-game` design D6.
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
@@ -59,6 +59,15 @@ struct CitybuilderMacApp: App {
     /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
     /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
     /// `-uiTestSeedLived`.
+    /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
+    private static var uiTestSaveDirectory: URL? {
+        #if DEBUG
+        UITestSeed.saveDirectory(fromArguments: ProcessInfo.processInfo.arguments)
+        #else
+        nil
+        #endif
+    }
+
     private static func uiTestWorld(replacing world: World) -> World {
         #if DEBUG
         if let seeded = UITestSeed.world(fromArguments: ProcessInfo.processInfo.arguments) {

@@ -72,6 +72,15 @@ struct RecipeRulesTests {
         #expect(abs(topCorner.y - 64) < 0.001)
     }
 
+    @Test("a narrow cell keeps its anchor at the bottom centre")
+    func narrowCellGeometry() {
+        let cell = SpriteCell(footprint: 1, heightPx: 30, widthPx: 24)
+        #expect(cell.widthPx == 24)
+        let anchor = Projection.screen(SCNVector3(4, 0, 4), in: cell)
+        #expect(abs(anchor.x - 12) < 0.001)
+        #expect(abs(anchor.y) < 0.001)
+    }
+
     /// The game starts chimney smoke at this point, so it must follow the chimney the recipe builds.
     @Test("a recipe's chimney anchor is its chimney top, as fractions of the sprite")
     func chimneyAnchorIsTheChimneyTop() throws {
@@ -105,6 +114,27 @@ struct RecipeRulesTests {
         // Both chimneys sit on the same screen column, so the height tells them apart.
         #expect(abs(anchor.x - expected.x / 128) < 0.001)
         #expect(abs(anchor.y - (1 - expected.y / 128)) < 0.001)
+    }
+
+    /// A unit's feet and baked shadow have no plot to hide a cut, so both must stay inside the cell.
+    @Test("a unit whose feet or shadow cross the bottom or side edge does not fit")
+    func unitFeetAndShadowStayInTheCell() {
+        func post(_ base: SCNVector3, height: CGFloat) -> Recipe {
+            Recipe(
+                id: "walker-test", entry: "walker", cell: SpriteCell(footprint: 1, heightPx: 40, widthPx: 32),
+                constructionFrames: 0, operationalFrames: 1,
+                moving: MovingPart(name: "gait") { kit, _ in
+                    kit.block(base, base + SCNVector3(0.1, height, 0.1), .wood)
+                },
+                plot: nil, unit: true
+            ) { _, _ in }
+        }
+        // Standing 5 pt up at the centre, a 1 m post and its shadow fit.
+        #expect(CellFit.problems(in: post(SCNVector3(3.33, 0, 3.33), height: 1)).isEmpty)
+        // At the bottom vertex its foot is on the bottom edge's far side.
+        #expect(!CellFit.problems(in: post(SCNVector3(4.0, 0, 4.0), height: 1)).isEmpty)
+        // A 3.5 m post throws its shadow past the right edge, though the post itself fits.
+        #expect(!CellFit.problems(in: post(SCNVector3(3.33, 0, 3.33), height: 3.5)).isEmpty)
     }
 
     /// A unit has no plot overhang to crop, so any of it past the edge is clipped; the sail counts too.

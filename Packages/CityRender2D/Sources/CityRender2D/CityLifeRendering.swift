@@ -23,29 +23,60 @@ extension IsoWorldScene {
         nightOverlay.alpha = CGFloat(time.darkness)
     }
 
-    /// Warm windows on inhabited houses, brightening as night falls.
+    /// Warm windows on inhabited houses and working buildings,
+    /// brightening as night falls. Spec: `rendering-2_5d` / Lit windows
+    /// follow the lights art.
     func updateWindowGlow(with snapshot: WorldSnapshot) {
         let glow = CGFloat(TimeOfDay(tick: snapshot.tickCount).darkness / TimeOfDay.nightDarkness)
         for (spec, node) in presentSprites {
             guard case let .building(kind, state, _, _, _, _, _, _, _, _) = spec.kind,
-                  kind == .house, state == .operational
+                  state == .operational, kind != .road, let sprite = node as? SKSpriteNode
             else { continue }
-            let inhabited = snapshot.occupiedTiles[spec.coord]
-                .flatMap { snapshot.housePopulations[$0] }
-                .map { $0.population > 0 } ?? false
-            let target = inhabited ? glow : 0
+            let lights = lightsTextureName(for: sprite, kind: kind)
+            guard kind == .house || lights != nil else { continue }
+            let target = isLit(kind: kind, at: spec.coord, in: snapshot) ? glow : 0
             if let existing = node.childNode(withName: Self.windowGlowNodeName) {
                 existing.alpha = target
             } else if target > 0 {
-                let size = (node as? SKSpriteNode)?.size ?? CGSize(width: 64, height: 64)
-                node.addChild(makeWindowGlow(alpha: target, spriteSize: size))
+                let made = lights.map(makeLightsGlow(named:)) ?? makeWindowGlow(spriteSize: sprite.size)
+                made.alpha = target
+                node.addChild(made)
             }
         }
     }
 
+    /// Inhabited for a house; otherwise working: a rival's operational
+    /// building, or a player's with no issue.
+    private func isLit(kind: BuildingKind, at coord: TileCoordinate, in snapshot: WorldSnapshot) -> Bool {
+        guard let id = snapshot.occupiedTiles[coord] else { return false }
+        if kind == .house { return (snapshot.housePopulations[id]?.population ?? 0) > 0 }
+        guard let building = snapshot.buildings[id] else { return false }
+        return building.owner != .player || snapshot.buildingIssues[id] == nil
+    }
+
+    /// `<sprite stem>-lights` when the atlas has it, remembered per stem.
+    private func lightsTextureName(for sprite: SKSpriteNode, kind: BuildingKind) -> String? {
+        let stem = (sprite.userData?[Self.textureNameKey] as? String).map(TextureFiltering.stem(of:)) ?? "building-\(kind.rawValue)"
+        if let known = lightsNames[stem] { return known }
+        let name = "\(stem)-lights"
+        let found = hasSprite(name) ? name : nil
+        lightsNames[stem] = .some(found)
+        return found
+    }
+
+    /// The building's lights art, added over its sprite.
+    private func makeLightsGlow(named name: String) -> SKNode {
+        let glow = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        glow.name = Self.windowGlowNodeName
+        glow.anchorPoint = CGPoint(x: 0.5, y: 0)
+        glow.blendMode = .add
+        glow.zPosition = 96
+        return glow
+    }
+
     /// Two warm panes on the front walls, a third of the way up the
     /// sprite (whose anchor is its bottom centre).
-    private func makeWindowGlow(alpha: CGFloat, spriteSize: CGSize) -> SKNode {
+    private func makeWindowGlow(spriteSize: CGSize) -> SKNode {
         let glow = SKNode()
         glow.name = Self.windowGlowNodeName
         for side in [-1.0, 1.0] {
@@ -55,42 +86,38 @@ extension IsoWorldScene {
             glow.addChild(pane)
         }
         glow.zPosition = 96
-        glow.alpha = alpha
         return glow
     }
 
     func reconcileStrollers(with snapshot: WorldSnapshot) {
         let wanted = StrollerPlanner.strollers(in: snapshot)
         let keys = Set(wanted.map { StrollerKey(house: $0.house, slot: $0.slot) })
-        for (key, node) in strollerNodes where !keys.contains(key) {
-            node.removeFromParent()
+        for (key, shown) in strollerNodes where !keys.contains(key) {
+            shown.node.removeFromParent()
             strollerNodes.removeValue(forKey: key)
         }
         for stroller in wanted {
             let key = StrollerKey(house: stroller.house, slot: stroller.slot)
-            let node = strollerNodes[key] ?? makeStrollerNode()
-            if strollerNodes[key] == nil {
+            let facing = stroller.facing
+            let node: SKSpriteNode
+            if let shown = strollerNodes[key] {
+                node = shown.node
+            } else {
+                node = SKSpriteNode.walker()
                 addChild(node)
-                strollerNodes[key] = node
+            }
+            if strollerNodes[key]?.facing != facing {
+                // Lit sprites are never mirrored: each facing plays its own frames.
+                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing))
+                strollerNodes[key] = (node, facing)
             }
             let from = IsoMath.screenPoint(forTile: stroller.from)
             let to = IsoMath.screenPoint(forTile: stroller.to)
             let along = CGFloat(stroller.progress)
             node.position = CGPoint(x: from.x + (to.x - from.x) * along, y: from.y + (to.y - from.y) * along)
-            node.xScale = stroller.to.x < stroller.from.x || stroller.to.y > stroller.from.y ? -1 : 1
             let depth = Double(max(stroller.from.x + stroller.from.y, stroller.to.x + stroller.to.y) + 1)
             node.zPosition = Self.depthZ(depth) + Self.figureLift
         }
-    }
-
-    private func makeStrollerNode() -> SKSpriteNode {
-        let frames = SpriteAtlas.walkerAnimation(facing: .se) ?? []
-        let node = SKSpriteNode(texture: frames.first)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0)
-        if frames.count > 1 {
-            node.run(.repeatForever(.animate(with: frames, timePerFrame: 0.2)), withKey: "walk")
-        }
-        return node
     }
 }
 
