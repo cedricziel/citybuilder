@@ -291,7 +291,8 @@ public final class IsoWorldScene: SKScene {
             camera: snapshot.camera,
             viewSize: size,
             mapWidth: snapshot.mapWidth,
-            mapHeight: snapshot.mapHeight
+            mapHeight: snapshot.mapHeight,
+            margin: Culling.screenMargin
         )
         else { return }
 
