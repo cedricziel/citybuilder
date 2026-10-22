@@ -47,8 +47,10 @@ NAME_PATTERNS = [
         r"^building-(?:port|shipyard)-[nsew]"
         r"(?:-(?:constructing|operational)-\d+)?$"
     ),
-    # Walker
-    re.compile(r"^walker-(?:ne|nw|se|sw)-\d+$"),
+    # Resident: walker-[woman-]<facing>-<frame>
+    re.compile(r"^walker-(?:woman-)?(?:ne|nw|se|sw)-\d+$"),
+    # Carrier: carrier-<load>-<facing>-<frame>
+    re.compile(r"^carrier-(?:sack|crate|barrel|logs)-(?:ne|nw|se|sw)-\d+$"),
     # Ship
     re.compile(r"^ship-(?:n|ne|e|se|s|sw|w|nw)-\d+$"),
     # Goods icon

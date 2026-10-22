@@ -22,9 +22,11 @@ public enum SpriteContentGate {
         case scaleTwinMismatch = "scale_twin_mismatch"
         /// An `@2x` file has no `@1x` sprite.
         case scaleTwinOrphan = "scale_twin_orphan"
-        /// A migrated walker frame is not 10×16 points.
+        /// A migrated walker or carrier frame is not 32×32 points.
         case walkerSize = "walker_size"
-        /// A migrated walker facing lacks one of its four gait frames.
+        /// A migrated walker or carrier frame, or its baked shadow, touches the left, right or bottom edge.
+        case walkerClipped = "walker_clipped"
+        /// A migrated walker or carrier facing lacks one of its eight gait frames.
         case walkerFramesMissing = "walker_frames_missing"
     }
 

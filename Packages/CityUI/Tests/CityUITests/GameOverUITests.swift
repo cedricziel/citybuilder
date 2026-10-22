@@ -44,7 +44,7 @@ func scenarioBuildToolsStayOffAfterGameOver() throws {
 func scenarioGameOverDisarmsTheArmedTool() throws {
     var world = World.newGame()
     world.economy.balance = -1
-    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
+    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks
     let session = GameSession(world: world)
     session.confirmsBuildingPlacement = true
     session.selectTool(.place(.sawmill))
@@ -129,7 +129,7 @@ func scenarioInspectorAndRouteActionsAreOffAfterGameOver() {
 func scenarioGameOverEndsRouteMode() {
     var world = World.newGame()
     world.economy.balance = -1
-    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks - 1
+    world.economy.bankruptcyDeficitTicks = world.difficulty.bankruptcyGraceTicks
     let session = GameSession(world: world)
     session.beginRouteAuthoring()
     #expect(session.routeAuthoring != nil)

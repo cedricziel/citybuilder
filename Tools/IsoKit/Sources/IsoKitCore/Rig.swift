@@ -3,6 +3,10 @@ import SceneKit
 
 /// The shared light rig and camera. Every building lights identically (design D3).
 public enum Rig {
+    /// Where the sun stands relative to the cell's centre: screen upper-left, high enough that the cast
+    /// shadow stays in the cell. Shadows fall the opposite way.
+    static let sunOffset = SCNVector3(-9, 30, 9)
+
     /// One warm sun from screen upper-left, high enough that the cast shadow stays in the cell,
     /// plus a cool sky fill.
     static func add(to root: SCNNode, cell: SpriteCell) {
@@ -19,7 +23,7 @@ public enum Rig {
         sun.shadowColor = NSColor(red: 0.12, green: 0.08, blue: 0.05, alpha: 0.55)
         let sunNode = SCNNode()
         sunNode.light = sun
-        sunNode.position = centre + SCNVector3(-9, 30, 9)
+        sunNode.position = centre + sunOffset
         sunNode.look(at: centre)
         root.addChildNode(sunNode)
 
