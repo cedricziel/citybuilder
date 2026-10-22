@@ -97,18 +97,11 @@ public enum PlazaCrowdPlanner {
         return lane[(Int(rng.next() % UInt64(lane.count)) + rank) % lane.count]
     }
 
-    /// Muted cloth tints, one per figure.
-    static let tints: [SKColor] = [
-        SKColor(red: 0.45, green: 0.32, blue: 0.20, alpha: 1),
-        SKColor(red: 0.30, green: 0.38, blue: 0.48, alpha: 1),
-        SKColor(red: 0.42, green: 0.45, blue: 0.28, alpha: 1),
-        SKColor(red: 0.55, green: 0.50, blue: 0.42, alpha: 1),
-        SKColor(red: 0.50, green: 0.25, blue: 0.22, alpha: 1)
-    ]
-
-    static func tint(center: EntityID, slot: Int) -> SKColor {
+    /// A worker or a woman, from a hash of the town center and slot.
+    static func look(center: EntityID, slot: Int) -> SpriteAtlas.WalkerLook {
         var rng = DeterministicRNG(seed: UInt64(center.raw) << 8 | UInt64(slot))
-        return tints[Int(rng.next() % UInt64(tints.count))]
+        let looks = SpriteAtlas.WalkerLook.allCases
+        return looks[Int(rng.next() % UInt64(looks.count))]
     }
 }
 
@@ -120,6 +113,7 @@ struct PlazaFigureKey: Hashable {
 struct PlazaPose: Equatable {
     let walking: Bool
     let facing: SpriteAtlas.WalkerFacing
+    let look: SpriteAtlas.WalkerLook
 }
 
 struct PlazaPass: Equatable {
@@ -158,7 +152,10 @@ extension IsoWorldScene {
         for figure in figures {
             let key = PlazaFigureKey(townCenter: figure.townCenter, slot: figure.slot)
             let target = IsoMath.screenPoint(forTileFractionalX: figure.col, fractionalY: figure.row)
-            let pose = PlazaPose(walking: figure.walking, facing: figure.facing)
+            let pose = PlazaPose(
+                walking: figure.walking, facing: figure.facing,
+                look: PlazaCrowdPlanner.look(center: figure.townCenter, slot: figure.slot)
+            )
             if var shown = plazaNodes[key] {
                 if shown.node.position != target { shown.node.glide(to: target) }
                 if shown.pose != pose {
@@ -170,8 +167,6 @@ extension IsoWorldScene {
             }
             let node = SKSpriteNode.walker()
             node.zPosition = Self.depthZ(figure.depth) + Self.figureLift
-            node.color = PlazaCrowdPlanner.tint(center: figure.townCenter, slot: figure.slot)
-            node.colorBlendFactor = 0.35
             node.position = target
             Self.apply(pose, to: node)
             addChild(node)
@@ -184,7 +179,7 @@ extension IsoWorldScene {
     private func standStillIfPaused(now: TimeInterval) {
         guard now - plazaTickAt > 0.3 else { return }
         for (key, shown) in plazaNodes where shown.pose.walking {
-            let standing = PlazaPose(walking: false, facing: shown.pose.facing)
+            let standing = PlazaPose(walking: false, facing: shown.pose.facing, look: shown.pose.look)
             Self.apply(standing, to: shown.node)
             plazaNodes[key] = (shown.node, standing)
         }
@@ -194,6 +189,10 @@ extension IsoWorldScene {
     /// from `SpriteAtlas.walkerAnimation`, the one walker lookup, so
     /// redrawn walkers show up here unchanged.
     private static func apply(_ pose: PlazaPose, to node: SKSpriteNode) {
-        node.playWalkCycle(.walker(pose.facing), frames: SpriteAtlas.walkerAnimation(facing: pose.facing), moving: pose.walking)
+        node.playWalkCycle(
+            .walker(pose.facing, pose.look),
+            frames: SpriteAtlas.walkerAnimation(facing: pose.facing, look: pose.look),
+            moving: pose.walking
+        )
     }
 }
