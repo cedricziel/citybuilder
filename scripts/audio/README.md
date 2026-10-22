@@ -13,5 +13,5 @@ Each full music render rewrites about 10 MB of `.caf`, and git keeps every versi
 
 - Don't re-render the music casually.
 - Batch score changes into one commit.
-- Render only the pieces that changed: `python3 -m audio.music.render --only music/<piece>.caf`.
+- Render only the pieces that changed: `cd scripts && python3 -m audio.music.render --only music/<piece>.caf`.
 - A change to `synth.py` or `score.py` changes every piece. Make it only when it's worth that cost.
