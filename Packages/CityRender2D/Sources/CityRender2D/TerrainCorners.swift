@@ -74,7 +74,7 @@ public enum TerrainCorners {
     /// Grass, beach and water blend into each other; forest and mountain keep their own sprites.
     static func blends(_ kind: TerrainType) -> Bool {
         switch kind {
-        case .grass, .beach, .water: true
+        case .grass, .forest, .beach, .water: true
         default: false
         }
     }

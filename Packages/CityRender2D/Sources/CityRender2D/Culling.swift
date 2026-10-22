@@ -44,6 +44,19 @@ public enum Culling {
         return (clampedX, clampedY)
     }
 
+    /// Scene points beyond the view's edge that still count as on screen: a tile reaches 32 pt past
+    /// its centre, and a tree clump 112 pt above it (terrain-v2, design D9).
+    public static let screenMargin: CGFloat = 160
+
+    /// The part of the scene the camera shows, in scene points, grown by `screenMargin`. The tile
+    /// range above is its bounding box in tile space, about twice as many tiles as the screen holds.
+    public static func screenBounds(camera: Camera, viewSize: CGSize) -> CGRect {
+        let centre = IsoMath.screenPoint(forTileFractionalX: camera.centerX, fractionalY: camera.centerY)
+        let width = viewSize.width / camera.zoom + 2 * screenMargin
+        let height = viewSize.height / camera.zoom + 2 * screenMargin
+        return CGRect(x: centre.x - width / 2, y: centre.y - height / 2, width: width, height: height)
+    }
+
     /// True if a tile is visible (or in the buffer margin) given the camera
     /// and view size.
     public static func isVisible(
