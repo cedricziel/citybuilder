@@ -5,7 +5,7 @@
 Terrain objects SHALL be named `terrain-<kind>-<density>[-<season>][-v<variant>]`:
 
 - `<kind>` is `forest` or `mountain`.
-- `<density>` is `single`, `sparse`, `medium` or `dense` for forest, and `sparse`, `medium`, `dense` or `peak` for mountain.
+- `<density>` is `sparse`, `medium` or `dense` for forest, and `sparse`, `medium`, `dense` or `peak` for mountain.
 - `<season>` is `autumn` or `winter` for forest, and `winter` for mountain.
 - `<variant>` is 1 to 3; variant 0 is the name without the slot.
 
@@ -25,7 +25,7 @@ Every name SHALL exist at @1x and @2x in `Resources/Kit.atlas` and filter linear
 
 `art.flora` and `art.rocks` SHALL generate the object sprites from seeded geometry, ray-cast on the CPU and lit with `art.ground`'s rig, with no network, no GPU and no image model. Two runs SHALL produce byte-identical raw renders. A clump's trees, and an outcrop's stones, SHALL depend only on the density and variant, so each season shows the same trees.
 
-#### Scenario: Tree clumps are byte-stable
+#### Scenario: Tree clumps are repeatable
 
 - **WHEN** a tree clump is rendered twice
 - **THEN** both renders are byte-identical

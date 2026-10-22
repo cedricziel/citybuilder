@@ -8,8 +8,8 @@ import pytest
 from art import flora, terrain_objects
 
 
-@pytest.mark.scenario("Tree clumps are byte-stable")
-def test_tree_clumps_are_byte_stable() -> None:
+@pytest.mark.scenario("Tree clumps are repeatable")
+def test_tree_clumps_are_repeatable() -> None:
     first = flora.render(flora.clump("single", 1, "spring"), "spring", scale=1)
     second = flora.render(flora.clump("single", 1, "spring"), "spring", scale=1)
     assert np.array_equal(first, second)
