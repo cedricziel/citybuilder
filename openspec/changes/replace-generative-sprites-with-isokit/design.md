@@ -116,9 +116,9 @@ SpriteKit picks `@2x` atlas images on retina devices automatically. Sprite sizes
 
 Pillow FASTOCTREE quantization of a 3D render @2× was 5.4× smaller than RGBA (15 KB vs 84 KB) with no visible difference. The 256-colour indexed rule of `sprite-asset-pipeline` therefore stays. The render tool quantizes on write.
 
-### D9. Walkers at 10×16 points
+### D9. Walkers move to their own change
 
-The 8×12 walker cannot show a hat, a load or a gait. Walkers become 10×16 points, rendered from a kit figure recipe: 4 facings × 4 gait frames, with tunic colour by job. Ships move to the kit in the same family PR.
+The 8×12 walker cannot show a hat, a load or a gait. The plan here was a 10×16 kit figure with 4 gait frames; `realistic-walkers` supersedes it with storybook-scale people (24×30 points, 8 gait frames), carrier looks per good family and animals. Ships moved to the kit in the shore family PR.
 
 ### D10. Catalog entries become briefs
 

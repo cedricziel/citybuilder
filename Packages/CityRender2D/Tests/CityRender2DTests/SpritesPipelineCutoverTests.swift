@@ -63,7 +63,6 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
     let atlases = [
         "Resources/Kit.atlas",
         "Resources/Buildings.atlas",
-        "Resources/Units.atlas",
         "Resources/Icons.atlas"
     ]
     let catalogDir = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")

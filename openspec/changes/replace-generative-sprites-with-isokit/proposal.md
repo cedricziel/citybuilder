@@ -21,7 +21,7 @@ This change turns that prototype into the source-controlled pipeline that writes
   `make sprites` builds it with `xcrun swift` and writes every building and unit PNG, with no network and no API key. The kit prototype in `.claude/skills/iso-sprite-authoring/kit/` (#87) is the starting point.
 - **Terrain transition tiles.** A generator writes corner-mask transition tiles for grass↔beach and beach↔water (14 masks each), plus full-tile variants, as SVG. These are rendered to PNG. **BREAKING for the renderer:** it now picks each tile from the terrain at its four corners, not from the tile's own kind alone. Forest and mountain keep their current tiles in this change.
 - **@2× atlases with linear filtering** for terrain, building and unit textures. Goods icons stay pixel art with nearest filtering.
-- **Walkers grow to 10×16** points (20×32 pixels @2×), rendered from the kit.
+- **Walkers** move to the kit in `realistic-walkers`.
 - **Remove the generative pipeline:**
   - `scripts/generate_sprites_ai/`
   - `Resources/Sprites.style/_sheets/`, `master-reference.png` and the model pin in `pipeline.toml`
@@ -55,7 +55,6 @@ This change turns that prototype into the source-controlled pipeline that writes
   - Building sprites must sit on their footprint, but no outline colour is required.
   - Terrain sprites fill the diamond with a 1-pixel bleed.
   - Moving-part frames are exempt from the silhouette rule.
-  - Walkers are 10×16.
 - `sprite-style-catalog`:
   - The style bible describes the kit.
   - Catalog entries name a recipe.

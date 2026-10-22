@@ -65,10 +65,10 @@ func kitRendersRouteToTheKitAtlas() {
     }
 }
 
-@Test("scenario: walker name routes to units atlas")
-func scenarioWalkerNameRoutesToUnitsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "walker-ne-0") == "Units")
-    #expect(SpriteAtlasRouting.atlasName(for: "walker-sw-1") == "Units")
+@Test("scenario: walker name routes to the kit atlas")
+func scenarioWalkerNameRoutesToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "walker-ne-0") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "walker-sw-1") == "Kit")
     if let texture = SpriteAtlas.texture(named: "walker-ne-0") {
         #expect(texture.size().width > 0)
     }
@@ -140,10 +140,6 @@ struct LazyConstructionSuite {
         // the per-category check by reading `isAtlasConstructed` for
         // the expected-positive case only.
         SpriteAtlas.resetForTesting()
-        _ = SpriteAtlas.texture(named: "walker-ne-0")
-        #expect(SpriteAtlas.isAtlasConstructed(named: "Units"))
-
-        SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "terrain-grass")
         #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
 
@@ -159,7 +155,7 @@ struct LazyConstructionSuite {
 
         SpriteAtlas.resetForTesting()
         _ = SpriteAtlas.texture(named: "walker-ne-0")
-        #expect(SpriteAtlas.isAtlasConstructed(named: "Units"))
+        #expect(SpriteAtlas.isAtlasConstructed(named: "Kit"))
     }
 }
 

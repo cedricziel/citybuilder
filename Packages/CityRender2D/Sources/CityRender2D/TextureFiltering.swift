@@ -16,6 +16,10 @@ public enum TextureFiltering {
         "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
         "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
         "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
+        "terrain-forest-single", "terrain-forest-single-autumn", "terrain-forest-single-winter",
+        "terrain-forest-sparse", "terrain-forest-sparse-autumn", "terrain-forest-sparse-winter",
+        "terrain-forest-medium", "terrain-forest-medium-autumn", "terrain-forest-medium-winter",
+        "terrain-forest-dense", "terrain-forest-dense-autumn", "terrain-forest-dense-winter",
         "terrain-grass-beach", "terrain-beach-water",
         "building-road", "building-road-plaza",
         "building-lumberjack-hut", "building-forester", "building-farm", "building-grain-farm", "building-mine",
@@ -34,7 +38,7 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]).union(houseAgeLooks)
+    ]).union(houseAgeLooks).union(peopleStems)
 
     /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).
     static let houseAgeLooks: [String] = ["antiquity", "renaissance", "industrial", "modern"].flatMap { age in
@@ -42,6 +46,11 @@ public enum TextureFiltering {
             ["building-house", "building-house-tier2", "building-house-tier3"].map { "\($0)-\(age)\(culture)" }
         }
     }
+
+    /// One stem per resident look or carrier load and facing (`walker-woman-se`, `carrier-logs-nw`).
+    static let peopleStems: Set<String> = Set(SpriteAnimation.AnimationKey.people.map {
+        stem(of: SpriteAnimation.assetName(for: $0, frame: 0))
+    })
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
         if spriteName.hasPrefix("good-") || spriteName.hasPrefix("overlay-") {

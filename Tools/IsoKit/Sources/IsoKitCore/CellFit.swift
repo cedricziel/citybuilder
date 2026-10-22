@@ -62,12 +62,43 @@ public enum CellFit {
         return (0 ..< recipe.operationalFrames).map { ("frame \($0)", recipe.unitModel($0)) }
     }
 
+    /// Where the sun casts `point` onto the ground.
+    static func shadow(of point: SCNVector3) -> SCNVector3 {
+        let sun = Rig.sunOffset
+        return point - sun * (point.y / sun.y)
+    }
+
+    /// A unit has no plot to hide its edges: its feet and its baked shadow (with a point of penumbra) must
+    /// stay inside the cell on the left, the right and the bottom, or the sprite shows a hard cut.
+    static let unitShadowMargin: CGFloat = 0.5
+
+    static func unitProblems(_ recipe: Recipe, _ stage: String, _ corners: [SCNVector3]) -> [String] {
+        let body = corners.map { Projection.screen($0, in: recipe.cell) }
+        let shade = corners.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell) }
+        var problems: [String] = []
+        if let bottom = body.map(\.y).min(), bottom < 0 {
+            problems.append("\(recipe.id) \(stage): bottom at \(String(format: "%.1f", bottom)) pt is below the cell")
+        }
+        let margin = unitShadowMargin, width = CGFloat(recipe.cell.widthPx)
+        let left = shade.map(\.x).min() ?? margin, right = shade.map(\.x).max() ?? margin
+        let low = shade.map(\.y).min() ?? margin
+        if left < margin || right > width - margin || low < margin {
+            problems.append(String(
+                format: "%@ %@: shadow reaches %.1f…%.1f pt across and %.1f pt up, outside %d pt with a %.0f pt margin",
+                recipe.id, stage, left, right, low, recipe.cell.widthPx, margin
+            ))
+        }
+        return problems
+    }
+
     /// Human-readable problems, one per clipped edge; empty when the recipe fits at every stage.
     public static func problems(in recipe: Recipe) -> [String] {
         var problems: [String] = []
         let edgeTolerance = edgeTolerance(for: recipe)
         for (stage, root) in fitBuilds(of: recipe) {
-            let points = corners(of: root).map { Projection.screen($0, in: recipe.cell) }
+            let world = corners(of: root)
+            if recipe.unit { problems += unitProblems(recipe, stage, world) }
+            let points = world.map { Projection.screen($0, in: recipe.cell) }
             let top = points.map(\.y).max() ?? 0
             let left = points.map(\.x).min() ?? 0
             let right = points.map(\.x).max() ?? 0
