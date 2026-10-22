@@ -19,7 +19,8 @@ public final class MusicDirector {
     private let playlist: MusicPlaylist
     private let crossfade: Double
     /// Starts a track: its path, fade-in seconds, and whether it loops.
-    private let play: (String, Double, Bool) -> Void
+    /// Returns false when it couldn't play (a missing file, a stopped engine).
+    private let play: (String, Double, Bool) -> Bool
     private let fadeOut: (String, Double) -> Void
     private let duration: (String) -> Double?
 
@@ -33,7 +34,7 @@ public final class MusicDirector {
     init(
         section: Bindings.MusicSection?,
         rng: any RandomNumberGenerator = SystemRandomNumberGenerator(),
-        play: @escaping (String, Double, Bool) -> Void,
+        play: @escaping (String, Double, Bool) -> Bool,
         fadeOut: @escaping (String, Double) -> Void,
         duration: @escaping (String) -> Double?
     ) {
@@ -95,7 +96,11 @@ public final class MusicDirector {
         }
         // The title theme loops in the player, gaplessly; game tracks play once.
         let loops = repeatsTitle
-        play(path, fade, loops)
+        guard play(path, fade, loops) else {
+            // Nothing is playing, so don't wait out the track: try again next tick.
+            nextStartAt = clock
+            return
+        }
         current = (path, loops ? .infinity : clock + (duration(path) ?? Self.fallbackDuration))
         nextStartAt = nil
     }

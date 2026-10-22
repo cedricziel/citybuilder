@@ -91,7 +91,7 @@ public final class AudioStack {
 
         let music = MusicDirector(
             section: bindings.music,
-            play: { [weak player] path, fade, loops in player?.playMusic(path, fade: fade, loops: loops) },
+            play: { [weak player] path, fade, loops in player?.playMusic(path, fade: fade, loops: loops) ?? false },
             fadeOut: { [weak player] path, fade in player?.fadeOutMusic(path, fade: fade) },
             duration: { [weak player] path in player?.duration(of: path) }
         )

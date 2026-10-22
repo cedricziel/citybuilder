@@ -9,11 +9,20 @@ import Testing
 private final class Recorder {
     var log: [String] = []
     var durations: [String: Double] = [:]
+    /// Paths the fake player can't play.
+    var failing: Set<String> = []
 
     func director(_ section: Bindings.MusicSection) -> MusicDirector {
         MusicDirector(
             section: section,
-            play: { [unowned self] path, fade, loops in log.append("play \(path) \(fade)\(loops ? " loop" : "")") },
+            play: { [unowned self] path, fade, loops in
+                guard !failing.contains(path) else {
+                    log.append("failed \(path)")
+                    return false
+                }
+                log.append("play \(path) \(fade)\(loops ? " loop" : "")")
+                return true
+            },
             fadeOut: { [unowned self] path, fade in log.append("fade \(path) \(fade)") },
             duration: { [unowned self] path in durations[path] }
         )
@@ -162,4 +171,20 @@ func titleThemeLoopsWithoutARestart() {
     let director = recorder.director(section())
     run(director, seconds: 60)
     #expect(recorder.log == ["play music/title.caf 0.0 loop"])
+}
+
+@MainActor
+@Test("scenario: a track that fails to play is tried again")
+func failedTrackIsTriedAgain() {
+    let recorder = Recorder()
+    recorder.durations = ["music/a.caf": 60]
+    recorder.failing = ["music/a.caf"]
+    let director = recorder.director(section(title: nil))
+    director.setContext(.game)
+    director.tick(dt: 0.1)
+    director.tick(dt: 0.1)
+    #expect(recorder.log == ["failed music/a.caf", "failed music/a.caf"], "no silent 60-second wait")
+    recorder.failing = []
+    director.tick(dt: 0.1)
+    #expect(recorder.log.last == "play music/a.caf 0.0")
 }
