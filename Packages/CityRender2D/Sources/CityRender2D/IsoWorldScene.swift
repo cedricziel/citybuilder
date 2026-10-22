@@ -299,12 +299,9 @@ public final class IsoWorldScene: SKScene {
         if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
             transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
         }
-        if objectMap?.matches(
-            width: snapshot.mapWidth,
-            height: snapshot.mapHeight,
-            grid: snapshot.terrainGrid,
-            occupancy: snapshot.occupiedTiles
-        ) != true {
+        if objectMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) == true {
+            objectMap?.update(occupancy: snapshot.occupiedTiles)
+        } else {
             objectMap = TerrainObjectMap(
                 width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid, occupancy: snapshot.occupiedTiles
             )
