@@ -47,25 +47,28 @@ Planks before houses has the best median on both layouts and is the only order t
 |---|---|
 | Build a farm | The player owns an operational farm (the only building that produces food). |
 | Make planks: a lumberjack and a sawmill | The player owns an operational lumberjack hut and an operational sawmill. |
-| Build 3 houses on a road | The player owns at least 3 operational houses. |
-| Earn more tax than upkeep | One collection's tax is above zero and at least its upkeep (`World.playerTaxAndUpkeep`). |
-| Sell surplus at the market | `World.market.sold` is non-empty: a sale this season (the ledger resets each season). |
+| Build 3 houses on a road | The player owns at least 3 operational houses with a road beside them (`World.isRoadConnected`). |
+| Earn more tax than upkeep | One collection's tax is more than its upkeep (`World.playerTaxAndUpkeep`). |
+| Sell surplus at the market | `World.market.sold` is non-empty: a sale this season. The ledger resets each season, so the latch below keeps the step met. |
 
-Steps are checked, not enforced: the player can build anything in any order. Every step is derived from the world as it stands, so a reloaded save shows the right checks and demolishing the only farm reopens its step. Roads are not a step; the house step says "on a road", and placement already rejects buildings off the network.
+Steps are checked, not enforced: the player can build anything in any order. A step is met when the world meets it as it stands, so a reloaded save shows the right checks, and once met it stays met for the session. Only the player's own buildings count. Roads are not a step of their own, but placement accepts a house with no road beside it, and such a house never fills, so the house step counts only road-connected houses.
 
 ### D2. When the guide shows
 
-The guide shows in every game mode while the date is in the game's first year, at least one step is open, the game is not over, the player has not hidden it this session, and the session has not yet seen every step met at once. Loading a save past year 1 shows nothing.
+The guide shows in every game mode while a step is open, the game is not over, and the player has not hidden it this session. There is no time limit: a naive Hard start goes bankrupt early in year 2, so a guide that left after year 1 would leave just before the failure it exists to prevent.
 
-Only two things are session state: the player hid the guide, and the session saw all five steps met at the same moment. The second latch keeps the guide from returning when a new season empties the market ledger. Neither is saved, which keeps CityCore and the save format unchanged. Later: remember "hidden" per save, so a player who hid the guide doesn't see it again after reloading a first-year save.
+Session state is the set of steps met so far, and whether the guide is dismissed (hidden by the player, or every step met). The latch keeps the market step met after a new season empties the ledger. Nothing is saved, which keeps CityCore and the save format unchanged; no existing stat counts lifetime market sales. Later: remember "hidden" and the met steps per save, so a reload neither brings back a hidden guide nor reopens the market step.
+
+Debug launches with any `-uiTest…` flag start with the guide dismissed, so UI tests and art shots aren't cluttered; `-uiTestFirstSteps` keeps it.
 
 ### D3. Layout: option A plus B's caption
 
 The Claude Design canvas put today's HUD next to three options: A, a first-steps card; B, contextual hints only; and C, first steps in the goals sheet. A plus B's caption was picked. A is the only option that shows the ledger before the deficit.
 
 - The card is a 12 pt-radius thin-material panel under the top-right HUD buttons, 300 pt wide. It has a "First steps" headline with a hide button, a tax / upkeep / net row in monospaced figures (net in red below zero), the caption "Per collection, every 50 ticks", and five step rows with a check circle and a one-line reason each.
-- On compact width (iPhone landscape) the card collapses to one capsule, "First steps 2/5 · net -$24", which expands on tap. Every platform shows the hide button, Apple TV included, where it takes focus like the other HUD buttons.
-- The tool strip warning is appended to the existing hint with " · ", as the in-reach count already is.
+- On a screen narrower than 600 pt or shorter than 500 pt (`HUDLayout.collapsesFirstSteps`; iPhone landscape is 844 × 390) the card collapses to one capsule, "First steps 2/5 · net -$24", which expands when activated and reads as "First steps, 2 of 5 done, net minus 24 dollars". Every platform shows the hide button, Apple TV included, where it takes focus like the other HUD buttons.
+- The tool strip warning is appended to the existing hint with " · ", as the in-reach count already is. Its upkeep is what the building would pay at its candidate site (`World.upkeepPerCollection`), so a mead hall's relief shows.
+- The card's column is subtracted from the stocks tray's width and from the inspector callout's free area while it shows expanded; the collapsed capsule only lowers the free area's top.
 
 ### D4. Measuring the advice with the PlayerBot
 

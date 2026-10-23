@@ -17,3 +17,10 @@
 
 - [x] 3.1 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
 - [x] 3.2 `make lint && make format`, `/simplify`, `openspec validate first-hour-guidance --strict`
+
+## 4. Review fixes (#193)
+
+- [x] 4.1 Count only road-connected houses (`World.isRoadConnected`); test with houses placed by command
+- [x] 4.2 Drop the year-one cutoff; latch met steps for the session; `-uiTest…` launches start dismissed unless `-uiTestFirstSteps`
+- [x] 4.3 Collapse on short screens (`HUDLayout.collapsesFirstSteps`); make room for the card in the stocks tray and the callout's free area
+- [x] 4.4 Strict tax step, upkeep at the candidate site with culture relief (`World.upkeepPerCollection`), idiom verbs, accessibility, Apple TV hide button

@@ -2,15 +2,17 @@
 
 ### Requirement: First-hour guide
 
-The game screen SHALL show a "First steps" guide while all of these hold: the in-game date is in the game's first year, at least one step is open, the game is not over, the player has not hidden the guide this session, and every step has not yet been met at once this session. It SHALL show in every game mode and difficulty. The guide SHALL list five steps in this order:
+The game screen SHALL show a "First steps" guide while all of these hold: at least one step is open, the game is not over, the player has not hidden the guide this session, and the session has not seen every step met. It SHALL show in every game mode and difficulty, with no time limit. The guide SHALL list five steps in this order:
 
-1. "Build a farm", met once the player owns an operational farm.
-2. "Make planks: a lumberjack and a sawmill", met once the player owns an operational lumberjack hut and an operational sawmill.
-3. "Build 3 houses on a road", met once the player owns at least 3 operational houses.
-4. "Earn more tax than upkeep", met once one collection's tax, as `World.playerTaxAndUpkeep` reports it, is above zero and at least its upkeep.
-5. "Sell surplus at the market", met while the player has sold at least one unit at a town center market this season.
+1. "Build a farm", met when the player owns an operational farm.
+2. "Make planks: a lumberjack and a sawmill", met when the player owns an operational lumberjack hut and an operational sawmill.
+3. "Build 3 houses on a road", met when the player owns at least 3 operational houses with a road beside them.
+4. "Earn more tax than upkeep", met when one collection's tax, as `World.playerTaxAndUpkeep` reports it, is more than its upkeep.
+5. "Sell surplus at the market", met when the player has sold at least one unit at a town center market this season.
 
-Each step SHALL carry one line saying why it matters: farms feed residents, a house needs planks, residents pay tax, tax against upkeep decides the treasury, and the market turns surplus into cash. Each step's state SHALL be derived from the world as it stands, so a loaded save shows the same steps as the session that saved it. The guide SHALL show the tax, the upkeep and the net (tax minus upkeep) of one collection as they stand, and SHALL mark the net as negative when it is below zero. The guide SHALL NOT pause the simulation or take input focus, and SHALL offer a control that hides it for the rest of the session. On a compact-width screen the guide SHALL collapse to one line with the count of met steps and the net, and SHALL expand when tapped.
+A step SHALL count as met when the world meets it as it stands, so a loaded save shows the steps its world meets, and SHALL then stay met for the rest of the session. Buildings of other owners SHALL NOT count. Each step SHALL carry one line saying why it matters: farms feed residents, a house needs planks, residents pay tax, tax against upkeep decides the treasury, and the market turns surplus into cash; a line that names a gesture SHALL use the platform's verb: "Tap" on iPhone and iPad, "Click" on the Mac, "Select" on Apple TV.
+
+The guide SHALL show the tax, the upkeep and the net (tax minus upkeep) of one collection as they stand, and SHALL mark the net as negative when it is below zero. The guide SHALL NOT pause the simulation or take input focus, and SHALL offer a control that hides it for the rest of the session. On a screen narrower than 600 points or shorter than 500 points the guide SHALL collapse to one line with the count of met steps and the net, which expands when activated; assistive technologies SHALL hear the collapsed line as the count and the net in words, and SHALL be able to expand and collapse it.
 
 #### Scenario: Guide shows on a new game
 
@@ -29,12 +31,22 @@ Each step SHALL carry one line saying why it matters: farms feed residents, a ho
 
 #### Scenario: Guide tracks the houses step
 
-- **WHEN** the player owns 2 operational houses and a third house finishes construction
+- **WHEN** the player owns 2 operational houses on a road and a third house on a road finishes construction
 - **THEN** the "Build 3 houses on a road" step is met
 
-#### Scenario: Tax step needs tax
+#### Scenario: Houses off the road don't count
 
-- **WHEN** one collection's tax and upkeep are both zero
+- **WHEN** the player places 3 houses with no road beside them and they finish construction
+- **THEN** the "Build 3 houses on a road" step is still open
+
+#### Scenario: Rival buildings don't count
+
+- **WHEN** a rival owns an operational farm, lumberjack hut, sawmill and 3 houses on a road, and the player owns none
+- **THEN** every step of the player's guide is open
+
+#### Scenario: Tax step needs more tax than upkeep
+
+- **WHEN** one collection's tax equals its upkeep
 - **THEN** the "Earn more tax than upkeep" step is still open
 
 #### Scenario: Guide shows the ledger
@@ -47,29 +59,39 @@ Each step SHALL carry one line saying why it matters: farms feed residents, a ho
 - **WHEN** the player sells 5 planks at the town center market
 - **THEN** the "Sell surplus at the market" step is met
 
+#### Scenario: Market step stays met after the season
+
+- **WHEN** the player sold at the market and a new season resets the market ledger
+- **THEN** the "Sell surplus at the market" step is still met
+
 #### Scenario: Hiding the guide
 
 - **WHEN** the player hides the guide
 - **THEN** the guide does not show again in that session
 
-#### Scenario: Guide leaves after year one
+#### Scenario: Guide stays past year one
 
 - **WHEN** the in-game date reaches the second year with a step still open
-- **THEN** the guide does not show
+- **THEN** the guide still shows
 
 #### Scenario: Guide leaves when every step is met
 
-- **WHEN** the last open step is met and a later season resets the market ledger
-- **THEN** the guide does not show
+- **WHEN** the last open step is met
+- **THEN** the guide does not show again in that session
 
 #### Scenario: Loaded save shows its steps
 
-- **WHEN** a session starts on a first-year save whose player owns an operational farm, lumberjack hut and sawmill
+- **WHEN** a session starts on a save whose player owns an operational farm, lumberjack hut and sawmill
 - **THEN** the guide shows the farm and planks steps as met
+
+#### Scenario: Guide collapses on short screens
+
+- **WHEN** the game screen is 844 by 390 points
+- **THEN** the guide shows as its one-line form
 
 ### Requirement: Tool strip warns while the guide shows
 
-While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no operational farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep $<upkeep> per collection", the difficulty-scaled upkeep of one collection. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
+While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no operational farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep <amount> per collection", the difficulty-scaled upkeep of one collection the building would pay at its candidate site, with any culture upkeep relief there, written as the HUD writes money. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
 
 #### Scenario: Caption warns about food
 
@@ -85,7 +107,6 @@ While the first-hour guide shows, the tool strip caption SHALL add a warning to 
 
 - **WHEN** the player has hidden the guide and arms the house with no farm
 - **THEN** the tool strip caption is the same as without this requirement
-
 ## MODIFIED Requirements
 
 ### Requirement: Deficit hint
