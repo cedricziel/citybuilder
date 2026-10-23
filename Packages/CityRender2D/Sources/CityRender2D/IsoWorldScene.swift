@@ -41,6 +41,9 @@ public final class IsoWorldScene: SKScene {
     var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
+    /// Open water, drawn by one backdrop sprite rather than a sprite per tile, and the tiles it holds.
+    var deepWaterNode: SKSpriteNode?
+    var deepWaterMask: DeepWaterMask?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.

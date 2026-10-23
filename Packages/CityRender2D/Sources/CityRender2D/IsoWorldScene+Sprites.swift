@@ -62,6 +62,9 @@ extension IsoWorldScene {
             objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
             redrawAll = true
         }
+        if redrawAll, let transitionMap {
+            showDeepWater(DeepWaterMask(width: width, height: height, grid: grid, transitions: transitionMap))
+        }
         guard redrawAll || view != shownTiles || !staleTerrain.isEmpty else { return }
         spriteReconcileCounts.terrainPasses += 1
         for coord in shownTiles?.tiles(notIn: view) ?? [] {
@@ -77,8 +80,13 @@ extension IsoWorldScene {
         staleTerrain.removeAll()
     }
 
-    /// Places the tile's terrain sprite, replacing the one there when it differs.
+    /// Places the tile's terrain sprite, replacing the one there when it differs. Open water has no
+    /// sprite of its own: the deep-water tile map draws it.
     private func drawTerrain(at coord: TileCoordinate, in snapshot: WorldSnapshot) {
+        guard deepWaterMask?.contains(coord) != true else {
+            removeTerrain(at: coord)
+            return
+        }
         guard let spec = SnapshotReconciler.terrainSprite(at: coord, in: snapshot, transitions: transitionMap, objects: objectMap),
               spec != terrainSpecs[coord]
         else { return }
