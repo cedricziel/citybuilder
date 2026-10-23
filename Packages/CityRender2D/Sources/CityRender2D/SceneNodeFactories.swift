@@ -26,8 +26,17 @@ extension IsoWorldScene {
         10 + CGFloat(depth) * 0.01
     }
 
-    /// Lifts a figure just above the building at its depth, below the next.
-    static let figureLift: CGFloat = 0.004
+    /// Lifts a figure just above a building at exactly its depth, and no further: a larger lift drew a
+    /// figure still behind a building's corner over its roof.
+    static let figureLift: CGFloat = 0.0001
+
+    /// The z of a figure whose feet stand at `point`: its iso depth there (fractional column plus row,
+    /// a tile centre counting as `x + y + 1` like a building's footprint centre), so a figure behind a
+    /// building, or stepping out from behind it, stays hidden until it is level with or in front of it.
+    static func figureZ(at point: CGPoint) -> CGFloat {
+        let tile = IsoMath.tileCoordinate(forScreenPoint: point)
+        return depthZ(tile.col + tile.row) + figureLift
+    }
 
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)

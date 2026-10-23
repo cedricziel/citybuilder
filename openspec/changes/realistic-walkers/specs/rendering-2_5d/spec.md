@@ -27,3 +27,17 @@ When no new simulation tick has arrived for 0.3 s, carriers and strollers SHALL 
 
 - **WHEN** a node that walks south-east is asked again for the south-east walk cycle
 - **THEN** it keeps the walk action it has
+
+### Requirement: Figures sort by where they stand
+
+A carrier, stroller or animal SHALL be depth-sorted by the iso depth of the point under its feet at the moment it is drawn (fractional column plus row, a tile centre counting as `x + y + 1`, like a building's footprint centre), plus a lift of a hundredth of a depth step, so it draws over a building only when level with it or in front. A figure whose feet are behind a building's footprint centre SHALL be hidden by the building; a figure level with it or in front SHALL draw over it. Strollers SHALL stand on the road's tile centres, as carriers do.
+
+#### Scenario: A figure behind a house is hidden by it
+
+- **WHEN** a stroller walks the road along the back edge of a 2×2 house, or steps from there out to the tile beside the house
+- **THEN** its node sorts below the house until its feet are level with the house's footprint centre
+
+#### Scenario: A figure in front of a house draws over it
+
+- **WHEN** a carrier walks the road along the house's front edge
+- **THEN** its node sorts above the house

@@ -82,6 +82,13 @@ func strollerNodesStandOnTheirFeetUnmirrored() throws {
     for stroller in planned {
         #expect(scene.strollerNodes[StrollerKey(house: stroller.house, slot: stroller.slot)]?.facing == stroller.facing)
     }
+    for stroller in planned {
+        // Feet on the road's tile centres, sorted by where they stand.
+        let node = try #require(scene.strollerNodes[StrollerKey(house: stroller.house, slot: stroller.slot)]?.node)
+        let tile = IsoMath.tileCoordinate(forScreenPoint: node.position)
+        #expect(abs(tile.row - (Double(stroller.from.y) + 0.5)) < 0.001)
+        #expect(abs(node.zPosition - IsoWorldScene.figureZ(at: node.position)) < 0.0001)
+    }
     for shown in scene.strollerNodes.values {
         #expect(abs(shown.node.anchorPoint.x - SpriteAtlas.walkerAnchor.x) < 0.0001)
         #expect(abs(shown.node.anchorPoint.y - SpriteAtlas.walkerAnchor.y) < 0.0001)
