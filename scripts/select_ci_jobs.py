@@ -1,9 +1,12 @@
-"""Select the CI jobs a pull request's changed files need.
+"""Select the CI jobs a change's files need.
 
 Reads changed paths (one per line, from `git diff --no-renames
---name-only`) on stdin and prints GitHub step outputs. ci.yml selects
-everything itself, without this script, for pushes to main and for
-changes to this script, its tests or the workflow.
+--name-only`) on stdin and prints GitHub step outputs. The paths are a
+PR's diff against its base, or a push to main's diff against the head
+of the latest green run on main. ci.yml selects everything itself,
+without this script, when there is nothing to diff against (the weekly
+schedule, a manual run, no usable green run) and for changes to this
+script, its tests or the workflow.
 
 - Docs only (`openspec/`, `.claude/`, top-level `*.md` but README.md):
   no code jobs.

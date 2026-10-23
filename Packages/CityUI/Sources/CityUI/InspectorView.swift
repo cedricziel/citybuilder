@@ -77,7 +77,8 @@ public struct InspectorViewModel: Sendable {
                 "Tier: \(pop.tier.displayName(in: culture))",
                 "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
-            ] + houseNotes(modifiers) + residentLines(house: entityID, population: pop, culture: culture)
+            ] + Self.nextTierLine(after: pop.tier, in: culture) + houseNotes(modifiers)
+                + residentLines(house: entityID, population: pop, culture: culture)
         }
         let problem = snapshot.buildingIssues[entityID].map(problemText)
         return InspectorViewModel(
@@ -216,13 +217,23 @@ extension InspectorViewModel {
     /// a house, otherwise state and road. Spec: `platform-shells` /
     /// Inspector callout.
     public var keyLines: [String] {
-        let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:"]
+        let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:", "Next:"]
         return (head + ["Problem:"]).compactMap { marker in
             bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
         }
     }
 
     private static let inReachMarker = " in reach: "
+
+    /// What the next tier wants beyond this one's needs, below the top
+    /// tier. Spec: `platform-shells` / Inspector callout.
+    static func nextTierLine(after tier: HouseTier, in culture: Culture) -> [String] {
+        guard let next = tier.next else { return [] }
+        let current = Set(tier.needs(in: culture))
+        let added = next.needs(in: culture).filter { !current.contains($0) }.map(\.rawValue)
+        guard !added.isEmpty else { return [] }
+        return ["Next: \(next.displayName(in: culture)) need \(added.joined(separator: ", "))"]
+    }
 
     /// Trees in reach of a hut, or open grass in reach of a forester.
     /// Spec: `platform-shells` / Forestry in the inspector and while

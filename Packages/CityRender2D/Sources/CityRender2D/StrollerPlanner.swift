@@ -40,13 +40,43 @@ public enum StrollerPlanner {
         return result
     }
 
-    /// Road tiles within `reach` of the house footprint, in reading order.
+    /// A walk along the roads near the house: from the road tile nearest the footprint, the shortest
+    /// road path to the farthest road tile it can reach without leaving `reach` of the house. Every
+    /// step joins two orthogonally adjacent road tiles, so a stroller never cuts across a plot.
+    /// Deterministic: ties break by distance, then reading order, and the search visits neighbours in
+    /// a fixed order.
     static func nearbyRoads(of house: Building, in roads: Set<TileCoordinate>) -> [TileCoordinate] {
         let footprint = BuildingCatalog.spec(for: house.kind).footprint
         let xs = (house.anchor.x - reach) ... (house.anchor.x + footprint.width - 1 + reach)
         let ys = (house.anchor.y - reach) ... (house.anchor.y + footprint.height - 1 + reach)
-        return roads.filter { xs.contains($0.x) && ys.contains($0.y) }
-            .sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        let near = roads.filter { xs.contains($0.x) && ys.contains($0.y) }
+        // Distance from the footprint, in tiles along each axis outside it.
+        func gap(_ tile: TileCoordinate) -> Int {
+            let dx = max(house.anchor.x - tile.x, 0, tile.x - (house.anchor.x + footprint.width - 1))
+            let dy = max(house.anchor.y - tile.y, 0, tile.y - (house.anchor.y + footprint.height - 1))
+            return dx + dy
+        }
+        guard let start = near.min(by: { (gap($0), $0.y, $0.x) < (gap($1), $1.y, $1.x) }) else { return [] }
+        var parent: [TileCoordinate: TileCoordinate] = [start: start]
+        var frontier = [start], farthest = start
+        while !frontier.isEmpty {
+            var next: [TileCoordinate] = []
+            for tile in frontier {
+                for (dx, dy) in [(1, 0), (0, 1), (-1, 0), (0, -1)] {
+                    let step = TileCoordinate(x: tile.x + dx, y: tile.y + dy)
+                    guard near.contains(step), parent[step] == nil else { continue }
+                    parent[step] = tile
+                    next.append(step)
+                }
+            }
+            if let last = next.min(by: { ($0.y, $0.x) < ($1.y, $1.x) }) { farthest = last }
+            frontier = next
+        }
+        var route = [farthest]
+        while let tile = route.last, tile != start, let back = parent[tile] {
+            route.append(back)
+        }
+        return route.reversed()
     }
 
     /// Back and forth along the route; each slot starts at a different

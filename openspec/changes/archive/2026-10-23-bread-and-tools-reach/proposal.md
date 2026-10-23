@@ -1,6 +1,6 @@
 ## Why
 
-Merchants need bread and tools, and the Renaissance needs 20 merchants. Scripted playtest bots never build a bakery or toolsmith (#71). That much is by design: the bots' kit stops at houses, farms, huts, sawmills, foresters and warehouses. But checking whether a player can reach the chain found two gaps.
+Merchants need bread, tools and their culture's luxury, and the Renaissance needs 20 merchants. Scripted playtest bots never build a bakery or toolsmith (#71). That much is by design: the bots' kit stops at houses, farms, huts, sawmills, foresters and warehouses. But checking whether a player can reach the chain found two gaps.
 
 - **Not every start island can hold a mine.** A mine needs at least 2 mountain tiles in its 2×2 footprint, and the market sells neither tools nor iron. Across seeds 0–49, every player home island has a mine site. But on 11 archipelago starts a second player island has mountains and no site: island 1 on seeds 5, 12, 24 and 43, and island 4 on seeds 2, 4, 13, 17, 41, 42 and 47. Two rival islands lack one too: seed 17's rival 1 and seed 30's rival 2. A town that grows from such an island can't mine there.
 - **The chain is hard to see.** The house inspector lists only the current tier's needs, so a citizens' house never says that merchants want bread and tools. A locked drawer tile shows a lock and a price, not the research that unlocks it.

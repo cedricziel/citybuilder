@@ -32,7 +32,7 @@ Alternatives: selling tools at the market changes the economy and the market spe
 
 ### D2. Next-tier needs as one key line
 
-"Next: Merchants need bread, tools" names only the goods the next tier adds, so a citizens' house doesn't repeat food and planks. A top-tier house has no such line. It is a text line in the existing callout, so the layout is unchanged.
+"Next: Merchants need bread, tools, beer" names only the goods the next tier adds, so a citizens' house doesn't repeat food and planks; the last is the culture's luxury. A top-tier house has no such line. It is a text line in the existing callout, so the layout is unchanged.
 
 ### D3. "Needs <Tech>" in place of the cost
 
