@@ -17,8 +17,8 @@ Xcode 26 or newer (Swift 6.3+) is required.
 
 CI pins the tools whose versions change results: SwiftFormat and
 SwiftLint (releases disagree on rules), pre-commit, libimagequant (it
-decides the atlas PNG bytes that `make sprites-verify` compares),
-jpeg-turbo and XcodeGen:
+quantizes every atlas PNG the art pipeline writes), jpeg-turbo and
+XcodeGen:
 
 | Tool          | Pinned version |
 | ------------- | -------------- |
@@ -49,7 +49,7 @@ Two limits:
 
 ```sh
 make hooks          # install pre-commit, commit-msg, and pre-push hooks
-make sprites-venv   # one-time: create .venv/sprites/ for the AI sprite pipeline
+make sprites-venv   # one-time: create .venv/sprites/ for the art pipeline (scripts/art)
 make generate       # regenerate Citybuilder.xcodeproj from project.yml
 make test           # run all swift-testing suites
 ```

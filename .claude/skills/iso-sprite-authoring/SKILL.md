@@ -10,8 +10,8 @@ OpenSpec change: `replace-generative-sprites-with-isokit`.
 
 ```
 make sprites-check                        # recipe/catalog agreement + cell fit, no GPU
-make sprites                              # render migrated entries into Kit.atlas
-make sprites-verify                       # tolerance check + legacy byte check + content gate
+make sprites                              # render every isokit and svg entry into Kit.atlas
+make sprites-verify                       # tolerance check + content gate
 xcrun swift run --package-path Tools/IsoKit isokit render --all --out /tmp/r   # every recipe, scratch
 ISOKIT_SKIP_RENDER=1 xcrun swift test --package-path Tools/IsoKit             # CI's view
 ```
