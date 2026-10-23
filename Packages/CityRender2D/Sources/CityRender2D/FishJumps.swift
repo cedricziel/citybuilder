@@ -76,7 +76,7 @@ final class FishLayerNode: SKNode {
         group.name = Self.jumpName
         group.position = start
         group.zPosition = IsoWorldScene.figureZ(at: start)
-        let fish = SKSpriteNode(texture: FishArt.frames[0])
+        let fish = SKSpriteNode(texture: FishArt.frames[0], size: FishArt.size)
         fish.xScale = side
         let arc = CGMutablePath()
         arc.move(to: .zero)
@@ -91,11 +91,14 @@ final class FishLayerNode: SKNode {
         let ring = SKShapeNode(ellipseOf: CGSize(width: 10, height: 4))
         ring.strokeColor = SKColor(white: 1, alpha: 0.8)
         ring.lineWidth = 1
-        ring.position = CGPoint(x: side * 18, y: -2)
-        ring.alpha = 0
+        // A small splash where it leaves the water, then the ring where it dives back in.
+        ring.setScale(0.6)
         ring.run(.sequence([
-            .wait(forDuration: 0.75),
-            .group([.fadeAlpha(to: 0.8, duration: 0.05), .scale(to: 2, duration: 0.7)]),
+            .group([.scale(to: 1.2, duration: 0.4), .fadeOut(withDuration: 0.4)]),
+            .wait(forDuration: 0.35),
+            .move(to: CGPoint(x: side * 18, y: -2), duration: 0),
+            .scale(to: 0.6, duration: 0),
+            .group([.fadeAlpha(to: 1, duration: 0.05), .scale(to: 2, duration: 0.7)]),
             .fadeOut(withDuration: 0.3)
         ]))
         group.addChild(fish)
@@ -105,24 +108,47 @@ final class FishLayerNode: SKNode {
     }
 }
 
-/// A small silver fish in three frames, rising, level and diving, drawn in code.
+/// A small fish in three frames, rising, level and diving, drawn in code
+/// at twice its size in points so it keeps its shape on a Retina screen:
+/// a dark back, a pale belly, a forked tail and an eye.
 @MainActor
 enum FishArt {
-    static let frames: [SKTexture] = [CGFloat(0.5), 0, -0.5].map { tilt in
+    static let size = CGSize(width: 16, height: 8)
+    static let frames: [SKTexture] = [CGFloat(0.45), 0, -0.45].map { frame(tilt: $0) }
+
+    private static func frame(tilt: CGFloat) -> SKTexture {
         guard let context = CGContext(
-            data: nil, width: 12, height: 8, bitsPerComponent: 8, bytesPerRow: 0,
+            data: nil, width: 32, height: 16, bitsPerComponent: 8, bytesPerRow: 0,
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         )
         else { return SKTexture() }
-        context.translateBy(x: 6, y: 4)
+        context.translateBy(x: 17, y: 8)
         context.rotate(by: tilt)
-        context.setFillColor(CGColor(red: 0.74, green: 0.79, blue: 0.82, alpha: 1))
-        context.fillEllipse(in: CGRect(x: -4, y: -1.5, width: 7, height: 3))
-        context.move(to: CGPoint(x: -3.5, y: 0))
-        context.addLines(between: [CGPoint(x: -3.5, y: 0), CGPoint(x: -6, y: 2), CGPoint(x: -6, y: -2)])
+        let body = CGPath(ellipseIn: CGRect(x: -9, y: -3.5, width: 17, height: 7), transform: nil)
+        let tail = CGMutablePath()
+        tail.addLines(between: [CGPoint(x: -8, y: 0), CGPoint(x: -14, y: 4.5), CGPoint(x: -12, y: 0), CGPoint(x: -14, y: -4.5)])
+        tail.closeSubpath()
+        context.setFillColor(CGColor(red: 0.33, green: 0.43, blue: 0.5, alpha: 1))
+        context.addPath(tail)
         context.fillPath()
+        context.setFillColor(CGColor(red: 0.88, green: 0.91, blue: 0.92, alpha: 1))
+        context.addPath(body)
+        context.fillPath()
+        // The back: the body's upper half, darker.
+        context.saveGState()
+        context.addPath(body)
+        context.clip()
+        context.setFillColor(CGColor(red: 0.36, green: 0.47, blue: 0.55, alpha: 1))
+        context.fill(CGRect(x: -10, y: 0.5, width: 20, height: 4))
+        context.restoreGState()
+        context.setStrokeColor(CGColor(red: 0.16, green: 0.22, blue: 0.27, alpha: 0.8))
+        context.setLineWidth(1)
+        context.addPath(body)
+        context.strokePath()
+        context.setFillColor(CGColor(red: 0.08, green: 0.1, blue: 0.12, alpha: 1))
+        context.fillEllipse(in: CGRect(x: 4, y: 0, width: 1.6, height: 1.6))
         let texture = context.makeImage().map { SKTexture(cgImage: $0) } ?? SKTexture()
-        texture.filteringMode = .nearest
+        texture.filteringMode = .linear
         return texture
     }
 }
