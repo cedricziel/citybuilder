@@ -1,4 +1,4 @@
-.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
+.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai app-icon
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -37,6 +37,7 @@ help:
 	@echo "  audio-check      Fail when a committed sound differs from its recipe"
 	@echo "  music            Render the original music into Resources/Audio/music"
 	@echo "  music-check      Fail when committed music differs from its score"
+	@echo "  app-icon         Render the iOS, macOS and tvOS app icons from the IsoKit house"
 	@echo "  lint             Run SwiftLint in strict mode"
 	@echo "  format           Run SwiftFormat across the repo"
 	@echo "  hooks            Install pre-commit / commit-msg / pre-push hooks"
@@ -171,6 +172,13 @@ sprites-regen-check:
 
 sprites-content:
 	$(SWIFT) run -q --package-path Packages/CityRender2D sprite-content-gate Resources
+
+# The app icon for iOS, macOS and tvOS: the IsoKit house at 8x on a grass plot (scripts/art/app_icon.py).
+# Needs a Mac GPU; the icons are committed, so CI never runs it.
+app-icon:
+	rm -rf $(ART_DIR)/app-icon
+	$(ISOKIT) render --catalog $(CATALOG) --only building-house-tier2 --scales 8 --out $(ART_DIR)/app-icon
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.app_icon --house $(ART_DIR)/app-icon/building-house-tier2@8x.png --repo $(CURDIR)
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)
