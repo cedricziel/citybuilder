@@ -139,9 +139,9 @@ extension Recipes {
         kit.chimney(x: 5.1, depth: 4.7, from: 3.0, to: 4.1, finish: .ashlar)
         kit.blueArch(Face.south(wallZ: 5.6), along: 3.6, width: 1.0, height: 2.0)
         for along in [2.2, 5.0] as [CGFloat] {
-            kit.archDoor(Face.south(wallZ: 5.6), along: along, width: 0.5, height: 0.9, base: 1.3, finish: .paint(Crops.opening))
+            kit.archDoor(Face.south(wallZ: 5.6), along: along, width: 0.5, height: 0.9, base: 1.3, finish: .glass)
         }
-        kit.archDoor(Face.east(wallX: 6.0), along: 3.5, width: 0.5, height: 0.9, base: 1.3, finish: .paint(Crops.opening))
+        kit.archDoor(Face.east(wallX: 6.0), along: 3.5, width: 0.5, height: 0.9, base: 1.3, finish: .glass)
         kit.awning(at: SCNVector3(3.6, 2.4, 6.0), width: 1.8)
         kit.crate(at: SCNVector3(5.2, 0, 6.4))
         kit.palm(at: SCNVector3(6.8, 0, 6.8))
@@ -153,7 +153,7 @@ extension Recipes {
         kit.chimney(x: 5.9, depth: 5.5, from: 5.2, to: 6.3, finish: .ashlar)
         kit.blueArch(Face.south(wallZ: 6.4), along: 2.4, width: 1.0, height: 2.0)
         kit.latticeBay(Face.south(wallZ: 6.4), along: 4.8, base: 2.8)
-        kit.archDoor(Face.east(wallX: 6.8), along: 3.8, width: 0.5, height: 0.9, base: 3.4, finish: .paint(Crops.opening))
+        kit.archDoor(Face.east(wallX: 6.8), along: 3.8, width: 0.5, height: 0.9, base: 3.4, finish: .glass)
         kit.parapetBlock(SCNVector3(1.4, 5.2, 1.6), SCNVector3(3.8, 7.0, 3.8))
         kit.awning(at: SCNVector3(4.8, 2.3, 6.8), width: 1.6)
     }
@@ -166,6 +166,9 @@ extension Recipes {
         kit.latticeBay(Face.south(wallZ: 6.6), along: 2.2, base: 3.0)
         kit.latticeBay(Face.south(wallZ: 6.6), along: 5.8, base: 3.0)
         kit.latticeBay(Face.east(wallX: 7.0), along: 3.8, base: 5.2)
+        for base in [1.3, 3.4] as [CGFloat] {
+            kit.archDoor(Face.east(wallX: 7.0), along: 2.2, width: 0.5, height: 0.9, base: base, finish: .glass)
+        }
         kit.block(SCNVector3(1.6, 7.4, 1.6), SCNVector3(3.0, 10.2, 3.0), .ashlar)
         for along in [1.95, 2.65] as [CGFloat] {
             kit.onFace(
@@ -254,7 +257,7 @@ extension Builder {
         for along in stride(from: lo.z, through: hi.z, by: (hi.z - lo.z) / 3) {
             block(SCNVector3(hi.x, base, along - 0.1), SCNVector3(hi.x + 0.1, hi.y, along + 0.1), posts)
         }
-        window(Face.south(wallZ: hi.z + 0.05), along: lo.x + (hi.x - lo.x) * 0.375, y: base + 1.3, lit: true)
+        window(Face.south(wallZ: hi.z + 0.05), along: lo.x + (hi.x - lo.x) * 0.375, y: base + 1.3)
         onFace(
             Face.south(wallZ: hi.z + 0.05),
             FaceRect(along: lo.x + (hi.x - lo.x) * 0.625, y: base + 1.0, width: 1.0, height: 1.9),
@@ -284,7 +287,7 @@ extension Builder {
     /// A shuttered window per entry of `at` on a face.
     func shuttered(_ face: Face, at alongs: [CGFloat], y: CGFloat) {
         for along in alongs {
-            window(face, along: along, y: y, lit: false, shutters: Looks.blueShutter)
+            window(face, along: along, y: y, shutters: Looks.blueShutter)
         }
     }
 

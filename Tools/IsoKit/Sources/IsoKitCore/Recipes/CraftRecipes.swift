@@ -71,7 +71,7 @@ extension Recipes {
             at: SCNVector3(4.0, 6.9, 4.0)
         )
         kit.door(Face.south(wallZ: 5.85), along: 4.0, base: 0)
-        kit.window(Face.east(wallX: 5.75), along: 4.0, y: 3.6, lit: true)
+        kit.window(Face.east(wallX: 5.75), along: 4.0, y: 3.6)
         for spot in [SCNVector3(1.2, 0, 6.2), SCNVector3(1.8, 0, 6.8)] {
             kit.add(SCNCylinder(radius: 0.3, height: 0.7), Finish.paint(Trade.flour).material(), at: spot + SCNVector3(0, 0.35, 0))
         }
@@ -158,7 +158,7 @@ extension Recipes {
         kit.block(SCNVector3(0.7, 2.8, 0.7), SCNVector3(4.7, 3.1, 3.9), .ashlar)
         kit.add(SCNSphere(radius: 1.1), Finish.paint(Trade.blueTile).material(), at: SCNVector3(2.7, 3.1, 2.3))
         kit.door(Face.south(wallZ: 3.8), along: 2.0, base: 0)
-        kit.window(Face.east(wallX: 4.6), along: 2.3, y: 1.6, lit: true)
+        kit.window(Face.east(wallX: 4.6), along: 2.3, y: 1.6)
         let awning = SCNBox(width: 2.2, height: 0.06, length: 1.0, chamferRadius: 0)
         kit.add(awning, Finish.paint(Trade.awning).material(), at: SCNVector3(3.5, 2.2, 4.25), euler: SCNVector3(0.3, 0, 0))
         kit.block(SCNVector3(4.6, 0, 4.8), SCNVector3(5.8, 0.6, 5.8), .brick)

@@ -84,6 +84,34 @@ A recipe MAY declare a moving part (sails, saw, wheel) with a frame count. For e
 - **WHEN** IsoKit renders the sawmill with a 4-frame sails part
 - **THEN** `building-sawmill-operational-0…3.png` are written, they differ only where the sails are, and the building pixels match the idle sprite within the regen tolerance
 
+### Requirement: Houses and workshops render night lights
+
+For every house look and every workshop whose finished building shows a window pane, IsoKit SHALL also write three evenings of lights, `<sprite id>-lights-0` to `-2`, at the sprite's size and anchor. Each variant SHALL:
+
+1. light a seeded subset of the panes, about 30%, at least one and at most three on a building with twelve panes or fewer, lower panes likelier than upper ones
+2. draw the lit panes unlit in oil-lamp amber (blue glass bands dimmer)
+3. draw everything else, the dark panes included, to depth only and before the lit panes, so it hides what is behind it and leaves no colour
+4. add no light to the scene
+
+A variant whose lit panes are all hidden is reseeded. A building whose panes are all hidden gets no lights files.
+
+The day sprites (finished, construction and operational frames) SHALL show every pane as dark glass: no material of a recipe MAY emit light, so window light comes only from the lights variants.
+
+#### Scenario: Night lights glow from a few of the panes
+
+- **WHEN** IsoKit builds an evening's lights of a house with eight windows
+- **THEN** two panes glow, every other part writes depth only and draws before them, and a shed without a pane has no lights
+
+#### Scenario: Day sprites never glow
+
+- **WHEN** a recipe gives a pane a material that emits light
+- **THEN** the recipe rules reject it
+
+#### Scenario: Every house look ships its lights
+
+- **WHEN** the committed Kit atlas is checked
+- **THEN** each of the 60 house looks has all three `-lights-<n>` at both scales, and every lights file sits beside its sprite
+
 ### Requirement: Terrain and icon tiles come from SVG generators
 
 A generator under `scripts/art/` SHALL write the SVG sources for:

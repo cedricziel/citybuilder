@@ -175,7 +175,7 @@ extension Builder {
             timberFrame(east, span: lo.z ... hi.z, base: 0.25, height: 2.05, posts: 2)
         }
         door(south, along: lo.x + 0.9, base: 0.25)
-        window(east, along: (lo.z + hi.z) / 2, y: 1.4, lit: true)
+        window(east, along: (lo.z + hi.z) / 2, y: 1.4)
         let spec = RoofSpec(
             lo: SCNVector3(lo.x, 2.3, lo.z),
             hi: hi,
