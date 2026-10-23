@@ -82,13 +82,13 @@ extension IsoWorldScene {
     /// Places the tile's terrain sprite, replacing the one there when it differs. Plain ground has no
     /// sprite of its own, as the ground backdrop draws it: such a tile places only its tree or rock.
     private func drawTerrain(at coord: TileCoordinate, in snapshot: WorldSnapshot) {
-        guard let spec = SnapshotReconciler.terrainSprite(at: coord, in: snapshot, transitions: transitionMap, objects: objectMap),
-              spec != terrainSpecs[coord]
-        else { return }
-        if groundBackdropMap?.covers(coord) == true, case .terrain(_, _, nil) = spec.kind {
+        guard groundBackdropMap?.covers(coord) != true || objectMap?.object(at: coord) != nil else {
             removeTerrain(at: coord)
             return
         }
+        guard let spec = SnapshotReconciler.terrainSprite(at: coord, in: snapshot, transitions: transitionMap, objects: objectMap),
+              spec != terrainSpecs[coord]
+        else { return }
         removeTerrain(at: coord)
         place(spec)
         terrainSpecs[coord] = spec

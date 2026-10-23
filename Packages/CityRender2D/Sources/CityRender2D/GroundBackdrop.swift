@@ -187,18 +187,9 @@ extension IsoWorldScene {
         return texture
     }
 
-    /// The sprite a tile of `look` shows in `season`: its seasonal look when the atlas has it, in the
-    /// tile's variant (`terrainSpriteName`'s choice for that look).
+    /// The sprite a tile of `look` shows in `season`, as its own sprite would (`terrainSpriteName`).
     private func lookSpriteName(_ look: GroundBackdropMap.Look, season: Season, variant: Int? = nil) -> String {
-        let seasonal = Self.seasonalTerrainName(kind: look.kind, season: season).flatMap { hasSprite($0) ? $0 : nil }
-        let stem = seasonal ?? "terrain-\(look.kind.rawValue)"
-        guard look.kind == .grass else { return stem }
-        let name = SpriteAtlas.variantAssetName(stem: stem, variant: variant ?? look.variant)
-        guard hasSprite(name) else {
-            SpriteAtlas.logMissOnce(name) // rendering-2_5d: Missing-sprite fallback in release
-            return stem
-        }
-        return name
+        terrainSpriteName(kind: look.kind, season: season, variant: variant ?? look.variant)
     }
 
     /// Frame `frame` of a looping terrain sprite, or the sprite itself when it does not animate.
