@@ -8,8 +8,7 @@ import pytest
 from art import ground
 
 
-TEXTURES = ["grass", "grass-autumn", "grass-winter-1", "beach", "water-2",
-            "forest-autumn", "forest-winter", "mountain", "mountain-v2"]
+TEXTURES = ["grass", "grass-autumn", "grass-winter-1", "beach", "water-2"]
 
 
 @pytest.mark.parametrize("name", TEXTURES)
@@ -37,15 +36,6 @@ def test_seasons_differ_and_grass_stays_green() -> None:
 def test_unknown_texture_is_rejected() -> None:
     with pytest.raises(ValueError):
         ground.texture("lava")
-
-
-def test_winter_twigs_stay_off_the_conifers() -> None:
-    """Only conifers rise above the floor in winter; the twig haze must never paint over them."""
-    surface = ground.forest("winter")
-    raised = surface.height > ground.FLOOR_HEIGHT + 1e-6
-    assert raised.any()
-    red, green = surface.albedo[..., 0][raised], surface.albedo[..., 1][raised]
-    assert (red <= green + 0.02).all()
 
 
 @pytest.mark.scenario("Variants share their edges")

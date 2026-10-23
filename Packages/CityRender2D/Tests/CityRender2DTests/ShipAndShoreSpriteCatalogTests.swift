@@ -76,9 +76,9 @@ func scenarioUnknownShipStemFallsBackToKitAtlas() {
     #expect(SpriteAtlasRouting.atlasName(for: "ship-x-0") == "Kit")
 }
 
-@Test("scenario: shore-building name routes to buildings atlas")
-func scenarioShoreBuildingNameRoutesToBuildingsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "building-port-x-operational-1") == "Buildings")
+@Test("scenario: an unknown building stem falls back to the kit atlas")
+func scenarioUnknownBuildingStemFallsBackToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "building-port-x-operational-1") == "Kit")
 }
 
 @Test("scenario: ship name routes to kit atlas")

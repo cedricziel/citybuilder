@@ -145,7 +145,7 @@ def bush(spheres: Spheres, rng, x, z, season) -> None:
                     crown=(centre, 0.6))
 
 
-TREES = {"dense": (5, 7), "medium": (3, 4), "sparse": (1, 2), "single": (1, 1)}
+TREES = {"dense": (5, 7), "medium": (3, 4), "sparse": (1, 2)}
 
 
 def positions(rng, count: int, spacing: float) -> list[tuple[float, float]]:
@@ -169,7 +169,7 @@ def clump(density: str, variant: int, season: str) -> Spheres:
     spheres = Spheres()
     for (x, z), (is_conifer, height, seed) in zip(spots, trees):
         (conifer if is_conifer else broadleaf)(spheres, np.random.default_rng(seed), x, z, height, season)
-    for x, z in positions(rng, {"single": 1, "sparse": 3}.get(density, 2), 0.8):
+    for x, z in positions(rng, {"sparse": 3}.get(density, 2), 0.8):
         bush(spheres, rng, x, z, season)
     return spheres
 

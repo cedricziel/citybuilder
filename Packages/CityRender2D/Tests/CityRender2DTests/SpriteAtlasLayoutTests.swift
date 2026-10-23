@@ -22,41 +22,25 @@ private func worktreeRoot() -> URL {
 func scenarioTerrainAtlasExists() {
     let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
     let contents = (try? FileManager.default.contentsOfDirectory(atPath: kit.path)) ?? []
-    for kind in ["grass", "beach", "water", "forest", "mountain"] {
+    for kind in ["grass", "beach", "water"] {
         #expect(contents.contains("terrain-\(kind).png"), "terrain-\(kind).png")
     }
+    // Forest and mountain stand on grass: their trees and rocks are objects, with no ground tile.
+    #expect(!contents.contains("terrain-forest.png") && !contents.contains("terrain-mountain.png"))
     let retired = worktreeRoot().appendingPathComponent("Resources/Terrain.atlas")
     #expect(!FileManager.default.fileExists(atPath: retired.path))
 }
 
-@Test("scenario: buildings atlas exists")
-func scenarioBuildingsAtlasExists() {
-    let url = worktreeRoot().appendingPathComponent("Resources/Buildings.atlas")
-    var isDir: ObjCBool = false
-    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-    #expect(exists && isDir.boolValue, "Resources/Buildings.atlas must exist as a directory")
-    let contents = Set((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? [])
-    // Every building sprite a brief still owns as legacy art (not `isokit` or `svg`) is committed here.
-    let catalog = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
-    let briefs = ((try? FileManager.default.contentsOfDirectory(at: catalog, includingPropertiesForKeys: nil)) ?? [])
-        .filter { $0.pathExtension == "md" }
-    var missing: [String] = []
-    for brief in briefs {
-        let text = (try? String(contentsOf: brief, encoding: .utf8)) ?? ""
-        guard !text.contains("source = \"isokit\""), !text.contains("source = \"svg\"") else { continue }
-        for line in text.split(separator: "\n") where line.hasPrefix("- (") {
-            guard let name = line.split(separator: "`").dropFirst().first, name.hasPrefix("building-") else { continue }
-            if !contents.contains("\(name).png") { missing.append(String(name)) }
-        }
+@Test("scenario: Retired atlases are gone")
+func scenarioRetiredAtlasesAreGone() throws {
+    // Terrain, buildings, people and ships are kit renders in Kit.atlas; goods and badges are in Icons.atlas.
+    for retired in ["Terrain", "Buildings", "Units"] {
+        let url = worktreeRoot().appendingPathComponent("Resources/\(retired).atlas")
+        #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/\(retired).atlas must not exist")
     }
-    #expect(missing.isEmpty, "legacy building sprites missing from Buildings.atlas: \(missing)")
-}
-
-@Test("scenario: units atlas retired")
-func scenarioUnitsAtlasRetired() {
-    // realistic-walkers: people and ships are kit renders in Kit.atlas.
-    let url = worktreeRoot().appendingPathComponent("Resources/Units.atlas")
-    #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/Units.atlas must not exist")
+    let atlases = try FileManager.default.contentsOfDirectory(atPath: worktreeRoot().appendingPathComponent("Resources").path)
+        .filter { $0.hasSuffix(".atlas") }.sorted()
+    #expect(atlases == ["Icons.atlas", "Kit.atlas"])
 }
 
 @Test("scenario: legacy sprite directory removed")
@@ -101,7 +85,7 @@ func scenarioRendererSourceUsesSpriteAtlasExclusively() throws {
 @MainActor
 private func terrainNamesTheRendererRequests() -> Set<String> {
     var names: Set<String> = []
-    for kind in TerrainType.allCases {
+    for kind in TerrainType.allCases where !TerrainObject.kinds.contains(kind) {
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
         let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
         let looks = ["terrain-\(kind.rawValue)"] + Season.allCases.compactMap { IsoWorldScene.seasonalTerrainName(kind: kind, season: $0) }
@@ -131,9 +115,9 @@ func everyRequestedTerrainSpriteIsOnDisk() {
     let resources = worktreeRoot().appendingPathComponent("Resources")
     let roads = RoadLinks.allMasks.flatMap { mask in [false, true].map { RoadLink(mask: mask, plaza: $0).assetName } }
     let names = terrainNamesTheRendererRequests().union(roads)
-    // terrain: 36 grass looks (3 seasons x 4 variants x base and 2 frames), 15 other tiles and frames,
-    // 56 transitions; roads: 47 masks x 2
-    #expect(names.count >= 107 + 94)
+    // terrain: 36 grass looks (3 seasons x 4 variants x base and 2 frames), 8 beach and water tiles and
+    // frames, 56 transitions; roads: 47 masks x 2
+    #expect(names.count >= 100 + 94)
     let missing = names.sorted().flatMap { name -> [String] in
         let atlas = SpriteAtlasRouting.atlasName(for: name) ?? "?"
         return ["\(name).png", "\(name)@2x.png"].compactMap { file in

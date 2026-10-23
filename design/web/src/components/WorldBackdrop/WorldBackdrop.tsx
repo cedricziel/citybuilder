@@ -87,14 +87,15 @@ const tileArt: Record<string, terrainSpritesKey> = {
   "~": "water",
   ".": "beach",
   ",": "grass",
-  T: "forest",
-  "^": "mountain",
+  // Forest and rock stand on grass in the game; their trees and outcrops are objects the backdrop
+  // does not draw yet.
+  T: "grass",
+  "^": "grass",
 };
 
 function seasonal(art: terrainSpritesKey, season: WorldBackdropProps["season"]): terrainSpritesKey {
   if (season === "summer" || !season) return art;
   if (art === "grass") return season === "autumn" ? "grass-autumn" : "grass-winter";
-  if (art === "forest") return season === "autumn" ? "forest-autumn" : "forest-winter";
   return art;
 }
 

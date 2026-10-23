@@ -13,7 +13,6 @@ import AppKit
 /// prefix uniquely determines its atlas. New prefixes (e.g. `ship-` once
 /// `add-archipelago-and-sea` lands) extend this table.
 public enum SpriteAtlasRouting {
-    public static let buildingsAtlasName = "Buildings"
     public static let iconsAtlasName = "Icons"
     /// Art-kit renders, filtered linearly. SpriteKit applies one filtering mode to a whole atlas
     /// page, so they cannot share a page with nearest-filtered pixel art (design D7).
@@ -22,28 +21,25 @@ public enum SpriteAtlasRouting {
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
-        if TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: spriteName)) { return kitAtlasName }
-        // Every terrain family has migrated; the Terrain atlas is retired.
-        if spriteName.hasPrefix("terrain-") { return kitAtlasName }
-        if spriteName.hasPrefix("building-") { return buildingsAtlasName }
-        // Status badges drawn over buildings live in the Buildings atlas.
-        if spriteName.hasPrefix("overlay-") { return buildingsAtlasName }
-        // People and ships are kit renders; the Units atlas is retired (realistic-walkers).
-        if ["walker-", "carrier-", "animal-", "ship-"].contains(where: spriteName.hasPrefix) { return kitAtlasName }
-        if spriteName.hasPrefix("good-") { return iconsAtlasName }
+        // Every terrain, building, people, animal and ship family is an art-kit render; the Terrain,
+        // Buildings and Units atlases are retired.
+        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-"]
+        if kitPrefixes.contains(where: spriteName.hasPrefix) { return kitAtlasName }
+        // Goods icons and the status badges drawn over buildings are pixel art.
+        if spriteName.hasPrefix("good-") || spriteName.hasPrefix("overlay-") { return iconsAtlasName }
         return nil
     }
 
     /// All atlas names known to the routing table. Used by the
     /// asset-presence check and the lazy-construction probe.
     public static let allAtlasNames: [String] = [
-        buildingsAtlasName, iconsAtlasName, kitAtlasName
+        iconsAtlasName, kitAtlasName
     ]
 }
 
 /// Resolves terrain, building, and walker textures from the host app's
-/// main bundle. Sprites live in three category atlases under
-/// `Resources/` (`Kit.atlas/`, `Buildings.atlas/`, `Icons.atlas/`),
+/// main bundle. Sprites live in two category atlases under
+/// `Resources/` (`Kit.atlas/`, `Icons.atlas/`),
 /// which Xcode packs into single GPU textures at build time. Lookups go
 /// through `SKTextureAtlas(named:)` — never `SKTexture(imageNamed:)`.
 ///
@@ -108,17 +104,16 @@ public enum SpriteAtlas {
     // MARK: - Per-tile art variants
 
     //
-    // Some sprite kinds (mountain, road) ship multiple visually distinct
-    // PNGs so a row of mountain tiles isn't a row of clones. Variant 0
-    // uses the canonical name (`terrain-mountain.png`); variants 1..N-1
+    // Some sprite kinds (grass, buildings) ship multiple visually distinct
+    // PNGs so a row of tiles isn't a row of clones. Variant 0
+    // uses the canonical name (`terrain-grass.png`); variants 1..N-1
     // use `<stem>-vN.png`. Selection is a deterministic function of the
     // tile coordinate, so replays and snapshots render the same.
 
     /// Number of art variants per terrain kind. Kinds not listed render
     /// the single canonical sprite.
     public static let terrainVariantCounts: [TerrainType: Int] = [
-        .grass: 4,
-        .mountain: 4
+        .grass: 4
     ]
 
     /// Number of art variants per building kind. Only applies to the
@@ -313,7 +308,8 @@ public enum SpriteAtlas {
     public static var catalogSpriteNames: [String] {
         var names: [String] = []
 
-        for kind in TerrainType.allCases {
+        // Forest and mountain draw grass ground with their trees and rocks on top: no ground sprite.
+        for kind in TerrainType.allCases where !TerrainObject.kinds.contains(kind) {
             names.append("terrain-\(kind.rawValue)")
             if let entry = SpriteAnimation.entry(for: .terrain(kind)) {
                 for frame in 0 ..< entry.frameCount {

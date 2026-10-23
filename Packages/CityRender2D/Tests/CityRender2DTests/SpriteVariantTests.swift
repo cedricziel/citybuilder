@@ -14,14 +14,14 @@ import Testing
 
 // MARK: - Catalog inventory
 
-@Test("scenario: mountain ships four art variants")
-func scenarioMountainShipsFourArtVariants() {
+@Test("scenario: grass ships four art variants")
+func scenarioGrassShipsFourArtVariants() {
     let names = SpriteAtlas.catalogSpriteNames
     let expected = [
-        "terrain-mountain",
-        "terrain-mountain-v1",
-        "terrain-mountain-v2",
-        "terrain-mountain-v3"
+        "terrain-grass",
+        "terrain-grass-v1",
+        "terrain-grass-v2",
+        "terrain-grass-v3"
     ]
     for entry in expected {
         #expect(names.contains(entry), "catalog must declare \(entry)")
@@ -110,7 +110,7 @@ func scenarioMissingVariantPngFailsTheDebugCatalogCheck() {
     // check returns it in the missing-list, which is the input
     // assertCatalogComplete fires its precondition on.
     SpriteAtlas.resetForTesting()
-    let absent = "terrain-mountain-v99"
+    let absent = "terrain-grass-v99"
     let missing = SpriteAtlas.missingSprites(in: [absent])
     #expect(missing.contains(absent))
 }
@@ -139,9 +139,9 @@ func scenarioCompleteVariantInventoryPassesTheDebugCatalogCheck() {
 
 // MARK: - Renderer texture lookup uses the variant selector
 
-@Test("scenario: placed mountain tile picks its variant from its coord")
+@Test("scenario: placed grass tile picks its variant from its coord")
 @MainActor
-func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
+func scenarioPlacedGrassTilePicksItsVariantFromItsCoord() {
     let scene = IsoWorldScene()
     scene.hasSprite = { _ in true }
     // The variant-aware lookup MUST be functionally equivalent to:
@@ -150,7 +150,7 @@ func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
     // the same SKTexture instance for a given name; if the asset is
     // missing both sides resolve to the shared placeholderTexture.
     SpriteAtlas.resetForTesting()
-    let count = SpriteAtlas.terrainVariantCounts[.mountain] ?? 1
+    let count = SpriteAtlas.terrainVariantCounts[.grass] ?? 1
     for coord in [
         TileCoordinate(x: 0, y: 0),
         TileCoordinate(x: 4, y: 11),
@@ -159,10 +159,10 @@ func scenarioPlacedMountainTilePicksItsVariantFromItsCoord() {
     ] {
         let variant = SpriteAtlas.variantIndex(coord: coord, count: count)
         let expected = SpriteAtlas.textureOrPlaceholder(
-            named: SpriteAtlas.variantAssetName(stem: "terrain-mountain", variant: variant)
+            named: SpriteAtlas.variantAssetName(stem: "terrain-grass", variant: variant)
         )
-        let actual = SpriteAtlas.textureOrPlaceholder(named: scene.terrainSpriteName(kind: .mountain, coord: coord))
-        #expect(actual === expected, "mountain at \(coord) must resolve via variant index \(variant)")
+        let actual = SpriteAtlas.textureOrPlaceholder(named: scene.terrainSpriteName(kind: .grass, coord: coord))
+        #expect(actual === expected, "grass at \(coord) must resolve via variant index \(variant)")
     }
 }
 

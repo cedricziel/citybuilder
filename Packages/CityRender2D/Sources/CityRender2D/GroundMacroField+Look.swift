@@ -105,6 +105,8 @@ extension GroundMacroField {
         var wetSand = SIMD3<Float>(0.84, 0.84, 0.88)
         var shallow = SIMD3<Float>(1.14, 1.28, 1.12)
         var deep = SIMD3<Float>(0.55, 0.68, 0.90)
+        /// Lit scree, grey-brown and a touch warm, matched to the lit ground tiles; snow in winter.
+        var screeColour = SIMD3<Float>(0.56, 0.52, 0.46)
 
         /// The season whose look `season` shows: spring and summer share one.
         static func season(of season: Season) -> Season {
@@ -129,6 +131,7 @@ extension GroundMacroField {
                 floor = SIMD3(0.70, 0.68, 0.60)
                 worn = SIMD3(1.04, 0.92, 0.76)
             case .winter:
+                screeColour = SIMD3(0.80, 0.82, 0.86)
                 dry = SIMD3(1.03, 1.03, 1.02)
                 lush = SIMD3(0.96, 0.97, 0.99)
                 fallow = SIMD3(1, 1, 1)
@@ -156,6 +159,19 @@ extension GroundMacroField {
             let sea = simd_clamp((share[TerrainShares.water] - share[TerrainShares.beach]) * 1.5, 0, 1)
             colour *= mix(.one, mix(shallow, deep, share[TerrainShares.depth]), sea)
             return colour
+        }
+
+        /// The scree over rock ground, premultiplied: opaque well inside a rock region, fading
+        /// across its edge, with gritty light and dark patches. Snow lies on it in winter.
+        func scree(_ shares: TerrainShares) -> [SIMD4<Float>] {
+            let stride = shares.stride
+            return shares.values.indices.map { index in
+                let rock = shares.values[index][TerrainShares.mountain]
+                let opacity = simd_clamp(rock * 1.6 - 0.35, 0, 1) * 0.9
+                let grit = Noise.value(Float(index % stride) * 1.7, Float(index / stride) * 1.7, 7)
+                let colour = screeColour * (1 + 0.12 * grit)
+                return SIMD4(colour * opacity, opacity)
+            }
         }
 
         private func mix(_ from: SIMD3<Float>, _ to: SIMD3<Float>, _ amount: Float) -> SIMD3<Float> {

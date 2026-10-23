@@ -15,11 +15,11 @@ public enum TextureFiltering {
     public static let kitRenderedStems: Set<String> = Set([
         "building-house", "building-house-tier2", "building-house-tier3", "building-town-center",
         "terrain-grass", "terrain-grass-autumn", "terrain-grass-winter", "terrain-beach", "terrain-water",
-        "terrain-forest", "terrain-forest-autumn", "terrain-forest-winter", "terrain-mountain",
-        "terrain-forest-single", "terrain-forest-single-autumn", "terrain-forest-single-winter",
         "terrain-forest-sparse", "terrain-forest-sparse-autumn", "terrain-forest-sparse-winter",
         "terrain-forest-medium", "terrain-forest-medium-autumn", "terrain-forest-medium-winter",
         "terrain-forest-dense", "terrain-forest-dense-autumn", "terrain-forest-dense-winter",
+        "terrain-mountain-sparse", "terrain-mountain-sparse-winter", "terrain-mountain-medium", "terrain-mountain-medium-winter",
+        "terrain-mountain-dense", "terrain-mountain-dense-winter", "terrain-mountain-peak", "terrain-mountain-peak-winter",
         "terrain-grass-beach", "terrain-beach-water",
         "building-road", "building-road-plaza",
         "building-lumberjack-hut", "building-forester", "building-farm", "building-grain-farm", "building-mine",
@@ -61,7 +61,7 @@ public enum TextureFiltering {
     }
 
     /// `building-sawmill-operational-2` → `building-sawmill`; `terrain-grass-beach-t3-1` and
-    /// `terrain-grass-beach-t3-winter` → `terrain-grass-beach`; `terrain-mountain-v2` → `terrain-mountain`.
+    /// `terrain-grass-beach-t3-winter` → `terrain-grass-beach`; `terrain-grass-v2` → `terrain-grass`.
     /// A season ends a stem (`terrain-grass-autumn`) unless it follows a transition mask.
     public static func stem(of spriteName: String) -> String {
         var parts = spriteName.split(separator: "-").map(String.init)
