@@ -39,3 +39,21 @@ The backdrop SHALL look the same as a sprite per tile, in every season and at ni
 
 - **WHEN** the season turns from summer to winter
 - **THEN** the backdrop draws the winter looks
+
+### Requirement: The ground backdrop follows pause and Reduce Motion
+
+The ground backdrop's animation SHALL follow the same motion state as building animations (see "Building animations follow pause and Reduce Motion"):
+- while running, its clock advances;
+- while held, its clock stops, so every tile keeps its frame, and it runs on from there with the next tick;
+- while stopped, every tile shows its look's frame 0.
+
+#### Scenario: Pausing holds the ground's animation
+
+- **WHEN** no tick arrives for more than 0.3 s
+- **THEN** the backdrop's clock stops, so every plain tile keeps its frame
+- **AND** it runs on from there with the next tick
+
+#### Scenario: Reduce Motion rests the ground on its first frame
+
+- **WHEN** Reduce Motion is on
+- **THEN** every plain tile shows its look's frame 0
