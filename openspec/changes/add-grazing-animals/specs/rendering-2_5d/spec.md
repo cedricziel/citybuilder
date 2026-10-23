@@ -18,11 +18,11 @@ Each operational farm SHALL keep 2–4 sheep and each operational grain farm 1�
 
 ### Requirement: Hens peck by the houses
 
-Each inhabited peasant house SHALL keep 1–2 hens, by a hash of the house, on the front edge of its plot. A hen SHALL hop to a new spot every 3–5 s. By night there SHALL be no hens. At most 24 hens SHALL be drawn, and none below zoom 0.75.
+Each inhabited peasant house SHALL keep 1–2 hens, by a hash of the house, in its yard: the half of an open tile (free grass or road) next to its +x or +y edge. Hens SHALL never stand on the house's own plot, whose log piles, barrels and garden beds are part of the house sprite. A house with no open tile in front SHALL keep no hens. A hen SHALL hop to a new spot every 3–5 s. By night there SHALL be no hens. At most 24 hens SHALL be drawn, and none below zoom 0.75.
 
 #### Scenario: Hens peck by an inhabited house
 - **WHEN** a peasant house with residents is planned at midday at zoom 1
-- **THEN** 1 or 2 hens stand on the front edge of its footprint
+- **THEN** 1 or 2 hens stand on the open tiles just in front of it, none on its plot
 
 #### Scenario: Animals stay in budget
 - **WHEN** 40 farms in open grass are visible at midday

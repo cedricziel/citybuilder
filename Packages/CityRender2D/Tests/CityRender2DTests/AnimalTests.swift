@@ -31,7 +31,10 @@ private func plan(
     free: ((TileCoordinate) -> Bool)? = nil
 ) -> [AnimalPlanner.Animal] {
     let open = free ?? { snapshot.terrain(at: $0) == .grass && snapshot.occupiedTiles[$0] == nil }
-    return AnimalPlanner.animals(in: snapshot, xRange: 0 ... 39, yRange: 0 ... 39, reduceMotion: reduceMotion, isFreeGrass: open)
+    return AnimalPlanner.animals(
+        in: snapshot, xRange: 0 ... 39, yRange: 0 ... 39, reduceMotion: reduceMotion,
+        ground: AnimalPlanner.Ground(isFreeGrass: open, isYard: open)
+    )
 }
 
 @Test("scenario: sheep graze beside a farm")
@@ -77,17 +80,22 @@ func scenarioHensPeckByAnInhabitedHouse() {
     let house = Building(id: EntityID(raw: 5), kind: .house, anchor: TileCoordinate(x: 20, y: 20), state: .operational)
     var pop = HousePopulation()
     pop.population = 3
-    let footprint = BuildingCatalog.spec(for: .house).footprint
-    let hens = plan(farmland([house], tick: 180, pops: [house.id: pop]))
-    #expect((1 ... 2).contains(hens.count) && hens.allSatisfy { $0.kind == .hen })
-    for hen in hens {
-        let localU = hen.col - 19.5, localV = hen.row - 19.5
-        let onFront = localU > Double(footprint.width) - 0.4 || localV > Double(footprint.height) - 0.4
-        #expect(onFront && localU <= Double(footprint.width) && localV <= Double(footprint.height))
+    for tick in stride(from: UInt64(100), to: 500, by: 7) {
+        let snapshot = farmland([house], tick: tick, pops: [house.id: pop])
+        let hens = plan(snapshot)
+        #expect((1 ... 2).contains(hens.count) && hens.allSatisfy { $0.kind == .hen })
+        for hen in hens {
+            let tile = TileCoordinate(x: Int(hen.col.rounded()), y: Int(hen.row.rounded()))
+            #expect(snapshot.occupiedTiles[tile] == nil, "a hen on the house plot at \(tile)")
+            // Just in front: on the tile next to the +x or +y edge.
+            #expect(tile.x == 22 || tile.y == 22)
+            #expect((20 ... 22).contains(tile.x) && (20 ... 22).contains(tile.y))
+        }
     }
     #expect(plan(farmland([house], tick: 180, pops: [house.id: pop], zoom: 0.6)).isEmpty, "too far out for hens")
     #expect(plan(farmland([house], tick: 780, pops: [house.id: pop])).isEmpty, "hens are in at night")
     #expect(plan(farmland([house], tick: 180)).isEmpty, "an empty house keeps no hens")
+    #expect(plan(farmland([house], tick: 180, pops: [house.id: pop])) { _ in false }.isEmpty, "no yard, no hens")
 }
 
 @Test("scenario: animals stay in budget")

@@ -40,6 +40,12 @@ extension IsoWorldScene {
         snapshot.terrain(at: tile) == .grass && snapshot.occupiedTiles[tile] == nil && objectMap?.object(at: tile) == nil
     }
 
+    /// Hens may also stand on a road in front of the house.
+    func isYard(_ tile: TileCoordinate, in snapshot: WorldSnapshot) -> Bool {
+        if let id = snapshot.occupiedTiles[tile] { return snapshot.buildings[id]?.kind == .road }
+        return isFreeGrass(tile, in: snapshot)
+    }
+
     /// Re-plans the animals once per tick, or when the view, zoom or Reduce
     /// Motion change; at night and while paused they hold their frame 0.
     func reconcileAnimals(with snapshot: WorldSnapshot, now: TimeInterval) {
@@ -58,8 +64,11 @@ extension IsoWorldScene {
         lastAnimalPass = pass
         let animals = range.map { visible in
             AnimalPlanner.animals(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, reduceMotion: reduceMotion
-            ) { self.isFreeGrass($0, in: snapshot) }
+                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, reduceMotion: reduceMotion,
+                ground: AnimalPlanner.Ground(
+                    isFreeGrass: { self.isFreeGrass($0, in: snapshot) }, isYard: { self.isYard($0, in: snapshot) }
+                )
+            )
         } ?? []
         let keys = Set(animals.map { AnimalKey(home: $0.home, slot: $0.slot) })
         for (key, shown) in animalNodes where !keys.contains(key) {

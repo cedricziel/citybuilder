@@ -28,14 +28,26 @@ public enum AnimalPlanner {
     static let henVisit: ClosedRange<UInt64> = 30 ... 50
     static let henHopTicks: UInt64 = 5
 
-    /// The animals on screen. `isFreeGrass` says whether an animal may
-    /// stand on a tile: grass, no building, no tree or rock.
+    /// Where animals may stand.
+    public struct Ground {
+        /// Grass with no building, tree or rock: where herds graze.
+        public let isFreeGrass: (TileCoordinate) -> Bool
+        /// Free grass or road: where hens peck.
+        public let isYard: (TileCoordinate) -> Bool
+
+        public init(isFreeGrass: @escaping (TileCoordinate) -> Bool, isYard: @escaping (TileCoordinate) -> Bool) {
+            self.isFreeGrass = isFreeGrass
+            self.isYard = isYard
+        }
+    }
+
+    /// The animals on screen.
     public static func animals(
         in snapshot: WorldSnapshot,
         xRange: ClosedRange<Int>,
         yRange: ClosedRange<Int>,
         reduceMotion: Bool,
-        isFreeGrass: (TileCoordinate) -> Bool
+        ground: Ground
     ) -> [Animal] {
         let phase = TimeOfDay(tick: snapshot.tickCount).phase
         let night = phase == .night
@@ -51,7 +63,7 @@ public enum AnimalPlanner {
             var herd: [Animal] = []
             for farm in buildings where (farm.kind == .farm || farm.kind == .grainFarm) && near(farm.anchor, herdReach) {
                 let kind: Kind = farm.kind == .farm ? .sheep : .cow
-                let strips = pastures(around: farm, isFreeGrass: isFreeGrass)
+                let strips = pastures(around: farm, isFreeGrass: ground.isFreeGrass)
                 guard !strips.isEmpty else { continue }
                 var rng = DeterministicRNG(seed: UInt64(farm.id.raw) &* 0xA24B_AED4_963E_E407)
                 let count = kind == .sheep ? 2 + Int(rng.next() % 3) : 1 + Int(rng.next() % 2)
@@ -66,10 +78,13 @@ public enum AnimalPlanner {
             var hens: [Animal] = []
             for house in buildings where house.kind == .house && near(house.anchor, 1) {
                 guard let pop = snapshot.housePopulations[house.id], pop.population > 0, pop.tier == .peasants else { continue }
+                let sides = frontage(of: house, isYard: ground.isYard)
+                guard !sides.isEmpty else { continue }
                 var rng = DeterministicRNG(seed: UInt64(house.id.raw) &* 0x9FB2_1C65_1E98_DF25)
                 let count = 1 + Int(rng.next() % 2)
                 for slot in 0 ..< count where hens.count < maxHens {
-                    hens.append(hen(house, slot: slot, clock: clock))
+                    let side = sides[(Int(house.id.raw) + slot) % sides.count]
+                    hens.append(hen(house.id, slot: slot, side: side, clock: clock))
                 }
             }
             result += hens
@@ -122,26 +137,45 @@ public enum AnimalPlanner {
         )
     }
 
-    /// A hen on the front edge of the house's plot: the +x or +y rim.
-    static func hen(_ house: Building, slot: Int, clock: UInt64?) -> Animal {
+    /// One front side of a house: the open tiles just past its +x or +y
+    /// edge, and which edge.
+    struct Frontage: Hashable {
+        let tiles: [TileCoordinate]
+        let alongX: Bool
+    }
+
+    /// The open yard tiles just in front of the house, per front side.
+    /// Hens stand there and never on the house's own plot, whose log
+    /// piles, barrels and garden beds are part of the house sprite.
+    static func frontage(of house: Building, isYard: (TileCoordinate) -> Bool) -> [Frontage] {
         let footprint = BuildingCatalog.spec(for: house.kind).footprint
-        let base = UInt64(house.id.raw) &* 0xD6E8_FEB8_6659_FD93 ^ UInt64(slot) &* 0x2545_F491_4F6C_DD1D
+        let right = (0 ..< footprint.height).map { TileCoordinate(x: house.anchor.x + footprint.width, y: house.anchor.y + $0) }
+        let front = (0 ..< footprint.width).map { TileCoordinate(x: house.anchor.x + $0, y: house.anchor.y + footprint.height) }
+        return [Frontage(tiles: right.filter(isYard), alongX: false), Frontage(tiles: front.filter(isYard), alongX: true)]
+            .filter { !$0.tiles.isEmpty }
+    }
+
+    /// A hen on one front side, in the half of a yard tile next to the house.
+    static func hen(_ house: EntityID, slot: Int, side: Frontage, clock: UInt64?) -> Animal {
+        let base = UInt64(house.raw) &* 0xD6E8_FEB8_6659_FD93 ^ UInt64(slot) &* 0x2545_F491_4F6C_DD1D
         let period = henVisit.lowerBound + base % (henVisit.upperBound - henVisit.lowerBound + 1)
         let time = (clock ?? 0) &+ base % period
         let visit = time / period, into = time % period
         func place(_ visit: UInt64) -> (col: Double, row: Double) {
             var rng = DeterministicRNG(seed: base ^ visit)
-            let along = 0.3 + Double(rng.next() % 1000) / 1000 * (Double(footprint.width) - 0.6)
-            let depth = Double(footprint.height) - 0.15 - Double(rng.next() % 200) / 1000
-            let onRight = rng.next() % 2 == 0
-            let local = onRight ? (depth, along) : (along, depth)
-            return (Double(house.anchor.x) - 0.5 + local.0, Double(house.anchor.y) - 0.5 + local.1)
+            let tile = side.tiles[Int(rng.next() % UInt64(side.tiles.count))]
+            // Tile (x, y) spans x ± 0.5; the house edge is at -0.5 on the facing axis.
+            let along = -0.35 + Double(rng.next() % 700) / 1000
+            let out = -0.4 + Double(rng.next() % 250) / 1000
+            return side.alongX
+                ? (Double(tile.x) + along, Double(tile.y) + out)
+                : (Double(tile.x) + out, Double(tile.y) + along)
         }
         let target = place(visit)
         let previous = visit == 0 ? target : place(visit - 1)
         let progress = clock == nil ? 1 : min(1, Double(into) / Double(henHopTicks))
         return Animal(
-            home: house.id, slot: slot, kind: .hen,
+            home: house, slot: slot, kind: .hen,
             col: previous.col + (target.col - previous.col) * progress,
             row: previous.row + (target.row - previous.row) * progress,
             walking: false,
