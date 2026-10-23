@@ -1,11 +1,11 @@
 import CityCore
 
 /// What stands on a tile (terrain-v2, design D3): a clump of trees on forest, an outcrop on
-/// mountain, and now and then a single tree in a meadow near the forest. Visual only: simulation and
-/// placement keep each tile's own terrain.
+/// mountain. Visual only: simulation and placement keep each tile's own terrain. Meadow trees wait
+/// for a design lumberjacks and foresters can see.
 public struct TerrainObject: Hashable, Sendable {
     public enum Density: String, Sendable, CaseIterable {
-        case single, sparse, medium, dense, peak
+        case sparse, medium, dense, peak
     }
 
     public let kind: TerrainType
@@ -34,52 +34,89 @@ public struct TerrainObject: Hashable, Sendable {
 
 /// Every tile's object for one terrain grid and its occupancy, worked out once: the edge distance of
 /// each forest and mountain region comes from one breadth-first search per kind, so a frame only
-/// looks objects up.
+/// looks objects up, and a building placed or cleared only redoes the tiles round it.
 public struct TerrainObjectMap: Sendable {
     public let width: Int
     public let height: Int
     let grid: [TerrainType]
-    let occupancy: [TileCoordinate: EntityID]
-    private let objects: [TerrainObject?]
+    private(set) var occupancy: [TileCoordinate: EntityID]
+    private let forest: [Int]
+    private let mountain: [Int]
+    private var occupied: [Bool]
+    private var objects: [TerrainObject?]
 
     public init(width: Int, height: Int, grid: [TerrainType], occupancy: [TileCoordinate: EntityID]) {
         self.width = width
         self.height = height
         self.grid = grid
         self.occupancy = occupancy
-        let forest = Self.edgeDistance(of: .forest, width: width, height: height, grid: grid)
-        let mountain = Self.edgeDistance(of: .mountain, width: width, height: height, grid: grid)
-        var objects = [TerrainObject?](repeating: nil, count: width * height)
-        for y in 0 ..< height {
-            for x in 0 ..< width {
-                let coord = TileCoordinate(x: x, y: y)
-                guard occupancy[coord] == nil else { continue }
-                let index = y * width + x
-                let crowded = Self.neighbours(of: coord).contains { occupancy[$0] != nil }
-                let variant = SpriteAtlas.variantIndex(coord: coord, count: TerrainObject.variants)
-                let density: TerrainObject.Density? = switch grid[index] {
-                case .forest: Self.forestDensity(distance: forest[index], coord: coord, crowded: crowded)
-                case .mountain: Self.rockDensity(distance: mountain[index], coord: coord, crowded: crowded)
-                case .grass: Self.meadowTree(at: coord, forest: forest, width: width, height: height, crowded: crowded)
-                default: nil
-                }
-                if let density {
-                    objects[index] = TerrainObject(kind: grid[index] == .mountain ? .mountain : .forest, density: density, variant: variant)
+        forest = Self.edgeDistance(of: .forest, width: width, height: height, grid: grid)
+        mountain = Self.edgeDistance(of: .mountain, width: width, height: height, grid: grid)
+        occupied = [Bool](repeating: false, count: grid.count)
+        objects = [TerrainObject?](repeating: nil, count: grid.count)
+        for tile in occupancy.keys {
+            if let index = index(of: tile) {
+                occupied[index] = true
+            }
+        }
+        for index in grid.indices {
+            objects[index] = object(forIndex: index)
+        }
+    }
+
+    /// Moves this map to a new occupancy over the same grid: only the tiles whose occupancy changed
+    /// and the ring round each are worked out again.
+    public mutating func update(occupancy newOccupancy: [TileCoordinate: EntityID]) {
+        guard newOccupancy != occupancy else { return }
+        let changed = Set(occupancy.keys).symmetricDifference(newOccupancy.keys)
+        occupancy = newOccupancy
+        var redo = Set<Int>()
+        for tile in changed {
+            if let index = index(of: tile) {
+                occupied[index] = newOccupancy[tile] != nil
+            }
+            for (dx, dy) in Self.ringAndSelf {
+                if let index = index(of: TileCoordinate(x: tile.x + dx, y: tile.y + dy)) {
+                    redo.insert(index)
                 }
             }
         }
-        self.objects = objects
+        for index in redo {
+            objects[index] = object(forIndex: index)
+        }
+    }
+
+    /// The eight tiles round a tile, as offsets.
+    private static let ring = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]
+    private static let ringAndSelf = ring + [(0, 0)]
+
+    private func index(of tile: TileCoordinate) -> Int? {
+        tile.x >= 0 && tile.x < width && tile.y >= 0 && tile.y < height ? tile.y * width + tile.x : nil
+    }
+
+    private func object(forIndex index: Int) -> TerrainObject? {
+        let kind = grid[index]
+        guard kind == .forest || kind == .mountain, !occupied[index] else { return nil }
+        let x = index % width, y = index / width
+        let coord = TileCoordinate(x: x, y: y)
+        let crowded = Self.ring.contains { dx, dy in
+            let nx = x + dx, ny = y + dy
+            return nx >= 0 && nx < width && ny >= 0 && ny < height && occupied[ny * width + nx]
+        }
+        let density = kind == .forest
+            ? Self.forestDensity(distance: forest[index], coord: coord, crowded: crowded)
+            : Self.rockDensity(distance: mountain[index], coord: coord, crowded: crowded)
+        return TerrainObject(kind: kind, density: density, variant: SpriteAtlas.variantIndex(coord: coord, count: TerrainObject.variants))
     }
 
     public func object(at coord: TileCoordinate) -> TerrainObject? {
-        guard coord.x >= 0, coord.x < width, coord.y >= 0, coord.y < height else { return nil }
-        return objects[coord.y * width + coord.x]
+        index(of: coord).flatMap { objects[$0] }
     }
 
-    /// Whether this map was built from the same grid and occupancy. Both compare in constant time
-    /// while they share storage with the world's, which they do while nothing changes.
-    public func matches(width: Int, height: Int, grid: [TerrainType], occupancy: [TileCoordinate: EntityID]) -> Bool {
-        self.width == width && self.height == height && self.grid == grid && self.occupancy == occupancy
+    /// Whether this map was built from the same grid. It compares in constant time while it shares
+    /// storage with the world's, which it does while nothing changes.
+    public func matches(width: Int, height: Int, grid: [TerrainType]) -> Bool {
+        self.width == width && self.height == height && self.grid == grid
     }
 
     // MARK: - Density (design D3)
@@ -105,29 +142,8 @@ public struct TerrainObjectMap: Sendable {
         return ladder[step]
     }
 
-    /// One meadow tile in about sixteen within two tiles of forest grows a single tree, never next to
-    /// a building or road.
-    static func meadowTree(at coord: TileCoordinate, forest: [Int], width: Int, height: Int, crowded: Bool) -> TerrainObject.Density? {
-        guard !crowded, hash(coord, salt: 13) % 16 == 0 else { return nil }
-        for dy in -2 ... 2 {
-            for dx in -2 ... 2 {
-                let x = coord.x + dx, y = coord.y + dy
-                if x >= 0, x < width, y >= 0, y < height, forest[y * width + x] > 0 {
-                    return .single
-                }
-            }
-        }
-        return nil
-    }
-
     private static func hash(_ coord: TileCoordinate, salt: UInt32) -> UInt32 {
         SpriteAtlas.tileHash(Int32(truncatingIfNeeded: coord.x), Int32(truncatingIfNeeded: coord.y), salt: salt)
-    }
-
-    private static func neighbours(of coord: TileCoordinate) -> [TileCoordinate] {
-        (-1 ... 1).flatMap { dy in (-1 ... 1).compactMap { dx in
-            dx == 0 && dy == 0 ? nil : TileCoordinate(x: coord.x + dx, y: coord.y + dy)
-        } }
     }
 
     /// Edge-neighbour steps from each tile of `kind` to the nearest tile that is not (1 on the edge),
@@ -136,11 +152,10 @@ public struct TerrainObjectMap: Sendable {
         var distance = [Int](repeating: 0, count: grid.count)
         var frontier: [Int] = []
         for index in grid.indices where grid[index] == kind {
-            let x = index % width, y = index / width
-            let onEdge = x == 0 || y == 0 || x == width - 1 || y == height - 1
-                || grid[index - 1] != kind || grid[index + 1] != kind || grid[index - width] != kind || grid[index + width] != kind
-            distance[index] = onEdge ? 1 : Int.max
-            if onEdge {
+            var inside = 0
+            forEachEdgeNeighbour(of: index, width: width, height: height) { inside += grid[$0] == kind ? 1 : 0 }
+            distance[index] = inside == 4 ? Int.max : 1
+            if inside < 4 {
                 frontier.append(index)
             }
         }
@@ -149,13 +164,24 @@ public struct TerrainObjectMap: Sendable {
             step += 1
             var next: [Int] = []
             for index in frontier {
-                for neighbour in [index - 1, index + 1, index - width, index + width] where distance[neighbour] == Int.max {
-                    distance[neighbour] = step
-                    next.append(neighbour)
+                forEachEdgeNeighbour(of: index, width: width, height: height) { neighbour in
+                    if distance[neighbour] == Int.max {
+                        distance[neighbour] = step
+                        next.append(neighbour)
+                    }
                 }
             }
             frontier = next
         }
         return distance
+    }
+
+    /// Calls `body` with each of the up to four edge neighbours of `index` inside the map.
+    private static func forEachEdgeNeighbour(of index: Int, width: Int, height: Int, _ body: (Int) -> Void) {
+        let x = index % width, y = index / width
+        if x > 0 { body(index - 1) }
+        if x < width - 1 { body(index + 1) }
+        if y > 0 { body(index - width) }
+        if y < height - 1 { body(index + width) }
     }
 }

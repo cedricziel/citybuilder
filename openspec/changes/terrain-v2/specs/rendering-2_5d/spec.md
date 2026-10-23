@@ -62,9 +62,7 @@ The density SHALL follow the tile's distance to the edge of its forest or rock r
 - distance 2: `medium`;
 - distance 3 or more: `dense` (a mountain tile may take `peak` by world noise).
 
-A tile next to an occupied tile SHALL drop one class. An occupied tile SHALL draw no object.
-
-A grass tile within 2 tiles of forest, with no occupied tile next to it, MAY draw `terrain-forest-single` by hash, at no more than 1 in 10 such tiles.
+A tile next to an occupied tile SHALL drop one class. An occupied tile SHALL draw no object, and an occupied forest tile SHALL still draw grass ground. A forest region reaching the map's border SHALL count the border as its edge. When a building is placed or cleared, or a tile is felled or planted, the scene SHALL redraw the objects it changes.
 
 Objects are visual only. Simulation and placement MUST keep using each tile's own terrain.
 
@@ -83,10 +81,20 @@ Objects are visual only. Simulation and placement MUST keep using each tile's ow
 - **WHEN** the scene renders a large mountain region
 - **THEN** its edge tiles draw `sparse` outcrops and its interior draws `dense` or `peak` ones
 
-#### Scenario: Meadow trees stay rare and clear of buildings
+#### Scenario: A forest reaching the map border
 
-- **WHEN** the scene renders a meadow beside a forest, with a house in it
-- **THEN** at most 1 in 10 meadow tiles near the forest draws a single tree, and none of the tiles next to the house does
+- **WHEN** a map is all forest
+- **THEN** its corner tiles draw `sparse` or `medium` clumps and a tile 3 from every border draws a `dense` one
+
+#### Scenario: A building placed in a live forest clears its clump and thins its neighbours
+
+- **WHEN** a house is placed on a forest the scene already shows
+- **THEN** the tiles under it draw grass ground and no clump, and the forest tiles next to it drop to `sparse`
+
+#### Scenario: Felling and planting reach the scene
+
+- **WHEN** a forest tile turns to grass, and later a grass tile beside the forest turns to forest
+- **THEN** the first loses its clump and the second gains one
 
 #### Scenario: Forest ground has no tile edge
 
@@ -95,7 +103,7 @@ Objects are visual only. Simulation and placement MUST keep using each tile's ow
 
 ### Requirement: Terrain objects depth-sort with buildings
 
-A terrain object SHALL draw at the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01`. Objects nearer the camera then cover buildings behind them, and buildings nearer the camera cover objects behind them.
+A terrain object SHALL draw just behind the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01 − 0.003`. Objects nearer the camera then cover buildings behind them, buildings nearer the camera cover objects behind them, and a building at the same depth always covers the object.
 
 #### Scenario: A clump in front of a house covers it
 
@@ -106,6 +114,11 @@ A terrain object SHALL draw at the global z of a 1 × 1 building on its tile, `1
 
 - **WHEN** a forest tile lies behind a house
 - **THEN** the tree clump's global z is less than the house's
+
+#### Scenario: A clump level with a building sorts behind it in every season
+
+- **WHEN** a forest tile has the same depth as a house's footprint centre
+- **THEN** the tree clump's global z is less than the house's in every season
 
 ### Requirement: Terrain objects follow the season
 

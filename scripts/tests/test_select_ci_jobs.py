@@ -111,6 +111,7 @@ def test_a_change_outside_the_packages_runs_everything(repo: Path, path: str) ->
     assert jobs.packages == ALL_PACKAGES
     assert jobs.apps and jobs.sprites and jobs.gamedata_fixture
     assert jobs.determinism_linux and jobs.determinism_compare
+    assert jobs.audio
 
 
 def test_a_rename_across_packages_runs_both_sides(repo: Path) -> None:
@@ -131,6 +132,7 @@ def test_the_output_is_github_output_lines(repo: Path) -> None:
     lines = select(["Packages/CityAudio/Package.swift"], repo).github_output().splitlines()
 
     assert "sprites=false" in lines
+    assert "audio=false" in lines
     assert "apps=true" in lines
     packages = next(line for line in lines if line.startswith("packages="))
     assert json.loads(packages.removeprefix("packages=")) == ["CityAudio"]

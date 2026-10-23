@@ -55,6 +55,7 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 - [ ] 4.7 Walkers: moved to `realistic-walkers` (storybook-scale people, carrier families and animals, 24×30 pt, 8 gait frames)
 - [x] 4.8 Terrain: grass/beach/water full tiles and both transition sets, season variants (`Terrain shows the season`), lands together with §3. Moved up after houses: `art.ground` paints lit, tile-periodic ground (grass, beach, water, forest, rock, seasons, frames, rock variants); grass shores have autumn and winter transition sets; `Terrain.atlas` is retired
 - [ ] 4.9 Goods icons: hand-authored SVG sources replace the three image-API icons and the procedural ones
+- [x] 4.10 Night lights: `<sprite id>-lights` masks for every house look and the workshops, drawn additively at night by the renderer (`add-night-glow`)
 
 ## 5. Retire the old pipeline and docs
 

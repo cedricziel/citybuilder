@@ -53,6 +53,11 @@ func run() throws -> Int32 {
     switch options.command {
     case "check":
         problems.forEach { print($0) }
+        // A warning, not a problem: a workshop may have no window. `isokit render` names the ones whose
+        // windows are all hidden.
+        for id in NightLights.withoutPanes(Recipes.all) {
+            print("warning: \(id) is meant to light up at night but has no window pane")
+        }
         print(problems.isEmpty ? "isokit check: \(Recipes.all.count) recipes ok" : "isokit check: \(problems.count) problem(s)")
         return problems.isEmpty ? 0 : 1
     case "chimneys":

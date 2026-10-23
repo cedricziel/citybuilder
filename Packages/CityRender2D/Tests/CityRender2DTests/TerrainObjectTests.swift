@@ -42,25 +42,33 @@ func treesNeverStandOnABuilding() {
     #expect(forest().object(at: .init(x: 9, y: 8))?.density == .dense)
 }
 
-@Test("scenario: Meadow trees stay rare and clear of buildings")
-func meadowTreesStayRareAndClearOfBuildings() {
-    let house = TileCoordinate(x: 3, y: 8)
-    let objects = forest(occupied: [house: EntityID(raw: 1)])
-    var near = 0, singles = 0
+@Test("scenario: A forest reaching the map border")
+func forestReachingTheMapBorder() {
+    let grid = World.fixtureWithTerrain(width: 6, height: 5, fill: .forest, seed: 1).snapshot().terrainGrid
+    let objects = TerrainObjectMap(width: 6, height: 5, grid: grid, occupancy: [:])
+    for corner in [TileCoordinate(x: 0, y: 0), TileCoordinate(x: 5, y: 0), TileCoordinate(x: 0, y: 4), TileCoordinate(x: 5, y: 4)] {
+        let density = objects.object(at: corner)?.density
+        #expect(density == .sparse || density == .medium, "corner \(corner) is \(String(describing: density))")
+    }
+    #expect(objects.object(at: .init(x: 2, y: 2))?.density == .dense)
+    #expect(TerrainObjectMap(width: 1, height: 3, grid: [.forest, .forest, .forest], occupancy: [:]).object(at: .init(x: 0, y: 1)) != nil)
+}
+
+@Test("A building placed or cleared redoes only its tiles, matching a fresh map")
+func occupancyUpdateMatchesAFreshMap() {
+    let built: [TileCoordinate: EntityID] = [.init(x: 8, y: 8): EntityID(raw: 1), .init(x: 11, y: 5): EntityID(raw: 2)]
+    var objects = forest()
+    objects.update(occupancy: built)
+    let fresh = forest(occupied: built)
+    var cleared = objects
+    cleared.update(occupancy: [:])
     for y in 0 ..< 17 {
-        for x in 0 ..< 17 where !((5 ... 11).contains(x) && (5 ... 11).contains(y)) {
+        for x in 0 ..< 17 {
             let tile = TileCoordinate(x: x, y: y)
-            if objects.object(at: tile) != nil {
-                singles += 1
-                #expect(objects.object(at: tile)?.density == .single)
-                #expect(abs(x - house.x) > 1 || abs(y - house.y) > 1, "a tree beside the house at \(tile)")
-            }
-            if (3 ... 13).contains(x), (3 ... 13).contains(y) {
-                near += 1
-            }
+            #expect(objects.object(at: tile) == fresh.object(at: tile), "\(tile)")
+            #expect(cleared.object(at: tile) == forest().object(at: tile), "\(tile)")
         }
     }
-    #expect(singles * 10 <= near)
 }
 
 @Test("Object sprite names follow the season, rock having no autumn look")
@@ -86,14 +94,32 @@ private final class Source: IsoWorldDataSource {
     }
 }
 
-private func forestSnapshot(season: Season = .summer) -> WorldSnapshot {
+/// A 3 x 3 forest at (3...5, 3...5) in a 9 x 9 meadow, with `buildings` on their footprints.
+private func forestSnapshot(
+    season: Season = .summer,
+    buildings: [Building] = [],
+    paint: [TileCoordinate: TerrainType] = [:]
+) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 9, height: 9, fill: .grass, seed: 1).snapshot()
-    let grid = base.terrainGrid.indices.map { (3 ... 5).contains($0 % 9) && (3 ... 5).contains($0 / 9) ? TerrainType.forest : .grass }
+    let grid = base.terrainGrid.indices.map { index in
+        let tile = TileCoordinate(x: index % 9, y: index / 9)
+        return paint[tile] ?? ((3 ... 5).contains(tile.x) && (3 ... 5).contains(tile.y) ? TerrainType.forest : .grass)
+    }
+    var occupied: [TileCoordinate: EntityID] = [:]
+    for building in buildings {
+        for tile in BuildingCatalog.spec(for: building.kind).footprint.tiles(anchor: building.anchor) {
+            occupied[tile] = building.id
+        }
+    }
     return WorldSnapshot(
         tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 9, mapHeight: 9, terrainGrid: grid,
-        occupiedTiles: [:], buildings: base.buildings, carriers: base.carriers, economy: base.economy,
-        totalPopulation: base.totalPopulation, camera: base.camera, date: GameDate(year: 1200, season: season)
+        occupiedTiles: occupied, buildings: Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) }), carriers: base.carriers,
+        economy: base.economy, totalPopulation: base.totalPopulation, camera: base.camera, date: GameDate(year: 1200, season: season)
     )
+}
+
+private func house(_ raw: UInt32, at x: Int, _ y: Int) -> Building {
+    Building(id: EntityID(raw: raw), kind: .house, anchor: TileCoordinate(x: x, y: y), state: .operational)
 }
 
 @MainActor
@@ -106,13 +132,29 @@ private func scene(_ source: Source) -> IsoWorldScene {
     return scene
 }
 
-/// The clumps on the forest tiles, leaving out single meadow trees.
 @MainActor
 private func objectNodes(_ scene: IsoWorldScene) -> [SKSpriteNode] {
-    scene.children.flatMap(\.children).compactMap { $0 as? SKSpriteNode }.filter {
-        $0.name == IsoWorldScene.terrainObjectNodeName
-            && ($0.userData?[IsoWorldScene.textureNameKey] as? String)?.contains("-single") == false
-    }
+    scene.children.flatMap(\.children).compactMap { $0 as? SKSpriteNode }.filter { $0.name == IsoWorldScene.terrainObjectNodeName }
+}
+
+@MainActor
+private func objectNames(_ scene: IsoWorldScene) -> [String] {
+    objectNodes(scene).compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+}
+
+/// The ground node of `tile`.
+@MainActor
+private func ground(at tile: TileCoordinate, in scene: IsoWorldScene) -> SKNode? {
+    scene.presentSprites.first { spec, _ in
+        guard case .terrain = spec.kind else { return false }
+        return spec.coord == tile
+    }?.value
+}
+
+/// The clump standing on `tile`, if any.
+@MainActor
+private func clump(at tile: TileCoordinate, in scene: IsoWorldScene) -> SKNode? {
+    ground(at: tile, in: scene)?.children.first { $0.name == IsoWorldScene.terrainObjectNodeName }
 }
 
 @MainActor
@@ -124,23 +166,74 @@ func forestGroundHasNoTileEdge() {
     #expect(objectNodes(scene).count == 9)
 }
 
+/// The forest with a house at (1, 1), behind all of it, and one at (6, 6), in front of all of it.
+@MainActor
+private func forestBetweenHouses() -> IsoWorldScene {
+    scene(Source(forestSnapshot(buildings: [house(1, at: 1, 1), house(2, at: 6, 6)])))
+}
+
 @MainActor
 @Test("scenario: A clump in front of a house covers it")
-func clumpInFrontOfAHouseCoversIt() {
-    // A house on 2 x 2 at (1, 1) has its footprint centre at depth 1 + 1 + 2 = 4; tile (3, 3) is deeper.
-    let house = 10 + 4 * 0.01
-    let scene = scene(Source(forestSnapshot()))
-    let front = objectNodes(scene).filter { ($0.userData?[IsoWorldScene.textureNameKey] as? String) != nil }
-    #expect(front.allSatisfy { $0.zPosition > CGFloat(house) })
+func clumpInFrontOfAHouseCoversIt() throws {
+    let scene = forestBetweenHouses()
+    let house = try #require(scene.buildingNodes[TileCoordinate(x: 1, y: 1)]).zPosition
+    #expect(objectNodes(scene).count == 9)
+    #expect(objectNodes(scene).allSatisfy { $0.zPosition > house })
 }
 
 @MainActor
 @Test("scenario: A clump behind a house stays behind it")
-func clumpBehindAHouseStaysBehindIt() {
-    // A house on 2 x 2 at (6, 6): depth 6 + 6 + 2 = 14, deeper than every tree in the 3...5 square.
-    let house = 10 + 14 * 0.01
-    let scene = scene(Source(forestSnapshot()))
-    #expect(objectNodes(scene).allSatisfy { $0.zPosition < CGFloat(house) })
+func clumpBehindAHouseStaysBehindIt() throws {
+    let scene = forestBetweenHouses()
+    let house = try #require(scene.buildingNodes[TileCoordinate(x: 6, y: 6)]).zPosition
+    #expect(objectNodes(scene).count == 9)
+    #expect(objectNodes(scene).allSatisfy { $0.zPosition < house })
+}
+
+@MainActor
+@Test("scenario: A clump level with a building sorts behind it in every season")
+func clumpLevelWithABuildingSortsBehindIt() throws {
+    // The house at (6, 1) has depth 6 + 1 + 2 = 9; the clump on (5, 3) too, 5 + 3 + 1.
+    let source = Source(forestSnapshot(buildings: [house(1, at: 6, 1)]))
+    let scene = scene(source)
+    for season in Season.allCases {
+        source.snapshot = forestSnapshot(season: season, buildings: [house(1, at: 6, 1)])
+        scene.update(1)
+        let houseZ = try #require(scene.buildingNodes[TileCoordinate(x: 6, y: 1)]).zPosition
+        let treeZ = try #require(clump(at: .init(x: 5, y: 3), in: scene)).zPosition
+        #expect(treeZ < houseZ, "\(season)")
+    }
+}
+
+@MainActor
+@Test("scenario: A building placed in a live forest clears its clump and thins its neighbours")
+func buildingPlacedInALiveForest() {
+    let source = Source(forestSnapshot())
+    let scene = scene(source)
+    #expect(objectNodes(scene).count == 9)
+    source.snapshot = forestSnapshot(buildings: [house(1, at: 3, 3)])
+    scene.update(1)
+    // Four tiles under the house; the five left all touch it and drop to sparse.
+    #expect(objectNames(scene).count == 5)
+    #expect(objectNames(scene).allSatisfy { $0.hasPrefix("terrain-forest-sparse") })
+    #expect(clump(at: .init(x: 3, y: 3), in: scene) == nil)
+    let under = ground(at: .init(x: 3, y: 3), in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String
+    #expect(under?.hasPrefix("terrain-grass") == true)
+}
+
+@MainActor
+@Test("scenario: Felling and planting reach the scene")
+func fellingAndPlantingReachTheScene() {
+    let source = Source(forestSnapshot())
+    let scene = scene(source)
+    source.snapshot = forestSnapshot(paint: [.init(x: 4, y: 4): .grass])
+    scene.update(1)
+    #expect(objectNodes(scene).count == 8)
+    #expect(clump(at: .init(x: 4, y: 4), in: scene) == nil)
+    source.snapshot = forestSnapshot(paint: [.init(x: 4, y: 4): .grass, .init(x: 6, y: 4): .forest])
+    scene.update(2)
+    #expect(objectNodes(scene).count == 9)
+    #expect(clump(at: .init(x: 6, y: 4), in: scene) != nil)
 }
 
 @MainActor
@@ -150,7 +243,7 @@ func forestsTurnInAutumn() {
     let scene = scene(source)
     source.snapshot = forestSnapshot(season: .autumn)
     scene.update(1)
-    let names = objectNodes(scene).compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+    let names = objectNames(scene)
     #expect(names.count == 9 && names.allSatisfy { $0.contains("-autumn") })
 }
 
@@ -164,4 +257,18 @@ func cullingKeepsOnlyTheScreen() throws {
     let range = Culling.visibleTileRange(camera: camera, viewSize: view, mapWidth: 200, mapHeight: 200)
     let corner = try TileCoordinate(x: #require(range?.xRange.upperBound), y: #require(range?.yRange.lowerBound))
     #expect(!bounds.contains(IsoMath.screenPoint(forTile: corner)))
+}
+
+@Test("A tree clump just below the screen's bottom corner stays in the scene")
+func clumpBelowTheBottomCornerStays() {
+    let camera = Camera(centerX: 50, centerY: 50, zoom: 1)
+    let view = CGSize(width: 1024, height: 768)
+    // (57, 73) lies 96 pt below the view's bottom-left corner: its clump, 112 pt tall, reaches into view.
+    let tile = TileCoordinate(x: 57, y: 73)
+    let point = IsoMath.screenPoint(forTile: tile)
+    let centre = IsoMath.screenPoint(forTileFractionalX: 50, fractionalY: 50)
+    #expect(point.y < centre.y - view.height / 2 && point.y + 112 > centre.y - view.height / 2)
+    #expect(Culling.screenBounds(camera: camera, viewSize: view).contains(point))
+    let range = Culling.visibleTileRange(camera: camera, viewSize: view, mapWidth: 200, mapHeight: 200, margin: Culling.screenMargin)
+    #expect(range.map { $0.xRange.contains(tile.x) && $0.yRange.contains(tile.y) } == true)
 }

@@ -85,7 +85,7 @@ public final class IsoWorldScene: SKScene {
     var lastAnimalPass: AnimalPass?
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
-    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
     /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
@@ -301,19 +301,17 @@ public final class IsoWorldScene: SKScene {
             camera: snapshot.camera,
             viewSize: size,
             mapWidth: snapshot.mapWidth,
-            mapHeight: snapshot.mapHeight
+            mapHeight: snapshot.mapHeight,
+            margin: Culling.screenMargin
         )
         else { return }
 
         if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
             transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
         }
-        if objectMap?.matches(
-            width: snapshot.mapWidth,
-            height: snapshot.mapHeight,
-            grid: snapshot.terrainGrid,
-            occupancy: snapshot.occupiedTiles
-        ) != true {
+        if objectMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) == true {
+            objectMap?.update(occupancy: snapshot.occupiedTiles)
+        } else {
             objectMap = TerrainObjectMap(
                 width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid, occupancy: snapshot.occupiedTiles
             )
@@ -364,8 +362,10 @@ public struct IsoWorldView: View {
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
         routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
-        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
+        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil,
+        showsStats: Bool = false
     ) {
+        debugOptions = showsStats ? [.showsFPS, .showsNodeCount, .showsDrawCount] : []
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
         prepared.scaleMode = .resizeFill
@@ -395,8 +395,10 @@ public struct IsoWorldView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private let debugOptions: SpriteView.DebugOptions
+
     public var body: some View {
-        SpriteView(scene: scene)
+        SpriteView(scene: scene, debugOptions: debugOptions)
             .ignoresSafeArea()
             .onChange(of: reduceMotion, initial: true) { _, isOn in
                 scene.reduceMotion = isOn

@@ -11,19 +11,23 @@ public enum Culling {
     public static let bufferTiles = 2
 
     /// Computes the inclusive range of tile coordinates visible in `view`
-    /// given `camera` and the iso projection. Bounds-checks against the map
+    /// given `camera` and the iso projection, with the view grown by `margin`
+    /// scene points on every side. Bounds-checks against the map
     /// dimensions, so the returned range is always in-bounds.
     public static func visibleTileRange(
         camera: Camera,
         viewSize: CGSize,
         mapWidth: Int,
-        mapHeight: Int
+        mapHeight: Int,
+        margin: CGFloat = 0
     ) -> (xRange: ClosedRange<Int>, yRange: ClosedRange<Int>)? {
         guard mapWidth > 0, mapHeight > 0, camera.zoom > 0 else { return nil }
 
         // Half-extent of the view in iso-tile units, accounting for zoom.
         let halfWidthInTiles = (Double(viewSize.width) / 2) / (Double(IsoMath.tileWidth) * camera.zoom)
+            + Double(margin / IsoMath.tileWidth)
         let halfHeightInTiles = (Double(viewSize.height) / 2) / (Double(IsoMath.tileHeight) * camera.zoom)
+            + Double(margin / IsoMath.tileHeight)
         // Iso projection: a screen-space horizontal half-extent of `h` columns
         // corresponds to ± h in (col - row) space. The bounding rectangle in
         // tile coordinates is therefore the sum of both half-extents.
@@ -49,7 +53,8 @@ public enum Culling {
     public static let screenMargin: CGFloat = 160
 
     /// The part of the scene the camera shows, in scene points, grown by `screenMargin`. The tile
-    /// range above is its bounding box in tile space, about twice as many tiles as the screen holds.
+    /// range above, given the same margin, is its bounding box in tile space: about twice as many
+    /// tiles as the screen holds.
     public static func screenBounds(camera: Camera, viewSize: CGSize) -> CGRect {
         let centre = IsoMath.screenPoint(forTileFractionalX: camera.centerX, fractionalY: camera.centerY)
         let width = viewSize.width / camera.zoom + 2 * screenMargin

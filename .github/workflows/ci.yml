@@ -28,6 +28,7 @@ jobs:
       gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
+      audio: ${{ steps.select.outputs.audio }}
 
     steps:
       - name: Checkout
@@ -55,6 +56,7 @@ jobs:
             echo "gamedata_fixture=true"
             echo "determinism_linux=true"
             echo "determinism_compare=true"
+            echo "audio=true"
           }
           selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
@@ -76,7 +78,7 @@ jobs:
   audio-linux:
     name: audio renders match on Linux
     needs: changes
-    if: needs.changes.outputs.sprites == 'true'
+    if: needs.changes.outputs.audio == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
