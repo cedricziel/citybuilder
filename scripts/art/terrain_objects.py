@@ -57,9 +57,9 @@ def render(name: str) -> np.ndarray:
     if path.exists():
         return np.load(path)
     kind, density, season, variant = parse(name)
-    image = flora.sprite(density, variant, season)
+    image = flora.sprite(density, variant, season).astype(np.float32)
     CACHE.mkdir(parents=True, exist_ok=True)
-    np.save(path, image.astype(np.float32))
+    np.save(path, image)
     return image
 
 

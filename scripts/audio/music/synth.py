@@ -61,6 +61,11 @@ def pluck(freq: float, seconds: float, velocity: float, brightness: float, rng: 
     period = SR / freq + 0.5
     length = int(period)
     frac = period - length
+    if frac < 0.1:
+        # A near-zero allpass delay has a coefficient near 1, which rings;
+        # move a sample of delay into it to keep the fraction in [0.1, 1.1).
+        length -= 1
+        frac += 1
     coeff = (1 - frac) / (1 + frac)
     burst = [rng.noise() for _ in range(length)]
     smooth = 1 - brightness

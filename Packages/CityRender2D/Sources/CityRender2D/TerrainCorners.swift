@@ -54,7 +54,7 @@ public enum TerrainCorners {
     }
 
     /// The transition tile for `coord`, or nil when its corners agree or its kind doesn't blend
-    /// (forest and mountain keep their own sprites).
+    /// (mountain keeps its own sprite).
     public static func transition(at coord: TileCoordinate, terrain: (TileCoordinate) -> TerrainType?) -> TerrainTransition? {
         guard let own = terrain(coord), blends(own) else { return nil }
         let corners = cornerOffsets.compactMap { dx, dy in
@@ -71,10 +71,11 @@ public enum TerrainCorners {
         return TerrainTransition(upper: pair.upper, lower: pair.lower, mask: mask)
     }
 
-    /// Grass, beach and water blend into each other; forest and mountain keep their own sprites.
+    /// Grass, beach and water blend into each other, and forest blends as grass, since it stands on
+    /// grass ground; mountain keeps its own sprite.
     static func blends(_ kind: TerrainType) -> Bool {
         switch kind {
-        case .grass, .beach, .water: true
+        case .grass, .forest, .beach, .water: true
         default: false
         }
     }

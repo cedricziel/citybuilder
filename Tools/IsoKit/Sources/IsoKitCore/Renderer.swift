@@ -59,6 +59,14 @@ public enum Renderer {
         try png.write(to: url)
     }
 
+    /// Whether any pixel of `image` is at least half opaque, the content gate's test for an empty frame.
+    public static func hasVisiblePixel(_ image: CGImage) -> Bool {
+        guard let ctx = try? canvas(width: image.width, height: image.height), let data = ctx.data else { return false }
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let bytes = UnsafeBufferPointer(start: data.assumingMemoryBound(to: UInt8.self), count: ctx.bytesPerRow * image.height)
+        return stride(from: 3, to: bytes.count, by: 4).contains { bytes[$0] >= 128 }
+    }
+
     static func canvas(width: Int, height: Int) throws -> CGContext {
         guard let ctx = CGContext(
             data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,

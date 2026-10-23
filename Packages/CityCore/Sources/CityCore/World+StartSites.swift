@@ -176,6 +176,60 @@ extension World {
         }
     }
 
+    /// Makes sure `island` holds a 2×2 square where a mine fits once
+    /// Mining is researched, clear of the town center's road ring, which
+    /// the starter roads take later: when it holds none, raises the first
+    /// grass neighbour of its mountains, nearest the town center first,
+    /// that makes one, else the first forest neighbour. Tiles in the start
+    /// area stay as they are. Spec: `world-terrain` / Starter mine site.
+    mutating func raiseStarterMineSite(
+        besideTownCenterAt anchor: TileCoordinate,
+        island: Island,
+        tileToIsland: [TileCoordinate: IslandID]
+    ) {
+        var probe = self
+        probe.research.markResearched(.mining)
+        let bounds = island.bounds
+        let islandTiles = (bounds.minY ... bounds.maxY).flatMap { y in
+            (bounds.minX ... bounds.maxX).map { TileCoordinate(x: $0, y: y) }
+        }.filter { tileToIsland[$0] == island.id }
+        let ring = Set(Self.ringSquare(of: anchor))
+        let footprint = BuildingCatalog.spec(for: .mine).footprint
+        func isMineSite(_ corner: TileCoordinate) -> Bool {
+            !footprint.tiles(anchor: corner).contains(where: ring.contains)
+                && probe.siteRejection(.mine, at: corner, for: .player, tileToIsland: tileToIsland) == nil
+        }
+        guard !islandTiles.contains(where: isMineSite) else { return }
+        let (startXs, startYs) = startBounds(ofTownCenterAt: anchor)
+        func distance(_ tile: TileCoordinate) -> Int {
+            (tile.x - anchor.x) * (tile.x - anchor.x) + (tile.y - anchor.y) * (tile.y - anchor.y)
+        }
+        let mountains = islandTiles.filter { terrain(at: $0) == .mountain }
+            .sorted { (distance($0), $0.y, $0.x) < (distance($1), $1.y, $1.x) }
+        // Grass first, so the trees a hut site counts on stay.
+        for raised in [TerrainType.grass, .forest] {
+            for mountain in mountains {
+                for (dx, dy) in [(1, 0), (0, 1), (-1, 0), (0, -1)] {
+                    let tile = TileCoordinate(x: mountain.x + dx, y: mountain.y + dy)
+                    guard terrain(at: tile) == raised,
+                          tileToIsland[tile] == island.id, occupiedTiles[tile] == nil,
+                          !(startXs.contains(tile.x) && startYs.contains(tile.y))
+                    else { continue }
+                    let index = tile.y * mapWidth + tile.x
+                    probe.terrainGrid[index] = .mountain
+                    // A new site holds the raised tile, so one of the four
+                    // squares around it.
+                    let corners = [(0, 0), (-1, 0), (0, -1), (-1, -1)].map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
+                    if corners.contains(where: isMineSite) {
+                        terrainGrid[index] = .mountain
+                        return
+                    }
+                    probe.terrainGrid[index] = raised
+                }
+            }
+        }
+    }
+
     /// Points the camera at the middle of the player's home town center:
     /// the one on the island under the map's centre tile, else the
     /// lowest-ID one. Spec: `world-terrain` / New game camera starts on

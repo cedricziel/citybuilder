@@ -18,7 +18,7 @@ A compositor lays out the seed-0 town exactly as `IsoWorldScene` does, from the 
 
 - stronger meadow, dry and worn variation in the grass;
 - rounder, weathered rock with gaps, varied heights and a soft edge;
-- thinner forest edges with a few single trees out in the meadow;
+- thinner forest edges;
 - the dark forest floor kept.
 
 `exploration/shore-before-after.jpg` shows the coast before and with B's first pass: straighter chords, a shallow band and the depth gradient.
@@ -74,7 +74,7 @@ A forest tile draws a tree clump and a mountain tile an outcrop, as a child of i
 
 A tile next to an occupied tile drops one class (`dense` → `medium` → `sparse`). An occupied tile draws no object, so trees and rocks never stand on a footprint or a road.
 
-**Meadow trees:** a grass tile within 2 tiles of forest, with no occupied tile next to it, draws `terrain-forest-single` when its hash falls in the lowest 8 %. This is visual only: the tile stays grass for every rule.
+**No meadow trees:** single trees out in the meadow were tried and dropped. A tree the player sees on a grass tile reads as forest that lumberjacks and foresters ignore. They return with a design that the forestry rules can see.
 
 **Variant:** `SpriteAtlas.variantIndex(coord, 4)`.
 
@@ -97,7 +97,7 @@ The PNGs enter the existing SVG step as embedded images. `make sprites` and `art
 
 ### D6. Names and seasons
 
-`terrain-forest-<density>[-<season>][-v<n>]`, with density `single`, `sparse`, `medium` or `dense`, and seasons `autumn` and `winter` (spring and summer use the plain name).
+`terrain-forest-<density>[-<season>][-v<n>]`, with density `sparse`, `medium` or `dense`, and seasons `autumn` and `winter` (spring and summer use the plain name).
 
 `terrain-mountain-<density>[-winter][-v<n>]`, with density `sparse`, `medium`, `dense` or `peak`. Autumn rock uses the plain name.
 
@@ -117,11 +117,11 @@ A second map-sized sprite, built with the macro field and alpha-blended at z 0.5
 
 Terrain is already 1 node per visible tile. This change adds:
 - 2 nodes for the whole map: the macro field and the cover;
-- 1 node per visible forest or mountain tile, plus the meadow trees.
+- 1 node per visible forest or mountain tile.
 
 Every texture comes from Kit atlas pages. The trees PR records node counts and frame times at zoom 0.25 on the archipelago. If they exceed the budget, the fallback is:
 1. Cull to the screen's diamond in tile space instead of its bounding box. That halves the tile nodes.
-2. Below zoom 0.5, draw no objects on `sparse` and `single` tiles.
+2. Below zoom 0.5, draw no objects on `sparse` tiles.
 
 ## Risks / Trade-offs
 

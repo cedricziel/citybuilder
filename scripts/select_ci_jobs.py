@@ -19,7 +19,9 @@ The app builds run when a package listed under `packages:` in
 GameDataGen or a package `scripts/check-gamedata-fixture-build.sh`
 builds is affected. Linux determinism runs for CityCore or GameDataGen;
 the macOS-vs-Linux comparison needs the CityCore test job's output, so
-it runs for CityCore only.
+it runs for CityCore only. The audio render check runs when everything
+does: its sources (`scripts/audio/`) and renders (`Resources/Audio/`)
+are outside the packages.
 """
 
 from __future__ import annotations
@@ -46,6 +48,7 @@ class Jobs:
     gamedata_fixture: bool
     determinism_linux: bool
     determinism_compare: bool
+    audio: bool
 
     def github_output(self) -> str:
         def flag(value: bool) -> str:
@@ -58,6 +61,7 @@ class Jobs:
             f"gamedata_fixture={flag(self.gamedata_fixture)}",
             f"determinism_linux={flag(self.determinism_linux)}",
             f"determinism_compare={flag(self.determinism_compare)}",
+            f"audio={flag(self.audio)}",
         ]) + "\n"
 
 
@@ -117,6 +121,9 @@ def _jobs(root: Path, affected: set[str], everything: bool) -> Jobs:
         gamedata_fixture=everything or bool(affected & fixture_packages(root)),
         determinism_linux=everything or bool(affected & {"CityCore", "GameDataGen"}),
         determinism_compare=everything or "CityCore" in affected,
+        # The audio sources and renders live outside Packages/, so only a
+        # change that selects everything can touch them.
+        audio=everything,
     )
 
 
@@ -130,7 +137,7 @@ def select(changed: list[str], root: Path) -> Jobs:
         return everything(root)
     code_files = [path for path in changed if not DOCS_ONLY.match(path)]
     if not code_files:
-        return Jobs([], False, False, False, False, False)
+        return Jobs([], False, False, False, False, False, False)
 
     touched: set[str] = set()
     for path in code_files:

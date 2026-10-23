@@ -118,6 +118,7 @@ public extension World {
             }
             stockpiles[id] = stockpile
             plantStarterGrove(besideTownCenterAt: anchor, island: island.id, tileToIsland: tileToIsland)
+            raiseStarterMineSite(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland)
         }
     }
 

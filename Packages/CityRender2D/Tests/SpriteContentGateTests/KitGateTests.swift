@@ -113,6 +113,9 @@ struct KitGateTests {
         #expect(failures.contains { $0.file == "terrain-grass.png" && $0.reason == .terrainCoverageBelowThreshold })
         #expect(SpriteContentGate.isTerrainObject("terrain-mountain-peak-winter-v3@2x.png"))
         #expect(!SpriteContentGate.isTerrainObject("terrain-forest-autumn.png"))
+        #expect(!SpriteContentGate.isTerrainObject("terrain-forest-dense-mask.png"))
+        #expect(!SpriteContentGate.isTerrainObject("terrain-forest-dense-spring-v1.png"))
+        #expect(!SpriteContentGate.isTerrainObject("building-forest-dense.png"))
     }
 
     @Test("scenario: Every atlas PNG has an @2x twin")

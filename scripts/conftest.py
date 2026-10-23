@@ -22,3 +22,4 @@ def pytest_configure(config) -> None:  # noqa: ANN001 - pytest hook
     # `@pytest.mark.scenario("Title")` maps a test to an OpenSpec scenario;
     # scripts/check-scenario-coverage.swift reads it.
     config.addinivalue_line("markers", "scenario(title): the OpenSpec scenario this test covers")
+    config.addinivalue_line("markers", "slow: renders a lot; skipped unless AUDIO_SLOW_TESTS is set")

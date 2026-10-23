@@ -78,11 +78,14 @@ public enum SpriteContentGate {
     /// Trees and outcrops (`terrain-forest-dense-v1`, change `terrain-v2`) stand over their tile
     /// instead of filling its diamond, and their variants are different objects, so neither the
     /// diamond rules nor frame coherence apply to them.
+    /// The whole name must read `terrain-<forest|mountain>-<density>[-<autumn|winter>][-v<n>]`. `single`
+    /// stays until the meadow-tree sprites leave the atlas.
     public static func isTerrainObject(_ fileName: String) -> Bool {
-        let parts = SpriteFile(fileName).stem.split(separator: "-")
-        return parts.count >= 3 && ["forest", "mountain"].contains(parts[1])
-            && ["single", "sparse", "medium", "dense", "peak"].contains(parts[2])
+        SpriteFile(fileName).stem.wholeMatch(of: terrainObjectName) != nil
     }
+
+    private nonisolated(unsafe) static let terrainObjectName =
+        /terrain-(forest|mountain)-(single|sparse|medium|dense|peak)(-(autumn|winter))?(-v\d+)?/
 
     /// No transparent pixel inside the diamond, and nothing opaque beyond its 1-point bleed.
     static func terrainFailures(_ name: String, _ image: RGBAImage) -> [Failure] {
@@ -169,7 +172,8 @@ public enum SpriteContentGate {
     /// construction stages, operational frames and variants excluded.
     static func isBuildingBase(_ fileName: String) -> Bool {
         let stem = SpriteFile(fileName).stem
-        guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road") else { return false }
+        // Roads lie flat, and night lights show only the window panes, so neither reaches the ground.
+        guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road"), !stem.contains("-lights") else { return false }
         return coherenceBase(for: fileName) == nil && !stem.contains("-constructing-")
     }
 

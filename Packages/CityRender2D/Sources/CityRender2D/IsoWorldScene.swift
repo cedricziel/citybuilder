@@ -36,6 +36,8 @@ public final class IsoWorldScene: SKScene {
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
     private(set) var transitionMap: TerrainTransitionMap?
+    /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
     private(set) var roadLinkCache = RoadLinkCache()
     /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
@@ -79,7 +81,7 @@ public final class IsoWorldScene: SKScene {
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
-    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
     /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
@@ -281,8 +283,8 @@ public final class IsoWorldScene: SKScene {
         appliedSeason = season
         guard changesLook else { return }
         for (spec, node) in presentSprites {
-            guard case let .terrain(kind, transition) = spec.kind,
-                  Self.seasonalTerrain.contains(kind) || transition?.upper == .grass
+            guard case let .terrain(kind, transition, object) = spec.kind,
+                  Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil
             else { continue }
             node.removeFromParent()
             presentSprites.removeValue(forKey: spec)
@@ -294,19 +296,29 @@ public final class IsoWorldScene: SKScene {
             camera: snapshot.camera,
             viewSize: size,
             mapWidth: snapshot.mapWidth,
-            mapHeight: snapshot.mapHeight
+            mapHeight: snapshot.mapHeight,
+            margin: Culling.screenMargin
         )
         else { return }
 
         if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
             transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
         }
+        if objectMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) == true {
+            objectMap?.update(occupancy: snapshot.occupiedTiles)
+        } else {
+            objectMap = TerrainObjectMap(
+                width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid, occupancy: snapshot.occupiedTiles
+            )
+        }
         let desired = SnapshotReconciler.desiredSprites(
             in: snapshot,
             xRange: xRange,
             yRange: yRange,
             transitions: transitionMap,
-            roadLinks: roadLinkCache.links(for: snapshot)
+            roadLinks: roadLinkCache.links(for: snapshot),
+            objects: objectMap,
+            onScreen: Culling.screenBounds(camera: snapshot.camera, viewSize: size)
         )
         let diff = SnapshotReconciler.diff(
             previous: Set(presentSprites.keys),
@@ -345,8 +357,10 @@ public struct IsoWorldView: View {
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
         routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
-        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil
+        cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil,
+        showsStats: Bool = false
     ) {
+        debugOptions = showsStats ? [.showsFPS, .showsNodeCount, .showsDrawCount] : []
         let prepared = IsoWorldScene()
         prepared.size = CGSize(width: 1024, height: 768)
         prepared.scaleMode = .resizeFill
@@ -376,8 +390,10 @@ public struct IsoWorldView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private let debugOptions: SpriteView.DebugOptions
+
     public var body: some View {
-        SpriteView(scene: scene)
+        SpriteView(scene: scene, debugOptions: debugOptions)
             .ignoresSafeArea()
             .onChange(of: reduceMotion, initial: true) { _, isOn in
                 scene.reduceMotion = isOn

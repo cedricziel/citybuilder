@@ -156,7 +156,9 @@ enum Tex {
 /// A finish = texture + PBR response. `repeatU/V` = texture repeats across the face.
 public enum Finish {
     case plaster, plasterPale, timber, rubble, ashlar, planks, thatch, thatchEave, tile, slate, cobbles, wood, yard, rock, wheat, brick
-    case paint(NSColor), glass, litGlass
+    /// Window panes: dark glass, and the blue glass bands of modern houses. Day sprites never glow;
+    /// window light comes only from the night-lights masks.
+    case paint(NSColor), glass, glazing
 
     var roughness: CGFloat {
         switch self {
@@ -187,7 +189,7 @@ public enum Finish {
         case .brick: Tex.brick
         case let .paint(colour): colour
         case .glass: NSColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1)
-        case .litGlass: NSColor(red: 0.95, green: 0.62, blue: 0.25, alpha: 1)
+        case .glazing: NSColor(red: 0.34, green: 0.50, blue: 0.62, alpha: 1)
         }
     }
 
@@ -203,13 +205,15 @@ public enum Finish {
         material.diffuse.contentsTransform = rotated ? SCNMatrix4Mult(SCNMatrix4MakeRotation(.pi / 2, 0, 0, 1), scale) : scale
         material.roughness.contents = roughness
         material.metalness.contents = 0.0
-        if case .litGlass = self {
-            material.emission.contents = NSColor(red: 1.0, green: 0.62, blue: 0.22, alpha: 1)
-        }
         return material
     }
 
     static let namePrefix = "finish:"
+
+    /// True for the window-pane finishes, which glow in a recipe's night lights.
+    static func isPane(_ material: SCNMaterial) -> Bool {
+        [glass, glazing].contains { material.name == namePrefix + "\($0)" }
+    }
 
     /// True when `material` came from the shared finish set (recipes may not define their own).
     static func isShared(_ material: SCNMaterial) -> Bool {
