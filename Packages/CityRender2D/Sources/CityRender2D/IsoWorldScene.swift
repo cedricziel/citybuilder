@@ -34,11 +34,11 @@ public final class IsoWorldScene: SKScene {
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
-    var transitionMap: TerrainTransitionMap?
+    private(set) var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
-    var objectMap: TerrainObjectMap?
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
-    var roadLinkCache = RoadLinkCache()
+    private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
     /// Open water, drawn by one backdrop sprite rather than a sprite per tile, and the tiles it holds.
@@ -72,7 +72,7 @@ public final class IsoWorldScene: SKScene {
     /// Ghost preview node shown at the hovered tile when a build tool is
     /// armed. The scene polls `ghostProvider` on every update; the
     /// controller (GameSession) returns the current ghost state.
-    private var ghostNode: SKSpriteNode?
+    private(set) var ghostNode: SKSpriteNode?
     public var ghostProvider: (() -> GhostState?)?
     /// Tile the inspector has selected; a selected signature building
     /// shows its range rings.
@@ -246,6 +246,8 @@ public final class IsoWorldScene: SKScene {
             ?? SpriteAtlas.buildingTextureOrPlaceholder(for: ghost.kind, coord: ghost.tile)
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
+        // Sprites differ in size (a wide cell fits a long shadow), so the ghost takes each texture's own.
+        node.size = texture.size()
         node.anchorPoint = CGPoint(x: 0.5, y: 0)
         let halfH = IsoMath.tileHeight / 2
         let footprint = BuildingCatalog.spec(for: ghost.kind).footprint
@@ -293,6 +295,29 @@ public final class IsoWorldScene: SKScene {
         shownTiles = nil
         buildingSpecs.removeAll()
         shownBuildingInputs = nil
+    }
+
+    /// Brings the terrain caches in line with the snapshot. Returns true when the grid changed, so
+    /// any tile may look different; tiles whose object alone changed join `staleTerrain`.
+    func refreshTerrainMaps(for snapshot: WorldSnapshot) -> Bool {
+        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
+        var gridChanged = false
+        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
+            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
+            gridChanged = true
+        }
+        if objectMap?.matches(width: width, height: height, grid: grid) == true {
+            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
+        } else {
+            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
+            gridChanged = true
+        }
+        return gridChanged
+    }
+
+    /// Each operational road's link to its neighbours, from the cache.
+    func roadLinks(for snapshot: WorldSnapshot) -> [TileCoordinate: RoadLink] {
+        roadLinkCache.links(for: snapshot)
     }
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a

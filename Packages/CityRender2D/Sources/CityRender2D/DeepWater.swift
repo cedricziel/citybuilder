@@ -52,15 +52,23 @@ extension IsoWorldScene {
             deepWaterNode = node
             return node
         }()
-        let bounds = Self.mapBounds(width: mask.width, height: mask.height)
-        node.position = bounds.origin
-        node.size = bounds.size
         let maskTexture = SKTexture(data: Data(mask.texels), size: CGSize(width: mask.width, height: mask.height), flipped: false)
         maskTexture.filteringMode = .nearest
         node.shader?.uniformNamed("u_mask")?.textureValue = maskTexture
-        node.shader?.uniformNamed("u_origin")?.vectorFloat2Value = vector_float2(Float(bounds.minX), Float(bounds.minY))
-        node.shader?.uniformNamed("u_size")?.vectorFloat2Value = vector_float2(Float(bounds.width), Float(bounds.height))
         node.shader?.uniformNamed("u_tiles")?.vectorFloat2Value = vector_float2(Float(mask.width), Float(mask.height))
+    }
+
+    /// Spans the backdrop over `screen`, clamped to the map, so its shader runs only on pixels the
+    /// camera can show.
+    func fitDeepWater(to screen: CGRect) {
+        guard let node = deepWaterNode, let mask = deepWaterMask else { return }
+        let rect = screen.intersection(Self.mapBounds(width: mask.width, height: mask.height))
+        node.isHidden = rect.isNull || rect.isEmpty
+        guard !node.isHidden else { return }
+        node.position = rect.origin
+        node.size = rect.size
+        node.shader?.uniformNamed("u_origin")?.vectorFloat2Value = vector_float2(Float(rect.minX), Float(rect.minY))
+        node.shader?.uniformNamed("u_size")?.vectorFloat2Value = vector_float2(Float(rect.width), Float(rect.height))
     }
 
     /// The scene rect that holds every tile of a `width` × `height` map.
@@ -124,13 +132,16 @@ extension IsoWorldScene {
             vec2 p = u_origin + v_tex_coord * u_size;
             float c = floor((p.x / \(halfWidth) - p.y / \(halfHeight)) * 0.5 + 0.5);
             float r = floor((-p.x / \(halfWidth) - p.y / \(halfHeight)) * 0.5 + 0.5);
-            float frame = floor(mod(u_time / \(entry?.timePerFrame ?? 1), \(frames)));
-            vec2 period = vec2(\(halfWidth) + mod(p.x, \(2 * halfWidth)), \(halfHeight) + mod(p.y, \(2 * halfHeight)));
-            float stripHeight = \(4 * halfHeight) * \(frames);
-            vec4 water = texture2D(u_water, vec2(period.x / \(4 * halfWidth), (frame * \(4 * halfHeight) + period.y) / stripHeight));
             bool inside = c >= 0.0 && r >= 0.0 && c < u_tiles.x && r < u_tiles.y
                 && texture2D(u_mask, vec2((c + 0.5) / u_tiles.x, (r + 0.5) / u_tiles.y)).a > 0.5;
-            gl_FragColor = inside ? water : vec4(0.0);
+            if (inside) {
+                float frame = floor(mod(u_time / \(entry?.timePerFrame ?? 1), \(frames)));
+                vec2 period = vec2(\(halfWidth) + mod(p.x, \(2 * halfWidth)), \(halfHeight) + mod(p.y, \(2 * halfHeight)));
+                float stripHeight = \(4 * halfHeight) * \(frames);
+                gl_FragColor = texture2D(u_water, vec2(period.x / \(4 * halfWidth), (frame * \(4 * halfHeight) + period.y) / stripHeight));
+            } else {
+                gl_FragColor = vec4(0.0);
+            }
         }
         """
         return SKShader(source: source, uniforms: [

@@ -108,3 +108,21 @@ func openWaterFollowsTheTerrain() throws {
     #expect(scene.terrainSpecs[TileCoordinate(x: 0, y: 1)] != nil)
     #expect(try hasWaterTile(scene, at: TileCoordinate(x: 10, y: 10)))
 }
+
+@MainActor
+@Test("The open-water backdrop spans only the screen, clamped to the map")
+func openWaterBackdropSpansOnlyTheScreen() throws {
+    let base = World.fixtureWithTerrain(width: 200, height: 200, fill: .water, seed: 1).snapshot()
+    let camera = Camera(centerX: 100, centerY: 100, zoom: 1)
+    let snapshot = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 200, mapHeight: 200, terrainGrid: base.terrainGrid,
+        occupiedTiles: [:], buildings: [:], carriers: base.carriers, economy: base.economy,
+        totalPopulation: base.totalPopulation, camera: camera, date: GameDate(year: 1200, season: .summer)
+    )
+    let scene = scene(Source(snapshot))
+    let node = try #require(scene.deepWaterNode)
+    let screen = Culling.screenBounds(camera: camera, viewSize: scene.size)
+    #expect(!node.isHidden)
+    #expect(node.frame.width <= screen.width + 0.5 && node.frame.height <= screen.height + 0.5)
+    #expect(node.frame.insetBy(dx: -0.5, dy: -0.5).contains(screen))
+}

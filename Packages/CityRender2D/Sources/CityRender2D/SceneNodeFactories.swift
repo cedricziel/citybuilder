@@ -260,7 +260,7 @@ extension IsoWorldScene {
     /// Every rival building but a road flies its rival's pennant.
     private func addPennant(for look: BuildingLook, kind: BuildingKind, to node: SKSpriteNode) {
         guard let rival = look.rival, kind != .road else { return }
-        node.addChild(Self.makePennantNode(colourHex: rival.colour.hex, on: node))
+        node.addChild(Self.makePennantNode(colourHex: rival.colour.hex, on: node, footprint: BuildingCatalog.spec(for: kind).footprint))
     }
 
     private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, cultureName: String?) {
