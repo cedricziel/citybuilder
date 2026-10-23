@@ -356,6 +356,11 @@ jobs:
       - name: Sprite pipeline pytest
         run: make sprites-test
 
+      # The committed terrain, transition and road PNGs still match their SVG generators,
+      # within the art pipeline's tolerance. Needs no GPU, unlike the IsoKit half.
+      - name: SVG sprites match their generators
+        run: make sprites-svg-verify
+
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
