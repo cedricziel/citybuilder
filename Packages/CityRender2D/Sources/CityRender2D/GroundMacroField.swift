@@ -16,16 +16,19 @@ public struct GroundMacroField: Sendable {
     /// RGBA, 8 bits a channel, rows from the top.
     public let pixels: [UInt8]
     /// The scree cover over rock (design D8): premultiplied RGBA, alpha-blended between the ground
-    /// tiles and the macro field.
-    public let screePixels: [UInt8]
-    let screeVertices: [SIMD4<Float>]
+    /// tiles and the macro field. Nil when the build left it out because the terrain had not changed.
+    public let screePixels: [UInt8]?
+    let screeVertices: [SIMD4<Float>]?
     /// Scene point of the texture's top-left corner.
     public let topLeft: CGPoint
     /// Each vertex's colour, row-major over (mapWidth + 1) × (mapHeight + 1), before the halving.
     let vertices: [SIMD3<Float>]
     let mapWidth: Int
 
-    public init(width mapWidth: Int, height mapHeight: Int, grid: [TerrainType], occupied: Set<TileCoordinate>, season: Season) {
+    public init(
+        width mapWidth: Int, height mapHeight: Int, grid: [TerrainType], occupied: Set<TileCoordinate>, season: Season,
+        withScree: Bool = true
+    ) {
         self.mapWidth = mapWidth
         let look = Look(season)
         let shares = TerrainShares(width: mapWidth, height: mapHeight, grid: grid, occupied: occupied)
@@ -40,8 +43,9 @@ public struct GroundMacroField: Sendable {
         height = mapWidth + mapHeight
         topLeft = Self.corner(mapHeight: mapHeight)
         pixels = Self.fill(vertices.map { SIMD4($0 * 0.5, 1) }, neutral: SIMD4(0.5, 0.5, 0.5, 1), mapWidth: mapWidth, mapHeight: mapHeight)
-        screeVertices = look.scree(shares)
-        screePixels = Self.fill(screeVertices, neutral: .zero, mapWidth: mapWidth, mapHeight: mapHeight)
+        let scree = withScree ? look.scree(shares) : nil
+        screeVertices = scree
+        screePixels = scree.map { Self.fill($0, neutral: .zero, mapWidth: mapWidth, mapHeight: mapHeight) }
     }
 
     /// Scene point of the texture's top-left corner: the map's west vertex across, its north vertex down.
@@ -50,8 +54,8 @@ public struct GroundMacroField: Sendable {
     }
 
     /// How opaque the scree cover is at a vertex.
-    public func screeOpacity(atVertex vertex: TileCoordinate) -> Float {
-        screeVertices[vertex.y * (mapWidth + 1) + vertex.x].w
+    public func screeOpacity(atVertex vertex: TileCoordinate) -> Float? {
+        screeVertices?[vertex.y * (mapWidth + 1) + vertex.x].w
     }
 
     /// The field at a vertex, as the multiplier it applies to the ground (1 is neutral).

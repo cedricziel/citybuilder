@@ -196,11 +196,23 @@ func anotherMapShapeRebuildsTheField() throws {
 }
 
 @Test("scenario: Scree fades at the edge of rock")
-func screeFadesAtTheEdgeOfRock() {
+func screeFadesAtTheEdgeOfRock() throws {
     let rock = grid(30, 30, fill: .grass) { x, y in (8 ..< 22).contains(x) && (8 ..< 22).contains(y) ? .mountain : nil }
     let field = GroundMacroField(width: 30, height: 30, grid: rock, occupied: [], season: .summer)
-    #expect(field.screeOpacity(atVertex: .init(x: 15, y: 15)) > 0.85)
-    let edge = field.screeOpacity(atVertex: .init(x: 8, y: 15))
+    #expect(try #require(field.screeOpacity(atVertex: .init(x: 15, y: 15))) > 0.85)
+    let edge = try #require(field.screeOpacity(atVertex: .init(x: 8, y: 15)))
     #expect(edge > 0.05 && edge < 0.85)
     #expect(field.screeOpacity(atVertex: .init(x: 6, y: 15)) == 0)
+}
+
+@Test("Placing a building redraws the macro field but leaves the scree alone")
+func placingABuildingLeavesTheScreeAlone() throws {
+    var cache = GroundMacroCache()
+    let first = cache.inputs(for: snapshot(season: .spring))
+    let placedInputs = cache.inputs(for: snapshot(season: .spring, occupied: [.init(x: 2, y: 2): EntityID(raw: 1)]))
+    let winter = cache.inputs(for: snapshot(season: .winter))
+    #expect(try #require(first).withScree)
+    let placed = try #require(placedInputs)
+    #expect(!placed.withScree && placed.build().screePixels == nil)
+    #expect(try #require(winter).withScree)
 }

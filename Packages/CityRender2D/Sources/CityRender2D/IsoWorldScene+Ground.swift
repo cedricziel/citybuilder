@@ -8,9 +8,12 @@ public struct GroundMacroInputs: Sendable {
     public let grid: [TerrainType]
     public let occupied: Set<TileCoordinate>
     public let season: Season
+    /// Whether the scree cover must be redrawn too: it follows the terrain and the season's look,
+    /// not occupancy, so placing a building leaves it alone.
+    public internal(set) var withScree: Bool
 
     public func build() -> GroundMacroField {
-        GroundMacroField(width: width, height: height, grid: grid, occupied: occupied, season: season)
+        GroundMacroField(width: width, height: height, grid: grid, occupied: occupied, season: season, withScree: withScree)
     }
 }
 
@@ -29,9 +32,8 @@ public struct GroundMacroCache {
     public mutating func inputs(for snapshot: WorldSnapshot) -> GroundMacroInputs? {
         let look = GroundMacroField.Look.season(of: snapshot.date.season)
         let mapSize = (width: snapshot.mapWidth, height: snapshot.mapHeight)
-        guard size.map({ $0 != mapSize }) ?? true || grid != snapshot.terrainGrid || occupancy != snapshot.occupiedTiles
-            || self.look != look
-        else { return nil }
+        let terrainChanged = size.map { $0 != mapSize } ?? true || grid != snapshot.terrainGrid || self.look != look
+        guard terrainChanged || occupancy != snapshot.occupiedTiles else { return nil }
         size = mapSize
         grid = snapshot.terrainGrid
         occupancy = snapshot.occupiedTiles
@@ -39,7 +41,7 @@ public struct GroundMacroCache {
         computations += 1
         return GroundMacroInputs(
             width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid,
-            occupied: Set(snapshot.occupiedTiles.keys), season: look
+            occupied: Set(snapshot.occupiedTiles.keys), season: look, withScree: terrainChanged
         )
     }
 }
@@ -51,8 +53,8 @@ extension GroundMacroField {
     }
 
     /// The scree cover as a linearly filtered texture, top row first.
-    func screeTexture() -> SKTexture {
-        texture(of: screePixels)
+    func screeTexture() -> SKTexture? {
+        screePixels.map { texture(of: $0) }
     }
 
     private func texture(of pixels: [UInt8]) -> SKTexture {
@@ -71,7 +73,9 @@ extension IsoWorldScene {
     /// the title backdrop nor a harvested forest tile stalls a frame; the ground shows unmultiplied
     /// until the first one lands. Requests that arrive meanwhile collapse into the latest.
     func reconcileGround(with snapshot: WorldSnapshot) {
-        guard let inputs = groundMacroCache.inputs(for: snapshot) else { return }
+        guard var inputs = groundMacroCache.inputs(for: snapshot) else { return }
+        // A newer request replaces a pending one, but must not drop the scree redraw it asked for.
+        inputs.withScree = inputs.withScree || groundMacroPending?.withScree == true
         groundMacroPending = inputs
         buildPendingGroundMacro()
     }
@@ -107,6 +111,7 @@ extension IsoWorldScene {
             (Self.groundScreeNodeName, field.screeTexture(), SKBlendMode.alpha, CGFloat(0.5)),
             (Self.groundMacroNodeName, field.texture(), .multiplyX2, 1)
         ] {
+            guard let texture else { continue } // the scree is unchanged
             let node = childNode(withName: name) as? SKSpriteNode ?? {
                 let node = SKSpriteNode()
                 node.name = name
