@@ -278,9 +278,8 @@ func scenarioOperationalHouseIsStatic() {
 func scenarioSawmillFinishesAndStartsRunning() {
     // The SpriteSpec.Kind discriminates on state, so a sawmill
     // transitioning constructing → operational produces a different
-    // spec; the reconciler diff naturally adds the new spec and
-    // removes the old. The renderer rebuilds the node in
-    // makeBuildingNode and arms the operational animation.
+    // spec: the scene drops the old node and builds a new one in
+    // makeBuildingNode, which arms the operational animation.
     let footprint = BuildingCatalog.spec(for: .sawmill).footprint
     let constructing = SpriteSpec(
         coord: TileCoordinate(x: 0, y: 0),
@@ -299,11 +298,6 @@ func scenarioSawmillFinishesAndStartsRunning() {
         )
     )
     #expect(constructing != operational)
-    let diff = SnapshotReconciler.diff(
-        previous: [constructing], current: [operational]
-    )
-    #expect(diff.added == [operational])
-    #expect(diff.removed == [constructing])
 }
 
 @Test("scenario: replay determinism preserved")
