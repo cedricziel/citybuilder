@@ -241,19 +241,6 @@ func workerHoldsWhilePausedAndAtNight() throws {
     #expect(scene.gatherNodes.isEmpty && night.node.parent == nil)
 }
 
-@MainActor
-@Test("a different world drops the workers and animals")
-func newWorldDropsFigures() throws {
-    let hut = site(1, .lumberjackHut, at: 11, 20)
-    let scene = scene(showing: world([hut], tick: 500, terrain: { $0.x >= 14 ? .forest : .grass }))
-    scene.update(0)
-    let old = try #require(scene.gatherNodes[hut.id]?.node)
-    (scene.dataSource as? FixedSnapshot)?.snapshot = world([hut], tick: 10, terrain: { $0.x >= 14 ? .forest : .grass })
-    scene.update(0.1)
-    #expect(old.parent == nil)
-    #expect(scene.gatherNodes[hut.id]?.node !== old)
-}
-
 @Test("a building on the way turns the worker home without a jump")
 func buildingOnTheWayTurnsTheWorkerHome() {
     // Forest further out, so the walk is several tiles long.

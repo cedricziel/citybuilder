@@ -112,6 +112,9 @@ public struct CityRootView: View {
 @Observable
 public final class GameSession {
     public var world: World
+    /// This session's identity for the views that show it. Unlike the
+    /// object's address, it is never reused by a later session.
+    public let instanceID = UUID()
 
     public let hud: HUDViewModel
     /// Optional sink for the per-tick `WorldEvent` stream. When non-nil,

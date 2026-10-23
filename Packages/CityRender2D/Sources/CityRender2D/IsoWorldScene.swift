@@ -101,9 +101,9 @@ public final class IsoWorldScene: SKScene {
     /// Each gather site's current trip, kept from tick to tick so its worker
     /// never jumps when the catchment changes.
     var gatherTrips: [EntityID: GatherWorkerPlanner.Trip] = [:]
-    /// The world the animals and workers were planned for.
-    var figureWorldShape: MapShape?
-    var figureWorldTick: UInt64?
+    /// Each animal's round, kept from tick to tick so it never jumps when
+    /// its pasture or yard is built on.
+    var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
@@ -230,7 +230,6 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
-        dropFiguresIfNewWorld(snapshot)
         reconcileAnimals(with: snapshot, now: currentTime)
         reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
