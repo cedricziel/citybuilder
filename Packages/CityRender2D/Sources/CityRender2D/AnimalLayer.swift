@@ -84,11 +84,10 @@ extension IsoWorldScene {
             let key = AnimalKey(home: animal.home, slot: animal.slot)
             let target = IsoMath.screenPoint(forTileFractionalX: animal.col, fractionalY: animal.row)
             let pose = AnimalPose(action: animal.action, facing: animal.facing, moving: !still)
-            let depth = Double(Int(animal.col.rounded()) + Int(animal.row.rounded()) + 1)
             if var shown = animalNodes[key] {
                 // SpriteKit keeps positions in single precision: compare with slack.
                 if hypot(shown.node.position.x - target.x, shown.node.position.y - target.y) > 0.01 { shown.node.glide(to: target) }
-                shown.node.zPosition = Self.depthZ(depth) + Self.figureLift
+                shown.node.zPosition = Self.figureZ(at: target)
                 if shown.pose != pose {
                     shown.pose = pose
                     Self.apply(pose, to: shown.node)
@@ -98,7 +97,7 @@ extension IsoWorldScene {
             }
             let node = SKSpriteNode()
             node.position = target
-            node.zPosition = Self.depthZ(depth) + Self.figureLift
+            node.zPosition = Self.figureZ(at: target)
             Self.apply(pose, to: node)
             addChild(node)
             animalNodes[key] = (node, pose)

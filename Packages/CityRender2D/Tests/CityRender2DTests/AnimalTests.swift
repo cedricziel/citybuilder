@@ -252,3 +252,24 @@ func animalNodesFollowThePlan() throws {
     scene.update(0.1)
     #expect(scene.animalNodes.isEmpty && shown.node.parent == nil)
 }
+
+@MainActor
+@Test("an animal behind a 2×2 building sorts below it, one in front above it")
+func animalsSortAgainstBuildings() throws {
+    let scene = scene(showing: farmland([farm(1, at: 20, 20)], tick: 180))
+    scene.update(0)
+    let shown = try #require(scene.animalNodes.values.first)
+    let (col, row) = IsoMath.tileCoordinate(forScreenPoint: shown.node.position)
+    let here = TileCoordinate(x: Int(col.rounded()), y: Int(row.rounded()))
+    func house(at anchor: TileCoordinate) -> SKNode {
+        scene.placedNode(for: SpriteSpec(coord: anchor, kind: .building(
+            kind: .house, state: .operational, footprint: Footprint(width: 2, height: 2),
+            constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
+        )))
+    }
+    // The animal stands behind a house one tile nearer the camera, and in
+    // front of one two tiles further back.
+    #expect(shown.node.zPosition < house(at: TileCoordinate(x: here.x + 1, y: here.y)).zPosition)
+    #expect(shown.node.zPosition > house(at: TileCoordinate(x: here.x - 2, y: here.y - 2)).zPosition)
+    #expect(scene.animalNodes.values.allSatisfy { abs($0.node.zPosition - IsoWorldScene.figureZ(at: $0.node.position)) < 0.0001 })
+}
