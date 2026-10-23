@@ -61,6 +61,9 @@ public final class AudioEngine: @unchecked Sendable {
         started
     }
 
+    /// Counts the starts. Players started under an earlier run were stopped with the engine.
+    public private(set) var runCount = 0
+
     /// True iff the loop bus is currently routed through the environment
     /// node (i.e. spatial audio is enabled).
     public var isSpatialEnabled: Bool {
@@ -98,6 +101,7 @@ public final class AudioEngine: @unchecked Sendable {
         guard !started else { return }
         try engine.start()
         started = true
+        runCount += 1
     }
 
     /// Sets the volume on `bus` to `volume` (0.0–1.0). If muted, the
