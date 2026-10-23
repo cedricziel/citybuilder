@@ -285,7 +285,7 @@ extension IsoWorldScene {
         guard state == .operational,
               let action = SpriteAnimation.loopingAction(for: .buildingOperational(kind, stem: animationBase))
         else { return }
-        node.run(action, withKey: "anim")
+        BuildingMotion.arm(action, on: node, state: buildingMotionState)
     }
 
     private func textureForBuilding(

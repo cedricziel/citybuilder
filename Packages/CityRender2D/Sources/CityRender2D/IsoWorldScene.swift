@@ -129,6 +129,7 @@ public final class IsoWorldScene: SKScene {
     /// Whether the tree clumps sway, hold or stand still. Spec:
     /// `rendering-2_5d` / Trees sway in the wind.
     var treeSwayState: TreeSway.State = .running
+    var buildingMotionState: BuildingMotion.State = .running
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -229,6 +230,7 @@ public final class IsoWorldScene: SKScene {
         updateWindowGlow(with: snapshot)
         noteTick(snapshot.tickCount, now: currentTime)
         updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
+        updateBuildingMotion(now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
