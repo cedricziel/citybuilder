@@ -4,7 +4,7 @@
 // Composes the app icon from the existing in-game sprites
 // (Resources/Kit.atlas/* and Resources/Buildings.atlas/*). The icon
 // is a tiny isometric island vignette — a few grass tiles with a beach
-// trim and water surround, two buildings on the grass, one forest tile.
+// trim and water surround, two buildings on the grass, tree clumps on grass.
 //
 // The whole composition is drawn at 256x256 native pixels, then upscaled
 // 4x to 1024x1024 with nearest-neighbor sampling so the pixel-art look
@@ -66,6 +66,24 @@ final class Pixmap {
                 let c = src.get(x, y)
                 if c.a == 0 { continue }
                 set(dx + x, dy + y, c)
+            }
+        }
+    }
+
+    /// Composite `src` over self with its top-left at `(dx, dy)`, so a soft shadow darkens what
+    /// lies under it instead of punching a hole.
+    func composite(_ src: Pixmap, atX dx: Int, atY dy: Int) {
+        for y in 0 ..< src.height {
+            for x in 0 ..< src.width {
+                let c = src.get(x, y)
+                if c.a == 0 { continue }
+                let under = get(dx + x, dy + y)
+                let a = Int(c.a), keep = (255 - a) * Int(under.a) / 255
+                let out = a + keep
+                func mix(_ top: UInt8, _ bottom: UInt8) -> Int {
+                    out == 0 ? 0 : (Int(top) * a + Int(bottom) * keep) / out
+                }
+                set(dx + x, dy + y, PColor(mix(c.r, under.r), mix(c.g, under.g), mix(c.b, under.b), out))
             }
         }
     }
@@ -220,7 +238,7 @@ func tileOrigin(col: Int, row: Int, cx: Int, cy: Int) -> (x: Int, y: Int) {
 let grass = sprite("Resources/Kit.atlas/terrain-grass.png")
 let water = sprite("Resources/Kit.atlas/terrain-water.png")
 let beach = sprite("Resources/Kit.atlas/terrain-beach.png")
-let forest = sprite("Resources/Kit.atlas/terrain-forest.png")
+let clump = sprite("Resources/Kit.atlas/terrain-forest-medium.png")
 let house = sprite("Resources/Kit.atlas/building-house.png")
 let sawmill = sprite("Resources/Kit.atlas/building-sawmill.png")
 let lumberjack = sprite("Resources/Kit.atlas/building-lumberjack-hut.png")
@@ -283,10 +301,17 @@ let grassTiles: [(Int, Int)] = [
 ]
 for (c, r) in grassTiles { place(grass, col: c, row: r) }
 
-// One forest tile at the back-right corner.
-place(forest, col: 2, row: -1)
-// And one front-left for variety.
-place(forest, col: -1, row: 1)
+/// A tree clump stands over its grass tile: its 144x132 cell has the tile centre 56 pt from the
+/// left and 112 pt from the top.
+func placeClump(col: Int, row: Int) {
+    place(grass, col: col, row: row)
+    let (x, y) = tileOrigin(col: col, row: row, cx: 1, cy: 1)
+    terrainLayer.composite(clump, atX: x + tileW / 2 - 56, atY: y + tileH / 2 - 112)
+}
+
+// One clump at the back-right corner, and one front-left for variety.
+placeClump(col: 2, row: -1)
+placeClump(col: -1, row: 1)
 
 // Buildings — order matters for occlusion. Back to front.
 placeBuilding(lumberjack, anchorCol: 0, anchorRow: 0, footprintW: 1, footprintH: 1)
