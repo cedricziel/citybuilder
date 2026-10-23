@@ -26,9 +26,10 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   `RenderJob`, and `Recipes/` (one recipe per building look).
 - `scripts/art`: `terrain_tiles` (corner-mask SVG), `svg_sprites` (rsvg),
   `finalize` (libimagequant into `Kit.atlas`), `compare` (tolerance).
-- A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) migrates by
-  setting `source = "isokit"` (or `"svg"`). Until then the legacy pipeline owns
-  its PNGs, and `make sprites` leaves them alone.
+- A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) says how its
+  sprites are made: `source = "isokit"`, `"svg"`, or `"pixel"` for the goods
+  icons and badges committed as is. `make sprites` renders the first two and
+  leaves pixel art alone. The generative pipeline is gone.
 
 ## Grid and anchors (from the code)
 
@@ -48,8 +49,8 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
 
 - A recipe is parts + numbers, 19–38 lines. `id` is the sprite stem; `entry`
   is the catalog brief. One brief can own several recipes (house tiers).
-- The rendered names must equal the brief's Sheet list, or `isokit check`
-  fails. Mirror the atlas you replace: count the `-constructing-N` and
+- The rendered names must equal the brief's `## Sprites` list, or `isokit
+  check` fails. Mirror the atlas you replace: count the `-constructing-N` and
   `-operational-N` files that exist today.
 - **Plot:** every recipe gets a slab over its whole footprint, 3 cm below yard
   slabs (no z-fighting), overhanging the two front edges by 12 cm. Without it,
@@ -129,7 +130,7 @@ files it lists as outside tolerance.
   `-winter` sets, because grass changes with the season) and
   `terrain-beach-water-t<m>`, m = 1..14, plus full tiles. Beach always
   separates grass from water. The brief of the upper terrain lists its
-  transitions in its Sheet; transitions have no brief of their own.
+  transitions in its Sprites list; transitions have no brief of their own.
 - Boundaries cross each tile edge **at its midpoint, leaving perpendicular**.
   Wobble fades to zero at the ends. Neighbours along +col need consistent
   masks (3 next to 7, not 3 next to 6).
