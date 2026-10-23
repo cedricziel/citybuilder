@@ -41,6 +41,13 @@ private final class Rig {
     func stall(_ seconds: Double) {
         engine.nodes.queue.async { Thread.sleep(forTimeInterval: seconds) }
     }
+
+    /// Holds the driver's queue until the returned gate is signalled.
+    func hold() -> DispatchSemaphore {
+        let gate = DispatchSemaphore(value: 0)
+        engine.nodes.queue.async { gate.wait() }
+        return gate
+    }
 }
 
 @MainActor
@@ -103,9 +110,11 @@ func cueBehindAQueuedStartKeepsIt() throws {
 func engineStopWhileAStartWaits() throws {
     let rig = try Rig(poolSize: 1)
     defer { rig.engine.stop() }
-    rig.stall(0.05)
+    // The queue stays held until the engine has stopped, however long the engine takes to start.
+    let gate = rig.hold()
     try rig.play(1)
     rig.engine.stop()
+    gate.signal()
     rig.settle()
     #expect(rig.trace.steps == [.stop, .schedule, .skipStart])
     try rig.play(1)
