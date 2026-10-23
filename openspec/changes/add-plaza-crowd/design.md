@@ -21,7 +21,7 @@ Figures reuse the walker sprites:
 - A walking figure plays the walk animation for its facing.
 - A standing figure shows frame 0.
 
-Nodes are kept by (town center, slot). A figure draws just above its town center (`depthZ(depth) + 0.004`), so a building nearer the camera covers it. Strollers now sort the same way, by their road tile. A figure glides to each new 10 Hz position over 0.1 s. When no new tick has arrived for 0.3 s (the game is paused), walking figures drop to their standing frame. Its tint comes from five muted cloth colours at a blend factor of 0.35.
+Nodes are kept by (town center, slot). A figure draws just above its town center (`depthZ(depth) + 0.004`), so a building nearer the camera covers it. Strollers now sort the same way, by their road tile. A figure glides to each new 10 Hz position over 0.1 s. When no new tick has arrived for 0.3 s (the game is paused), walking figures drop to their standing frame. Its look, worker or woman, comes from a `DeterministicRNG` hash of (town center, slot), and its frames from `SpriteAtlas.walkerAnimation(facing:look:)`. Figures are not tinted, because a tint muddies the lit sprites.
 
 ### D4: Budget and Reduce Motion
 
