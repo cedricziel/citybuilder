@@ -137,7 +137,7 @@ def house_layer(house: Image.Image, anchor: tuple[float, float]) -> Image.Image:
     cx, by, _ = PLOT
     left, top = round(cx - scaled.width / 2), round(by - 50 - scaled.height)
     front.alpha_composite(scaled, (left, top))
-    smoke(front, left + anchor[0] * scaled.width, top + anchor[1] * scaled.height - 6, 1.6)
+    smoke(front, left + anchor[0] * scaled.width, top + anchor[1] * scaled.height - 6, 1.3)
     return front
 
 
@@ -165,24 +165,37 @@ def mac_icon(flat: Image.Image) -> Image.Image:
     return sheet
 
 
-def tv_layer(art: Image.Image, width: int, height: int, *, back: bool) -> Image.Image:
-    """One tvOS layer at `width` x `height`. The back layer is the sky redrawn at that size; the plot and
-    the house stand bottom-centred, a little taller than the canvas so the plot's tip bleeds off."""
-    if back:
-        return sky((width, height))
-    fit = art.resize((round(height * 1.12), round(height * 1.12)), Image.LANCZOS)
-    layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    layer.alpha_composite(fit, ((width - fit.width) // 2, height - fit.height + round(height * 0.06)))
-    return layer
+TV_MARGIN = 0.10  # tvOS crops and scales layered icons on focus, so the art keeps this clear of each edge
+VISIBLE = 8  # alpha above which a pixel counts as art (the blurred smoke fades out below it)
+
+
+def visible_bounds(*images: Image.Image) -> tuple[int, int, int, int]:
+    """The box round every pixel any of `images` shows."""
+    boxes = [image.getchannel("A").point(lambda a: 255 if a > VISIBLE else 0).getbbox() for image in images]
+    boxes = [box for box in boxes if box]
+    return min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes)
+
+
+def safe_fit(layers: Layers, width: int, height: int) -> list[Image.Image]:
+    """The plot and the house on a `width` x `height` canvas, scaled together and centred so their art
+    stays `TV_MARGIN` clear of every edge."""
+    left, top, right, bottom = visible_bounds(layers.middle, layers.front)
+    scale = min((1 - 2 * TV_MARGIN) * width / (right - left), (1 - 2 * TV_MARGIN) * height / (bottom - top))
+    x = round(width / 2 - (left + right) / 2 * scale)
+    y = round(height / 2 - (top + bottom) / 2 * scale)
+    fitted = []
+    for art in (layers.middle, layers.front):
+        scaled = art.resize((round(N * scale), round(N * scale)), Image.LANCZOS)
+        layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        layer.alpha_composite(scaled, dest=(max(x, 0), max(y, 0)), source=(max(-x, 0), max(-y, 0)))
+        fitted.append(layer)
+    return fitted
 
 
 def top_shelf(layers: Layers, width: int, height: int) -> Image.Image:
     out = sky((width, height))
-    scene = Image.new("RGBA", (N, N), (0, 0, 0, 0))
-    scene.alpha_composite(layers.middle)
-    scene.alpha_composite(layers.front)
-    fit = scene.resize((round(height * 1.12), round(height * 1.12)), Image.LANCZOS)
-    out.alpha_composite(fit, ((width - fit.width) // 2, height - fit.height + round(height * 0.06)))
+    for layer in safe_fit(layers, width, height):
+        out.alpha_composite(layer)
     return out
 
 
@@ -203,11 +216,12 @@ def write(layers: Layers, repo: Path) -> None:
     brand = repo / "Apps/CitybuilderTV/Assets.xcassets/App Icon & Top Shelf Image.brandassets"
     for stack, (width, height), scales in (("App Icon", (400, 240), (1, 2)), ("App Store", (1280, 768), (1,))):
         folder = brand / ("App Icon.imagestack" if stack == "App Icon" else "App Icon - App Store.imagestack")
-        for name, art in (("Back", None), ("Middle", layers.middle), ("Front", layers.front)):
-            for scale in scales:
-                image = tv_layer(art, width * scale, height * scale, back=art is None)
+        for scale in scales:
+            size = (width * scale, height * scale)
+            images = [sky(size), *safe_fit(layers, *size)]
+            for name, image in zip(("Back", "Middle", "Front"), images):
                 file = folder / f"{name}.imagestacklayer/Content.imageset/{name.lower()}-{width}x{height}@{scale}x.png"
-                save(image, file, opaque=art is None)
+                save(image, file, opaque=name == "Back")
     for name, width in (("Top Shelf Image", 1920), ("Top Shelf Image Wide", 2320)):
         for scale in (1, 2):
             save(top_shelf(layers, width * scale, 720 * scale), brand / f"{name}.imageset/top-shelf-{width}x720@{scale}x.png", opaque=True)

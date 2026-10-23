@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from art import app_icon
@@ -60,3 +61,32 @@ def test_every_icon_is_written(tmp_path: Path) -> None:
         assert (store.size, store.mode) == ((1280, 768), mode)
     shelf = Image.open(brand / "Top Shelf Image Wide.imageset/top-shelf-2320x720@2x.png")
     assert (shelf.size, shelf.mode) == ((4640, 1440), "RGB")
+
+
+def test_tvos_art_stays_inside_the_safe_zone(tmp_path: Path) -> None:
+    """tvOS crops and scales the stack on focus, so the plot, the house and its smoke keep 10% clear."""
+    app_icon.write(app_icon.compose(_house(), (0.5, 0.25)), tmp_path)
+    brand = tmp_path / "Apps/CitybuilderTV/Assets.xcassets/App Icon & Top Shelf Image.brandassets"
+    stacks = {
+        "App Icon.imagestack": "400x240@2x",
+        "App Icon - App Store.imagestack": "1280x768@1x",
+    }
+    for stack, size in stacks.items():
+        layers = [
+            Image.open(brand / f"{stack}/{name.capitalize()}.imagestacklayer/Content.imageset/{name}-{size}.png")
+            for name in ("middle", "front")
+        ]
+        width, height = layers[0].size
+        left, top, right, bottom = app_icon.visible_bounds(*layers)
+        assert left >= 0.1 * width - 1 and right <= 0.9 * width + 1
+        assert top >= 0.1 * height - 1 and bottom <= 0.9 * height + 1
+
+
+def test_the_real_house_and_its_smoke_fit_the_master() -> None:
+    """Nothing in the front layer is cut off by the master's top edge, so the tvOS fit has whole smoke."""
+    render = REPO / ".build/art/app-icon/building-house-tier2@8x.png"
+    if not render.exists():
+        pytest.skip("run `make app-icon` first")
+    front = app_icon.compose(Image.open(render).convert("RGBA"), app_icon.chimney_anchor(REPO)).front
+    _, top, _, _ = app_icon.visible_bounds(front)
+    assert top > 0
