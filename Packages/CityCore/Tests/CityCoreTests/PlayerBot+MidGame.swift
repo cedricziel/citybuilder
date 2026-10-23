@@ -40,7 +40,7 @@ extension PlayerBot {
         // Each entry is (kinds, per set); a set is completed across every
         // chain before the next set starts.
         let perSet: [(kinds: [BuildingKind], count: Int)] = switch order {
-        case .naive: [
+        case .naive, .naiveFollowingHints: [
                 ([.library], 0),
                 ([.grainFarm], 2), ([.quernHouse, .windmill], 1), ([.bakery], 1),
                 ([.mine], 1), ([.charcoalBurner], 1), ([.smelter], 1), ([.toolsmith], 1),
@@ -141,6 +141,16 @@ extension PlayerBot {
 
     static let maxRoadLink = 30
 
+    /// Acts on the idle-good hint: places the first user of the first
+    /// idle good. True when it placed one.
+    func followIdleGoodHint(in world: inout World, plan: inout RivalTownPlan, stock: [Good: Int]) -> Bool {
+        guard midGame == .naiveFollowingHints else { return false }
+        for idle in world.idleGoods(of: .player) where place(idle.users[0], in: &world, plan: &plan, stock: stock) {
+            return true
+        }
+        return false
+    }
+
     /// The buildings the throttle counts as the kit's.
     static func chainKinds(_ culture: Culture) -> [BuildingKind] {
         [
@@ -168,6 +178,9 @@ extension PlayerBot {
 /// How the mid-game kit orders each chain (#186).
 enum MidGameOrder {
     case naive
+    /// The naive order, but acting on the idle-good hint: it first builds
+    /// a user of a good piling up (`keep-the-town-supplied` D4).
+    case naiveFollowingHints
     case careful
 }
 
@@ -185,6 +198,8 @@ struct MidGameMilestones {
     var twentyMerchants: Int?
     var renaissance: Int?
     var bankruptAt: Int?
+    /// Goods the idle-good hint would have named, in first-seen order.
+    var hinted: [Good] = []
 
     static func years(_ tick: Int?) -> String {
         tick.map { String(format: "%.1f", Double($0) / Double(CalendarState.ticksPerYear)) } ?? "-"
@@ -203,6 +218,9 @@ extension World {
         for tick in 1 ... ticks {
             if tick.isMultiple(of: 50) {
                 bot.takeTurn(&world)
+                for idle in world.idleGoods(of: .player) where !milestones.hinted.contains(idle.good) {
+                    milestones.hinted.append(idle.good)
+                }
                 if milestones.firstMerchant == nil, world.residents(atLeast: .merchants) > 0 { milestones.firstMerchant = tick }
                 if milestones.twentyMerchants == nil, world.residents(atLeast: .merchants) >= 20 {
                     milestones.twentyMerchants = tick
