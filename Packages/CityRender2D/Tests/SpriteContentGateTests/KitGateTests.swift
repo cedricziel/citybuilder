@@ -6,10 +6,14 @@ import Testing
 /// Gate rules from `replace-generative-sprites-with-isokit` (sprite-asset-pipeline).
 @Suite("Content gate: art-kit rules")
 struct KitGateTests {
-    private func writeBrief(_ root: URL, id: String, source: String, recipe: String = "") throws {
+    private func writeBrief(_ root: URL, id: String, source: String, sprites: String = "", recipe: String = "") throws {
         let url = root.appendingPathComponent("Sprites.style/catalog/\(id).md")
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try "---\nsource = \"\(source)\"\n---\n## Function\n\n## Recipe\n\n\(recipe)\n".write(to: url, atomically: true, encoding: .utf8)
+        try "---\nsource = \"\(source)\"\n---\n## Function\n\n## Sprites\n\n\(sprites)\n\n## Recipe\n\n\(recipe)\n".write(
+            to: url,
+            atomically: true,
+            encoding: .utf8
+        )
     }
 
     private func grounded(width: Int = 64, height: Int = 32, scale: Int = 1) -> RGBAImage {
@@ -257,10 +261,10 @@ struct KitGateTests {
         #expect(catalog.entry(forSprite: "building-house-tier2.png")?.id == "building-house")
     }
 
-    @Test("a brief is migrated whatever its front-matter order and spacing, and lists its sheet names")
+    @Test("a brief is migrated whatever its front-matter order and spacing, and lists its sprite names")
     func migratedBriefsParseLoosely() {
-        let markdown = "---\nid = \"building-house\"\nsource=  \"isokit\"\n---\n## Sheet\n"
-            + "- (0, 0): `building-house`\n- (0, 1): `building-house-tier2`\n"
+        let markdown = "---\nid = \"building-house\"\nsource=  \"isokit\"\n---\n## Sprites\n"
+            + "- `building-house` — base\n- `building-house-tier2`\n## Recipe\n- `not-a-sprite`\n"
         let entry = GateCatalog.parse(id: "building-house", markdown: markdown)
         #expect(entry.isMigrated)
         let catalog = GateCatalog(entries: [entry], sheetNames: ["building-house": GateCatalog.sheetNames(in: markdown)])
@@ -270,8 +274,8 @@ struct KitGateTests {
     @Test("two briefs listing the same sprite are rejected, since its owner would be arbitrary")
     func duplicateSheetOwnersAreRejected() throws {
         let root = temporaryResources()
-        try writeBrief(root, id: "building-house", source: "isokit", recipe: "- (0, 1): `building-house-tier2`")
-        try writeBrief(root, id: "building-house-tier2", source: "procedural", recipe: "- (0, 0): `building-house-tier2`")
+        try writeBrief(root, id: "building-house", source: "isokit", sprites: "- `building-house-tier2`")
+        try writeBrief(root, id: "building-house-tier2", source: "procedural", sprites: "- `building-house-tier2`")
         #expect(throws: GateCatalog.DuplicateSheetNames(names: ["building-house-tier2"])) {
             try GateCatalog.load(resourcesRoot: root)
         }
@@ -280,7 +284,7 @@ struct KitGateTests {
     @Test("a brief that lists its own sprite twice is not a duplicate owner")
     func briefListingASpriteTwiceLoads() throws {
         let root = temporaryResources()
-        try writeBrief(root, id: "building-house", source: "isokit", recipe: "- (0, 0): `building-house`\n- (0, 1): `building-house`")
+        try writeBrief(root, id: "building-house", source: "isokit", sprites: "- `building-house`\n- `building-house`")
         #expect(try GateCatalog.load(resourcesRoot: root).migratedSheetNames == ["building-house"])
     }
 

@@ -78,9 +78,9 @@ struct CatalogSelectionTests {
         #expect(CatalogEntry.recipeFacts(fromMarkdown: text) == ["Recipe": "`x` (IsoKit)", "Construction stages": "3"])
     }
 
-    @Test("sheet lines yield sprite names and skip spare cells")
-    func sheetNamesParsing() {
-        let text = "## Sheet\n\n- (0, 0): `building-house` — base\n- (0, 1): `building-house-constructing-0` — x\n- (1, 2): spare\n"
+    @Test("the Sprites section yields sprite names, and other sections do not")
+    func spriteNamesParsing() {
+        let text = "## Sprites\n\n- `building-house` — base\n- `building-house-constructing-0` — x\n\n## Recipe\n\n- `elsewhere`\n"
         #expect(CatalogEntry.spriteNames(fromMarkdown: text) == ["building-house", "building-house-constructing-0"])
     }
 

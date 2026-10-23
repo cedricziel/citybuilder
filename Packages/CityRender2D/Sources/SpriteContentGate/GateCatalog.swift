@@ -26,7 +26,7 @@ public struct GateCatalog: Sendable {
     }
 
     public let entries: [String: Entry]
-    /// Sprite stem → owning brief, from each brief's Sheet list (`- (r, c): `name``).
+    /// Sprite stem → owning brief, from each brief's `## Sprites` list (`- `name``).
     let owners: [String: String]
 
     public init(entries: [Entry], sheetNames: [String: [String]] = [:]) {
@@ -40,12 +40,12 @@ public struct GateCatalog: Sendable {
         self.owners = owners
     }
 
-    /// Every sprite name a migrated brief lists in its Sheet section, sorted.
+    /// Every sprite name a migrated brief lists in its Sprites section, sorted.
     public var migratedSheetNames: [String] {
         owners.filter { entries[$0.value]?.isMigrated == true }.keys.sorted()
     }
 
-    /// Sprite names more than one brief lists in its Sheet section.
+    /// Sprite names more than one brief lists in its Sprites section.
     public struct DuplicateSheetNames: Error, Equatable, CustomStringConvertible {
         public let names: [String]
 
@@ -78,10 +78,13 @@ public struct GateCatalog: Sendable {
         return GateCatalog(entries: entries, sheetNames: sheets)
     }
 
+    /// Sprite names from the brief's `## Sprites` section (`- \`name\`` lines).
     static func sheetNames(in markdown: String) -> [String] {
-        markdown.components(separatedBy: "\n").compactMap { line in
-            guard line.hasPrefix("- ("), let open = line.firstIndex(of: "`") else { return nil }
-            let rest = line[line.index(after: open)...]
+        let lines = markdown.components(separatedBy: "\n")
+        guard let start = lines.firstIndex(of: "## Sprites") else { return [] }
+        return lines[(start + 1)...].prefix { !$0.hasPrefix("## ") }.compactMap { line in
+            guard line.hasPrefix("- `") else { return nil }
+            let rest = line.dropFirst(3)
             return rest.firstIndex(of: "`").map { String(rest[..<$0]) }
         }
     }
@@ -107,8 +110,8 @@ public struct GateCatalog: Sendable {
         return Entry(id: id, source: source, sweptEdge: edge)
     }
 
-    /// The brief a sprite belongs to: the brief whose Sheet lists it, else the longest catalog id that
-    /// is the sprite's stem or a `-`-separated prefix of it. The Sheet comes first because prefixes
+    /// The brief a sprite belongs to: the brief whose Sprites section lists it, else the longest catalog id that
+    /// is the sprite's stem or a `-`-separated prefix of it. The Sprites list comes first because prefixes
     /// mislead: `building-house-tier3-renaissance` belongs to `building-house-renaissance`.
     public func entry(forSprite fileName: String) -> Entry? {
         let stem = SpriteFile(fileName).stem

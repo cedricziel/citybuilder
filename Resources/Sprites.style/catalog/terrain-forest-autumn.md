@@ -10,15 +10,9 @@ The autumn look of the forest tile. The renderer swaps it in for
 
 Painted by `scripts/art/ground.py`. The canopy in autumn: muted ochre, gold and russet broadleaf crowns among dark conifers. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
 
-## Sheet
+## Sprites
 
-Grid: 1 cols × 1 rows. 64×32 point tiles, rendered at @1x and @2x.
-
-- (0, 0): `terrain-forest-autumn` — canonical static tile
-
-## Animation
-
-Static — no animation.
+- `terrain-forest-autumn` — canonical static tile
 
 ## Recipe
 

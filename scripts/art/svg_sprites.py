@@ -18,7 +18,7 @@ from pathlib import Path
 
 from art import roads, terrain_objects, terrain_tiles
 
-SHEET_LINE = re.compile(r"^- \(\d+, *\d+\): `([a-z0-9-]+)`", re.MULTILINE)
+SPRITE_LINE = re.compile(r"^- `([a-z0-9-]+)`", re.MULTILINE)
 SOURCE_LINE = re.compile(r'^source\s*=\s*"([a-z]+)"', re.MULTILINE)
 
 
@@ -33,6 +33,12 @@ def drawable_names() -> set[str]:
     return {*terrain_tiles.sources(), *roads.sources(), *terrain_objects.names()}
 
 
+def sprites_section(text: str) -> str:
+    """The body of a brief's `## Sprites` section, or "" when it has none."""
+    match = re.search(r"^## Sprites\n(.*?)(?=^## |\Z)", text, re.MULTILINE | re.DOTALL)
+    return match.group(1) if match else ""
+
+
 def svg_entry_names(catalog: Path) -> list[str]:
     """Sprite names declared by catalog entries whose front matter says `source = "svg"`."""
     names = []
@@ -41,7 +47,7 @@ def svg_entry_names(catalog: Path) -> list[str]:
         front = text.split("---")[1] if text.startswith("---") else ""
         match = SOURCE_LINE.search(front)
         if match and match.group(1) == "svg":
-            names += SHEET_LINE.findall(text) or [md.stem]
+            names += SPRITE_LINE.findall(sprites_section(text)) or [md.stem]
     return names
 
 

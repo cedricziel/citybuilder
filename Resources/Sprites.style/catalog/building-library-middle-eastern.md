@@ -10,26 +10,11 @@ The Middle Eastern look of the research building. Shown in place of
 
 Rendered by IsoKit in the shared light rig. A sandstone cube with a parapet roof, two tall arched windows framed in blue tile, and a white dome on a blue drum.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-library-middle-eastern` — canonical operational base
-- (0, 1): spare
-- (0, 2): spare
-- (0, 3): spare
-- (1, 0): `building-library-middle-eastern-operational-0` — operational frame 0
-- (1, 1): `building-library-middle-eastern-operational-1` — operational frame 1
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-The operational frames repeat the finished building.
-
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Both frames repeat
-  the finished building.
-- Construction uses the shared `building-library-constructing-*` frames.
+- `building-library-middle-eastern` — canonical operational base
+- `building-library-middle-eastern-operational-0` — operational frame 0
+- `building-library-middle-eastern-operational-1` — operational frame 1
 
 ## Recipe
 

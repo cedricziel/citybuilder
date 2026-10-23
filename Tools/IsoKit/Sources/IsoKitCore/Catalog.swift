@@ -4,7 +4,7 @@ import Foundation
 public struct CatalogEntry: Equatable {
     public let id: String
     public let source: String
-    /// Sprite names listed in the brief (`- (r, c): \`name\`` lines), in file order.
+    /// Sprite names listed in the brief's `## Sprites` section, in file order.
     public let spriteNames: [String]
     /// `- Key: value` lines of the brief's `## Recipe` section.
     public let recipeFacts: [String: String]
@@ -51,13 +51,14 @@ public struct CatalogEntry: Equatable {
         return ""
     }
 
-    /// Sprite names from `- (row, col): \`name\`` lines; spare cells have no name and are skipped.
+    /// Sprite names from the `## Sprites` section's `- \`name\`` lines, in file order.
     static func spriteNames(fromMarkdown text: String) -> [String] {
-        let pattern = #"^- \(\d+, *\d+\): `([a-z0-9-]+)`"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else { return [] }
-        let range = NSRange(text.startIndex..., in: text)
-        return regex.matches(in: text, range: range).compactMap { match in
-            Range(match.range(at: 1), in: text).map { String(text[$0]) }
+        let lines = text.components(separatedBy: "\n")
+        guard let start = lines.firstIndex(of: "## Sprites") else { return [] }
+        return lines[(start + 1)...].prefix { !$0.hasPrefix("## ") }.compactMap { line in
+            guard line.hasPrefix("- `") else { return nil }
+            let rest = line.dropFirst(3)
+            return rest.firstIndex(of: "`").map { String(rest[..<$0]) }
         }
     }
 }
