@@ -13,7 +13,7 @@ The review of the music director and the original music found five problems:
 - **Measured clock.** `AudioStack` measures elapsed time with `ContinuousClock` and runs its timer in the common run-loop modes.
 - **Season reset.** `MusicDirector` forgets the season when it returns to the title.
 - **Looping title theme.** The title theme plays as a looping voice. The director starts it once.
-- **CI selection.** `changes` gains an `audio` output, true for changes to the audio sources, the renders, their tests, the Makefile, `requirements.txt` or the workflow. `audio-linux` runs on it. The full music render test is marked slow and runs only with `AUDIO_SLOW_TESTS` set.
+- **CI selection.** `scripts/select_ci_jobs.py` gains an `audio` output, and `audio-linux` runs on it instead of the sprite selection. It is true whenever the selector picks everything, which every change to the audio sources (`scripts/audio/`) and renders (`Resources/Audio/`) does, since they live outside the packages. The full music render test is marked slow and runs only with `AUDIO_SLOW_TESTS` set.
 - **Pluck fraction.** It stays in [0.1, 1.1). Every piece is re-rendered once, in one commit.
 - **Size test.** It measures the committed files.
 - **`render.py --only`.** An unknown path is now an error, before anything renders or the manifest changes. The docstring no longer documents a `--preview` flag that doesn't exist.

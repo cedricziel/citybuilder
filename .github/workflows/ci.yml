@@ -28,7 +28,7 @@ jobs:
       gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
-      audio: ${{ steps.audio.outputs.audio }}
+      audio: ${{ steps.select.outputs.audio }}
 
     steps:
       - name: Checkout
@@ -56,6 +56,7 @@ jobs:
             echo "gamedata_fixture=true"
             echo "determinism_linux=true"
             echo "determinism_compare=true"
+            echo "audio=true"
           }
           selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
@@ -70,20 +71,6 @@ jobs:
           fi
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
-
-      # The audio renders only need checking when their sources, their
-      # outputs or the way they're checked change.
-      - name: Select the audio check
-        id: audio
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          if [ -z "$BASE_SHA" ] || git diff --no-renames --name-only "$BASE_SHA" HEAD \
-              | grep -qE '^(scripts/audio/|scripts/tests/test_(audio_generator|music)\.py$|Resources/Audio/|Makefile$|scripts/requirements\.txt$|\.github/workflows/ci\.yml$)'; then
-            echo "audio=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "audio=false" >> "$GITHUB_OUTPUT"
-          fi
 
   # The sound generator and the music renderer promise the same bytes on
   # every machine; the sprite pipeline's pytest job checks them on macOS,
