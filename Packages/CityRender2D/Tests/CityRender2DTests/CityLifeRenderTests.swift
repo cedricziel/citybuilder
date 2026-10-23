@@ -83,11 +83,12 @@ func strollerNodesStandOnTheirFeetUnmirrored() throws {
         #expect(scene.strollerNodes[StrollerKey(house: stroller.house, slot: stroller.slot)]?.facing == stroller.facing)
     }
     for stroller in planned {
-        // Feet on the road's tile centres, sorted by where they stand.
+        // Feet on the line between the two road tiles' centres, as far along as the stroller has come.
         let node = try #require(scene.strollerNodes[StrollerKey(house: stroller.house, slot: stroller.slot)]?.node)
         let tile = IsoMath.tileCoordinate(forScreenPoint: node.position)
-        #expect(abs(tile.row - (Double(stroller.from.y) + 0.5)) < 0.001)
-        #expect(abs(node.zPosition - IsoWorldScene.figureZ(at: node.position)) < 0.0001)
+        let col = Double(stroller.from.x) + 0.5 + Double(stroller.to.x - stroller.from.x) * stroller.progress
+        let row = Double(stroller.from.y) + 0.5 + Double(stroller.to.y - stroller.from.y) * stroller.progress
+        #expect(abs(tile.col - col) < 0.001 && abs(tile.row - row) < 0.001)
     }
     for shown in scene.strollerNodes.values {
         #expect(abs(shown.node.anchorPoint.x - SpriteAtlas.walkerAnchor.x) < 0.0001)
@@ -135,4 +136,31 @@ func carriersAndStrollersStandWhilePaused() throws {
     #expect(started.count > 1 && !started.contains(false))
     #expect(!paused.contains(true))
     #expect(!resumed.contains(false))
+}
+
+@MainActor
+@Test("strollers on the road in front of their house draw over it and over the road")
+func strollersDrawOverTheHouseBehindThem() throws {
+    let (base, house) = try houseOnRoad()
+    var pop = HousePopulation()
+    pop.population = 9
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.hasSprite = { _ in true }
+    let shown = snapshot(base, tick: 180, pops: [house: pop])
+    scene.dataSource = FixedSnapshotSource(WorldSnapshot(
+        tickCount: shown.tickCount, simulatedTime: shown.simulatedTime, mapWidth: shown.mapWidth, mapHeight: shown.mapHeight,
+        terrainGrid: shown.terrainGrid, occupiedTiles: shown.occupiedTiles, buildings: shown.buildings, carriers: shown.carriers,
+        economy: shown.economy, totalPopulation: shown.totalPopulation, camera: Camera(centerX: 5, centerY: 5, zoom: 1),
+        housePopulations: shown.housePopulations
+    ))
+    scene.update(0)
+    // The house stands on (2–3, 2–3); its strollers walk the road on row 4, in front of it.
+    let houseZ = try #require(scene.buildingNodes[TileCoordinate(x: 2, y: 2)]).zPosition
+    let roads = (0 ..< 8).compactMap { scene.buildingNodes[TileCoordinate(x: $0, y: 4)]?.zPosition }
+    let roadZ = try #require(roads.max())
+    #expect(!scene.strollerNodes.isEmpty)
+    for shown in scene.strollerNodes.values {
+        #expect(shown.node.zPosition > houseZ && shown.node.zPosition > roadZ)
+    }
 }
