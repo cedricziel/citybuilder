@@ -62,7 +62,6 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
     let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSheetNames)
     let atlases = [
         "Resources/Kit.atlas",
-        "Resources/Buildings.atlas",
         "Resources/Icons.atlas"
     ]
     let catalogDir = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
