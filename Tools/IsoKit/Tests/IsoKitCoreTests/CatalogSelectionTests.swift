@@ -76,7 +76,7 @@ struct CatalogSelectionTests {
 
     @Test("recipe facts are read from the Recipe section only")
     func recipeFactsParsing() {
-        let text = "## Sheet\n\n- Grid: 4\n\n## Recipe\n\n- Recipe: `x` (IsoKit)\n- Construction stages: 3\n\n## Notes\n- Other: 1\n"
+        let text = "## Function\n\n- Grid: 4\n\n## Recipe\n\n- Recipe: `x` (IsoKit)\n- Construction stages: 3\n\n## Notes\n- Other: 1\n"
         #expect(CatalogEntry.recipeFacts(fromMarkdown: text) == ["Recipe": "`x` (IsoKit)", "Construction stages": "3"])
     }
 

@@ -127,22 +127,25 @@ func grassVariantsAreStablePerTile() {
     #expect(winter == summerAsWinter)
 }
 
-/// A missing grass variant falls back to the plain tile and says so, once.
-@MainActor
-@Test("A missing grass variant falls back to the plain tile and is logged once")
-func missingGrassVariantIsLoggedOnce() {
-    SpriteAtlas.resetMissLogForTesting()
-    var logged: [String] = []
-    SpriteAtlas.missLogHook = { logged.append($0) }
-    defer { SpriteAtlas.missLogHook = nil }
-    let scene = IsoWorldScene()
-    scene.size = CGSize(width: 1024, height: 768)
-    scene.hasSprite = { !$0.contains("-v") }
-    scene.dataSource = FixedSnapshot(grassSnapshot(season: .summer))
-    scene.update(0)
-    let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
-    #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
-    let variants = logged.filter { $0.hasPrefix("terrain-grass-v") }
-    #expect(!variants.isEmpty)
-    #expect(variants.count == Set(variants).count)
+/// A missing grass variant falls back to the plain tile and says so, once. It shares the miss log
+/// with the placeholder tests, so it runs in their serialized suite.
+extension PlaceholderSuite {
+    @MainActor
+    @Test("A missing grass variant falls back to the plain tile and is logged once")
+    func missingGrassVariantIsLoggedOnce() {
+        SpriteAtlas.resetMissLogForTesting()
+        var logged: [String] = []
+        SpriteAtlas.missLogHook = { logged.append($0) }
+        defer { SpriteAtlas.missLogHook = nil }
+        let scene = IsoWorldScene()
+        scene.size = CGSize(width: 1024, height: 768)
+        scene.hasSprite = { !$0.contains("-v") }
+        scene.dataSource = FixedSnapshot(grassSnapshot(season: .summer))
+        scene.update(0)
+        let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+        #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
+        let variants = logged.filter { $0.hasPrefix("terrain-grass-v") }
+        #expect(!variants.isEmpty)
+        #expect(variants.count == Set(variants).count)
+    }
 }

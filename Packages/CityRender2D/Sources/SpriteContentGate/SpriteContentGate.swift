@@ -84,14 +84,13 @@ public enum SpriteContentGate {
     /// Trees and outcrops (`terrain-forest-dense-v1`, change `terrain-v2`) stand over their tile
     /// instead of filling its diamond, and their variants are different objects, so neither the
     /// diamond rules nor frame coherence apply to them.
-    /// The whole name must read `terrain-<forest|mountain>-<density>[-<autumn|winter>][-v<n>]`. `single`
-    /// stays until the meadow-tree sprites leave the atlas.
+    /// The whole name must read `terrain-<forest|mountain>-<density>[-<autumn|winter>][-v<n>]`.
     public static func isTerrainObject(_ fileName: String) -> Bool {
         SpriteFile(fileName).stem.wholeMatch(of: terrainObjectName) != nil
     }
 
     private nonisolated(unsafe) static let terrainObjectName =
-        /terrain-(forest|mountain)-(single|sparse|medium|dense|peak)(-(autumn|winter))?(-v\d+)?/
+        /terrain-(forest|mountain)-(sparse|medium|dense|peak)(-(autumn|winter))?(-v\d+)?/
 
     /// No transparent pixel inside the diamond, and nothing opaque beyond its 1-point bleed.
     static func terrainFailures(_ name: String, _ image: RGBAImage) -> [Failure] {
@@ -126,7 +125,7 @@ public enum SpriteContentGate {
     /// The sprite a frame or variant must stay coherent with, or nil
     /// when the name is a base sprite or a construction stage.
     /// - `terrain-water-2` → `terrain-water`
-    /// - `terrain-mountain-v1` → `terrain-mountain`
+    /// - `terrain-grass-v1` → `terrain-grass`
     /// - `building-sawmill-operational-0` → `building-sawmill`
     static func coherenceBase(for fileName: String) -> String? {
         let file = SpriteFile(fileName)

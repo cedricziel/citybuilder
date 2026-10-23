@@ -66,7 +66,7 @@ struct TerrainCornersTests {
         #expect(snapshot.terrain(at: TileCoordinate(x: 1, y: 1)) == .grass)
     }
 
-    @Test("uniform tiles, forest and mountain keep their own sprite")
+    @Test("uniform tiles keep their sprite; forest and mountain blend like grass")
     func noTransitionWhereNothingChanges() {
         let terrain = map([
             "fff",
@@ -74,7 +74,8 @@ struct TerrainCornersTests {
             "www"
         ])
         #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 0), terrain: terrain) == nil) // forest
-        #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 1), terrain: terrain) == nil) // mountain
+        #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 1), terrain: terrain)
+            == TerrainTransition(upper: .grass, lower: .beach, mask: 0b0011)) // mountain, its south corners on the shore
         #expect(TerrainCorners.transition(at: TileCoordinate(x: 1, y: 0), terrain: map(["ggg", "ggg"])) == nil)
     }
 

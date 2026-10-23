@@ -26,12 +26,17 @@ IsoKit SHALL render through one orthographic camera with:
 - euler angles (−30°, 45°, 0) and vertical projection
 - a scale of 64 / (4·√2) points per metre, where one tile is 4 m
 
-An n×n footprint renders into a cell 64·n points wide. The footprint's bottom vertex MUST sit at the cell's bottom-centre. Each recipe declares its cell height, and no part of the building may be clipped by the cell's top edge.
+An n×n footprint renders into a cell at least 64·n points wide. A building's cell widens symmetrically, in 16-point steps, until its baked shadow fits, so no shadow ends in a hard edge at the sprite's side. The footprint's bottom vertex MUST sit at the cell's bottom-centre. Each recipe declares its cell height, and no part of the building may be clipped by the cell's top edge.
 
-#### Scenario: A 2×2 house renders 128 points wide
+#### Scenario: A 2×2 house renders centred in its cell
 
 - **WHEN** the peasant house recipe (2×2 footprint) is rendered at @1×
-- **THEN** the PNG is 128 pixels wide and its lowest opaque pixel is in the bottom row at the horizontal centre ±2 pixels
+- **THEN** the PNG is as wide as its cell, at least 128 pixels, and its lowest opaque pixel is in the bottom row at the horizontal centre ±2 pixels
+
+#### Scenario: A building's shadow fits its cell
+
+- **WHEN** a building's baked shadow reaches past its footprint's width
+- **THEN** its cell widens until the shadow fits, and the IsoKit test suite fails for any building whose shadow leaves its cell
 
 #### Scenario: A recipe taller than its cell is rejected
 

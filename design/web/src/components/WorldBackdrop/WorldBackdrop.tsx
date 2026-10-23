@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { buildingSprites, type buildingSpritesKey } from "../../generated/buildings";
+import { buildingFootprints } from "../../generated/buildingFootprints";
 import { buildingSizes } from "../../generated/buildingSizes";
 import { terrainSprites, type terrainSpritesKey } from "../../generated/terrain";
 import "./WorldBackdrop.css";
@@ -87,14 +88,15 @@ const tileArt: Record<string, terrainSpritesKey> = {
   "~": "water",
   ".": "beach",
   ",": "grass",
-  T: "forest",
-  "^": "mountain",
+  // Forest and rock stand on grass in the game; their trees and outcrops are objects the backdrop
+  // does not draw yet.
+  T: "grass",
+  "^": "grass",
 };
 
 function seasonal(art: terrainSpritesKey, season: WorldBackdropProps["season"]): terrainSpritesKey {
   if (season === "summer" || !season) return art;
   if (art === "grass") return season === "autumn" ? "grass-autumn" : "grass-winter";
-  if (art === "forest") return season === "autumn" ? "forest-autumn" : "forest-winter";
   return art;
 }
 
@@ -146,9 +148,10 @@ export function WorldBackdrop({
   const sorted = [...buildings].sort((a, b) => depth(a) - depth(b));
   const sprites = sorted.map((building, index) => {
     const [w, h] = buildingSizes[building.art];
-    const f = Math.max(1, Math.round(w / 64));
-    const bottom = at(building.x + f - 1, building.y + f - 1);
-    const centerX = (at(building.x, building.y + f - 1).left + at(building.x + f - 1, building.y).left) / 2;
+    // The sprite is wider than its footprint where its shadow needs room, so place it by its footprint.
+    const [cols, rows] = buildingFootprints[building.art];
+    const bottom = at(building.x + cols - 1, building.y + rows - 1);
+    const centerX = (at(building.x, building.y + rows - 1).left + at(building.x + cols - 1, building.y).left) / 2;
     return (
       <img
         key={`${building.art}-${building.x}-${building.y}-${index}`}
@@ -175,7 +178,6 @@ export function WorldBackdrop({
 }
 
 function depth(building: PlacedBuilding): number {
-  const [w] = buildingSizes[building.art];
-  const f = Math.max(1, Math.round(w / 64));
-  return building.x + building.y + 2 * (f - 1);
+  const [cols, rows] = buildingFootprints[building.art];
+  return building.x + building.y + (cols - 1) + (rows - 1);
 }

@@ -9,23 +9,12 @@ forest.
 
 ## Visual identity
 
-Painted by `scripts/art/ground.py`. A loose canopy of broadleaf crowns in five greens and three sizes among darker conifers, scattered so the tile repeat is hard to see, with small clearings where the floor shows. Shallow relief keeps it light enough to read next to the grass. Lit like the IsoKit rig (warm sun from the upper left, cool sky) and repeating once per tile in (u, v), so any two tiles join without a seam.
+The tile's ground is grass, drawn by the grass tiles and the macro field, which darkens the forest floor. Over it stands one tree clump per tile, ray-cast by `scripts/art/flora.py` (through `scripts/art/terrain_objects.py`) from spheres and lit like the IsoKit rig: broadleaf crowns of leaf clumps round a trunk, spruces as tiered cones of needle clumps, a shrub or two at the foot, each clump with its own cast shadow. Autumn turns the broadleaf crowns ochre and russet; winter leaves bare limbs and puts snow on the spruces. A clump keeps its trees all year. The renderer picks the density from the distance to the forest's edge: sparse at the edge, medium on the next ring, dense inside.
 
 ## Sprites
 
-- `terrain-forest` — canonical static tile
-- `terrain-forest-single` — single clump, spring, variant 0
-- `terrain-forest-single-v1` — single clump, spring, variant 1
-- `terrain-forest-single-v2` — single clump, spring, variant 2
-- `terrain-forest-single-v3` — single clump, spring, variant 3
-- `terrain-forest-single-autumn` — single clump, autumn, variant 0
-- `terrain-forest-single-autumn-v1` — single clump, autumn, variant 1
-- `terrain-forest-single-autumn-v2` — single clump, autumn, variant 2
-- `terrain-forest-single-autumn-v3` — single clump, autumn, variant 3
-- `terrain-forest-single-winter` — single clump, winter, variant 0
-- `terrain-forest-single-winter-v1` — single clump, winter, variant 1
-- `terrain-forest-single-winter-v2` — single clump, winter, variant 2
-- `terrain-forest-single-winter-v3` — single clump, winter, variant 3
+Each is a 144×132-point cell with the tile centre 56 points from the left and 112 from the top, rendered at @1x and @2x.
+
 - `terrain-forest-sparse` — sparse clump, spring, variant 0
 - `terrain-forest-sparse-v1` — sparse clump, spring, variant 1
 - `terrain-forest-sparse-v2` — sparse clump, spring, variant 2
@@ -63,16 +52,6 @@ Painted by `scripts/art/ground.py`. A loose canopy of broadleaf crowns in five g
 - `terrain-forest-dense-winter-v2` — dense clump, winter, variant 2
 - `terrain-forest-dense-winter-v3` — dense clump, winter, variant 3
 
-## Tree clumps (change `terrain-v2`)
-
-Ray-cast by `scripts/art/flora.py` (through `scripts/art/terrain_objects.py`) from spheres and lit
-like the IsoKit rig: broadleaf crowns of leaf clumps round a trunk, spruces as tiered cones of needle
-clumps, a shrub or two at the foot, each clump with its own cast shadow. Autumn turns the broadleaf
-crowns ochre and russet; winter leaves bare limbs and puts snow on the spruces. A clump keeps its
-trees all year. The renderer draws one per forest tile, its density from the distance to the
-forest's edge; `single` is a lone tree out in the meadow.
-
 ## Recipe
 
-- SVG generator: `scripts/art/terrain_tiles.py` (`full`)
-- Texture: `scripts/art/ground.py` (`forest`)
+- Objects: `scripts/art/flora.py` through `scripts/art/terrain_objects.py`, embedded in SVG by `scripts/art/svg_sprites.py`
