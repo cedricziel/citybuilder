@@ -18,23 +18,11 @@ func kitIconsScaleSmoothly() {
     #expect(BuildingIconLoader.interpolation(for: .townCenter) == .high)
 }
 
-/// A building kind still drawn as legacy pixel art: its icon is outside the art kit and committed in
-/// Buildings.atlas. Found at runtime, so a family migration never breaks these tests; nil once every
-/// family is on the kit.
-private let legacyKind = BuildingKind.allCases.first { kind in
-    let name = BuildingIconLoader.textureName(for: kind)
-    return !TextureFiltering.kitRenderedStems.contains(TextureFiltering.stem(of: name)) && FileManager.default.fileExists(
-        atPath: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Resources/Buildings.atlas/\(name).png").path
-    )
-}
-
-@Test("legacy building icons keep crisp interpolation", .enabled(if: legacyKind != nil, "every building family is on the art kit"))
-func legacyIconsStayCrisp() throws {
-    let legacy = try #require(legacyKind)
-    #expect(BuildingIconLoader.interpolation(for: legacy) == GoodIconLoader.pixelArtInterpolation)
-    #expect(BuildingIconLoader.atlasName(for: legacy) == "Buildings")
+/// Every building family is on the art kit, so every kind's icon is a linearly filtered kit render.
+@Test("every building icon is a kit render")
+func everyBuildingIconIsAKitRender() {
+    let pixelArt = BuildingKind.allCases.filter { BuildingIconLoader.interpolation(for: $0) != .high }
+    #expect(pixelArt.isEmpty, "\(pixelArt)")
 }
 
 @Test("building icons come from the atlas their sprite routes to")

@@ -374,7 +374,7 @@ The ghost preview reflects the supply situation per good:
   the good. Placement is rejected.
 
 A waiting construction site renders a small clock-face badge
-(`overlay-waiting-materials.png` in `Resources/Buildings.atlas/`)
+(`overlay-waiting-materials.png` in `Resources/Icons.atlas/`)
 floating above the building tile. The badge disappears the moment the
 site flips to `.actively`.
 
