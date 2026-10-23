@@ -82,55 +82,6 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 - **WHEN** the sawmill's catalog entry declares a sails moving part on its east side and an operational frame's right edge extends 9 pixels past the base sprite's
 - **THEN** the gate reports no `frame_misaligned` failure for that frame
 
-### Requirement: Category-atlas folder layout
-The asset pipeline SHALL organize sprite PNGs into category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render, which filters linearly; `Buildings.atlas/`, `Units.atlas/` and `Icons.atlas/` hold the nearest-filtered pixel art, goods icons and status badges. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas whose last sprite migrates SHALL be removed: `Terrain.atlas/` no longer exists. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
-
-#### Scenario: Terrain atlas exists
-- **WHEN** the repository is inspected
-- **THEN** `Resources/Kit.atlas/` contains every `terrain-*.png` referenced by the sprite catalog, and `Resources/Terrain.atlas/` does not exist
-
-#### Scenario: Buildings atlas exists
-- **WHEN** the repository is inspected
-- **THEN** `Resources/Buildings.atlas/` exists and contains every `building-*.png` of a brief that has not migrated to the art kit
-
-#### Scenario: Units atlas exists
-- **WHEN** the repository is inspected
-- **THEN** `Resources/Units.atlas/` exists and contains every `walker-*.png` referenced by the sprite catalog
-
-#### Scenario: Legacy sprite directory removed
-- **WHEN** the repository is inspected
-- **THEN** `Resources/Sprites/` does not exist
-
-### Requirement: Atlas routing by sprite-name prefix
-The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to the atlas holding it. A sprite whose catalog brief has migrated to the art kit routes to `Kit`; every other sprite routes by its prefix:
-
-| Prefix | Atlas |
-|---|---|
-| `terrain-` | `Kit` |
-| `building-` | `Buildings` |
-| `overlay-` | `Buildings` |
-| `walker-` | `Units` |
-| `ship-` | `Units` |
-| `good-` | `Icons` |
-
-The public `SpriteAtlas` API remains unchanged.
-
-#### Scenario: Ship name routes to Units atlas
-- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name whose stem is not kit-rendered
-- **THEN** it answers `Units`, the prefix fallback
-
-#### Scenario: Shore-building name routes to Buildings atlas
-- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a shore-building name whose facing is not kit-rendered
-- **THEN** it answers `Buildings`, the prefix fallback
-
-#### Scenario: Ship name routes to Kit atlas
-- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
-
-#### Scenario: Shore-building name routes to Kit atlas
-- **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
-- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
-
 ### Requirement: Ship sprite inventory
 The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross product of facings `{n, ne, e, se, s, sw, w, nw}` and frames `{0, 1}`. Every declared ship sprite MUST resolve to a non-nil texture in `Kit.atlas` (verified by the asset-presence check from `sprite-asset-pipeline`).
 
@@ -143,6 +94,61 @@ The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross produ
 - **THEN** every declared `ship-<facing>-<frame>` resolves to a non-nil texture from `Kit.atlas`
 
 ## ADDED Requirements
+
+### Requirement: Two category atlases, Kit and Icons
+The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, ships), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: goods icons and the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas whose last sprite migrates SHALL be removed: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
+
+#### Scenario: Terrain atlas exists
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Kit.atlas/` contains every `terrain-*.png` referenced by the sprite catalog, and `Resources/Terrain.atlas/` does not exist
+
+#### Scenario: Retired atlases are gone
+- **WHEN** the repository is inspected
+- **THEN** `Resources/` holds exactly `Kit.atlas/` and `Icons.atlas/`, and `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` do not exist
+
+#### Scenario: Legacy sprite directory removed
+- **WHEN** the repository is inspected
+- **THEN** `Resources/Sprites/` does not exist
+
+### Requirement: Atlas routing to the Kit and Icons atlases
+The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to the atlas holding it, by prefix:
+
+| Prefix | Atlas |
+|---|---|
+| `terrain-` | `Kit` |
+| `building-` | `Kit` |
+| `walker-` | `Kit` |
+| `carrier-` | `Kit` |
+| `ship-` | `Kit` |
+| `good-` | `Icons` |
+| `overlay-` | `Icons` |
+
+The public `SpriteAtlas` API remains unchanged.
+
+#### Scenario: An unknown ship stem falls back to the Kit atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name with no committed sprite
+- **THEN** it answers `Kit`
+
+#### Scenario: An unknown building stem falls back to the Kit atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `building-` name with no committed sprite
+- **THEN** it answers `Kit`
+
+#### Scenario: Ship name routes to Kit atlas
+- **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+#### Scenario: Shore-building name routes to Kit atlas
+- **WHEN** `SpriteAtlas.texture(for: "building-port-w-operational-1")` is called
+- **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
+
+### Requirement: Overlay sprites route to the Icons atlas
+
+Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x` beside the goods icons.
+
+#### Scenario: Waiting badge routes to the Icons atlas
+
+- **WHEN** `SpriteAtlasRouting.atlasName(for: "overlay-waiting-materials")` is called
+- **THEN** it returns `"Icons"`
 
 ### Requirement: Shore-building sprites per facing
 For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: one for the Port, whose operational sprite does not loop, and two for the Shipyard, whose hull work does. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
@@ -275,6 +281,24 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 - **THEN** the gate fails and names the tile with reason `terrain_coverage_below_threshold`
 
 ## REMOVED Requirements
+
+### Requirement: Category-atlas folder layout
+
+**Reason**: `Terrain.atlas`, `Buildings.atlas` and `Units.atlas` are retired; every render is in `Kit.atlas`.
+
+**Migration**: See "Two category atlases, Kit and Icons".
+
+### Requirement: Atlas routing by sprite-name prefix
+
+**Reason**: The `Buildings` and `Units` prefix fallbacks are gone with their atlases.
+
+**Migration**: See "Atlas routing to the Kit and Icons atlases".
+
+### Requirement: Overlay sprites route to the Buildings atlas
+
+**Reason**: `Buildings.atlas` is retired; its last sprite, the waiting badge, moved to `Icons.atlas`.
+
+**Migration**: Overlay sprites route to the Icons atlas (see the ADDED requirement).
 
 ### Requirement: Shore-building sprite inventory
 
