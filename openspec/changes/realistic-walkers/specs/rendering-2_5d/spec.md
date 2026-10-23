@@ -1,3 +1,31 @@
+## MODIFIED Requirements
+
+### Requirement: Residents stroll the streets
+
+During day and dusk, each inhabited house with an adjacent road SHALL show up to three strollers (one per three residents) walking the nearby roads, and none at night. Stroller positions SHALL be a pure function of house, slot and tick.
+
+A stroller's route SHALL be a walk along the roads: from the road tile nearest the house, the shortest road path to the farthest road tile it reaches within 3 tiles of the house, walked back and forth. Every leg SHALL join two orthogonally adjacent road tiles, so a stroller's feet never cross a plot or a building that is not a road.
+
+#### Scenario: Strollers by day
+
+- **WHEN** a house with 9 residents next to a road is planned at midday
+- **THEN** there are 3 strollers for it
+
+#### Scenario: No strollers at night
+
+- **WHEN** the same house is planned at midnight
+- **THEN** there are no strollers for it
+
+#### Scenario: Every stroller leg joins two neighbouring road tiles
+
+- **WHEN** strollers are planned over a day for a house with roads behind it, in front of it and between it and its neighbour
+- **THEN** every leg runs between two road tiles that share an edge
+
+#### Scenario: A stroller's feet never land on a building that is not a road
+
+- **WHEN** a stroller is at any point of any leg
+- **THEN** the tile under its feet is a road or open ground, never a house or another building
+
 ## ADDED Requirements
 
 ### Requirement: Figures stand on their feet and face their way
@@ -34,7 +62,7 @@ A carrier, stroller or animal SHALL be depth-sorted, every frame, by the iso dep
 
 Flat ground buildings (roads and the plaza paving) SHALL NOT take part in this sort: they draw on a flat layer above the terrain and below every standing building and figure, so a figure walking a road never sinks into the tile it steps onto.
 
-Strollers SHALL stand on a road tile's centre at each end of a leg and move in a straight line between those centres; carriers stand on their path's tile centres the same way.
+Strollers SHALL stand on a road tile's centre at each end of a leg and move in a straight line between those centres, which are neighbouring road tiles; carriers stand on their path's tile centres the same way.
 
 One depth per footprint sorts correctly only while a footprint is at most one tile longer than it is wide. A footprint 3:1 or longer (|width − height| ≥ 2) can be drawn over by a figure beside its long end; no catalogued building is that long, and a test fails if one becomes so.
 
