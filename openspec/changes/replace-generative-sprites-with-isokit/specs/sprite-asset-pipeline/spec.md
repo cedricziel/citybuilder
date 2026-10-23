@@ -232,8 +232,9 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 
 Every sprite PNG under `Resources/{Kit,Icons}.atlas/` SHALL be produced by:
 
-- IsoKit, for buildings and units, or
-- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons.
+- IsoKit, for buildings and units,
+- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons, or
+- hand-drawn pixel art, for the status badges drawn over buildings (`overlay-`), committed as is with a nearest-neighbour `@2x` twin.
 
 Every PNG has an `@1x` file and an `@2x` file with the same stem. No PNG may come from an image-generation API or from the retired `scripts/generate_sprites_ai` pipeline.
 
