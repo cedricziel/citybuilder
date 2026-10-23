@@ -67,19 +67,34 @@ public enum InspectorCalloutLayout {
         topInset + layout.margin + layout.controlHeight + 8
     }
 
-    /// The safe area minus the pill row, rail and dock, and the minimap's
-    /// band while it shows. Spec: `platform-shells` / Minimap layout.
-    public static func freeArea(size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool) -> CGRect {
+    /// The safe area minus the pill row, rail and dock, the minimap's band
+    /// while it shows, and the first-steps card's column (or, collapsed,
+    /// its capsule's band) while it shows. Spec: `platform-shells` /
+    /// Minimap layout, First-hour guide.
+    public static func freeArea(
+        size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false
+    ) -> CGRect {
         let margin = layout.margin
         var top = topBarBottom(topInset: insets.top, layout: layout)
         let left = insets.leading + margin + layout.railInset
-        let right = size.width - insets.trailing - margin
+        var right = size.width - insets.trailing - margin
         var bottom = size.height - insets.bottom - margin - (layout.placement == .bottomDock ? 74 : 0)
+        // The card stacks under the minimap when both sit top-right.
+        var rightColumnTop = top
         if showsMinimap {
             let minimap = MinimapLayout.frame(in: size, insets: insets, layout: layout)
             switch MinimapLayout.corner(for: layout) {
             case .bottomTrailing: bottom = min(bottom, minimap.minY - MinimapLayout.gap)
-            case .topTrailing: top = max(top, minimap.maxY + MinimapLayout.gap)
+            case .topTrailing:
+                top = max(top, minimap.maxY + MinimapLayout.gap)
+                rightColumnTop = top
+            }
+        }
+        if showsFirstSteps {
+            if layout.collapsesFirstSteps {
+                top = max(top, rightColumnTop + FirstStepsCardView.capsuleHeight + MinimapLayout.gap)
+            } else {
+                right = min(right, size.width - insets.trailing - margin - FirstStepsCardView.width - MinimapLayout.gap)
             }
         }
         return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
@@ -136,7 +151,8 @@ struct InspectorCalloutView<Actions: View>: View {
         GeometryReader { proxy in
             let (anchor, half) = projection(viewSize: proxy.size)
             let bounds = InspectorCalloutLayout.freeArea(
-                size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap
+                size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
+                showsFirstSteps: session.firstStepsGuide != nil
             )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,

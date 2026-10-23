@@ -115,7 +115,7 @@ extension GameSession {
     private static func deficitHint(upkeep: Int64, tax: Int64) -> SessionBanner {
         SessionBanner(
             title: "In the red: upkeep $\(upkeep) vs tax $\(tax)",
-            description: "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts."
+            description: "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market."
         )
     }
 

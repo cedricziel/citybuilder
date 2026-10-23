@@ -44,10 +44,19 @@ private func plan(
     _ snapshot: WorldSnapshot, clock: UInt64? = nil,
     free: ((TileCoordinate) -> Bool)? = nil, yard: ((TileCoordinate) -> Bool)? = nil
 ) -> [AnimalPlanner.Animal] {
+    var tours: [AnimalKey: AnimalPlanner.Tour] = [:]
+    return plan(snapshot, clock: clock, free: free, yard: yard, tours: &tours)
+}
+
+private func plan(
+    _ snapshot: WorldSnapshot, clock: UInt64? = nil,
+    free: ((TileCoordinate) -> Bool)? = nil, yard: ((TileCoordinate) -> Bool)? = nil,
+    tours: inout [AnimalKey: AnimalPlanner.Tour]
+) -> [AnimalPlanner.Animal] {
     let open = free ?? { snapshot.terrain(at: $0) == .grass && snapshot.occupiedTiles[$0] == nil }
     return AnimalPlanner.animals(
-        in: snapshot, xRange: 0 ... 39, yRange: 0 ... 39, clock: clock ?? AnimalPlanner.dayClock(tick: snapshot.tickCount),
-        ground: AnimalPlanner.Ground(isFreeGrass: open, isYard: yard ?? open)
+        in: snapshot, visible: (0 ... 39, 0 ... 39), clock: clock ?? AnimalPlanner.dayClock(tick: snapshot.tickCount),
+        ground: AnimalPlanner.Ground(isFreeGrass: open, isYard: yard ?? open), tours: &tours
     )
 }
 
@@ -86,6 +95,30 @@ func scenarioWalksStayOnFreeGrass() {
         }
     }
     #expect(walked)
+}
+
+@Test("scenario: no jump when the pasture is built on")
+func scenarioNoJumpWhenThePastureIsBuiltOn() {
+    let sheepFarm = farm(1, at: 10, 10)
+    let snapshot = farmland([sheepFarm], tick: 180)
+    let footprint = Set(BuildingCatalog.spec(for: .farm).footprint.tiles(anchor: sheepFarm.anchor))
+    // A road grows across the pasture, a tile every 15 ticks, along row 9 then column 9.
+    let road = (8 ... 14).map { TileCoordinate(x: $0, y: 9) } + (10 ... 14).map { TileCoordinate(x: 9, y: $0) }
+    var tours: [AnimalKey: AnimalPlanner.Tour] = [:]
+    var last: [AnimalPlanner.Animal] = []
+    for clock in UInt64(100) ..< 700 {
+        let laid = Set(road.prefix(Int(clock - 100) / 15))
+        let free = { (tile: TileCoordinate) in !footprint.contains(tile) && !laid.contains(tile) }
+        let sheep = plan(snapshot, clock: clock, free: free, tours: &tours)
+        #expect(sheep.count == last.count || last.isEmpty)
+        for (old, new) in zip(last, sheep) {
+            #expect(abs(old.col - new.col) <= 1 && abs(old.row - new.row) <= 1, "jumped at \(clock)")
+        }
+        for animal in sheep where !animal.walking {
+            #expect(free(tile(of: animal)), "a sheep standing on the road at \(tile(of: animal)), clock \(clock)")
+        }
+        last = sheep
+    }
 }
 
 @Test("scenario: no animals inside a tree clump")

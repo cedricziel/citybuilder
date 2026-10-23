@@ -37,7 +37,7 @@ extension IsoWorldScene {
     /// culture kinds follow culture only. A rival's building uses the
     /// rival's culture and age, the player's the scene's.
     func cultureTexture(
-        kind: BuildingKind, state: BuildingState, houseTier: HouseTier, rival: RivalSummary?
+        kind: BuildingKind, state: BuildingState, houseTier: HouseTier, rival: RivalLook?
     ) -> (String, SKTexture)? {
         guard state != .constructing else { return nil }
         let culture = rival?.culture ?? culture

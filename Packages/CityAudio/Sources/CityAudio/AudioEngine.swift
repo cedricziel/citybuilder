@@ -23,6 +23,10 @@ public final class AudioEngine: @unchecked Sendable {
     private var started: Bool = false
     private var muted: Bool = false
     private var spatialEnabled: Bool
+    /// The system stops the engine when the output hardware changes (#206).
+    private var configurationObserver: NSObjectProtocol?
+    /// The queue every player node call runs on.
+    let nodes = AudioNodeQueue()
 
     /// Default reference distance (in tiles) for spatial attenuation —
     /// sources within this radius play at full volume. Spec D5.
@@ -42,6 +46,26 @@ public final class AudioEngine: @unchecked Sendable {
         self.buses = buses
         self.spatialEnabled = spatialEnabled
         wireBuses()
+        configurationObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
+        ) { [weak self] _ in
+            self?.restartAfterConfigurationChange()
+        }
+    }
+
+    deinit {
+        if let configurationObserver {
+            NotificationCenter.default.removeObserver(configurationObserver)
+        }
+    }
+
+    /// Starts the engine again, as a new run, after the system stopped it for a hardware change,
+    /// if it was meant to be running. Player nodes pick up where they were; the one-shot pool
+    /// starts its nodes again on the next cue.
+    func restartAfterConfigurationChange() {
+        guard started, !engine.isRunning else { return }
+        started = false
+        try? start()
     }
 
     /// Returns the `AVAudioMixerNode` for the named bus. Callers can read
@@ -60,6 +84,9 @@ public final class AudioEngine: @unchecked Sendable {
     public var isRunning: Bool {
         started
     }
+
+    /// Counts the starts. Players started under an earlier run were stopped with the engine.
+    public private(set) var runCount = 0
 
     /// True iff the loop bus is currently routed through the environment
     /// node (i.e. spatial audio is enabled).
@@ -98,6 +125,7 @@ public final class AudioEngine: @unchecked Sendable {
         guard !started else { return }
         try engine.start()
         started = true
+        runCount += 1
     }
 
     /// Sets the volume on `bus` to `volume` (0.0–1.0). If muted, the
