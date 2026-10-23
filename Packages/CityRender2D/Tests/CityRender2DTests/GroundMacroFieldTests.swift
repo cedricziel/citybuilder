@@ -194,3 +194,13 @@ func anotherMapShapeRebuildsTheField() throws {
     let inputs = try #require(rebuilt)
     #expect(inputs.width == 4 && inputs.height == 16)
 }
+
+@Test("scenario: Scree fades at the edge of rock")
+func screeFadesAtTheEdgeOfRock() {
+    let rock = grid(30, 30, fill: .grass) { x, y in (8 ..< 22).contains(x) && (8 ..< 22).contains(y) ? .mountain : nil }
+    let field = GroundMacroField(width: 30, height: 30, grid: rock, occupied: [], season: .summer)
+    #expect(field.screeOpacity(atVertex: .init(x: 15, y: 15)) > 0.85)
+    let edge = field.screeOpacity(atVertex: .init(x: 8, y: 15))
+    #expect(edge > 0.05 && edge < 0.85)
+    #expect(field.screeOpacity(atVertex: .init(x: 6, y: 15)) == 0)
+}

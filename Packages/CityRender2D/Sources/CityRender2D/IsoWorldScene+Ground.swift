@@ -47,6 +47,15 @@ public struct GroundMacroCache {
 extension GroundMacroField {
     /// The field as a linearly filtered texture, top row first.
     func texture() -> SKTexture {
+        texture(of: pixels)
+    }
+
+    /// The scree cover as a linearly filtered texture, top row first.
+    func screeTexture() -> SKTexture {
+        texture(of: screePixels)
+    }
+
+    private func texture(of pixels: [UInt8]) -> SKTexture {
         let texture = SKTexture(data: Data(pixels), size: CGSize(width: width, height: height), flipped: true)
         texture.filteringMode = .linear
         return texture
@@ -55,6 +64,7 @@ extension GroundMacroField {
 
 extension IsoWorldScene {
     public static let groundMacroNodeName = "ground-macro"
+    public static let groundScreeNodeName = "ground-scree"
 
     /// Multiplies the macro field over the ground tiles (z 0), under objects and buildings (z >= 10).
     /// Fields build off the main thread, one at a time and at most every quarter second, so neither
@@ -88,20 +98,27 @@ extension IsoWorldScene {
 
     private func show(_ field: GroundMacroField, from inputs: GroundMacroInputs) {
         groundMacroShown = inputs
-        let node = childNode(withName: Self.groundMacroNodeName) as? SKSpriteNode ?? {
-            let node = SKSpriteNode()
-            node.name = Self.groundMacroNodeName
-            node.anchorPoint = CGPoint(x: 0, y: 1)
-            node.blendMode = .multiplyX2
-            node.zPosition = 1
-            addChild(node)
-            return node
-        }()
-        node.texture = field.texture()
-        node.size = CGSize(
+        let size = CGSize(
             width: CGFloat(field.width) * GroundMacroField.pointsPerTexel,
             height: CGFloat(field.height) * GroundMacroField.pointsPerTexel
         )
-        node.position = field.topLeft
+        // Scree lies on rock ground under the macro field, which then tints it like everything else.
+        for (name, texture, blend, zPosition) in [
+            (Self.groundScreeNodeName, field.screeTexture(), SKBlendMode.alpha, CGFloat(0.5)),
+            (Self.groundMacroNodeName, field.texture(), .multiplyX2, 1)
+        ] {
+            let node = childNode(withName: name) as? SKSpriteNode ?? {
+                let node = SKSpriteNode()
+                node.name = name
+                node.anchorPoint = CGPoint(x: 0, y: 1)
+                node.blendMode = blend
+                node.zPosition = zPosition
+                addChild(node)
+                return node
+            }()
+            node.texture = texture
+            node.size = size
+            node.position = field.topLeft
+        }
     }
 }

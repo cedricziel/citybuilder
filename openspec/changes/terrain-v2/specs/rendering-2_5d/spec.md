@@ -60,7 +60,7 @@ The density SHALL follow the tile's distance to the edge of its forest or rock r
 
 - distance 1: `sparse` (a forest tile may take `medium` by hash);
 - distance 2: `medium`;
-- distance 3 or more: `dense` (a mountain tile may take `peak` by world noise).
+- distance 3 or more: `dense`. Inside a rock region, smooth world noise opens some tiles to `medium` and raises others, 4 or more from the edge, to `peak`.
 
 A tile next to an occupied tile SHALL drop one class. An occupied tile SHALL draw no object, and an occupied forest tile SHALL still draw grass ground. A forest region reaching the map's border SHALL count the border as its edge. When a building is placed or cleared, or a tile is felled or planted, the scene SHALL redraw the objects it changes.
 
@@ -103,7 +103,7 @@ Objects are visual only. Simulation and placement MUST keep using each tile's ow
 
 ### Requirement: Terrain objects depth-sort with buildings
 
-A terrain object SHALL draw just behind the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01 − 0.003`. Objects nearer the camera then cover buildings behind them, buildings nearer the camera cover objects behind them, and a building at the same depth always covers the object.
+A terrain object SHALL draw just behind the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01 − 0.003 + (c mod 16) × 0.0001`. Objects nearer the camera then cover buildings behind them, buildings nearer the camera cover objects behind them, and a building at the same depth always covers the object. Objects at one depth keep a fixed order by column, so overlapping neighbours never swap when the scene rebuilds.
 
 #### Scenario: A clump in front of a house covers it
 
@@ -119,6 +119,11 @@ A terrain object SHALL draw just behind the global z of a 1 × 1 building on its
 
 - **WHEN** a forest tile has the same depth as a house's footprint centre
 - **THEN** the tree clump's global z is less than the house's in every season
+
+#### Scenario: Rock and trees level with a building keep one order in every season
+
+- **WHEN** a mountain tile and a forest tile have the same depth as a house's footprint centre
+- **THEN** in every season both objects draw behind the house, and the one further right draws over the other
 
 ### Requirement: Terrain objects follow the season
 

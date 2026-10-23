@@ -53,10 +53,10 @@ public enum TerrainCorners {
         return .grass
     }
 
-    /// The transition tile for `coord`, or nil when its corners agree or its kind doesn't blend
-    /// (mountain keeps its own sprite).
+    /// The transition tile for `coord`, or nil when its corners agree. Every kind blends: forest and
+    /// mountain stand on grass, with their trees and rocks on top (terrain-v2, design D3).
     public static func transition(at coord: TileCoordinate, terrain: (TileCoordinate) -> TerrainType?) -> TerrainTransition? {
-        guard let own = terrain(coord), blends(own) else { return nil }
+        guard terrain(coord) != nil else { return nil }
         let corners = cornerOffsets.compactMap { dx, dy in
             vertex(TileCoordinate(x: coord.x + dx, y: coord.y + dy), terrain: terrain)
         }
@@ -69,15 +69,6 @@ public enum TerrainCorners {
         let pair: (upper: TerrainType, lower: TerrainType) = corners.contains(.grass) ? (.grass, .beach) : (.beach, .water)
         let mask = corners.enumerated().reduce(0) { mask, corner in corner.element == pair.upper ? mask | (1 << corner.offset) : mask }
         return TerrainTransition(upper: pair.upper, lower: pair.lower, mask: mask)
-    }
-
-    /// Grass, beach and water blend into each other, and forest blends as grass, since it stands on
-    /// grass ground; mountain keeps its own sprite.
-    static func blends(_ kind: TerrainType) -> Bool {
-        switch kind {
-        case .grass, .forest, .beach, .water: true
-        default: false
-        }
     }
 
     static func blendClass(_ kind: TerrainType) -> TerrainType {
@@ -114,7 +105,6 @@ public struct TerrainTransitionMap: Sendable {
         var transitions = [TerrainTransition?](repeating: nil, count: width * height)
         for y in 0 ..< height {
             for x in 0 ..< width {
-                guard TerrainCorners.blends(grid[y * width + x]) else { continue }
                 let corners = TerrainCorners.cornerOffsets.compactMap { dx, dy in vertices[(y + dy) * (width + 1) + x + dx] }
                 transitions[y * width + x] = TerrainCorners.transition(corners: corners)
             }
