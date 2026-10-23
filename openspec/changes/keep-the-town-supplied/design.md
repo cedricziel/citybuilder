@@ -56,6 +56,7 @@ House needs are excluded because piling them up is normal. That also covers plan
 - It reuses `SessionBanner` through `show(_:)`: no pause and no new layout, so no canvas.
 - `GameSession` keeps the goods it has already hinted about this session.
 - It checks after each tick, only when no other banner shows, so history events and the deficit hint keep priority. It names the first idle good not yet hinted.
+- While the first-hour guide shows, a good waits if one of its users is a building an open step asks for. Wood waits while "Make planks" is open, because the card already says it. It isn't marked as hinted, so it can fire once the step is met or the card is hidden.
 - Building names come from the kind's raw value ("charcoal burner"), because the palette's short labels name goods ("Charcoal").
 
 ### D4. Measuring it

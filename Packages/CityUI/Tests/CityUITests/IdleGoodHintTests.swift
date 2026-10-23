@@ -90,6 +90,22 @@ func scenarioHintOncePerGood() {
 }
 
 @MainActor
+@Test("scenario: the first-steps card speaks first")
+func scenarioTheFirstStepsCardSpeaksFirst() {
+    var world = World.fixtureWithTerrain(width: 20, height: 12, fill: .grass, seed: 1)
+    world.research = ResearchState(researched: [.scholarship, .feudalOrder])
+    let store = add(.warehouse, at: TileCoordinate(x: 1, y: 1), state: .operational, to: &world)
+    world.stockpiles[store]?.deposit(.wood, amount: 25)
+    let session = GameSession(world: world)
+    #expect(session.firstStepsGuide?.met.contains(.planks) == false)
+    session.step()
+    #expect(session.banner == nil)
+    session.hideFirstSteps()
+    session.step()
+    #expect(session.banner?.title == "Nothing uses your wood")
+}
+
+@MainActor
 @Test("scenario: hint doesn't pause")
 func scenarioHintDoesntPause() {
     let (session, _) = session([.hops: 22])

@@ -10,7 +10,7 @@ A good is idle for the player when all of these hold:
 
 Projects that make nothing, such as the monument, don't count as using a good.
 
-The first time in a session that a good is idle, the game screen SHALL show a session banner about it, unless another banner is showing. Its title SHALL be "Nothing uses your <good>". Its description SHALL be "Build a <building> for it, or sell <good> at the town center's market." When two or more kinds use it, it SHALL name them as "a <building> or a <building>". Goods are checked in catalog order. The banner SHALL NOT pause the simulation, SHALL show for the usual banner time, and SHALL show at most once per good per session.
+The first time in a session that a good is idle, the game screen SHALL show a session banner about it, unless another banner is showing. Its title SHALL be "Nothing uses your <good>". Its description SHALL be "Build a <building> for it, or sell <good> at the town center's market." When two or more kinds use it, it SHALL name them as "a <building> or a <building>". Goods are checked in catalog order. While the first-hour guide shows, a good SHALL wait while any building that uses it is one an open step asks for (for example wood while "Make planks" is open), and SHALL be hinted as usual once that step is met or the guide is hidden. The banner SHALL NOT pause the simulation, SHALL show for the usual banner time, and SHALL show at most once per good per session.
 
 #### Scenario: Hops pile up without a brewery
 
@@ -31,6 +31,11 @@ The first time in a session that a good is idle, the game screen SHALL show a se
 
 - **WHEN** the banner about hops has shown, the hops are sold, and hops pile up again in the same session
 - **THEN** no second banner about hops shows
+
+#### Scenario: The first-steps card speaks first
+
+- **WHEN** the player's stores hold 25 wood, there is no sawmill, and the first-hour guide shows with "Make planks" open
+- **THEN** no banner about wood shows, and after the player hides the guide the next step shows one
 
 #### Scenario: Hint doesn't pause
 

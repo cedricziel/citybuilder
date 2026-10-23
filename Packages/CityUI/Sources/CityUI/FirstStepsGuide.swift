@@ -36,6 +36,21 @@ struct FirstStep: Equatable {
 struct FirstStepsGuide: Equatable {
     enum Step: CaseIterable, Hashable {
         case farm, planks, houses, tax, market
+
+        /// The buildings the step asks for.
+        var kinds: [BuildingKind] {
+            switch self {
+            case .farm: [.farm]
+            case .planks: [.lumberjackHut, .sawmill]
+            case .houses: [.house]
+            case .tax, .market: []
+            }
+        }
+    }
+
+    /// Buildings an open step already asks the player for.
+    var openStepKinds: Set<BuildingKind> {
+        Set(Step.allCases.filter { !met.contains($0) }.flatMap(\.kinds))
     }
 
     let met: Set<Step>
