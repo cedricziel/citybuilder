@@ -10,8 +10,8 @@ from art import flora, terrain_objects
 
 @pytest.mark.scenario("Tree clumps are repeatable")
 def test_tree_clumps_are_repeatable() -> None:
-    first = flora.render(flora.clump("single", 1, "spring"), "spring", scale=1)
-    second = flora.render(flora.clump("single", 1, "spring"), "spring", scale=1)
+    first = flora.render(flora.clump("sparse", 1, "spring"), "spring", scale=1)
+    second = flora.render(flora.clump("sparse", 1, "spring"), "spring", scale=1)
     assert np.array_equal(first, second)
 
 
@@ -33,12 +33,12 @@ def test_denser_clumps_hold_more_trees() -> None:
         spheres = flora.clump(density, 0, "spring")
         return sum(1 for c, leafy in zip(spheres.centre, spheres.leafy) if not leafy and c[1] < 0.01)
 
-    assert trees("single") == 1 <= trees("sparse") < trees("medium") < trees("dense")
+    assert 1 <= trees("sparse") < trees("medium") < trees("dense")
 
 
 def test_every_object_name_parses_back() -> None:
     for name in terrain_objects.names():
         kind, density, season, variant = terrain_objects.parse(name)
-        assert kind == "forest" and density in terrain_objects.TREES
+        assert density in (terrain_objects.TREES if kind == "forest" else terrain_objects.ROCKS)
         assert season in ("spring", "autumn", "winter") and 0 <= variant < terrain_objects.VARIANTS
-    assert len(terrain_objects.names()) == 4 * 3 * 4
+    assert len(terrain_objects.names()) == 3 * 3 * 4 + 4 * 2 * 4
