@@ -6,7 +6,9 @@ import Testing
 
 // Scenarios from openspec/changes/redesign-hud-map-first/specs/platform-shells/spec.md.
 
-private func inspector(for kind: BuildingKind, residents: UInt32? = nil) throws -> InspectorViewModel {
+private func inspector(
+    for kind: BuildingKind, residents: UInt32? = nil, tier: HouseTier = .peasants
+) throws -> InspectorViewModel {
     var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
     let anchor = TileCoordinate(x: 2, y: 2)
     world.enqueue(.place(kind, at: anchor))
@@ -17,6 +19,7 @@ private func inspector(for kind: BuildingKind, residents: UInt32? = nil) throws 
     if let residents {
         let id = try #require(world.occupiedTiles[anchor])
         var pop = HousePopulation()
+        pop.tier = tier
         pop.population = residents
         snapshot = withHousePopulations(snapshot, [id: pop])
     }
@@ -32,6 +35,17 @@ func scenarioCalloutTitleAndKeyLines() throws {
     #expect(abs(fill - 0.5) < 0.0001)
     #expect(inspector.keyLines.first == "Residents: 2/4")
     #expect(inspector.keyLines.dropFirst().first?.hasPrefix("Needs:") == true)
+}
+
+@Test("scenario: callout names the next tier's needs")
+func scenarioCalloutNamesTheNextTiersNeeds() throws {
+    let citizens = try inspector(for: .house, residents: 6, tier: .citizens)
+    // A Northern European town: its merchants' luxury is beer.
+    #expect(citizens.keyLines.contains("Next: Merchants need bread, tools, beer"))
+    let peasants = try inspector(for: .house, residents: 2)
+    #expect(peasants.keyLines.contains("Next: Citizens need planks"))
+    let merchants = try inspector(for: .house, residents: 8, tier: .merchants)
+    #expect(!merchants.keyLines.contains { $0.hasPrefix("Next:") })
 }
 
 @Test("scenario: callout key lines for other buildings")

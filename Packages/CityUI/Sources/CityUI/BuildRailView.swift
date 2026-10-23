@@ -196,7 +196,7 @@ struct BuildDrawerView: View {
                     Text(name).lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .font(.system(size: 11, weight: .semibold))
-                Text("$\(BuildingCatalog.spec(for: kind).cost)")
+                Text(session.drawerCaption(for: kind))
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
             }

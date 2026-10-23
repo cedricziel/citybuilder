@@ -59,6 +59,14 @@ func scenarioLockedDrawerTileDoesNothing() {
 }
 
 @MainActor
+@Test("scenario: locked drawer tile names its research")
+func scenarioLockedDrawerTileNamesItsResearch() {
+    let session = GameSession()
+    #expect(session.drawerCaption(for: .mine) == "Needs Mining")
+    #expect(session.drawerCaption(for: .farm) == "$60")
+}
+
+@MainActor
 @Test("scenario: arming clears the selection")
 func scenarioArmingClearsTheSelection() {
     let session = GameSession()
