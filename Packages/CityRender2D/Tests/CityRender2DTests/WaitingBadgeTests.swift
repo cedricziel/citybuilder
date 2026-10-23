@@ -121,9 +121,8 @@ func scenarioTierChangeSwapsTheHouseSprite() throws {
     let after = SnapshotReconciler.desiredSprites(
         in: withHousePopulations(snapshot, [house: citizens]), xRange: 0 ... 5, yRange: 0 ... 5
     )
-    let diff = SnapshotReconciler.diff(previous: before, current: after)
-    #expect(diff.added.contains { $0.coord == TileCoordinate(x: 1, y: 1) })
-    #expect(diff.removed.contains { $0.coord == TileCoordinate(x: 1, y: 1) })
+    #expect(after.subtracting(before).contains { $0.coord == TileCoordinate(x: 1, y: 1) })
+    #expect(before.subtracting(after).contains { $0.coord == TileCoordinate(x: 1, y: 1) })
 }
 
 private func withHousePopulations(_ base: WorldSnapshot, _ pops: [EntityID: HousePopulation]) -> WorldSnapshot {
