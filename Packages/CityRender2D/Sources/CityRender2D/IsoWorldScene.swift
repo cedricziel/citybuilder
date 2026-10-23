@@ -9,13 +9,12 @@ import SwiftUI
 
 /// Snapshot-driven SpriteKit scene. Holds no simulation state — every
 /// frame it asks its `dataSource` for the current snapshot and reconciles
-/// the scene tree against the desired sprite set.
+/// the scene tree against it (`reconcileSprites`).
 public final class IsoWorldScene: SKScene {
     public var dataSource: IsoWorldDataSource?
     public var intentSink: ((Intent) -> Void)?
 
-    /// Tracks which sprite specs are currently present in the scene tree so
-    /// each frame can compute add/remove diffs via SnapshotReconciler.
+    /// Every terrain and building sprite in the scene tree, by spec.
     var presentSprites: [SpriteSpec: SKNode] = [:]
     /// City life (`add-city-life`): night shade and strolling residents.
     let nightOverlay = SKSpriteNode()
@@ -35,11 +34,21 @@ public final class IsoWorldScene: SKScene {
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
-    private(set) var transitionMap: TerrainTransitionMap?
+    var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
-    private(set) var objectMap: TerrainObjectMap?
+    var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
-    private(set) var roadLinkCache = RoadLinkCache()
+    var roadLinkCache = RoadLinkCache()
+    /// The terrain sprite on screen per tile, and the view those tiles fill.
+    var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
+    var shownTiles: VisibleTiles?
+    /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
+    /// season change dropped their node.
+    var staleTerrain: Set<TileCoordinate> = []
+    /// The building sprites on screen and what they were drawn from.
+    var buildingSpecs: Set<SpriteSpec> = []
+    var shownBuildingInputs: BuildingSpriteInputs?
+    var spriteReconcileCounts = SpriteReconcileCounts()
     /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
     var groundMacroCache = GroundMacroCache()
     /// Whether a macro field is building off the main thread, and the latest request waiting for it.
@@ -272,6 +281,10 @@ public final class IsoWorldScene: SKScene {
         }
         presentSprites.removeAll()
         buildingNodes.removeAll()
+        terrainSpecs.removeAll()
+        shownTiles = nil
+        buildingSpecs.removeAll()
+        shownBuildingInputs = nil
     }
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a
@@ -284,80 +297,12 @@ public final class IsoWorldScene: SKScene {
         }
         appliedSeason = season
         guard changesLook else { return }
-        for (spec, node) in presentSprites {
+        for (coord, spec) in terrainSpecs {
             guard case let .terrain(kind, transition, object) = spec.kind,
                   Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil
             else { continue }
-            node.removeFromParent()
-            presentSprites.removeValue(forKey: spec)
-        }
-    }
-
-    private func reconcileSprites(with snapshot: WorldSnapshot) {
-        guard let (xRange, yRange) = Culling.visibleTileRange(
-            camera: snapshot.camera,
-            viewSize: size,
-            mapWidth: snapshot.mapWidth,
-            mapHeight: snapshot.mapHeight,
-            margin: Culling.screenMargin
-        )
-        else { return }
-
-        if transitionMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) != true {
-            transitionMap = TerrainTransitionMap(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid)
-        }
-        if objectMap?.matches(width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid) == true {
-            objectMap?.update(occupancy: snapshot.occupiedTiles)
-        } else {
-            objectMap = TerrainObjectMap(
-                width: snapshot.mapWidth, height: snapshot.mapHeight, grid: snapshot.terrainGrid, occupancy: snapshot.occupiedTiles
-            )
-        }
-        let desired = SnapshotReconciler.desiredSprites(
-            in: snapshot,
-            xRange: xRange,
-            yRange: yRange,
-            transitions: transitionMap,
-            roadLinks: roadLinkCache.links(for: snapshot),
-            objects: objectMap,
-            onScreen: Culling.screenBounds(camera: snapshot.camera, viewSize: size)
-        )
-        let diff = SnapshotReconciler.diff(
-            previous: Set(presentSprites.keys),
-            current: desired
-        )
-        for spec in diff.removed {
-            if let node = presentSprites.removeValue(forKey: spec) {
-                node.removeFromParent()
-                if buildingNodes[spec.coord] === node { buildingNodes.removeValue(forKey: spec.coord) }
-            }
-        }
-        // Nodes at equal depth draw in child order. Adding them sorted by (depth, x), and placing a building
-        // before an equal-depth building already to its right, keeps that order the same however a pan or a
-        // launch brings them on screen: a wide sprite's shadow margin always falls under its right neighbour.
-        let added = diff.added.map { ($0, placedNode(for: $0)) }
-            .sorted { ($0.1.zPosition, $0.1.position.x) < ($1.1.zPosition, $1.1.position.x) }
-        for (spec, node) in added {
-            if case .building = spec.kind {
-                addBuildingInDrawOrder(node)
-            } else {
-                addChild(node)
-            }
-            presentSprites[spec] = node
-            if case .building = spec.kind, let sprite = node as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
-        }
-    }
-
-    /// Adds `node` after every building at its depth to its left and before every one to its right.
-    private func addBuildingInDrawOrder(_ node: SKNode) {
-        let rightNeighbours = buildingNodes.values.filter {
-            $0.parent === self && $0.zPosition == node.zPosition && $0.position.x > node.position.x
-        }
-        let firstToTheRight = rightNeighbours.compactMap { children.firstIndex(of: $0) }.min()
-        if let index = firstToTheRight {
-            insertChild(node, at: index)
-        } else {
-            addChild(node)
+            removeTerrain(at: coord)
+            staleTerrain.insert(coord)
         }
     }
 }

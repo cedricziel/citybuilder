@@ -57,10 +57,9 @@ public struct SpriteSpec: Hashable, Sendable {
     }
 }
 
-/// Snapshot-driven scene reconciliation. Given two snapshots and a visible
-/// tile range, returns three sets: sprite specs to add, to remove, and to
-/// update. The scene mutates only those nodes, leaving everything else in
-/// place. Per spec rendering-2_5d "Snapshot-driven rendering".
+/// The sprite specs a snapshot calls for. The scene asks for single tiles and for the buildings
+/// (`terrainSprite`, `buildingSprites`); `desiredSprites` builds a whole range at once. Per spec
+/// rendering-2_5d "Snapshot-driven rendering".
 public enum SnapshotReconciler {
     /// Build the desired sprite set for one snapshot inside the visible
     /// range. Pure function.
@@ -80,21 +79,40 @@ public enum SnapshotReconciler {
         for tileY in yRange {
             for tileX in xRange {
                 let coord = TileCoordinate(x: tileX, y: tileY)
-                guard let terrainHere = snapshot.terrain(at: coord),
-                      onScreen.map({ $0.contains(IsoMath.screenPoint(forTile: coord)) }) ?? true
+                guard onScreen.map({ $0.contains(IsoMath.screenPoint(forTile: coord)) }) ?? true,
+                      let spec = terrainSprite(at: coord, in: snapshot, transitions: transitions, objects: objects)
                 else { continue }
-                let transition = transitions.map { $0.transition(at: coord) }
-                    ?? TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
-                result.insert(SpriteSpec(
-                    coord: coord,
-                    kind: .terrain(terrainHere, transition: transition, object: objects?.object(at: coord))
-                ))
+                result.insert(spec)
             }
         }
+        result.formUnion(buildingSprites(in: snapshot, xRange: xRange, yRange: yRange, roadLinks: roadLinks))
+        return result
+    }
+
+    /// The terrain sprite for one tile, nil off the map. Without `transitions` the tile's transition
+    /// is worked out on the spot.
+    static func terrainSprite(
+        at coord: TileCoordinate,
+        in snapshot: WorldSnapshot,
+        transitions: TerrainTransitionMap?,
+        objects: TerrainObjectMap?
+    ) -> SpriteSpec? {
+        guard let terrainHere = snapshot.terrain(at: coord) else { return nil }
+        let transition = transitions.map { $0.transition(at: coord) }
+            ?? TerrainCorners.transition(at: coord, terrain: snapshot.terrain(at:))
+        return SpriteSpec(coord: coord, kind: .terrain(terrainHere, transition: transition, object: objects?.object(at: coord)))
+    }
+
+    /// One sprite per building whose anchor lies in the range. Multi-tile buildings draw as a single
+    /// visual unit so the "four pillars" artefact goes away.
+    static func buildingSprites(
+        in snapshot: WorldSnapshot,
+        xRange: ClosedRange<Int>,
+        yRange: ClosedRange<Int>,
+        roadLinks: [TileCoordinate: RoadLink]?
+    ) -> Set<SpriteSpec> {
         let roadLinks = roadLinks ?? RoadLinks.links(in: snapshot)
-        // Emit one sprite per building (at its anchor) when its anchor is
-        // inside the visible range. Multi-tile buildings draw as a single
-        // visual unit so the "four pillars" artefact goes away.
+        var result = Set<SpriteSpec>()
         for building in snapshot.buildings.values where xRange.contains(building.anchor.x) && yRange.contains(building.anchor.y) {
             let spec = BuildingCatalog.spec(for: building.kind)
             let frameIndex: Int? = constructionFrameIndex(for: building, spec: spec)
