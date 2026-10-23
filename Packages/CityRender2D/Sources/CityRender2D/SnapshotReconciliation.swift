@@ -147,18 +147,6 @@ public enum SnapshotReconciler {
         return result
     }
 
-    /// Difference between two desired sets: which specs to add, which to
-    /// remove. Specs that exist in both sets are left in place.
-    public struct Diff: Equatable, Sendable {
-        public let added: Set<SpriteSpec>
-        public let removed: Set<SpriteSpec>
-
-        public init(added: Set<SpriteSpec>, removed: Set<SpriteSpec>) {
-            self.added = added
-            self.removed = removed
-        }
-    }
-
     /// Scaffold-stage index for a constructing building, or nil for any
     /// other state. Factored out of `desiredSprites` so the formatting
     /// stays clean and the helper is unit-testable in isolation.
@@ -173,16 +161,6 @@ public enum SnapshotReconciler {
             ticksSincePlacement: building.ticksSincePlacement,
             duration: spec.buildDurationTicks,
             frameCount: entry.frameCount
-        )
-    }
-
-    public static func diff(
-        previous: Set<SpriteSpec>,
-        current: Set<SpriteSpec>
-    ) -> Diff {
-        Diff(
-            added: current.subtracting(previous),
-            removed: previous.subtracting(current)
         )
     }
 }

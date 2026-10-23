@@ -52,18 +52,7 @@ extension IsoWorldScene {
     }
 
     private func reconcileTerrain(in view: VisibleTiles, with snapshot: WorldSnapshot) {
-        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
-        var redrawAll = false
-        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
-            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
-            redrawAll = true
-        }
-        if objectMap?.matches(width: width, height: height, grid: grid) == true {
-            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
-        } else {
-            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
-            redrawAll = true
-        }
+        let redrawAll = refreshTerrainMaps(for: snapshot)
         guard redrawAll || view != shownTiles || !staleTerrain.isEmpty else { return }
         spriteReconcileCounts.terrainPasses += 1
         for coord in shownTiles?.tiles(notIn: view) ?? [] {
@@ -102,7 +91,7 @@ extension IsoWorldScene {
         shownBuildingInputs = inputs
         spriteReconcileCounts.buildingPasses += 1
         let desired = SnapshotReconciler.buildingSprites(
-            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinkCache.links(for: snapshot)
+            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinks(for: snapshot)
         )
         for spec in buildingSpecs.subtracting(desired) {
             guard let node = presentSprites.removeValue(forKey: spec) else { continue }
