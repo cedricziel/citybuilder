@@ -72,7 +72,10 @@ public struct RenderJob {
                 let image = try Renderer.image(scene, cell: recipe.cell, scale: scale)
                 if Renderer.hasVisiblePixel(image) { found = image }
             }
-            guard let found else { return [] }
+            guard let found else {
+                print("warning: \(recipe.id) is meant to light up at night but shows no window, so it gets no lights")
+                return []
+            }
             variants.append(("\(recipe.id)-lights-\(variant)", found))
         }
         return variants

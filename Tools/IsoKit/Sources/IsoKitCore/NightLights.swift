@@ -40,6 +40,11 @@ public enum NightLights {
         return lit
     }
 
+    /// The recipes meant to light up at night that have no window pane at all, so they never will.
+    public static func withoutPanes(_ recipes: [Recipe]) -> [String] {
+        recipes.filter { Recipes.lit.contains($0.id) && $0.lightsScene(variant: 0) == nil }.map(\.id)
+    }
+
     /// A stable 64-bit FNV-1a hash, so a recipe's evenings never change between runs or machines.
     static func seed(_ text: String) -> UInt64 {
         text.utf8.reduce(14_695_981_039_346_656_037) { ($0 ^ UInt64($1)) &* 1_099_511_628_211 }

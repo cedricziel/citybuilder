@@ -75,4 +75,13 @@ struct NightLightsTests {
         #expect(ground > top * 3)
         #expect(top > 0)
     }
+
+    @Test("isokit check names a building meant to light up that has no window")
+    func paneLessLitBuildingIsNamed() {
+        let blind = Recipe(id: "building-bakery", cell: SpriteCell(footprint: 1, heightPx: 64)) { kit, _ in
+            kit.block(SCNVector3(1, 0, 1), SCNVector3(3, 2, 3), .planks)
+        }
+        #expect(NightLights.withoutPanes([blind]) == ["building-bakery"])
+        #expect(NightLights.withoutPanes(Recipes.all).isEmpty)
+    }
 }
