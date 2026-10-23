@@ -18,7 +18,7 @@ from pathlib import Path
 
 from art import roads, terrain_objects, terrain_tiles
 
-SPRITE_LINE = re.compile(r"^- `([a-z0-9-]+)`", re.MULTILINE)
+SPRITE_LINE = re.compile(r"^- `([a-z0-9-]+)`")  # the grammar IsoKit's `Catalog` and the gate read
 SOURCE_LINE = re.compile(r'^source\s*=\s*"([a-z]+)"', re.MULTILINE)
 
 
@@ -33,10 +33,29 @@ def drawable_names() -> set[str]:
     return {*terrain_tiles.sources(), *roads.sources(), *terrain_objects.names()}
 
 
-def sprites_section(text: str) -> str:
-    """The body of a brief's `## Sprites` section, or "" when it has none."""
-    match = re.search(r"^## Sprites\n(.*?)(?=^## |\Z)", text, re.MULTILINE | re.DOTALL)
-    return match.group(1) if match else ""
+class UnreadableBrief(ValueError):
+    """A brief whose `## Sprites` list cannot be read."""
+
+
+def sprite_names(text: str, brief: str) -> list[str]:
+    """The names in a brief's `## Sprites` section, in order. A brief with no Sprites section, an empty
+    one, or a name outside `[a-z0-9-]` is an error, so no brief's sprites drop out unnoticed."""
+    lines = [line.strip() for line in text.splitlines()]
+    if "## Sprites" not in lines:
+        raise UnreadableBrief(f"{brief}: no `## Sprites` section")
+    names = []
+    for line in lines[lines.index("## Sprites") + 1 :]:
+        if line.startswith("## "):
+            break
+        if not line.startswith("- "):
+            continue
+        match = SPRITE_LINE.match(line)
+        if not match:
+            raise UnreadableBrief(f"{brief}: sprite line is not `- `name``: {line}")
+        names.append(match.group(1))
+    if not names:
+        raise UnreadableBrief(f"{brief}: its Sprites section lists no sprite")
+    return names
 
 
 def svg_entry_names(catalog: Path) -> list[str]:
@@ -47,7 +66,7 @@ def svg_entry_names(catalog: Path) -> list[str]:
         front = text.split("---")[1] if text.startswith("---") else ""
         match = SOURCE_LINE.search(front)
         if match and match.group(1) == "svg":
-            names += SPRITE_LINE.findall(sprites_section(text)) or [md.stem]
+            names += sprite_names(text, md.stem)
     return names
 
 

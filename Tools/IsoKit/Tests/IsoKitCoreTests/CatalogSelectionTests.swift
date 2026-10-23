@@ -30,10 +30,10 @@ struct CatalogSelectionTests {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("isokit-catalog-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
-        try "---\nsource = \"procedural\"\n---\n## Function\n".write(
+        try "---\nsource = \"procedural\"\n---\n## Function\n\n## Sprites\n\n- `building-bakery`\n".write(
             to: dir.appendingPathComponent("building-bakery.md"), atomically: true, encoding: .utf8
         )
-        try "---\nsource = \"isokit\"\n---\n## Function\n".write(
+        try "---\nsource = \"isokit\"\n---\n## Function\n\n## Sprites\n\n- `building-house`\n".write(
             to: dir.appendingPathComponent("building-house.md"), atomically: true, encoding: .utf8
         )
         let catalog = try Catalog.load(directory: dir)
@@ -61,11 +61,13 @@ struct CatalogSelectionTests {
             id: "building-sawmill", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 4,
             moving: MovingPart(name: "sails") { _, _ in }
         ) { _, _ in }
-        let agreeing = CatalogEntry(id: "building-sawmill", source: "isokit", recipeFacts: [
+        let agreeing = CatalogEntry(id: "building-sawmill", source: "isokit", spriteNames: sawmill.spriteNames, recipeFacts: [
             "Construction stages": "3", "Operational frames": "4", "Moving part": "sails, 4 frames, sweeps right"
         ])
         #expect(RecipeRegistry.mismatches(recipes: [sawmill], catalog: Catalog(entries: [agreeing])).isEmpty)
-        let stale = CatalogEntry(id: "building-sawmill", source: "isokit", recipeFacts: ["Operational frames": "2"])
+        let stale = CatalogEntry(
+            id: "building-sawmill", source: "isokit", spriteNames: sawmill.spriteNames, recipeFacts: ["Operational frames": "2"]
+        )
         #expect(RecipeRegistry.mismatches(recipes: [sawmill], catalog: Catalog(entries: [stale])) == [
             "building-sawmill: brief says Operational frames 2, recipe has 4",
             "building-sawmill: brief names moving part none, recipe has sails"
@@ -79,9 +81,15 @@ struct CatalogSelectionTests {
     }
 
     @Test("the Sprites section yields sprite names, and other sections do not")
-    func spriteNamesParsing() {
+    func spriteNamesParsing() throws {
         let text = "## Sprites\n\n- `building-house` — base\n- `building-house-constructing-0` — x\n\n## Recipe\n\n- `elsewhere`\n"
-        #expect(CatalogEntry.spriteNames(fromMarkdown: text) == ["building-house", "building-house-constructing-0"])
+        #expect(try CatalogEntry.spriteNames(fromMarkdown: text, id: "x") == ["building-house", "building-house-constructing-0"])
+        #expect(try CatalogEntry.spriteNames(fromMarkdown: "## Sprites  \r\n- `a-b`\r\n", id: "x") == ["a-b"])
+        #expect(throws: CatalogError.noSprites("x")) { try CatalogEntry.spriteNames(fromMarkdown: "## Recipe\n- `a`", id: "x") }
+        #expect(throws: CatalogError.noSprites("x")) { try CatalogEntry.spriteNames(fromMarkdown: "## Sprites\n\n## Recipe", id: "x") }
+        #expect(throws: CatalogError.badSpriteLine("x", "- `A B`")) {
+            try CatalogEntry.spriteNames(fromMarkdown: "## Sprites\n- `A B`", id: "x")
+        }
     }
 
     @Test("front matter source is read and defaults to empty")
@@ -109,5 +117,13 @@ struct CatalogSelectionTests {
             constructionFrames: 0, operationalFrames: 2, plot: nil, unit: true
         ) { _, _ in }
         #expect(recipe.spriteNames == ["ship-ne-0", "ship-ne-1"])
+    }
+
+    /// A brief that drops out of the catalog leaves its sprites unrendered and unchecked.
+    @Test("every committed brief lists its sprites")
+    func everyBriefListsItsSprites() throws {
+        let catalog = try Catalog.load(directory: RepoPaths.catalog)
+        #expect(catalog.entries.count > 90)
+        #expect(catalog.entries.filter(\.spriteNames.isEmpty).isEmpty)
     }
 }
