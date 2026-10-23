@@ -186,5 +186,5 @@ func failedTrackIsTriedAgain() {
     #expect(recorder.log == ["failed music/a.caf", "failed music/a.caf"], "no silent 60-second wait")
     recorder.failing = []
     director.tick(dt: 0.1)
-    #expect(recorder.log.last == "play music/a.caf 0.0")
+    #expect(recorder.log.last == "play music/a.caf 3.0", "the retry keeps the crossfade it was asked for")
 }

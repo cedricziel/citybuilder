@@ -30,6 +30,8 @@ public final class MusicDirector {
     private var clock = 0.0
     private var current: (path: String, endsAt: Double)?
     private var nextStartAt: Double? = 0
+    /// The fade the next start uses: a retried crossfade keeps its fade.
+    private var nextFade = 0.0
 
     init(
         section: Bindings.MusicSection?,
@@ -79,7 +81,7 @@ public final class MusicDirector {
             nextStartAt = clock + (repeatsTitle ? 0 : playlist.gapSecondsBetweenTracks)
         }
         if current == nil, let startAt = nextStartAt, clock >= startAt {
-            start(fade: 0)
+            start(fade: nextFade)
         }
     }
 
@@ -97,10 +99,13 @@ public final class MusicDirector {
         // The title theme loops in the player, gaplessly; game tracks play once.
         let loops = repeatsTitle
         guard play(path, fade, loops) else {
-            // Nothing is playing, so don't wait out the track: try again next tick.
+            // Nothing is playing, so don't wait out the track: try again next
+            // tick, with the same fade, so a failed crossfade still fades in.
             nextStartAt = clock
+            nextFade = fade
             return
         }
+        nextFade = 0
         current = (path, loops ? .infinity : clock + (duration(path) ?? Self.fallbackDuration))
         nextStartAt = nil
     }

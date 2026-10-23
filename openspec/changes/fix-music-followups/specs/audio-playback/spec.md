@@ -2,7 +2,7 @@
 
 ### Requirement: Music keeps real time and loops its title theme
 
-The audio layer SHALL advance the music director and the ambient scene by the wall-clock time measured between timer firings, and the timer SHALL fire in the common run-loop modes, so menus and scrolling don't stall the music. The title theme SHALL play as a looping voice that the director starts once. Returning to the title SHALL clear the director's season. A track that fails to play (its file won't load, or the engine won't start) MUST NOT count as playing: the director SHALL try again on the next tick.
+The audio layer SHALL advance the music director and the ambient scene by the wall-clock time measured between timer firings, and the timer SHALL fire in the common run-loop modes, so menus and scrolling don't stall the music. The title theme SHALL play as a looping voice that the director starts once. Returning to the title SHALL clear the director's season. A track that fails to play (its file won't load, or the engine won't start) MUST NOT count as playing: the director SHALL try again on the next tick, with the fade it was asked for.
 
 #### Scenario: The title theme loops without a restart
 - **WHEN** a 20-second title theme has played for a minute
@@ -18,4 +18,4 @@ The audio layer SHALL advance the music director and the ambient scene by the wa
 
 #### Scenario: A track that fails to play is tried again
 - **WHEN** a game track fails to play
-- **THEN** the director does not wait out its length, and tries again on the next tick
+- **THEN** the director does not wait out its length, and tries again on the next tick with the same fade
