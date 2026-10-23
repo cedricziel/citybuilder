@@ -124,18 +124,23 @@ extension IsoWorldScene {
     }
 
     /// Nodes at equal depth draw in child order, and side-by-side buildings overlap where a wide sprite's
-    /// shadow margin meets its neighbour. Each building goes after every equal-depth building to its left
-    /// and before every one to its right, so the order is left to right however the buildings come on
-    /// screen: in one pass, across pans, or one at a time as they change.
+    /// shadow margin meets its neighbour. Buildings live in `buildingLayer`, whose children stay sorted by
+    /// depth, then left to right, so the order holds however the buildings come on screen: in one pass,
+    /// across pans, or one at a time as they change. A binary search finds each new building's place.
     private func addBuildingInDrawOrder(_ node: SKNode) {
-        let rightNeighbours = buildingNodes.values.filter {
-            $0.parent === self && $0.zPosition == node.zPosition && $0.position.x > node.position.x
+        if buildingLayer.parent == nil { addChild(buildingLayer) }
+        let siblings = buildingLayer.children
+        let key = (node.zPosition, node.position.x)
+        var low = 0, high = siblings.count
+        while low < high {
+            let mid = (low + high) / 2
+            if (siblings[mid].zPosition, siblings[mid].position.x) <= key {
+                low = mid + 1
+            } else {
+                high = mid
+            }
         }
-        if let index = rightNeighbours.compactMap({ children.firstIndex(of: $0) }).min() {
-            insertChild(node, at: index)
-        } else {
-            addChild(node)
-        }
+        buildingLayer.insertChild(node, at: low)
     }
 
     @discardableResult

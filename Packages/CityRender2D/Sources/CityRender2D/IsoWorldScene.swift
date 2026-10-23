@@ -90,6 +90,9 @@ public final class IsoWorldScene: SKScene {
     let ambientLayer = AmbientLayerNode()
     var lastAmbientPass: AmbientPass?
     var smokeSources: [SmokeSource] = []
+    /// Every building sprite, its children sorted by depth and then left to right, at z 0 so each
+    /// building's global depth stays its own `zPosition`.
+    let buildingLayer = SKNode()
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Sheep, cows and hens. Spec: `rendering-2_5d` / Animals graze by the
