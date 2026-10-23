@@ -22,7 +22,8 @@ extension CityRootView {
                             hud: session.hud,
                             layout: layout,
                             maxWidth: MinimapLayout.trayColumnWidth(
-                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap
+                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap,
+                                showsFirstSteps: firstStepsGuide != nil
                             )
                         )
                         SessionBannerView(
@@ -43,6 +44,7 @@ extension CityRootView {
                                 .panelTransition(.fade)
                         }
                     }
+                    .tvFocusSection()
                     .panelAnimation(value: firstStepsGuide == nil)
                 }
                 .padding(.leading, railInset)

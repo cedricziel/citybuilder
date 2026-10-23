@@ -188,9 +188,11 @@ public final class GameSession {
     /// The deficit hint while it shows; the simulation waits for the
     /// player to dismiss it (`deficit-hint` D1).
     public internal(set) var deficitHint: SessionBanner?
-    /// The player hid the first-hour guide, or met every step at once,
-    /// this session (`first-hour-guidance` D2).
+    /// The player hid the first-hour guide, or met every step, this
+    /// session (`first-hour-guidance` D2).
     var isFirstStepsDismissed = false
+    /// First steps met so far this session; a met step stays met.
+    var firstStepsMet: Set<FirstStepsGuide.Step> = []
     /// The first-hour guide while it shows, refreshed every tick.
     var firstStepsGuide: FirstStepsGuide?
     public var isWinSheetPresented = false
