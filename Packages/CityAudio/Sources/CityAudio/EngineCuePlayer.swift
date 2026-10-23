@@ -23,6 +23,12 @@ public final class EngineCuePlayer {
     private var nextPoolIndex: [AudioBus: Int] = [:]
     /// When each pooled node's cue ends, so a new one-shot doesn't cut it off.
     private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
+    /// The engine run each pooled node was started in. A node keeps playing between cues, but the
+    /// engine stopping stops it while `isPlaying` stays true.
+    private var poolStartedIn: [ObjectIdentifier: Int] = [:]
+    /// Starts a stopped pool node. `AVAudioPlayerNode.play()` waits for the engine's next I/O
+    /// cycle, so it must not run on the main thread, where the simulation steps (#191).
+    let startNode: (AVAudioPlayerNode) -> Void
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
     /// Music tracks playing once, by path.
@@ -32,9 +38,14 @@ public final class EngineCuePlayer {
         self.makeVoice(for: dispatched)
     }
 
-    public init(engine: AudioEngine, bundle: Bundle = .main, oneShotPoolSize: Int = 4) {
+    public convenience init(engine: AudioEngine, bundle: Bundle = .main, oneShotPoolSize: Int = 4) {
+        self.init(engine: engine, bundle: bundle, oneShotPoolSize: oneShotPoolSize, startNode: Self.startOffMain)
+    }
+
+    init(engine: AudioEngine, bundle: Bundle, oneShotPoolSize: Int, startNode: @escaping (AVAudioPlayerNode) -> Void) {
         self.engine = engine
         self.bundle = bundle
+        self.startNode = startNode
         for bus in AudioBus.allCases {
             var nodes: [AVAudioPlayerNode] = []
             for _ in 0 ..< oneShotPoolSize {
@@ -138,8 +149,10 @@ public final class EngineCuePlayer {
         engine.underlyingEngine.detach(player)
     }
 
+    /// Plays a one-shot on a pooled node. A free node still running from an earlier cue only gets
+    /// the file scheduled; any other node is stopped, scheduled and started again.
     private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let player = nextOneShotPlayer(on: cue.bus, file: file) else { return }
+        guard let (player, wasFree) = nextOneShotPlayer(on: cue.bus, file: file) else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
@@ -148,10 +161,24 @@ public final class EngineCuePlayer {
         if let volume = cue.volume {
             player.volume = volume
         }
-        player.stop()
+        let running = player.isPlaying && poolStartedIn[ObjectIdentifier(player)] == engine.runCount
+        let restarts = !(running && wasFree)
+        if restarts {
+            player.stop()
+        }
         player.scheduleFile(file, at: nil, completionHandler: nil)
-        player.play()
+        guard restarts else { return }
+        poolStartedIn[ObjectIdentifier(player)] = engine.runCount
+        startNode(player)
     }
+
+    /// Starts a node on a serial queue, so the wait for the I/O cycle never blocks the caller.
+    nonisolated static func startOffMain(_ node: AVAudioPlayerNode) {
+        nonisolated(unsafe) let node = node
+        startQueue.async { node.play() }
+    }
+
+    private nonisolated static let startQueue = DispatchQueue(label: "citybuilder.audio.one-shot-start", qos: .userInteractive)
 
     private func playLoop(dispatched: DispatchedCue, file: AVAudioFile) {
         let cue = dispatched.cue
@@ -260,15 +287,22 @@ public final class EngineCuePlayer {
         }
     }
 
-    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> AVAudioPlayerNode? {
+    /// The pooled node for the next one-shot on `bus`, and whether its last cue had ended.
+    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> (AVAudioPlayerNode, Bool)? {
         guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
         let now = ProcessInfo.processInfo.systemUptime
         let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
+        let wasFree = slots[index].endsAt <= now
         let seconds = Double(file.length) / file.processingFormat.sampleRate
         slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
         poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count
-        return nodes[index]
+        return (nodes[index], wasFree)
+    }
+
+    /// The pool nodes on `bus`, for tests.
+    func oneShotNodes(on bus: AudioBus) -> [AVAudioPlayerNode] {
+        oneShotPool[bus] ?? []
     }
 
     private func loadFile(at path: String) -> AVAudioFile? {
