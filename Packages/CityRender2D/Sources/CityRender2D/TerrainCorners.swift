@@ -72,10 +72,7 @@ public enum TerrainCorners {
     }
 
     static func blendClass(_ kind: TerrainType) -> TerrainType {
-        switch kind {
-        case .forest, .mountain: .grass
-        default: kind
-        }
+        TerrainObject.kinds.contains(kind) ? .grass : kind
     }
 }
 
