@@ -74,7 +74,7 @@ public final class IsoWorldScene: SKScene {
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
-    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
     /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire

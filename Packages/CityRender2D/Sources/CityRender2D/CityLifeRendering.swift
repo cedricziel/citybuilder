@@ -27,14 +27,18 @@ extension IsoWorldScene {
     /// brightening as night falls. Spec: `rendering-2_5d` / Lit windows
     /// follow the lights art.
     func updateWindowGlow(with snapshot: WorldSnapshot) {
-        let glow = CGFloat(TimeOfDay(tick: snapshot.tickCount).darkness / TimeOfDay.nightDarkness)
+        let time = TimeOfDay(tick: snapshot.tickCount)
+        let glow = CGFloat(time.darkness / TimeOfDay.nightDarkness) * WindowLights.strength
         for (spec, node) in presentSprites {
             guard case let .building(kind, state, _, _, _, _, _, _, _, _) = spec.kind,
                   state == .operational, kind != .road, let sprite = node as? SKSpriteNode
             else { continue }
-            let lights = lightsTextureName(for: sprite, kind: kind)
+            let id = snapshot.occupiedTiles[spec.coord]
+            let lights = lightsTextureName(for: sprite, kind: kind, id: id)
             guard kind == .house || lights != nil else { continue }
-            let target = isLit(kind: kind, at: spec.coord, in: snapshot) ? glow : 0
+            // Late at night most houses go to bed; workshops keep working.
+            let awake = kind == .house ? 1 - (id.map { WindowLights.sleepiness(of: $0, at: time) } ?? 0) : 1
+            let target = isLit(kind: kind, at: spec.coord, in: snapshot) ? glow * awake : 0
             if let existing = node.childNode(withName: Self.windowGlowNodeName) {
                 existing.alpha = target
             } else if target > 0 {
@@ -54,13 +58,14 @@ extension IsoWorldScene {
         return building.owner != .player || snapshot.buildingIssues[id] == nil
     }
 
-    /// `<sprite stem>-lights` when the atlas has it, remembered per stem.
-    private func lightsTextureName(for sprite: SKSpriteNode, kind: BuildingKind) -> String? {
+    /// This building's `<sprite stem>-lights-<n>`, else `<sprite stem>-lights`, when the atlas has it,
+    /// remembered per name tried.
+    private func lightsTextureName(for sprite: SKSpriteNode, kind: BuildingKind, id: EntityID?) -> String? {
         let stem = (sprite.userData?[Self.textureNameKey] as? String).map(TextureFiltering.stem(of:)) ?? "building-\(kind.rawValue)"
-        if let known = lightsNames[stem] { return known }
-        let name = "\(stem)-lights"
-        let found = hasSprite(name) ? name : nil
-        lightsNames[stem] = .some(found)
+        let candidates = WindowLights.candidates(stem: stem, id: id)
+        if let known = lightsNames[candidates[0]] { return known }
+        let found = candidates.first(where: hasSprite)
+        lightsNames[candidates[0]] = .some(found)
         return found
     }
 

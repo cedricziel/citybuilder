@@ -64,8 +64,12 @@ public enum TextureFiltering {
     /// A season ends a stem (`terrain-grass-autumn`) unless it follows a transition mask.
     public static func stem(of spriteName: String) -> String {
         var parts = spriteName.split(separator: "-").map(String.init)
-        // A building's night lights (`building-bakery-lights`) belong with the building.
-        if parts.count > 2, parts.last == "lights" { parts.removeLast() }
+        // A building's night lights (`building-bakery-lights`, `building-bakery-lights-2`) belong with the building.
+        if parts.count > 3, parts[parts.count - 2] == "lights", parts[parts.count - 1].allSatisfy(\.isNumber) {
+            parts.removeLast(2)
+        } else if parts.count > 2, parts.last == "lights" {
+            parts.removeLast()
+        }
         if parts.count > 2, ["autumn", "winter"].contains(parts[parts.count - 1]), isMask(parts[parts.count - 2]) {
             parts.removeLast()
         }

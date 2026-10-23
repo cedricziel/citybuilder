@@ -86,7 +86,32 @@ func glowLeavesWhenTheForgeGoesCold() {
 func scenarioLightsMaskReplacesThePanes() throws {
     let (_, node) = render(town(.house, tick: 780, residents: 4)) { $0 == "building-house-lights" }
     let glow = try #require(node?.childNode(withName: IsoWorldScene.windowGlowNodeName) as? SKSpriteNode)
-    #expect(glow.blendMode == .add && abs(glow.alpha - 1) < 0.001 && glow.children.isEmpty)
+    #expect(glow.blendMode == .add && abs(glow.alpha - WindowLights.strength) < 0.001 && glow.children.isEmpty)
+}
+
+@MainActor
+@Test("scenario: each house shows its own evening")
+func houseShowsItsOwnVariant() {
+    let variant = "building-house-lights-\(WindowLights.variant(for: EntityID(raw: 1)))"
+    let (scene, node) = render(town(.house, tick: 780, residents: 4)) { $0 == variant || $0 == "building-house-lights" }
+    #expect(node?.childNode(withName: IsoWorldScene.windowGlowNodeName) is SKSpriteNode)
+    #expect(scene.lightsNames[variant] == .some(variant))
+    let (single, _) = render(town(.house, tick: 780, residents: 4)) { $0 == "building-house-lights" }
+    #expect(single.lightsNames[variant] == .some("building-house-lights"))
+}
+
+@MainActor
+@Test("scenario: late at night most houses go to bed")
+func lateNightHousesGoToBed() {
+    // Tick 930 is 3 AM.
+    let time = TimeOfDay(tick: 930)
+    let expected = WindowLights.strength * CGFloat(time.darkness / TimeOfDay.nightDarkness)
+        * (1 - WindowLights.sleepiness(of: EntityID(raw: 1), at: time))
+    let (_, house) = render(town(.house, tick: 930, residents: 4)) { $0.hasPrefix("building-house-lights") }
+    #expect(abs((house?.childNode(withName: IsoWorldScene.windowGlowNodeName)?.alpha ?? 0) - expected) < 0.001)
+    let (_, bakery) = render(town(.bakery, tick: 930)) { $0.hasPrefix("building-bakery-lights") }
+    let lit = bakery?.childNode(withName: IsoWorldScene.windowGlowNodeName)?.alpha ?? 0
+    #expect(abs(lit - WindowLights.strength * CGFloat(time.darkness / TimeOfDay.nightDarkness)) < 0.001)
 }
 
 @MainActor
