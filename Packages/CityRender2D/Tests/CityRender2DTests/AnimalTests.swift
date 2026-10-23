@@ -208,16 +208,19 @@ func scenarioAnimalsStayInBudget() {
 func budgetGoesToTheFarmsNearestTheCamera() {
     // 40 farms, more sheep than the budget, all in view.
     let farms = (0 ..< 40).map { farm(UInt32(100 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
-    let homes = { (animals: [AnimalPlanner.Animal]) in Set(animals.map(\.home)) }
-    for center in [(x: 2.0, y: 1.0), (x: 36.0, y: 29.0), (x: 20.0, y: 15.0)] {
+    for center in [(x: 35.0, y: 28.0), (x: 0.0, y: 0.0), (x: 20.0, y: 14.0)] {
         let animals = plan(farmland(farms, tick: 180, center: center))
+        let herded = Set(animals.map(\.home))
         #expect(animals.count <= AnimalPlanner.maxHerd)
-        // Every farm within 8 tiles of the camera centre keeps its herd.
-        for farm in farms {
-            let dx = Double(farm.anchor.x) - center.x, dy = Double(farm.anchor.y) - center.y
-            guard dx * dx + dy * dy <= 64 else { continue }
-            #expect(homes(animals).contains(farm.id), "farm \(farm.id.raw) near \(center) has no animals")
+        // Farms get animals by distance from the camera centre until the budget is full.
+        let byDistance = farms.sorted {
+            let lhs = pow(Double($0.anchor.x) - center.x, 2) + pow(Double($0.anchor.y) - center.y, 2)
+            let rhs = pow(Double($1.anchor.x) - center.x, 2) + pow(Double($1.anchor.y) - center.y, 2)
+            return (lhs, $0.id.raw) < (rhs, $1.id.raw)
         }
+        #expect(herded.contains(byDistance[0].id), "the farm under the camera at \(center) has no animals")
+        let served = byDistance.prefix { herded.contains($0.id) }.count
+        #expect(served == herded.count, "a farm at \(center) has animals while a nearer one has none")
     }
 }
 

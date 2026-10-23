@@ -18,7 +18,7 @@ Each operational farm SHALL keep 2â€“4 sheep and each operational grain farm 1â€
 
 #### Scenario: Panning to a farm gives it animals
 - **WHEN** more farms are in view than the herd budget covers, and the camera centres on one of them
-- **THEN** that farm and every farm within 8 tiles of the camera centre show their animals
+- **THEN** eligible farms get animals in order of distance from the camera centre until the budget is full: the farm under the camera has its animals, and no farm has animals while a nearer one has none
 
 ### Requirement: Hens peck by the houses
 
