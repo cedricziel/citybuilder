@@ -25,6 +25,8 @@ public final class AudioEngine: @unchecked Sendable {
     private var spatialEnabled: Bool
     /// The system stops the engine when the output hardware changes (#206).
     private var configurationObserver: NSObjectProtocol?
+    /// The queue every player node call runs on.
+    let nodes = AudioNodeQueue()
 
     /// Default reference distance (in tiles) for spatial attenuation —
     /// sources within this radius play at full volume. Spec D5.

@@ -24,3 +24,31 @@ func changeConfiguration(of engine: AudioEngine) {
     engine.underlyingEngine.stop()
     NotificationCenter.default.post(name: .AVAudioEngineConfigurationChange, object: engine.underlyingEngine)
 }
+
+/// The steps taken on player nodes, with the node and the thread each ran on.
+final class NodeTrace: @unchecked Sendable {
+    private let lock = NSLock()
+    private struct Entry {
+        let node: ObjectIdentifier
+        let step: AudioNodeQueue.Step
+        let onMain: Bool
+    }
+
+    private var entries: [Entry] = []
+
+    func record(_ node: ObjectIdentifier, _ step: AudioNodeQueue.Step) {
+        lock.withLock { entries.append(Entry(node: node, step: step, onMain: Thread.isMainThread)) }
+    }
+
+    var steps: [AudioNodeQueue.Step] {
+        lock.withLock { entries.map(\.step) }
+    }
+
+    var nodes: [ObjectIdentifier] {
+        lock.withLock { entries.map(\.node) }
+    }
+
+    var anyOnMain: Bool {
+        lock.withLock { entries.contains(where: \.onMain) }
+    }
+}
