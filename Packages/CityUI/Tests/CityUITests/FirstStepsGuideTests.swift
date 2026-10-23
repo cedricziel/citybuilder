@@ -270,7 +270,7 @@ func marketStepNamesThePlatformGesture() {
 
 @MainActor
 @Test("scenario: caption warns about food")
-func scenarioCaptionWarnsAboutFood() {
+func scenarioCaptionWarnsAboutFood() throws {
     let session = GameSession(world: town([]))
     session.selectTool(.place(.house))
     #expect(session.armedGuideWarning(idiom: .pad) == "No farm yet: residents need food")
@@ -279,6 +279,12 @@ func scenarioCaptionWarnsAboutFood() {
     let fed = GameSession(world: town([.farm]))
     fed.selectTool(.place(.house))
     #expect(fed.armedGuideWarning(idiom: .pad) == nil)
+    // The farm step stays met, but the warning follows the farms standing now.
+    let farm = try #require(fed.world.buildings.values.first { $0.kind == .farm }?.id)
+    fed.world.buildings[farm] = nil
+    fed.refreshFirstSteps()
+    #expect(fed.firstStepsGuide?.met.contains(.farm) == true)
+    #expect(fed.armedGuideWarning(idiom: .pad) == "No farm yet: residents need food")
 }
 
 @MainActor

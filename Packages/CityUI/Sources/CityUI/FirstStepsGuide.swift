@@ -120,8 +120,13 @@ extension GameSession {
     /// shows, with the upkeep it would pay at its candidate site. Spec:
     /// `platform-shells` / Tool strip warns while the guide shows.
     func armedGuideWarning(idiom: HUDIdiom) -> String? {
-        guard case let .place(kind) = selectedTool, let guide = firstStepsGuide else { return nil }
-        if kind == .house, !guide.met.contains(.farm) { return "No farm yet: residents need food" }
+        guard case let .place(kind) = selectedTool, firstStepsGuide != nil else { return nil }
+        // The farm step latches, so read the farms standing now: a
+        // demolished farm brings the warning back.
+        let hasFarm = world.buildings.values.contains {
+            $0.owner == .player && $0.kind == .farm && $0.state == .operational
+        }
+        if kind == .house, !hasFarm { return "No farm yet: residents need food" }
         let upkeep = world.upkeepPerCollection(of: kind, at: armedCandidateSite(idiom: idiom)?.anchor)
         return upkeep > 0 ? "Upkeep \(FirstStepsLedger.money(upkeep)) per collection" : nil
     }
