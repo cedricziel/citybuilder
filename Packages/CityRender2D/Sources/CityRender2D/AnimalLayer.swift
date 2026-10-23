@@ -2,10 +2,7 @@ import CityCore
 import CoreGraphics
 import SpriteKit
 
-struct AnimalKey: Hashable {
-    let home: EntityID
-    let slot: Int
-}
+typealias AnimalKey = AnimalPlanner.Key
 
 struct AnimalPose: Equatable {
     let action: SpriteAtlas.AnimalAction
@@ -75,10 +72,11 @@ extension IsoWorldScene {
         let clock = ambientClock(for: snapshot)
         let animals = range.map { visible in
             AnimalPlanner.animals(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: clock,
+                in: snapshot, visible: (visible.xRange, visible.yRange), clock: clock,
                 ground: AnimalPlanner.Ground(
                     isFreeGrass: { self.isFreeGrass($0, in: snapshot) }, isYard: { self.isYard($0, in: snapshot) }
-                )
+                ),
+                tours: &animalTours
             )
         } ?? []
         let keys = Set(animals.map { AnimalKey(home: $0.home, slot: $0.slot) })

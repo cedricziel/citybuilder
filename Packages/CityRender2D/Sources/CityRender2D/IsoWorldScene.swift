@@ -101,6 +101,9 @@ public final class IsoWorldScene: SKScene {
     /// Each gather site's current trip, kept from tick to tick so its worker
     /// never jumps when the catchment changes.
     var gatherTrips: [EntityID: GatherWorkerPlanner.Trip] = [:]
+    /// Each animal's round, kept from tick to tick so it never jumps when
+    /// its pasture or yard is built on.
+    var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
