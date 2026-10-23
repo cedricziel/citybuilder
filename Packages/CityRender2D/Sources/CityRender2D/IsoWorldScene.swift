@@ -34,11 +34,11 @@ public final class IsoWorldScene: SKScene {
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
-    var transitionMap: TerrainTransitionMap?
+    private(set) var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
-    var objectMap: TerrainObjectMap?
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
-    var roadLinkCache = RoadLinkCache()
+    private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
     var shownTiles: VisibleTiles?
@@ -290,6 +290,29 @@ public final class IsoWorldScene: SKScene {
         shownTiles = nil
         buildingSpecs.removeAll()
         shownBuildingInputs = nil
+    }
+
+    /// Brings the terrain caches in line with the snapshot. Returns true when the grid changed, so
+    /// any tile may look different; tiles whose object alone changed join `staleTerrain`.
+    func refreshTerrainMaps(for snapshot: WorldSnapshot) -> Bool {
+        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
+        var gridChanged = false
+        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
+            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
+            gridChanged = true
+        }
+        if objectMap?.matches(width: width, height: height, grid: grid) == true {
+            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
+        } else {
+            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
+            gridChanged = true
+        }
+        return gridChanged
+    }
+
+    /// Each operational road's link to its neighbours, from the cache.
+    func roadLinks(for snapshot: WorldSnapshot) -> [TileCoordinate: RoadLink] {
+        roadLinkCache.links(for: snapshot)
     }
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a
