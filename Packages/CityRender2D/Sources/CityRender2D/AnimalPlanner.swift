@@ -86,9 +86,18 @@ public enum AnimalPlanner {
             (xRange.lowerBound - pad ... xRange.upperBound + pad).contains(anchor.x)
                 && (yRange.lowerBound - pad ... yRange.upperBound + pad).contains(anchor.y)
         }
+        // The budget goes to the homes nearest the camera centre, so panning
+        // to a farm gives it animals and those on screen keep theirs.
+        let camera = snapshot.camera
+        let distance = { (home: Building) -> Double in
+            let dx = Double(home.anchor.x) - camera.centerX, dy = Double(home.anchor.y) - camera.centerY
+            return dx * dx + dy * dy
+        }
         let homes = snapshot.buildings.values
             .filter { [.farm, .grainFarm, .house].contains($0.kind) && $0.state == .operational }
-            .sorted { $0.id.raw < $1.id.raw }
+            .map { (home: $0, distance: distance($0)) }
+            .sorted { ($0.distance, $0.home.id.raw) < ($1.distance, $1.home.id.raw) }
+            .map(\.home)
         var herd: [Animal] = []
         for farm in homes where farm.kind != .house && near(farm.anchor, herdReach) {
             guard herd.count < maxHerd else { break }

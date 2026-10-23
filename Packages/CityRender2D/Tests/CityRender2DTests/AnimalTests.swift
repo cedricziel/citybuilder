@@ -7,7 +7,7 @@ import Testing
 
 private func farmland(
     _ buildings: [Building], tick: UInt64, pops: [EntityID: HousePopulation] = [:], zoom: Double = 1,
-    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil
+    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil, center: (x: Double, y: Double) = (20, 20)
 ) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 40, height: 40, fill: .grass, seed: 1).snapshot()
     var occupied: [TileCoordinate: EntityID] = [:]
@@ -21,7 +21,7 @@ private func farmland(
         tickCount: tick, simulatedTime: base.simulatedTime, mapWidth: 40, mapHeight: 40,
         terrainGrid: grid, occupiedTiles: occupied,
         buildings: Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) }), carriers: [],
-        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: 20, centerY: 20, zoom: zoom), housePopulations: pops,
+        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: center.x, centerY: center.y, zoom: zoom), housePopulations: pops,
         date: GameDate(year: 1200, season: season)
     )
 }
@@ -202,6 +202,26 @@ func scenarioAnimalsStayInBudget() {
     let houses = (0 ..< 40).map { house(UInt32(300 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
     let hens = plan(farmland(houses, tick: 180, pops: residents(houses)))
     #expect(hens.count == AnimalPlanner.maxHens)
+}
+
+@Test("scenario: panning to a farm gives it animals")
+func budgetGoesToTheFarmsNearestTheCamera() {
+    // 40 farms, more sheep than the budget, all in view.
+    let farms = (0 ..< 40).map { farm(UInt32(100 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
+    for center in [(x: 35.0, y: 28.0), (x: 0.0, y: 0.0), (x: 20.0, y: 14.0)] {
+        let animals = plan(farmland(farms, tick: 180, center: center))
+        let herded = Set(animals.map(\.home))
+        #expect(animals.count <= AnimalPlanner.maxHerd)
+        // Farms get animals by distance from the camera centre until the budget is full.
+        let byDistance = farms.sorted {
+            let lhs = pow(Double($0.anchor.x) - center.x, 2) + pow(Double($0.anchor.y) - center.y, 2)
+            let rhs = pow(Double($1.anchor.x) - center.x, 2) + pow(Double($1.anchor.y) - center.y, 2)
+            return (lhs, $0.id.raw) < (rhs, $1.id.raw)
+        }
+        #expect(herded.contains(byDistance[0].id), "the farm under the camera at \(center) has no animals")
+        let served = byDistance.prefix { herded.contains($0.id) }.count
+        #expect(served == herded.count, "a farm at \(center) has animals while a nearer one has none")
+    }
 }
 
 // MARK: - Through the scene
