@@ -24,7 +24,9 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   `Rig` (sun, sky, camera), `Renderer`, `Materials` (finishes), `Parts`,
   `Props`, `Recipe` (stages, moving parts, plot), `Catalog`, `CellFit`,
   `RenderJob`, and `Recipes/` (one recipe per building look).
-- `scripts/art`: `terrain_tiles` (corner-mask SVG), `svg_sprites` (rsvg),
+- `scripts/art`: `terrain_tiles` (corner-mask SVG), `ground` (lit ground
+  textures), `flora` and `rocks` (ray-cast tree clumps and rock outcrops),
+  `terrain_objects` (object names, cache, SVG embedding), `svg_sprites` (rsvg),
   `finalize` (libimagequant into `Kit.atlas`), `compare` (tolerance).
 - A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) says how its
   sprites are made: `source = "isokit"`, `"svg"`, or `"pixel"` for the goods
@@ -158,15 +160,59 @@ files it lists as outside tolerance.
 - The seam test joins every pair of tiles whose shared corners agree, in both
   lattice directions: no gaps, and colour changes only on edges the boundary
   crosses. The content gate applies the diamond rules to every `terrain-*`
-  name, wherever it lives.
+  name, wherever it lives, except terrain objects.
+- Only grass, beach and water have ground tiles. Forest and mountain draw grass
+  ground (and grass transitions) with an object on top.
+
+## Terrain objects (scripts/art/flora.py, rocks.py, terrain_objects.py)
+
+- One object per forest or mountain tile: `terrain-<forest|mountain>-<density>
+  [-<autumn|winter>][-v<n>]`. Forest densities are `sparse`, `medium`, `dense`;
+  mountain adds `peak`, and has only a winter look. `SpriteContentGate.isTerrainObject`
+  holds the grammar; the briefs' Sheet lists must enumerate every name, and
+  `TextureFiltering.kitRenderedStems` must list every stem.
+- Cell 144×132 pt, tile centre 56 pt from the left and 112 from the top
+  (anchor `(56/144, 20/132)`). Each object carries its own ground shadow.
+- Both generators ray-cast on the CPU with numpy and light with `art.ground`'s
+  rig: `flora` from spheres (leaf clumps, trunks, needle tiers), `rocks` from
+  convex polytopes (an ellipsoid cut by planes: many shallow cuts round a stone
+  off, few deep ones leave a crag; close few-cut polytopes with a box). Geometry
+  depends only on density and variant, so seasons change colour, never shape.
+- Ray-casting takes seconds per sprite. Renders cache under `.build/art/objects`
+  (`ART_OBJECT_CACHE`), keyed by the source of every module that shapes them, so
+  touching `ground.py` re-renders every object. Warm the cache in parallel with a
+  `multiprocessing.Pool` over `terrain_objects.names()` before `art.svg_sprites`.
+- The renderer (`TerrainObjectMap`) picks the density from the distance to the
+  region's edge (BFS over edge neighbours), drops a step next to an occupied
+  tile, and draws nothing on one. Objects are child nodes of the ground node at
+  the z of a 1×1 building on the tile, minus `objectSink`, plus a column slot
+  (`x % 3`) so level neighbours never swap.
+- Judge objects in game and on a diorama of real @2x tiles: a region that is
+  mostly `dense` reads very differently from a single sprite.
+
+## Macro field and scree (GroundMacroField, CityRender2D)
+
+- The ground macro field is one map-sized texture, 16 pt per texel, multiplied
+  over the ground at twice its value (0.5 grey is neutral). Each map vertex gets
+  a colour from the terrain shares round it, world noise, occupancy (worn ground)
+  and the season; texels interpolate, so the tile lattice never shows.
+- Scree is a second map-sized texture, alpha-blended between the ground and the
+  macro field, its opacity following the share of rock round each vertex. It
+  follows terrain and season only, so placing a building leaves it alone.
+- Both build off the main thread, throttled to one build per 250 ms, with
+  pending requests collapsed into the latest.
 ## In-game before/after
 
 Debug builds take `-uiTestSeedTown`: the seed-0 island with four finished peasant
 houses beside the town center, under the default camera (`UITestSeed.townWorld`).
-Build the before app from main plus that seed and the after app from the family
-branch. Launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
--uiTestSeedTown`, tap New Game, then Start, wait about 15 s, and take the shot
-with `simctl io screenshot`. Add `-uiTestSeason autumn` or `winter` to start
+Build the before app from main and the after app from the family branch. The
+Mac app needs no simulator and no input: launch each binary by its path with
+`-uiTestSeedTown -uiTestStartGame` (and `-uiTestCamera x,y,zoom` to frame a
+spot), capture only its window with `screencapture -l<window id>`, found through
+your own process's PID, and quit it; the `verify` skill has the full recipe.
+On the simulator, launch with `xcrun simctl launch <udid> com.cedricziel.citybuilder
+-uiTestSeedTown -uiTestStartGame`, wait about 15 s, and take the shot with
+`simctl io screenshot`. Add `-uiTestSeason autumn` or `winter` to start
 the town in that season, and `-uiTestShowcase <category>` (`gather`, `craft`,
 `town`) to also place one of each kind in that build category where the rules
 allow. Shore art uses `-uiTestSeedShore` instead: a port, a shipyard and a ship on
@@ -182,8 +228,8 @@ different main commits; the art didn't cause it.
   capture both builds at the same moment (the in-panel screenshot is saved
   under `tool-results/`; a later `simctl io screenshot` can already be at
   dusk), and label a winter pair as night.
-- Pinch to the zoom-out limit for an island-wide shot; the limit makes the
-  framing repeatable.
+- Use `-uiTestCamera` at zoom 0.25 (the zoom-out limit) for an island-wide shot;
+  the limit makes the framing repeatable.
 
 ## Roads (scripts/art/roads.py)
 

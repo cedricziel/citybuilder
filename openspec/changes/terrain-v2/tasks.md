@@ -34,5 +34,5 @@
 
 ## 6. Close
 
-- [ ] 6.1 Update the `iso-sprite-authoring` skill (objects, macro field, compositor) and `world.md`
-- [ ] 6.2 `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` for this change's scenarios
+- [x] 6.1 Update the `iso-sprite-authoring` skill (objects, macro field, compositor) and `world.md`
+- [x] 6.2 `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` for this change's scenarios

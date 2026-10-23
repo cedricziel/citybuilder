@@ -34,11 +34,11 @@ public final class IsoWorldScene: SKScene {
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
-    var transitionMap: TerrainTransitionMap?
+    private(set) var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
-    var objectMap: TerrainObjectMap?
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
-    var roadLinkCache = RoadLinkCache()
+    private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
     var shownTiles: VisibleTiles?
@@ -92,8 +92,18 @@ public final class IsoWorldScene: SKScene {
     /// farms, Hens peck by the houses.
     var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
     var lastAnimalPass: AnimalPass?
-    /// The animals' clock while Reduce Motion holds them still.
+    /// The animals' and workers' clock while Reduce Motion holds them still.
     var animalFrozenClock: UInt64?
+    /// Woodcutters and miners by site. Spec: `rendering-2_5d` / Workers
+    /// walk out from the gather sites.
+    var gatherNodes: [EntityID: (node: SKSpriteNode, pose: GatherPose)] = [:]
+    var lastGatherPass: AnimalPass?
+    /// Each gather site's current trip, kept from tick to tick so its worker
+    /// never jumps when the catchment changes.
+    var gatherTrips: [EntityID: GatherWorkerPlanner.Trip] = [:]
+    /// The world the animals and workers were planned for.
+    var figureWorldShape: MapShape?
+    var figureWorldTick: UInt64?
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
@@ -216,7 +226,9 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
+        dropFiguresIfNewWorld(snapshot)
         reconcileAnimals(with: snapshot, now: currentTime)
+        reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
@@ -292,6 +304,29 @@ public final class IsoWorldScene: SKScene {
         shownTiles = nil
         buildingSpecs.removeAll()
         shownBuildingInputs = nil
+    }
+
+    /// Brings the terrain caches in line with the snapshot. Returns true when the grid changed, so
+    /// any tile may look different; tiles whose object alone changed join `staleTerrain`.
+    func refreshTerrainMaps(for snapshot: WorldSnapshot) -> Bool {
+        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
+        var gridChanged = false
+        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
+            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
+            gridChanged = true
+        }
+        if objectMap?.matches(width: width, height: height, grid: grid) == true {
+            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
+        } else {
+            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
+            gridChanged = true
+        }
+        return gridChanged
+    }
+
+    /// Each operational road's link to its neighbours, from the cache.
+    func roadLinks(for snapshot: WorldSnapshot) -> [TileCoordinate: RoadLink] {
+        roadLinkCache.links(for: snapshot)
     }
 
     /// Drops present vegetation nodes, and the grass edges that blend them, on a

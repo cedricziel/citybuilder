@@ -79,7 +79,7 @@ Objects are visual only. Simulation and placement MUST keep using each tile's ow
 #### Scenario: Rock thins toward the edge
 
 - **WHEN** the scene renders a large mountain region
-- **THEN** its edge tiles draw `sparse` outcrops and its interior draws `dense` or `peak` ones
+- **THEN** its edge tiles draw `sparse` outcrops, and its interior tiles draw `medium`, `dense` or `peak` outcrops, never `sparse`
 
 #### Scenario: A forest reaching the map border
 

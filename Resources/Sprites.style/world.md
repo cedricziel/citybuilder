@@ -38,6 +38,13 @@ afternoon sun.
   bottom vertex at the cell's bottom-centre. A recipe declares its cell height; nothing it builds
   may cross the top edge.
 - **Scales.** Every rendered sprite is written at `@1x` and `@2x`.
+- **Terrain objects.** Trees and rocks stand over their tile in a 144×132-point
+  cell with the tile centre 56 points from the left and 112 from the top. They
+  are ray-cast from code (`scripts/art/flora.py`, `scripts/art/rocks.py`) and
+  stand on grass: forest and mountain have no ground tile of their own. The
+  darker forest floor comes from the map-wide macro field; the scree under rock
+  is a separate map-wide texture, drawn between the ground tiles and the macro
+  field.
 
 ## Light rig
 
