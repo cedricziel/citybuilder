@@ -55,8 +55,10 @@ and do not regurgitate their UI fonts, water shaders, or particle effects.
 - **Terrain objects.** Trees and rocks stand over their tile in a 144×132-point
   cell with the tile centre 56 points from the left and 112 from the top. They
   are ray-cast from code (`scripts/art/flora.py`, `scripts/art/rocks.py`) and
-  stand on grass: forest and mountain have no ground tile of their own. Scree
-  under rock and the darker forest floor come from the map-wide macro field.
+  stand on grass: forest and mountain have no ground tile of their own. The
+  darker forest floor comes from the map-wide macro field; the scree under rock
+  is a separate map-wide texture, drawn between the ground tiles and the macro
+  field.
 - **Pixel grain.** All sprites are drawn so a 4×4 sheet pixel reads as a
   single canonical pixel after downsampling. No sub-pixel detail; no
   textures that depend on alpha gradients.
