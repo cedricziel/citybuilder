@@ -69,7 +69,7 @@ public final class IsoWorldScene: SKScene {
     /// Ghost preview node shown at the hovered tile when a build tool is
     /// armed. The scene polls `ghostProvider` on every update; the
     /// controller (GameSession) returns the current ghost state.
-    private var ghostNode: SKSpriteNode?
+    private(set) var ghostNode: SKSpriteNode?
     public var ghostProvider: (() -> GhostState?)?
     /// Tile the inspector has selected; a selected signature building
     /// shows its range rings.
@@ -243,6 +243,8 @@ public final class IsoWorldScene: SKScene {
             ?? SpriteAtlas.buildingTextureOrPlaceholder(for: ghost.kind, coord: ghost.tile)
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
+        // Sprites differ in size (a wide cell fits a long shadow), so the ghost takes each texture's own.
+        node.size = texture.size()
         node.anchorPoint = CGPoint(x: 0.5, y: 0)
         let halfH = IsoMath.tileHeight / 2
         let footprint = BuildingCatalog.spec(for: ghost.kind).footprint

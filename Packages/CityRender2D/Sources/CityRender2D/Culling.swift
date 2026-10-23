@@ -39,13 +39,11 @@ public enum Culling {
         let yMin = Int((camera.centerY - rowSpan).rounded(.down)) - bufferTiles
         let yMax = Int((camera.centerY + rowSpan).rounded(.up)) + bufferTiles
 
-        let clampedX = max(0, xMin) ... min(mapWidth - 1, xMax)
-        let clampedY = max(0, yMin) ... min(mapHeight - 1, yMax)
-
-        guard clampedX.lowerBound <= clampedX.upperBound,
-              clampedY.lowerBound <= clampedY.upperBound
-        else { return nil }
-        return (clampedX, clampedY)
+        // Off the map the clamped bounds cross; a ClosedRange of them would trap.
+        let lowX = max(0, xMin), highX = min(mapWidth - 1, xMax)
+        let lowY = max(0, yMin), highY = min(mapHeight - 1, yMax)
+        guard lowX <= highX, lowY <= highY else { return nil }
+        return (lowX ... highX, lowY ... highY)
     }
 
     /// Scene points beyond the view's edge that still count as on screen: a tile reaches 32 pt past

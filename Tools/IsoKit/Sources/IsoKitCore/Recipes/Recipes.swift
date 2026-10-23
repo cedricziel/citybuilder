@@ -12,7 +12,8 @@ enum Palette {
 }
 
 public enum Recipes {
-    public static let all: [Recipe] = [
+    /// Every recipe; each building gets a cell wide enough for its baked shadow.
+    public static let all: [Recipe] = ([
         Recipe(id: "building-house", cell: SpriteCell(footprint: 2, heightPx: 112), customStages: true) { kit, stage in
             housePeasant(kit, stage: peasantStage(stage))
         },
@@ -45,7 +46,7 @@ public enum Recipes {
         Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
             forester(kit)
         }
-    ] + gather + craft + civic + shore + culture + ages + walkers + animals
+    ] + gather + craft + civic + shore + culture + ages).map(CellFit.roomForShadow) + walkers + animals
 
     /// Recipes that get night lights: every house look and the workshops.
     public static let lit: Set<String> = Set((all.filter { $0.entry.hasPrefix("building-house") } + craft).map(\.id))

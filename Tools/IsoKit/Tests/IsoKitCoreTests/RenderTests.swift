@@ -15,15 +15,15 @@ enum RenderGate {
 
 @Suite(.enabled(if: RenderGate.enabled))
 struct RenderTests {
-    @Test("scenario: A 2×2 house renders 128 points wide")
-    func houseRendersOneTwentyEightWide() throws {
+    @Test("scenario: A 2×2 house renders centred in its cell")
+    func houseRendersCentredInItsCell() throws {
         let recipe = try #require(Recipes.all.first { $0.id == "building-house" })
         let image = try Renderer.image(recipe.scene(stage: .finished), cell: recipe.cell, scale: 1)
-        #expect(image.width == 128)
+        #expect(image.width == recipe.cell.widthPx && image.width >= 128)
         let lowest = try #require(PixelScan.lowestOpaqueRow(image))
         #expect(lowest == image.height - 1, "lowest opaque row \(lowest) of \(image.height)")
         let span = try #require(PixelScan.opaqueSpan(image, row: lowest))
-        #expect(abs((span.lowerBound + span.upperBound) / 2 - 64) <= 2)
+        #expect(abs((span.lowerBound + span.upperBound) / 2 - image.width / 2) <= 2)
     }
 
     @Test("scenario: Sawmill sails turn across operational frames")
