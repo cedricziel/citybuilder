@@ -86,23 +86,24 @@ A recipe MAY declare a moving part (sails, saw, wheel) with a frame count. For e
 
 ### Requirement: Houses and workshops render night lights
 
-For every house look and every workshop whose finished building shows a window pane, IsoKit SHALL also write `<sprite id>-lights` at the sprite's size and anchor. The mask SHALL:
+For every house look and every workshop whose finished building shows a window pane, IsoKit SHALL also write three evenings of lights, `<sprite id>-lights-0` to `-2`, at the sprite's size and anchor. Each variant SHALL:
 
-1. draw each visible pane unlit in a warm colour (blue glass bands dimmer)
-2. draw the rest of the building to depth only, before the panes, so it hides the panes behind it and leaves no colour
-3. add no light to the scene
+1. light a seeded subset of the panes, about 30%, at least one and at most three on a building with twelve panes or fewer, lower panes likelier than upper ones
+2. draw the lit panes unlit in oil-lamp amber (blue glass bands dimmer)
+3. draw everything else, the dark panes included, to depth only and before the lit panes, so it hides what is behind it and leaves no colour
+4. add no light to the scene
 
-A building whose panes are all hidden gets no lights file.
+A variant whose lit panes are all hidden is reseeded. A building whose panes are all hidden gets no lights files.
 
-#### Scenario: Night lights glow from the panes
+#### Scenario: Night lights glow from a few of the panes
 
-- **WHEN** IsoKit builds the lights of a hut with one window
-- **THEN** the window pane is the only coloured part, every other part writes depth only and draws before it, and a shed without a pane has no lights
+- **WHEN** IsoKit builds an evening's lights of a house with eight windows
+- **THEN** two panes glow, every other part writes depth only and draws before them, and a shed without a pane has no lights
 
 #### Scenario: Every house look ships its lights
 
 - **WHEN** the committed Kit atlas is checked
-- **THEN** each of the 60 house looks has `-lights` at both scales, and every lights file sits beside its sprite
+- **THEN** each of the 60 house looks has all three `-lights-<n>` at both scales, and every lights file sits beside its sprite
 
 ### Requirement: Terrain and icon tiles come from SVG generators
 
