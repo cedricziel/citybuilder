@@ -65,9 +65,10 @@ public struct TerrainObjectMap: Sendable {
     }
 
     /// Moves this map to a new occupancy over the same grid: only the tiles whose occupancy changed
-    /// and the ring round each are worked out again.
-    public mutating func update(occupancy newOccupancy: [TileCoordinate: EntityID]) {
-        guard newOccupancy != occupancy else { return }
+    /// and the ring round each are worked out again. Returns the tiles whose object changed.
+    @discardableResult
+    public mutating func update(occupancy newOccupancy: [TileCoordinate: EntityID]) -> [TileCoordinate] {
+        guard newOccupancy != occupancy else { return [] }
         let changed = Set(occupancy.keys).symmetricDifference(newOccupancy.keys)
         occupancy = newOccupancy
         var redo = Set<Int>()
@@ -81,9 +82,14 @@ public struct TerrainObjectMap: Sendable {
                 }
             }
         }
+        var moved: [TileCoordinate] = []
         for index in redo {
-            objects[index] = object(forIndex: index)
+            let object = object(forIndex: index)
+            guard object != objects[index] else { continue }
+            objects[index] = object
+            moved.append(TileCoordinate(x: index % width, y: index / width))
         }
+        return moved
     }
 
     /// The eight tiles round a tile, as offsets.
