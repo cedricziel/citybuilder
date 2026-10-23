@@ -160,10 +160,13 @@ public enum UITestSeed {
         return world
     }
 
-    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), if any.
+    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), or the
+    /// kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
-        return BuildingKind.allCases.filter { $0.category == arguments[flag + 1] }
+        let value = arguments[flag + 1]
+        let category = BuildingKind.allCases.filter { $0.category == value }
+        return category.isEmpty ? value.split(separator: ",").compactMap { BuildingKind(rawValue: String($0)) } : category
     }
 
     private static func playerTownCenter(in world: World) -> TileCoordinate? {

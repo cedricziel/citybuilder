@@ -48,6 +48,8 @@ func townSeedShowsACategory() {
     #expect(shown.count >= 4, "most gather kinds find a site near the town center")
     #expect(shown.allSatisfy { $0.state == .operational })
     #expect(UITestSeed.showcase(fromArguments: ["app"]).isEmpty)
+    let listed = UITestSeed.showcase(fromArguments: ["app", "-uiTestShowcase", "lumberjack-hut,sawmill"])
+    #expect(listed == [.lumberjackHut, .sawmill], "a list of kinds, for a working sawmill")
 }
 
 @Test("The town seed can start in a given season, for seasonal art shots")
