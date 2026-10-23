@@ -124,3 +124,28 @@ func panesWithoutLightsArt() {
     let (_, lit) = render(town(.bakery, tick: 780)) { $0 == "building-bakery-lights" }
     #expect(lit?.childNode(withName: IsoWorldScene.windowGlowNodeName) != nil)
 }
+
+@MainActor
+@Test("by day a building without a glow looks nothing up")
+func noLookupsByDay() {
+    var asked: [String] = []
+    let (scene, house) = render(town(.house, tick: 180, residents: 4)) { asked.append($0); return true }
+    #expect(house?.childNode(withName: IsoWorldScene.windowGlowNodeName) == nil)
+    #expect(asked.filter { $0.contains("-lights") }.isEmpty)
+    #expect(scene.lightsNames.isEmpty)
+}
+
+@MainActor
+@Test("a glow resolves its lights once and keeps them")
+func glowResolvesOnce() {
+    var asked = 0
+    let (scene, house) = render(town(.house, tick: 780, residents: 4)) { name in
+        if name.contains("-lights") { asked += 1 }
+        return name.hasPrefix("building-house-lights")
+    }
+    let first = asked
+    scene.update(0.1)
+    scene.update(0.2)
+    #expect(asked == first)
+    #expect(house?.childNode(withName: IsoWorldScene.windowGlowNodeName)?.userData?[IsoWorldScene.glowSleepsKey] is Bool)
+}

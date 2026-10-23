@@ -50,4 +50,9 @@ func mostHousesSleepLate() throws {
     let sleeper = try #require(ids.first { WindowLights.sleepiness(of: $0, at: at(3)) == 1 })
     let halfway = WindowLights.sleepiness(of: sleeper, at: at(2.0 - 0.125))
     #expect(abs(halfway - 0.5) < 0.05)
+    // Dark through 4:30, then the quarter hour after it fades back, mirroring the start.
+    #expect(WindowLights.sleepiness(of: sleeper, at: at(2.05)) == 1)
+    #expect(WindowLights.sleepiness(of: sleeper, at: at(4.45)) == 1)
+    #expect(abs(WindowLights.sleepiness(of: sleeper, at: at(4.5 + 0.125)) - 0.5) < 0.05)
+    #expect(WindowLights.sleepiness(of: sleeper, at: at(4.75)) == 0)
 }

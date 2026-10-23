@@ -29,13 +29,21 @@ enum WindowLights {
         return ["\(single)-\(variant(for: id))", single]
     }
 
-    /// How far a house has gone to bed at `time`: 0 awake, 1 dark, ramping over a quarter hour at
-    /// either end of the night. A house that stays up is always 0.
-    static func sleepiness(of id: EntityID, at time: TimeOfDay) -> CGFloat {
-        guard mix(id, salt: 0x73_6C65_6570) % awakeOneIn != 0 else { return 0 }
-        let fraction = time.fraction
-        let into = (fraction - (sleepFrom - rampLength)) / rampLength
-        let outOf = (sleepUntil - fraction) / rampLength
+    /// Whether this household stays up through the small hours; four in five go to bed.
+    static func staysUp(_ id: EntityID) -> Bool {
+        mix(id, salt: 0x73_6C65_6570) % awakeOneIn == 0
+    }
+
+    /// How far into the town's bedtime `time` is: 0 before 1:45 and after 4:45, 1 from 2:00 to 4:30,
+    /// ramping over the quarter hour either side.
+    static func bedtime(at time: TimeOfDay) -> CGFloat {
+        let into = (time.fraction - (sleepFrom - rampLength)) / rampLength
+        let outOf = (sleepUntil + rampLength - time.fraction) / rampLength
         return CGFloat(max(0, min(1, into, outOf)))
+    }
+
+    /// How far a house has gone to bed at `time`: 0 awake, 1 dark. A house that stays up is always 0.
+    static func sleepiness(of id: EntityID, at time: TimeOfDay) -> CGFloat {
+        staysUp(id) ? 0 : bedtime(at: time)
     }
 }
