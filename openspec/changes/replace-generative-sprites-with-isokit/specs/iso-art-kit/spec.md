@@ -95,10 +95,17 @@ For every house look and every workshop whose finished building shows a window p
 
 A variant whose lit panes are all hidden is reseeded. A building whose panes are all hidden gets no lights files.
 
+The day sprites (finished, construction and operational frames) SHALL show every pane as dark glass: no material of a recipe MAY emit light, so window light comes only from the lights variants.
+
 #### Scenario: Night lights glow from a few of the panes
 
 - **WHEN** IsoKit builds an evening's lights of a house with eight windows
 - **THEN** two panes glow, every other part writes depth only and draws before them, and a shed without a pane has no lights
+
+#### Scenario: Day sprites never glow
+
+- **WHEN** a recipe gives a pane a material that emits light
+- **THEN** the recipe rules reject it
 
 #### Scenario: Every house look ships its lights
 
