@@ -57,6 +57,31 @@ public enum BuildingIconLoader {
             return Image(systemName: fallbackSymbolName(for: kind))
         }
         let cgImage = atlas.textureNamed(name).cgImage()
-        return Image(decorative: cgImage, scale: 1).interpolation(interpolation(for: kind))
+        return Image(decorative: croppedToOpaque(cgImage), scale: 1).interpolation(interpolation(for: kind))
+    }
+
+    /// `image` cut to its opaque pixels. A sprite is wider than its building where its shadow needs room,
+    /// and an icon scaled to fit would shrink by that margin.
+    static func croppedToOpaque(_ image: CGImage) -> CGImage {
+        let width = image.width, height = image.height
+        guard let context = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ), let data = context.data
+        else { return image }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let alpha = data.assumingMemoryBound(to: UInt8.self)
+        var minX = width, maxX = -1, minY = height, maxY = -1
+        for row in 0 ..< height {
+            for column in 0 ..< width where alpha[(row * width + column) * 4 + 3] > 0 {
+                minX = min(minX, column)
+                maxX = max(maxX, column)
+                minY = min(minY, row)
+                maxY = max(maxY, row)
+            }
+        }
+        guard maxX >= minX, maxY >= minY else { return image }
+        // The bitmap's rows run top to bottom, as `cropping(to:)` expects.
+        return image.cropping(to: CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)) ?? image
     }
 }

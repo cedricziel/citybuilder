@@ -1,5 +1,6 @@
 import CityCore
 import CityRender2D
+import CoreGraphics
 import Foundation
 import Testing
 @testable import CityUI
@@ -53,4 +54,23 @@ func buildingIconsFallBackToASymbol() {
 func buildingIconsAreCachedPerKind() {
     _ = BuildingIconLoader.image(for: .monument)
     #expect(BuildingIconLoader.cachedKinds.contains(.monument))
+}
+
+private func bitmap(width: Int, height: Int) -> CGContext? {
+    CGContext(
+        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )
+}
+
+/// Sprites carry a transparent margin for their shadow; the icon is cut to the building so it fills its slot.
+@Test("building icons are cut to their opaque pixels")
+func iconsAreCutToTheirOpaquePixels() throws {
+    let context = try #require(bitmap(width: 40, height: 20))
+    context.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
+    context.fill(CGRect(x: 5, y: 3, width: 10, height: 6))
+    let cropped = try BuildingIconLoader.croppedToOpaque(#require(context.makeImage()))
+    #expect(cropped.width == 10 && cropped.height == 6)
+    let empty = try #require(bitmap(width: 4, height: 4)?.makeImage())
+    #expect(BuildingIconLoader.croppedToOpaque(empty).width == 4)
 }
