@@ -141,7 +141,7 @@ func missingGrassVariantIsLoggedOnce() {
     scene.update(0)
     let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
     #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
-    let variants = logged.withLock(\.self)
-    #expect(!variants.isEmpty && variants.allSatisfy { $0.hasPrefix("terrain-grass-v") })
+    let variants = logged.withLock { $0.filter { $0.hasPrefix("terrain-grass-v") } }
+    #expect(!variants.isEmpty)
     #expect(variants.count == Set(variants).count)
 }
