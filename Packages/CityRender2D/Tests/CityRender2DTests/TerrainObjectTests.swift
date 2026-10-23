@@ -243,6 +243,30 @@ func buildingPlacedInALiveForest() {
 }
 
 @MainActor
+@Test("A mine on rock hides the outcrops under it, and demolishing it brings them back")
+func mineOnRockHidesItsOutcrops() {
+    // A 4 x 4 rock at (2...5, 2...5) beside the forest square; the 2 x 2 mine sits on (3, 3).
+    var rock: [TileCoordinate: TerrainType] = [:]
+    for y in 2 ... 5 {
+        for x in 2 ... 5 {
+            rock[TileCoordinate(x: x, y: y)] = .mountain
+        }
+    }
+    let mine = Building(id: EntityID(raw: 1), kind: .mine, anchor: TileCoordinate(x: 3, y: 3), state: .operational)
+    let footprint = BuildingCatalog.spec(for: .mine).footprint.tiles(anchor: mine.anchor)
+    let source = Source(forestSnapshot(paint: rock))
+    let scene = scene(source)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) != nil })
+    source.snapshot = forestSnapshot(buildings: [mine], paint: rock)
+    scene.update(1)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) == nil })
+    #expect(clump(at: .init(x: 2, y: 2), in: scene) != nil)
+    source.snapshot = forestSnapshot(paint: rock)
+    scene.update(2)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) != nil })
+}
+
+@MainActor
 @Test("scenario: Felling and planting reach the scene")
 func fellingAndPlantingReachTheScene() {
     let source = Source(forestSnapshot())
