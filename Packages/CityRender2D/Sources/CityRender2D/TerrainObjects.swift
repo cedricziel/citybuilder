@@ -13,6 +13,8 @@ public struct TerrainObject: Hashable, Sendable {
     public let variant: Int
 
     public static let variants = 4
+    /// The terrain kinds drawn as objects over grass ground, with no ground sprite of their own.
+    public static let kinds: Set<TerrainType> = [.forest, .mountain]
 
     /// `terrain-<kind>-<density>[-<season>][-v<n>]`. Trees have autumn and winter looks; rock only a
     /// winter one. Spring and summer use the plain name.
@@ -65,9 +67,10 @@ public struct TerrainObjectMap: Sendable {
     }
 
     /// Moves this map to a new occupancy over the same grid: only the tiles whose occupancy changed
-    /// and the ring round each are worked out again.
-    public mutating func update(occupancy newOccupancy: [TileCoordinate: EntityID]) {
-        guard newOccupancy != occupancy else { return }
+    /// and the ring round each are worked out again. Returns the tiles whose object changed.
+    @discardableResult
+    public mutating func update(occupancy newOccupancy: [TileCoordinate: EntityID]) -> [TileCoordinate] {
+        guard newOccupancy != occupancy else { return [] }
         let changed = Set(occupancy.keys).symmetricDifference(newOccupancy.keys)
         occupancy = newOccupancy
         var redo = Set<Int>()
@@ -81,9 +84,14 @@ public struct TerrainObjectMap: Sendable {
                 }
             }
         }
+        var moved: [TileCoordinate] = []
         for index in redo {
-            objects[index] = object(forIndex: index)
+            let object = object(forIndex: index)
+            guard object != objects[index] else { continue }
+            objects[index] = object
+            moved.append(TileCoordinate(x: index % width, y: index / width))
         }
+        return moved
     }
 
     /// The eight tiles round a tile, as offsets.
@@ -133,13 +141,14 @@ public struct TerrainObjectMap: Sendable {
         return ladder[max(0, step - (crowded ? 1 : 0))]
     }
 
-    /// Rock thins toward its edge the same way; deep inside, world noise raises some tiles to peaks.
+    /// Rock thins toward its edge the same way. Inside a region, smooth world noise lays out open
+    /// stretches of boulders with scree and grass between, ordinary rock, and ridges of tall tors.
     static func rockDensity(distance: Int, coord: TileCoordinate, crowded: Bool) -> TerrainObject.Density {
         let step = max(0, min(distance, 3) - 1 - (crowded ? 1 : 0))
-        if step == 2, distance >= 4, !crowded, hash(TileCoordinate(x: coord.x / 3, y: coord.y / 3), salt: 11) % 3 != 0 {
-            return .peak
-        }
-        return ladder[step]
+        guard step == 2 else { return ladder[step] }
+        let relief = Noise.value(Float(coord.x) / 3.5, Float(coord.y) / 3.5, 11)
+        if relief < -0.15 { return .medium }
+        return relief > 0.35 && distance >= 4 ? .peak : .dense
     }
 
     private static func hash(_ coord: TileCoordinate, salt: UInt32) -> UInt32 {

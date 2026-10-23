@@ -23,14 +23,14 @@
 - [x] 4.2 `art.flora`; catalog briefs; `make sprites`
 - [x] 4.3 `TerrainObjectMap` beside the transition map; object child nodes; season redraw
 - [x] 4.4 Node counts and frame times at zoom 0.25 on the archipelago; tighten culling if needed (D9)
-- [ ] 4.5 Delete `terrain-forest*` ground sprites; in-game before and after (spring, autumn, winter); PR
+- [x] 4.5 Delete `terrain-forest*` ground sprites; in-game before and after (spring, autumn, winter); PR
 
 ## 5. Rocks and scree (D3–D6, D8)
 
-- [ ] 5.1 Tests first: rock densities and peaks, the scree cover, routing, byte-stable outcrops
-- [ ] 5.2 `art.rocks`; catalog briefs; `make sprites`
-- [ ] 5.3 Scree cover node; mountain objects
-- [ ] 5.4 Delete `terrain-mountain*` ground sprites and the mountain variant count; in-game before and after; PR
+- [x] 5.1 Tests first: rock densities and peaks, the scree cover, routing, byte-stable outcrops
+- [x] 5.2 `art.rocks`; catalog briefs; `make sprites`
+- [x] 5.3 Scree cover node; mountain objects
+- [x] 5.4 Delete `terrain-mountain*` ground sprites and the mountain variant count; in-game before and after; PR
 
 ## 6. Close
 
