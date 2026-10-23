@@ -330,11 +330,32 @@ public final class IsoWorldScene: SKScene {
                 if buildingNodes[spec.coord] === node { buildingNodes.removeValue(forKey: spec.coord) }
             }
         }
-        for spec in diff.added {
-            let node = placedNode(for: spec)
-            addChild(node)
+        // Nodes at equal depth draw in child order. Adding them sorted by (depth, x), and placing a building
+        // before an equal-depth building already to its right, keeps that order the same however a pan or a
+        // launch brings them on screen: a wide sprite's shadow margin always falls under its right neighbour.
+        let added = diff.added.map { ($0, placedNode(for: $0)) }
+            .sorted { ($0.1.zPosition, $0.1.position.x) < ($1.1.zPosition, $1.1.position.x) }
+        for (spec, node) in added {
+            if case .building = spec.kind {
+                addBuildingInDrawOrder(node)
+            } else {
+                addChild(node)
+            }
             presentSprites[spec] = node
             if case .building = spec.kind, let sprite = node as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
+        }
+    }
+
+    /// Adds `node` after every building at its depth to its left and before every one to its right.
+    private func addBuildingInDrawOrder(_ node: SKNode) {
+        let rightNeighbours = buildingNodes.values.filter {
+            $0.parent === self && $0.zPosition == node.zPosition && $0.position.x > node.position.x
+        }
+        let firstToTheRight = rightNeighbours.compactMap { children.firstIndex(of: $0) }.min()
+        if let index = firstToTheRight {
+            insertChild(node, at: index)
+        } else {
+            addChild(node)
         }
     }
 }
