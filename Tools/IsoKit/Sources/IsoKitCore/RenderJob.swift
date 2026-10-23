@@ -56,7 +56,29 @@ public struct RenderJob {
             let frame = try overlays[index].map { try Renderer.composite(base, $0) } ?? idle
             images.append(("\(recipe.id)-operational-\(index)", frame))
         }
+        if Recipes.lit.contains(recipe.id) { try images += lights(of: recipe, scale: scale) }
         return try write(images, scale: scale)
+    }
+
+    /// The night-lights variants, `<id>-lights-<n>`. A variant whose lit panes all hide behind the
+    /// building's own walls is reseeded; a building with no visible pane at all gets no lights, so the
+    /// game never picks a variant that is missing.
+    private func lights(of recipe: Recipe, scale: Int) throws -> [(String, CGImage)] {
+        var variants: [(String, CGImage)] = []
+        for variant in 0 ..< NightLights.variants {
+            var found: CGImage?
+            for attempt in 0 ..< 8 where found == nil {
+                guard let scene = recipe.lightsScene(variant: variant, attempt: attempt) else { return [] }
+                let image = try Renderer.image(scene, cell: recipe.cell, scale: scale)
+                if Renderer.hasVisiblePixel(image) { found = image }
+            }
+            guard let found else {
+                print("warning: \(recipe.id) is meant to light up at night but shows no window, so it gets no lights")
+                return []
+            }
+            variants.append(("\(recipe.id)-lights-\(variant)", found))
+        }
+        return variants
     }
 
     private func write(_ images: [(String, CGImage)], scale: Int) throws -> [String] {

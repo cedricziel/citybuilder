@@ -19,7 +19,8 @@ public final class IsoWorldScene: SKScene {
     var presentSprites: [SpriteSpec: SKNode] = [:]
     /// City life (`add-city-life`): night shade and strolling residents.
     let nightOverlay = SKSpriteNode()
-    var strollerNodes: [StrollerKey: (node: SKSpriteNode, facing: SpriteAtlas.WalkerFacing)] = [:]
+    /// Stroller nodes with the facing and walk state they show, so a node changes only on a turn or a pause.
+    var strollerNodes: [StrollerKey: StrollerVisual] = [:]
     /// Season whose terrain tint is on screen. Spec: `rendering-2_5d` /
     /// Terrain shows the season.
     var appliedSeason: Season = .spring
@@ -50,6 +51,10 @@ public final class IsoWorldScene: SKScene {
     /// Carriers glide and show their load.
     var carrierVisuals: [EntityID: CarrierVisual] = [:]
     var lastCarrierTick: UInt64?
+    /// The last simulation tick seen and when it arrived; carriers and strollers stand still once
+    /// ticks stop (`simulationIsStill`).
+    var tickSeen: UInt64?
+    var tickSeenAt: TimeInterval = 0
     private let cameraNode = SKCameraNode()
 
     /// Ghost preview node shown at the hovered tile when a build tool is
@@ -76,7 +81,7 @@ public final class IsoWorldScene: SKScene {
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
-    /// The `-lights` texture per sprite stem, or nil when the atlas has
+    /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
     /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
@@ -86,7 +91,6 @@ public final class IsoWorldScene: SKScene {
     /// / Residents gather on the plaza.
     var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
     var lastPlazaPass: PlazaPass?
-    var plazaTickAt: TimeInterval = 0
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
@@ -188,10 +192,11 @@ public final class IsoWorldScene: SKScene {
         applyTimeOfDay(TimeOfDay(tick: snapshot.tickCount))
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
+        noteTick(snapshot.tickCount, now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
-        reconcileStrollers(with: snapshot)
+        reconcileStrollers(with: snapshot, now: currentTime)
         reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)

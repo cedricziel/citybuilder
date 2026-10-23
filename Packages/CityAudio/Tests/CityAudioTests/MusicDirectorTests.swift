@@ -9,11 +9,20 @@ import Testing
 private final class Recorder {
     var log: [String] = []
     var durations: [String: Double] = [:]
+    /// Paths the fake player can't play.
+    var failing: Set<String> = []
 
     func director(_ section: Bindings.MusicSection) -> MusicDirector {
         MusicDirector(
             section: section,
-            play: { [unowned self] path, fade in log.append("play \(path) \(fade)") },
+            play: { [unowned self] path, fade, loops in
+                guard !failing.contains(path) else {
+                    log.append("failed \(path)")
+                    return false
+                }
+                log.append("play \(path) \(fade)\(loops ? " loop" : "")")
+                return true
+            },
             fadeOut: { [unowned self] path, fade in log.append("fade \(path) \(fade)") },
             duration: { [unowned self] path in durations[path] }
         )
@@ -41,10 +50,9 @@ func titleThemePlaysOnTheMenu() {
     recorder.durations = ["music/title.caf": 20]
     let director = recorder.director(section())
     director.tick(dt: 0.1)
-    #expect(recorder.log == ["play music/title.caf 0.0"])
-    run(director, seconds: 20.5)
-    #expect(recorder.log.last == "play music/title.caf 0.0")
-    #expect(recorder.log.count == 2)
+    #expect(recorder.log == ["play music/title.caf 0.0 loop"])
+    run(director, seconds: 60)
+    #expect(recorder.log.count == 1, "the player loops the title; the director never restarts it")
 }
 
 @MainActor
@@ -103,7 +111,7 @@ func returningToTheTitle() {
     run(director, seconds: 10)
     director.setContext(.title)
     director.tick(dt: 0.1)
-    #expect(Array(recorder.log.suffix(2)) == ["fade music/a.caf 3.0", "play music/title.caf 3.0"])
+    #expect(Array(recorder.log.suffix(2)) == ["fade music/a.caf 3.0", "play music/title.caf 3.0 loop"])
 }
 
 @MainActor
@@ -114,4 +122,69 @@ func returningToTheTitle() {
     director.setContext(.game)
     run(director, seconds: 5)
     #expect(recorder.log.isEmpty)
+}
+
+@MainActor
+@Test("scenario: game, title and game again")
+func gameTitleGameToggle() {
+    let recorder = Recorder()
+    recorder.durations = ["music/title.caf": 20, "music/a.caf": 60]
+    let director = recorder.director(section())
+    director.tick(dt: 0.1)
+    director.setContext(.game)
+    director.tick(dt: 0.1)
+    director.setContext(.title)
+    director.tick(dt: 0.1)
+    director.setContext(.game)
+    director.tick(dt: 0.1)
+    #expect(recorder.log == [
+        "play music/title.caf 0.0 loop",
+        "fade music/title.caf 3.0", "play music/a.caf 3.0",
+        "fade music/a.caf 3.0", "play music/title.caf 3.0 loop",
+        "fade music/title.caf 3.0", "play music/a.caf 3.0"
+    ])
+}
+
+@MainActor
+@Test("scenario: a new game starts without the last game's season")
+func newGameForgetsTheLastSeason() {
+    let recorder = Recorder()
+    let tracks = [
+        Bindings.MusicTrack(file: "music/winter.caf", seasons: ["winter"]),
+        Bindings.MusicTrack(file: "music/summer.caf", seasons: ["summer"])
+    ]
+    recorder.durations = ["music/winter.caf": 100, "music/summer.caf": 100]
+    let director = recorder.director(Bindings.MusicSection(tracks: tracks))
+    director.setContext(.game)
+    director.setSeason(.winter)
+    director.tick(dt: 0.1)
+    director.setContext(.title)
+    director.tick(dt: 0.1)
+    #expect(director.season == nil)
+}
+
+@MainActor
+@Test("scenario: the title theme loops without a restart")
+func titleThemeLoopsWithoutARestart() {
+    let recorder = Recorder()
+    recorder.durations = ["music/title.caf": 20]
+    let director = recorder.director(section())
+    run(director, seconds: 60)
+    #expect(recorder.log == ["play music/title.caf 0.0 loop"])
+}
+
+@MainActor
+@Test("scenario: a track that fails to play is tried again")
+func failedTrackIsTriedAgain() {
+    let recorder = Recorder()
+    recorder.durations = ["music/a.caf": 60]
+    recorder.failing = ["music/a.caf"]
+    let director = recorder.director(section(title: nil))
+    director.setContext(.game)
+    director.tick(dt: 0.1)
+    director.tick(dt: 0.1)
+    #expect(recorder.log == ["failed music/a.caf", "failed music/a.caf"], "no silent 60-second wait")
+    recorder.failing = []
+    director.tick(dt: 0.1)
+    #expect(recorder.log.last == "play music/a.caf 3.0", "the retry keeps the crossfade it was asked for")
 }

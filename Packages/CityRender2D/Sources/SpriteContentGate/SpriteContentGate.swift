@@ -171,7 +171,8 @@ public enum SpriteContentGate {
     /// construction stages, operational frames and variants excluded.
     static func isBuildingBase(_ fileName: String) -> Bool {
         let stem = SpriteFile(fileName).stem
-        guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road") else { return false }
+        // Roads lie flat, and night lights show only the window panes, so neither reaches the ground.
+        guard stem.hasPrefix("building-"), !stem.hasPrefix("building-road"), !stem.contains("-lights") else { return false }
         return coherenceBase(for: fileName) == nil && !stem.contains("-constructing-")
     }
 

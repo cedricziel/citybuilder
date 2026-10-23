@@ -75,16 +75,19 @@ public final class EngineCuePlayer {
         detach(player)
     }
 
-    /// Starts `path` once on the music bus, fading in over `fade` seconds.
-    public func playMusic(_ path: String, fade: Double) {
-        guard let file = loadFile(at: path), (try? engine.start()) != nil else { return }
+    /// Starts `path` on the music bus, once or looping, fading in over `fade` seconds.
+    /// Returns false when the file won't load or the engine won't start.
+    @discardableResult
+    public func playMusic(_ path: String, fade: Double, loops: Bool = false) -> Bool {
+        guard let file = loadFile(at: path), (try? engine.start()) != nil else { return false }
         musicVoices.removeValue(forKey: path)?.stop(fade: 0)
         let node = AVAudioPlayerNode()
         engine.underlyingEngine.attach(node)
         engine.underlyingEngine.connect(node, to: engine.bus(.music), format: file.processingFormat)
-        let voice = PlayerVoice(node: node, file: file, engine: engine.underlyingEngine, volume: 1, loops: false)
+        let voice = PlayerVoice(node: node, file: file, engine: engine.underlyingEngine, volume: 1, loops: loops)
         musicVoices[path] = voice
         voice.start(fade: fade)
+        return true
     }
 
     /// Fades the music track `path` out over `fade` seconds and releases it.

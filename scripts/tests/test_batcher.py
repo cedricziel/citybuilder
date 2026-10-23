@@ -24,8 +24,10 @@ def _patch_dirs_to(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(paths, "ATLAS_DIRS", {
         "terrain-": tmp_path / "Terrain.atlas",
         "building-": tmp_path / "Buildings.atlas",
-        "walker-": tmp_path / "Units.atlas",
-        "ship-": tmp_path / "Units.atlas",
+        "walker-": tmp_path / "Kit.atlas",
+        "carrier-": tmp_path / "Kit.atlas",
+        "animal-": tmp_path / "Kit.atlas",
+        "ship-": tmp_path / "Kit.atlas",
         "good-": tmp_path / "Icons.atlas",
     })
 
