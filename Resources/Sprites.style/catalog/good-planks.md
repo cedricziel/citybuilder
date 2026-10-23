@@ -1,5 +1,5 @@
 ---
-source = "pixel"
+source = "svg"
 ---
 ## Function
 
@@ -8,11 +8,7 @@ tooltips, and the warehouse buffer indicator. Single static cell.
 
 ## Visual identity
 
-A neatly-stacked bundle of fresh-cut planks bound by a single rope
-strap, seen at the canonical 30° south-east tilt. End-grain visible on
-the south face; smooth plank faces on the east. Palette anchors:
-`#A07C50` pine plank face, `#D4A86A` end-grain highlight, `#6E4A2A`
-rope strap, `#5C3F28` shadow under the bundle.
+Three sawn boards stacked with a slight offset, light wood with grain lines. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
 ## Sprites
 
@@ -20,4 +16,4 @@ rope strap, `#5C3F28` shadow under the bundle.
 
 ## Recipe
 
-- Source: committed pixel art in `Icons.atlas`, drawn by an image-generation API before the art kit; task 4.9 replaces it with a hand-authored SVG icon
+- Source: `scripts/art/goods_icons.py`, rendered by `art.svg_sprites` at @1x and @2x into `Kit.atlas`

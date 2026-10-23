@@ -198,13 +198,14 @@ func scenarioEveryBuildingAndUnitEntryIsRenderedByIsoKit() throws {
     #expect(wrong.isEmpty, "\(wrong.map(\.lastPathComponent))")
 }
 
-@Test("scenario: terrain entries are svg and goods icons committed pixel art")
-func scenarioTerrainIsSVGAndGoodsArePixelArt() throws {
+@Test("scenario: Terrain entries and goods icons are SVG")
+func scenarioTerrainAndGoodsAreSVG() throws {
     for url in try catalogFiles() {
         let id = url.deletingPathExtension().lastPathComponent
         let source = try catalogSource(of: String(contentsOf: url, encoding: .utf8))
-        if id.hasPrefix("terrain-") || id == "building-road" { #expect(source == "svg", "\(id) is \(source)") }
-        if id.hasPrefix("good-") { #expect(source == "pixel", "\(id) is \(source)") }
+        if id.hasPrefix("terrain-") || id.hasPrefix("good-") || id == "building-road" {
+            #expect(source == "svg", "\(id) is \(source)")
+        }
     }
 }
 
