@@ -50,7 +50,8 @@ extension IsoWorldScene {
     /// Motion change; at night and while paused they hold their frame 0.
     func reconcileAnimals(with snapshot: WorldSnapshot, now: TimeInterval) {
         let range = Culling.visibleTileRange(
-            camera: snapshot.camera, viewSize: size, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight
+            camera: snapshot.camera, viewSize: size, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight,
+            margin: Culling.screenMargin
         )
         let pass = AnimalPass(
             tick: snapshot.tickCount, xRange: range?.xRange, yRange: range?.yRange,
@@ -62,9 +63,13 @@ extension IsoWorldScene {
             return
         }
         lastAnimalPass = pass
+        // Reduce Motion holds the animals where they stand when it comes on.
+        let dayClock = AnimalPlanner.dayClock(tick: snapshot.tickCount)
+        let clock = reduceMotion ? (animalFrozenClock ?? dayClock) : dayClock
+        animalFrozenClock = reduceMotion ? clock : nil
         let animals = range.map { visible in
             AnimalPlanner.animals(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, reduceMotion: reduceMotion,
+                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: clock,
                 ground: AnimalPlanner.Ground(
                     isFreeGrass: { self.isFreeGrass($0, in: snapshot) }, isYard: { self.isYard($0, in: snapshot) }
                 )
@@ -81,7 +86,8 @@ extension IsoWorldScene {
             let pose = AnimalPose(action: animal.action, facing: animal.facing, moving: !still)
             let depth = Double(Int(animal.col.rounded()) + Int(animal.row.rounded()) + 1)
             if var shown = animalNodes[key] {
-                if shown.node.position != target { shown.node.glide(to: target) }
+                // SpriteKit keeps positions in single precision: compare with slack.
+                if hypot(shown.node.position.x - target.x, shown.node.position.y - target.y) > 0.01 { shown.node.glide(to: target) }
                 shown.node.zPosition = Self.depthZ(depth) + Self.figureLift
                 if shown.pose != pose {
                     shown.pose = pose
@@ -99,7 +105,7 @@ extension IsoWorldScene {
         }
     }
 
-    private func holdAnimals() {
+    func holdAnimals() {
         for (key, shown) in animalNodes where shown.pose.moving {
             let held = AnimalPose(action: shown.pose.action, facing: shown.pose.facing, moving: false)
             Self.apply(held, to: shown.node)

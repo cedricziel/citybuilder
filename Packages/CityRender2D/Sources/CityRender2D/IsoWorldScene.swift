@@ -83,6 +83,8 @@ public final class IsoWorldScene: SKScene {
     /// farms, Hens peck by the houses.
     var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
     var lastAnimalPass: AnimalPass?
+    /// The animals' clock while Reduce Motion holds them still.
+    var animalFrozenClock: UInt64?
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
