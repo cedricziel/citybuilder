@@ -95,7 +95,7 @@ extension World {
         return needs
     }
 
-    private func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
+    func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
         guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
@@ -119,10 +119,16 @@ extension World {
         events.append(.carrierDeparted(carrier: carrierID, from: path[0], good: good))
     }
 
+    /// Carriers on the way to `consumer`, from storage or straight from a
+    /// producer, optionally only those carrying `good`.
     func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
         carriers.values.count { carrier in
-            guard case let .retrieve(carried, _, _, toConsumer) = carrier.mission else { return false }
-            return toConsumer == consumer && (good == nil || carried == good)
+            switch carrier.mission {
+            case let .retrieve(carried, _, _, toConsumer), let .deliverToConsumer(carried, _, _, toConsumer):
+                toConsumer == consumer && (good == nil || carried == good)
+            case .deliver, .deliverToConstructionSite:
+                false
+            }
         }
     }
 

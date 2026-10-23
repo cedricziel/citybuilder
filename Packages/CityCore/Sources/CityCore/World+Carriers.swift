@@ -22,6 +22,7 @@ extension World {
                 applyCarrierArrival(carrier, events: &events)
                 switch carrier.mission {
                 case let .deliver(_, _, fromProducer, _),
+                     let .deliverToConsumer(_, _, fromProducer, _),
                      let .deliverToConstructionSite(_, _, fromProducer, _):
                     carrierCountByProducer[fromProducer, default: 1] -= 1
                 case .retrieve:
@@ -47,7 +48,8 @@ extension World {
             events.append(.carrierArrived(
                 carrier: carrier.id, at: arrivalTile, good: good, amount: amount
             ))
-        case let .retrieve(good, amount, _, toConsumer):
+        case let .retrieve(good, amount, _, toConsumer),
+             let .deliverToConsumer(good, amount, _, toConsumer):
             stockpiles[toConsumer]?.deposit(good, amount: amount)
             events.append(.carrierArrived(
                 carrier: carrier.id, at: arrivalTile, good: good, amount: amount
@@ -111,10 +113,14 @@ extension World {
     ) {
         // Spawning carriers moves goods, not buildings, so list the
         // candidate destinations once for every producer.
-        let buffers = goodsBuffers().filter { $0.state == .operational }
-        let waitingSites = buildings.values
-            .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
-            .sorted { $0.id.raw < $1.id.raw }
+        let candidates = DestinationCandidates(
+            buffers: goodsBuffers().filter { $0.state == .operational },
+            waitingSites: buildings.values
+                .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
+                .sorted { $0.id.raw < $1.id.raw },
+            consumers: consumersByGood(),
+            tileToIsland: tileToIsland
+        )
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
@@ -124,47 +130,99 @@ extension World {
             let footprint = BuildingCatalog.spec(for: building.kind).footprint
             guard let road = anyAdjacentRoad(anchor: building.anchor, footprint: footprint)
             else { continue }
-            let islandID = islandFor(building: building, tileToIsland: tileToIsland)
 
             for (good, _) in recipe.outputs where producerStock.quantity(of: good) >= 1 {
-                if let (siteId, sitePath) = findWaitingSiteOnIsland(
-                    fromRoad: road, good: good, islandID: islandID, tileToIsland: tileToIsland, among: waitingSites
-                ) {
-                    spawnCarrier(
-                        CarrierSpawn(
-                            producerId: producerId,
-                            road: road,
-                            good: good,
-                            mission: .deliverToConstructionSite(
-                                good: good, amount: 1,
-                                fromProducer: producerId, toBuilding: siteId
-                            ),
-                            path: sitePath
-                        ),
-                        events: &events
-                    )
-                    break
-                }
-                guard let (warehouseId, path) = findRoadConnectedBuffer(
-                    fromRoad: road, good: good, among: buffers
-                )
+                guard let (mission, path) = destination(of: good, from: building, road: road, among: candidates)
                 else { continue }
                 spawnCarrier(
-                    CarrierSpawn(
-                        producerId: producerId,
-                        road: road,
-                        good: good,
-                        mission: .deliver(
-                            good: good, amount: 1,
-                            fromProducer: producerId, toWarehouse: warehouseId
-                        ),
-                        path: path
-                    ),
+                    CarrierSpawn(producerId: producerId, road: road, good: good, mission: mission, path: path),
                     events: &events
                 )
                 break
             }
         }
+    }
+
+    /// Where producers may send output this tick, listed once.
+    private struct DestinationCandidates {
+        let buffers: [Building]
+        let waitingSites: [Building]
+        let consumers: [Good: [GoodConsumer]]
+        let tileToIsland: [TileCoordinate: IslandID]
+    }
+
+    /// Where one unit of `good` from `producer` goes, and the road path
+    /// there: a waiting construction site first, then a short consumer,
+    /// then the nearest goods buffer with room.
+    private func destination(
+        of good: Good,
+        from producer: Building,
+        road: TileCoordinate,
+        among candidates: DestinationCandidates
+    ) -> (Carrier.Mission, [TileCoordinate])? {
+        let islandID = islandFor(building: producer, tileToIsland: candidates.tileToIsland)
+        if let (siteId, path) = findWaitingSiteOnIsland(
+            fromRoad: road, good: good, islandID: islandID,
+            tileToIsland: candidates.tileToIsland, among: candidates.waitingSites
+        ) {
+            return (.deliverToConstructionSite(good: good, amount: 1, fromProducer: producer.id, toBuilding: siteId), path)
+        }
+        if let (consumerId, path) = nearestShortConsumer(
+            of: good, from: producer, road: road, among: candidates.consumers[good] ?? []
+        ) {
+            return (.deliverToConsumer(good: good, amount: 1, fromProducer: producer.id, toConsumer: consumerId), path)
+        }
+        if let (bufferId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: candidates.buffers) {
+            return (.deliver(good: good, amount: 1, fromProducer: producer.id, toWarehouse: bufferId), path)
+        }
+        return nil
+    }
+
+    /// A consumer of a good, with the amount its recipe or fuel uses at a time.
+    struct GoodConsumer {
+        let building: Building
+        let amount: Int
+    }
+
+    /// Operational buildings that take each good as a recipe input or
+    /// fuel, in entity order.
+    func consumersByGood() -> [Good: [GoodConsumer]] {
+        var consumers: [Good: [GoodConsumer]] = [:]
+        for building in buildings.values.sorted(by: { $0.id.raw < $1.id.raw }) where building.state == .operational {
+            for (good, amount) in Self.suppliedGoods(of: building) {
+                consumers[good, default: []].append(GoodConsumer(building: building, amount: amount))
+            }
+        }
+        return consumers
+    }
+
+    /// The short consumer of `good` with the shortest road path from
+    /// `producer`'s road; ties go to the lower entity ID. Short means
+    /// the same owner, and stock plus inbound below twice the recipe
+    /// amount, as for supply carriers. Spec: `warehouses-and-logistics`
+    /// / Producers deliver to short consumers.
+    private func nearestShortConsumer(
+        of good: Good,
+        from producer: Building,
+        road: TileCoordinate,
+        among consumers: [GoodConsumer]
+    ) -> (EntityID, [TileCoordinate])? {
+        var best: (EntityID, [TileCoordinate])?
+        for consumer in consumers {
+            let building = consumer.building
+            guard building.id != producer.id, building.owner == producer.owner,
+                  needsSupply(building.id, good: good, amount: consumer.amount),
+                  let consumerRoad = anyAdjacentRoad(
+                      anchor: building.anchor,
+                      footprint: BuildingCatalog.spec(for: building.kind).footprint
+                  ),
+                  let path = roadPath(from: road, to: consumerRoad)
+            else { continue }
+            if best.map({ path.count < $0.1.count }) ?? true {
+                best = (building.id, path)
+            }
+        }
+        return best
     }
 
     /// Bundle of spawn arguments, packed so `spawnCarrier` stays

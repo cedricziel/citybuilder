@@ -8,6 +8,10 @@ public struct Carrier: Hashable, Codable, Sendable {
     public enum Mission: Hashable, Codable, Sendable {
         case deliver(good: Good, amount: Int, fromProducer: EntityID, toWarehouse: EntityID)
         case retrieve(good: Good, amount: Int, fromWarehouse: EntityID, toConsumer: EntityID)
+        /// Producer→consumer hop for a consumer short of the good, so a
+        /// chain skips storage. Spec: `warehouses-and-logistics` /
+        /// Producers deliver to short consumers.
+        case deliverToConsumer(good: Good, amount: Int, fromProducer: EntityID, toConsumer: EntityID)
         /// Spec: `add-construction-stalls` / `warehouses-and-logistics`
         /// Producer→site delivery for materials a `.waitingForMaterials`
         /// building still needs. Arrival increments
