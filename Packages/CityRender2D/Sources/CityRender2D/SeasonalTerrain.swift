@@ -21,11 +21,16 @@ extension IsoWorldScene {
     /// The sprite for a tile drawn from its own terrain: the season's look when the atlas has it,
     /// then the tile's variant of that look when the atlas has it (grass and rock come in variants).
     func terrainSpriteName(kind: TerrainType, coord: TileCoordinate) -> String {
-        let seasonal = Self.seasonalTerrainName(kind: kind, season: appliedSeason).flatMap { hasSprite($0) ? $0 : nil }
-        let stem = seasonal ?? "terrain-\(kind.rawValue)"
         let count = SpriteAtlas.terrainVariantCounts[kind] ?? 1
-        guard count > 1 else { return stem }
-        let variant = SpriteAtlas.variantAssetName(stem: stem, variant: SpriteAtlas.variantIndex(coord: coord, count: count))
+        return terrainSpriteName(kind: kind, season: appliedSeason, variant: SpriteAtlas.variantIndex(coord: coord, count: count))
+    }
+
+    /// The sprite for `kind` in `season`, in `variant` where the kind has variants.
+    func terrainSpriteName(kind: TerrainType, season: Season, variant index: Int) -> String {
+        let seasonal = Self.seasonalTerrainName(kind: kind, season: season).flatMap { hasSprite($0) ? $0 : nil }
+        let stem = seasonal ?? "terrain-\(kind.rawValue)"
+        guard (SpriteAtlas.terrainVariantCounts[kind] ?? 1) > 1 else { return stem }
+        let variant = SpriteAtlas.variantAssetName(stem: stem, variant: index)
         guard hasSprite(variant) else {
             SpriteAtlas.logMissOnce(variant) // rendering-2_5d: Missing-sprite fallback in release
             return stem

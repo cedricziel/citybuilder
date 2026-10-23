@@ -54,7 +54,7 @@ extension IsoWorldScene {
     private func reconcileTerrain(in view: VisibleTiles, with snapshot: WorldSnapshot) {
         let redrawAll = refreshTerrainMaps(for: snapshot)
         if redrawAll, let transitionMap {
-            showDeepWater(DeepWaterMask(
+            showGroundBackdrop(GroundBackdropMap(
                 width: snapshot.mapWidth,
                 height: snapshot.mapHeight,
                 grid: snapshot.terrainGrid,
@@ -62,7 +62,7 @@ extension IsoWorldScene {
             ))
         }
         if redrawAll || view != shownTiles {
-            fitDeepWater(to: Culling.screenBounds(camera: snapshot.camera, viewSize: size))
+            fitGroundBackdrop(to: Culling.screenBounds(camera: snapshot.camera, viewSize: size))
         }
         guard redrawAll || view != shownTiles || !staleTerrain.isEmpty else { return }
         spriteReconcileCounts.terrainPasses += 1
@@ -79,10 +79,10 @@ extension IsoWorldScene {
         staleTerrain.removeAll()
     }
 
-    /// Places the tile's terrain sprite, replacing the one there when it differs. Open water has no
-    /// sprite of its own: the open-water backdrop draws it.
+    /// Places the tile's terrain sprite, replacing the one there when it differs. Plain ground has no
+    /// sprite of its own, as the ground backdrop draws it: such a tile places only its tree or rock.
     private func drawTerrain(at coord: TileCoordinate, in snapshot: WorldSnapshot) {
-        guard deepWaterMask?.contains(coord) != true else {
+        guard groundBackdropMap?.covers(coord) != true || objectMap?.object(at: coord) != nil else {
             removeTerrain(at: coord)
             return
         }
