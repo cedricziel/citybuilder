@@ -21,13 +21,15 @@ extension IsoWorldScene {
         return texture
     }
 
-    /// The pennant child for a rival building, at the top-left of
-    /// `sprite` and above it.
-    static func makePennantNode(colourHex: String, on sprite: SKSpriteNode) -> SKNode {
+    /// The pennant child for a rival building, over the left corner of its
+    /// footprint and at the top of `sprite`. The footprint, not the sprite:
+    /// a sprite is wider than its footprint where its shadow needs the room.
+    static func makePennantNode(colourHex: String, on sprite: SKSpriteNode, footprint: Footprint) -> SKNode {
         let pennant = SKSpriteNode(texture: pennantTexture(colourHex: colourHex))
         pennant.name = pennantNodeName
         pennant.anchorPoint = CGPoint(x: 0, y: 1)
-        pennant.position = CGPoint(x: -sprite.size.width / 2, y: sprite.size.height)
+        let footprintWidth = CGFloat(32 * (footprint.width + footprint.height))
+        pennant.position = CGPoint(x: -min(sprite.size.width, footprintWidth) / 2, y: sprite.size.height)
         pennant.zPosition = 1
         pennant.userData = [pennantColourKey: colourHex]
         return pennant
