@@ -8,12 +8,19 @@
 struct PlayerBot {
     let center: Building
     let tradesAtMarket: Bool
+    /// Follows the first-hour guide (`first-hour-guidance`): houses
+    /// before anything else until `firstHouses`, then no new building
+    /// whose upkeep would push one collection's net below zero.
+    let followsFirstSteps: Bool
     private var script = RivalAIState()
 
-    init(center: Building, tradesAtMarket: Bool) {
+    init(center: Building, tradesAtMarket: Bool, followsFirstSteps: Bool = false) {
         self.center = center
         self.tradesAtMarket = tradesAtMarket
+        self.followsFirstSteps = followsFirstSteps
     }
+
+    static let firstHouses = 3
 
     static let cushion: Int64 = 50
     static let sellBelowBalance: Int64 = 150
@@ -33,6 +40,10 @@ struct PlayerBot {
         }
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
+        if followsFirstSteps, town.houses < Self.firstHouses {
+            _ = place(.house, in: &world, plan: &plan, stock: stock)
+            return
+        }
         let kinds = town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
         for kind in kinds where !town.waiting || kind == .lumberjackHut {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
@@ -54,6 +65,11 @@ struct PlayerBot {
     private func place(
         _ kind: BuildingKind, in world: inout World, plan: inout RivalTownPlan, stock: [Good: Int]
     ) -> Bool {
+        if followsFirstSteps, kind != .house {
+            let (tax, upkeep) = world.playerTaxAndUpkeep
+            let added = world.difficulty.scaledUpkeep(BuildingCatalog.spec(for: kind).upkeep)
+            guard tax - upkeep - added >= 0 else { return false }
+        }
         var buys: [Command] = []
         var price: Int64 = 0
         for (good, amount) in world.materialCost(of: kind, for: .player).sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
@@ -117,12 +133,13 @@ extension World {
     /// Plays `ticks` ticks of a new game with `bot` taking a turn every
     /// 50 ticks; true when the game ends in bankruptcy.
     static func botGoesBankrupt(
-        layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool, ticks: Int
+        layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool,
+        followsFirstSteps: Bool = false, ticks: Int
     ) -> Bool {
         var world = World.newGame(layout: layout, seed: seed, difficulty: difficulty)
         world.calendar = CalendarState(startYear: 1200, isActive: true)
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return false }
-        var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket)
+        var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket, followsFirstSteps: followsFirstSteps)
         for tick in 1 ... ticks where !world.economy.gameOver {
             if tick.isMultiple(of: 50) { bot.takeTurn(&world) }
             world.tick()
