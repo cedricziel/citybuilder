@@ -83,8 +83,12 @@ public final class IsoWorldScene: SKScene {
     /// farms, Hens peck by the houses.
     var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
     var lastAnimalPass: AnimalPass?
-    /// The animals' clock while Reduce Motion holds them still.
+    /// The animals' and workers' clock while Reduce Motion holds them still.
     var animalFrozenClock: UInt64?
+    /// Woodcutters and miners by site. Spec: `rendering-2_5d` / Workers
+    /// walk out from the gather sites.
+    var gatherNodes: [EntityID: (node: SKSpriteNode, pose: GatherPose)] = [:]
+    var lastGatherPass: AnimalPass?
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
@@ -208,6 +212,7 @@ public final class IsoWorldScene: SKScene {
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)
+        reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)

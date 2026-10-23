@@ -40,6 +40,15 @@ extension IsoWorldScene {
         snapshot.terrain(at: tile) == .grass && snapshot.occupiedTiles[tile] == nil && objectMap?.object(at: tile) == nil
     }
 
+    /// The clock animals and workers move by: the day clock, held where it
+    /// was when Reduce Motion came on.
+    func ambientClock(for snapshot: WorldSnapshot) -> UInt64 {
+        let dayClock = AnimalPlanner.dayClock(tick: snapshot.tickCount)
+        let clock = reduceMotion ? (animalFrozenClock ?? dayClock) : dayClock
+        animalFrozenClock = reduceMotion ? clock : nil
+        return clock
+    }
+
     /// Hens may also stand on a road in front of the house.
     func isYard(_ tile: TileCoordinate, in snapshot: WorldSnapshot) -> Bool {
         if let id = snapshot.occupiedTiles[tile] { return snapshot.buildings[id]?.kind == .road }
@@ -63,10 +72,7 @@ extension IsoWorldScene {
             return
         }
         lastAnimalPass = pass
-        // Reduce Motion holds the animals where they stand when it comes on.
-        let dayClock = AnimalPlanner.dayClock(tick: snapshot.tickCount)
-        let clock = reduceMotion ? (animalFrozenClock ?? dayClock) : dayClock
-        animalFrozenClock = reduceMotion ? clock : nil
+        let clock = ambientClock(for: snapshot)
         let animals = range.map { visible in
             AnimalPlanner.animals(
                 in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: clock,
