@@ -240,19 +240,8 @@ public enum SpriteAtlas {
     /// `rendering-2_5d` / `Missing-sprite fallback in release`.
     public nonisolated(unsafe) static let placeholderTexture: SKTexture = makePlaceholderTexture()
 
-    /// Test-only hook: when set, called instead of `NSLog` for the
-    /// first miss observed for each name. Tests use this to assert
-    /// the log-once invariant without intercepting the system log.
-    nonisolated(unsafe) static var missLogHook: ((String) -> Void)?
-
     /// The process-wide miss log behind `textureOrPlaceholder(named:)`.
-    static let missLog = MissLog { name in
-        if let hook = missLogHook {
-            hook(name)
-        } else {
-            NSLog("[CityRender2D] missing sprite: %@", name)
-        }
-    }
+    static let missLog = MissLog { NSLog("[CityRender2D] missing sprite: %@", $0) }
 
     /// Returns the named texture, or `placeholderTexture` if the
     /// lookup fails. The missing name is logged exactly once per
@@ -260,8 +249,13 @@ public enum SpriteAtlas {
     /// `assertCatalogComplete()` check still surfaces loudly in
     /// release without crashing the renderer.
     public static func textureOrPlaceholder(named name: String) -> SKTexture {
+        textureOrPlaceholder(named: name, log: missLog)
+    }
+
+    /// `textureOrPlaceholder(named:)`, reporting a miss to `log`.
+    static func textureOrPlaceholder(named name: String, log: MissLog) -> SKTexture {
         if let tex = texture(named: name) { return tex }
-        missLog.logOnce(name)
+        log.logOnce(name)
         return placeholderTexture
     }
 
@@ -287,12 +281,6 @@ public enum SpriteAtlas {
         #endif
         texture.filteringMode = .nearest
         return texture
-    }
-
-    /// Test-only: clears the per-process miss-log set so a follow-up
-    /// test observes the first-miss path.
-    static func resetMissLogForTesting() {
-        missLog.reset()
     }
 
     // MARK: - Catalog & presence validation
@@ -447,9 +435,5 @@ final class MissLog: Sendable {
     func logOnce(_ name: String) {
         guard logged.withLock({ $0.insert(name).inserted }) else { return }
         sink(name)
-    }
-
-    func reset() {
-        logged.withLock { $0.removeAll() }
     }
 }

@@ -115,7 +115,7 @@ extension IsoWorldScene {
     /// tie flips (terrain-v2, design D4). The ground node sits at z 0, and a child's z adds to its
     /// parent's.
     private func makeObjectNode(named name: String, coord: TileCoordinate) -> SKSpriteNode {
-        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        let node = SKSpriteNode(texture: textureOrPlaceholder(named: name))
         node.name = Self.terrainObjectNodeName
         node.userData = [Self.textureNameKey: name]
         node.anchorPoint = CGPoint(x: 56.0 / 144.0, y: 20.0 / 132.0)
@@ -129,7 +129,7 @@ extension IsoWorldScene {
         // tint, so the transition comes first.
         let transitionNames = transition.map { [$0.assetName(in: appliedSeason), $0.assetName] } ?? []
         if let name = transitionNames.first(where: hasSprite) {
-            let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+            let node = SKSpriteNode(texture: textureOrPlaceholder(named: name))
             node.userData = [Self.textureNameKey: name]
             node.zPosition = 0
             return node
@@ -158,7 +158,7 @@ extension IsoWorldScene {
         var textureName: String?
         // The stem of a look with its own operational frames: a culture variant or a shore facing.
         var animationBase: String?
-        let signature = Self.signatureTexture(kind: kind, look: look)
+        let signature = signatureTexture(kind: kind, look: look)
         if let (name, signatureTexture) = signature {
             textureName = name
             texture = signatureTexture
@@ -172,11 +172,11 @@ extension IsoWorldScene {
             // Spec: `rendering-2_5d` / Houses render their tier.
             let name = "building-house-tier\(houseTier.rawValue)"
             textureName = name
-            texture = SpriteAtlas.textureOrPlaceholder(named: name)
+            texture = textureOrPlaceholder(named: name)
         } else if let roadLink, hasSprite(roadLink.assetName) {
             // Spec: `rendering-2_5d` / Roads join their neighbours.
             textureName = roadLink.assetName
-            texture = SpriteAtlas.textureOrPlaceholder(named: roadLink.assetName)
+            texture = textureOrPlaceholder(named: roadLink.assetName)
         } else if let orientation {
             (texture, animationBase) = shoreLook(
                 kind: kind,
@@ -223,7 +223,7 @@ extension IsoWorldScene {
             frame: state == .constructing ? (constructionFrame ?? 0) : 0
         )
         let stem = ShoreOrientationMath.textureName(kind: kind, orientation: orientation, state: nil, frame: nil)
-        return (SpriteAtlas.textureOrPlaceholder(named: name), stem)
+        return (textureOrPlaceholder(named: name), stem)
     }
 
     /// Red disc with a white bar floating over a building that no road
@@ -250,7 +250,7 @@ extension IsoWorldScene {
     /// `add-construction-stalls` / `rendering-2_5d` Requirement:
     /// Waiting-for-materials badge.
     private func makeWaitingBadgeNode() -> SKSpriteNode {
-        let texture = SpriteAtlas.textureOrPlaceholder(named: "overlay-waiting-materials")
+        let texture = textureOrPlaceholder(named: "overlay-waiting-materials")
         let badge = SKSpriteNode(texture: texture)
         badge.name = Self.waitingBadgeNodeName
         badge.anchorPoint = CGPoint(x: 0.5, y: 0.5)
@@ -264,14 +264,14 @@ extension IsoWorldScene {
 
     /// The idle sprite of a signature building that is off, or the
     /// construction frame of an unfinished monument; nil otherwise.
-    static func signatureTexture(kind: BuildingKind, look: BuildingLook) -> (String, SKTexture)? {
+    func signatureTexture(kind: BuildingKind, look: BuildingLook) -> (String, SKTexture)? {
         if let frame = look.projectFrame {
             let name = "building-\(kind.rawValue)-constructing-\(frame)"
-            return (name, SpriteAtlas.textureOrPlaceholder(named: name))
+            return (name, textureOrPlaceholder(named: name))
         }
         guard look.idle else { return nil }
         let name = "building-\(kind.rawValue)"
-        return (name, SpriteAtlas.textureOrPlaceholder(named: name))
+        return (name, textureOrPlaceholder(named: name))
     }
 
     /// Smoky houses are tinted grey (design D9).

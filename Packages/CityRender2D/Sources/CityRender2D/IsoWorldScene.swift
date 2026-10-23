@@ -33,8 +33,11 @@ public final class IsoWorldScene: SKScene {
     /// seasonal variants) check it before falling back; tests replace it
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
-    /// Where a missing variant is reported; tests give a scene its own log.
-    var missLog = SpriteAtlas.missLog
+    /// Where the scene reports a missing sprite, variant or plain; tests give a scene its own log.
+    var missLog = SpriteAtlas.missLog {
+        didSet { shipLayer.missLog = missLog }
+    }
+
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
     private(set) var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
@@ -265,7 +268,7 @@ public final class IsoWorldScene: SKScene {
         }
         // A shore building has no facing-free sprite: show the facing it would get there.
         let shore = ShoreOrientationMath.ghostTextureName(kind: ghost.kind, anchor: ghost.tile, terrain: snapshot.terrain(at:))
-        let texture = shore.map(SpriteAtlas.textureOrPlaceholder(named:))
+        let texture = shore.map(textureOrPlaceholder(named:))
             ?? SpriteAtlas.buildingTextureOrPlaceholder(for: ghost.kind, coord: ghost.tile)
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
@@ -438,3 +441,10 @@ private final class SnapshotProviderBridge: NSObject, IsoWorldDataSource {
     }
 }
 #endif
+
+extension IsoWorldScene {
+    /// The named texture, or the placeholder with the miss reported to `missLog`.
+    func textureOrPlaceholder(named name: String) -> SKTexture {
+        SpriteAtlas.textureOrPlaceholder(named: name, log: missLog)
+    }
+}

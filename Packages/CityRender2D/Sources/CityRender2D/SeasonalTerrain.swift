@@ -41,11 +41,7 @@ extension IsoWorldScene {
     /// A tile drawn from its own terrain, looping `<name>-<frame>` when its kind animates.
     func plainTerrainNode(kind: TerrainType, coord: TileCoordinate) -> SKSpriteNode {
         let name = terrainSpriteName(kind: kind, coord: coord)
-        let texture = SpriteAtlas.texture(named: name) ?? {
-            missLog.logOnce(name)
-            return SpriteAtlas.placeholderTexture
-        }()
-        let node = SKSpriteNode(texture: texture)
+        let node = SKSpriteNode(texture: textureOrPlaceholder(named: name))
         node.userData = [Self.textureNameKey: name]
         if let action = Self.terrainLoop(name: name, kind: kind) {
             node.run(action, withKey: "anim")

@@ -133,7 +133,7 @@ extension IsoWorldScene {
         let names = looks.map { lookSpriteName($0, season: season) }
         let key = names.joined(separator: " ")
         if let hit = Self.lookStripCache[key] { return hit }
-        let strip = Self.drawLookStrip(looks: looks, names: names, bases: looks.map { lookSpriteName($0, season: season, variant: 0) })
+        let strip = drawLookStrip(looks: looks, names: names, bases: looks.map { lookSpriteName($0, season: season, variant: 0) })
         Self.lookStripCache[key] = strip
         return strip
     }
@@ -149,9 +149,9 @@ extension IsoWorldScene {
         return lookSpriteName(look, season: appliedSeason)
     }
 
-    private static func drawLookStrip(looks: [GroundBackdropMap.Look], names: [String], bases: [String]) -> SKTexture {
-        let columns = groundLookFrames
-        let probe = SpriteAtlas.textureOrPlaceholder(named: "terrain-grass").cgImage()
+    private func drawLookStrip(looks: [GroundBackdropMap.Look], names: [String], bases: [String]) -> SKTexture {
+        let columns = Self.groundLookFrames
+        let probe = textureOrPlaceholder(named: "terrain-grass").cgImage()
         let scale = CGFloat(probe.width) / IsoMath.tileWidth
         let tile = CGSize(width: IsoMath.tileWidth * scale, height: IsoMath.tileHeight * scale)
         let cell = CGSize(width: tile.width * 2, height: tile.height * 2)
@@ -193,10 +193,10 @@ extension IsoWorldScene {
     }
 
     /// Frame `frame` of a looping terrain sprite, or the sprite itself when it does not animate.
-    private static func frameImage(_ name: String, kind: TerrainType, frame: Int) -> CGImage {
+    private func frameImage(_ name: String, kind: TerrainType, frame: Int) -> CGImage {
         let frames = SpriteAnimation.entry(for: .terrain(kind))?.frameCount ?? 0
         let framed = frames > 1 ? SpriteAtlas.texture(named: "\(name)-\(frame % frames)") : nil
-        return (framed ?? SpriteAtlas.textureOrPlaceholder(named: name)).cgImage()
+        return (framed ?? textureOrPlaceholder(named: name)).cgImage()
     }
 
     /// Scene point → tile (the inverse of `IsoMath.screenPoint(forTile:)`) → its look and phase →

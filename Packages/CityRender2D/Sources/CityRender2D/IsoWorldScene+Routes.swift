@@ -121,6 +121,8 @@ final class ShipLayerNode: SKNode {
     }
 
     private var visuals: [EntityID: ShipVisual] = [:]
+    /// Where a missing ship sprite is reported; the scene hands down its own.
+    var missLog = SpriteAtlas.missLog
     /// What a pass draws from; the snapshot changes at 10 Hz, the
     /// scene updates every frame.
     private struct PassKey: Equatable {
@@ -178,7 +180,7 @@ final class ShipLayerNode: SKNode {
         let texture = ShipRenderMath.textureName(facing: ShipRenderMath.facing(forHeading: ship.heading), frame: frame)
         let target = ShipRenderMath.screenPoint(for: ship.position)
         guard var visual = visuals[ship.id] else {
-            let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: texture))
+            let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: texture, log: missLog))
             node.name = "ship-\(ship.id.raw)"
             node.anchorPoint = CGPoint(x: 0.5, y: 0.3)
             node.position = target
@@ -189,7 +191,7 @@ final class ShipLayerNode: SKNode {
         }
         if visual.texture != texture {
             visual.texture = texture
-            let atlasTexture = SpriteAtlas.textureOrPlaceholder(named: texture)
+            let atlasTexture = SpriteAtlas.textureOrPlaceholder(named: texture, log: missLog)
             visual.node.texture = atlasTexture
             visual.node.size = atlasTexture.size()
         }
