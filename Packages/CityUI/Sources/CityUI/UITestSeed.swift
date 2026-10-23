@@ -75,8 +75,9 @@ public enum UITestSeed {
     }
 
     /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore`,
-    /// `-uiTestSeedPort` or `-uiTestSeedTown` (with `-uiTestShowcase`, `-uiTestSeason`, `-uiTestCulture`
-    /// and `-uiTestAge`), checked in that order. `-uiTestCamera x,y,zoom` then moves its camera.
+    /// `-uiTestSeedPort`, `-uiTestSeedArchipelago` (the largest map, seed 0, for frame times) or
+    /// `-uiTestSeedTown` (with `-uiTestShowcase`, `-uiTestSeason`, `-uiTestCulture` and `-uiTestAge`),
+    /// checked in that order. `-uiTestCamera x,y,zoom` then moves its camera.
     public static func world(fromArguments arguments: [String]) -> World? {
         guard var world = seededWorld(fromArguments: arguments) else { return nil }
         if let camera = camera(fromArguments: arguments) {
@@ -89,6 +90,7 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedLived") { return livedTownWorld() }
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
         if arguments.contains("-uiTestSeedPort") { return portWorld() }
+        if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
@@ -114,6 +116,11 @@ public enum UITestSeed {
     /// for (or a regular new game), so in-game shots need no clicks.
     public static func startsGame(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestStartGame")
+    }
+
+    /// `-uiTestShowStats`: frame rate, node and draw counts in the corner of the map, for performance shots.
+    public static func showsStats(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestShowStats")
     }
 
     /// The camera after `-uiTestCamera x,y,zoom` (tile coordinates and zoom), if any.
