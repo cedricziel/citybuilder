@@ -152,3 +152,18 @@ func missingGrassVariantIsLoggedOnce() {
     #expect(!variants.isEmpty)
     #expect(variants.count == Set(variants).count)
 }
+
+/// A plain tile whose texture is missing reports it to the scene's own log, once.
+@MainActor
+@Test("A missing plain terrain texture is logged once to the scene's log")
+func missingPlainTerrainTextureIsLoggedToSceneLog() {
+    let logged = Mutex<[String]>([])
+    let scene = IsoWorldScene()
+    scene.missLog = MissLog { name in logged.withLock { $0.append(name) } }
+    scene.hasSprite = { _ in false }
+    let name = scene.terrainSpriteName(kind: .beach, coord: TileCoordinate(x: 0, y: 0))
+    #expect(SpriteAtlas.texture(named: name) == nil, "the test bundle carries no atlases")
+    _ = scene.plainTerrainNode(kind: .beach, coord: TileCoordinate(x: 0, y: 0))
+    _ = scene.plainTerrainNode(kind: .beach, coord: TileCoordinate(x: 1, y: 0))
+    #expect(logged.withLock(\.self) == [name])
+}
