@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "isokit"
 ---
 ## Function
 
@@ -9,18 +9,15 @@ shared with `building-house`. No operational animation.
 
 ## Visual identity
 
-Brick buildings under upturned slate roofs: pale string courses, arched portals and brick chimneys. Palette anchors: `#A53329`/`#7A1F1A` brick, `#7A6B59`/`#3F2A26` roof, `#A89884` trim.
-
-Drawn by the procedural building kit (`scripts/generate_sprites_ai/buildings.py`, `age_style("east-asian", "industrial")`: the `east-asian` culture style with the industrial age's materials and shapes) in the register pinned by `world.md` § Building register. Same 2×2 footprint and bottom anchor as
-`building-house`.
+Rendered by IsoKit in the shared light rig. Brick houses with pale string courses under slate hip roofs. Same 2×2 footprint and bottom anchor as `building-house`.
 
 ## Sheet
 
 Grid: 4 cols × 2 rows. Default sheet size.
 
-- (0, 0): `building-house-industrial-east-asian` — canonical operational base: single-storey brick house with a flared roof and chimney
-- (0, 1): `building-house-tier2-industrial-east-asian` — tier 2: two storeys with a balcony and two chimneys
-- (0, 2): `building-house-tier3-industrial-east-asian` — tier 3: three-storey brick hall with a clock turret on the roof
+- (0, 0): `building-house-industrial-east-asian` — a one-storey brick house
+- (0, 1): `building-house-tier2-industrial-east-asian` — two storeys
+- (0, 2): `building-house-tier3-industrial-east-asian` — three storeys with a clock turret on the roof
 - (0, 3): spare
 - (1, 0): spare
 - (1, 1): spare
@@ -29,13 +26,12 @@ Grid: 4 cols × 2 rows. Default sheet size.
 
 ## Animation
 
-None. Construction uses the shared `building-house-constructing-*`
-frames.
+None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
 
 ## Recipe
 
-- Recipe: `building-house-industrial-east-asian` (IsoKit), planned
+- Recipe: `building-house-industrial-east-asian` (IsoKit)
 - Also renders: `building-house-tier2-industrial-east-asian`, `building-house-tier3-industrial-east-asian`
-- Cell: set when the recipe lands
+- Cell: 2×2 footprint, 112 pt tall (tier 2 144 pt, tier 3 176 pt)
 - Construction stages: 0
 - Operational frames: 0

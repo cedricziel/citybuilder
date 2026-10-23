@@ -174,3 +174,18 @@ func lanesHoldTheirFigures(layout: PlazaLayout) {
         #expect(lane.count >= figures)
     }
 }
+
+@MainActor
+@Test("scenario: a mixed crowd")
+func scenarioAMixedCrowd() {
+    let looks = (0 ..< PlazaCrowdPlanner.maxPerPlaza).map { PlazaCrowdPlanner.look(center: center.id, slot: $0) }
+    #expect(Set(looks) == Set(SpriteAtlas.WalkerLook.allCases))
+    #expect(looks == (0 ..< PlazaCrowdPlanner.maxPerPlaza).map { PlazaCrowdPlanner.look(center: center.id, slot: $0) })
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.reconcilePlazaCrowd(with: town(residents: 30, tick: 180), now: 0)
+    #expect(scene.plazaNodes.count == 8)
+    #expect(scene.plazaNodes.allSatisfy { key, shown in
+        shown.node.colorBlendFactor == 0 && shown.pose.look == PlazaCrowdPlanner.look(center: key.townCenter, slot: key.slot)
+    })
+}
