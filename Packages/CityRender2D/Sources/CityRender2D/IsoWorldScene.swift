@@ -88,6 +88,12 @@ public final class IsoWorldScene: SKScene {
     var smokeSources: [SmokeSource] = []
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
+    /// Sheep, cows and hens. Spec: `rendering-2_5d` / Animals graze by the
+    /// farms, Hens peck by the houses.
+    var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
+    var lastAnimalPass: AnimalPass?
+    /// The animals' clock while Reduce Motion holds them still.
+    var animalFrozenClock: UInt64?
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
@@ -210,6 +216,7 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
+        reconcileAnimals(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
