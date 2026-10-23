@@ -9,9 +9,10 @@ private func site(_ raw: UInt32, _ kind: BuildingKind, at x: Int, _ y: Int) -> B
     Building(id: EntityID(raw: raw), kind: kind, anchor: TileCoordinate(x: x, y: y), state: .operational)
 }
 
-/// Forest from column 14 east, mountain from row 30 south, grass between.
+/// Forest from column 14 east above row 25, mountain from row 30 south,
+/// grass elsewhere.
 private func land(_ tile: TileCoordinate) -> TerrainType {
-    tile.y >= 30 ? .mountain : tile.x >= 14 ? .forest : .grass
+    tile.y >= 30 ? .mountain : tile.x >= 14 && tile.y < 25 ? .forest : .grass
 }
 
 private func world(_ sites: [Building], tick: UInt64 = 180, issues: [EntityID: BuildingIssue] = [:], zoom: Double = 1) -> WorldSnapshot {
