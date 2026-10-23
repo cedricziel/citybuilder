@@ -3,7 +3,7 @@
 ### Requirement: Building animations follow pause and Reduce Motion
 
 The renderer SHALL keep one state for every building animation on screen: running, held or stopped.
-- With Reduce Motion on, the state SHALL be stopped, and each animated building SHALL show the frame it was drawn with, its operational frame 0.
+- With Reduce Motion on, the state SHALL be stopped, and each animated building SHALL show its operational frame 0, culture looks included.
 - Otherwise, while the game is paused (no new tick for 0.3 s), the state SHALL be held: each building animation SHALL keep its current frame.
 - Otherwise the state SHALL be running.
 

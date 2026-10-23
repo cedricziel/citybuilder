@@ -20,18 +20,19 @@ extension IsoWorldScene {
 /// `rendering-2_5d` / Building animations follow pause and Reduce Motion.
 @MainActor
 enum BuildingMotion {
-    /// Paused, a building holds its current frame; with Reduce Motion it shows the frame it was
-    /// drawn with, operational frame 0.
+    /// Paused, a building holds its current frame; with Reduce Motion it shows its operational
+    /// frame 0.
     typealias State = MotionState
 
     static let key = "anim"
     /// The node's `userData` entry holding the texture it rests on.
     static let restKey = "animRest"
 
-    /// Runs `action` on `node` as its animation, in `state`.
-    static func arm(_ action: SKAction, on node: SKSpriteNode, state: State) {
+    /// Runs `action` on `node` as its animation, in `state`. Stopped, the node shows `rest`, else the
+    /// texture it was drawn with.
+    static func arm(_ action: SKAction, on node: SKSpriteNode, resting rest: SKTexture? = nil, state: State) {
         if node.userData == nil { node.userData = [:] }
-        node.userData?[restKey] = node.texture
+        node.userData?[restKey] = rest ?? node.texture
         node.run(action, withKey: key)
         apply(state, to: node)
     }

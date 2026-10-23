@@ -289,10 +289,11 @@ extension IsoWorldScene {
 
     /// Loops an operational building's frames: its own look's, else the kind's shared ones.
     private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, animationBase: String?) {
-        guard state == .operational,
-              let action = SpriteAnimation.loopingAction(for: .buildingOperational(kind, stem: animationBase))
-        else { return }
-        BuildingMotion.arm(action, on: node, state: buildingMotionState)
+        let key = SpriteAnimation.AnimationKey.buildingOperational(kind, stem: animationBase)
+        guard state == .operational, let action = SpriteAnimation.loopingAction(for: key) else { return }
+        // A culture look is drawn on its base sprite; it rests on its operational frame 0 like the rest.
+        let rest = SpriteAtlas.texture(named: SpriteAnimation.assetName(for: key, frame: 0))
+        BuildingMotion.arm(action, on: node, resting: rest, state: buildingMotionState)
     }
 
     private func textureForBuilding(
