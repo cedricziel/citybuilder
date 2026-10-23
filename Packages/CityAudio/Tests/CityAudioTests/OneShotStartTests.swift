@@ -6,18 +6,9 @@ import Testing
 // #191: one-shot pool nodes are driven from one serial queue, never from the calling thread, which
 // is the main thread during `GameSession.step`.
 
-/// A bundle holding one 50 ms silent `blip.wav`, laid out as the cue player looks files up.
-private let blipBundle: Bundle? = {
-    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("one-shot-start-tests")
-    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    guard let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1),
-          let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 2205),
-          let file = try? AVAudioFile(forWriting: folder.appendingPathComponent("blip.wav"), settings: format.settings)
-    else { return nil }
-    buffer.frameLength = 2205
-    try? file.write(from: buffer)
-    return Bundle(url: folder)
-}()
+/// One 50 ms silent `blip.wav`.
+@MainActor
+private let blipBundle = silentBundle(folder: "one-shot-start-tests", file: "blip.wav", seconds: 0.05)
 
 private let blip = DispatchedCue(cue: Bindings.Cue(file: "sfx/blip.wav", bus: .sfx))
 
@@ -149,4 +140,18 @@ func engineStopWhileAStartWaits() throws {
     rig.settle()
     #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
     #expect(rig.player.oneShotNodes(on: .sfx).first?.isPlaying == true)
+}
+
+@MainActor
+@Test("after a configuration change the next one-shot starts its node again")
+func configurationChangeRestartsPoolNodes() throws {
+    let rig = try Rig(poolSize: 1)
+    defer { rig.engine.stop() }
+    try rig.play(1)
+    rig.settle()
+    Thread.sleep(forTimeInterval: 0.08)
+    changeConfiguration(of: rig.engine)
+    try rig.play(1)
+    rig.settle()
+    #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
 }
