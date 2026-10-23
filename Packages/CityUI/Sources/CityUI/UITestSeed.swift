@@ -125,6 +125,11 @@ public enum UITestSeed {
         arguments.contains("-uiTestStartGame")
     }
 
+    /// `-uiTestOpenStocks`: the started game opens with the stocks tray shown, for shots of the goods icons.
+    public static func opensStocks(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestOpenStocks")
+    }
+
     /// `-uiTestShowStats`: frame rate, node and draw counts in the corner of the map, for performance shots.
     public static func showsStats(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestShowStats")
