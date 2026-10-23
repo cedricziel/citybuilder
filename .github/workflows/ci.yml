@@ -220,30 +220,10 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # CityRender2D's cutover test drives the byte half of
-      # `make sprites-verify`, the hermetic regen gate, so it needs the
-      # sprite pipeline's venv.
-      - name: Install sprite pipeline libraries
-        if: matrix.packages == 'CityRender2D'
-        # libimagequant decides the atlas PNG bytes, so it is pinned.
-        run: scripts/ci/install-pinned-tools.sh sprites
-
-      - name: Set up Python for sprite pipeline
-        if: matrix.packages == 'CityRender2D'
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Bootstrap sprite venv
-        if: matrix.packages == 'CityRender2D'
-        run: make sprites-venv
-
       # A failing package doesn't stop the next, so one run reports every
       # broken package; the step fails at the end if any did.
       - name: swift test
         env:
-          # The hermetic gate must pass without an API key.
-          OPENAI_API_KEY: ""
           PACKAGES: ${{ matrix.packages }}
         run: |
           failed=""
@@ -257,27 +237,12 @@ jobs:
             exit 1
           fi
 
-      # PNG bytes depend on the encoder's zlib, so a sprite made on another
-      # OS can fail the byte-exact gate. Regenerate here and upload the
-      # atlases, so they can be committed as CI encodes them.
-      - name: Regenerate atlases after a sprite gate failure
-        if: failure() && matrix.packages == 'CityRender2D'
-        run: make sprites-offline
-
-      - name: Upload regenerated atlases
-        if: failure() && matrix.packages == 'CityRender2D'
-        uses: actions/upload-artifact@v7
-        with:
-          name: regenerated-atlases
-          path: Resources/*.atlas/
-
       - name: gamedata-check (committed catalogs match the packs)
         if: contains(matrix.packages, 'GameDataGen')
         run: make gamedata-check SWIFT=swift
 
-      # Second half of `make sprites-verify`: the CityRender2D tests run
-      # the byte check (`make sprites-regen-check`), this runs the content
-      # gate once, outside `swift test`.
+      # The content half of `make sprites-verify`. The art pipeline's tolerance
+      # check needs a Mac GPU, so it runs locally and in family PRs' test plans.
       - name: Sprite content gate
         if: matrix.packages == 'CityRender2D'
         run: make sprites-content
@@ -350,11 +315,8 @@ jobs:
       - name: Bootstrap sprite venv
         run: make sprites-venv
 
-      # The hermetic-regen check (`make sprites-verify`) runs inside the
-      # CityRender2D tests; only the pipeline's own unit tests run here.
+      # The art pipeline's own unit tests (terrain, roads, finalize, compare).
       - name: Sprite pipeline pytest
-        env:
-          OPENAI_API_KEY: ""
         run: make sprites-test
 
       - name: Select Xcode

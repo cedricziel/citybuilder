@@ -95,7 +95,7 @@ func scenarioLegacyPathIsEmpty() {
     let url = worktreeRoot().appendingPathComponent("scripts/generate-sprites.swift")
     #expect(
         !FileManager.default.fileExists(atPath: url.path),
-        "scripts/generate-sprites.swift must not exist (legacy path quarantined to scripts/legacy/)"
+        "scripts/generate-sprites.swift must not exist: the procedural generator is retired"
     )
 }
 
@@ -119,63 +119,4 @@ func scenarioReadmeReferencesNoProceduralWorkflow() throws {
     )
 }
 
-// MARK: - Requirement: Hermetic regeneration via make sprites
-
-@Test("scenario: offline regen reproduces committed pngs")
-func scenarioOfflineRegenReproducesCommittedPngs() throws {
-    // Drives `make sprites-regen-check`, the byte half of
-    // `make sprites-verify`: it redirects pipeline writes to a tempdir,
-    // runs the pipeline offline against the committed `_sheets/`, and
-    // exits non-zero on any byte mismatch against the committed atlas
-    // PNGs. CI runs the other half, `make sprites-content`, as its own
-    // step, so this test doesn't build the content gate inside `swift test`.
-    let process = Process()
-    process.currentDirectoryURL = worktreeRoot()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["make", "sprites-regen-check"]
-    let pipe = Pipe()
-    process.standardOutput = pipe
-    process.standardError = pipe
-    // Strip OPENAI_API_KEY from the test process so the verify step
-    // also fails fast if it tries to call the API.
-    var env = ProcessInfo.processInfo.environment
-    env["OPENAI_API_KEY"] = ""
-    process.environment = env
-    try process.run()
-    process.waitUntilExit()
-    let output = String(
-        data: pipe.fileHandleForReading.readDataToEndOfFile(),
-        encoding: .utf8
-    ) ?? ""
-    #expect(
-        process.terminationStatus == 0,
-        "make sprites-regen-check exited \(process.terminationStatus):\n\(output)"
-    )
-}
-
-@Test("scenario: ci fails on a cache miss")
-func scenarioCiFailsOnACacheMiss() throws {
-    // CI's reproducibility gate is `make sprites-verify`. The
-    // scenario asserts that contributors who commit a catalog edit
-    // without the matching sheet hit a hard CI failure. We assert
-    // both anchors: `sprites-verify` must be a Makefile target, and
-    // the catalog/sheet consistency hook must be wired into
-    // pre-commit so the failure is caught before the push, not just
-    // at CI time.
-    let makefile = try readFile("Makefile")
-    #expect(
-        makefile.contains("sprites-verify:"),
-        "Makefile must declare a `sprites-verify` target"
-    )
-    let preCommit = try readFile(".pre-commit-config.yaml")
-    #expect(
-        preCommit.contains("check-sprite-catalog-consistency"),
-        "pre-commit must include the catalog-sheet consistency hook"
-    )
-    let ci = try readFile(".github/workflows/ci.yml")
-    #expect(
-        ci.contains("make sprites-verify"),
-        "ci.yml must invoke make sprites-verify"
-    )
-}
 #endif

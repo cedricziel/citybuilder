@@ -1,4 +1,4 @@
-.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
+.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-verify sprites-content sprites-art-verify sprites-check
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -149,25 +149,8 @@ sprites-art-verify:
 sprites-check:
 	$(ISOKIT) check --catalog $(CATALOG)
 
-# Legacy generative pipeline, kept until the last family migrates (tasks §5).
-sprites-ai:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai
-
-sprites-offline:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --offline
-
-sprites-procedural:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --procedural
-
-sprites-reference:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
-
-# Tolerance check of the art pipeline, the legacy byte check of entries not yet
-# migrated, then the content gate.
-sprites-verify: sprites-art-verify sprites-regen-check sprites-content
-
-sprites-regen-check:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
+# Tolerance check of the art pipeline, then the content gate.
+sprites-verify: sprites-art-verify sprites-content
 
 sprites-content:
 	$(SWIFT) run -q --package-path Packages/CityRender2D sprite-content-gate Resources
