@@ -34,7 +34,7 @@ The player sees "Waiting for hops" only by inspecting a building that isn't even
 | Baseline | 55 | 1 | 31 | 5 |
 | Charcoal burner keeps 8 wood | 44 | 11 | 24 of 44 | 4 |
 | Store-full hint, followed | 55 | 1 | 37 | 1 |
-| Idle-good hint, followed | 55 | 1 | 21 | 0 |
+| Idle-good hint, followed | 55 | 2 | 19 | 0 |
 
 - The wood reserve starves charcoal, then tools, then merchants. By then 13–24 huts already report "no trees in reach".
 - The store-full hint fires on ordinary goods (planks, bread), because the town center's 40 shared units fill with them in a healthy town.
@@ -63,3 +63,29 @@ House needs are excluded because piling them up is normal. That also covers plan
 - The PlayerBot's `naiveFollowingHints` order is the naive order that, while a good is idle, places its first user before anything else.
 - The pacing sweep records every good hinted in each game (`hints=`), with the hint shown but ignored by every order except the hint-following one.
 - The careful order's count is the false-positive rate a good player would see in 20 years.
+
+## Results
+
+Market on, seeds 0–9 × Easy, Normal, Hard × both layouts, 20 years. A miss is a start where the careful order reaches the Renaissance and the other order doesn't.
+
+| Layout | Careful reaches | Naive misses | Naive extra bankrupt | Following the hint: misses | Following the hint: extra bankrupt |
+|---|---|---|---|---|---|
+| Single island | 29/30 | 13 | 1 | 10 | 0 |
+| Archipelago | 26/30 | 18 | 4 | 9 | 0 |
+| All | 55/60 | 31 | 5 | 19 | 0 |
+
+Per cell (Renaissance reached, of 10), as careful / naive / following the hint:
+
+| | Single island | Archipelago |
+|---|---|---|
+| Easy | 10 / 9 / 10 | 8 / 3 / 5 |
+| Normal | 9 / 8 / 1 | 8 / 5 / 7 |
+| Hard | 10 / 0 / 8 | 10 / 1 / 6 |
+
+Single-island seeds play almost identically, so a single-island cell moves on one outcome. Normal single island (8 to 1) is such a swing: following the hint built the bakery and the charcoal burner early, and the base script never reached its warehouse. The per-layout totals are the fairer read.
+
+**False positives:**
+- 27 of 60 careful games see at least one hint in 20 years: hops 14 times, wood 10, grain 5.
+- That is about one hint every two games, at most once per good.
+- Each fires while the user building is genuinely missing: a hop garden before the brewery could be afforded, or wood before the first sawmill.
+- The threshold stays at 20 for now. If players find wood's early hint redundant with the first-hour guide, the bar for raw goods is the knob.

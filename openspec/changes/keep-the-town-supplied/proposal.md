@@ -18,7 +18,7 @@ Two first ideas were measured and dropped:
   - It is a regular session banner in the existing style. It doesn't pause, and shows once per good per session.
 - CityCore reports idle goods through one read-only query, `World.idleGoods(of:)`, which the hint and the scripted player share.
 
-A scripted player that follows the hint misses the Renaissance in 21 of the 31 starts (down from 31), and its extra bankruptcies drop from 5 to 0. The consumer-first order's results are unchanged.
+A scripted player that follows the hint misses the Renaissance in 19 starts instead of 31, and its extra bankruptcies drop from 5 to 0. The consumer-first order's results are unchanged. A player who already builds consumers first sees about one hint every two games.
 
 Out of scope: wood supply and forest exhaustion (#186 pacing), store caps, production priorities.
 

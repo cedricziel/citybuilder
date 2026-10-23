@@ -5,14 +5,14 @@
 
 ## 2. Idle-good hint
 
-- [ ] 2.1 Tests-first: `World.idleGoods(of:)` (design D2)
-- [ ] 2.2 Tests-first: the "Idle-good hint" scenarios against `GameSession`; confirm red
-- [ ] 2.3 Implement to green (design D2, D3)
+- [x] 2.1 Tests-first: `World.idleGoods(of:)` (design D2)
+- [x] 2.2 Tests-first: the "Idle-good hint" scenarios against `GameSession`; confirm red
+- [x] 2.3 Implement to green (design D2, D3)
 
 ## 3. Measurement
 
-- [ ] 3.1 `naiveFollowingHints` follows idle goods; the sweep records the hints of every game (design D4)
-- [ ] 3.2 Re-run the market arms; report naive misses, bankruptcies, per-layout totals, and the careful order's false positives
+- [x] 3.1 `naiveFollowingHints` follows idle goods; the sweep records the hints of every game (design D4)
+- [x] 3.2 Re-run the market arms; report naive misses, bankruptcies, per-layout totals, and the careful order's false positives
 
 ## 4. Wrap-up
 
