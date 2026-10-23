@@ -112,3 +112,15 @@ func pennantTextureIsCachedPerColour() {
     #expect(IsoWorldScene.pennantTexture(colourHex: "#2E6DB4") !== crimson)
     #expect(crimson.size() == CGSize(width: 6, height: 6))
 }
+
+/// A sprite is wider than its footprint where its shadow needs the room; the pennant stays over the
+/// footprint's left corner.
+@MainActor
+@Test("a rival's pennant sits over its footprint, not the sprite's shadow margin")
+func pennantSitsOverTheFootprint() {
+    let wide = SKSpriteNode(color: .clear, size: CGSize(width: 224, height: 200))
+    let pennant = IsoWorldScene.makePennantNode(colourHex: "#c03030", on: wide, footprint: Footprint(width: 2, height: 2))
+    #expect(pennant.position == CGPoint(x: -64, y: 200))
+    let narrow = SKSpriteNode(color: .clear, size: CGSize(width: 96, height: 120))
+    #expect(IsoWorldScene.makePennantNode(colourHex: "#c03030", on: narrow, footprint: Footprint(width: 2, height: 2)).position.x == -48)
+}
