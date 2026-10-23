@@ -21,7 +21,7 @@ When no new simulation tick has arrived for 0.3 s, carriers and strollers SHALL 
 #### Scenario: A paused carrier stands on frame 0
 
 - **WHEN** the game is paused while a carrier walks a road
-- **THEN** within 0.3 s its node shows frame 0 of its facing and runs no walk action
+- **THEN** after 0.3 s without a tick its node shows frame 0 of its facing and runs no walk action
 
 #### Scenario: A repeated request does not restart the cycle
 

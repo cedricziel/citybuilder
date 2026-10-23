@@ -77,10 +77,55 @@ func strollerNodesStandOnTheirFeetUnmirrored() throws {
     pop.population = 9
     let scene = IsoWorldScene()
     scene.reconcileStrollers(with: snapshot(base, tick: 180, pops: [house: pop]), now: 0)
-    #expect(!scene.strollerNodes.isEmpty)
+    let planned = StrollerPlanner.strollers(in: snapshot(base, tick: 180, pops: [house: pop]))
+    #expect(!planned.isEmpty && scene.strollerNodes.count == planned.count)
+    for stroller in planned {
+        #expect(scene.strollerNodes[StrollerKey(house: stroller.house, slot: stroller.slot)]?.facing == stroller.facing)
+    }
     for shown in scene.strollerNodes.values {
         #expect(abs(shown.node.anchorPoint.x - SpriteAtlas.walkerAnchor.x) < 0.0001)
         #expect(abs(shown.node.anchorPoint.y - SpriteAtlas.walkerAnchor.y) < 0.0001)
         #expect(shown.node.xScale > 0)
     }
+}
+
+@MainActor
+@Test("scenario: A paused carrier stands on frame 0, and walks again on the next tick")
+func carriersAndStrollersStandWhilePaused() throws {
+    let (base, house) = try houseOnRoad()
+    var pop = HousePopulation()
+    pop.population = 9
+    let carrier = Carrier(
+        id: EntityID(raw: 77),
+        path: [TileCoordinate(x: 1, y: 4), TileCoordinate(x: 2, y: 4), TileCoordinate(x: 3, y: 4)],
+        mission: .deliver(good: .grain, amount: 1, fromProducer: EntityID(raw: 1), toWarehouse: EntityID(raw: 2))
+    )
+    func frame(tick: UInt64) -> WorldSnapshot {
+        let town = snapshot(base, tick: tick, pops: [house: pop])
+        return WorldSnapshot(
+            tickCount: tick, simulatedTime: town.simulatedTime, mapWidth: town.mapWidth, mapHeight: town.mapHeight,
+            terrainGrid: town.terrainGrid, occupiedTiles: town.occupiedTiles, buildings: town.buildings,
+            carriers: [carrier], economy: town.economy, totalPopulation: town.totalPopulation, camera: town.camera,
+            housePopulations: town.housePopulations
+        )
+    }
+    let scene = IsoWorldScene()
+    func step(tick: UInt64, at now: TimeInterval) {
+        let shown = frame(tick: tick)
+        scene.noteTick(shown.tickCount, now: now)
+        scene.reconcileCarriers(with: shown, now: now)
+        scene.reconcileStrollers(with: shown, now: now)
+    }
+    func walking() -> [Bool] {
+        [scene.carrierVisuals[carrier.id]?.walking ?? false] + scene.strollerNodes.values.map(\.walking)
+    }
+    step(tick: 180, at: 0)
+    let started = walking()
+    step(tick: 180, at: 0.5)
+    let paused = walking()
+    step(tick: 181, at: 0.6)
+    let resumed = walking()
+    #expect(started.count > 1 && !started.contains(false))
+    #expect(!paused.contains(true))
+    #expect(!resumed.contains(false))
 }
