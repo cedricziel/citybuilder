@@ -54,7 +54,7 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 - [x] 4.6 Ships and shore buildings: port and shipyard in four orientations (resolve the open question in design.md), ship facings. Facings move the geometry, never the camera or the sun; the port and shipyard render on a 2 × 3 cell and the ship in eight facings of two frames each, all in `Kit.atlas`
 - [x] 4.7 Walkers: done in `realistic-walkers` (storybook-scale people, carrier families and animals, 32×32 pt people, 8 gait frames)
 - [x] 4.8 Terrain: grass/beach/water full tiles and both transition sets, season variants (`Terrain shows the season`), lands together with §3. Moved up after houses: `art.ground` paints lit, tile-periodic ground (grass, beach, water, forest, rock, seasons, frames, rock variants); grass shores have autumn and winter transition sets; `Terrain.atlas` is retired
-- [ ] 4.9 Goods icons: hand-authored SVG sources replace the three image-API icons and the procedural ones. Until then the 18 icons are committed pixel art (`source = "pixel"`, with nearest-neighbour `@2x` twins), so §5 could remove the pipeline first
+- [x] 4.9 Goods icons: `scripts/art/goods_icons.py` draws all 18 as hand-authored SVG (outlined objects, picked on the canvas in #195), rendered at @1x and @2x into `Kit.atlas` and filtered linearly; the HUD and the web bundle scale them smoothly
 - [x] 4.10 Night lights: `<sprite id>-lights` masks for every house look and the workshops, drawn additively at night by the renderer (`add-night-glow`)
 
 ## 5. Retire the old pipeline and docs

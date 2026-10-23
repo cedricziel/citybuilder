@@ -17,7 +17,7 @@ export interface GoodChipProps {
 }
 
 /**
- * A good's pixel icon with a monospaced number: a stock count in the HUD
+ * A good's icon with a monospaced number: a stock count in the HUD
  * (16px icon, caption) or `have/need` in the cost breakdown (14px, caption2).
  */
 export function GoodChip({ good, count, need, have, status = "ok" }: GoodChipProps) {

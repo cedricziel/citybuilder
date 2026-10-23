@@ -257,7 +257,7 @@ struct GoodChipView: View {
         HStack(spacing: 4) {
             GoodIconLoader.image(for: good)
                 .resizable()
-                .interpolation(GoodIconLoader.pixelArtInterpolation)
+                .interpolation(GoodIconLoader.interpolation)
                 .frame(width: 16, height: 16)
             Text(text)
                 .font(.system(.caption, design: .monospaced))

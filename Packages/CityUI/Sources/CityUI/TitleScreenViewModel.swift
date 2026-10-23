@@ -205,6 +205,9 @@ public final class TitleScreenViewModel {
     public func startGameIfRequested(arguments: [String]) {
         guard committedSession == nil, UITestSeed.startsGame(fromArguments: arguments) else { return }
         commit(world: World.newGame(layout: .singleIsland, seed: 0))
+        if UITestSeed.opensStocks(fromArguments: arguments) {
+            committedSession?.hud.toggleStocksTray()
+        }
     }
 
     public func commit(world: World) {

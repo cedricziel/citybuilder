@@ -31,8 +31,8 @@ Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual
 
 - **Building:** the IsoKit recipe, cell height, construction stage count, and any moving part with its frame count.
 - **Unit:** the IsoKit recipe, cell size, facings and frames per facing.
-- **Terrain and roads:** the SVG generator entry.
-- **Pixel art:** where the committed PNG came from, and what replaces it.
+- **Terrain, roads and goods icons:** the SVG generator entry.
+- **Pixel art:** where the committed PNG came from.
 
 #### Scenario: Catalog entry declares all required sections
 
@@ -46,17 +46,17 @@ Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual
 
 ### Requirement: One rendered register for world sprites
 
-Every catalog entry for a building (`building-*`) or unit (`walker`, `animal`, `ship`) SHALL declare `source = "isokit"` in its front matter, except the road, whose connection tiles come from the road generator and which declares `source = "svg"`. Terrain entries SHALL declare `source = "svg"`. Goods-icon entries SHALL declare `source = "pixel"`: their 24 × 24 icons are committed as is, from the retired generative pipeline (three of them, `good-wood`, `good-planks` and `good-food`, from an image-generation API), until hand-authored SVG icons replace them.
+Every catalog entry for a building (`building-*`) or unit (`walker`, `animal`, `ship`) SHALL declare `source = "isokit"` in its front matter, except the road, whose connection tiles come from the road generator and which declares `source = "svg"`. Terrain and goods-icon entries SHALL declare `source = "svg"`.
 
 #### Scenario: Every building and unit entry is rendered by IsoKit
 
 - **WHEN** the catalog entries whose names start with `building-` (the road aside), `walker`, `animal` or `ship` are read
 - **THEN** each declares `source = "isokit"` in its front matter
 
-#### Scenario: Terrain entries are SVG and goods icons committed pixel art
+#### Scenario: Terrain entries and goods icons are SVG
 
 - **WHEN** the catalog entries whose names start with `terrain-` or `good-`, and the road's, are read
-- **THEN** the terrain entries and the road declare `source = "svg"`, and each goods icon declares `source = "pixel"`
+- **THEN** each declares `source = "svg"`
 
 ## REMOVED Requirements
 

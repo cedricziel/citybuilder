@@ -1,5 +1,5 @@
 ---
-source = "pixel"
+source = "svg"
 ---
 ## Function
 
@@ -8,8 +8,7 @@ tooltips. Single static cell.
 
 ## Visual identity
 
-Two pale green hop cones with leafy scale rows on a twig with a leaf, outlined in `#1A1410`. Drawn by
-the retired procedural generator.
+Two green hop cones on a forked stem, their scales drawn as bands. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
 ## Sprites
 
@@ -17,4 +16,4 @@ the retired procedural generator.
 
 ## Recipe
 
-- Source: committed pixel art in `Icons.atlas`, drawn by the retired procedural generator; task 4.9 replaces it with a hand-authored SVG icon
+- Source: `scripts/art/goods_icons.py`, rendered by `art.svg_sprites` at @1x and @2x into `Kit.atlas`

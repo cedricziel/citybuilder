@@ -1,5 +1,5 @@
 ---
-source = "pixel"
+source = "svg"
 ---
 ## Function
 
@@ -8,13 +8,7 @@ and the warehouse buffer indicator. Single static cell.
 
 ## Visual identity
 
-A coarse sack of grain (cinched at the neck with a darker cord) beside
-a single round loaf of bread, both rendered at the canonical 30°
-south-east tilt. Reads at a glance as "edibles, mixed". Palette
-anchors: `#C9A671` sack linen, `#A07C50` bread crust, `#D4A86A` crust
-highlight on south face, `#6E4A2A` neck cord. No animal products
-visible — keep iconography vegetal/grain-led so it stays culturally
-neutral.
+A wicker basket holding a red apple with a leaf and a pale roll. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
 ## Sprites
 
@@ -22,4 +16,4 @@ neutral.
 
 ## Recipe
 
-- Source: committed pixel art in `Icons.atlas`, drawn by an image-generation API before the art kit; task 4.9 replaces it with a hand-authored SVG icon
+- Source: `scripts/art/goods_icons.py`, rendered by `art.svg_sprites` at @1x and @2x into `Kit.atlas`

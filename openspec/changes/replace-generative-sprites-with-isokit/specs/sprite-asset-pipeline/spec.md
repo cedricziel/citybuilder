@@ -124,9 +124,28 @@ The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross produ
 
 ## ADDED Requirements
 
+### Requirement: Good-prefix names route to the Kit atlas
+
+The sprite-name grammar SHALL accept the prefix `good-` for good icons, in addition to the existing `terrain-`, `building-`, and `walker-` prefixes. The `SpriteAtlasRouting` table MUST map `good-*` names to the `Kit` atlas, where the goods icons are rendered with the rest of the art kit. Validation MUST continue to reject names with uppercase letters or underscores.
+
+#### Scenario: Sprite-name grammar accepts good- prefix
+
+- **WHEN** `SpriteName.validate("good-wood")` is called
+- **THEN** the validator returns `.success`
+
+#### Scenario: SpriteAtlasRouting routes good- to the Kit atlas
+
+- **WHEN** `SpriteAtlasRouting.atlasName(for: "good-wood")` is called
+- **THEN** it returns `"Kit"`
+
+#### Scenario: Validator rejects good- with underscore
+
+- **WHEN** `SpriteName.validate("good-iron_ore")` is called
+- **THEN** the validator returns `.failure(.spriteNameUsesUnderscore)`
+
 ### Requirement: Overlay sprites route to the Icons atlas
 
-Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x` beside the goods icons.
+Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x`.
 
 #### Scenario: Waiting badge routes to the Icons atlas
 
@@ -134,7 +153,7 @@ Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHA
 - **THEN** it returns `"Icons"`
 
 ### Requirement: Two category atlases, Kit and Icons
-The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, animals and ships), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: goods icons and the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
+The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, animals, ships and goods icons), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
 
 #### Scenario: Kit atlas holds the terrain
 - **WHEN** the repository is inspected
@@ -157,8 +176,8 @@ The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to 
 
 | Prefix | Atlas |
 |---|---|
-| `terrain-`, `building-`, `walker-`, `carrier-`, `animal-`, `ship-` | `Kit` |
-| `good-`, `overlay-` | `Icons` |
+| `terrain-`, `building-`, `walker-`, `carrier-`, `animal-`, `ship-`, `good-` | `Kit` |
+| `overlay-` | `Icons` |
 
 The public `SpriteAtlas` API remains unchanged.
 
@@ -247,8 +266,8 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 Every sprite PNG under `Resources/{Kit,Icons}.atlas/` SHALL be produced by:
 
 - IsoKit, for buildings and units,
-- the SVG generators of capability `iso-art-kit`, for terrain, transitions and roads, or
-- committed pixel art, for the status badges drawn over buildings (`overlay-`) and the goods icons (`good-`), each with a nearest-neighbour `@2x` twin. The goods icons came from the retired generative pipeline, three of them (`good-wood`, `good-planks`, `good-food`) from an image-generation API; hand-authored SVG icons replace them, and until then their briefs declare `source = "pixel"`.
+- the SVG generators of capability `iso-art-kit`, for terrain, transitions, roads and the goods icons (`good-`), or
+- committed pixel art, for the status badges drawn over buildings (`overlay-`), each with a nearest-neighbour `@2x` twin.
 
 Every PNG has an `@1x` file and an `@2x` file with the same stem. No new PNG may come from an image-generation API, and the retired `scripts/generate_sprites_ai` pipeline no longer exists.
 
@@ -311,11 +330,17 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 ## REMOVED Requirements
 
+### Requirement: Good-prefix sprite name grammar
+
+**Reason**: It routed the goods icons to the `Icons` atlas as pixel art; they are now SVG renders in `Kit.atlas`.
+
+**Migration**: "Good-prefix names route to the Kit atlas" keeps the grammar and routes `good-*` to `Kit`.
+
 ### Requirement: Procedurally generated good icons
 
 **Reason**: The generator that drew them is retired.
 
-**Migration**: The goods icons are committed pixel art (see "Atlas PNGs are rendered by the art kit") until hand-authored SVG icons replace them.
+**Migration**: Hand-authored SVG goods icons replace them (see "Atlas PNGs are rendered by the art kit" and the `iso-art-kit` requirement "Goods icons come from an SVG generator").
 
 ### Requirement: Overlay sprites route to the Buildings atlas
 

@@ -20,7 +20,7 @@ This change turns that prototype into the source-controlled pipeline that writes
 
   `make sprites` builds it with `xcrun swift` and writes every building and unit PNG, with no network and no API key. The kit prototype in `.claude/skills/iso-sprite-authoring/kit/` (#87) is the starting point.
 - **Terrain transition tiles.** A generator writes corner-mask transition tiles for grass↔beach and beach↔water (14 masks each), plus full-tile variants, as SVG. These are rendered to PNG. **BREAKING for the renderer:** it now picks each tile from the terrain at its four corners, not from the tile's own kind alone. Forest and mountain keep their current tiles in this change.
-- **@2× atlases with linear filtering** for terrain, building and unit textures. Goods icons stay pixel art with nearest filtering.
+- **@2× atlases with linear filtering** for terrain, building and unit textures and the goods icons. Status badges stay pixel art with nearest filtering.
 - **Walkers** move to the kit in `realistic-walkers`.
 - **Remove the generative pipeline:**
   - `scripts/generate_sprites_ai/`

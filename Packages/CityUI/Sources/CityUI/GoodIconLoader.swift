@@ -1,4 +1,5 @@
 import CityCore
+import CityRender2D
 import Foundation
 import SpriteKit
 import SwiftUI
@@ -9,15 +10,15 @@ import UIKit
 import AppKit
 #endif
 
-/// Loads pixel-art good icons into SwiftUI `Image`s for the HUD stocks
-/// row. Falls back to an SF Symbol when a good has no icon so the row
-/// never goes blank.
+/// Loads the goods icons into SwiftUI `Image`s for the HUD stocks row.
+/// Falls back to an SF Symbol when a good has no icon so the row never
+/// goes blank.
 ///
-/// In the app, Xcode compiles `Icons.atlas/` into `Icons.atlasc`, so
-/// the loose PNGs are gone and the icon comes from the `Icons`
+/// In the app, Xcode compiles `Kit.atlas/` into `Kit.atlasc`, so the
+/// loose PNGs are gone and the icon comes from the `Kit`
 /// `SKTextureAtlas`. The URL route stays for tests that point at temp
-/// PNGs. Both render with nearest-neighbor interpolation, the same
-/// crisp pixel-art mode the SpriteKit scene uses.
+/// PNGs. The icons are anti-aliased SVG renders, so both scale smoothly,
+/// as the SpriteKit scene filters them.
 public enum GoodIconLoader {
     /// Source the resolved Image came from. `loaded` carries the URL
     /// the loader used so tests can assert routing without rendering.
@@ -28,7 +29,7 @@ public enum GoodIconLoader {
     }
 
     /// Compiled texture atlas that holds the `good-*` icons.
-    public static let atlasName = "Icons"
+    public static let atlasName = SpriteAtlasRouting.kitAtlasName
 
     private static func textureName(for good: Good) -> String {
         "good-\(good.rawValue)"
@@ -44,9 +45,13 @@ public enum GoodIconLoader {
     /// SF Symbol name used when a good's PNG can't be resolved.
     public static let fallbackSymbolName = "cube.fill"
 
-    /// Interpolation mode applied to every loaded pixel-art image. The
-    /// HUD chips scale at any DPI; nearest-neighbor keeps the pixels
-    /// crisp instead of blurring.
+    /// Interpolation for the goods icons: the HUD draws the 24-point
+    /// icons at 16 points, and smooth scaling keeps the anti-aliased
+    /// edges clean.
+    public static let interpolation: Image.Interpolation = .high
+
+    /// Interpolation for pixel art, such as a legacy building sprite:
+    /// nearest-neighbor keeps the pixels crisp instead of blurring.
     public static let pixelArtInterpolation: Image.Interpolation = .none
 
     /// Resolves the asset URL for a good — defaults to the main bundle
@@ -70,13 +75,13 @@ public enum GoodIconLoader {
             return image(for: good, resolveURL: mainBundleResolver)
         }
         let cgImage = atlas.textureNamed(textureName(for: good)).cgImage()
-        return Image(decorative: cgImage, scale: 1).interpolation(pixelArtInterpolation)
+        return Image(decorative: cgImage, scale: 1).interpolation(interpolation)
     }
 
     public static func image(for good: Good, resolveURL: URLResolver) -> Image {
         switch origin(for: good, resolveURL: resolveURL) {
         case let .loaded(url):
-            return loadPixelArtImage(at: url) ?? fallbackImage
+            return loadImage(at: url) ?? fallbackImage
         case .atlas, .fallback:
             return fallbackImage
         }
@@ -90,13 +95,13 @@ public enum GoodIconLoader {
         Bundle.main.url(forResource: "good-\(good.rawValue)", withExtension: "png")
     }
 
-    private static func loadPixelArtImage(at url: URL) -> Image? {
+    private static func loadImage(at url: URL) -> Image? {
         #if canImport(UIKit)
         guard let bitmap = UIImage(contentsOfFile: url.path) else { return nil }
-        return Image(uiImage: bitmap).interpolation(pixelArtInterpolation)
+        return Image(uiImage: bitmap).interpolation(interpolation)
         #elseif canImport(AppKit)
         guard let bitmap = NSImage(contentsOf: url) else { return nil }
-        return Image(nsImage: bitmap).interpolation(pixelArtInterpolation)
+        return Image(nsImage: bitmap).interpolation(interpolation)
         #else
         return nil
         #endif

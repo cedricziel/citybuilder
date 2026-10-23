@@ -127,6 +127,17 @@ func startGameFlagSkipsTheTitle() {
     #expect(started.committedSession != nil)
 }
 
+@Test("The open-stocks flag starts the game with the stocks tray shown")
+@MainActor
+func openStocksFlagShowsTheTray() {
+    let plain = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    plain.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
+    #expect(plain.committedSession?.hud.isStocksTrayOpen == false)
+    let open = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    open.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame", "-uiTestOpenStocks"])
+    #expect(open.committedSession?.hud.isStocksTrayOpen == true)
+}
+
 @Test("A test or shot launch saves into a folder of its own, a regular launch into the player's")
 func uiTestLaunchesKeepTheirOwnSaves() throws {
     #expect(UITestSeed.saveDirectory(fromArguments: ["Citybuilder"]) == nil)

@@ -116,7 +116,7 @@ func scenarioCompactLayoutLimitsLabelsToOneLine() {
 
 @Test("compiled atlas texture names carry the png extension")
 func compiledAtlasNamesWithExtensionResolve() throws {
-    // Xcode's compiled Icons.atlasc lists `good-planks.png`, not `good-planks`.
+    // Xcode's compiled Kit.atlasc lists `good-planks.png`, not `good-planks`.
     let atlas = try SKTextureAtlas(dictionary: ["good-planks.png": tinyImage()])
     #expect(GoodIconLoader.origin(for: .planks, atlas: atlas) == .atlas(name: GoodIconLoader.atlasName))
 }

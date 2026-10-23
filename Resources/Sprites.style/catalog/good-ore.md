@@ -1,5 +1,5 @@
 ---
-source = "pixel"
+source = "svg"
 ---
 ## Function
 
@@ -7,7 +7,7 @@ UI icon for the `ore` good. Single static cell.
 
 ## Visual identity
 
-A grey rock with rust-red flecks. Outlined in `#1A1410`, drawn by the retired procedural generator.
+A grey rock with rust-red flecks of ore. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
 ## Sprites
 
@@ -15,4 +15,4 @@ A grey rock with rust-red flecks. Outlined in `#1A1410`, drawn by the retired pr
 
 ## Recipe
 
-- Source: committed pixel art in `Icons.atlas`, drawn by the retired procedural generator; task 4.9 replaces it with a hand-authored SVG icon
+- Source: `scripts/art/goods_icons.py`, rendered by `art.svg_sprites` at @1x and @2x into `Kit.atlas`

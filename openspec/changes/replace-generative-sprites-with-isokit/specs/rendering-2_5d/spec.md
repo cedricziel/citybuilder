@@ -51,19 +51,51 @@ An operational road SHALL draw the connection sprite for its mask: an arm per pa
 
 ### Requirement: World textures are @2x and linearly filtered
 
-Terrain, building, unit and ship textures SHALL be loaded from atlases that include `@2x` images and SHALL use `.linear` filtering. Goods icons and status overlay badges SHALL keep `.nearest` filtering. Sprite sizes in points and every anchor and position rule are unchanged.
+Terrain, building, unit and ship textures and the goods icons SHALL be loaded from atlases that include `@2x` images and SHALL use `.linear` filtering. Status overlay badges SHALL keep `.nearest` filtering. Sprite sizes in points and every anchor and position rule are unchanged.
 
 #### Scenario: Building textures filter linearly
 
 - **WHEN** the renderer creates the node for an operational house
 - **THEN** its texture's `filteringMode` is `.linear` and its size in points matches the @1x PNG
 
-#### Scenario: Goods icons stay pixel art
+#### Scenario: Goods icons filter linearly
 
-- **WHEN** the HUD shows the wood icon
-- **THEN** its texture's `filteringMode` is `.nearest`
+- **WHEN** the texture for the wood icon is looked up
+- **THEN** its `filteringMode` is `.linear`
+
+#### Scenario: Status badges stay pixel art
+
+- **WHEN** the texture for the waiting-materials badge is looked up
+- **THEN** its `filteringMode` is `.nearest`
 
 #### Scenario: Linear and nearest textures never share an atlas
 
 - **WHEN** a sprite name is routed to its atlas
 - **THEN** it goes to the `Kit` atlas exactly when its texture filters linearly, because SpriteKit applies one filtering mode to a whole atlas page
+
+### Requirement: Stocks row of goods icons
+
+The HUD's stocks row SHALL render one chip per good with non-zero stock OR non-zero capacity on the current island. Each chip MUST display the good's icon (loaded from `Kit.atlas`) and the integer count. Goods with both zero stock AND zero capacity MUST be omitted to keep the row uncluttered.
+
+#### Scenario: Stocks row shows goods present on the island
+
+- **WHEN** the current island has 12 wood and 4 planks in its stockpile
+- **THEN** the HUD renders two chips: a wood chip with "12" and a planks chip with "4"
+
+#### Scenario: Goods with zero stock and zero capacity are omitted
+
+- **WHEN** an island has warehouses storing wood and planks but no capacity at all for food
+- **THEN** the food chip is not rendered
+
+#### Scenario: Goods icon scales smoothly
+
+- **WHEN** a good icon is rendered at any scale
+- **THEN** SwiftUI's `Image.interpolation(.high)` is applied, as the icons are anti-aliased SVG renders
+
+## REMOVED Requirements
+
+### Requirement: Stocks row layout
+
+**Reason**: It loaded the icons from `Icons.atlas` with nearest-neighbour interpolation, for pixel art.
+
+**Migration**: "Stocks row of goods icons" keeps the layout, loads the SVG icons from `Kit.atlas` and scales them smoothly.
