@@ -6,7 +6,7 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
   - modules: `Geometry`, `Rig`, `Renderer`, `Materials` (finishes), `Parts`, `Props`, `Recipe`, `Catalog`, `CellFit`, `RenderJob`, `Recipes/` and the `isokit` CLI
   - add `Tools` to `.swiftlint.yml` `included` (SwiftFormat already covers it)
   - every recipe gets a building plot slab over its whole footprint, which grounds the sprite (`not_grounded`); the slab overhangs the front edges by 12 cm so the cell crops a solid bottom row
-- [x] 1.2 Tests-first: IsoKit tests for the `iso-art-kit` scenarios "Recipes cannot add lights", "Recipes use shared finishes", "A recipe taller than its cell is rejected", "A 2×2 house renders 128 points wide" and "Every catalogued building kind has a recipe" (the registry against the catalog, including each migrated entry's sprite list). Render tests skip when `ISOKIT_SKIP_RENDER=1`; CI sets it
+- [x] 1.2 Tests-first: IsoKit tests for the `iso-art-kit` scenarios "Recipes cannot add lights", "Recipes use shared finishes", "A recipe taller than its cell is rejected", "A 2×2 house renders centred in its cell" and "Every catalogued building kind has a recipe" (the registry against the catalog, including each migrated entry's sprite list). Render tests skip when `ISOKIT_SKIP_RENDER=1`; CI sets it
 - [x] 1.3 Implement to green: recipe registry (an entry may own several recipes, e.g. house tiers), cell-fit check with pure projection maths (design D2), finish-only materials (D3)
 - [x] 1.4 Implement the CLI:
   - `isokit render --catalog <dir> --out <dir>` writes raw RGBA `@1x` and `@2x` PNGs for the recipes of every `source = "isokit"` entry; `art.finalize` quantizes them into the atlases (D8)
