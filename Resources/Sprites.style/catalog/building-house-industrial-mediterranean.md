@@ -11,22 +11,11 @@ shared with `building-house`. No operational animation.
 
 Rendered by IsoKit in the shared light rig. Brick apartment houses on a stone ground floor with iron-railed balconies under a low slate hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-house-industrial-mediterranean` — two storeys with a balcony
-- (0, 1): `building-house-tier2-industrial-mediterranean` — three storeys with balconies
-- (0, 2): `building-house-tier3-industrial-mediterranean` — four storeys with a balcony on every floor
-- (0, 3): spare
-- (1, 0): spare
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
+- `building-house-industrial-mediterranean` — two storeys with a balcony
+- `building-house-tier2-industrial-mediterranean` — three storeys with balconies
+- `building-house-tier3-industrial-mediterranean` — four storeys with a balcony on every floor
 
 ## Recipe
 

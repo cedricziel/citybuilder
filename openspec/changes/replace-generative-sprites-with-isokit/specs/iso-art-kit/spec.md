@@ -117,13 +117,13 @@ The day sprites (finished, construction and operational frames) SHALL show every
 - **WHEN** the committed Kit atlas is checked
 - **THEN** each of the 60 house looks has all three `-lights-<n>` at both scales, and every lights file sits beside its sprite
 
-### Requirement: Terrain and icon tiles come from SVG generators
+### Requirement: Terrain tiles come from SVG generators
 
 A generator under `scripts/art/` SHALL write the SVG sources for:
 
 - the terrain transition tiles
 - the full-tile variants
-- the goods icons
+
 
 It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner masks 1–14 for the pairs grass→beach and beach→water. Every boundary MUST cross a tile edge at the edge's midpoint. Texture patterns MUST repeat on a 32×16-point period.
 
@@ -165,3 +165,12 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 
 - **WHEN** a recipe's roof finish is changed and the PNGs are not re-rendered
 - **THEN** `make sprites-verify` exits non-zero and names the affected PNGs
+
+### Requirement: Goods icons come from an SVG generator
+
+`scripts/art/goods_icons.py` SHALL write one hand-authored SVG source per good, `good-<good>`, on a 24-point grid. Every icon draws the good as an object in its natural colours, lit from the upper left, inside a dark warm outline, so it reads on light and dark HUDs. `art.svg_sprites` renders each at `@1x` and `@2x` into `Kit.atlas`, and `make sprites-svg-verify` checks the committed PNGs against fresh renders.
+
+#### Scenario: Every good has an icon
+
+- **WHEN** the goods icon generator runs
+- **THEN** it writes one source for every good CityCore defines, and each goods brief declares `source = "svg"`

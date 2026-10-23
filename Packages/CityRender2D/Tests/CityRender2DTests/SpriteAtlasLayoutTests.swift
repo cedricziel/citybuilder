@@ -33,7 +33,7 @@ func scenarioTerrainAtlasExists() {
 
 @Test("scenario: Retired atlases are gone")
 func scenarioRetiredAtlasesAreGone() throws {
-    // Terrain, buildings, people and ships are kit renders in Kit.atlas; goods and badges are in Icons.atlas.
+    // Terrain, buildings, people, ships and goods icons are kit renders in Kit.atlas; the badges are in Icons.atlas.
     for retired in ["Terrain", "Buildings", "Units"] {
         let url = worktreeRoot().appendingPathComponent("Resources/\(retired).atlas")
         #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/\(retired).atlas must not exist")

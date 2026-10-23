@@ -9,25 +9,14 @@ Middle Eastern luxury producer. Carriers bring coffee cherries; every 50 ticks t
 
 Rendered by IsoKit in the shared light rig. A sandstone roastery with a parapet roof and a blue-tiled dome, a red awning over the door, an iron roasting drum on a brick firebox, and a date palm.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-roastery` — canonical operational base
-- (0, 1): `building-roastery-constructing-0` — stone pad
-- (0, 2): `building-roastery-constructing-1` — timber frame
-- (0, 3): `building-roastery-constructing-2` — walls with scaffolding
-- (1, 0): `building-roastery-operational-0` — operational frame 0
-- (1, 1): `building-roastery-operational-1` — operational frame 1
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+- `building-roastery` — canonical operational base
+- `building-roastery-constructing-0` — stone pad
+- `building-roastery-constructing-1` — timber frame
+- `building-roastery-constructing-2` — walls with scaffolding
+- `building-roastery-operational-0` — operational frame 0
+- `building-roastery-operational-1` — operational frame 1
 
 ## Recipe
 

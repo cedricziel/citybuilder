@@ -137,7 +137,7 @@ func scenarioCultureContentIsCatalogued() {
         !FileManager.default.fileExists(atPath: catalog.appendingPathComponent("\($0).md").path)
     }
     #expect(missingEntries.isEmpty, "missing catalog entries: \(missingEntries)")
-    var sprites = goods.map { "Icons.atlas/good-\($0.rawValue)" }
+    var sprites = goods.map { "Kit.atlas/good-\($0.rawValue)" }
     for kind in kinds {
         let name = "building-\(kind.rawValue)"
         let base = "\(SpriteAtlasRouting.atlasName(for: name) ?? "Kit").atlas/\(name)" // migrated kinds live in Kit

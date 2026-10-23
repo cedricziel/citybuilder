@@ -17,8 +17,8 @@ Xcode 26 or newer (Swift 6.3+) is required.
 
 CI pins the tools whose versions change results: SwiftFormat and
 SwiftLint (releases disagree on rules), pre-commit, libimagequant (it
-decides the atlas PNG bytes that `make sprites-verify` compares),
-jpeg-turbo and XcodeGen:
+quantizes every atlas PNG the art pipeline writes), jpeg-turbo and
+XcodeGen:
 
 | Tool          | Pinned version |
 | ------------- | -------------- |
@@ -38,29 +38,18 @@ Two limits:
   digest; they can't install an older version. When a runner image's
   Homebrew moves a formula on, CI fails at the install step instead of
   quietly using the new version. Bump the version and digests in the
-  script and here. For libimagequant, also regenerate the atlases
-  (`make sprites-offline`) in the same PR.
+  script and here. For libimagequant, also re-render the atlases
+  (`make sprites`) in the same PR, since it quantizes every atlas PNG.
 - zlib is not pinned. Pillow links the zlib that the runner image (or
-  your macOS) ships, and zlib decides the compressed PNG bytes. A new
-  runner image can therefore change the atlas bytes while every pinned
-  version stays the same. When the CityRender2D job fails the byte
-  check, it uploads a `regenerated-atlases` artifact holding the bytes
-  CI produces.
-
-If `brew install` gave you other versions, install the pinned ones:
-
-```sh
-scripts/ci/install-pinned-tools.sh lint      # then put the bin directory it prints first on PATH
-scripts/ci/install-pinned-tools.sh sprites   # libimagequant and jpeg-turbo via Homebrew
-scripts/ci/install-pinned-tools.sh xcodegen  # XcodeGen via Homebrew
-rm -rf .venv/sprites && make sprites-venv    # Pillow links libimagequant when it is built
-```
+  your macOS) ships, and zlib decides the compressed PNG bytes. That
+  doesn't affect verification: `make sprites-verify` compares renders
+  within a tolerance, never byte for byte, and CI never re-renders.
 
 ## Quick start
 
 ```sh
 make hooks          # install pre-commit, commit-msg, and pre-push hooks
-make sprites-venv   # one-time: create .venv/sprites/ for the AI sprite pipeline
+make sprites-venv   # one-time: create .venv/sprites/ for the art pipeline (scripts/art)
 make generate       # regenerate Citybuilder.xcodeproj from project.yml
 make test           # run all swift-testing suites
 ```
@@ -148,53 +137,42 @@ SWIFT_DETERMINISTIC_HASHING=1 xcrun swift run --package-path Packages/CityCore D
 
 A pure refactor must leave the output byte-identical. CI compares macOS and Linux output on the same commit.
 
-## Adding a new animated sprite
+## Adding or changing a sprite
 
-Sprite art is produced by the AI pipeline driven by the natural-language
-catalog under `Resources/Sprites.style/`. To add a new animated terrain
-or building:
+Buildings, people, animals and ships are pre-rendered 3D recipes in
+`Tools/IsoKit`; terrain, roads and their transition tiles come from the
+SVG generators in `scripts/art`. No sprite comes from an
+image-generation model. `Resources/Sprites.style/world.md` is the style
+bible: the camera, light rig and finish set every sprite shares. The
+`iso-sprite-authoring` skill covers recipes in detail.
 
-1. **Edit the style bible if needed.** Most additions stay within the
-   register already declared in `Resources/Sprites.style/world.md`
-   (palette, projection, outline). If your new sprite needs a new
-   palette role, add it there first. Edits to `world.md` invalidate
-   every cache entry (intentional — bumping a global property
-   regenerates everything).
-2. **Author the catalog entry.** Create
-   `Resources/Sprites.style/catalog/<id>.md` declaring sections:
-   - `## Function` — what the sprite does in-world
-   - `## Visual identity` — silhouette, palette anchors, distinctive
-     details
-   - `## Sheet` — `Grid: N cols × M rows.` then one `- (r, c):
-     <atlas-filename>` line per cell (use `spare` for unused cells)
-   - `## Animation` — sequences of `(r, c)` arrows for each loop;
-     frames MUST be placed in adjacent cells per the sprite-style
-     catalog spec.
-3. **Add the catalog entry to `SpriteAnimation.entry(for:)`** in
-   `Packages/CityRender2D/Sources/CityRender2D/SpriteAnimation.swift`
-   if the sprite animates (`frameCount`, `timePerFrame`, `loop`).
-4. **Regenerate**: `make sprites` (needs `OPENAI_API_KEY`; ~$0.04 per
-   sprite kind, ~2 min wall-clock at 4-way concurrency). Cache hits
-   on unchanged inputs are free; only the new/edited entry will
-   actually call the API.
-5. **Visually review** the regenerated PNG under
-   `Resources/<Category>.atlas/`. If the result needs tightening,
-   iterate on the catalog entry's prose and re-run `make sprites`.
-6. **Commit** the new `Resources/Sprites.style/catalog/<id>.md`, the
-   new `Resources/Sprites.style/_sheets/<id>.png`, and the produced
-   atlas PNG(s). CI runs `make sprites --offline` (no API key) and
-   verifies committed atlas PNGs reproduce byte-for-byte from the
-   committed catalog + sheets.
+1. **Write or change the recipe.** A building is a `Recipe` in
+   `Tools/IsoKit/Sources/IsoKitCore/Recipes/`: its cell, construction
+   stages, any moving part (sails, a saw) and the parts it builds from
+   the shared finishes. `make sprites-check` (`isokit check`) checks
+   that every recipe fits its cell and follows the recipe rules,
+   without a GPU.
+2. **Write the brief.** Each sprite kind has
+   `Resources/Sprites.style/catalog/<id>.md` with `source = "isokit"`
+   (or `"svg"`) in its front matter and these sections:
+   - `## Function`: what the sprite does in the game
+   - `## Visual identity`: what it looks like
+   - `## Sprites`: one `` - `<sprite name>` `` line per sprite it owns
+   - `## Recipe`: the recipe, its cell and its frame counts
+3. **Render**: `make sprites` re-renders every atlas PNG. It needs a
+   Mac GPU and `rsvg-convert`, and no network. Renders vary slightly
+   between runs, so commit only the PNGs of the sprites you changed
+   and restore the rest.
+4. **Verify**: `make sprites-verify` compares fresh renders with the
+   committed PNGs within a tolerance, then runs the content gate.
+5. **Show it.** A significant visual change gets a before and after on
+   a Claude Design canvas before its PR, and the PR links it under
+   `## Design`.
 
-The scene's reconciler picks the new sprite up automatically — no
-`IsoWorldScene` changes are needed.
-
-If playtest reveals visible animation flicker on a particular sprite,
-opt that catalog entry into the two-pass escape hatch by setting
-`two-pass: true` in its YAML front matter; the pipeline then runs a
-second `/v1/images/edits` call against the pass-1 base cell as
-reference to lock pixel coherence for the operational frames at 2×
-the API cost.
+If the sprite animates, add its entry to `SpriteAnimation.entry(for:)`
+in `Packages/CityRender2D/Sources/CityRender2D/SpriteAnimation.swift`.
+The scene's reconciler picks a new sprite up without `IsoWorldScene`
+changes.
 
 ## Adding a new audio cue
 
@@ -326,18 +304,18 @@ save/load via the `Island.name` Codable field.
 
 ### Adding a new good icon
 
-1. **Author the catalog entry.** Create
-   `Resources/Sprites.style/catalog/good-<rawValue>.md` with the four
-   required sections (`Function`, `Visual identity`, `Sheet`,
-   `Animation`). Use a `Grid: 1 cols × 1 rows.` sheet — goods are
-   single-cell static icons. Follow the existing
-   `good-wood.md` / `good-planks.md` / `good-food.md` shape; their
-   front-matter overrides `sheet_size = "256x256"` and `cell_grid =
-   "1x1"` so the cell downsamples cleanly to the canonical 24×24 HUD
-   size with nearest-neighbour resampling.
-2. **Regenerate**: `make sprites`. Commit the produced
-   `Resources/Icons.atlas/good-<rawValue>.png` plus the new
-   `Resources/Sprites.style/_sheets/good-<rawValue>.png`.
+Goods icons are hand-authored SVG on a 24-point grid, drawn by
+`scripts/art/goods_icons.py` and rendered at @1x and @2x into
+`Resources/Kit.atlas`.
+
+1. **Draw the icon**: add the good's shapes to `GLYPHS` and its colours
+   to `PALETTES` in `scripts/art/goods_icons.py`, in the shared style
+   (natural colours, lit from the upper left, dark outline).
+2. **Write the brief**:
+   `Resources/Sprites.style/catalog/good-<rawValue>.md` with
+   `source = "svg"`, and `Function`, `Visual identity`, `Sprites`
+   and `Recipe` sections. Then run `make sprites`, and
+   `make sprites-svg-verify` to check the committed PNGs.
 3. **Extend `Good`** in
    `Packages/CityCore/Sources/CityCore/Goods.swift` with the matching
    raw value. The HUD reads icons via `GoodIconLoader.image(for:)`,

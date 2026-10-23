@@ -2,10 +2,7 @@ import CityCore
 import CoreGraphics
 import SpriteKit
 
-struct AnimalKey: Hashable {
-    let home: EntityID
-    let slot: Int
-}
+typealias AnimalKey = AnimalPlanner.Key
 
 struct AnimalPose: Equatable {
     let action: SpriteAtlas.AnimalAction
@@ -40,6 +37,15 @@ extension IsoWorldScene {
         snapshot.terrain(at: tile) == .grass && snapshot.occupiedTiles[tile] == nil && objectMap?.object(at: tile) == nil
     }
 
+    /// The clock animals and workers move by: the day clock, held where it
+    /// was when Reduce Motion came on.
+    func ambientClock(for snapshot: WorldSnapshot) -> UInt64 {
+        let dayClock = AnimalPlanner.dayClock(tick: snapshot.tickCount)
+        let clock = reduceMotion ? (animalFrozenClock ?? dayClock) : dayClock
+        animalFrozenClock = reduceMotion ? clock : nil
+        return clock
+    }
+
     /// Hens may also stand on a road in front of the house.
     func isYard(_ tile: TileCoordinate, in snapshot: WorldSnapshot) -> Bool {
         if let id = snapshot.occupiedTiles[tile] { return snapshot.buildings[id]?.kind == .road }
@@ -63,16 +69,14 @@ extension IsoWorldScene {
             return
         }
         lastAnimalPass = pass
-        // Reduce Motion holds the animals where they stand when it comes on.
-        let dayClock = AnimalPlanner.dayClock(tick: snapshot.tickCount)
-        let clock = reduceMotion ? (animalFrozenClock ?? dayClock) : dayClock
-        animalFrozenClock = reduceMotion ? clock : nil
+        let clock = ambientClock(for: snapshot)
         let animals = range.map { visible in
             AnimalPlanner.animals(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: clock,
+                in: snapshot, visible: (visible.xRange, visible.yRange), clock: clock,
                 ground: AnimalPlanner.Ground(
                     isFreeGrass: { self.isFreeGrass($0, in: snapshot) }, isYard: { self.isYard($0, in: snapshot) }
-                )
+                ),
+                tours: &animalTours
             )
         } ?? []
         let keys = Set(animals.map { AnimalKey(home: $0.home, slot: $0.slot) })
@@ -85,9 +89,7 @@ extension IsoWorldScene {
             let target = IsoMath.screenPoint(forTileFractionalX: animal.col, fractionalY: animal.row)
             let pose = AnimalPose(action: animal.action, facing: animal.facing, moving: !still)
             if var shown = animalNodes[key] {
-                // SpriteKit keeps positions in single precision: compare with slack.
-                if hypot(shown.node.position.x - target.x, shown.node.position.y - target.y) > 0.01 { shown.node.glide(to: target) }
-                shown.node.zPosition = Self.figureZ(at: target)
+                shown.node.glide(to: target, sortingBy: Self.figureZ(at:))
                 if shown.pose != pose {
                     shown.pose = pose
                     Self.apply(pose, to: shown.node)

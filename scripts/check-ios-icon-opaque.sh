@@ -29,7 +29,7 @@ fi
 
 if grep -q "hasAlpha: yes" <<< "$info"; then
     echo "ERROR: $ICON has an alpha channel; App Store Connect rejects it." >&2
-    echo "       Regenerate it with 'xcrun swift scripts/generate-app-icon.swift'." >&2
+    echo "       Regenerate it with 'make app-icon'." >&2
     exit 1
 fi
 

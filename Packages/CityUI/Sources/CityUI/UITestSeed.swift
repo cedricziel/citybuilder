@@ -112,10 +112,22 @@ public enum UITestSeed {
             .appendingPathComponent("citybuilder-ui-test-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
     }
 
+    /// Whether a test or shot launch starts with the first-hour guide
+    /// dismissed: any `-uiTest…` flag hides it, unless `-uiTestFirstSteps`
+    /// asks for it (`first-hour-guidance` D2).
+    public static func hidesFirstSteps(fromArguments arguments: [String]) -> Bool {
+        isActive(fromArguments: arguments) && !arguments.contains("-uiTestFirstSteps")
+    }
+
     /// `-uiTestStartGame`: skip the title and start a game at once, from the seed the other flags ask
     /// for (or a regular new game), so in-game shots need no clicks.
     public static func startsGame(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestStartGame")
+    }
+
+    /// `-uiTestOpenStocks`: the started game opens with the stocks tray shown, for shots of the goods icons.
+    public static func opensStocks(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestOpenStocks")
     }
 
     /// `-uiTestShowStats`: frame rate, node and draw counts in the corner of the map, for performance shots.

@@ -96,8 +96,18 @@ public final class IsoWorldScene: SKScene {
     /// farms, Hens peck by the houses.
     var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
     var lastAnimalPass: AnimalPass?
-    /// The animals' clock while Reduce Motion holds them still.
+    /// The animals' and workers' clock while Reduce Motion holds them still.
     var animalFrozenClock: UInt64?
+    /// Woodcutters and miners by site. Spec: `rendering-2_5d` / Workers
+    /// walk out from the gather sites.
+    var gatherNodes: [EntityID: (node: SKSpriteNode, pose: GatherPose)] = [:]
+    var lastGatherPass: AnimalPass?
+    /// Each gather site's current trip, kept from tick to tick so its worker
+    /// never jumps when the catchment changes.
+    var gatherTrips: [EntityID: GatherWorkerPlanner.Trip] = [:]
+    /// Each animal's round, kept from tick to tick so it never jumps when
+    /// its pasture or yard is built on.
+    var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
@@ -113,6 +123,9 @@ public final class IsoWorldScene: SKScene {
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
+    /// Whether the tree clumps sway, hold or stand still. Spec:
+    /// `rendering-2_5d` / Trees sway in the wind.
+    var treeSwayState: TreeSway.State = .running
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -212,6 +225,7 @@ public final class IsoWorldScene: SKScene {
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
         noteTick(snapshot.tickCount, now: currentTime)
+        updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
@@ -221,6 +235,7 @@ public final class IsoWorldScene: SKScene {
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)
+        reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)

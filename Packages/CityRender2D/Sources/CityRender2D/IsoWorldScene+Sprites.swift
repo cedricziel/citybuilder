@@ -11,9 +11,11 @@ struct BuildingSpriteInputs: Equatable {
     let buildings: [EntityID: Building]
     let occupiedTiles: [TileCoordinate: EntityID]
     let roadDisconnectedBuildings: Set<EntityID>
-    let housePopulations: [EntityID: HousePopulation]
-    let houseModifiers: [EntityID: HouseModifiers]
-    let rivals: [RivalSummary]
+    /// Each house's tier: the sprite shows it, while the population counts change every tick.
+    let houseTiers: [EntityID: HouseTier]
+    /// The smoky houses, the one house modifier the sprite shows.
+    let smokyHouses: Set<EntityID>
+    let rivals: [RivalLook]
 
     init(_ snapshot: WorldSnapshot, view: VisibleTiles) {
         xRange = view.xRange
@@ -21,9 +23,9 @@ struct BuildingSpriteInputs: Equatable {
         buildings = snapshot.buildings
         occupiedTiles = snapshot.occupiedTiles
         roadDisconnectedBuildings = snapshot.roadDisconnectedBuildings
-        housePopulations = snapshot.housePopulations
-        houseModifiers = snapshot.houseModifiers
-        rivals = snapshot.rivals
+        houseTiers = snapshot.housePopulations.mapValues(\.tier)
+        smokyHouses = Set(snapshot.houseModifiers.lazy.filter(\.value.smoky).map(\.key))
+        rivals = snapshot.rivals.map(RivalLook.init)
     }
 }
 

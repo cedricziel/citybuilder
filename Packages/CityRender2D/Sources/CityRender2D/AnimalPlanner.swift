@@ -55,24 +55,49 @@ public enum AnimalPlanner {
         return tick - (tick / day) * nightLength - tonight
     }
 
+    /// One animal: its home and its place in the herd or flock.
+    public struct Key: Hashable, Sendable {
+        public let home: EntityID
+        public let slot: Int
+    }
+
     /// The animals on screen at `clock` (a `dayClock`, or a frozen one).
+    /// `tours` keeps each animal's round from call to call, so a tile built
+    /// on near its home never makes it jump.
     public static func animals(
         in snapshot: WorldSnapshot,
-        xRange: ClosedRange<Int>,
-        yRange: ClosedRange<Int>,
+        visible: (x: ClosedRange<Int>, y: ClosedRange<Int>),
         clock: UInt64,
-        ground: Ground
+        ground: Ground,
+        tours: inout [Key: Tour]
     ) -> [Animal] {
+        var kept: [Key: Tour] = [:]
+        defer { tours = kept }
         // Inside for the winter, and too small to see far out.
         guard snapshot.date.season != .winter, snapshot.camera.zoom >= herdMinZoom else { return [] }
+        func roam(_ key: Key, area: [TileCoordinate], pace: Pace) -> Place {
+            let tour = tour(for: tours[key], area: area, pace: pace, clock: clock)
+            kept[key] = tour
+            return place(on: tour, pace: pace, clock: clock)
+        }
+        let (xRange, yRange) = visible
         let night = TimeOfDay(tick: snapshot.tickCount).phase == .night
         let near = { (anchor: TileCoordinate, pad: Int) in
             (xRange.lowerBound - pad ... xRange.upperBound + pad).contains(anchor.x)
                 && (yRange.lowerBound - pad ... yRange.upperBound + pad).contains(anchor.y)
         }
+        // The budget goes to the homes nearest the camera centre, so panning
+        // to a farm gives it animals and those on screen keep theirs.
+        let camera = snapshot.camera
+        let distance = { (home: Building) -> Double in
+            let dx = Double(home.anchor.x) - camera.centerX, dy = Double(home.anchor.y) - camera.centerY
+            return dx * dx + dy * dy
+        }
         let homes = snapshot.buildings.values
             .filter { [.farm, .grainFarm, .house].contains($0.kind) && $0.state == .operational }
-            .sorted { $0.id.raw < $1.id.raw }
+            .map { (home: $0, distance: distance($0)) }
+            .sorted { ($0.distance, $0.home.id.raw) < ($1.distance, $1.home.id.raw) }
+            .map(\.home)
         var herd: [Animal] = []
         for farm in homes where farm.kind != .house && near(farm.anchor, herdReach) {
             guard herd.count < maxHerd else { break }
@@ -82,7 +107,7 @@ public enum AnimalPlanner {
             var rng = DeterministicRNG(seed: UInt64(farm.id.raw) &* 0xA24B_AED4_963E_E407)
             let count = kind == .sheep ? 2 + Int(rng.next() % 3) : 1 + Int(rng.next() % 2)
             for slot in 0 ..< min(count, maxHerd - herd.count) {
-                herd.append(grazer(farm.id, slot: slot, kind: kind, pasture: pasture, clock: clock))
+                herd.append(grazer(farm.id, slot: slot, kind: kind, pasture: pasture, roam: roam))
             }
         }
         guard snapshot.camera.zoom >= henMinZoom, !night else { return herd }
@@ -95,7 +120,7 @@ public enum AnimalPlanner {
             var rng = DeterministicRNG(seed: UInt64(house.id.raw) &* 0x9FB2_1C65_1E98_DF25)
             let count = 1 + Int(rng.next() % 2)
             for slot in 0 ..< min(count, maxHens - hens.count) {
-                hens.append(hen(house, slot: slot, yard: yard, clock: clock))
+                hens.append(hen(house, slot: slot, yard: yard, roam: roam))
             }
         }
         return herd + hens
@@ -141,54 +166,104 @@ public enum AnimalPlanner {
         return route
     }
 
-    /// One leg of an animal's tour: from the tile it stood on last visit
-    /// to this visit's, and how many ticks it has been on the way.
-    struct Leg {
-        let from: TileCoordinate
-        let to: TileCoordinate
-        let ticks: UInt64
+    /// A spot in fractional tile coordinates.
+    public struct Spot: Equatable, Sendable {
+        let col: Double
+        let row: Double
     }
 
-    private static func leg(tour: [TileCoordinate], base: UInt64, period: UInt64, clock: UInt64) -> Leg {
-        let time = clock &+ base % period
-        let visit = time / period
-        let step = Int((base &+ visit) % UInt64(tour.count))
-        let back = Int((base &+ visit &+ UInt64(tour.count) - 1) % UInt64(tour.count))
-        return Leg(from: visit == 0 ? tour[step] : tour[back], to: tour[step], ticks: time % period)
+    /// How an animal moves along its round: its hash, the ticks between
+    /// visits and the ticks a step takes, and its spot in each tile.
+    struct Pace {
+        let base: UInt64
+        let period: UInt64
+        let walkTicks: UInt64
+        let spot: (TileCoordinate) -> Spot
     }
 
-    static func grazer(_ farm: EntityID, slot: Int, kind: Kind, pasture: [TileCoordinate], clock: UInt64) -> Animal {
-        let base = UInt64(farm.raw) &* 0x9E37_79B9_7F4A_7C15 ^ UInt64(slot) &* 0xBF58_476D_1CE4_E5B9
-        let start = pasture[Int(base % UInt64(pasture.count))]
-        let tour = tour(from: start, through: Set(pasture))
-        let period = herdVisit.lowerBound + base % (herdVisit.upperBound - herdVisit.lowerBound + 1)
-        let stop = leg(tour: tour, base: base, period: period, clock: clock)
-        // A spot in the tile, 0.2 off its edges (tile (x, y) spans x ± 0.5).
-        func spot(_ tile: TileCoordinate) -> (col: Double, row: Double) {
-            var rng = spotRNG(base, tile)
-            return (Double(tile.x) - 0.3 + Double(rng.next() % 600) / 1000, Double(tile.y) - 0.3 + Double(rng.next() % 600) / 1000)
+    /// An animal's round, kept by the scene from pass to pass.
+    public struct Tour: Equatable, Sendable {
+        /// The round's tiles in walking order (`tour(from:through:)`).
+        let tiles: [TileCoordinate]
+        /// Added to the clock to give the time into the round.
+        let shift: UInt64
+        /// The step of the round the animal makes in visit 0.
+        let first: UInt64
+        /// Where visit 0 sets out from, for a round planned on the way.
+        let entry: Spot?
+        /// The clock the round was planned at.
+        let since: UInt64
+    }
+
+    /// The round to follow at `clock`: the kept one while all its tiles are
+    /// open, else a new one from where the animal stands to the tile it was
+    /// heading for, or the open tile nearest it.
+    static func tour(for previous: Tour?, area: [TileCoordinate], pace: Pace, clock: UInt64) -> Tour {
+        let open = Set(area)
+        guard let previous, clock >= previous.since else {
+            let start = area[Int(pace.base % UInt64(area.count))]
+            return Tour(tiles: tour(from: start, through: open), shift: pace.base % pace.period, first: pace.base, entry: nil, since: 0)
         }
-        let place = move(from: spot(stop.from), to: spot(stop.to), progress: Double(stop.ticks) / Double(herdWalkTicks))
+        guard !previous.tiles.allSatisfy(open.contains) else { return previous }
+        let here = place(on: previous, pace: pace, clock: clock)
+        let goal = previous.tiles[step(on: previous, period: pace.period, clock: clock)]
+        let start = open.contains(goal) ? goal : area.min { distance($0, goal) < distance($1, goal) } ?? goal
+        return Tour(
+            tiles: tour(from: start, through: open), shift: 0 &- clock, first: 0, entry: Spot(col: here.col, row: here.row),
+            since: clock
+        )
+    }
+
+    private static func distance(_ lhs: TileCoordinate, _ rhs: TileCoordinate) -> Int {
+        abs(lhs.x - rhs.x) + abs(lhs.y - rhs.y)
+    }
+
+    private static func step(on tour: Tour, period: UInt64, clock: UInt64) -> Int {
+        Int((tour.first &+ (clock &+ tour.shift) / period) % UInt64(tour.tiles.count))
+    }
+
+    /// Where the animal is at `clock`: on its way from the tile it stood on
+    /// last visit (or the round's entry spot) to this visit's.
+    static func place(on tour: Tour, pace: Pace, clock: UInt64) -> Place {
+        let (time, period) = (clock &+ tour.shift, pace.period)
+        let count = UInt64(tour.tiles.count)
+        let to = tour.tiles[step(on: tour, period: period, clock: clock)]
+        let back = tour.tiles[Int((tour.first &+ time / period &+ count - 1) % count)]
+        let from = time / period == 0 ? tour.entry ?? pace.spot(to) : pace.spot(back)
+        return move(from: from, to: pace.spot(to), progress: Double(time % period) / Double(pace.walkTicks))
+    }
+
+    typealias Roam = (Key, [TileCoordinate], Pace) -> Place
+
+    static func grazer(_ farm: EntityID, slot: Int, kind: Kind, pasture: [TileCoordinate], roam: Roam) -> Animal {
+        let base = UInt64(farm.raw) &* 0x9E37_79B9_7F4A_7C15 ^ UInt64(slot) &* 0xBF58_476D_1CE4_E5B9
+        let period = herdVisit.lowerBound + base % (herdVisit.upperBound - herdVisit.lowerBound + 1)
+        // A spot in the tile, 0.2 off its edges (tile (x, y) spans x ± 0.5).
+        func spot(_ tile: TileCoordinate) -> Spot {
+            var rng = spotRNG(base, tile)
+            return Spot(
+                col: Double(tile.x) - 0.3 + Double(rng.next() % 600) / 1000,
+                row: Double(tile.y) - 0.3 + Double(rng.next() % 600) / 1000
+            )
+        }
+        let place = roam(Key(home: farm, slot: slot), pasture, Pace(base: base, period: period, walkTicks: herdWalkTicks, spot: spot))
         return Animal(home: farm, slot: slot, kind: kind, col: place.col, row: place.row, walking: place.walking, facing: place.facing)
     }
 
-    static func hen(_ house: Building, slot: Int, yard: [TileCoordinate], clock: UInt64) -> Animal {
+    static func hen(_ house: Building, slot: Int, yard: [TileCoordinate], roam: Roam) -> Animal {
         let footprint = BuildingCatalog.spec(for: house.kind).footprint
         let base = UInt64(house.id.raw) &* 0xD6E8_FEB8_6659_FD93 ^ UInt64(slot) &* 0x2545_F491_4F6C_DD1D
-        let start = yard[Int(base % UInt64(yard.count))]
-        let tour = tour(from: start, through: Set(yard))
         let period = henVisit.lowerBound + base % (henVisit.upperBound - henVisit.lowerBound + 1)
-        let stop = leg(tour: tour, base: base, period: period, clock: clock)
         // In the half of the yard tile next to the house.
-        func spot(_ tile: TileCoordinate) -> (col: Double, row: Double) {
+        func spot(_ tile: TileCoordinate) -> Spot {
             var rng = spotRNG(base, tile)
             let along = -0.35 + Double(rng.next() % 700) / 1000
             let out = -0.4 + Double(rng.next() % 250) / 1000
             return tile.x == house.anchor.x + footprint.width
-                ? (Double(tile.x) + out, Double(tile.y) + along)
-                : (Double(tile.x) + along, Double(tile.y) + out)
+                ? Spot(col: Double(tile.x) + out, row: Double(tile.y) + along)
+                : Spot(col: Double(tile.x) + along, row: Double(tile.y) + out)
         }
-        let hop = move(from: spot(stop.from), to: spot(stop.to), progress: Double(stop.ticks) / Double(henHopTicks))
+        let hop = roam(Key(home: house.id, slot: slot), yard, Pace(base: base, period: period, walkTicks: henHopTicks, spot: spot))
         return Animal(home: house.id, slot: slot, kind: .hen, col: hop.col, row: hop.row, walking: false, facing: hop.facing)
     }
 
@@ -198,14 +273,14 @@ public enum AnimalPlanner {
         DeterministicRNG(seed: base ^ UInt64(UInt32(bitPattern: Int32(tile.x))) << 20 ^ UInt64(UInt32(bitPattern: Int32(tile.y))))
     }
 
-    private struct Place {
+    struct Place {
         let col: Double
         let row: Double
         let walking: Bool
         let facing: SpriteAtlas.WalkerFacing
     }
 
-    private static func move(from: (col: Double, row: Double), to: (col: Double, row: Double), progress: Double) -> Place {
+    private static func move(from: Spot, to: Spot, progress: Double) -> Place {
         let along = min(1, progress)
         return Place(
             col: from.col + (to.col - from.col) * along,

@@ -1,4 +1,5 @@
 import CityCore
+import CityRender2D
 import Foundation
 import SwiftUI
 import Testing
@@ -36,20 +37,18 @@ func scenarioMissingIconReturnsTheSFSymbolFallback() {
     #expect(GoodIconLoader.fallbackSymbolName == "cube.fill")
 }
 
-@Test("scenario: loaded image uses nearest-neighbor interpolation")
-func scenarioLoadedImageUsesNearestNeighborInterpolation() {
-    // The loader applies `pixelArtInterpolation` to every loaded
-    // image. The constant MUST be `.none` so HUD chips scale crisp
-    // at any DPI.
-    #expect(GoodIconLoader.pixelArtInterpolation == .none)
+@Test("scenario: Goods icon scales smoothly")
+func scenarioGoodsIconScalesSmoothly() {
+    // The icons are anti-aliased SVG renders: the loader and the HUD's
+    // good chips draw them with high-quality interpolation, not the
+    // nearest-neighbor mode kept for pixel art.
+    #expect(GoodIconLoader.interpolation == .high)
+    #expect(GoodIconLoader.interpolation != GoodIconLoader.pixelArtInterpolation)
 }
 
-@Test("scenario: goods icon uses nearest-neighbor interpolation")
-func scenarioGoodsIconUsesNearestNeighborInterpolation() {
-    // rendering-2_5d spec mirror of the loader-level scenario — the
-    // HUD's stocks row applies `GoodIconLoader.pixelArtInterpolation`
-    // to every Image chip via the modifier chain in `HUDFrameView`.
-    #expect(GoodIconLoader.pixelArtInterpolation == .none)
+@Test("the goods icons come from the Kit atlas")
+func goodsIconsComeFromTheKitAtlas() {
+    #expect(GoodIconLoader.atlasName == SpriteAtlasRouting.atlasName(for: "good-wood"))
 }
 
 @Test("scenario: image factory never returns nil")
