@@ -144,7 +144,8 @@ func treesAndRocksKeepTheirPlaceOverTheBackdrop() throws {
 func eachTileAnimatesOnItsOwnPhase() {
     let grid = [TerrainType](repeating: .water, count: 64 * 64)
     let map = GroundBackdropMap(width: 64, height: 64, grid: grid, transitions: TerrainTransitionMap(width: 64, height: 64, grid: grid))
-    let phases = stride(from: 1, to: map.texels.count, by: 4).map { map.texels[$0] }
+    let texels = map.texels
+    let phases = stride(from: 1, to: texels.count, by: 4).map { texels[$0] }
     #expect(Set(phases).count > 200, "phases spread over the tiles")
 }
 
@@ -163,4 +164,45 @@ func groundBackdropFollowsTheSeason() throws {
     scene.update(1)
     let winter = try #require(scene.groundBackdropNode?.shader?.uniformNamed("u_looks")?.textureValue)
     #expect(winter !== summer)
+}
+
+@MainActor
+private func uniform(_ scene: IsoWorldScene, _ name: String) throws -> Float {
+    try #require(scene.groundBackdropNode?.shader?.uniformNamed(name)).floatValue
+}
+
+@MainActor
+@Test("scenario: Pausing holds the ground's animation")
+func pausingHoldsTheGroundsAnimation() throws {
+    let scene = scene(Source(islandSnapshot()))
+    scene.noteTick(1, now: 0)
+    scene.updateGroundMotion(now: 0)
+    scene.updateGroundMotion(now: 0.2)
+    let running = try uniform(scene, "u_clock")
+    #expect(running > 0.19 && running < 0.21)
+    // No tick for more than 0.3 s: the clock holds, so every tile keeps its frame.
+    scene.updateGroundMotion(now: 1)
+    scene.updateGroundMotion(now: 2)
+    #expect(try uniform(scene, "u_clock") == Float(scene.groundClock))
+    let held = try uniform(scene, "u_clock")
+    scene.updateGroundMotion(now: 3)
+    #expect(try uniform(scene, "u_clock") == held)
+    // The next tick runs it on from where it stopped.
+    scene.noteTick(2, now: 3.1)
+    scene.updateGroundMotion(now: 3.2)
+    #expect(try uniform(scene, "u_clock") > held && uniform(scene, "u_clock") < held + 0.25)
+    #expect(try uniform(scene, "u_rest") == 0)
+}
+
+@MainActor
+@Test("scenario: Reduce Motion rests the ground on its first frame")
+func reduceMotionRestsTheGroundOnItsFirstFrame() throws {
+    let scene = scene(Source(islandSnapshot()))
+    scene.noteTick(1, now: 0)
+    scene.reduceMotion = true
+    scene.updateGroundMotion(now: 0.1)
+    #expect(try uniform(scene, "u_rest") == 1)
+    scene.reduceMotion = false
+    scene.updateGroundMotion(now: 0.2)
+    #expect(try uniform(scene, "u_rest") == 0)
 }

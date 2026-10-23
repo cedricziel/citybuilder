@@ -89,6 +89,19 @@ extension IsoWorldScene {
         node.shader?.uniformNamed("u_map")?.vectorFloat2Value = vector_float2(Float(map.width), Float(map.height))
     }
 
+    /// Advances the backdrop's animation while motion runs, holds it while the game is paused, and
+    /// rests every tile on frame 0 under Reduce Motion, like the building animations.
+    func updateGroundMotion(now: TimeInterval) {
+        let state = motionState(now: now)
+        if state == .running {
+            groundClock += now - (groundClockSeen ?? now)
+        }
+        groundClockSeen = now
+        guard let shader = groundBackdropNode?.shader else { return }
+        shader.uniformNamed("u_clock")?.floatValue = Float(groundClock)
+        shader.uniformNamed("u_rest")?.floatValue = state == .stopped ? 1 : 0
+    }
+
     /// Redraws the looks for a new season.
     func refreshGroundBackdropLooks() {
         groundBackdropNode?.shader?.uniformNamed("u_looks")?.textureValue = groundLookStrip(season: appliedSeason)
@@ -229,7 +242,7 @@ extension IsoWorldScene {
             } else {
                 float row = floor(tile.r * 255.0 + 0.5) - 1.0;
                 vec2 timing = \(frameChoice);
-                float frame = floor(mod(u_time / timing.y + tile.g * timing.x, timing.x));
+                float frame = u_rest > 0.5 ? 0.0 : floor(mod(u_clock / timing.y + tile.g * timing.x, timing.x));
                 vec2 offset = vec2((c - r) * \(halfWidth), -(c + r) * \(halfHeight));
                 vec2 local = p - offset + vec2(\(2 * halfWidth), \(2 * halfHeight));
                 vec2 uv = vec2((frame * \(4 * halfWidth) + local.x) / (\(4 * halfWidth) * \(columns)),
@@ -243,7 +256,9 @@ extension IsoWorldScene {
             SKUniform(name: "u_tiles", texture: SKTexture()),
             SKUniform(name: "u_origin", vectorFloat2: .zero),
             SKUniform(name: "u_size", vectorFloat2: .zero),
-            SKUniform(name: "u_map", vectorFloat2: .zero)
+            SKUniform(name: "u_map", vectorFloat2: .zero),
+            SKUniform(name: "u_clock", float: 0),
+            SKUniform(name: "u_rest", float: 0)
         ])
     }
 }
