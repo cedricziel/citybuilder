@@ -2,7 +2,7 @@
 
 ### Requirement: Animals graze by the farms
 
-Each operational farm SHALL keep 2–4 sheep and each operational grain farm 1–2 cows. The count SHALL come from a hash of the building. The animals SHALL stand on free grass within 2 tiles of the farm's footprint. A free grass tile has grass terrain, no building and no terrain object (tree or rock). Each animal SHALL graze at its spot and walk to another free spot every 6–10 s. At night an animal SHALL keep its place and not animate. Positions SHALL be a pure function of the farm, slot and tick, and SHALL never change simulation state. At most 30 herd animals SHALL be drawn, none below zoom 0.5, and none outside the visible tile range. With Reduce Motion on, or while the game is paused, animals SHALL stand still.
+Each operational farm SHALL keep 2–4 sheep and each operational grain farm 1–2 cows. The count SHALL come from a hash of the building. The animals SHALL stand on free grass within 2 tiles of the farm's footprint. A free grass tile has grass terrain, no building and no terrain object (tree or rock). Each animal SHALL graze at its spot and walk to another free spot on the same side of the farm every 6–10 s, so no walk crosses the farm. At night an animal SHALL keep its place and not animate. Positions SHALL be a pure function of the farm, slot and tick, and SHALL never change simulation state. At most 30 herd animals SHALL be drawn, none below zoom 0.5, and none outside the visible tile range. With Reduce Motion on, or while the game is paused, animals SHALL stand still.
 
 #### Scenario: Sheep graze beside a farm
 - **WHEN** an operational farm stands in open grass at midday
