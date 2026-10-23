@@ -6,6 +6,9 @@ name: rival-sweep
 #   difficulty over 36,000 ticks, with the year-5 floors.
 # - Solvency (hard-bankruptcy-grace design D2): a market-trading scripted
 #   town on Normal, seeds 0–9 on both layouts over 36,000 ticks.
+# - Mid-game pacing (#186): years to the first merchant, 20 merchants and
+#   the Renaissance for the scripted town's mid-game kit; a measurement
+#   with no pass bar.
 on:
   workflow_dispatch:
   schedule:
@@ -19,7 +22,7 @@ jobs:
   sweep:
     name: balance sweeps
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -58,6 +61,19 @@ jobs:
           grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
           exit "$status"
 
+      - name: Run the mid-game pacing sweep (release build)
+        if: ${{ !cancelled() }}
+        env:
+          RIVAL_SWEEP: "1"
+        shell: bash
+        run: |
+          set -o pipefail
+          status=0
+          swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
+            --filter midGamePacingAcrossSeeds 2>&1 | tee pacing-sweep.log || status=$?
+          grep '^PACING_SWEEP' pacing-sweep.log > pacing-sweep.txt
+          exit "$status"
+
       - name: Upload the sweeps' per-game lines
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -66,3 +82,4 @@ jobs:
           path: |
             rival-sweep.txt
             solvency-sweep.txt
+            pacing-sweep.txt
