@@ -4,7 +4,7 @@ import SpriteKit
 /// Autumn and winter looks for vegetation, and per-tile variants. Spec: `rendering-2_5d` /
 /// Terrain shows the season (design D7), Grass picks a variant per tile (terrain-v2, D2).
 extension IsoWorldScene {
-    static let seasonalTerrain: Set<TerrainType> = [.grass, .forest]
+    static let seasonalTerrain: Set<TerrainType> = [.grass]
 
     /// `terrain-<kind>-<season>` for seasonal kinds in autumn and winter.
     static func seasonalTerrainName(kind: TerrainType, season: Season) -> String? {

@@ -86,17 +86,16 @@ public enum SpriteAtlas {
     // MARK: - Per-tile art variants
 
     //
-    // Some sprite kinds (mountain, road) ship multiple visually distinct
-    // PNGs so a row of mountain tiles isn't a row of clones. Variant 0
-    // uses the canonical name (`terrain-mountain.png`); variants 1..N-1
+    // Some sprite kinds (grass, buildings) ship multiple visually distinct
+    // PNGs so a row of tiles isn't a row of clones. Variant 0
+    // uses the canonical name (`terrain-grass.png`); variants 1..N-1
     // use `<stem>-vN.png`. Selection is a deterministic function of the
     // tile coordinate, so replays and snapshots render the same.
 
     /// Number of art variants per terrain kind. Kinds not listed render
     /// the single canonical sprite.
     public static let terrainVariantCounts: [TerrainType: Int] = [
-        .grass: 4,
-        .mountain: 4
+        .grass: 4
     ]
 
     /// Number of art variants per building kind. Only applies to the
@@ -286,7 +285,8 @@ public enum SpriteAtlas {
     public static var catalogSpriteNames: [String] {
         var names: [String] = []
 
-        for kind in TerrainType.allCases {
+        // Forest and mountain draw grass ground with their trees and rocks on top: no ground sprite.
+        for kind in TerrainType.allCases where !TerrainObject.kinds.contains(kind) {
             names.append("terrain-\(kind.rawValue)")
             if let entry = SpriteAnimation.entry(for: .terrain(kind)) {
                 for frame in 0 ..< entry.frameCount {

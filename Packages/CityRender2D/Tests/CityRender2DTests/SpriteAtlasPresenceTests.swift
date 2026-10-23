@@ -61,7 +61,8 @@ func scenarioCatalogEnumeratesEveryDeclaredSpriteName() {
     // sprite-asset-pipeline naming grammar describes.
     let names = SpriteAtlas.catalogSpriteNames
     for kind in TerrainType.allCases {
-        #expect(names.contains("terrain-\(kind.rawValue)"))
+        // Forest and mountain draw grass ground under their objects, so they have no ground sprite.
+        #expect(names.contains("terrain-\(kind.rawValue)") != TerrainObject.kinds.contains(kind))
     }
     for kind in BuildingKind.allCases {
         let isShore = SpriteName.shorePlacementKindRawValues.contains(kind.rawValue)
