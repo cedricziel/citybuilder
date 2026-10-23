@@ -1,13 +1,22 @@
 name: ci
 
 on:
+  # A push to main selects jobs from the files it changed, like a PR.
   push:
     branches: [main]
   # Every PR, including one stacked on another PR's branch.
   pull_request:
+  # Selective pushes skip jobs, so main also gets a full run every week.
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
 
+# A newer run replaces an older one on the same ref, main included: a
+# push to main diffs against the last green run, so a cancelled push's
+# changes fall inside the next push's diff. The weekly and manual runs
+# get their own group so a push can't cancel the full run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' || github.event_name == 'push') && github.ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -21,6 +30,10 @@ jobs:
     name: changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # `actions: read` lets the push case look up the last green run.
+    permissions:
+      contents: read
+      actions: read
     outputs:
       packages: ${{ steps.select.outputs.packages }}
       test_matrix: ${{ steps.select.outputs.test_matrix }}
@@ -40,14 +53,24 @@ jobs:
 
       # Docs need lint only. A change inside Packages/ runs that package
       # and its dependents, read from the Package.swift graph; anything
-      # else runs everything (see scripts/select_ci_jobs.py). Pushes to
-      # main, and PRs that edit the selector, its tests or this workflow,
-      # select everything here in shell, so a broken selector can't
-      # deselect the jobs that would test it.
+      # else runs everything (see scripts/select_ci_jobs.py).
+      #
+      # A PR diffs against its base. A push to main diffs against the head
+      # of the latest green run on main, not against the commit before
+      # it: that run may have failed, and a later docs-only push must not
+      # turn main green while a package is still broken. Everything is
+      # selected, in shell, when there is nothing to diff against (the
+      # weekly schedule, a manual run, no green run yet, a green commit
+      # that is not in the checkout, a failing API call) and when the
+      # change edits the selector, its tests or this workflow, so a
+      # broken selector can't deselect the jobs that would test it.
       - name: Select jobs from the changed files
         id: select
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           select_all() {
             for manifest in Packages/*/Package.swift; do basename "$(dirname "$manifest")"; done > "$RUNNER_TEMP/packages"
@@ -59,6 +82,18 @@ jobs:
             echo "determinism_compare=true"
             echo "audio=true"
           }
+          case "$EVENT_NAME" in
+            pull_request) BASE_SHA="$PR_BASE_SHA" ;;
+            push)
+              BASE_SHA=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=main&status=success&per_page=30" \
+                --jq '[.workflow_runs[] | select(.event == "push" or .event == "schedule")][0].head_sha // empty') \
+                || BASE_SHA=""
+              ;;
+            *) BASE_SHA="" ;;
+          esac
+          if ! git cat-file -e "${BASE_SHA:-HEAD}^{commit}" 2>/dev/null; then
+            BASE_SHA=""
+          fi
           selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
             select_all > "$selection"
