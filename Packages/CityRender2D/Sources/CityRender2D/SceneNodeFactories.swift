@@ -266,7 +266,7 @@ extension IsoWorldScene {
     /// construction frame of an unfinished monument; nil otherwise.
     static func signatureTexture(kind: BuildingKind, look: BuildingLook) -> (String, SKTexture)? {
         if let frame = look.projectFrame {
-            let name = "building-\(kind.rawValue)-constructing-\(frame)"
+            let name = SpriteAnimation.assetName(for: .buildingConstructing(kind), frame: frame)
             return (name, SpriteAtlas.textureOrPlaceholder(named: name))
         }
         guard look.idle else { return nil }
@@ -287,26 +287,12 @@ extension IsoWorldScene {
         node.addChild(Self.makePennantNode(colourHex: rival.colour.hex, on: node, footprint: BuildingCatalog.spec(for: kind).footprint))
     }
 
+    /// Loops an operational building's frames: its own look's, else the kind's shared ones.
     private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, animationBase: String?) {
-        guard let animationBase else {
-            armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
-            return
-        }
-        if state == .operational, let action = Self.operationalAction(baseName: animationBase, kind: kind) {
-            node.run(action, withKey: "anim")
-        }
-    }
-
-    private func armOperationalAnimationIfNeeded(
-        on node: SKSpriteNode,
-        kind: BuildingKind,
-        state: BuildingState
-    ) {
-        guard state == .operational else { return }
-        guard let action = SpriteAnimation.loopingAction(for: .buildingOperational(kind)) else {
-            return
-        }
-        node.run(action, withKey: "anim")
+        guard state == .operational,
+              let action = SpriteAnimation.loopingAction(for: .buildingOperational(kind, stem: animationBase))
+        else { return }
+        BuildingMotion.arm(action, on: node, state: buildingMotionState)
     }
 
     private func textureForBuilding(

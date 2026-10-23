@@ -10,8 +10,11 @@ public enum SpriteAnimation {
     /// the same catalog so the atlas has one lookup path.
     public enum AnimationKey: Hashable, Sendable {
         case terrain(TerrainType)
-        case buildingOperational(BuildingKind)
-        case buildingConstructing(BuildingKind)
+        /// A building's operational loop and construction frames. `stem` names a look with frames
+        /// of its own (a culture variant, a shore facing); nil means the kind's shared
+        /// `building-<kind>` frames.
+        case buildingOperational(BuildingKind, stem: String? = nil)
+        case buildingConstructing(BuildingKind, stem: String? = nil)
         case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
@@ -65,7 +68,7 @@ public enum SpriteAnimation {
             case .grass: Entry(frameCount: 2, timePerFrame: 0.60, loop: .forever)
             case .forest, .mountain: nil
             }
-        case let .buildingOperational(kind):
+        case let .buildingOperational(kind, _):
             operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
@@ -109,10 +112,10 @@ public enum SpriteAnimation {
         switch key {
         case let .terrain(kind):
             "terrain-\(kind.rawValue)-\(frame)"
-        case let .buildingOperational(kind):
-            "building-\(kind.rawValue)-operational-\(frame)"
-        case let .buildingConstructing(kind):
-            "building-\(kind.rawValue)-constructing-\(frame)"
+        case let .buildingOperational(kind, stem):
+            "\(stem ?? "building-\(kind.rawValue)")-operational-\(frame)"
+        case let .buildingConstructing(kind, stem):
+            "\(stem ?? "building-\(kind.rawValue)")-constructing-\(frame)"
         case let .walker(facing, look):
             "\(look.stem)-\(facing.rawValue)-\(frame)"
         case let .carrier(load, facing):
