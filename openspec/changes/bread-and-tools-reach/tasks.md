@@ -1,9 +1,9 @@
 ## 1. M1 — Starter mine site (CityCore)
 
-- [ ] 1.1 Tests-first: "Every home island has a mine site" and "Only a missing mine site raises a tile"; confirm red
-- [ ] 1.2 Implement to green: the mine-site raise after the starter grove (design D1)
-- [ ] 1.3 Run the fair-start-sites tests and the rival sweep locally, and record the sweep in the PR
-- [ ] 1.4 Run `DeterminismFixture` twice at each length with `SWIFT_DETERMINISTIC_HASHING=1`, confirm byte-identical output, and regenerate the `game-data-codegen` baseline in its own commit if it changes
+- [x] 1.1 Tests-first: "Every home island has a mine site" and "Only a missing mine site raises a tile"; confirm red
+- [x] 1.2 Implement to green: the mine-site raise after the starter grove (design D1)
+- [x] 1.3 Run the fair-start-sites tests and the rival sweep locally, and record the sweep in the PR
+- [x] 1.4 Run `DeterminismFixture` twice at each length with `SWIFT_DETERMINISTIC_HASHING=1`, confirm byte-identical output, and regenerate the `game-data-codegen` baseline in its own commit if it changes (it did not)
 
 ## 2. M2 — Showing the chain (CityUI)
 
