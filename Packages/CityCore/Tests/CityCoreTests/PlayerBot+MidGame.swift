@@ -1,0 +1,221 @@
+@testable import CityCore
+
+/// The PlayerBot's opt-in mid-game kit (#186): research toward the tools,
+/// bread and luxury chains and the Renaissance, then one building of
+/// each chain per 12 houses.
+extension PlayerBot {
+    /// Houses before the kit starts building.
+    static let midGameHouses = 6
+
+    /// Research in this order, each once it can be chosen.
+    static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .printingPress]
+
+    /// Starts the next tech of `midGameResearch` while nothing is being
+    /// researched.
+    func chooseResearch(in world: inout World) {
+        guard world.research.current == nil,
+              let tech = Self.midGameResearch.first(where: { world.canChooseResearch($0) })
+        else { return }
+        world.enqueue(.chooseResearch(tech))
+    }
+
+    /// The chain buildings the town lacks, in build order, each unlocked,
+    /// one per two houses past `midGameHouses` so the town keeps growing.
+    /// Per 12 houses: two grain farms, a mill and a bakery; a mine, a
+    /// charcoal burner, a smelter and a toolsmith; two of the culture's
+    /// luxury gardens and a producer; and one library in all. The mill is
+    /// a quern house until milling unlocks the windmill.
+    ///
+    /// `.naive` builds each chain from its raw end, as the bread and tools
+    /// read in the palette. `.careful` builds consumers before producers,
+    /// adds a warehouse,
+    /// and sells raw surplus at the market when it trades there.
+    func missingMidGameKinds(in world: World, town: Town) -> [BuildingKind] {
+        guard let order = midGame, town.houses >= Self.midGameHouses else { return [] }
+        let chainBuilt = Self.chainKinds(world.culture).reduce(0) { $0 + town.counts[$1, default: 0] }
+        guard town.houses >= Self.midGameHouses + 2 * chainBuilt else { return [] }
+        let sets = 1 + town.houses / 12
+        let mill: BuildingKind = world.research.isAvailable(.windmill) ? .windmill : .quernHouse
+        let luxury = world.culture.luxuryChain
+        // Each entry is (kinds, per set); a set is completed across every
+        // chain before the next set starts.
+        let perSet: [(kinds: [BuildingKind], count: Int)] = switch order {
+        case .naive: [
+                ([.library], 0),
+                ([.grainFarm], 2), ([.quernHouse, .windmill], 1), ([.bakery], 1),
+                ([.mine], 1), ([.charcoalBurner], 1), ([.smelter], 1), ([.toolsmith], 1),
+                ([luxury.garden], 2), ([luxury.producer], 1)
+            ]
+        case .careful: [
+                ([.library], 0), ([.warehouse], 0),
+                ([.quernHouse, .windmill], 1), ([.bakery], 1), ([.grainFarm], 2),
+                ([.toolsmith], 1), ([.smelter], 1), ([.mine], 1), ([.charcoalBurner], 1),
+                ([luxury.producer], 1), ([luxury.garden], 2)
+            ]
+        }
+        var missing: [BuildingKind] = []
+        for set in 1 ... sets {
+            for (kinds, count) in perSet {
+                // Library and warehouse: one in all.
+                let target = count == 0 ? 1 : count * set
+                let owned = kinds.reduce(0) { $0 + town.counts[$1, default: 0] }
+                let kind = kinds.contains(.windmill) ? mill : kinds[0]
+                if owned < target, world.research.isAvailable(kind), !missing.contains(kind) { missing.append(kind) }
+            }
+        }
+        return missing
+    }
+
+    /// A mine site the town plan's block corners miss, such as the
+    /// starter mine site beside the town center: the nearest anchor
+    /// within `mineSearchRadius` tiles where a mine may stand and a road
+    /// touches, or a short road would join it to the network.
+    func roadsideMineSlot(_ kind: BuildingKind, in world: World) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
+        guard kind == .mine else { return nil }
+        let footprint = BuildingCatalog.spec(for: .mine).footprint
+        let tileToIsland = world.tileToIslandMap()
+        var near: [(dx: Int, dy: Int)] = []
+        for dy in -Self.mineSearchRadius ... Self.mineSearchRadius {
+            for dx in -Self.mineSearchRadius ... Self.mineSearchRadius {
+                near.append((dx, dy))
+            }
+        }
+        near.sort { $0.dx * $0.dx + $0.dy * $0.dy < $1.dx * $1.dx + $1.dy * $1.dy }
+        for (dx, dy) in near {
+            let anchor = TileCoordinate(x: center.anchor.x + dx, y: center.anchor.y + dy)
+            guard world.siteRejection(.mine, at: anchor, for: .player, tileToIsland: tileToIsland) == nil else { continue }
+            if world.anyAdjacentRoad(anchor: anchor, footprint: footprint) != nil { return ([], anchor) }
+            if let link = Self.roadLink(to: anchor, footprint: footprint, in: world, tileToIsland: tileToIsland) {
+                return (link, anchor)
+            }
+        }
+        return nil
+    }
+
+    static let mineSearchRadius = 30
+
+    /// The shortest run of free tiles, at most `maxRoadLink` long, that
+    /// joins the footprint to the road network, found breadth-first from
+    /// the footprint's sides; nil when none is that short.
+    static func roadLink(
+        to anchor: TileCoordinate, footprint: Footprint, in world: World, tileToIsland: [TileCoordinate: IslandID]
+    ) -> [TileCoordinate]? {
+        let tiles = Set(footprint.tiles(anchor: anchor))
+        func neighbours(_ tile: TileCoordinate) -> [TileCoordinate] {
+            [(1, 0), (-1, 0), (0, 1), (0, -1)].map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
+        }
+        func isFree(_ tile: TileCoordinate) -> Bool {
+            world.siteRejection(.road, at: tile, for: .player, tileToIsland: tileToIsland) == nil
+        }
+        var parent: [TileCoordinate: TileCoordinate] = [:]
+        var depth: [TileCoordinate: Int] = [:]
+        var queue: [TileCoordinate] = []
+        for tile in tiles.sorted(by: { ($0.y, $0.x) < ($1.y, $1.x) }) {
+            for side in neighbours(tile) where !tiles.contains(side) && depth[side] == nil && isFree(side) {
+                depth[side] = 1
+                queue.append(side)
+            }
+        }
+        var cursor = 0
+        while cursor < queue.count {
+            let tile = queue[cursor]
+            cursor += 1
+            if neighbours(tile).contains(where: { world.roadGraph.isConnected($0) }) {
+                var path = [tile]
+                var step = tile
+                while let previous = parent[step] {
+                    path.append(previous)
+                    step = previous
+                }
+                return path
+            }
+            guard let tileDepth = depth[tile], tileDepth < maxRoadLink else { continue }
+            for next in neighbours(tile) where !tiles.contains(next) && depth[next] == nil && isFree(next) {
+                depth[next] = tileDepth + 1
+                parent[next] = tile
+                queue.append(next)
+            }
+        }
+        return nil
+    }
+
+    static let maxRoadLink = 30
+
+    /// The buildings the throttle counts as the kit's.
+    static func chainKinds(_ culture: Culture) -> [BuildingKind] {
+        [
+            .library,
+            .warehouse,
+            .grainFarm,
+            .quernHouse,
+            .windmill,
+            .bakery,
+            .mine,
+            .charcoalBurner,
+            .smelter,
+            .toolsmith,
+            culture.luxuryChain.garden,
+            culture.luxuryChain.producer
+        ]
+    }
+
+    /// Raw goods the careful kit sells above `keepOnSale` units.
+    static func rawSurplus(_ culture: Culture) -> [Good] {
+        [.grain, .ore, .charcoal, culture.luxuryChain.raw]
+    }
+}
+
+/// How the mid-game kit orders each chain (#186).
+enum MidGameOrder {
+    case naive
+    case careful
+}
+
+/// One measured setup of the mid-game sweep.
+struct MidGameArm {
+    let layout: WorldLayout
+    let difficulty: Difficulty
+    let tradesAtMarket: Bool
+    let order: MidGameOrder
+}
+
+/// When a bot game first reached each mid-game milestone, in ticks.
+struct MidGameMilestones {
+    var firstMerchant: Int?
+    var twentyMerchants: Int?
+    var renaissance: Int?
+    var bankruptAt: Int?
+
+    static func years(_ tick: Int?) -> String {
+        tick.map { String(format: "%.1f", Double($0) / Double(CalendarState.ticksPerYear)) } ?? "-"
+    }
+}
+
+extension World {
+    /// Plays a guided start with the mid-game kit for `ticks` ticks and
+    /// records the milestones, checked every bot turn.
+    static func midGameRun(_ arm: MidGameArm, seed: UInt64, ticks: Int) -> MidGameMilestones {
+        var world = World.newGame(layout: arm.layout, seed: seed, difficulty: arm.difficulty)
+        world.calendar = CalendarState(startYear: 1200, isActive: true)
+        var milestones = MidGameMilestones()
+        guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
+        var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
+        for tick in 1 ... ticks {
+            if tick.isMultiple(of: 50) {
+                bot.takeTurn(&world)
+                if milestones.firstMerchant == nil, world.residents(atLeast: .merchants) > 0 { milestones.firstMerchant = tick }
+                if milestones.twentyMerchants == nil, world.residents(atLeast: .merchants) >= 20 {
+                    milestones.twentyMerchants = tick
+                }
+                if milestones.renaissance == nil, world.age >= .renaissance { milestones.renaissance = tick }
+                if milestones.renaissance != nil { break }
+            }
+            world.tick()
+            if world.economy.gameOver {
+                milestones.bankruptAt = tick
+                break
+            }
+        }
+        return milestones
+    }
+}

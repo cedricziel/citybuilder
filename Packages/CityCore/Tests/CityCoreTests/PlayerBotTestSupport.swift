@@ -11,12 +11,16 @@ struct PlayerBot {
     /// Buildings placed in this order before anything else, one per
     /// entry, waiting until each fits (`first-hour-guidance` D4).
     let firstSteps: [BuildingKind]
+    /// Researches and builds the bread, tools and luxury chains once the
+    /// town has `midGameHouses` houses (#186, `PlayerBot+MidGame.swift`).
+    let midGame: MidGameOrder?
     private var script = RivalAIState()
 
-    init(center: Building, tradesAtMarket: Bool, firstSteps: [BuildingKind] = []) {
+    init(center: Building, tradesAtMarket: Bool, firstSteps: [BuildingKind] = [], midGame: MidGameOrder? = nil) {
         self.center = center
         self.tradesAtMarket = tradesAtMarket
         self.firstSteps = firstSteps
+        self.midGame = midGame
     }
 
     /// The first-hour guide's order: food first so houses fill, then the
@@ -30,15 +34,8 @@ struct PlayerBot {
 
     mutating func takeTurn(_ world: inout World) {
         let stock = world.islandStockpile(at: center.anchor, tileToIsland: world.tileToIslandMap())
-        if tradesAtMarket, world.economy.balance < Self.sellBelowBalance {
-            for good in [Good.planks, .wood] {
-                let units = min(stock[good, default: 0] - Self.keepOnSale, world.market.left(good, .sold))
-                if units > 0 {
-                    world.enqueue(.marketSell(center.id, good, units))
-                    return
-                }
-            }
-        }
+        if sellAtMarket(in: &world, stock: stock) { return }
+        if midGame != nil { chooseResearch(in: &world) }
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
         if let next = nextFirstStep(in: world) {
@@ -50,6 +47,9 @@ struct PlayerBot {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
         }
         guard !town.waiting else { return }
+        for kind in missingMidGameKinds(in: world, town: town) where place(kind, in: &world, plan: &plan, stock: stock) {
+            return
+        }
         if RivalAI.scriptKind(at: script.scriptIndex) == .house, town.houses >= Self.houseCap {
             script.advance()
         }
@@ -59,6 +59,27 @@ struct PlayerBot {
             script.waitTurns += 1
             if script.waitTurns >= RivalAI.waitLimit { script.advance() }
         }
+    }
+
+    /// While trading: sells planks, then wood, above `keepOnSale` when
+    /// cash is short, which ends the turn; with the careful mid-game kit
+    /// also sells raw surplus every turn.
+    private func sellAtMarket(in world: inout World, stock: [Good: Int]) -> Bool {
+        guard tradesAtMarket else { return false }
+        func surplus(_ good: Good) -> Int {
+            min(stock[good, default: 0] - Self.keepOnSale, world.market.left(good, .sold))
+        }
+        let shortOfCash = world.economy.balance < Self.sellBelowBalance
+        if shortOfCash, let good = [Good.planks, .wood].first(where: { surplus($0) > 0 }) {
+            world.enqueue(.marketSell(center.id, good, surplus(good)))
+            return true
+        }
+        if midGame == .careful {
+            for good in Self.rawSurplus(world.culture) where surplus(good) > 0 {
+                world.enqueue(.marketSell(center.id, good, surplus(good)))
+            }
+        }
+        return false
     }
 
     /// The first entry of `firstSteps` the player's buildings don't
@@ -77,7 +98,7 @@ struct PlayerBot {
 
     /// Enqueues any purchase, the ring roads and the building; false
     /// when the bot must wait.
-    private func place(
+    func place(
         _ kind: BuildingKind, in world: inout World, plan: inout RivalTownPlan, stock: [Good: Int]
     ) -> Bool {
         var buys: [Command] = []
@@ -91,7 +112,7 @@ struct PlayerBot {
             price += Int64(missing) * good.marketPrice(.bought)
         }
         let cost = BuildingCatalog.spec(for: kind).cost + Self.cushion + price
-        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) else { return false }
+        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) ?? roadsideMineSlot(kind, in: world) else { return false }
         guard world.economy.balance >= cost + BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
         else { return false }
         for command in buys + slot.roads.map({ .place(.road, at: $0) }) + [.place(kind, at: slot.anchor)] {
@@ -101,7 +122,7 @@ struct PlayerBot {
     }
 
     /// The player's buildings as the threshold rules see them.
-    private struct Town {
+    struct Town {
         var counts: [BuildingKind: Int] = [:]
         var allHuts = 0
         var forestLeft = 0
