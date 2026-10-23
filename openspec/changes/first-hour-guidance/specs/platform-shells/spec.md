@@ -2,27 +2,39 @@
 
 ### Requirement: First-hour guide
 
-The game screen SHALL show a "First steps" guide while all of these hold: the in-game date is in the game's first year, at least one step is open, the game is not over, and the player has not hidden the guide this session. It SHALL show in every game mode and difficulty. The guide SHALL list three steps in this order:
+The game screen SHALL show a "First steps" guide while all of these hold: the in-game date is in the game's first year, at least one step is open, the game is not over, the player has not hidden the guide this session, and every step has not yet been met at once this session. It SHALL show in every game mode and difficulty. The guide SHALL list five steps in this order:
 
-1. "Build 3 houses on a road", met once the player owns at least 3 operational houses.
-2. "Earn more tax than upkeep", met once one collection's tax is at least its upkeep, as `World.playerTaxAndUpkeep` reports them, while the player owns at least 3 operational houses.
-3. "Sell surplus at the market", met once the player has sold at least one unit at a town center market in this session.
+1. "Build a farm", met once the player owns an operational farm.
+2. "Make planks: a lumberjack and a sawmill", met once the player owns an operational lumberjack hut and an operational sawmill.
+3. "Build 3 houses on a road", met once the player owns at least 3 operational houses.
+4. "Earn more tax than upkeep", met once one collection's tax, as `World.playerTaxAndUpkeep` reports it, is above zero and at least its upkeep.
+5. "Sell surplus at the market", met while the player has sold at least one unit at a town center market this season.
 
-A met step SHALL stay met for the rest of the session. The guide SHALL show the tax, the upkeep and the net (tax minus upkeep) of one collection as they stand, and SHALL mark the net as negative when it is below zero. The guide SHALL NOT pause the simulation or take input focus, and SHALL offer a control that hides it for the rest of the session.
+Each step SHALL carry one line saying why it matters: farms feed residents, a house needs planks, residents pay tax, tax against upkeep decides the treasury, and the market turns surplus into cash. Each step's state SHALL be derived from the world as it stands, so a loaded save shows the same steps as the session that saved it. The guide SHALL show the tax, the upkeep and the net (tax minus upkeep) of one collection as they stand, and SHALL mark the net as negative when it is below zero. The guide SHALL NOT pause the simulation or take input focus, and SHALL offer a control that hides it for the rest of the session. On a compact-width screen the guide SHALL collapse to one line with the count of met steps and the net, and SHALL expand when tapped.
 
 #### Scenario: Guide shows on a new game
 
 - **WHEN** a session starts on a new game at tick 0
-- **THEN** the guide shows with all three steps open and the simulation is not paused
+- **THEN** the guide shows with all five steps open and the simulation is not paused
+
+#### Scenario: Farm step met by a farm
+
+- **WHEN** a farm the player placed finishes construction
+- **THEN** the "Build a farm" step is met
+
+#### Scenario: Planks step needs both buildings
+
+- **WHEN** the player owns an operational lumberjack hut and no sawmill
+- **THEN** the "Make planks" step is still open
 
 #### Scenario: Guide tracks the houses step
 
 - **WHEN** the player owns 2 operational houses and a third house finishes construction
 - **THEN** the "Build 3 houses on a road" step is met
 
-#### Scenario: Tax step needs houses
+#### Scenario: Tax step needs tax
 
-- **WHEN** the player owns 1 operational house and one collection's tax is at least its upkeep
+- **WHEN** one collection's tax and upkeep are both zero
 - **THEN** the "Earn more tax than upkeep" step is still open
 
 #### Scenario: Guide shows the ledger
@@ -47,19 +59,62 @@ A met step SHALL stay met for the rest of the session. The guide SHALL show the 
 
 #### Scenario: Guide leaves when every step is met
 
-- **WHEN** the last open step is met
+- **WHEN** the last open step is met and a later season resets the market ledger
 - **THEN** the guide does not show
 
-### Requirement: Tool strip names buildings that pay no tax
+#### Scenario: Loaded save shows its steps
 
-While a building that pays no tax is armed and the player owns fewer than 3 operational houses, the tool strip caption SHALL add the building's difficulty-scaled upkeep for one collection and the words "pays no tax". Arming a house, or arming any building once the player owns 3 operational houses, SHALL leave the caption as it is today.
+- **WHEN** a session starts on a first-year save whose player owns an operational farm, lumberjack hut and sawmill
+- **THEN** the guide shows the farm and planks steps as met
 
-#### Scenario: Caption warns before houses
+### Requirement: Tool strip warns while the guide shows
 
-- **WHEN** the player owns 1 operational house and arms the lumberjack hut
-- **THEN** the tool strip caption names the hut's upkeep and says it pays no tax
+While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep $<upkeep> per collection", the difficulty-scaled upkeep of one collection. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
 
-#### Scenario: Caption unchanged for houses
+#### Scenario: Caption warns about food
 
-- **WHEN** the player owns 1 operational house and arms the house
+- **WHEN** the guide shows, the player owns no farm and arms the house
+- **THEN** the tool strip caption ends with "No farm yet: residents need food"
+
+#### Scenario: Caption names upkeep
+
+- **WHEN** the guide shows on Hard and the player arms the sawmill
+- **THEN** the tool strip caption ends with the sawmill's Hard upkeep per collection
+
+#### Scenario: Caption unchanged without the guide
+
+- **WHEN** the player has hidden the guide and arms the house with no farm
 - **THEN** the tool strip caption is the same as without this requirement
+
+## MODIFIED Requirements
+
+### Requirement: Deficit hint
+
+The first time in a session that the treasury is below zero, the game screen SHALL show the deficit hint as its banner: on the tick that emits `bankruptcyWarning`, or when the session starts with the treasury already below zero and the game not over. On the tick it shows, the hint SHALL take the place of any other banner that tick raises. Its title SHALL be "In the red: upkeep $<upkeep> vs tax $<tax>", with the upkeep and tax of one collection as they stand when it shows. Its description SHALL read "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market."
+
+While the hint shows, the simulation SHALL be paused without opening the pause menu, so the bankruptcy grace does not run down. The hint SHALL stay until the player dismisses it, with its Resume button, with the pause control or, on the Mac, with Esc; dismissing it resumes the simulation. On Apple TV the Resume button SHALL take focus when the hint shows. The hint SHALL show at most once per session, and the game-over banner SHALL take its place once the game is over.
+
+#### Scenario: Deficit hint names the cause
+
+- **WHEN** a tick emits `bankruptcyWarning` while one collection's upkeep is $14 and its tax is $9
+- **THEN** the session shows a banner titled "In the red: upkeep $14 vs tax $9" that names food, houses and the market
+
+#### Scenario: Deficit hint pauses until dismissed
+
+- **WHEN** the deficit hint shows and the session is stepped 100 times
+- **THEN** the tick count does not change and the hint still shows, and after the player dismisses it the next step advances the tick
+
+#### Scenario: Deficit hint wins its tick
+
+- **WHEN** a tick emits `bankruptcyWarning` and a history event together
+- **THEN** the session shows the deficit hint, not the history event
+
+#### Scenario: Deficit hint on loading a save in the red
+
+- **WHEN** a session starts on a world whose treasury is below zero and whose game is not over
+- **THEN** the session shows the deficit hint and is paused
+
+#### Scenario: Deficit hint shows once
+
+- **WHEN** the player dismisses the hint and a later tick emits `bankruptcyWarning` again in the same session
+- **THEN** no deficit hint shows

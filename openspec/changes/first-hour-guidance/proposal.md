@@ -1,22 +1,22 @@
 ## Why
 
-A scripted player that builds the way a newcomer would, huts and foresters before houses and never touching the market, goes bankrupt in year 1 on every Hard start we measured (20 of 20 games, seeds 0–9 on both layouts) and in 7 of 20 Normal archipelago games. The same player with the market goes bankrupt in 1 of 20 Hard games. The economy works; the game just never tells a new player how it works. The deficit hint (#162) only speaks once the treasury is already below zero, which on Hard leaves one tax interval of grace. Issue #185.
+A scripted player that builds the way a newcomer might, never touching the market, goes bankrupt on all 20 Hard starts we measured (seeds 0–9, both layouts), mostly at the first collections of year 2. A trace of one game shows why. The player never builds a farm, so its houses never fill and tax stays at $0. Roads and a sawmill spend the starting money, and the sawmill's upkeep bleeds the rest. Huts are not the problem: lumberjack huts and foresters cost no upkeep. Nothing on screen says that residents need food, that only residents pay tax, or that Hard's 3 starting planks can't build a 4-plank house. The deficit hint (#162) speaks only once the treasury is negative, and its advice ("build houses before more huts") points at the wrong cause. Issue #185.
 
 ## What Changes
 
-The first hour should teach three things, in this order:
+The first hour should teach that food leads to residents and residents lead to tax, in the order a Hard start can actually follow:
 
-1. **Houses before huts.** Only houses pay tax. Huts, foresters and sawmills only cost upkeep, so a town that builds them first pays for buildings nothing funds.
-2. **Tax against upkeep.** Every 50 ticks the town collects tax and pays upkeep. The player should see both numbers and the net before it goes negative, not after.
-3. **The market as a pressure valve.** Selling surplus at the town center's market turns stock into cash when the net dips.
+1. **Build a farm.** Farms feed residents, and empty houses pay nothing.
+2. **Make planks.** A lumberjack and a sawmill, because a house needs 4 planks and Hard starts with 3. The market can buy the difference.
+3. **Build 3 houses on a road.** Residents pay tax.
+4. **Earn more tax than upkeep.** Shown live, before the treasury goes negative.
+5. **Sell surplus at the market.** The pressure valve when cash runs low.
 
-Delivered lightly, without a tutorial wall:
+All of this is delivered without a tutorial wall:
 
-- A "First steps" guide on the game screen with the three steps as checkable goals and the tax, upkeep and net of one collection. It does not pause the game, needs no input to continue, can be hidden at any time, and leaves once all three steps are met or the first year ends.
-- While fewer than three houses stand, arming a building that pays no tax adds its upkeep and "pays no tax" to the tool strip caption.
-- The deficit hint stays as the last line of defence.
-
-The layout (where the guide sits, card or goals sheet) is chosen on the Claude Design canvas before UI work starts; the spec below describes the recommended option and is revised if another is picked.
+- A "First steps" glass card under the top-right HUD buttons lists the five steps with check circles and shows one collection's tax, upkeep and net, with the net in red when negative. It never pauses, can be hidden, and leaves once every step is met or the first year ends. On compact widths it collapses to one line.
+- While the card shows, the tool strip caption warns when a house is armed with no farm and names the upkeep of any building that has one.
+- The deficit hint's advice changes to food, houses and the market.
 
 Out of scope: a scripted tutorial, forced camera moves, new tax or upkeep rules, and mid-game pacing (#186).
 
@@ -26,12 +26,12 @@ Out of scope: a scripted tutorial, forced camera moves, new tax or upkeep rules,
 - (none)
 
 ### Modified Capabilities
-- `platform-shells`: adds "First-hour guide" and "Tool strip names buildings that pay no tax".
-- `economy`: adds "Following the first steps keeps a Hard start solvent", the balance check behind the guide.
+- `platform-shells`: adds "First-hour guide" and "Tool strip warns while the guide shows"; changes the advice in "Deficit hint".
+- `economy`: adds "Following the first steps keeps a Hard start solvent and growing", the balance check behind the guide.
 
 ## Impact
 
-- **CityUI**: a guide view on the game screen, fed by `World.playerTaxAndUpkeep`, the player's house count and the season's `MarketLedger`; the tool strip caption; one hide flag per session.
-- **CityCore**: no new state; everything the guide shows is already readable.
-- **Tests**: `PlayerBot` gains a `followsFirstSteps` mode; the weekly `rival-sweep` job runs the guided Hard start for year 1.
+- **CityUI**: a `FirstStepsGuide` model on `GameSession`, the card view on the game screen, the tool strip caption, and the deficit hint text.
+- **CityCore**: no source change. Everything the guide reads (`playerTaxAndUpkeep`, buildings, `MarketLedger`) is already public.
+- **Tests**: `PlayerBot` gains ordered `firstSteps`; the weekly `rival-sweep` job runs the guided and naive Hard starts for five years.
 - **Determinism**: none; the simulation is unchanged.
