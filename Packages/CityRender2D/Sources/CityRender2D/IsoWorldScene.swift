@@ -33,6 +33,8 @@ public final class IsoWorldScene: SKScene {
     /// seasonal variants) check it before falling back; tests replace it
     /// because SwiftPM test bundles carry no atlases.
     var hasSprite: (String) -> Bool = { SpriteAtlas.texture(named: $0) != nil }
+    /// Where a missing variant is reported; tests give a scene its own log.
+    var missLog = SpriteAtlas.missLog
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
     var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.

@@ -1,6 +1,7 @@
 import CityCore
 import Foundation
 import SpriteKit
+import Synchronization
 
 #if canImport(UIKit)
 import UIKit
@@ -244,7 +245,14 @@ public enum SpriteAtlas {
     /// the log-once invariant without intercepting the system log.
     nonisolated(unsafe) static var missLogHook: ((String) -> Void)?
 
-    private nonisolated(unsafe) static var loggedMisses: Set<String> = []
+    /// The process-wide miss log behind `textureOrPlaceholder(named:)`.
+    static let missLog = MissLog { name in
+        if let hook = missLogHook {
+            hook(name)
+        } else {
+            NSLog("[CityRender2D] missing sprite: %@", name)
+        }
+    }
 
     /// Returns the named texture, or `placeholderTexture` if the
     /// lookup fails. The missing name is logged exactly once per
@@ -253,20 +261,8 @@ public enum SpriteAtlas {
     /// release without crashing the renderer.
     public static func textureOrPlaceholder(named name: String) -> SKTexture {
         if let tex = texture(named: name) { return tex }
-        logMissOnce(name)
+        missLog.logOnce(name)
         return placeholderTexture
-    }
-
-    /// Logs a missing sprite once per process; a fallback that draws something else still reports it.
-    static func logMissOnce(_ name: String) {
-        var shouldLog = false
-        cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
-        guard shouldLog else { return }
-        if let hook = missLogHook {
-            hook(name)
-        } else {
-            NSLog("[CityRender2D] missing sprite: %@", name)
-        }
     }
 
     private static func makePlaceholderTexture() -> SKTexture {
@@ -296,7 +292,7 @@ public enum SpriteAtlas {
     /// Test-only: clears the per-process miss-log set so a follow-up
     /// test observes the first-miss path.
     static func resetMissLogForTesting() {
-        cacheQueue.sync { loggedMisses.removeAll() }
+        missLog.reset()
     }
 
     // MARK: - Catalog & presence validation
@@ -436,5 +432,24 @@ public enum SpriteAtlas {
             atlasNameSetCache.removeAll()
             textureCache.removeAll()
         }
+    }
+}
+
+/// Reports each missing sprite name to its sink once.
+final class MissLog: Sendable {
+    private let logged = Mutex<Set<String>>([])
+    private let sink: @Sendable (String) -> Void
+
+    init(sink: @escaping @Sendable (String) -> Void) {
+        self.sink = sink
+    }
+
+    func logOnce(_ name: String) {
+        guard logged.withLock({ $0.insert(name).inserted }) else { return }
+        sink(name)
+    }
+
+    func reset() {
+        logged.withLock { $0.removeAll() }
     }
 }
