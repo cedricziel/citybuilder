@@ -119,6 +119,30 @@ extension GameSession {
         )
     }
 
+    /// The first time this session a good piles up that nothing in town
+    /// uses, a banner names it and what would, once no other banner
+    /// shows. Spec: `platform-shells` / Idle-good hint.
+    func noteIdleGoods() {
+        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
+        guard !showing, deficitHint == nil, !isGameOver,
+              let idle = world.idleGoods(of: .player).first(where: { !hintedIdleGoods.contains($0.good) })
+        else { return }
+        hintedIdleGoods.insert(idle.good)
+        show(Self.idleGoodHint(idle))
+    }
+
+    static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
+        let good = GoodsCatalog.spec(for: idle.good).displayName.lowercased()
+        // The raw value names the building ("charcoal-burner"); the
+        // palette's short label names its good ("Charcoal").
+        let builds = idle.users.map { "a " + $0.rawValue.replacingOccurrences(of: "-", with: " ") }
+        let named = builds.count < 2 ? builds.joined() : builds.dropLast().joined(separator: ", ") + " or " + builds[builds.count - 1]
+        return SessionBanner(
+            title: "Nothing uses your \(good)",
+            description: "Build \(named) for it, or sell \(good) at the town center's market."
+        )
+    }
+
     private func show(_ banner: SessionBanner) {
         bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
