@@ -62,4 +62,17 @@ struct WalkerRecipeTests {
             .union(names("animal-cow-walk", 8)).union(names("animal-cow-graze", 4)).union(names("animal-hen", 4))
         #expect(rendered == expected)
     }
+
+    /// The renderer anchors animals where the brief's `Anchor:` lines say; the pens must render the feet there.
+    @Test("animal pens put the feet where the animal brief's Anchor lines say")
+    func pensMatchTheBrief() throws {
+        let brief = try String(contentsOf: RepoPaths.catalog.appendingPathComponent("animal.md"), encoding: .utf8)
+        for (animal, pen) in [("sheep", Recipes.sheepPen), ("cow", Recipes.cowPen), ("hen", Recipes.henPen)] {
+            let line = try #require(brief.split(separator: "\n").first { $0.hasPrefix("- Anchor \(animal):") })
+            let numbers = line.split(whereSeparator: { !"0123456789".contains($0) }).compactMap { Double($0) }
+            #expect(numbers == [Double(pen.feetX), Double(pen.feetY), Double(pen.width), Double(pen.height)], "\(line)")
+            let feet = Projection.screen(pen.ground, in: pen.cell)
+            #expect(abs(feet.x - pen.feetX) < 0.01 && abs(feet.y - pen.feetY) < 0.01)
+        }
+    }
 }
