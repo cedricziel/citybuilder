@@ -24,10 +24,10 @@ function atlas(name, prefix, keep) {
   return entries;
 }
 
-const goods = atlas("Icons.atlas", "good-", () => true);
-const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
-// Art-kit renders live in Kit.atlas at @1x and @2x; the web pages take the @1x base sprites.
+// Every atlas holds @1x and @2x files; the web pages take the @1x ones.
 const oneX = (key) => !key.includes("@");
+const goods = atlas("Icons.atlas", "good-", oneX);
+const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
 const buildingBase = (key) =>
   oneX(key) && !/-(constructing|operational)-\d$/.test(key) && !cultureOrEra.test(key) && !/-v\d$/.test(key) &&
   !/-c\d+$/.test(key) && // road connection tiles: the backdrop draws the base road
