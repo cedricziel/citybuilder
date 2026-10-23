@@ -24,7 +24,7 @@ private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
 func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
         for market in markets {
-            for order in [MidGameOrder.careful, .naive] {
+            for order in [MidGameOrder.careful, .naive, .naiveFollowingHints] {
                 let arm = MidGameArm(layout: layout, difficulty: difficulty, tradesAtMarket: market, order: order)
                 let run = World.midGameRun(arm, seed: seed, ticks: pacingTicks)
                 print(
@@ -32,7 +32,8 @@ func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
                         + "order=\(order) firstMerchant=\(MidGameMilestones.years(run.firstMerchant)) "
                         + "twentyMerchants=\(MidGameMilestones.years(run.twentyMerchants)) "
                         + "renaissance=\(MidGameMilestones.years(run.renaissance)) "
-                        + "bankrupt=\(MidGameMilestones.years(run.bankruptAt))"
+                        + "bankrupt=\(MidGameMilestones.years(run.bankruptAt)) "
+                        + "hints=\(run.hinted.isEmpty ? "-" : run.hinted.map(\.rawValue).joined(separator: ","))"
                 )
             }
         }

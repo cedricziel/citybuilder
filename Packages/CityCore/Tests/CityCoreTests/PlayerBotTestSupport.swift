@@ -38,6 +38,7 @@ struct PlayerBot {
         if midGame != nil { chooseResearch(in: &world) }
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
+        if followIdleGoodHint(in: &world, plan: &plan, stock: stock) { return }
         if let next = nextFirstStep(in: world) {
             _ = place(next, in: &world, plan: &plan, stock: stock)
             return

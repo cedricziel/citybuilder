@@ -194,6 +194,8 @@ public final class GameSession {
     /// The player hid the first-hour guide, or met every step, this
     /// session (`first-hour-guidance` D2).
     var isFirstStepsDismissed = false
+    /// Goods the idle-good hint has named this session.
+    var hintedIdleGoods: Set<Good> = []
     /// First steps met so far this session; a met step stays met.
     var firstStepsMet: Set<FirstStepsGuide.Step> = []
     /// The first-hour guide while it shows, refreshed every tick.
@@ -210,6 +212,7 @@ public final class GameSession {
         let result = world.tick()
         noteBannerEvents(in: result.events)
         refreshFirstSteps()
+        noteIdleGoods()
         let snapshot = world.snapshot()
         hud.apply(snapshot)
         routeList.snapshot = snapshot
