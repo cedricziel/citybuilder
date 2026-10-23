@@ -1,4 +1,4 @@
-"""Render SVG-sourced sprites (terrain, transitions, roads, icons) to raw RGBA PNGs with rsvg-convert.
+"""Render SVG-sourced sprites (terrain, transitions, roads, goods icons) to raw RGBA PNGs with rsvg-convert.
 
 usage: python -m art.svg_sprites --catalog <dir> --out <dir> [--all]
 
@@ -16,21 +16,21 @@ import sys
 import tempfile
 from pathlib import Path
 
-from art import roads, terrain_objects, terrain_tiles
+from art import goods_icons, roads, terrain_objects, terrain_tiles
 
 SPRITE_LINE = re.compile(r"^- `([a-z0-9-]+)`")  # the grammar IsoKit's `Catalog` and the gate read
 SOURCE_LINE = re.compile(r'^source\s*=\s*"([a-z]+)"', re.MULTILINE)
 
 
 def all_sources(wanted: set[str] | None = None) -> dict[str, str]:
-    """Every SVG source, or every tile and road plus the `wanted` terrain objects: objects are
-    ray-cast, so only the ones asked for are drawn."""
-    return {**terrain_tiles.sources(), **roads.sources(), **terrain_objects.sources(wanted)}
+    """Every SVG source, or every tile, road and goods icon plus the `wanted` terrain objects:
+    objects are ray-cast, so only the ones asked for are drawn."""
+    return {**terrain_tiles.sources(), **roads.sources(), **goods_icons.sources(), **terrain_objects.sources(wanted)}
 
 
 def drawable_names() -> set[str]:
     """Every sprite name an SVG source exists for, without ray-casting any object."""
-    return {*terrain_tiles.sources(), *roads.sources(), *terrain_objects.names()}
+    return {*terrain_tiles.sources(), *roads.sources(), *goods_icons.sources(), *terrain_objects.names()}
 
 
 class UnreadableBrief(ValueError):
