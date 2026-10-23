@@ -24,4 +24,4 @@
 
 ## 5. Close out
 
-- [ ] 5.1 Mark `replace-generative-sprites-with-isokit` task 4.7 done by this change; `make lint`, `make format`, `make sprites-verify`
+- [x] 5.1 Mark `replace-generative-sprites-with-isokit` task 4.7 done by this change; `make lint`, `make format`, `make sprites-verify`

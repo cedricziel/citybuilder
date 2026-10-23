@@ -1,9 +1,12 @@
-"""Select the CI jobs a pull request's changed files need.
+"""Select the CI jobs a change's files need.
 
 Reads changed paths (one per line, from `git diff --no-renames
---name-only`) on stdin and prints GitHub step outputs. ci.yml selects
-everything itself, without this script, for pushes to main and for
-changes to this script, its tests or the workflow.
+--name-only`) on stdin and prints GitHub step outputs. The paths are a
+PR's diff against its base, or a push to main's diff against the head
+of the latest green run on main. ci.yml selects everything itself,
+without this script, when there is nothing to diff against (the weekly
+schedule, a manual run, no usable green run) and for changes to this
+script, its tests or the workflow.
 
 - Docs only (`openspec/`, `.claude/`, top-level `*.md` but README.md):
   no code jobs.
@@ -11,6 +14,10 @@ changes to this script, its tests or the workflow.
   on P, directly or transitively, per the `.package(path:)` entries in
   each `Packages/*/Package.swift`. CityCore affects every package:
   GameDataGen writes CityCore's generated sources.
+- `design/web/` (the React recreation of the HUD, which the app does
+  not use) selects only the web build, as do the sprite atlases it
+  inlines (`Resources/*.atlas/`); the atlases also select everything
+  else, like any other file outside the packages.
 - Anything else (apps, `project.yml`, `Resources/`, scripts, the
   Makefile, workflows) selects everything.
 
@@ -21,7 +28,8 @@ builds is affected. Linux determinism runs for CityCore or GameDataGen;
 the macOS-vs-Linux comparison needs the CityCore test job's output, so
 it runs for CityCore only. The audio render check runs when everything
 does: its sources (`scripts/audio/`) and renders (`Resources/Audio/`)
-are outside the packages.
+are outside the packages. The web build runs for the paths above, and
+when everything is selected for lack of a diff.
 """
 
 from __future__ import annotations
@@ -30,13 +38,17 @@ import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 # README.md is not docs-only: SpritesPipelineCutoverTests reads it.
 DOCS_ONLY = re.compile(r"^(openspec/|\.claude/|(?!README\.md$)[^/]+\.md$)")
 PACKAGE_CALL = re.compile(r"\.package\(([^)]*)\)")
 LOCAL_DEPENDENCY = re.compile(r'\s*path:\s*"\.\./([^"/]+)"\s*')
+# The web build's own sources, and the sprite atlases gen-sprites.mjs
+# inlines into its bundle.
+WEB_BUILD = re.compile(r"^(design/web/|Resources/[^/]+\.atlas/)")
+WEB_ONLY = re.compile(r"^design/web/")
 FIXTURE_PACKAGES = re.compile(r"^for package in ([^;]+); do$", re.M)
 
 
@@ -49,6 +61,7 @@ class Jobs:
     determinism_linux: bool
     determinism_compare: bool
     audio: bool
+    web: bool
 
     def github_output(self) -> str:
         def flag(value: bool) -> str:
@@ -62,6 +75,7 @@ class Jobs:
             f"determinism_linux={flag(self.determinism_linux)}",
             f"determinism_compare={flag(self.determinism_compare)}",
             f"audio={flag(self.audio)}",
+            f"web={flag(self.web)}",
         ]) + "\n"
 
 
@@ -113,7 +127,7 @@ def fixture_packages(root: Path) -> set[str]:
     return set(match.group(1).split()) | {"GameDataGen"}
 
 
-def _jobs(root: Path, affected: set[str], everything: bool) -> Jobs:
+def _jobs(root: Path, affected: set[str], everything: bool, web: bool = False) -> Jobs:
     return Jobs(
         packages=sorted(affected),
         apps=everything or bool(affected & app_packages(root)),
@@ -124,29 +138,33 @@ def _jobs(root: Path, affected: set[str], everything: bool) -> Jobs:
         # The audio sources and renders live outside Packages/, so only a
         # change that selects everything can touch them.
         audio=everything,
+        web=web,
     )
 
 
 def everything(root: Path) -> Jobs:
-    return _jobs(root, set(dependencies(root)), everything=True)
+    return _jobs(root, set(dependencies(root)), everything=True, web=True)
 
 
 def select(changed: list[str], root: Path) -> Jobs:
     graph = dependencies(root)
     if not changed:
         return everything(root)
-    code_files = [path for path in changed if not DOCS_ONLY.match(path)]
+    web = any(WEB_BUILD.match(path) for path in changed)
+    code_files = [
+        path for path in changed if not DOCS_ONLY.match(path) and not WEB_ONLY.match(path)
+    ]
     if not code_files:
-        return Jobs([], False, False, False, False, False, False)
+        return Jobs([], False, False, False, False, False, False, web)
 
     touched: set[str] = set()
     for path in code_files:
         parts = path.split("/")
         if parts[0] != "Packages" or len(parts) < 3 or parts[1] not in graph:
-            return everything(root)
+            return replace(everything(root), web=web)
         touched.add(parts[1])
     if "CityCore" in touched:
-        return _jobs(root, set(graph), everything=False)
+        return _jobs(root, set(graph), everything=False, web=web)
 
     affected = set(touched)
     while True:
@@ -154,7 +172,7 @@ def select(changed: list[str], root: Path) -> Jobs:
         if not dependents:
             break
         affected |= dependents
-    return _jobs(root, affected, everything=False)
+    return _jobs(root, affected, everything=False, web=web)
 
 
 def main(argv: list[str] | None = None) -> int:

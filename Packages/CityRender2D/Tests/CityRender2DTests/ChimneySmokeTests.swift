@@ -168,7 +168,7 @@ func everySmokingSpriteHasAChimneyRow() throws {
     ]
     let rooflessOnPurpose: Set<String> = []
     var stems: Set<String> = []
-    for atlas in ["Kit.atlas", "Buildings.atlas"] {
+    for atlas in ["Kit.atlas"] {
         let files = try FileManager.default.contentsOfDirectory(atPath: resources.appendingPathComponent(atlas).path)
         for file in files where file.hasSuffix(".png") && !file.contains("-constructing") {
             let name = String(file.dropLast(4)).replacingOccurrences(of: "@2x", with: "")

@@ -1,13 +1,22 @@
 name: ci
 
 on:
+  # A push to main selects jobs from the files it changed, like a PR.
   push:
     branches: [main]
   # Every PR, including one stacked on another PR's branch.
   pull_request:
+  # Selective pushes skip jobs, so main also gets a full run every week.
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
 
+# A newer run replaces an older one on the same ref, main included: a
+# push to main diffs against the last green run, so a cancelled push's
+# changes fall inside the next push's diff. The weekly and manual runs
+# get their own group so a push can't cancel the full run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ (github.event_name == 'pull_request' || github.event_name == 'push') && github.ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -21,14 +30,20 @@ jobs:
     name: changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # `actions: read` lets the push case look up the last green run.
+    permissions:
+      contents: read
+      actions: read
     outputs:
       packages: ${{ steps.select.outputs.packages }}
+      test_matrix: ${{ steps.select.outputs.test_matrix }}
       apps: ${{ steps.select.outputs.apps }}
       sprites: ${{ steps.select.outputs.sprites }}
       gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
       audio: ${{ steps.select.outputs.audio }}
+      web: ${{ steps.select.outputs.web }}
 
     steps:
       - name: Checkout
@@ -39,14 +54,24 @@ jobs:
 
       # Docs need lint only. A change inside Packages/ runs that package
       # and its dependents, read from the Package.swift graph; anything
-      # else runs everything (see scripts/select_ci_jobs.py). Pushes to
-      # main, and PRs that edit the selector, its tests or this workflow,
-      # select everything here in shell, so a broken selector can't
-      # deselect the jobs that would test it.
+      # else runs everything (see scripts/select_ci_jobs.py).
+      #
+      # A PR diffs against its base. A push to main diffs against the head
+      # of the latest green run on main, not against the commit before
+      # it: that run may have failed, and a later docs-only push must not
+      # turn main green while a package is still broken. Everything is
+      # selected, in shell, when there is nothing to diff against (the
+      # weekly schedule, a manual run, no green run yet, a green commit
+      # that is not in the checkout, a failing API call) and when the
+      # change edits the selector, its tests or this workflow, so a
+      # broken selector can't deselect the jobs that would test it.
       - name: Select jobs from the changed files
         id: select
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           select_all() {
             for manifest in Packages/*/Package.swift; do basename "$(dirname "$manifest")"; done > "$RUNNER_TEMP/packages"
@@ -57,7 +82,20 @@ jobs:
             echo "determinism_linux=true"
             echo "determinism_compare=true"
             echo "audio=true"
+            echo "web=true"
           }
+          case "$EVENT_NAME" in
+            pull_request) BASE_SHA="$PR_BASE_SHA" ;;
+            push)
+              BASE_SHA=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=main&status=success&per_page=30" \
+                --jq '[.workflow_runs[] | select(.event == "push" or .event == "schedule")][0].head_sha // empty') \
+                || BASE_SHA=""
+              ;;
+            *) BASE_SHA="" ;;
+          esac
+          if ! git cat-file -e "${BASE_SHA:-HEAD}^{commit}" 2>/dev/null; then
+            BASE_SHA=""
+          fi
           selection="$RUNNER_TEMP/selection"
           if [ -z "$BASE_SHA" ]; then
             select_all > "$selection"
@@ -71,6 +109,22 @@ jobs:
           fi
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
+
+          # Four small packages share one test job, since each job pays
+          # for a runner, a checkout and an Xcode setup; the others keep
+          # their own. The count check makes a bad grouping fail loudly
+          # rather than drop a package from the matrix.
+          packages=$(sed -n 's/^packages=//p' "$selection")
+          matrix=$(jq -c '
+            map({package: ., group: (if IN("CityAudio", "CityPersistence", "CityRender3D", "GameDataGen") then "small" else . end)})
+            | group_by(.group)
+            | map({name: (map(.package) | join(", ")), packages: (map(.package) | join(" "))})
+          ' <<< "$packages")
+          if [ "$(jq 'map(.packages | split(" ") | length) | add // 0' <<< "$matrix")" != "$(jq length <<< "$packages")" ]; then
+            echo "::error::test matrix does not cover the selected packages: $packages -> $matrix"
+            exit 1
+          fi
+          echo "test_matrix=$matrix" | tee -a "$GITHUB_OUTPUT"
 
   # The sound generator and the music renderer promise the same bytes on
   # every machine; the sprite pipeline's pytest job checks them on macOS,
@@ -92,6 +146,41 @@ jobs:
           "$RUNNER_TEMP/audio/bin/pip" install --quiet "numpy==$(sed -n 's/^numpy==//p' scripts/requirements.txt)"
       - name: Sounds and music match their recipes
         run: make audio-check music-check PYTHON="$RUNNER_TEMP/audio/bin/python"
+
+  # design/web is the React recreation of the HUD for Claude Design; the
+  # app doesn't use it, so nothing else builds it. Its build inlines the
+  # sprite atlases, hence `Resources/*.atlas/` selects it too. Both npm
+  # scripts run gen-sprites.mjs first, so no separate step does.
+  web:
+    name: design/web typecheck and build
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: design/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: design/web/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
 
   lint:
     name: lint
@@ -137,23 +226,26 @@ jobs:
           SCENARIO_COVERAGE_STRICT: "0"
         run: make test-scenarios
 
+  # CityCore, CityRender2D and CityUI are big enough to keep their own
+  # job; the rest share one (see `test_matrix` in `changes`). A job's
+  # `packages` is a space-separated list, tested one `swift test` each.
   test:
-    name: test (${{ matrix.package }})
+    name: test (${{ matrix.name }})
     needs: changes
-    if: needs.changes.outputs.packages != '[]'
+    if: needs.changes.outputs.test_matrix != '[]'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        include: ${{ fromJSON(needs.changes.outputs.test_matrix) }}
 
     steps:
       - name: Checkout (with full history for diff-cover)
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          fetch-depth: ${{ matrix.package == 'CityCore' && '0' || '1' }}
+          fetch-depth: ${{ matrix.packages == 'CityCore' && '0' || '1' }}
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -169,53 +261,66 @@ jobs:
       # `make sprites-verify`, the hermetic regen gate, so it needs the
       # sprite pipeline's venv.
       - name: Install sprite pipeline libraries
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         # libimagequant decides the atlas PNG bytes, so it is pinned.
         run: scripts/ci/install-pinned-tools.sh sprites
 
       - name: Set up Python for sprite pipeline
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Bootstrap sprite venv
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         run: make sprites-venv
 
+      # A failing package doesn't stop the next, so one run reports every
+      # broken package; the step fails at the end if any did.
       - name: swift test
         env:
           # The hermetic gate must pass without an API key.
           OPENAI_API_KEY: ""
-        run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
+          PACKAGES: ${{ matrix.packages }}
+        run: |
+          failed=""
+          for package in $PACKAGES; do
+            echo "==> swift test $package"
+            swift test --package-path "Packages/$package" --enable-code-coverage \
+              || failed="$failed $package"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::swift test failed for:$failed"
+            exit 1
+          fi
 
       # PNG bytes depend on the encoder's zlib, so a sprite made on another
       # OS can fail the byte-exact gate. Regenerate here and upload the
       # atlases, so they can be committed as CI encodes them.
       - name: Regenerate atlases after a sprite gate failure
-        if: failure() && matrix.package == 'CityRender2D'
+        if: failure() && matrix.packages == 'CityRender2D'
         run: make sprites-offline
 
       - name: Upload regenerated atlases
-        if: failure() && matrix.package == 'CityRender2D'
+        if: failure() && matrix.packages == 'CityRender2D'
         uses: actions/upload-artifact@v7
         with:
           name: regenerated-atlases
           path: Resources/*.atlas/
 
       - name: gamedata-check (committed catalogs match the packs)
-        if: matrix.package == 'GameDataGen'
+        if: contains(matrix.packages, 'GameDataGen')
         run: make gamedata-check SWIFT=swift
 
       # Second half of `make sprites-verify`: the CityRender2D tests run
       # the byte check (`make sprites-regen-check`), this runs the content
       # gate once, outside `swift test`.
       - name: Sprite content gate
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         run: make sprites-content
 
       - name: Coverage gate (CityCore floors + diff-cover vs the base branch)
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         env:
           COVERAGE_BASE_REF: origin/${{ github.base_ref || 'main' }}
           COVERAGE_STRICT: "1"
@@ -226,7 +331,7 @@ jobs:
           ./scripts/check-coverage.sh
 
       - name: DeterminismFixture (macOS) — produce post-tick JSON
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         env:
           # The fixture dumps Dictionary-backed state, whose iteration
           # order is seeded per process unless hashing is pinned.
@@ -238,14 +343,14 @@ jobs:
           shasum -a 256 determinism/macos.json determinism/macos-36k.json
 
       - name: Upload macOS determinism JSON
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         uses: actions/upload-artifact@v7
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
-        if: always() && matrix.package == 'CityCore'
+        if: always() && matrix.packages == 'CityCore'
         uses: actions/upload-artifact@v7
         with:
           name: coverage
@@ -302,24 +407,20 @@ jobs:
           ISOKIT_SKIP_RENDER: "1"
         run: swift test --package-path Tools/IsoKit
 
+  # One runner builds every scheme in turn, into one DerivedData, so
+  # `make generate`, XcodeGen and the package resolution run once and the
+  # macOS app and the CLI share their compiled package products. Each
+  # scheme is its own step that runs even when an earlier one failed, so
+  # one run reports every broken scheme; `Summarize builds` then fails
+  # the job with the list.
   build:
-    name: build (${{ matrix.scheme }})
+    name: build (iOS, Mac, tvOS, cli)
     needs: changes
     if: needs.changes.outputs.apps == 'true'
     runs-on: macos-26
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - scheme: CitybuilderiOS
-            destination: generic/platform=iOS Simulator
-          - scheme: CitybuilderMac
-            destination: platform=macOS
-          - scheme: CitybuilderTV
-            destination: generic/platform=tvOS Simulator
-          - scheme: citybuilder-cli
-            destination: platform=macOS
+    # The four old jobs took 1 to 4 minutes each (3.7 at most) in recent
+    # runs; the budget covers all four plus a cold tvOS runtime download.
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -332,29 +433,63 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Install the tvOS simulator runtime when missing
-        if: matrix.scheme == 'CitybuilderTV'
-        run: |
-          xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
-
       - name: Install XcodeGen
         run: scripts/ci/install-pinned-tools.sh xcodegen
 
       - name: make generate
+        id: generate
         run: make generate
 
-      - name: xcodebuild
-        shell: bash
+      - name: Build CitybuilderiOS
+        id: ios
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderiOS "generic/platform=iOS Simulator"
+
+      - name: Build CitybuilderMac
+        id: mac
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderMac "platform=macOS"
+
+      - name: Build citybuilder-cli
+        id: cli
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh citybuilder-cli "platform=macOS"
+
+      # Only the tvOS build needs the runtime, so the download comes
+      # last and a failed iOS or Mac build doesn't wait for it.
+      - name: Install the tvOS simulator runtime when missing
+        id: tvos_runtime
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
         run: |
-          set -o pipefail
-          xcodebuild \
-            -project Citybuilder.xcodeproj \
-            -scheme "${{ matrix.scheme }}" \
-            -destination "${{ matrix.destination }}" \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            build | xcbeautify --renderer github-actions
+          xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
+
+      - name: Build CitybuilderTV
+        id: tvos
+        if: ${{ !cancelled() && steps.tvos_runtime.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderTV "generic/platform=tvOS Simulator"
+
+      - name: Summarize builds
+        if: ${{ !cancelled() }}
+        env:
+          OUTCOMES: >-
+            generate=${{ steps.generate.outcome }}
+            CitybuilderiOS=${{ steps.ios.outcome }}
+            CitybuilderMac=${{ steps.mac.outcome }}
+            citybuilder-cli=${{ steps.cli.outcome }}
+            tvOS-runtime=${{ steps.tvos_runtime.outcome }}
+            CitybuilderTV=${{ steps.tvos.outcome }}
+        run: |
+          failed=""
+          for outcome in $OUTCOMES; do
+            echo "$outcome"
+            case "$outcome" in
+              *=success) ;;
+              *) failed="$failed ${outcome%%=*}" ;;
+            esac
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::did not succeed:$failed"
+            exit 1
+          fi
 
   gamedata-fixture:
     name: gamedata — a fixture pack builds without Swift edits
@@ -453,7 +588,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [changes, lint, test, sprites, audio-linux, build, gamedata-fixture, determinism-linux, determinism-compare]
+    needs: [changes, lint, test, sprites, audio-linux, build, gamedata-fixture, determinism-linux, determinism-compare, web]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

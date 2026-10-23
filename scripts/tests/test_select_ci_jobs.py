@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -96,7 +97,7 @@ def test_a_docs_only_change_runs_no_code_jobs(repo: Path) -> None:
 @pytest.mark.parametrize("path", [
     "Apps/iOS/ContentView.swift",
     "project.yml",
-    "Resources/Buildings.atlas/building-house.png",
+    "Resources/Audio/click.wav",
     "scripts/check-coverage.sh",
     "Makefile",
     ".github/workflows/ci.yml",
@@ -107,11 +108,12 @@ def test_a_docs_only_change_runs_no_code_jobs(repo: Path) -> None:
 def test_a_change_outside_the_packages_runs_everything(repo: Path, path: str) -> None:
     jobs = select([path, "Packages/CityAudio/Sources/CityAudio/Mixer.swift"], repo)
 
-    assert jobs == select_ci_jobs.everything(repo)
+    assert jobs == replace(select_ci_jobs.everything(repo), web=False)
     assert jobs.packages == ALL_PACKAGES
     assert jobs.apps and jobs.sprites and jobs.gamedata_fixture
     assert jobs.determinism_linux and jobs.determinism_compare
     assert jobs.audio
+    assert not jobs.web
 
 
 def test_a_rename_across_packages_runs_both_sides(repo: Path) -> None:
@@ -179,10 +181,62 @@ def test_the_real_manifests_parse() -> None:
     )
 
 
+def test_a_web_change_runs_only_the_web_build(repo: Path) -> None:
+    for path in ["design/web/src/Hud.tsx", "design/web/package.json", "design/web/scripts/gen-sprites.mjs"]:
+        jobs = select([path], repo)
+
+        assert jobs.web
+        assert jobs.packages == []
+        assert not (jobs.apps or jobs.sprites or jobs.gamedata_fixture or jobs.audio)
+        assert not (jobs.determinism_linux or jobs.determinism_compare)
+
+
+def test_a_web_change_beside_a_package_change_runs_both(repo: Path) -> None:
+    jobs = select(["design/web/src/Hud.tsx", "Packages/CityRender3D/Sources/CityRender3D/Camera.swift"], repo)
+
+    assert jobs.web
+    assert jobs.packages == ["CityRender3D"]
+
+
+def test_a_web_change_beside_a_non_package_change_still_runs_everything(repo: Path) -> None:
+    jobs = select(["design/web/src/Hud.tsx", "Makefile"], repo)
+
+    assert jobs == select_ci_jobs.everything(repo)  # web included
+
+
+def test_an_atlas_change_runs_the_web_build_and_everything_else(repo: Path) -> None:
+    jobs = select(["Resources/Buildings.atlas/building-house.png"], repo)
+
+    assert jobs == select_ci_jobs.everything(repo)
+    assert jobs.web
+
+
+@pytest.mark.parametrize("path", [
+    "Packages/CityAudio/Sources/CityAudio/Mixer.swift",
+    "Resources/Audio/click.wav",
+    "Makefile",
+    "CHANGELOG.md",
+])
+def test_other_changes_skip_the_web_build(repo: Path, path: str) -> None:
+    assert not select([path], repo).web
+
+
+def test_no_changed_files_runs_the_web_build_too(repo: Path) -> None:
+    assert select([], repo).web
+
+
+def test_the_output_has_a_web_flag(repo: Path) -> None:
+    assert "web=true" in select(["design/web/src/a.ts"], repo).github_output().splitlines()
+    assert "web=false" in select(["Makefile"], repo).github_output().splitlines()
+
+
 def test_the_workflow_selects_everything_with_the_same_outputs() -> None:
     root = Path(__file__).resolve().parents[2]
     workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    shell_keys = re.findall(r'^ +echo "([a-z_]+)=', workflow, re.M)
+    # Only select_all(): the step echoes other outputs (test_matrix) too.
+    body = re.search(r"^ +select_all\(\) \{\n(.*?)^ +\}$", workflow, re.M | re.S)
+    assert body is not None, "ci.yml has no select_all() function"
+    shell_keys = re.findall(r'echo "([a-z_]+)=', body.group(1))
     output = select_ci_jobs.everything(root).github_output()
 
     assert shell_keys == [line.split("=", 1)[0] for line in output.splitlines()]

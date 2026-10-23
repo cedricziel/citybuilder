@@ -207,12 +207,17 @@ The HUD SHALL offer a research button that opens a panel listing every tech with
 
 ### Requirement: Locked palette entries
 
-Build palette entries for buildings whose tech is not researched SHALL be marked locked, and a locked placement MUST show "Needs <Tech> research".
+Build palette entries for buildings whose tech is not researched SHALL be marked locked, and a locked placement MUST show "Needs <Tech> research". A locked drawer tile SHALL read "Needs <Tech>" where an unlocked tile shows its cost.
 
 #### Scenario: Locked placement message
 
 - **WHEN** a placement is rejected with `locked(.mining)`
 - **THEN** the HUD message reads "Needs Mining research"
+
+#### Scenario: Locked drawer tile names its research
+
+- **WHEN** the Gather drawer lists the mine before Mining is researched
+- **THEN** the mine's tile reads "Needs Mining" in place of its cost, while the farm's tile shows "$60"
 
 ### Requirement: HUD shows the date
 
@@ -610,7 +615,7 @@ While a build or demolish tool is armed, the HUD SHALL show a tool strip with th
 
 ### Requirement: Inspector callout
 
-Selecting a building SHALL show the inspector as a callout next to it: 14 points right of the building's edge when the build controls are in the rail, 12 points below it when they are in the dock. When that side has no room the callout MUST flip to the other side, and it MUST stay inside the area the status pill, menus, rail and dock leave free. The callout SHALL show the building's name with a house's tier beside it, a residents meter for a house, and its key lines: residents and needs for a house, otherwise state and road, followed by a "Problem:" line naming the building's issue when it has one, shown with a warning symbol. Details SHALL show every other inspector line and control, and stays open for the session once chosen. The callout SHALL offer Demolish for the player's buildings, which enqueues a demolish command for the selected tile and clears the selection.
+Selecting a building SHALL show the inspector as a callout next to it: 14 points right of the building's edge when the build controls are in the rail, 12 points below it when they are in the dock. When that side has no room the callout MUST flip to the other side, and it MUST stay inside the area the status pill, menus, rail and dock leave free. The callout SHALL show the building's name with a house's tier beside it, a residents meter for a house, and its key lines: residents and needs for a house, then, below its top tier, "Next: <tier> need <goods>" naming the goods the next tier needs that its own tier does not, otherwise state and road, followed by a "Problem:" line naming the building's issue when it has one, shown with a warning symbol. Details SHALL show every other inspector line and control, and stays open for the session once chosen. The callout SHALL offer Demolish for the player's buildings, which enqueues a demolish command for the selected tile and clears the selection.
 
 #### Scenario: Callout title and key lines
 - **WHEN** the player selects a peasant house with 2 of 4 residents
@@ -639,6 +644,11 @@ Selecting a building SHALL show the inspector as a callout next to it: 14 points
 #### Scenario: Demolish from the callout
 - **WHEN** the player selects their house and taps Demolish in the callout
 - **THEN** a demolish command for the house's tile is enqueued and nothing is selected
+
+#### Scenario: Callout names the next tier's needs
+
+- **WHEN** the player selects a citizens' house in a Northern European town, then a peasants' house, then a merchants' house
+- **THEN** the first two have the key lines "Next: Merchants need bread, tools, beer" and "Next: Citizens need planks", and the merchants' house has no "Next:" line
 
 ### Requirement: Quit asks whether to save
 

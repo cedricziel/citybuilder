@@ -2,7 +2,7 @@
 // scripts/generate-app-icon.swift
 //
 // Composes the app icon from the existing in-game sprites
-// (Resources/Kit.atlas/* and Resources/Buildings.atlas/*). The icon
+// (Resources/Kit.atlas/*). The icon
 // is a tiny isometric island vignette — a few grass tiles with a beach
 // trim and water surround, two buildings on the grass, tree clumps on grass.
 //

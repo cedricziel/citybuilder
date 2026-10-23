@@ -37,9 +37,9 @@ extension IsoWorldScene {
         let time = TimeOfDay(tick: snapshot.tickCount)
         let glow = CGFloat(time.darkness / TimeOfDay.nightDarkness) * WindowLights.strength
         let bedtime = WindowLights.bedtime(at: time)
-        for (spec, node) in presentSprites {
+        for spec in buildingSpecs {
             guard case let .building(kind, state, _, _, _, _, _, _, _, _) = spec.kind,
-                  state == .operational, kind != .road
+                  state == .operational, kind != .road, let node = presentSprites[spec]
             else { continue }
             let lit = glow > 0 && isLit(kind: kind, at: spec.coord, in: snapshot)
             let shown = node.childNode(withName: Self.windowGlowNodeName)
@@ -135,12 +135,13 @@ extension IsoWorldScene {
                 node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing), moving: walking)
                 strollerNodes[key] = StrollerVisual(node: node, facing: facing, walking: walking)
             }
-            let from = IsoMath.screenPoint(forTile: stroller.from)
-            let to = IsoMath.screenPoint(forTile: stroller.to)
-            let along = CGFloat(stroller.progress)
-            node.position = CGPoint(x: from.x + (to.x - from.x) * along, y: from.y + (to.y - from.y) * along)
-            let depth = Double(max(stroller.from.x + stroller.from.y, stroller.to.x + stroller.to.y) + 1)
-            node.zPosition = Self.depthZ(depth) + Self.figureLift
+            // Feet on the tile centre, like carriers, sorted by where they stand right now.
+            let along = stroller.progress
+            node.position = IsoMath.screenPoint(
+                forTileFractionalX: Double(stroller.from.x) + 0.5 + Double(stroller.to.x - stroller.from.x) * along,
+                fractionalY: Double(stroller.from.y) + 0.5 + Double(stroller.to.y - stroller.from.y) * along
+            )
+            node.zPosition = Self.figureZ(at: node.position)
         }
     }
 }

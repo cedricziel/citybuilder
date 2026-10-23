@@ -103,7 +103,7 @@ Objects are visual only. Simulation and placement MUST keep using each tile's ow
 
 ### Requirement: Terrain objects depth-sort with buildings
 
-A terrain object SHALL draw just behind the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01 − 0.003 + (c mod 3) × 0.00005`. Objects nearer the camera then cover buildings behind them, buildings nearer the camera cover objects behind them, and a building at the same depth always covers the object. Objects at one depth that overlap are at most two columns apart; they keep a fixed order by column, so they never swap when the scene rebuilds.
+A terrain object SHALL draw just behind the global z of a 1 × 1 building on its tile, `10 + (c + r + 1) × 0.01 − 0.0002 + (c mod 3) × 0.00005`. Objects nearer the camera then cover buildings behind them, buildings nearer the camera cover objects behind them, and a building at the same depth always covers the object. Objects at one depth that overlap are at most two columns apart; they keep a fixed order by column, so they never swap when the scene rebuilds.
 
 #### Scenario: A clump in front of a house covers it
 

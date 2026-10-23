@@ -54,6 +54,11 @@ extension IsoWorldScene {
     /// Despawns finished carriers, and glides live ones to their tile over
     /// the time since their last step, so they keep pace at any speed.
     func reconcileCarriers(with snapshot: WorldSnapshot, now: TimeInterval) {
+        // Every frame: sort each carrier by where its glide has taken it, so one stepping out from behind
+        // a building stays behind it until it is level with it.
+        for visual in carrierVisuals.values {
+            visual.node.zPosition = Self.figureZ(at: visual.node.position)
+        }
         guard snapshot.tickCount != lastCarrierTick else {
             // Paused: carriers stop mid-road on their standing frame instead of walking in place.
             if simulationIsStill(now: now) {
@@ -76,7 +81,7 @@ extension IsoWorldScene {
             guard var visual = carrierVisuals[carrier.id] else {
                 let node = SKSpriteNode.walker()
                 node.position = target
-                node.zPosition = Self.zPosition(of: carrier)
+                node.zPosition = Self.figureZ(at: target)
                 Self.animate(node, look: look)
                 addChild(node)
                 carrierVisuals[carrier.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now)
@@ -87,7 +92,6 @@ extension IsoWorldScene {
                 visual.walking = true
                 Self.animate(visual.node, look: look)
             }
-            visual.node.zPosition = Self.zPosition(of: carrier)
             if visual.target != target {
                 let step = min(0.25, max(0.03, now - visual.movedAt))
                 visual.node.glide(to: target, duration: step)
@@ -114,15 +118,6 @@ extension IsoWorldScene {
         guard idx >= 0, idx < carrier.path.count - 1 else { return .se }
         let from = carrier.path[idx], next = carrier.path[idx + 1]
         return SpriteAtlas.WalkerFacing(stepX: Double(next.x - from.x), stepY: Double(next.y - from.y))
-    }
-
-    /// Just above the road it walks on, so buildings nearer the camera
-    /// cover it; the nearer of its two tiles while it steps.
-    static func zPosition(of carrier: Carrier) -> CGFloat {
-        let first = min(max(0, carrier.pathIndex), carrier.path.count)
-        let tiles = carrier.path[first ..< min(carrier.path.count, first + 2)]
-        let depth = tiles.map { $0.x + $0.y }.max() ?? 0
-        return depthZ(Double(depth + 1)) + figureLift
     }
 
     /// Slightly below the tile centre, so the figure stands on the tile.

@@ -85,12 +85,12 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 - **THEN** the gate reports no `frame_misaligned` failure for that frame
 
 ### Requirement: Committed PNGs are indexed-mode and optimized
-Every committed PNG under `Resources/{Kit,Buildings,Icons}.atlas/` and `Resources/Sprites.style/` (including `master-reference.png` and every `_sheets/<id>.png`) SHALL be encoded as an **indexed-mode PNG with a palette of at most 256 colours** and written with `optimize=True` (Pillow) or the equivalent compression-maximizing flag in any future tooling. RGB or RGBA truecolor PNGs MUST NOT be committed. The committed footprint per binary stays an order of magnitude smaller than truecolor — repo size is a load-bearing concern for clone times.
+Every committed PNG under `Resources/{Kit,Icons}.atlas/` and `Resources/Sprites.style/` (including `master-reference.png` and every `_sheets/<id>.png`) SHALL be encoded as an **indexed-mode PNG with a palette of at most 256 colours** and written with `optimize=True` (Pillow) or the equivalent compression-maximizing flag in any future tooling. RGB or RGBA truecolor PNGs MUST NOT be committed. The committed footprint per binary stays an order of magnitude smaller than truecolor — repo size is a load-bearing concern for clone times.
 
 Rationale: indexed encoding keeps every sprite well under the pre-commit 1 MB bar. Art-kit renders are quantized to 256 colours on write (design D8) with no visible loss, and the retired `Terrain` and `Units` atlases hold no PNGs any more.
 
 #### Scenario: Every committed sprite PNG is indexed-mode
-- **WHEN** every `*.png` under `Resources/{Kit,Buildings,Icons}.atlas/` and `Resources/Sprites.style/` is inspected
+- **WHEN** every `*.png` under `Resources/{Kit,Icons}.atlas/` and `Resources/Sprites.style/` is inspected
 - **THEN** Pillow `Image.open(path).mode` reports `P` (indexed) for each — never `RGB`, never `RGBA` truecolor
 
 #### Scenario: Pipeline writes indexed-mode PNGs by default
@@ -110,45 +110,51 @@ The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross produ
 
 ## ADDED Requirements
 
-### Requirement: Kit and legacy atlas folders
-The asset pipeline SHALL organize sprite PNGs into category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render, which filters linearly. `Buildings.atlas/` and `Icons.atlas/` hold the nearest-filtered pixel art, goods icons and status badges. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
+### Requirement: Overlay sprites route to the Icons atlas
+
+Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x` beside the goods icons.
+
+#### Scenario: Waiting badge routes to the Icons atlas
+
+- **WHEN** `SpriteAtlasRouting.atlasName(for: "overlay-waiting-materials")` is called
+- **THEN** it returns `"Icons"`
+
+### Requirement: Two category atlases, Kit and Icons
+The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, animals and ships), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: goods icons and the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
 
 #### Scenario: Kit atlas holds the terrain
 - **WHEN** the repository is inspected
 - **THEN** `Resources/Kit.atlas/` contains every `terrain-*.png` referenced by the sprite catalog, and `Resources/Terrain.atlas/` does not exist
 
-#### Scenario: Buildings atlas holds unmigrated buildings
-- **WHEN** the repository is inspected
-- **THEN** `Resources/Buildings.atlas/` exists and contains every `building-*.png` of a brief that has not migrated to the art kit
-
 #### Scenario: Units atlas is retired
 - **WHEN** the repository is inspected
 - **THEN** `Resources/Units.atlas/` does not exist, and `Resources/Kit.atlas/` contains every `walker-*`, `carrier-*`, `animal-*` and `ship-*` PNG referenced by the sprite catalog
+
+#### Scenario: Retired atlases are gone
+- **WHEN** the repository is inspected
+- **THEN** `Resources/` holds exactly `Kit.atlas/` and `Icons.atlas/`, and `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` do not exist
 
 #### Scenario: Legacy sprite directory removed
 - **WHEN** the repository is inspected
 - **THEN** `Resources/Sprites/` does not exist
 
 ### Requirement: Atlas routing to Kit
-The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to the atlas holding it. A sprite whose catalog brief has migrated to the art kit routes to `Kit`. Every other sprite routes by its prefix:
+The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to the atlas holding it, by prefix:
 
 | Prefix | Atlas |
 |---|---|
-| `terrain-` | `Kit` |
-| `building-` | `Buildings` |
-| `overlay-` | `Buildings` |
-| `walker-`, `carrier-`, `animal-`, `ship-` | `Kit` |
-| `good-` | `Icons` |
+| `terrain-`, `building-`, `walker-`, `carrier-`, `animal-`, `ship-` | `Kit` |
+| `good-`, `overlay-` | `Icons` |
 
 The public `SpriteAtlas` API remains unchanged.
 
-#### Scenario: Ship name falls back to Kit
-- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name whose stem is not kit-rendered
+#### Scenario: An unknown ship stem falls back to the Kit atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `ship-` name with no committed sprite
 - **THEN** it answers `Kit`, the prefix fallback
 
-#### Scenario: Unmigrated shore building falls back to Buildings
-- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a shore-building name whose facing is not kit-rendered
-- **THEN** it answers `Buildings`, the prefix fallback
+#### Scenario: An unknown building stem falls back to the Kit atlas
+- **WHEN** `SpriteAtlasRouting.atlasName(for:)` is asked for a `building-` name with no committed sprite
+- **THEN** it answers `Kit`, the prefix fallback
 
 #### Scenario: Ship name routes to Kit atlas
 - **WHEN** `SpriteAtlas.texture(for: "ship-ne-0")` is called
@@ -224,10 +230,11 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 
 ### Requirement: Atlas PNGs are rendered by the art kit
 
-Every sprite PNG under `Resources/{Kit,Buildings,Icons}.atlas/` SHALL be produced by:
+Every sprite PNG under `Resources/{Kit,Icons}.atlas/` SHALL be produced by:
 
-- IsoKit, for buildings and units, or
-- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons.
+- IsoKit, for buildings and units,
+- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons, or
+- hand-drawn pixel art, for the status badges drawn over buildings (`overlay-`), committed as is with a nearest-neighbour `@2x` twin.
 
 Every PNG has an `@1x` file and an `@2x` file with the same stem. No PNG may come from an image-generation API or from the retired `scripts/generate_sprites_ai` pipeline.
 
@@ -290,17 +297,23 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 ## REMOVED Requirements
 
+### Requirement: Overlay sprites route to the Buildings atlas
+
+**Reason**: `Buildings.atlas` is retired; its last sprite, the waiting badge, moved to `Icons.atlas`.
+
+**Migration**: "Overlay sprites route to the Icons atlas" replaces it.
+
 ### Requirement: Category-atlas folder layout
 
 **Reason**: It named three atlases, including the retired `Terrain` and `Units`.
 
-**Migration**: "Kit and legacy atlas folders" replaces it: art-kit renders live in `Kit.atlas`, pixel art in `Buildings.atlas` and `Icons.atlas`.
+**Migration**: "Two category atlases, Kit and Icons" replaces it: art-kit renders live in `Kit.atlas`, pixel art in `Icons.atlas`.
 
 ### Requirement: Atlas routing by sprite-name prefix
 
 **Reason**: Its table sent `walker-` and `ship-` to the retired `Units` atlas.
 
-**Migration**: "Atlas routing to Kit" replaces it: migrated stems and the `walker-`, `carrier-`, `animal-` and `ship-` prefixes route to `Kit`.
+**Migration**: "Atlas routing to Kit" replaces it: every rendered prefix routes to `Kit`, and goods icons and badges to `Icons`.
 
 ### Requirement: Shore-building sprite inventory
 

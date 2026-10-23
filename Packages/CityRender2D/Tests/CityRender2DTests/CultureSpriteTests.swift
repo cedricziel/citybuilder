@@ -140,7 +140,7 @@ func scenarioCultureContentIsCatalogued() {
     var sprites = goods.map { "Icons.atlas/good-\($0.rawValue)" }
     for kind in kinds {
         let name = "building-\(kind.rawValue)"
-        let base = "\(SpriteAtlasRouting.atlasName(for: name) ?? "Buildings").atlas/\(name)" // migrated kinds live in Kit
+        let base = "\(SpriteAtlasRouting.atlasName(for: name) ?? "Kit").atlas/\(name)" // migrated kinds live in Kit
         let frames = SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0
         #expect(frames == 2, "\(kind) has no operational animation")
         sprites.append(base)

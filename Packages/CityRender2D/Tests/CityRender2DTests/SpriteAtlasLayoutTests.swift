@@ -31,34 +31,16 @@ func scenarioTerrainAtlasExists() {
     #expect(!FileManager.default.fileExists(atPath: retired.path))
 }
 
-@Test("scenario: buildings atlas exists")
-func scenarioBuildingsAtlasExists() {
-    let url = worktreeRoot().appendingPathComponent("Resources/Buildings.atlas")
-    var isDir: ObjCBool = false
-    let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-    #expect(exists && isDir.boolValue, "Resources/Buildings.atlas must exist as a directory")
-    let contents = Set((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? [])
-    // Every building sprite a brief still owns as legacy art (not `isokit` or `svg`) is committed here.
-    let catalog = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
-    let briefs = ((try? FileManager.default.contentsOfDirectory(at: catalog, includingPropertiesForKeys: nil)) ?? [])
-        .filter { $0.pathExtension == "md" }
-    var missing: [String] = []
-    for brief in briefs {
-        let text = (try? String(contentsOf: brief, encoding: .utf8)) ?? ""
-        guard !text.contains("source = \"isokit\""), !text.contains("source = \"svg\"") else { continue }
-        for line in text.split(separator: "\n") where line.hasPrefix("- (") {
-            guard let name = line.split(separator: "`").dropFirst().first, name.hasPrefix("building-") else { continue }
-            if !contents.contains("\(name).png") { missing.append(String(name)) }
-        }
+@Test("scenario: Retired atlases are gone")
+func scenarioRetiredAtlasesAreGone() throws {
+    // Terrain, buildings, people and ships are kit renders in Kit.atlas; goods and badges are in Icons.atlas.
+    for retired in ["Terrain", "Buildings", "Units"] {
+        let url = worktreeRoot().appendingPathComponent("Resources/\(retired).atlas")
+        #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/\(retired).atlas must not exist")
     }
-    #expect(missing.isEmpty, "legacy building sprites missing from Buildings.atlas: \(missing)")
-}
-
-@Test("scenario: units atlas retired")
-func scenarioUnitsAtlasRetired() {
-    // realistic-walkers: people and ships are kit renders in Kit.atlas.
-    let url = worktreeRoot().appendingPathComponent("Resources/Units.atlas")
-    #expect(!FileManager.default.fileExists(atPath: url.path), "Resources/Units.atlas must not exist")
+    let atlases = try FileManager.default.contentsOfDirectory(atPath: worktreeRoot().appendingPathComponent("Resources").path)
+        .filter { $0.hasSuffix(".atlas") }.sorted()
+    #expect(atlases == ["Icons.atlas", "Kit.atlas"])
 }
 
 @Test("scenario: legacy sprite directory removed")
