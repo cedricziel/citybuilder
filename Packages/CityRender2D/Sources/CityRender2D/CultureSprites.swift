@@ -51,19 +51,19 @@ extension IsoWorldScene {
         return (name, SpriteAtlas.textureOrPlaceholder(named: name))
     }
 
-    private static var cultureActionCache: [String: SKAction] = [:]
+    private static var operationalActionCache: [String: SKAction] = [:]
 
-    /// Looping operational frames `<baseName>-operational-N`, or nil when
-    /// the kind has no operational loop or a frame is missing.
-    static func cultureOperationalAction(baseName: String, kind: BuildingKind) -> SKAction? {
-        if let hit = cultureActionCache[baseName] { return hit }
+    /// Looping operational frames `<baseName>-operational-N` of a look with its own frames, or nil
+    /// when the kind has no operational loop or a frame is missing.
+    static func operationalAction(baseName: String, kind: BuildingKind) -> SKAction? {
+        if let hit = operationalActionCache[baseName] { return hit }
         guard let entry = SpriteAnimation.entry(for: .buildingOperational(kind)), entry.loop == .forever else {
             return nil
         }
         let frames = (0 ..< entry.frameCount).compactMap { SpriteAtlas.texture(named: "\(baseName)-operational-\($0)") }
         guard frames.count == entry.frameCount, frames.count > 1 else { return nil }
-        let action = SKAction.repeatForever(.animate(with: frames, timePerFrame: entry.timePerFrame))
-        cultureActionCache[baseName] = action
+        let action = SKAction.repeatForever(SpriteAnimation.cycle(frames, entry: entry))
+        operationalActionCache[baseName] = action
         return action
     }
 }

@@ -340,7 +340,7 @@ public enum SpriteAtlas {
                     for frame in 0 ..< 3 {
                         names.append("\(stem)-constructing-\(frame)")
                     }
-                    for frame in 0 ..< (SpriteName.shoreOperationalFrames[kind.rawValue] ?? 2) {
+                    for frame in 0 ..< (SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0) {
                         names.append("\(stem)-operational-\(frame)")
                     }
                 }
