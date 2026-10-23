@@ -45,6 +45,9 @@ public final class IsoWorldScene: SKScene {
     /// the looks it shows.
     var groundBackdropNode: SKSpriteNode?
     var groundBackdropMap: GroundBackdropMap?
+    /// The backdrop's animation clock: it advances only while motion runs.
+    var groundClock: TimeInterval = 0
+    var groundClockSeen: TimeInterval?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.
@@ -232,6 +235,7 @@ public final class IsoWorldScene: SKScene {
         noteTick(snapshot.tickCount, now: currentTime)
         updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
         updateBuildingMotion(now: currentTime)
+        updateGroundMotion(now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
