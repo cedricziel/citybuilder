@@ -5,9 +5,9 @@
 An operational port SHALL loop its facing's six operational frames, `building-port-<o>-operational-0` to `-5`, at 0.45 s each. The loop SHALL show its crane lifting a crate off the wharf, swinging it onto the quay, setting it down and swinging back out.
 
 An operational shipyard SHALL loop its facing's five operational frames, `building-shipyard-<o>-operational-0` to `-4`:
-- keel and ribs, then two, four and six strakes, for 2.5 s each;
-- the finished hull SHALL hold for 4 s;
-- the empty slipway after its launch SHALL show for 1.25 s.
+- frames 0–2, keel and ribs, then two and four strakes, SHALL show for 2.5 s each;
+- frame 3, the finished hull with six strakes, SHALL show for 4 s;
+- frame 4, the empty slipway after its launch, SHALL show for 1.25 s.
 
 An operational entry MAY give each frame its own duration. When it does, it SHALL give exactly one positive duration per frame.
 
