@@ -13,9 +13,9 @@ public struct BuildingLook: Hashable, Sendable {
     /// Grey tint of a smoky house.
     public var smoky: Bool
     /// The rival owning the building, nil for the player's.
-    public var rival: RivalSummary?
+    public var rival: RivalLook?
 
-    public init(idle: Bool = false, projectFrame: Int? = nil, smoky: Bool = false, rival: RivalSummary? = nil) {
+    public init(idle: Bool = false, projectFrame: Int? = nil, smoky: Bool = false, rival: RivalLook? = nil) {
         self.idle = idle
         self.projectFrame = projectFrame
         self.smoky = smoky
@@ -23,6 +23,22 @@ public struct BuildingLook: Hashable, Sendable {
     }
 
     public static let standard = BuildingLook()
+}
+
+/// What a rival building's sprite shows of its owner. Stock and offers stay out, so trade never
+/// redraws the rival's buildings.
+public struct RivalLook: Hashable, Sendable {
+    public let id: RivalID
+    public let colour: RivalColour
+    public let culture: Culture
+    public let age: Age
+
+    public init(_ rival: RivalSummary) {
+        id = rival.id
+        colour = rival.colour
+        culture = rival.culture
+        age = rival.age
+    }
 }
 
 /// A signature building's range drawn on the map.
@@ -39,7 +55,7 @@ public enum SignatureLooks {
     }
 
     static func look(for building: Building, in snapshot: WorldSnapshot) -> BuildingLook {
-        let rival = building.owner.rivalID.flatMap(snapshot.rival)
+        let rival = building.owner.rivalID.flatMap(snapshot.rival).map(RivalLook.init)
         guard building.state == .operational else { return BuildingLook(rival: rival) }
         var look = BuildingLook(rival: rival)
         if building.kind == .monument, !building.isCompletedMonument {

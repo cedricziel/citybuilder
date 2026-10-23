@@ -14,9 +14,8 @@
 # Once a runner image's Homebrew moves a formula on (libimagequant
 # 4.4.2, say), the digest check fails the job instead of installing the
 # new bottle. Then bump the version and digests here and in the README,
-# and for libimagequant regenerate the atlases (`make sprites-offline`,
-# or the regenerated-atlases artifact a failing CI run uploads) in the
-# same PR.
+# and for libimagequant re-render the atlases (`make sprites`) in the same
+# PR.
 #
 # Not pinned here: zlib. Pillow links the zlib the runner image (or your
 # macOS) ships, and it decides the compressed PNG bytes, so a new image
@@ -31,8 +30,8 @@ SWIFTLINT_SHA256=c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d
 
 PRE_COMMIT_VERSION=4.6.2
 
-# `make sprites-verify` compares PNG bytes, and the quantizer decides
-# them, so a new libimagequant can change every atlas PNG. Bottle
+# `art.finalize` quantizes every atlas PNG with it, so a new libimagequant
+# can change every committed PNG. Bottle
 # digests per macOS (27, 26, 15) come from
 # https://formulae.brew.sh/api/formula/<formula>.json
 LIBIMAGEQUANT_VERSION=4.4.1

@@ -37,33 +37,5 @@ struct CommittedTerrainArtTests {
         let register = failures.filter { $0.reason == .notGrounded }
         #expect(register.isEmpty, "\(register)")
     }
-
-    @Test("scenario: every building and unit entry is procedural")
-    func everyBuildingAndUnitEntryIsProcedural() throws {
-        let catalog = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog")
-        let entries = try FileManager.default.contentsOfDirectory(at: catalog, includingPropertiesForKeys: nil)
-            .filter { url in
-                let name = url.deletingPathExtension().lastPathComponent
-                return name.hasPrefix("building-") || name == "walker" || name == "ship"
-            }
-        #expect(entries.count >= 15)
-        for entry in entries {
-            let text = try String(contentsOf: entry, encoding: .utf8)
-            // Families migrate one at a time (replace-generative-sprites-with-isokit, tasks section 4):
-            // until the last one flips, a brief is procedural, rendered by IsoKit, or drawn by an SVG
-            // generator (roads).
-            let source = ["procedural", "isokit", "svg"].first { text.hasPrefix("---\nsource = \"\($0)\"\n---\n") }
-            #expect(source != nil, "\(entry.lastPathComponent)")
-        }
-    }
-
-    @Test("scenario: style bible pins the building register")
-    func styleBiblePinsTheBuildingRegister() throws {
-        let world = try String(
-            contentsOf: worktreeRoot().appendingPathComponent("Resources/Sprites.style/world.md"),
-            encoding: .utf8
-        )
-        #expect(world.split(separator: "\n").contains("## Building register"))
-    }
 }
 #endif

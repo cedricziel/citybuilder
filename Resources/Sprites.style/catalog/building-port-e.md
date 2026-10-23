@@ -9,25 +9,13 @@ Shore-placement goods exchange. Carriers deposit and withdraw goods on the land 
 
 Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a timber-framed plaster warehouse under a red tile roof and a timber crane whose jib reaches over the water, with crates and barrels. A plank wharf on pilings covers the seaward half, so it stands over the water wherever the shoreline crosses the footprint. The four facings move the geometry, never the camera or the sun, so they light alike.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-port-e` — finished port
-- (0, 1): `building-port-e-constructing-0` — quay and wharf
-- (0, 2): `building-port-e-constructing-1` — warehouse walls rising
-- (0, 3): `building-port-e-constructing-2` — warehouse under its roof, scaffold
-- (1, 0): `building-port-e-operational-0` — the finished port, operational
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages: the quay and wharf are there from the start, and the warehouse and crane rise through rising cuts with scaffold on the visible corners. The operational sprite is the finished port; it has no loop.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)`, one frame.
+- `building-port-e` — finished port
+- `building-port-e-constructing-0` — quay and wharf
+- `building-port-e-constructing-1` — warehouse walls rising
+- `building-port-e-constructing-2` — warehouse under its roof, scaffold
+- `building-port-e-operational-0` — the finished port, operational
 
 ## Recipe
 

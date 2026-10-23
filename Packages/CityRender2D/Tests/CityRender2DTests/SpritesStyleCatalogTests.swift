@@ -4,17 +4,11 @@ import Foundation
 import Testing
 @testable import CityRender2D
 
-// Markdown + TOML shape scenarios for the sprite-style-catalog
-// capability introduced by replace-procedural-sprites-with-ai-pipeline.
-// Each `#### Scenario:` in the change's
-// specs/sprite-style-catalog/spec.md maps to one `@Test("scenario:
-// ...")` here. The tests parse the committed Markdown / TOML on disk;
-// they do not invoke the pipeline.
-//
-// Scenarios spanning the cutover commit (every PNG has a catalog,
-// legacy generator retired) live next door in
-// `SpritesPipelineCutoverTests.swift` so this file stays under the
-// 500-line SwiftLint cap.
+// Markdown shape scenarios for the sprite-style-catalog capability, as
+// replace-generative-sprites-with-isokit leaves it: the kit's style bible
+// and one brief per sprite kind. Each `@Test("scenario: ...")` maps to a
+// `#### Scenario:` of that capability. The tests parse the committed
+// Markdown on disk; they render nothing.
 
 private func worktreeRoot() -> URL {
     URL(fileURLWithPath: #filePath)
@@ -61,85 +55,25 @@ private func sectionBody(_ heading: String, in markdown: String) -> String? {
     return inSection ? collected.joined(separator: "\n") : nil
 }
 
-// MARK: - Requirement: Style bible declares the world's visual identity
-
-@Test("scenario: style bible file exists")
-func scenarioStyleBibleFileExists() {
-    let url = worktreeRoot().appendingPathComponent("Resources/Sprites.style/world.md")
-    let exists = FileManager.default.fileExists(atPath: url.path)
-    #expect(exists, "Resources/Sprites.style/world.md must exist")
-    let attrs = (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:]
-    let size = (attrs[.size] as? NSNumber)?.intValue ?? 0
-    #expect(size > 0, "world.md must be non-empty")
-}
+// MARK: - Requirement: Style bible declares the kit's visual identity
 
 @Test("scenario: style bible declares all required sections")
 func scenarioStyleBibleDeclaresAllRequiredSections() throws {
     let body = try readFile("Resources/Sprites.style/world.md")
     let headings = Set(level2Headings(in: body))
     let required: Set = [
-        "Theme & era",
-        "Visual references",
-        "Projection & scale",
-        "Palette",
-        "Outline & shading",
-        "Background",
+        "Theme & era", "Visual references", "Projection & scale", "Light rig", "Finishes & tiers", "Terrain", "Animation",
         "Forbidden"
     ]
     let missing = required.subtracting(headings)
     #expect(missing.isEmpty, "world.md is missing required sections: \(missing.sorted())")
 }
 
-@Test("scenario: style bible declares the transparent-background convention")
-func scenarioStyleBibleDeclaresTheTransparentBackgroundConvention() throws {
+@Test("scenario: style bible forbids image generation")
+func scenarioStyleBibleForbidsImageGeneration() throws {
     let body = try readFile("Resources/Sprites.style/world.md")
-    guard let section = sectionBody("Background", in: body) else {
-        Issue.record("world.md has no Background section")
-        return
-    }
-    let normalised = section.lowercased()
-    #expect(
-        normalised.contains("transparent"),
-        "Background section must declare PNG transparency as the alpha convention"
-    )
-    #expect(
-        normalised.contains("background"),
-        "Background section must reference the API's transparent-background mode"
-    )
-}
-
-// MARK: - Requirement: Model version is pinned in the catalog
-
-@Test("scenario: pipeline pins a recognised openai image model")
-func scenarioPipelinePinsARecognisedOpenaiImageModel() throws {
-    let body = try readFile("Resources/Sprites.style/pipeline.toml")
-    // Look for a top-level `model = "..."` line. We don't need a full
-    // TOML parser for one key; a regex is enough.
-    let pattern = #"^\s*model\s*=\s*"([^"]+)"\s*$"#
-    var matched: String?
-    for raw in body.split(separator: "\n", omittingEmptySubsequences: false) {
-        let line = String(raw)
-        guard let range = line.range(of: pattern, options: .regularExpression) else { continue }
-        let assignment = String(line[range])
-        let quotes = assignment.indices.filter { assignment[$0] == "\"" }
-        guard quotes.count >= 2 else { continue }
-        matched = String(assignment[assignment.index(after: quotes[0]) ..< quotes[1]])
-        break
-    }
-    guard let model = matched else {
-        Issue.record("pipeline.toml has no `model = \"...\"` line")
-        return
-    }
-    // Accept either a dated snapshot OR a known floating alias for a
-    // model family that doesn't expose dated snapshots (currently
-    // `gpt-image-1`, `gpt-image-1.5`, `gpt-image-1-mini`).
-    let datedSnapshot = #"^gpt-image-\d+(?:\.\d+)?-\d{4}-\d{2}-\d{2}$"#
-    let recognisedAlias = #"^gpt-image-(1|1\.5|1-mini)$"#
-    let isDated = model.range(of: datedSnapshot, options: .regularExpression) != nil
-    let isAlias = model.range(of: recognisedAlias, options: .regularExpression) != nil
-    let comment = "model id must be a dated snapshot or recognised "
-        + "floating alias, got \(model)"
-    #expect(isDated || isAlias, "\(comment)")
+    let forbidden = try #require(sectionBody("Forbidden", in: body)).lowercased()
+    #expect(forbidden.contains("image-generation"), "the Forbidden section must rule out image-generation models")
 }
 
 // MARK: - Per-sprite catalog enumeration & parsing helpers
@@ -183,6 +117,8 @@ private func expectedCatalogIds() -> Set<String> {
             if let name = IsoWorldScene.seasonalTerrainName(kind: terrain, season: season) { ids.insert(name) }
         }
     }
+    // The status badge drawn over a waiting construction site.
+    ids.insert(IsoWorldScene.waitingBadgeNodeName)
     ids.insert("walker")
     ids.insert("animal")
     ids.insert("ship")
@@ -199,68 +135,6 @@ private func catalogFiles() throws -> [URL] {
         at: dir, includingPropertiesForKeys: nil
     )
     return contents.filter { $0.pathExtension == "md" }.sorted { $0.path < $1.path }
-}
-
-private struct CatalogGrid {
-    let cols: Int
-    let rows: Int
-}
-
-/// Parses `Grid: N cols × M rows.` (or `Grid: N×M`) inside the body of
-/// the `## Sheet` section. Returns nil if not found.
-private func parseGrid(in sheetBody: String) -> CatalogGrid? {
-    let pattern = #"Grid:\s*(\d+)\s*(?:cols?\s*[x×]\s*|[x×])\s*(\d+)"#
-    guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-        return nil
-    }
-    let range = NSRange(sheetBody.startIndex ..< sheetBody.endIndex, in: sheetBody)
-    guard
-        let match = regex.firstMatch(in: sheetBody, options: [], range: range),
-        match.numberOfRanges >= 3,
-        let r1 = Range(match.range(at: 1), in: sheetBody),
-        let r2 = Range(match.range(at: 2), in: sheetBody),
-        let cols = Int(sheetBody[r1]),
-        let rows = Int(sheetBody[r2])
-    else { return nil }
-    return CatalogGrid(cols: cols, rows: rows)
-}
-
-/// Extracts every distinct `(row, col)` coordinate pair from text.
-private func parseCellCoords(in body: String) -> [(Int, Int)] {
-    let pattern = #"\((\d+)\s*,\s*(\d+)\)"#
-    guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
-    let range = NSRange(body.startIndex ..< body.endIndex, in: body)
-    var out: [(Int, Int)] = []
-    regex.enumerateMatches(in: body, options: [], range: range) { match, _, _ in
-        guard
-            let match,
-            match.numberOfRanges >= 3,
-            let rowRange = Range(match.range(at: 1), in: body),
-            let colRange = Range(match.range(at: 2), in: body),
-            let row = Int(body[rowRange]),
-            let col = Int(body[colRange])
-        else { return }
-        out.append((row, col))
-    }
-    return out
-}
-
-/// Extracts animation sequences from the Animation section body. A
-/// sequence is a series of `(r, c) → (r, c) → ...` connected by an
-/// arrow character (`→` or `->`). Returns an array of sequences, each a
-/// list of (row, col) coordinates. An animation section containing no
-/// arrow returns an empty array (representing a static sprite).
-private func parseAnimationSequences(in body: String) -> [[(Int, Int)]] {
-    var sequences: [[(Int, Int)]] = []
-    for raw in body.split(separator: "\n", omittingEmptySubsequences: true) {
-        let line = String(raw)
-        // Must contain at least one arrow to be a sequence line.
-        guard line.contains("→") || line.contains("->") else { continue }
-        let coords = parseCellCoords(in: line)
-        guard coords.count >= 2 else { continue }
-        sequences.append(coords)
-    }
-    return sequences
 }
 
 // MARK: - Requirement: Per-sprite catalog covers every sprite kind
@@ -295,25 +169,43 @@ func scenarioNoOrphanCatalogEntries() throws {
 
 // MARK: - Requirement: Catalog entry declares function, identity, sheet, animation
 
-/// Every brief has `Function` and `Visual identity`. Briefs past the image API also name their
-/// `Recipe` (replace-generative-sprites-with-isokit); briefs the legacy pipeline still slices keep
-/// `Sheet` and `Animation` until their family migrates.
+/// Every brief names its sprites and how they are made.
 @Test("scenario: catalog entry declares all required sections")
 func scenarioCatalogEntryDeclaresAllRequiredSections() throws {
     let files = try catalogFiles()
+    #expect(!files.isEmpty)
     var failures: [String] = []
     for url in files {
         let body = try String(contentsOf: url, encoding: .utf8)
-        let source = catalogSource(of: body)
-        var required: Set = ["Function", "Visual identity"]
-        if !source.isEmpty { required.insert("Recipe") }
-        if source != "isokit", source != "svg" { required.formUnion(["Sheet", "Animation"]) }
-        let missing = required.subtracting(Set(level2Headings(in: body)))
+        let missing = Set(["Function", "Visual identity", "Sprites", "Recipe"]).subtracting(Set(level2Headings(in: body)))
         if !missing.isEmpty {
             failures.append("\(url.lastPathComponent): missing \(missing.sorted())")
         }
     }
     #expect(failures.isEmpty, "catalog files missing sections:\n\(failures.joined(separator: "\n"))")
+}
+
+// MARK: - Requirement: One rendered register for world sprites
+
+@Test("scenario: every building and unit entry is rendered by isokit")
+func scenarioEveryBuildingAndUnitEntryIsRenderedByIsoKit() throws {
+    let wrong = try catalogFiles().filter { url in
+        let id = url.deletingPathExtension().lastPathComponent
+        // Roads are drawn by the road generator, an SVG source.
+        guard id.hasPrefix("building-") && id != "building-road" || ["walker", "animal", "ship"].contains(id) else { return false }
+        return try catalogSource(of: String(contentsOf: url, encoding: .utf8)) != "isokit"
+    }
+    #expect(wrong.isEmpty, "\(wrong.map(\.lastPathComponent))")
+}
+
+@Test("scenario: terrain entries are svg and goods icons committed pixel art")
+func scenarioTerrainIsSVGAndGoodsArePixelArt() throws {
+    for url in try catalogFiles() {
+        let id = url.deletingPathExtension().lastPathComponent
+        let source = try catalogSource(of: String(contentsOf: url, encoding: .utf8))
+        if id.hasPrefix("terrain-") || id == "building-road" { #expect(source == "svg", "\(id) is \(source)") }
+        if id.hasPrefix("good-") { #expect(source == "pixel", "\(id) is \(source)") }
+    }
 }
 
 /// `source = "<value>"` from the front matter, or "" for image-API briefs.
@@ -324,167 +216,4 @@ private func catalogSource(of body: String) -> String {
     return ""
 }
 
-@Test("scenario: sheet section enumerates every cell")
-func scenarioSheetSectionEnumeratesEveryCell() throws {
-    let files = try catalogFiles()
-    var failures: [String] = []
-    for url in files {
-        let body = try String(contentsOf: url, encoding: .utf8)
-        guard let sheet = sectionBody("Sheet", in: body) else {
-            failures.append("\(url.lastPathComponent): no Sheet section")
-            continue
-        }
-        guard let grid = parseGrid(in: sheet) else {
-            failures.append("\(url.lastPathComponent): Sheet missing `Grid: N cols × M rows`")
-            continue
-        }
-        let cells = Set(parseCellCoords(in: sheet).map { "\($0.0),\($0.1)" })
-        var expected: Set<String> = []
-        for row in 0 ..< grid.rows {
-            for col in 0 ..< grid.cols {
-                expected.insert("\(row),\(col)")
-            }
-        }
-        let missing = expected.subtracting(cells)
-        let unexpected = cells.subtracting(expected)
-        if !missing.isEmpty || !unexpected.isEmpty {
-            failures.append(
-                "\(url.lastPathComponent): missing=\(missing.sorted()) "
-                    + "unexpected=\(unexpected.sorted())"
-            )
-        }
-    }
-    #expect(failures.isEmpty, "Sheet enumeration failures:\n\(failures.joined(separator: "\n"))")
-}
-
-// MARK: - Requirement: Master reference image anchors inter-sprite cohesion
-
-@Test("scenario: master reference exists and is a png")
-// swiftlint:disable:next inclusive_language
-func scenarioMasterReferenceExistsAndIsAPng() {
-    let url = worktreeRoot().appendingPathComponent(
-        "Resources/Sprites.style/master-reference.png"
-    )
-    let exists = FileManager.default.fileExists(atPath: url.path)
-    #expect(exists, "Resources/Sprites.style/master-reference.png must exist")
-    let data = (try? Data(contentsOf: url, options: [.alwaysMapped])) ?? Data()
-    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
-    let signature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
-    let head = Array(data.prefix(signature.count))
-    #expect(head == signature, "master-reference must be a PNG; got first 8 bytes \(head)")
-}
-
-@Test("scenario: make sprites does not regenerate master reference")
-// swiftlint:disable:next inclusive_language
-func scenarioMakeSpritesDoesNotRegenerateMasterReference() throws {
-    // The pytest runs the offline regen with every output redirected
-    // into a tempdir; running `make sprites-offline` here would rewrite
-    // the committed atlas PNGs while other tests read them.
-    let process = Process()
-    process.currentDirectoryURL = worktreeRoot().appendingPathComponent("scripts")
-    process.executableURL = worktreeRoot().appendingPathComponent(".venv/sprites/bin/python")
-    process.arguments = ["-m", "pytest", "-q", "tests/test_master_reference.py"]
-    let pipe = Pipe()
-    process.standardOutput = pipe
-    process.standardError = pipe
-    try process.run()
-    process.waitUntilExit()
-    let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    #expect(process.terminationStatus == 0, "test_master_reference.py failed:\n\(output)")
-}
-
-@Test("scenario: make sprites-reference is the only path to regenerate")
-func scenarioMakeSpritesReferenceIsTheOnlyPathToRegenerate() throws {
-    let makefile = try String(
-        contentsOf: worktreeRoot().appendingPathComponent("Makefile"),
-        encoding: .utf8
-    )
-    // swiftformat:disable docComments
-    // Find the recipe under target `sprites-reference:` and confirm it
-    // invokes the pipeline with --regenerate-reference. Other targets
-    // MUST NOT mention --regenerate-reference.
-    func recipeFor(target: String) -> String {
-        let lines = makefile.split(separator: "\n", omittingEmptySubsequences: false)
-            .map(String.init)
-        var collecting = false
-        var collected: [String] = []
-        for line in lines {
-            if line.hasPrefix("\(target):") {
-                collecting = true
-                continue
-            }
-            if collecting {
-                if line.first == "\t" { collected.append(line) } else if !line.isEmpty {
-                    break
-                }
-            }
-        }
-        return collected.joined(separator: "\n")
-    }
-    // swiftformat:enable docComments
-    let referenceRecipe = recipeFor(target: "sprites-reference")
-    #expect(
-        referenceRecipe.contains("--regenerate-reference"),
-        "sprites-reference target must invoke pipeline with --regenerate-reference"
-    )
-    // No other target references --regenerate-reference.
-    let lines = makefile.split(separator: "\n").map(String.init)
-    let otherTargets = ["sprites:", "sprites-offline:", "sprites-verify:", "sprites-regen-check:"]
-    var violations: [String] = []
-    for target in otherTargets {
-        var collecting = false
-        var collected: [String] = []
-        for line in lines {
-            if line.hasPrefix(target) {
-                collecting = true
-                continue
-            }
-            if collecting {
-                if line.first == "\t" {
-                    collected.append(line)
-                } else if !line.isEmpty {
-                    break
-                }
-            }
-        }
-        let recipe = collected.joined(separator: "\n")
-        if recipe.contains("--regenerate-reference") {
-            violations.append(target)
-        }
-    }
-    #expect(
-        violations.isEmpty,
-        "non-reference target(s) regenerate master reference: \(violations)"
-    )
-}
-
-@Test("scenario: animation frames are declared adjacent")
-func scenarioAnimationFramesAreDeclaredAdjacent() throws {
-    let files = try catalogFiles()
-    var failures: [String] = []
-    for url in files {
-        let body = try String(contentsOf: url, encoding: .utf8)
-        guard let animation = sectionBody("Animation", in: body) else { continue }
-        let sequences = parseAnimationSequences(in: animation)
-        for (idx, seq) in sequences.enumerated() {
-            for step in 1 ..< seq.count {
-                let (row0, col0) = seq[step - 1]
-                let (row1, col1) = seq[step]
-                let sharesAxis = row0 == row1 || col0 == col1
-                let colDistOK = abs(col1 - col0) <= 1
-                let rowDistOK = abs(row1 - row0) <= 1
-                if !(sharesAxis && colDistOK && rowDistOK) {
-                    failures.append(
-                        "\(url.lastPathComponent) seq#\(idx): "
-                            + "(\(row0),\(col0)) -> (\(row1),\(col1)) not adjacent"
-                    )
-                }
-            }
-        }
-    }
-    #expect(
-        failures.isEmpty,
-        "animation adjacency failures:\n\(failures.joined(separator: "\n"))"
-    )
-}
 #endif

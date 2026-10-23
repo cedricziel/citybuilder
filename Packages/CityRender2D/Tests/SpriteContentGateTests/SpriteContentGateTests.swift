@@ -145,5 +145,17 @@ struct SpriteContentGateTests {
         #expect(report.exitCode != 0)
         #expect(report.output.contains("terrain-water-2.png frame_empty"))
     }
+
+    /// The threshold is the gate's own; it no longer reads a pipeline config file.
+    @Test("the gate runs without a pipeline config, at its own coherence threshold")
+    func gateRunsWithoutConfig() throws {
+        let root = temporaryResources()
+        try writePNG(waterFrame(glintPhase: 0), to: root.appendingPathComponent("Kit.atlas/terrain-water.png"))
+
+        let report = try SpriteContentGate.run(arguments: [root.path])
+
+        #expect(report.exitCode == 0, "\(report.output)")
+        #expect(SpriteContentGate.coherenceMaxDistance == 0.3)
+    }
 }
 #endif

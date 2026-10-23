@@ -11,22 +11,11 @@ shared with `building-house`. No operational animation.
 
 Rendered by IsoKit in the shared light rig. Three steps up: a wattle-and-daub hut under thatch, a rendered stone house under a tile roof behind a low yard wall, and a courtyard house with a columned portico under tile. Same 2×2 footprint and bottom anchor as `building-house`.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-house-antiquity` — a wattle-and-daub hut under thatch with a log pile
-- (0, 1): `building-house-tier2-antiquity` — a rendered stone house under a tile gable roof behind a yard wall
-- (0, 2): `building-house-tier3-antiquity` — a courtyard house with a columned portico under a tile hip roof
-- (0, 3): spare
-- (1, 0): spare
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
+- `building-house-antiquity` — a wattle-and-daub hut under thatch with a log pile
+- `building-house-tier2-antiquity` — a rendered stone house under a tile gable roof behind a yard wall
+- `building-house-tier3-antiquity` — a courtyard house with a columned portico under a tile hip roof
 
 ## Recipe
 

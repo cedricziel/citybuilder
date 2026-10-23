@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "pixel"
 ---
 ## Function
 
@@ -9,18 +9,12 @@ tooltips. Single static cell.
 ## Visual identity
 
 Two pale green hop cones with leafy scale rows on a twig with a leaf, outlined in `#1A1410`. Drawn by
-`scripts/generate_sprites_ai/procedural.py`.
+the retired procedural generator.
 
-## Sheet
+## Sprites
 
-Grid: 1 cols × 1 rows.
-
-- (0, 0): `good-hops` — static icon
-
-## Animation
-
-Static — no animation loop.
+- `good-hops` — static icon
 
 ## Recipe
 
-- SVG source: hand-authored icon, planned (goods icons family)
+- Source: committed pixel art in `Icons.atlas`, drawn by the retired procedural generator; task 4.9 replaces it with a hand-authored SVG icon

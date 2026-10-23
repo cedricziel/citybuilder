@@ -119,6 +119,9 @@ public final class IsoWorldScene: SKScene {
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
+    /// Whether the tree clumps sway, hold or stand still. Spec:
+    /// `rendering-2_5d` / Trees sway in the wind.
+    var treeSwayState: TreeSway.State = .running
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -218,6 +221,7 @@ public final class IsoWorldScene: SKScene {
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
         noteTick(snapshot.tickCount, now: currentTime)
+        updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)

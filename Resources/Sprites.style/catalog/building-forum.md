@@ -9,25 +9,14 @@ Mediterranean culture signature. Houses within 8 tiles of an operational forum p
 
 Rendered by IsoKit in the shared light rig. A paved square framed on its two back sides by white colonnades under tile, a bronze statue on a plinth, a fountain basin and a cypress.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-forum` — canonical idle base (unserved)
-- (0, 1): `building-forum-constructing-0` — stone pad
-- (0, 2): `building-forum-constructing-1` — timber frame
-- (0, 3): `building-forum-constructing-2` — walls with scaffolding
-- (1, 0): `building-forum-operational-0` — operational frame 0
-- (1, 1): `building-forum-operational-1` — operational frame 1
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Played only while served.
+- `building-forum` — canonical idle base (unserved)
+- `building-forum-constructing-0` — stone pad
+- `building-forum-constructing-1` — timber frame
+- `building-forum-constructing-2` — walls with scaffolding
+- `building-forum-operational-0` — operational frame 0
+- `building-forum-operational-1` — operational frame 1
 
 ## Recipe
 
