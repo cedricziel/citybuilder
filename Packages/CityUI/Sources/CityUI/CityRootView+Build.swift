@@ -24,8 +24,11 @@ extension CityRootView {
                                 hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap
                             )
                         )
-                        SessionBannerView(banner: session.banner)
-                            .padding(.top, 4)
+                        SessionBannerView(
+                            banner: session.banner,
+                            onResume: session.deficitHint == nil || session.isGameOver ? nil : { session.dismissDeficitHint() }
+                        )
+                        .padding(.top, 4)
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity)

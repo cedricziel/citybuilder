@@ -24,11 +24,13 @@ extension GameSession {
     /// and tools.
     public var banner: SessionBanner? {
         if isGameOver { return Self.gameOverBanner }
+        if let deficitHint { return deficitHint }
         guard let state = bannerState, world.tickCount < state.hidesAtTick else { return nil }
         return state.banner
     }
 
     func noteBannerEvents(in events: [WorldEvent]) {
+        defer { noteDeficitHint(in: events) }
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -88,14 +90,46 @@ extension GameSession {
         enqueue(.setExport(id, good))
     }
 
+    /// The first `bankruptcyWarning` of the session shows the deficit
+    /// hint, after the tick's other banners so it takes their place.
+    private func noteDeficitHint(in events: [WorldEvent]) {
+        if events.contains(where: { if case .bankruptcyWarning = $0 { true } else { false } }) {
+            showDeficitHint()
+        }
+    }
+
+    /// Shows the deficit hint once per session and holds the simulation.
+    func showDeficitHint() {
+        guard !hasShownDeficitHint else { return }
+        hasShownDeficitHint = true
+        let figures = world.playerTaxAndUpkeep
+        deficitHint = Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax)
+    }
+
+    /// Resume, the pause control or Esc: the simulation runs again.
+    public func dismissDeficitHint() {
+        deficitHint = nil
+    }
+
+    /// Spec: `platform-shells` / Deficit hint.
+    private static func deficitHint(upkeep: Int64, tax: Int64) -> SessionBanner {
+        SessionBanner(
+            title: "In the red: upkeep $\(upkeep) vs tax $\(tax)",
+            description: "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts."
+        )
+    }
+
     private func show(_ banner: SessionBanner) {
         bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
 }
 
-/// Parchment-coloured card announcing a history event or a new age.
+/// Parchment-coloured card announcing a history event or a new age. With
+/// `onResume` it holds the game and offers Resume (`deficit-hint` D1).
 struct SessionBannerView: View {
     let banner: SessionBanner?
+    var onResume: (() -> Void)?
+    @FocusState private var resumeFocused: Bool
 
     var body: some View {
         if let banner {
@@ -105,6 +139,14 @@ struct SessionBannerView: View {
                 Text(banner.description)
                     .font(.caption)
                     .multilineTextAlignment(.center)
+                if let onResume {
+                    Button("Resume", action: onResume)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.42, green: 0.29, blue: 0.16))
+                        .padding(.top, 4)
+                        .focused($resumeFocused)
+                        .onAppear { resumeFocused = true }
+                }
             }
             .foregroundStyle(Color(red: 0.24, green: 0.16, blue: 0.08))
             .padding(.horizontal, 14)
@@ -113,7 +155,7 @@ struct SessionBannerView: View {
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.42, green: 0.29, blue: 0.16), lineWidth: 2))
             .padding(.horizontal, 24)
             .panelTransition(.slide(.top))
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: onResume == nil ? .combine : .contain)
         }
     }
 }

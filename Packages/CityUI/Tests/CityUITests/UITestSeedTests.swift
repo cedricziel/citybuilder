@@ -89,6 +89,7 @@ func livedSeedHasResidents() {
 func argumentsPickTheSeed() {
     #expect(UITestSeed.world(fromArguments: []) == nil)
     #expect(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestCulture", "mediterranean"])?.culture == .mediterranean)
+    #expect(UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestAge", "modern"])?.age == .modern)
     #expect(UITestSeed.world(fromArguments: ["-uiTestSeedShore"])?.ships.count == 1)
     #expect(UITestSeed.world(fromArguments: ["-uiTestSeedPort"])?.buildings.values.contains { $0.kind == .port } == true)
     let town = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestShowcase", "craft"])

@@ -3,7 +3,8 @@
 ### D1: Positions are a pure function of town center, slot and tick
 
 - Each town center look has a `PlazaLayout`, measured on its sprite. It lists lanes of open spots plus the props to keep clear of:
-  - The Northern European IsoKit look has three lanes: between the hall and the stalls, along the front edge, and right of the yellow stall. Its props are the hall and tower, the well, both stalls, the barrels and the crate.
+  - The Northern European IsoKit look has two lanes: along the front edge, and right of the yellow stall. Its props are the hall and tower, the well, both stalls, the barrels and the crate. A lane between the hall and the stalls was dropped. The stalls are part of the town center sprite, so a figure behind them drew over their roofs.
+  - A tall prop hides a spot when part of its footprint shares the spot's screen column (u − v) and lies nearer the camera (larger u + v). No spot or walk may sit behind a tall prop. The crate and barrels are low, so they only have to be kept clear of.
   - The culture looks fill their footprint with the building, so their lanes run along the paved rim of the two front edges.
 - A test checks every spot, and every straight walk inside a lane, against the props.
 - Each slot belongs to one lane (slot mod lane count) and has a rank in it (slot div lane count).
@@ -21,7 +22,7 @@ Figures reuse the walker sprites:
 - A walking figure plays the walk animation for its facing.
 - A standing figure shows frame 0.
 
-Nodes are kept by (town center, slot). A figure draws just above its town center (`depthZ(depth) + 0.004`), so a building nearer the camera covers it. Strollers now sort the same way, by their road tile. A figure glides to each new 10 Hz position over 0.1 s. When no new tick has arrived for 0.3 s (the game is paused), walking figures drop to their standing frame. Its tint comes from five muted cloth colours at a blend factor of 0.35.
+Nodes are kept by (town center, slot). A figure draws just above its town center (`depthZ(depth) + 0.004`), so a building nearer the camera covers it. Strollers now sort the same way, by their road tile. A figure glides to each new 10 Hz position over 0.1 s. When no new tick has arrived for 0.3 s (the game is paused), walking figures drop to their standing frame. Its look, worker or woman, comes from a `DeterministicRNG` hash of (town center, slot), and its frames from `SpriteAtlas.walkerAnimation(facing:look:)`. Figures are not tinted, because a tint muddies the lit sprites.
 
 ### D4: Budget and Reduce Motion
 

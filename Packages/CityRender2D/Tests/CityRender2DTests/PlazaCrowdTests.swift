@@ -71,7 +71,7 @@ func scenarioFiguresStayOnThePlaza() {
     #expect(walked)
 }
 
-@Test("no spot or walk inside a lane crosses a prop", arguments: [PlazaLayout.northernEuropean, PlazaLayout.rim])
+@Test("no spot or walk inside a lane crosses a prop or passes behind one", arguments: [PlazaLayout.northernEuropean, PlazaLayout.rim])
 func lanesKeepClearOfProps(layout: PlazaLayout) {
     for lane in layout.lanes {
         for from in lane {
@@ -81,6 +81,8 @@ func lanesKeepClearOfProps(layout: PlazaLayout) {
                     let spot = (u: from.u + (to.u - from.u) * along, v: from.v + (to.v - from.v) * along)
                     let hit = layout.props.first { $0.contains(spot) }
                     #expect(hit == nil, "walk \(from) → \(to) crosses \(hit?.name ?? "")")
+                    let cover = layout.props.first { $0.hides(spot) }
+                    #expect(cover == nil, "walk \(from) → \(to) passes behind \(cover?.name ?? "")")
                 }
             }
         }
@@ -187,4 +189,28 @@ func lanesHoldTheirFigures(layout: PlazaLayout) {
         let figures = (0 ..< PlazaCrowdPlanner.maxPerPlaza).count { $0 % layout.lanes.count == index }
         #expect(lane.count >= figures)
     }
+}
+
+@MainActor
+@Test("scenario: a mixed crowd")
+func scenarioAMixedCrowd() {
+    let looks = (0 ..< PlazaCrowdPlanner.maxPerPlaza).map { PlazaCrowdPlanner.look(center: center.id, slot: $0) }
+    #expect(Set(looks) == Set(SpriteAtlas.WalkerLook.allCases))
+    #expect(looks == (0 ..< PlazaCrowdPlanner.maxPerPlaza).map { PlazaCrowdPlanner.look(center: center.id, slot: $0) })
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.reconcilePlazaCrowd(with: town(residents: 30, tick: 180), now: 0)
+    #expect(scene.plazaNodes.count == 8)
+    #expect(scene.plazaNodes.allSatisfy { key, shown in
+        shown.node.colorBlendFactor == 0 && shown.pose.look == PlazaCrowdPlanner.look(center: key.townCenter, slot: key.slot)
+    })
+}
+
+@Test("a tall prop hides what stands behind it, not what stands in front")
+func propsHideOnlyWhatIsBehind() {
+    let stall = PlazaLayout.Prop(name: "stall", alongU: 1 ... 1.5, alongV: 1 ... 1.5)
+    #expect(stall.hides((u: 0.9, v: 0.9)))
+    #expect(!stall.hides((u: 1.7, v: 1.7)))
+    #expect(!stall.hides((u: 0.5, v: 2.5)), "beside it, in another screen column")
+    #expect(!PlazaLayout.Prop(name: "crate", alongU: 1 ... 1.5, alongV: 1 ... 1.5, tall: false).hides((u: 0.9, v: 0.9)))
 }

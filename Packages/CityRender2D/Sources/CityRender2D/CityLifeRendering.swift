@@ -108,9 +108,9 @@ extension IsoWorldScene {
                 addChild(node)
             }
             // Lit sprites are never mirrored: each facing plays its own frames. Paused, they stand.
-            if strollerNodes[key]?.facing != facing || node.isWalking != walking {
+            if strollerNodes[key]?.facing != facing || strollerNodes[key]?.walking != walking {
                 node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing), moving: walking)
-                strollerNodes[key] = (node, facing)
+                strollerNodes[key] = StrollerVisual(node: node, facing: facing, walking: walking)
             }
             let from = IsoMath.screenPoint(forTile: stroller.from)
             let to = IsoMath.screenPoint(forTile: stroller.to)
@@ -120,6 +120,13 @@ extension IsoWorldScene {
             node.zPosition = Self.depthZ(depth) + Self.figureLift
         }
     }
+}
+
+/// A stroller's node and the facing and walk state it shows.
+struct StrollerVisual {
+    let node: SKSpriteNode
+    let facing: SpriteAtlas.WalkerFacing
+    let walking: Bool
 }
 
 struct StrollerKey: Hashable {
