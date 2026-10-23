@@ -21,14 +21,15 @@ final class SawdustLayerNode: SKNode {
         }
     }
 
-    /// Where the saw stands: the middle of the mill's front (+y) edge.
+    /// Where the saw stands: the middle of the mill's +x edge, under the
+    /// saw's sails on the sprite.
     static func saw(of mill: Building) -> CGPoint {
         let footprint = BuildingCatalog.spec(for: mill.kind).footprint
         let point = IsoMath.screenPoint(
-            forTileFractionalX: Double(mill.anchor.x) + Double(footprint.width - 1) / 2,
-            fractionalY: Double(mill.anchor.y + footprint.height) - 0.5
+            forTileFractionalX: Double(mill.anchor.x + footprint.width) - 0.5,
+            fractionalY: Double(mill.anchor.y) + Double(footprint.height - 1) / 2
         )
-        return CGPoint(x: point.x, y: point.y + 4)
+        return CGPoint(x: point.x, y: point.y + 6)
     }
 
     func reconcile(snapshot: WorldSnapshot, viewSize: CGSize, reduceMotion: Bool, still: Bool) {
@@ -78,7 +79,7 @@ final class SawdustLayerNode: SKNode {
         }
     }
 
-    static let birthRate: CGFloat = 5
+    static let birthRate: CGFloat = 8
 
     /// Freezes the puffs in the air, and lets none new out, while `still`.
     static func hold(_ emitter: SKEmitterNode, still: Bool) {
@@ -92,20 +93,20 @@ final class SawdustLayerNode: SKNode {
         emitter.name = emitterName
         emitter.particleTexture = AmbientLayerNode.puffTexture
         emitter.particleBirthRate = birthRate
-        emitter.particleLifetime = 1.1
-        emitter.particleLifetimeRange = 0.3
-        emitter.particlePositionRange = CGVector(dx: 6, dy: 2)
+        emitter.particleLifetime = 1.4
+        emitter.particleLifetimeRange = 0.4
+        emitter.particlePositionRange = CGVector(dx: 8, dy: 3)
         emitter.emissionAngle = .pi / 2
-        emitter.emissionAngleRange = 1.2
-        emitter.particleSpeed = 7
-        emitter.particleSpeedRange = 3
-        emitter.yAcceleration = -9
-        emitter.particleScale = 0.1
-        emitter.particleScaleRange = 0.04
-        emitter.particleScaleSpeed = 0.05
-        emitter.particleAlpha = 0.7
+        emitter.emissionAngleRange = 1
+        emitter.particleSpeed = 16
+        emitter.particleSpeedRange = 5
+        emitter.yAcceleration = -14
+        emitter.particleScale = 0.16
+        emitter.particleScaleRange = 0.05
+        emitter.particleScaleSpeed = 0.1
+        emitter.particleAlpha = 0.9
         emitter.particleAlphaSpeed = -0.6
-        emitter.particleColor = SKColor(red: 0.93, green: 0.85, blue: 0.66, alpha: 1)
+        emitter.particleColor = SKColor(red: 0.98, green: 0.93, blue: 0.8, alpha: 1)
         emitter.particleColorBlendFactor = 1
         return emitter
     }

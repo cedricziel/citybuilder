@@ -14,7 +14,7 @@ By day, every 8–15 s of scene time, one fish SHALL jump from a visible open-wa
 
 ### Requirement: Sawdust puffs at the sawmills
 
-Each working player sawmill in view (operational, with no building issue) SHALL show pale sawdust puffs at the middle of its front edge, from one emitter per mill that reuses the smoke puff texture. At most 8 mills SHALL show sawdust, by id. An emitter SHALL go back to a pool when its mill stops working or leaves the view, and come from the pool when one is needed. The puffs SHALL hold still at night and while the game is paused. There SHALL be no sawdust with Reduce Motion on or below zoom 0.5.
+Each working player sawmill in view (operational, with no building issue) SHALL show pale sawdust puffs below the saw, at the middle of its +x edge, from one emitter per mill that reuses the smoke puff texture. At most 8 mills SHALL show sawdust, by id. An emitter SHALL go back to a pool when its mill stops working or leaves the view, and come from the pool when one is needed. The puffs SHALL hold still at night and while the game is paused. There SHALL be no sawdust with Reduce Motion on or below zoom 0.5.
 
 #### Scenario: Sawdust puffs at a working sawmill
 - **WHEN** a working sawmill is in view by day
