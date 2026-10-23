@@ -36,32 +36,107 @@ public enum GatherWorkerPlanner {
     static let workTicks: UInt64 = 40
     static let restTicks: UInt64 = 20
 
+    /// The workers on screen. `trips` keeps each site's current trip from
+    /// call to call: a worker finishes the trip it is on, so a tree felled
+    /// or planted in the catchment never makes it jump. A trip is planned
+    /// again only at the rest point by the site, or when a tile on it stops
+    /// being walkable; then the worker turns for home from where it stands.
     public static func workers(
-        in snapshot: WorldSnapshot, xRange: ClosedRange<Int>, yRange: ClosedRange<Int>, clock: UInt64, ground: Ground
+        in snapshot: WorldSnapshot, visible: (x: ClosedRange<Int>, y: ClosedRange<Int>), clock: UInt64, ground: Ground,
+        trips: inout [EntityID: Trip]
     ) -> [Worker] {
         guard snapshot.camera.zoom >= minZoom else { return [] }
+        let (xRange, yRange) = visible
         let reach = World.lumberjackCatchmentRadius
+        let onScreen = { (site: Building) in xRange.contains(site.anchor.x) && yRange.contains(site.anchor.y) }
+        // Sites on screen take the budget first, then those just off it, each by id.
         let sites = snapshot.buildings.values.filter {
             ($0.kind == .lumberjackHut || $0.kind == .mine) && $0.state == .operational && $0.owner == .player
                 && snapshot.buildingIssues[$0.id] == nil
                 && (xRange.lowerBound - reach ... xRange.upperBound + reach).contains($0.anchor.x)
                 && (yRange.lowerBound - reach ... yRange.upperBound + reach).contains($0.anchor.y)
         }
-        .sorted { $0.id.raw < $1.id.raw }
+        .sorted { (onScreen($0) ? 0 : 1, $0.id.raw) < (onScreen($1) ? 0 : 1, $1.id.raw) }
         var result: [Worker] = []
+        var kept: [EntityID: Trip] = [:]
         for site in sites {
             guard result.count < maxWorkers else { break }
-            guard let trip = route(from: site, ground: ground) else { continue }
+            guard let trip = nextTrip(for: site, ground: ground, clock: clock, previous: trips[site.id]) else { continue }
+            kept[site.id] = trip
             result.append(worker(site, trip: trip, clock: clock))
         }
+        trips = kept
         return result
     }
 
-    /// A walk from beside the site into its woods or rock: the tiles in
-    /// order, each a 4-connected step from the one before, ending on the
-    /// forest or mountain tile the worker works at.
-    struct Trip {
+    /// One round trip: the tiles out to the worked tile, and the clock it began at.
+    public struct Trip: Equatable, Sendable {
         let path: [TileCoordinate]
+        let start: UInt64
+        /// Cut short and heading home: its last tile is wherever the worker
+        /// turned, not a tree or rock.
+        var homeward = false
+
+        var walkTicks: UInt64 {
+            UInt64(max(1, path.count - 1)) * ticksPerTile
+        }
+
+        var cycle: UInt64 {
+            walkTicks + workTicks + walkTicks + restTicks
+        }
+    }
+
+    /// The trip a site's worker is on at `clock`.
+    static func nextTrip(for site: Building, ground: Ground, clock: UInt64, previous: Trip?) -> Trip? {
+        guard let previous else {
+            // A first trip starts somewhere along its cycle, so workers seen
+            // together are not in step.
+            guard let path = route(from: site, ground: ground) else { return nil }
+            var rng = DeterministicRNG(seed: UInt64(site.id.raw) &* 0x94D0_49BB_1331_11EB)
+            let trip = Trip(path: path, start: 0)
+            return Trip(path: path, start: clock &- rng.next() % trip.cycle)
+        }
+        let elapsed = clock &- previous.start
+        let goalStands = previous.homeward || previous.path.last.map { ground.terrain($0) == wanted(by: site) } ?? false
+        guard isStandable(previous.path, site: site, ground: ground), goalStands else {
+            // Something was built on the way, or the tree is gone: head home
+            // from here along the tiles already walked, if they still stand.
+            let here = tileIndex(on: previous, elapsed: elapsed)
+            let walked = Array(previous.path[...here])
+            guard isStandable(walked, site: site, ground: ground) else { return nil }
+            let back = Trip(path: walked, start: 0)
+            return Trip(path: walked, start: clock &- (back.walkTicks + workTicks), homeward: true)
+        }
+        guard elapsed >= previous.cycle else { return previous }
+        // Back at the site: the next trip leaves from the same spot.
+        guard let path = route(from: site, ground: ground, leavingFrom: previous.path[0]) else { return nil }
+        let end = previous.start &+ previous.cycle
+        let next = Trip(path: path, start: end)
+        return clock &- end < next.cycle ? next : Trip(path: path, start: clock)
+    }
+
+    /// What a site's worker works at: forest for a hut, mountain for a mine.
+    static func wanted(by site: Building) -> TerrainType {
+        site.kind == .mine ? .mountain : .forest
+    }
+
+    /// Every tile still one a worker may stand on.
+    static func isStandable(_ path: [TileCoordinate], site: Building, ground: Ground) -> Bool {
+        let footprint = BuildingCatalog.spec(for: site.kind).footprint.tiles(anchor: site.anchor)
+        return path.allSatisfy { !footprint.contains($0) && (ground.isWalkable($0) || ground.terrain($0) == wanted(by: site)) }
+    }
+
+    /// The path tile nearest the worker `elapsed` ticks into a trip.
+    static func tileIndex(on trip: Trip, elapsed: UInt64) -> Int {
+        let last = trip.path.count - 1
+        let walk = trip.walkTicks
+        let steps = { (ticks: UInt64) in Int((Double(ticks) / Double(ticksPerTile)).rounded()) }
+        switch elapsed {
+        case ..<walk: return min(last, steps(elapsed))
+        case ..<(walk + workTicks): return last
+        case ..<(walk + workTicks + walk): return max(0, last - steps(elapsed - walk - workTicks))
+        default: return 0
+        }
     }
 
     /// Breadth first from the tiles beside the site, over free grass, road
@@ -69,7 +144,10 @@ public enum GatherWorkerPlanner {
     /// the worked tile is one of the reachable forest or mountain tiles at
     /// the edge of the woods or rock in the catchment, picked by a hash of
     /// the site.
-    static func route(from site: Building, ground: Ground) -> Trip? {
+    /// A walk from beside the site (from `leavingFrom`, while a worker may
+    /// still stand there) into its woods or rock: the tiles in order, each a
+    /// 4-connected step from the one before.
+    static func route(from site: Building, ground: Ground, leavingFrom: TileCoordinate? = nil) -> [TileCoordinate]? {
         let footprint = BuildingCatalog.spec(for: site.kind).footprint
         let reach = World.lumberjackCatchmentRadius
         let wanted: TerrainType = site.kind == .mine ? .mountain : .forest
@@ -87,8 +165,9 @@ public enum GatherWorkerPlanner {
         func neighbours(_ tile: TileCoordinate) -> [TileCoordinate] {
             steps.map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
         }
-        var queue = Array(Set(footprint.tiles(anchor: site.anchor).flatMap(neighbours).filter(canStand)))
+        let doorstep = Array(Set(footprint.tiles(anchor: site.anchor).flatMap(neighbours).filter(canStand)))
             .sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        var queue = leavingFrom.map { doorstep.contains($0) ? [$0] : doorstep } ?? doorstep
         var cameFrom: [TileCoordinate: TileCoordinate] = [:]
         var seen = Set(queue)
         var goals: [TileCoordinate] = []
@@ -110,17 +189,14 @@ public enum GatherWorkerPlanner {
         while let back = cameFrom[path[0]] {
             path.insert(back, at: 0)
         }
-        return Trip(path: path)
+        return path
     }
 
     static func worker(_ site: Building, trip: Trip, clock: UInt64) -> Worker {
         // A site whose tree or rock is right at the door still takes a
         // short turn to carry its load in.
-        let legs = UInt64(max(1, trip.path.count - 1))
-        let walk = legs * ticksPerTile
-        let cycle = walk + workTicks + walk + restTicks
-        var rng = DeterministicRNG(seed: UInt64(site.id.raw) &* 0x94D0_49BB_1331_11EB)
-        let time = (clock &+ rng.next() % cycle) % cycle
+        let walk = trip.walkTicks
+        let time = min(clock &- trip.start, trip.cycle - 1)
         let load: CarrierLoad = site.kind == .mine ? .crate : .logs
         let home = trip.path[0], far = trip.path[trip.path.count - 1]
         // Between two neighbouring tiles of the path, `ticks` into the walk.
@@ -177,15 +253,19 @@ extension IsoWorldScene {
             return
         }
         lastGatherPass = pass
-        let workers = range.map { visible in
-            GatherWorkerPlanner.workers(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: ambientClock(for: snapshot),
-                ground: GatherWorkerPlanner.Ground(
-                    isWalkable: { self.isYard($0, in: snapshot) },
-                    terrain: { snapshot.occupiedTiles[$0] == nil ? snapshot.terrain(at: $0) : nil }
-                )
+        let ground = GatherWorkerPlanner.Ground(
+            isWalkable: { self.isYard($0, in: snapshot) },
+            terrain: { snapshot.occupiedTiles[$0] == nil ? snapshot.terrain(at: $0) : nil }
+        )
+        var workers: [GatherWorkerPlanner.Worker] = []
+        if let visible = range {
+            workers = GatherWorkerPlanner.workers(
+                in: snapshot, visible: (visible.xRange, visible.yRange), clock: ambientClock(for: snapshot),
+                ground: ground, trips: &gatherTrips
             )
-        } ?? []
+        } else {
+            gatherTrips = [:]
+        }
         let sites = Set(workers.map(\.site))
         for (site, shown) in gatherNodes where !sites.contains(site) {
             shown.node.removeFromParent()
@@ -200,8 +280,7 @@ extension IsoWorldScene {
                 addChild(made)
                 return made
             }()
-            if hypot(node.position.x - target.x, node.position.y - target.y) > 0.01 { node.glide(to: target) }
-            node.zPosition = Self.figureZ(at: target)
+            node.glide(to: target, sortingBy: Self.figureZ(at:))
             if gatherNodes[worker.site]?.pose != pose {
                 Self.apply(pose, to: node)
             }
