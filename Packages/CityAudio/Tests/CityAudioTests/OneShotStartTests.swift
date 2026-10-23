@@ -6,59 +6,22 @@ import Testing
 // #191: one-shot pool nodes are driven from one serial queue, never from the calling thread, which
 // is the main thread during `GameSession.step`.
 
-/// A bundle holding one 50 ms silent `blip.wav`, laid out as the cue player looks files up.
-private let blipBundle: Bundle? = {
-    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("one-shot-start-tests")
-    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    guard let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1),
-          let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 2205),
-          let file = try? AVAudioFile(forWriting: folder.appendingPathComponent("blip.wav"), settings: format.settings)
-    else { return nil }
-    buffer.frameLength = 2205
-    try? file.write(from: buffer)
-    return Bundle(url: folder)
-}()
+/// One 50 ms silent `blip.wav`.
+@MainActor
+private let blipBundle = silentBundle(folder: "one-shot-start-tests", file: "blip.wav", seconds: 0.05)
 
 private let blip = DispatchedCue(cue: Bindings.Cue(file: "sfx/blip.wav", bus: .sfx))
-
-/// The steps the driver took, with the thread each ran on.
-private final class Trace: @unchecked Sendable {
-    private let lock = NSLock()
-    private struct Entry {
-        let node: ObjectIdentifier
-        let step: OneShotDriver.Step
-        let onMain: Bool
-    }
-
-    private var entries: [Entry] = []
-
-    func record(_ node: ObjectIdentifier, _ step: OneShotDriver.Step) {
-        lock.withLock { entries.append(Entry(node: node, step: step, onMain: Thread.isMainThread)) }
-    }
-
-    var steps: [OneShotDriver.Step] {
-        lock.withLock { entries.map(\.step) }
-    }
-
-    var nodes: [ObjectIdentifier] {
-        lock.withLock { entries.map(\.node) }
-    }
-
-    var anyOnMain: Bool {
-        lock.withLock { entries.contains(where: \.onMain) }
-    }
-}
 
 /// A cue player whose driver steps are traced.
 @MainActor
 private final class Rig {
     let engine = AudioEngine()
-    let trace = Trace()
+    let trace = NodeTrace()
     let player: EngineCuePlayer
 
     init(poolSize: Int) throws {
         player = try EngineCuePlayer(engine: engine, bundle: #require(blipBundle), oneShotPoolSize: poolSize)
-        player.oneShots.trace = { [trace] in trace.record($0, $1) }
+        engine.nodes.trace = { [trace] in trace.record($0, $1) }
     }
 
     /// Plays `count` blips back to back, after checking the engine came up.
@@ -71,12 +34,12 @@ private final class Rig {
 
     /// Waits until the driver has handled every cue so far.
     func settle() {
-        player.oneShots.queue.sync {}
+        engine.nodes.queue.sync {}
     }
 
     /// Holds the driver's queue for `seconds`, as a slow start would.
     func stall(_ seconds: Double) {
-        player.oneShots.queue.async { Thread.sleep(forTimeInterval: seconds) }
+        engine.nodes.queue.async { Thread.sleep(forTimeInterval: seconds) }
     }
 }
 
@@ -149,4 +112,18 @@ func engineStopWhileAStartWaits() throws {
     rig.settle()
     #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
     #expect(rig.player.oneShotNodes(on: .sfx).first?.isPlaying == true)
+}
+
+@MainActor
+@Test("after a configuration change the next one-shot starts its node again")
+func configurationChangeRestartsPoolNodes() throws {
+    let rig = try Rig(poolSize: 1)
+    defer { rig.engine.stop() }
+    try rig.play(1)
+    rig.settle()
+    Thread.sleep(forTimeInterval: 0.08)
+    changeConfiguration(of: rig.engine)
+    try rig.play(1)
+    rig.settle()
+    #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
 }
