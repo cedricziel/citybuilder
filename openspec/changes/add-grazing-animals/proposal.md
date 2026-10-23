@@ -4,7 +4,7 @@ Farms sit in empty meadows and houses stand without a yard. Animals near the far
 
 ## What Changes
 
-- Each operational farm keeps 2–4 sheep, and each grain farm 1–2 cows. They stand on free grass within 2 tiles of the farm: grass with no building, road or field on it and no tree or rock from the terrain object map. They mostly graze, and every 6–10 s one walks a short way to another free spot. At night they stand still. A farm with no free grass nearby has no animals.
+- Each operational farm keeps 2–4 sheep, and each grain farm 1–2 cows. They stand on free grass within 2 tiles of the farm: grass with no building, road or field on it and no tree or rock from the terrain object map. They mostly graze, and every 6–10 s one steps to a neighbouring free tile, so a walk never crosses a building, tree or water. They move by a clock that stops at night, so they hold their place from dusk to dawn without jumping. In winter they're kept inside. A farm with no free grass nearby has no animals.
 - Each inhabited peasant house keeps 1–2 hens in the yard just in front of it (free grass or road), never on its own plot, where the log piles, barrels and garden beds are part of the house sprite. Every few seconds a hen hops to a new spot. The hens are inside at night.
 - Animals are drawn from the snapshot alone and never touch the simulation. Positions are a pure function of the building, slot and tick.
 - Budget:
