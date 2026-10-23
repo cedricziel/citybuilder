@@ -1,8 +1,9 @@
 // isokit: render building and unit sprites from IsoKit recipes (capability `iso-art-kit`).
 //
-//   isokit render --catalog <dir> --out <dir> [--all] [--scales 1,2]
+//   isokit render --catalog <dir> --out <dir> [--all] [--only <id>] [--scales 1,2]
 //       Renders recipes whose catalog entry declares source = "isokit" (or every recipe with --all)
-//       to RGBA PNGs in <dir>. `make sprites` quantizes them into the atlases.
+//       to RGBA PNGs in <dir>. `make sprites` quantizes them into the atlases. --only renders one
+//       recipe, as `make app-icon` does at 8x.
 //   isokit check --catalog <dir>
 //       Recipe/catalog agreement and cell fit. Needs no GPU.
 //   isokit chimneys --catalog <dir>
@@ -15,6 +16,7 @@ struct Options {
     var catalog = URL(fileURLWithPath: "Resources/Sprites.style/catalog")
     var output: URL?
     var all = false
+    var only: String?
     var scales = [1, 2]
 
     init(_ arguments: [String]) throws {
@@ -25,6 +27,7 @@ struct Options {
             case "--catalog": catalog = try URL(fileURLWithPath: Self.value(flag, &rest))
             case "--out": output = try URL(fileURLWithPath: Self.value(flag, &rest))
             case "--all": all = true
+            case "--only": only = try Self.value(flag, &rest)
             case "--scales": scales = try Self.value(flag, &rest).split(separator: ",").compactMap { Int($0) }
             default: throw UsageError("unknown option \(flag)")
             }
@@ -72,7 +75,11 @@ func run() throws -> Int32 {
             return 1
         }
         guard let output = options.output else { throw UsageError("render needs --out <dir>") }
-        let recipes = options.all ? Recipes.all : RenderSelection.recipes(Recipes.all, migratedIn: catalog)
+        var recipes = options.all ? Recipes.all : RenderSelection.recipes(Recipes.all, migratedIn: catalog)
+        if let only = options.only {
+            recipes = recipes.filter { $0.id == only }
+            guard !recipes.isEmpty else { throw UsageError("no recipe \(only) to render") }
+        }
         let started = Date()
         let written = try RenderJob(recipes: recipes, output: output, scales: options.scales).run { print($0) }
         print(String(
@@ -83,7 +90,10 @@ func run() throws -> Int32 {
         ))
         return 0
     default:
-        throw UsageError("usage: isokit render --catalog <dir> --out <dir> [--all] [--scales 1,2] | isokit check|chimneys --catalog <dir>")
+        throw UsageError(
+            "usage: isokit render --catalog <dir> --out <dir> [--all] [--only <id>] [--scales 1,2]"
+                + " | isokit check|chimneys --catalog <dir>"
+        )
     }
 }
 
