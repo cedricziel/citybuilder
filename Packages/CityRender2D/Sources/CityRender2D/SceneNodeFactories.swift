@@ -149,7 +149,8 @@ extension IsoWorldScene {
         let coord = spec.coord
         let texture: SKTexture
         var textureName: String?
-        var cultureName: String?
+        // The stem of a look with its own operational frames: a culture variant or a shore facing.
+        var animationBase: String?
         let signature = Self.signatureTexture(kind: kind, look: look)
         if let (name, signatureTexture) = signature {
             textureName = name
@@ -158,7 +159,7 @@ extension IsoWorldScene {
             kind: kind, state: state, houseTier: houseTier, rival: look.rival
         ) {
             textureName = name
-            cultureName = name
+            animationBase = name
             texture = cultureTexture
         } else if kind == .house, houseTier != .peasants, state != .constructing {
             // Spec: `rendering-2_5d` / Houses render their tier.
@@ -170,16 +171,12 @@ extension IsoWorldScene {
             textureName = roadLink.assetName
             texture = SpriteAtlas.textureOrPlaceholder(named: roadLink.assetName)
         } else if let orientation {
-            // Shore buildings live under the `building-<kind>-<orientation>-*`
-            // grammar; resolve the right state-keyed name and skip the
-            // non-orientation fallback (which would magenta out).
-            let name = ShoreOrientationMath.textureName(
+            (texture, animationBase) = shoreLook(
                 kind: kind,
                 orientation: orientation,
                 state: state,
-                frame: state == .constructing ? (constructionFrameIndex ?? 0) : 0
+                constructionFrame: constructionFrameIndex
             )
-            texture = SpriteAtlas.textureOrPlaceholder(named: name)
         } else {
             texture = textureForBuilding(
                 kind: kind,
@@ -195,7 +192,7 @@ extension IsoWorldScene {
         applyLook(look, to: node)
         addPennant(for: look, kind: kind, to: node)
         if signature == nil {
-            armAnimation(on: node, kind: kind, state: state, cultureName: cultureName)
+            armAnimation(on: node, kind: kind, state: state, animationBase: animationBase)
         }
         if isWaitingForMaterials, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
@@ -204,6 +201,22 @@ extension IsoWorldScene {
             node.addChild(makeNoRoadBadgeNode(spriteHeight: node.size.height))
         }
         return node
+    }
+
+    /// A shore building's texture and the stem its operational frames hang off. Shore buildings
+    /// live under the `building-<kind>-<orientation>-*` grammar; resolve the right state-keyed name
+    /// and skip the non-orientation fallback (which would magenta out).
+    private func shoreLook(
+        kind: BuildingKind, orientation: ShoreOrientation, state: BuildingState, constructionFrame: Int?
+    ) -> (SKTexture, String) {
+        let name = ShoreOrientationMath.textureName(
+            kind: kind,
+            orientation: orientation,
+            state: state,
+            frame: state == .constructing ? (constructionFrame ?? 0) : 0
+        )
+        let stem = ShoreOrientationMath.textureName(kind: kind, orientation: orientation, state: nil, frame: nil)
+        return (SpriteAtlas.textureOrPlaceholder(named: name), stem)
     }
 
     /// Red disc with a white bar floating over a building that no road
@@ -267,12 +280,12 @@ extension IsoWorldScene {
         node.addChild(Self.makePennantNode(colourHex: rival.colour.hex, on: node, footprint: BuildingCatalog.spec(for: kind).footprint))
     }
 
-    private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, cultureName: String?) {
-        guard let cultureName else {
+    private func armAnimation(on node: SKSpriteNode, kind: BuildingKind, state: BuildingState, animationBase: String?) {
+        guard let animationBase else {
             armOperationalAnimationIfNeeded(on: node, kind: kind, state: state)
             return
         }
-        if state == .operational, let action = Self.cultureOperationalAction(baseName: cultureName, kind: kind) {
+        if state == .operational, let action = Self.operationalAction(baseName: animationBase, kind: kind) {
             node.run(action, withKey: "anim")
         }
     }

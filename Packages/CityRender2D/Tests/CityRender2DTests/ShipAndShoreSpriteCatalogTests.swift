@@ -110,29 +110,31 @@ func scenarioAll16ShipSpritesDeclared() {
 
 // MARK: - Shore-building sprite inventory
 
-@Test("scenario: all 20 port sprites declared")
-func scenarioAll20PortSpritesDeclared() {
+@Test("scenario: all 40 port sprites declared")
+func scenarioAll40PortSpritesDeclared() {
     let names = Set(SpriteAtlas.catalogSpriteNames.filter { $0.hasPrefix("building-port-") })
-    #expect(names.count == 20)
+    #expect(names.count == 40)
     for orientation in SpriteName.shoreOrientations {
         #expect(names.contains("building-port-\(orientation)"))
         for frame in 0 ..< 3 {
             #expect(names.contains("building-port-\(orientation)-constructing-\(frame)"))
         }
-        #expect(names.contains("building-port-\(orientation)-operational-0"))
+        for frame in 0 ..< 6 {
+            #expect(names.contains("building-port-\(orientation)-operational-\(frame)"))
+        }
     }
 }
 
-@Test("scenario: all 24 shipyard sprites declared")
-func scenarioAll24ShipyardSpritesDeclared() {
+@Test("scenario: all 36 shipyard sprites declared")
+func scenarioAll36ShipyardSpritesDeclared() {
     let names = Set(SpriteAtlas.catalogSpriteNames.filter { $0.hasPrefix("building-shipyard-") })
-    #expect(names.count == 24)
+    #expect(names.count == 36)
     for orientation in SpriteName.shoreOrientations {
         #expect(names.contains("building-shipyard-\(orientation)"))
         for frame in 0 ..< 3 {
             #expect(names.contains("building-shipyard-\(orientation)-constructing-\(frame)"))
         }
-        for frame in 0 ..< 2 {
+        for frame in 0 ..< 5 {
             #expect(names.contains("building-shipyard-\(orientation)-operational-\(frame)"))
         }
     }
@@ -140,12 +142,12 @@ func scenarioAll24ShipyardSpritesDeclared() {
 
 // MARK: - Catalog counts
 
-@Test("the catalog declares 16 ships, 20 port sprites and 24 shipyard sprites")
+@Test("the catalog declares 16 ships, 40 port sprites and 36 shipyard sprites")
 func catalogCountsShipsAndShoreSprites() {
     let names = Set(SpriteAtlas.catalogSpriteNames)
     #expect(names.count(where: { $0.hasPrefix("ship-") }) == 16)
-    #expect(names.count(where: { $0.hasPrefix("building-port-") }) == 20)
-    #expect(names.count(where: { $0.hasPrefix("building-shipyard-") }) == 24)
+    #expect(names.count(where: { $0.hasPrefix("building-port-") }) == 40)
+    #expect(names.count(where: { $0.hasPrefix("building-shipyard-") }) == 36)
 }
 
 @Test("pre-existing catalog entries stay declared")
