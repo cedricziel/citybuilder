@@ -41,9 +41,10 @@ public final class IsoWorldScene: SKScene {
     private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
-    /// Open water, drawn by one backdrop sprite rather than a sprite per tile, and the tiles it holds.
-    var deepWaterNode: SKSpriteNode?
-    var deepWaterMask: DeepWaterMask?
+    /// Plain grass, beach and water, drawn by one backdrop sprite rather than a sprite per tile, and
+    /// the looks it shows.
+    var groundBackdropNode: SKSpriteNode?
+    var groundBackdropMap: GroundBackdropMap?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.
@@ -350,6 +351,7 @@ public final class IsoWorldScene: SKScene {
         }
         appliedSeason = season
         guard changesLook else { return }
+        refreshGroundBackdropLooks()
         for (coord, spec) in terrainSpecs {
             guard case let .terrain(kind, transition, object) = spec.kind,
                   Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil

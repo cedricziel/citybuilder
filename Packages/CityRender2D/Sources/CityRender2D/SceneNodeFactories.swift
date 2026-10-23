@@ -89,14 +89,21 @@ extension IsoWorldScene {
         kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition? = nil, object: TerrainObject? = nil
     ) -> SKNode {
         let objectName = object.flatMap { object in [object.assetName(in: appliedSeason), object.assetName].first(where: hasSprite) }
-        // Forest and rock stand on grass, built on or not (terrain-v2, design D3).
-        let floor: TerrainType = TerrainObject.kinds.contains(kind) ? .grass : kind
-        let ground = makeGroundNode(kind: floor, coord: coord, transition: transition)
-        if let objectName {
-            let clump = makeObjectNode(named: objectName, coord: coord)
+        let clump = objectName.map { name in
+            let clump = makeObjectNode(named: name, coord: coord)
             if object?.kind == .forest {
                 TreeSway.arm(clump, coord: coord, state: treeSwayState)
             }
+            return clump
+        }
+        // The ground backdrop draws plain ground: the tile is its tree or rock alone, at the same z.
+        if groundBackdropMap?.covers(coord) == true {
+            return clump ?? SKNode()
+        }
+        // Forest and rock stand on grass, built on or not (terrain-v2, design D3).
+        let floor: TerrainType = TerrainObject.kinds.contains(kind) ? .grass : kind
+        let ground = makeGroundNode(kind: floor, coord: coord, transition: transition)
+        if let clump {
             ground.addChild(clump)
         }
         return ground
