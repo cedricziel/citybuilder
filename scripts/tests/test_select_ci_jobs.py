@@ -182,7 +182,10 @@ def test_the_real_manifests_parse() -> None:
 def test_the_workflow_selects_everything_with_the_same_outputs() -> None:
     root = Path(__file__).resolve().parents[2]
     workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    shell_keys = re.findall(r'^ +echo "([a-z_]+)=', workflow, re.M)
+    # Only select_all(): the step echoes other outputs (test_matrix) too.
+    body = re.search(r"^ +select_all\(\) \{\n(.*?)^ +\}$", workflow, re.M | re.S)
+    assert body is not None, "ci.yml has no select_all() function"
+    shell_keys = re.findall(r'echo "([a-z_]+)=', body.group(1))
     output = select_ci_jobs.everything(root).github_output()
 
     assert shell_keys == [line.split("=", 1)[0] for line in output.splitlines()]
