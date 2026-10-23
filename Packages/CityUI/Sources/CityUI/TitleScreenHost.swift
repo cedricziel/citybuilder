@@ -69,7 +69,7 @@ public struct TitleScreenHost: View {
         if let session = viewModel.committedSession {
             // Each game gets its own map view, so no figure of another game carries over.
             gameView(session: session)
-                .id(ObjectIdentifier(session))
+                .id(session.instanceID)
         } else {
             titleView
         }
