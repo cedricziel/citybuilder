@@ -16,10 +16,21 @@ public enum SpriteAnimation {
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
 
+        /// An animal walking, grazing or pecking (realistic-walkers).
+        case animal(SpriteAtlas.AnimalAction, SpriteAtlas.WalkerFacing)
+
         /// Every resident look and carrier load in every facing (realistic-walkers).
         public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
         }
+
+        /// Every animal action in every facing.
+        public static let animals: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
+            SpriteAtlas.AnimalAction.allCases.map { AnimationKey.animal($0, facing) }
+        }
+
+        /// People and animals: every figure sprite family the kit renders.
+        public static let figures = people + animals
     }
 
     /// `.forever` arms `SKAction.repeatForever(animate(...))` on the node.
@@ -58,6 +69,12 @@ public enum SpriteAnimation {
         case .walker, .carrier:
             // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
             Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
+        case let .animal(action, _):
+            switch action {
+            case .sheepWalk, .cowWalk: Entry(frameCount: 8, timePerFrame: 0.12, loop: .forever)
+            case .sheepGraze, .cowGraze: Entry(frameCount: 4, timePerFrame: 0.3, loop: .forever)
+            case .hen: Entry(frameCount: 4, timePerFrame: 0.15, loop: .forever)
+            }
         }
     }
 
@@ -92,6 +109,8 @@ public enum SpriteAnimation {
             "\(look.stem)-\(facing.rawValue)-\(frame)"
         case let .carrier(load, facing):
             "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
+        case let .animal(action, facing):
+            "\(action.stem)-\(facing.rawValue)-\(frame)"
         }
     }
 

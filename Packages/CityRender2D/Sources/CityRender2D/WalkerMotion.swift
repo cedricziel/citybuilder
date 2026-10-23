@@ -23,16 +23,28 @@ extension SKSpriteNode {
         return node
     }
 
-    /// Shows the first of `frames` and, while `moving`, loops them at `key`'s pace. The loop comes from
-    /// the shared action cache when the frames are `key`'s own.
+    /// Shows the first of `frames`, `key`'s own, and, while `moving`, loops them at `key`'s pace, from
+    /// the shared action cache when the atlas has them. Asking again for the cycle already playing leaves
+    /// it running.
     func playWalkCycle(_ key: SpriteAnimation.AnimationKey, frames: [SKTexture]?, moving: Bool = true) {
+        if moving, isWalking, userData?[Self.walkKey] as? SpriteAnimation.AnimationKey == key { return }
         removeAction(forKey: Self.walkKey)
+        userData?.removeObject(forKey: Self.walkKey)
         guard let frames, let first = frames.first else { return }
         texture = first
         size = first.size()
         guard moving, frames.count > 1, let entry = SpriteAnimation.entry(for: key) else { return }
-        let loop = SpriteAnimation.loopingAction(for: key) ?? .repeatForever(.animate(with: frames, timePerFrame: entry.timePerFrame))
-        run(loop, withKey: Self.walkKey)
+        run(
+            SpriteAnimation.loopingAction(for: key) ?? .repeatForever(.animate(with: frames, timePerFrame: entry.timePerFrame)),
+            withKey: Self.walkKey
+        )
+        if userData == nil { userData = [:] }
+        userData?[Self.walkKey] = key
+    }
+
+    /// Whether the walk cycle is playing.
+    var isWalking: Bool {
+        action(forKey: Self.walkKey) != nil
     }
 }
 

@@ -89,13 +89,14 @@ extension IsoWorldScene {
         return glow
     }
 
-    func reconcileStrollers(with snapshot: WorldSnapshot) {
+    func reconcileStrollers(with snapshot: WorldSnapshot, now: TimeInterval) {
         let wanted = StrollerPlanner.strollers(in: snapshot)
         let keys = Set(wanted.map { StrollerKey(house: $0.house, slot: $0.slot) })
         for (key, shown) in strollerNodes where !keys.contains(key) {
             shown.node.removeFromParent()
             strollerNodes.removeValue(forKey: key)
         }
+        let walking = !simulationIsStill(now: now)
         for stroller in wanted {
             let key = StrollerKey(house: stroller.house, slot: stroller.slot)
             let facing = stroller.facing
@@ -106,10 +107,10 @@ extension IsoWorldScene {
                 node = SKSpriteNode.walker()
                 addChild(node)
             }
-            if strollerNodes[key]?.facing != facing {
-                // Lit sprites are never mirrored: each facing plays its own frames.
-                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing))
-                strollerNodes[key] = (node, facing)
+            // Lit sprites are never mirrored: each facing plays its own frames. Paused, they stand.
+            if strollerNodes[key]?.facing != facing || strollerNodes[key]?.walking != walking {
+                node.playWalkCycle(.walker(facing), frames: SpriteAtlas.walkerAnimation(facing: facing), moving: walking)
+                strollerNodes[key] = StrollerVisual(node: node, facing: facing, walking: walking)
             }
             let from = IsoMath.screenPoint(forTile: stroller.from)
             let to = IsoMath.screenPoint(forTile: stroller.to)
@@ -119,6 +120,13 @@ extension IsoWorldScene {
             node.zPosition = Self.depthZ(depth) + Self.figureLift
         }
     }
+}
+
+/// A stroller's node and the facing and walk state it shows.
+struct StrollerVisual {
+    let node: SKSpriteNode
+    let facing: SpriteAtlas.WalkerFacing
+    let walking: Bool
 }
 
 struct StrollerKey: Hashable {

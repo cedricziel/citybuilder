@@ -19,9 +19,11 @@ MASTER_REFERENCE = STYLE_DIR / "master-reference.png"
 
 ATLAS_DIRS = {
     "terrain-": REPO_ROOT / "Resources" / "Kit.atlas",  # every terrain family has migrated to the art kit
-    # Buildings, people and ships are art-kit renders too; the Buildings and Units atlases are retired.
+    # Buildings, people, animals and ships are art-kit renders too; the Buildings and Units atlases are retired.
     "building-": REPO_ROOT / "Resources" / "Kit.atlas",
     "walker-": REPO_ROOT / "Resources" / "Kit.atlas",
+    "carrier-": REPO_ROOT / "Resources" / "Kit.atlas",
+    "animal-": REPO_ROOT / "Resources" / "Kit.atlas",
     "ship-": REPO_ROOT / "Resources" / "Kit.atlas",
     "good-": REPO_ROOT / "Resources" / "Icons.atlas",
 }
