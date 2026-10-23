@@ -14,7 +14,7 @@ The first hour should teach that food leads to residents and residents lead to t
 
 All of this is delivered without a tutorial wall:
 
-- A "First steps" glass card under the top-right HUD buttons lists the five steps with check circles and shows one collection's tax, upkeep and net, with the net in red when negative. It never pauses, can be hidden, and leaves once every step is met or the first year ends. On compact widths it collapses to one line.
+- A "First steps" glass card under the top-right HUD buttons lists the five steps with check circles and shows one collection's tax, upkeep and net, with the net in red when negative. It never pauses, can be hidden, and leaves once every step has been met in the session. It has no time limit. On narrow or short screens it collapses to one line.
 - While the card shows, the tool strip caption warns when a house is armed with no farm and names the upkeep of any building that has one.
 - The deficit hint's advice changes to food, houses and the market.
 
@@ -32,6 +32,6 @@ Out of scope: a scripted tutorial, forced camera moves, new tax or upkeep rules,
 ## Impact
 
 - **CityUI**: a `FirstStepsGuide` model on `GameSession`, the card view on the game screen, the tool strip caption, and the deficit hint text.
-- **CityCore**: no source change. Everything the guide reads (`playerTaxAndUpkeep`, buildings, `MarketLedger`) is already public.
+- **CityCore**: two read-only queries, `World.isRoadConnected` and `World.upkeepPerCollection(of:at:)`. The rest of what the guide reads (`playerTaxAndUpkeep`, buildings, `MarketLedger`) is already public. The simulation and save format are unchanged.
 - **Tests**: `PlayerBot` gains ordered `firstSteps`; the weekly `rival-sweep` job runs the guided and naive Hard starts for five years.
 - **Determinism**: none; the simulation is unchanged.

@@ -75,7 +75,7 @@ The Claude Design canvas put today's HUD next to three options: A, a first-steps
 `PlayerBot` gains `firstSteps`, an ordered list of buildings it places before anything else, buying missing wood or planks at the market when `tradesAtMarket` is set. `PlayerBot.guideSteps` is the guide's order. The sweep checks, on Hard, seeds 0–9, both layouts, 12,000 ticks:
 
 - Guided (guide steps plus the market): never bankrupt, and at least 25 residents in the player's houses. The threshold sits below the market-only variant's worst solvent start (32) and the guided minimum (29). Population is noisy from seed to seed, so the threshold is set to catch a stalled town, not a dip. The stalled no-market guided runs end at 0–8 residents on 11 of 20 starts.
-- Naive control (no steps, no market): at least one start goes bankrupt. Today all 20 do.
+- Naive control (no steps, no market): seeds 0 and 5 on both layouts each go bankrupt. Two seeds keep the weekly job short; the full measurement had all 20 starts go bankrupt.
 
 Both run behind `RIVAL_SWEEP=1` in the weekly `rival-sweep` job, because a five-year bot game takes about two minutes in a debug build.
 
