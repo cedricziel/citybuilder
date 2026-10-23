@@ -206,6 +206,30 @@ func clumpLevelWithABuildingSortsBehindIt() throws {
 }
 
 @MainActor
+@Test("scenario: Rock and trees level with a building keep one order in every season")
+func rockAndTreesLevelWithABuildingKeepOneOrder() throws {
+    // Depth 9 for all three: the house at (7, 0) (7 + 0 + 2), the outcrop on (6, 2) and the clump on (5, 3).
+    let rock = TileCoordinate(x: 6, y: 2), tree = TileCoordinate(x: 5, y: 3)
+    func snapshot(_ season: Season) -> WorldSnapshot {
+        forestSnapshot(season: season, buildings: [house(1, at: 7, 0)], paint: [rock: .mountain])
+    }
+    let source = Source(snapshot(.spring))
+    let scene = scene(source)
+    var orders: Set<Bool> = []
+    for season in Season.allCases {
+        source.snapshot = snapshot(season)
+        scene.update(1)
+        let houseZ = try #require(scene.buildingNodes[TileCoordinate(x: 7, y: 0)]).zPosition
+        let rockZ = try #require(clump(at: rock, in: scene)).zPosition
+        let treeZ = try #require(clump(at: tree, in: scene)).zPosition
+        #expect(rockZ < houseZ && treeZ < houseZ, "\(season)")
+        #expect(rockZ != treeZ, "\(season): objects at one depth never tie")
+        orders.insert(treeZ < rockZ)
+    }
+    #expect(orders.count == 1, "the order between them never changes")
+}
+
+@MainActor
 @Test("scenario: A building placed in a live forest clears its clump and thins its neighbours")
 func buildingPlacedInALiveForest() {
     let source = Source(forestSnapshot())
@@ -219,6 +243,46 @@ func buildingPlacedInALiveForest() {
     #expect(clump(at: .init(x: 3, y: 3), in: scene) == nil)
     let under = ground(at: .init(x: 3, y: 3), in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String
     #expect(under?.hasPrefix("terrain-grass") == true)
+}
+
+@Test("Overlapping objects at one depth stay apart in Float32 on the largest map")
+func overlappingObjectsStayApartOnTheLargestMap() {
+    // Depth 400: the far corner of a 300 x 300 map is 599. Neighbours that can overlap sit 1 or 2
+    // columns apart; each must stay behind the building at its depth and differ in Float32.
+    for column in 200 ..< 203 {
+        let here = TileCoordinate(x: column, y: 399 - column)
+        let house = Float(IsoWorldScene.depthZ(Double(here.x + here.y + 1)))
+        let objectZ = Float(IsoWorldScene.objectZ(at: here))
+        #expect(objectZ < house)
+        for step in 1 ... 2 {
+            let other = Float(IsoWorldScene.objectZ(at: TileCoordinate(x: column + step, y: 399 - column - step)))
+            #expect(other != objectZ, "column \(column) and \(column + step)")
+        }
+    }
+}
+
+@MainActor
+@Test("A mine on rock hides the outcrops under it, and demolishing it brings them back")
+func mineOnRockHidesItsOutcrops() {
+    // A 4 x 4 rock at (2...5, 2...5) beside the forest square; the 2 x 2 mine sits on (3, 3).
+    var rock: [TileCoordinate: TerrainType] = [:]
+    for y in 2 ... 5 {
+        for x in 2 ... 5 {
+            rock[TileCoordinate(x: x, y: y)] = .mountain
+        }
+    }
+    let mine = Building(id: EntityID(raw: 1), kind: .mine, anchor: TileCoordinate(x: 3, y: 3), state: .operational)
+    let footprint = BuildingCatalog.spec(for: .mine).footprint.tiles(anchor: mine.anchor)
+    let source = Source(forestSnapshot(paint: rock))
+    let scene = scene(source)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) != nil })
+    source.snapshot = forestSnapshot(buildings: [mine], paint: rock)
+    scene.update(1)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) == nil })
+    #expect(clump(at: .init(x: 2, y: 2), in: scene) != nil)
+    source.snapshot = forestSnapshot(paint: rock)
+    scene.update(2)
+    #expect(footprint.allSatisfy { clump(at: $0, in: scene) != nil })
 }
 
 @MainActor
@@ -247,6 +311,17 @@ func forestsTurnInAutumn() {
     #expect(names.count == 9 && names.allSatisfy { $0.contains("-autumn") })
 }
 
+@MainActor
+@Test("scenario: Rock keeps its look in autumn")
+func rockKeepsItsLookInAutumn() {
+    let rock = TileCoordinate(x: 7, y: 7)
+    let source = Source(forestSnapshot(season: .autumn, paint: [rock: .mountain]))
+    let scene = scene(source)
+    let name = clump(at: rock, in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String
+    #expect(name?.hasPrefix("terrain-mountain-") == true && name?.contains("-autumn") == false)
+    #expect(objectNames(scene).filter { $0.hasPrefix("terrain-forest-") }.allSatisfy { $0.contains("-autumn") })
+}
+
 @Test("Culling keeps the tiles the screen shows and drops the corners of the tile-space box")
 func cullingKeepsOnlyTheScreen() throws {
     let camera = Camera(centerX: 50, centerY: 50, zoom: 1)
@@ -271,4 +346,54 @@ func clumpBelowTheBottomCornerStays() {
     #expect(Culling.screenBounds(camera: camera, viewSize: view).contains(point))
     let range = Culling.visibleTileRange(camera: camera, viewSize: view, mapWidth: 200, mapHeight: 200, margin: Culling.screenMargin)
     #expect(range.map { $0.xRange.contains(tile.x) && $0.yRange.contains(tile.y) } == true)
+}
+
+@Test("scenario: Rock thins toward the edge")
+func rockThinsTowardTheEdge() throws {
+    let rock = map(40, 40) { x, y in (4 ..< 36).contains(x) && (4 ..< 36).contains(y) ? .mountain : .grass }
+    var interior: [TerrainObject.Density: Int] = [:]
+    for along in 4 ..< 36 {
+        #expect(rock.object(at: .init(x: along, y: 4))?.density == .sparse)
+        #expect(rock.object(at: .init(x: 4, y: along))?.density == .sparse)
+    }
+    for y in 10 ..< 30 {
+        for x in 10 ..< 30 {
+            try interior[#require(rock.object(at: .init(x: x, y: y))?.density), default: 0] += 1
+        }
+    }
+    // The interior mixes open stretches, ordinary rock and tall tors.
+    #expect((interior[.dense] ?? 0) > 0 && (interior[.peak] ?? 0) > 0 && (interior[.medium] ?? 0) > 0)
+    #expect(interior[.sparse] == nil)
+}
+
+@Test("scenario: Object names route to the Kit atlas")
+func objectNamesRouteToTheKitAtlas() {
+    let name = "terrain-forest-dense-autumn-v2"
+    #expect(SpriteAtlasRouting.atlasName(for: name) == "Kit")
+    #expect(TextureFiltering.stem(of: name) == "terrain-forest-dense-autumn")
+    #expect(TextureFiltering.mode(for: name) == .linear)
+}
+
+@Test("scenario: Every object sprite ships")
+func everyObjectSpriteShips() {
+    let kit = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Resources/Kit.atlas")
+    let densities: [TerrainType: [TerrainObject.Density]] = [
+        .forest: [.sparse, .medium, .dense],
+        .mountain: [.sparse, .medium, .dense, .peak]
+    ]
+    let files = densities.flatMap { kind, list in
+        list.flatMap { density in
+            (0 ..< TerrainObject.variants).flatMap { variant in
+                Season.allCases.flatMap { season in
+                    let name = TerrainObject(kind: kind, density: density, variant: variant).assetName(in: season)
+                    return ["\(name).png", "\(name)@2x.png"]
+                }
+            }
+        }
+    }
+    let missing = files.filter { !FileManager.default.fileExists(atPath: kit.appendingPathComponent($0).path) }
+    #expect(missing.isEmpty, "\(missing)")
 }

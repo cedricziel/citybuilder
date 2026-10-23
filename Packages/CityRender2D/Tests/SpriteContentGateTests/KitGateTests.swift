@@ -102,20 +102,21 @@ struct KitGateTests {
     func terrainObjectsSkipTheDiamondRules() throws {
         let root = temporaryResources()
         let tree = image { x, y in abs(x - 32) < 6 && y < 28 ? water : nil } // tall, narrow, off the diamond
-        try writePNG(tree, to: root.appendingPathComponent("Kit.atlas/terrain-forest-single.png"))
+        try writePNG(tree, to: root.appendingPathComponent("Kit.atlas/terrain-forest-sparse.png"))
         let spruce = image { x, y in abs(x - 32) < 6 && y < 28 ? glint : nil }
-        try writePNG(spruce, to: root.appendingPathComponent("Kit.atlas/terrain-forest-single-v1.png"))
+        try writePNG(spruce, to: root.appendingPathComponent("Kit.atlas/terrain-forest-sparse-v1.png"))
         try writePNG(tree, to: root.appendingPathComponent("Kit.atlas/terrain-grass.png"))
 
         let failures = try SpriteContentGate.inspect(resourcesRoot: root, coherenceMaxDistance: 0.9)
 
-        #expect(!failures.contains { $0.file.hasPrefix("terrain-forest-single") })
+        #expect(!failures.contains { $0.file.hasPrefix("terrain-forest-sparse") })
         #expect(failures.contains { $0.file == "terrain-grass.png" && $0.reason == .terrainCoverageBelowThreshold })
         #expect(SpriteContentGate.isTerrainObject("terrain-mountain-peak-winter-v3@2x.png"))
         #expect(!SpriteContentGate.isTerrainObject("terrain-forest-autumn.png"))
         #expect(!SpriteContentGate.isTerrainObject("terrain-forest-dense-mask.png"))
         #expect(!SpriteContentGate.isTerrainObject("terrain-forest-dense-spring-v1.png"))
         #expect(!SpriteContentGate.isTerrainObject("building-forest-dense.png"))
+        #expect(!SpriteContentGate.isTerrainObject("terrain-forest-single.png"))
     }
 
     @Test("scenario: Every atlas PNG has an @2x twin")

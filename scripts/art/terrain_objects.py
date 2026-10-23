@@ -1,6 +1,6 @@
-"""Terrain object sprites as SVG sources (change `terrain-v2`, design D5): tree clumps for now.
+"""Terrain object sprites, tree clumps and rock outcrops, as SVG sources (change `terrain-v2`, design D5).
 
-`art.flora` ray-casts each object at @2x on the CPU; the result enters the SVG step
+`art.flora` and `art.rocks` ray-cast each object at @2x on the CPU; the result enters the SVG step
 as an embedded image, so `art.svg_sprites` renders both scales like every other terrain sprite.
 Ray-casting takes seconds per sprite, so renders are cached under `.build/art/objects`, keyed by
 the sprite name and the source of every module that shapes it.
@@ -17,18 +17,20 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from art import flora, ground
+from art import flora, ground, rocks
 
 CACHE = Path(os.environ.get("ART_OBJECT_CACHE", Path(__file__).resolve().parents[2] / ".build" / "art" / "objects"))
 VARIANTS = 4
-TREES = ("single", "sparse", "medium", "dense")
+TREES = ("sparse", "medium", "dense")
+ROCKS = ("sparse", "medium", "dense", "peak")
 TREE_SEASONS = ("", "autumn", "winter")
+ROCK_SEASONS = ("", "winter")
 
 
 def names() -> list[str]:
     """Every object sprite: `terrain-<kind>-<density>[-<season>][-v<n>]`."""
     out = []
-    for kind, densities, seasons in (("forest", TREES, TREE_SEASONS),):
+    for kind, densities, seasons in (("forest", TREES, TREE_SEASONS), ("mountain", ROCKS, ROCK_SEASONS)):
         for density in densities:
             for season in seasons:
                 for variant in range(VARIANTS):
@@ -46,7 +48,7 @@ def parse(name: str) -> tuple[str, str, str, int]:
 
 def _fingerprint() -> str:
     digest = hashlib.sha256()
-    for module in (flora, ground):
+    for module in (flora, rocks, ground):
         digest.update(Path(module.__file__).read_bytes())
     return digest.hexdigest()[:16]
 
@@ -57,7 +59,7 @@ def render(name: str) -> np.ndarray:
     if path.exists():
         return np.load(path)
     kind, density, season, variant = parse(name)
-    image = flora.sprite(density, variant, season).astype(np.float32)
+    image = (flora if kind == "forest" else rocks).sprite(density, variant, season).astype(np.float32)
     CACHE.mkdir(parents=True, exist_ok=True)
     np.save(path, image)
     return image
