@@ -91,13 +91,43 @@ public enum CellFit {
         return problems
     }
 
+    /// A building's baked shadow falls across its plot and past it; it may not leave the sprite.
+    static let buildingShadowMargin: CGFloat = 2
+
+    /// How far a building's baked shadow reaches from the cell's centre line, at any stage. The body is
+    /// checked on its own: its plot spans the cell's full width on purpose.
+    static func shadowHalfSpan(of recipe: Recipe) -> CGFloat {
+        let centre = CGFloat(recipe.cell.widthPx) / 2
+        return fitBuilds(of: recipe).flatMap { _, root in
+            corners(of: root).filter { $0.y > 0.01 }.map { abs(Projection.screen(shadow(of: $0), in: recipe.cell).x - centre) }
+        }.max() ?? 0
+    }
+
+    /// `recipe` in a cell wide enough for its shadow, in 16 pt steps, centred on the same anchor; a
+    /// recipe that already fits keeps its cell.
+    public static func roomForShadow(_ recipe: Recipe) -> Recipe {
+        let needed = 2 * (shadowHalfSpan(of: recipe) + buildingShadowMargin)
+        guard needed > CGFloat(recipe.cell.widthPx) else { return recipe }
+        let width = Int((needed / 16).rounded(.up)) * 16
+        let cell = recipe.cell
+        return recipe.with(cell: SpriteCell(footprint: cell.footprint, rows: cell.rows, heightPx: cell.heightPx, widthPx: width))
+    }
+
     /// Human-readable problems, one per clipped edge; empty when the recipe fits at every stage.
     public static func problems(in recipe: Recipe) -> [String] {
         var problems: [String] = []
         let edgeTolerance = edgeTolerance(for: recipe)
         for (stage, root) in fitBuilds(of: recipe) {
             let world = corners(of: root)
-            if recipe.unit { problems += unitProblems(recipe, stage, world) }
+            if recipe.unit {
+                problems += unitProblems(recipe, stage, world)
+            } else {
+                let shade = world.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell).x }
+                if let left = shade.min(), let right = shade.max(), left < 0 || right > CGFloat(recipe.cell.widthPx) {
+                    problems
+                        .append("\(recipe.id) \(stage): shadow spans \(Int(left))…\(Int(right)) pt outside width \(recipe.cell.widthPx)")
+                }
+            }
             let points = world.map { Projection.screen($0, in: recipe.cell) }
             let top = points.map(\.y).max() ?? 0
             let left = points.map(\.x).min() ?? 0
