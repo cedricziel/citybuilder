@@ -122,6 +122,15 @@ public extension GameSession {
         !world.research.isAvailable(kind)
     }
 
+    /// A drawer tile's caption: its cost, or the tech it waits on. Spec:
+    /// `platform-shells` / Locked palette entries.
+    func drawerCaption(for kind: BuildingKind) -> String {
+        if isLocked(kind), let tech = Tech.unlocking(kind) {
+            return "Needs \(tech.displayName)"
+        }
+        return "$\(BuildingCatalog.spec(for: kind).cost)"
+    }
+
     /// True when a later tech replaced `kind`. Spec: `platform-shells` /
     /// Palette hides obsolete buildings.
     func isObsolete(_ kind: BuildingKind) -> Bool {
