@@ -59,7 +59,7 @@ private func catalogId(forSpriteName name: String) -> String {
 @Test("scenario: every committed atlas png has a catalog entry")
 func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
     // A migrated brief lists its sprites by name, transitions included.
-    let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSheetNames)
+    let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSpriteNames)
     let atlases = [
         "Resources/Kit.atlas",
         "Resources/Icons.atlas"
@@ -74,9 +74,7 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
             // `@2x` twins and night lights (`-lights`) belong to their sprite's entry.
             let stem = (entry as NSString).deletingPathExtension.replacingOccurrences(of: "@2x", with: "")
                 .replacingOccurrences(of: "-lights(-[0-9]+)?$", with: "", options: .regularExpression)
-            // The overlay-* family is renderer-internal, not a catalog
-            // entry — skip the routing check for it.
-            if stem.hasPrefix("overlay-") || listed.contains(stem) { continue }
+            if listed.contains(stem) { continue }
             let id = catalogId(forSpriteName: stem)
             let catalog = catalogDir.appendingPathComponent("\(id).md")
             if !FileManager.default.fileExists(atPath: catalog.path) {

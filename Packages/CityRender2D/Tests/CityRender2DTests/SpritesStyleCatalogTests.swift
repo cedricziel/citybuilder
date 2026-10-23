@@ -117,6 +117,8 @@ private func expectedCatalogIds() -> Set<String> {
             if let name = IsoWorldScene.seasonalTerrainName(kind: terrain, season: season) { ids.insert(name) }
         }
     }
+    // The status badge drawn over a waiting construction site.
+    ids.insert(IsoWorldScene.waitingBadgeNodeName)
     ids.insert("walker")
     ids.insert("animal")
     ids.insert("ship")
