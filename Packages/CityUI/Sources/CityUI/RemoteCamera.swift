@@ -72,13 +72,21 @@ public extension GameSession {
         }
     }
 
-    /// Runs after every camera move.
-    /// On Apple TV the camera center stays on the map, and a pending
-    /// placement follows the reticle (design D5).
+    /// How far past the map's edge the camera center may go, in tiles.
+    nonisolated static let cameraMapMargin = 8.0
+
+    /// Runs after every camera move. The camera center stays within
+    /// `cameraMapMargin` of the map, so the island can't be lost; on Apple
+    /// TV it stays on the map, and a pending placement follows the reticle
+    /// (design D5). Spec: `rendering-2_5d` / Camera stays near the map.
     internal func cameraDidMove() {
-        guard clampsCameraToMap, world.mapWidth > 0, world.mapHeight > 0 else { return }
-        world.camera.centerX = min(max(world.camera.centerX, 0), Double(world.mapWidth).nextDown)
-        world.camera.centerY = min(max(world.camera.centerY, 0), Double(world.mapHeight).nextDown)
-        pendingPlacement?.anchor = reticleTile
+        guard world.mapWidth > 0, world.mapHeight > 0 else { return }
+        let (width, height) = (Double(world.mapWidth), Double(world.mapHeight))
+        let (low, highX, highY) = clampsCameraToMap
+            ? (0, width.nextDown, height.nextDown)
+            : (-Self.cameraMapMargin, width + Self.cameraMapMargin, height + Self.cameraMapMargin)
+        world.camera.centerX = min(max(world.camera.centerX, low), highX)
+        world.camera.centerY = min(max(world.camera.centerY, low), highY)
+        if clampsCameraToMap { pendingPlacement?.anchor = reticleTile }
     }
 }
