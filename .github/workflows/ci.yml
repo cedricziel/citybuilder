@@ -43,6 +43,7 @@ jobs:
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
       audio: ${{ steps.select.outputs.audio }}
+      web: ${{ steps.select.outputs.web }}
 
     steps:
       - name: Checkout
@@ -81,6 +82,7 @@ jobs:
             echo "determinism_linux=true"
             echo "determinism_compare=true"
             echo "audio=true"
+            echo "web=true"
           }
           case "$EVENT_NAME" in
             pull_request) BASE_SHA="$PR_BASE_SHA" ;;
