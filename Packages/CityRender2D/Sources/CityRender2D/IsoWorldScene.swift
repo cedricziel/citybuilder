@@ -109,6 +109,10 @@ public final class IsoWorldScene: SKScene {
     var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
+    /// Fish jumping near the coast. Spec: `rendering-2_5d` / Fish jump near the coast.
+    let fishLayer = FishLayerNode()
+    /// Sawdust at the working sawmills. Spec: `rendering-2_5d` / Sawdust puffs at the sawmills.
+    let sawdustLayer = SawdustLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
@@ -233,6 +237,7 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
+        reconcileWaterAndMills(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)
         reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
