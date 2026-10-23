@@ -99,3 +99,21 @@ private final class EndSessionStore: SaveStoreFacade, @unchecked Sendable {
         World.newGame()
     }
 }
+
+@MainActor
+@Test("scenario: a new game ends the old one before it starts")
+func newGameEndsTheOldOneFirst() {
+    var log: [String] = []
+    var count = 0
+    let viewModel = TitleScreenViewModel(saveStore: EndSessionStore(), sessionFactory: { world in
+        count += 1
+        log.append("start \(count)")
+        let session = GameSession(world: world)
+        let number = count
+        session.onEnd = { log.append("end \(number)") }
+        return session
+    })
+    viewModel.commit(world: World.newGame())
+    viewModel.commit(world: World.newGame())
+    #expect(log == ["start 1", "end 1", "start 2"])
+}
