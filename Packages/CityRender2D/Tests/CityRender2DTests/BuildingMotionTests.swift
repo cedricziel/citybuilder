@@ -113,3 +113,30 @@ func operationalShoreBuildingsRunTheirAnimation() throws {
     scene.buildingMotionState = .stopped
     #expect(try speed(shoreNode(.port, facing: .e, in: scene)) == 0)
 }
+
+/// A culture look is drawn on its base sprite, but under Reduce Motion it rests on its operational
+/// frame 0, like every other animated building.
+@MainActor
+@Test("a culture look stopped by Reduce Motion rests on its operational frame 0")
+func cultureLookRestsOnItsFirstOperationalFrame() throws {
+    let scene = IsoWorldScene()
+    scene.culture = .mediterranean
+    scene.hasSprite = { _ in true }
+    let base = try #require(IsoWorldScene.cultureTextureName(kind: .townCenter, houseTier: .peasants, culture: .mediterranean))
+    let entry = try #require(SpriteAnimation.entry(for: .buildingOperational(.townCenter)))
+    let frames = (0 ..< entry.frameCount).map { _ in SKTexture() }
+    var stubs = [base: SKTexture()]
+    for (index, frame) in frames.enumerated() {
+        stubs[SpriteAnimation.assetName(for: .buildingOperational(.townCenter, stem: base), frame: index)] = frame
+    }
+    SpriteAtlas.stub(stubs)
+    defer { SpriteAtlas.stub([:]) }
+    scene.buildingMotionState = .stopped
+    let spec = SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
+        kind: .townCenter, state: .operational, footprint: BuildingCatalog.spec(for: .townCenter).footprint,
+        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
+    ))
+    let node = try #require(scene.makeBuildingNode(for: spec) as? SKSpriteNode)
+    #expect(speed(node) == 0)
+    #expect(node.texture === frames[0])
+}
