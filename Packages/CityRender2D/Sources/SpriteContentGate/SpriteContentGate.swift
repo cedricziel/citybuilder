@@ -2,10 +2,16 @@
 import Foundation
 import ImageIO
 
-/// Content checks for committed sprite PNGs. The byte-identical regen
-/// check proves the atlas reproduces from `_sheets/`; this proves the
+/// Content checks for committed sprite PNGs. The art pipeline's tolerance
+/// check proves the atlas reproduces from its recipes; this proves the
 /// atlas shows something sane. Spec: `sprite-asset-pipeline`.
 public enum SpriteContentGate {
+    /// Maximum chi-squared distance between an animation frame's or variant's
+    /// 16-bin palette histogram and its base sprite's. Known-good frames (grass,
+    /// road variants, lumberjack, mountain variants) stay below 0.3; the broken
+    /// water and beach frames it was calibrated on landed above it.
+    public static let coherenceMaxDistance = 0.3
+
     /// Allowed drift, in pixels, of an operational frame's left, right
     /// and bottom edges from its base sprite's.
     public static let silhouetteTolerance = 2
@@ -102,15 +108,13 @@ public enum SpriteContentGate {
 
     /// Entry point shared by the `sprite-content-gate` executable and
     /// tests: `<resources-dir> [--max-distance <d>]`. Without the flag
-    /// the threshold is read from `Sprites.style/pipeline.toml`.
+    /// the threshold is `coherenceMaxDistance`.
     public static func run(arguments: [String]) throws -> Report {
         guard let rootPath = arguments.first else {
             return Report(exitCode: 2, output: "usage: sprite-content-gate <resources-dir> [--max-distance <d>]\n")
         }
         let root = URL(fileURLWithPath: rootPath)
-        guard let distance = try flagDistance(arguments) ?? pinnedCoherenceDistance(resourcesRoot: root) else {
-            return Report(exitCode: 2, output: "coherence_max_distance missing from Sprites.style/pipeline.toml\n")
-        }
+        let distance = flagDistance(arguments) ?? coherenceMaxDistance
         let failures = try inspect(resourcesRoot: root, coherenceMaxDistance: distance)
         let lines = failures.map { "\($0.file) \($0.reason.rawValue)\n" }.joined()
         if failures.isEmpty {
@@ -180,18 +184,6 @@ public enum SpriteContentGate {
     private static func flagDistance(_ arguments: [String]) -> Double? {
         guard let flag = arguments.firstIndex(of: "--max-distance"), flag + 1 < arguments.count else { return nil }
         return Double(arguments[flag + 1])
-    }
-
-    static func pinnedCoherenceDistance(resourcesRoot: URL) throws -> Double? {
-        let toml = resourcesRoot.appendingPathComponent("Sprites.style/pipeline.toml")
-        guard FileManager.default.fileExists(atPath: toml.path) else { return nil }
-        for line in try String(contentsOf: toml, encoding: .utf8).split(separator: "\n") {
-            let parts = line.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count == 2, parts[0] == "coherence_max_distance" {
-                return Double(parts[1])
-            }
-        }
-        return nil
     }
 
     private static func atlasDirectories(in root: URL) throws -> [URL] {
