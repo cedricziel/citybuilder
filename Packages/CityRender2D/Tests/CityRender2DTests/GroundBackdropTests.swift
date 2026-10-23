@@ -137,6 +137,7 @@ func treesAndRocksKeepTheirPlaceOverTheBackdrop() throws {
     // SpriteKit keeps z in Float.
     #expect(Float(clump.zPosition) == Float(IsoWorldScene.objectZ(at: wood)))
     #expect(clump.position == IsoMath.screenPoint(forTile: wood))
+    #expect(clump.action(forKey: TreeSway.key) != nil, "it still sways")
 }
 
 @Test("scenario: Each tile animates on its own phase")
