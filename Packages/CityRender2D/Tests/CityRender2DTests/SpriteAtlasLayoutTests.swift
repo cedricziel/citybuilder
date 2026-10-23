@@ -241,25 +241,29 @@ private func facingSprites() -> (facings: Int, names: [String]) {
     return (facings, names)
 }
 
-/// Houses and workshops glow at night through `<stem>-lights`, added over the sprite: every house look
-/// ships one at both scales, and every lights file sits beside the sprite it lights.
+/// Houses and workshops glow at night through `<stem>-lights-<n>`, added over the sprite: every house
+/// look ships each variant at both scales, and every lights file sits beside the sprite it lights.
 @Test("scenario: Every house look ships its lights")
 func nightLightsAreCommitted() throws {
     let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
     let files = try Set(FileManager.default.contentsOfDirectory(atPath: kit.path))
     let houses = TextureFiltering.kitRenderedStems.filter { $0.hasPrefix("building-house") }
     #expect(houses.count == 60, "three base tiers, nine culture looks, 48 age looks")
-    let unlit = houses.filter { !files.contains("\($0)-lights.png") || !files.contains("\($0)-lights@2x.png") }
-    #expect(unlit.isEmpty, "house looks without night lights: \(unlit.sorted())")
-    let lights = files.filter { $0.hasSuffix("-lights.png") }
-    #expect(lights.count > houses.count, "the workshops have lights too")
+    let variants = 0 ..< WindowLights.variants
+    let unlit = houses.filter { house in
+        variants.contains { !files.contains("\(house)-lights-\($0).png") || !files.contains("\(house)-lights-\($0)@2x.png") }
+    }
+    #expect(unlit.isEmpty, "house looks without all their night lights: \(unlit.sorted())")
+    let lights = files.filter { $0.range(of: #"-lights-\d+\.png$"#, options: .regularExpression) != nil }
+    #expect(lights.count > houses.count * variants.count, "the workshops have lights too")
     let orphans = lights.filter { name in
-        let sprite = String(name.dropLast("-lights.png".count))
-        return !files.contains("\(sprite).png") || !files.contains("\(sprite)-lights@2x.png")
+        let lit = String(name.dropLast(".png".count))
+        let sprite = String(lit[..<lit.range(of: "-lights-", options: .backwards)!.lowerBound])
+        return !files.contains("\(sprite).png") || !files.contains("\(lit)@2x.png")
     }
     #expect(orphans.isEmpty, "lights without their sprite or @2x twin: \(orphans.sorted())")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-bakery-lights") == "Kit")
-    #expect(SpriteAtlasRouting.atlasName(for: "building-house-tier2-modern-east-asian-lights") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-bakery-lights-0") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "building-house-tier2-modern-east-asian-lights-2") == "Kit")
 }
 
 /// Routing and the committed files must agree. A stem listed as kit-rendered with a frame left in
