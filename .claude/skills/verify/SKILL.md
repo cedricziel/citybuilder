@@ -47,6 +47,7 @@ Debug builds take launch flags that set up a scene, so a shot needs no clicks an
 | `-uiTestSeedLived`       | The town with farms and workshops working and residents in the houses.                                                                                     |
 | `-uiTestSeedArchipelago` | A new archipelago game, the largest map (seed 0), for performance shots.                                                                                   |
 | `-uiTestShowStats`       | Shows the frame rate and the node and draw counts in the corner of the map.                                                                                |
+| `-uiTestFirstSteps`      | Keeps the first-hour guide ("First steps" card), which every other `-uiTest…` launch starts with dismissed.                                                  |
 | `-uiTestStartGame`       | Skips the title and starts the game at once, from the seed above (or a regular new game).                                                                  |
 | `-uiTestCamera x,y,zoom` | Puts the seeded game's camera on tile (x, y) at that zoom (0.25 to 4).                                                                                     |
 
