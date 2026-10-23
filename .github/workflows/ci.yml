@@ -43,6 +43,7 @@ jobs:
       determinism_linux: ${{ steps.select.outputs.determinism_linux }}
       determinism_compare: ${{ steps.select.outputs.determinism_compare }}
       audio: ${{ steps.select.outputs.audio }}
+      web: ${{ steps.select.outputs.web }}
 
     steps:
       - name: Checkout
@@ -81,6 +82,7 @@ jobs:
             echo "determinism_linux=true"
             echo "determinism_compare=true"
             echo "audio=true"
+            echo "web=true"
           }
           case "$EVENT_NAME" in
             pull_request) BASE_SHA="$PR_BASE_SHA" ;;
@@ -144,6 +146,41 @@ jobs:
           "$RUNNER_TEMP/audio/bin/pip" install --quiet "numpy==$(sed -n 's/^numpy==//p' scripts/requirements.txt)"
       - name: Sounds and music match their recipes
         run: make audio-check music-check PYTHON="$RUNNER_TEMP/audio/bin/python"
+
+  # design/web is the React recreation of the HUD for Claude Design; the
+  # app doesn't use it, so nothing else builds it. Its build inlines the
+  # sprite atlases, hence `Resources/*.atlas/` selects it too. Both npm
+  # scripts run gen-sprites.mjs first, so no separate step does.
+  web:
+    name: design/web typecheck and build
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: design/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: design/web/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
 
   lint:
     name: lint
@@ -551,7 +588,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [changes, lint, test, sprites, audio-linux, build, gamedata-fixture, determinism-linux, determinism-compare]
+    needs: [changes, lint, test, sprites, audio-linux, build, gamedata-fixture, determinism-linux, determinism-compare, web]
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
