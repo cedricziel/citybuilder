@@ -43,7 +43,8 @@ struct CitybuilderTVApp: App {
                                 IsoWorldScene.RouteOverlay(waypoints: $0.waypoints, redSegments: $0.redSegments, flash: $0.flash)
                             }
                         },
-                        cameraListener: { tile in audio.setListenerPosition(tile) }
+                        cameraListener: { tile in audio.setListenerPosition(tile) },
+                        showsStats: UITestSeed.showsStats(fromArguments: ProcessInfo.processInfo.arguments)
                     )
                 )
             }

@@ -47,6 +47,9 @@ public enum Recipes {
         }
     ] + gather + craft + civic + shore + culture + ages + walkers + animals
 
+    /// Recipes that get night lights: every house look and the workshops.
+    public static let lit: Set<String> = Set((all.filter { $0.entry.hasPrefix("building-house") } + craft).map(\.id))
+
     /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {
         switch stage {
@@ -70,10 +73,10 @@ public enum Recipes {
         }
         kit.block(SCNVector3(lo.x, base, lo.z), SCNVector3(hi.x, wallTop, hi.z), .plaster)
         kit.door(south, along: lo.x + 0.87, base: base)
-        kit.window(south, along: lo.x + 2.6, y: 1.75, lit: false, shutters: Palette.shutterGreen)
-        kit.window(south, along: lo.x + 4.33, y: 1.75, lit: true, shutters: Palette.shutterGreen)
-        kit.window(east, along: lo.z + 1.05, y: 1.75, lit: false)
-        kit.window(east, along: lo.z + 3.15, y: 1.75, lit: false)
+        kit.window(south, along: lo.x + 2.6, y: 1.75, shutters: Palette.shutterGreen)
+        kit.window(south, along: lo.x + 4.33, y: 1.75, shutters: Palette.shutterGreen)
+        kit.window(east, along: lo.z + 1.05, y: 1.75)
+        kit.window(east, along: lo.z + 3.15, y: 1.75)
         guard stage >= 2 else {
             kit.plankStack(at: SCNVector3(1.0, 0, 6.6), length: 2.4, layers: 3)
             return
@@ -108,15 +111,15 @@ public enum Recipes {
         kit.timberFrame(southUp, span: lo.x ... (hi.x + jetty), base: 3.0, height: 2.4, posts: 5)
         kit.timberFrame(eastUp, span: lo.z ... (hi.z + jetty), base: 3.0, height: 2.4, posts: 4)
         kit.door(south, along: lo.x + 1.6, base: 0.4, width: 1.2, height: 2.2)
-        kit.window(south, along: lo.x + 3.4, y: 1.8, lit: true)
-        kit.window(south, along: lo.x + 5.0, y: 1.8, lit: false)
-        kit.window(east, along: lo.z + 1.5, y: 1.8, lit: false)
-        kit.window(east, along: lo.z + 3.8, y: 1.8, lit: true)
+        kit.window(south, along: lo.x + 3.4, y: 1.8)
+        kit.window(south, along: lo.x + 5.0, y: 1.8)
+        kit.window(east, along: lo.z + 1.5, y: 1.8)
+        kit.window(east, along: lo.z + 3.8, y: 1.8)
         for index in 0 ..< 4 {
-            kit.window(southUp, along: lo.x + 0.8 + CGFloat(index) * 1.61, y: 4.25, lit: index == 2, shutters: Palette.shutterRed)
+            kit.window(southUp, along: lo.x + 0.8 + CGFloat(index) * 1.61, y: 4.25, shutters: Palette.shutterRed)
         }
         for index in 0 ..< 3 {
-            kit.window(eastUp, along: lo.z + 0.94 + CGFloat(index) * 1.88, y: 4.25, lit: false, shutters: Palette.shutterRed)
+            kit.window(eastUp, along: lo.z + 0.94 + CGFloat(index) * 1.88, y: 4.25, shutters: Palette.shutterRed)
         }
         let ridge = kit.gableRoof(RoofSpec(
             lo: SCNVector3(lo.x, 5.4, lo.z),
@@ -139,16 +142,16 @@ public enum Recipes {
         kit.block(SCNVector3(lo.x, 0.5, lo.z), SCNVector3(hi.x, 4.6, hi.z), .ashlar)
         let south = Face.south(wallZ: hi.z), east = Face.east(wallX: hi.x)
         kit.door(south, along: 4.7, base: 0.5, width: 1.6, height: 2.8)
-        for (index, along) in [2.0, 3.3, 6.1, 7.4].enumerated() {
-            kit.window(south, along: CGFloat(along), y: 2.6, lit: index % 2 == 0)
+        for along in [2.0, 3.3, 6.1, 7.4] {
+            kit.window(south, along: CGFloat(along), y: 2.6)
         }
-        kit.window(east, along: 3.8, y: 2.6, lit: false)
+        kit.window(east, along: 3.8, y: 2.6)
         kit.hipRoof(RoofSpec(lo: SCNVector3(lo.x, 4.6, lo.z), hi: hi, pitchDegrees: 40, finish: .slate))
         let towerLo = SCNVector3(8.4, 0, 1.2), towerHi = SCNVector3(10.8, 9.0, 3.6)
         kit.block(towerLo, towerHi, .ashlar)
-        kit.window(Face.east(wallX: towerHi.x), along: 2.4, y: 6.8, lit: false)
-        kit.window(Face.south(wallZ: towerHi.z), along: 9.6, y: 6.8, lit: true)
-        kit.window(Face.south(wallZ: towerHi.z), along: 9.6, y: 3.2, lit: false)
+        kit.window(Face.east(wallX: towerHi.x), along: 2.4, y: 6.8)
+        kit.window(Face.south(wallZ: towerHi.z), along: 9.6, y: 6.8)
+        kit.window(Face.south(wallZ: towerHi.z), along: 9.6, y: 3.2)
         let apex = kit.hipRoof(RoofSpec(
             lo: SCNVector3(towerLo.x, towerHi.y, towerLo.z),
             hi: towerHi,
@@ -188,10 +191,10 @@ public enum Recipes {
         kit.block(SCNVector3(lo.x, 0.4, lo.z), SCNVector3(hi.x, 3.2, hi.z), .ashlar)
         let south = Face.south(wallZ: hi.z), east = Face.east(wallX: hi.x)
         kit.door(south, along: lo.x + 1.4, base: 0.4, width: 1.3, height: 2.3)
-        kit.window(south, along: lo.x + 3.4, y: 1.8, lit: true)
-        kit.window(south, along: lo.x + 4.9, y: 1.8, lit: true)
-        kit.window(east, along: lo.z + 1.6, y: 1.8, lit: false)
-        kit.window(east, along: lo.z + 4.2, y: 1.8, lit: true)
+        kit.window(south, along: lo.x + 3.4, y: 1.8)
+        kit.window(south, along: lo.x + 4.9, y: 1.8)
+        kit.window(east, along: lo.z + 1.6, y: 1.8)
+        kit.window(east, along: lo.z + 4.2, y: 1.8)
         for storey in 0 ..< 2 {
             let out = jetty * CGFloat(storey + 1), base = 3.2 + CGFloat(storey) * 2.3
             kit.block(SCNVector3(lo.x, base, lo.z), SCNVector3(hi.x + out, base + 2.3, hi.z + out), .plasterPale)
@@ -203,12 +206,11 @@ public enum Recipes {
                     southUp,
                     along: lo.x + 0.8 + CGFloat(index) * 1.55,
                     y: base + 1.2,
-                    lit: (index + storey) % 3 == 0,
                     shutters: Palette.shutterGreen
                 )
             }
             for index in 0 ..< 3 {
-                kit.window(eastUp, along: lo.z + 1.0 + CGFloat(index) * 1.9, y: base + 1.2, lit: false, shutters: Palette.shutterGreen)
+                kit.window(eastUp, along: lo.z + 1.0 + CGFloat(index) * 1.9, y: base + 1.2, shutters: Palette.shutterGreen)
             }
         }
         let top = kit.hipRoof(RoofSpec(
@@ -255,8 +257,8 @@ public enum Recipes {
         kit.block(SCNVector3(lo.x, 0.25, lo.z), SCNVector3(hi.x, 2.5, hi.z), .planks)
         let south = Face.south(wallZ: hi.z)
         kit.door(south, along: 1.8, base: 0.25)
-        kit.window(south, along: 3.4, y: 1.5, lit: false, shutters: Palette.shutterRed)
-        kit.window(Face.east(wallX: hi.x), along: 2.5, y: 1.5, lit: true)
+        kit.window(south, along: 3.4, y: 1.5, shutters: Palette.shutterRed)
+        kit.window(Face.east(wallX: hi.x), along: 2.5, y: 1.5)
         kit.gableRoof(RoofSpec(
             lo: SCNVector3(lo.x, 2.5, lo.z),
             hi: hi,
@@ -289,8 +291,8 @@ public enum Recipes {
         kit.timberFrame(south, span: lo.x ... hi.x, base: 0.3, height: 2.3, posts: 3)
         kit.timberFrame(east, span: lo.z ... hi.z, base: 0.3, height: 2.3, posts: 2)
         kit.door(south, along: 1.75, base: 0.3)
-        kit.window(south, along: 3.65, y: 1.55, lit: false, shutters: Palette.shutterGreen)
-        kit.window(east, along: 2.3, y: 1.55, lit: true)
+        kit.window(south, along: 3.65, y: 1.55, shutters: Palette.shutterGreen)
+        kit.window(east, along: 2.3, y: 1.55)
         kit.gableRoof(RoofSpec(lo: SCNVector3(lo.x, 2.6, lo.z), hi: hi, pitchDegrees: 45, finish: .thatch))
         for row in 0 ..< 3 {
             for col in 0 ..< 6 {

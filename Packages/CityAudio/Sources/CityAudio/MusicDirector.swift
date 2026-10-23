@@ -18,21 +18,25 @@ public final class MusicDirector {
     private let title: Bindings.MusicTrack?
     private let playlist: MusicPlaylist
     private let crossfade: Double
-    private let play: (String, Double) -> Void
+    /// Starts a track: its path, fade-in seconds, and whether it loops.
+    /// Returns false when it couldn't play (a missing file, a stopped engine).
+    private let play: (String, Double, Bool) -> Bool
     private let fadeOut: (String, Double) -> Void
     private let duration: (String) -> Double?
 
     private var context = Context.title
-    private var season: Season?
+    private(set) var season: Season?
     private var switching = false
     private var clock = 0.0
     private var current: (path: String, endsAt: Double)?
     private var nextStartAt: Double? = 0
+    /// The fade the next start uses: a retried crossfade keeps its fade.
+    private var nextFade = 0.0
 
     init(
         section: Bindings.MusicSection?,
         rng: any RandomNumberGenerator = SystemRandomNumberGenerator(),
-        play: @escaping (String, Double) -> Void,
+        play: @escaping (String, Double, Bool) -> Bool,
         fadeOut: @escaping (String, Double) -> Void,
         duration: @escaping (String) -> Double?
     ) {
@@ -48,9 +52,12 @@ public final class MusicDirector {
         self.duration = duration
     }
 
+    /// Switches between the title and a game. Leaving a game forgets its
+    /// season, so the next game's first pick follows its own season.
     public func setContext(_ newContext: Context) {
         guard newContext != context else { return }
         context = newContext
+        if newContext == .title { season = nil }
         switching = true
     }
 
@@ -74,7 +81,7 @@ public final class MusicDirector {
             nextStartAt = clock + (repeatsTitle ? 0 : playlist.gapSecondsBetweenTracks)
         }
         if current == nil, let startAt = nextStartAt, clock >= startAt {
-            start(fade: 0)
+            start(fade: nextFade)
         }
     }
 
@@ -89,8 +96,17 @@ public final class MusicDirector {
             nextStartAt = nil
             return
         }
-        play(path, fade)
-        current = (path, clock + (duration(path) ?? Self.fallbackDuration))
+        // The title theme loops in the player, gaplessly; game tracks play once.
+        let loops = repeatsTitle
+        guard play(path, fade, loops) else {
+            // Nothing is playing, so don't wait out the track: try again next
+            // tick, with the same fade, so a failed crossfade still fades in.
+            nextStartAt = clock
+            nextFade = fade
+            return
+        }
+        nextFade = 0
+        current = (path, loops ? .infinity : clock + (duration(path) ?? Self.fallbackDuration))
         nextStartAt = nil
     }
 }

@@ -45,6 +45,8 @@ Debug builds take launch flags that set up a scene, so a shot needs no clicks an
 | `-uiTestSeedShore`       | A port, a shipyard and a ship on the coast, camera on the port.                                                                                            |
 | `-uiTestSeedPort`        | A Renaissance game with a player port, camera on it.                                                                                                       |
 | `-uiTestSeedLived`       | The town with farms and workshops working and residents in the houses.                                                                                     |
+| `-uiTestSeedArchipelago` | A new archipelago game, the largest map (seed 0), for performance shots.                                                                                   |
+| `-uiTestShowStats`       | Shows the frame rate and the node and draw counts in the corner of the map.                                                                                |
 | `-uiTestStartGame`       | Skips the title and starts the game at once, from the seed above (or a regular new game).                                                                  |
 | `-uiTestCamera x,y,zoom` | Puts the seeded game's camera on tile (x, y) at that zoom (0.25 to 4).                                                                                     |
 

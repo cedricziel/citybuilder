@@ -1,7 +1,7 @@
 import SceneKit
 
 /// The rules every recipe obeys at every stage and in every moving-part frame (design D3): no lights
-/// of its own, only materials from the shared finish set. `isokit check` and the tests both run them.
+/// of its own, no glowing material, and only materials from the shared finish set. `isokit check` and the tests both run them.
 public enum RecipeRules {
     /// Every node tree a recipe can produce: each stage, and each moving-part frame.
     static func builds(of recipe: Recipe) -> [(label: String, root: SCNNode)] {
@@ -23,11 +23,22 @@ public enum RecipeRules {
                 if node.light != nil {
                     problems.append("\(recipe.id) \(label): adds a light")
                 }
-                for material in node.geometry?.materials ?? [] where !Finish.isShared(material) {
-                    problems.append("\(recipe.id) \(label): material \(material.name ?? "unnamed") is outside the finish set")
+                for material in node.geometry?.materials ?? [] {
+                    if !Finish.isShared(material) {
+                        problems.append("\(recipe.id) \(label): material \(material.name ?? "unnamed") is outside the finish set")
+                    }
+                    // Window light belongs to the night-lights masks; a sprite that glows glows all day.
+                    if emits(material) { problems.append("\(recipe.id) \(label): material \(material.name ?? "unnamed") glows") }
                 }
             }
         }
         return problems
+    }
+
+    private static func emits(_ material: SCNMaterial) -> Bool {
+        guard let colour = (material.emission.contents as? NSColor)?.usingColorSpace(.deviceRGB) else {
+            return material.emission.contents != nil
+        }
+        return colour.redComponent + colour.greenComponent + colour.blueComponent > 0
     }
 }

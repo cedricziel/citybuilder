@@ -11,7 +11,6 @@ enum AgePalette {
     static let panel = NSColor(red: 0.25, green: 0.22, blue: 0.20, alpha: 1)
     static let solar = NSColor(red: 0.14, green: 0.18, blue: 0.30, alpha: 1)
     static let pool = NSColor(red: 0.30, green: 0.56, blue: 0.70, alpha: 1)
-    static let glazing = NSColor(red: 0.34, green: 0.50, blue: 0.62, alpha: 1)
 }
 
 /// A house roof: a gable (ridge along x, or along z so the gable faces south), a hip, a mansard (steep
@@ -108,15 +107,15 @@ extension Recipes {
                         width: span.upperBound - span.lowerBound - 1.0,
                         height: 1.1
                     )
-                    kit.onFace(face, rect, depth: 0.06, finish: .paint(AgePalette.glazing))
+                    kit.onFace(face, rect, depth: 0.06, finish: .glazing)
                 }
                 continue
             }
             for along in stride(from: lo.x + (index == 0 ? 2.4 : 1.2), to: hi.x - 0.6, by: 1.6) {
-                kit.window(box.south, along: along, y: sill, lit: (index + Int(along)) % 3 == 0, shutters: style.shutters)
+                kit.window(box.south, along: along, y: sill, shutters: style.shutters)
             }
             for along in stride(from: lo.z + 1.0, to: hi.z - 0.5, by: 1.7) {
-                kit.window(box.east, along: along, y: sill, lit: false, shutters: style.shutters)
+                kit.window(box.east, along: along, y: sill, shutters: style.shutters)
             }
         }
         kit.door(box.south, along: lo.x + 1.0, base: 0.3, width: 1.0, height: 2.0)
@@ -150,7 +149,7 @@ extension Recipes {
         case .mansard:
             kit.block(SCNVector3(lo.x + 0.3, box.top, lo.z + 0.3), SCNVector3(hi.x - 0.3, box.top + 2.4, hi.z - 0.3), .slate)
             for along in stride(from: lo.x + 1.4, to: hi.x - 0.8, by: 1.6) {
-                kit.window(Face.south(wallZ: hi.z - 0.3), along: along, y: box.top + 1.2, lit: false)
+                kit.window(Face.south(wallZ: hi.z - 0.3), along: along, y: box.top + 1.2)
             }
             kit.hipRoof(RoofSpec(
                 lo: SCNVector3(lo.x + 0.3, box.top + 2.5, lo.z + 0.3), hi: SCNVector3(hi.x - 0.3, 0, hi.z - 0.3),

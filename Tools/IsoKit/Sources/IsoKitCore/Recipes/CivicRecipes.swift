@@ -64,7 +64,7 @@ extension Recipes {
     static func library(_ kit: Builder) {
         kit.hall(SCNVector3(0.8, 0, 1.0), SCNVector3(6.6, 0, 5.4), walls: .ashlar, roof: .slate, wallHeight: 3.6)
         for along in [2.0, 3.7, 5.4] as [CGFloat] {
-            kit.onFace(Face.south(wallZ: 5.4), FaceRect(along: along, y: 2.2, width: 0.6, height: 1.8), depth: 0.06, finish: .litGlass)
+            kit.onFace(Face.south(wallZ: 5.4), FaceRect(along: along, y: 2.2, width: 0.6, height: 1.8), depth: 0.06, finish: .glass)
         }
         kit.block(SCNVector3(5.6, 5.4, 2.9), SCNVector3(6.4, 7.0, 3.6), .ashlar)
         kit.add(SCNPyramid(width: 1.0, height: 0.9, length: 0.9), Finish.slate.material(), at: SCNVector3(6.0, 7.0, 3.25))
@@ -195,7 +195,7 @@ extension Recipes {
         kit.timberFrame(south, span: lo.x ... hi.x, base: 2.6, height: 3.8, posts: 6)
         kit.timberFrame(east, span: lo.z ... hi.z, base: 2.6, height: 3.8, posts: 4)
         for along in [3.0, 5.4, 7.8] as [CGFloat] {
-            kit.window(south, along: along, y: 4.4, lit: true)
+            kit.window(south, along: along, y: 4.4)
         }
         kit.door(Face.south(wallZ: hi.z), along: 5.4, base: 0, width: 1.6, height: 2.2)
         kit.gableRoof(RoofSpec(lo: SCNVector3(lo.x, 6.4, lo.z), hi: hi, pitchDegrees: 52, finish: .tile, gableFinish: .plaster))
@@ -212,7 +212,7 @@ extension Recipes {
         kit.arcade(Face.south(wallZ: hi.z), from: lo.x + 0.4, to: hi.x - 0.4, base: 0)
         kit.block(SCNVector3(lo.x, 3.0, lo.z), SCNVector3(hi.x, 6.4, hi.z), .paint(Civic.ochre))
         for along in [2.0, 6.0] as [CGFloat] {
-            kit.window(Face.south(wallZ: hi.z), along: along, y: 4.7, lit: true)
+            kit.window(Face.south(wallZ: hi.z), along: along, y: 4.7)
         }
         kit.onFace(
             Face.south(wallZ: hi.z),
@@ -292,7 +292,7 @@ extension Recipes {
     static func libraryMediterranean(_ kit: Builder) {
         kit.hall(SCNVector3(0.8, 0, 1.0), SCNVector3(6.6, 0, 5.4), walls: .plasterPale, roof: .tile, wallHeight: 3.6, pitch: 24)
         for along in [2.0, 3.7, 5.4] as [CGFloat] {
-            kit.archDoor(Face.south(wallZ: 5.4), along: along, width: 0.6, height: 1.6, base: 1.4, finish: .litGlass)
+            kit.archDoor(Face.south(wallZ: 5.4), along: along, width: 0.6, height: 1.6, base: 1.4, finish: .glass)
         }
         kit.block(SCNVector3(6.4, 3.6, 2.4), SCNVector3(6.8, 6.6, 4.0), .plasterPale)
         kit.onFace(Face.east(wallX: 6.8), FaceRect(along: 3.2, y: 5.6, width: 0.6, height: 0.7), depth: 0.03, finish: .paint(Crops.opening))
@@ -309,7 +309,7 @@ extension Recipes {
                 depth: 0.03,
                 finish: .paint(Trade.blueTile)
             )
-            kit.archDoor(Face.south(wallZ: 5.64), along: along, width: 0.7, height: 2.0, base: 1.0, finish: .litGlass)
+            kit.archDoor(Face.south(wallZ: 5.64), along: along, width: 0.7, height: 2.0, base: 1.0, finish: .glass)
         }
         kit.add(SCNCylinder(radius: 1.3, height: 0.8), Finish.paint(Trade.blueTile).material(), at: SCNVector3(3.8, 4.8, 3.3))
         kit.add(SCNSphere(radius: 1.3), Finish.plasterPale.material(), at: SCNVector3(3.8, 5.2, 3.3))

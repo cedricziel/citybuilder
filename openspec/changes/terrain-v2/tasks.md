@@ -19,10 +19,10 @@
 
 ## 4. Trees (D3–D6, D9)
 
-- [ ] 4.1 Tests first: object selection (densities, occupancy, meadow trees, forest ground is grass), depth order, seasons, routing, byte-stable clumps
-- [ ] 4.2 `art.flora`; catalog briefs; `make sprites`
-- [ ] 4.3 `TerrainObjectMap` beside the transition map; object child nodes; season redraw
-- [ ] 4.4 Node counts and frame times at zoom 0.25 on the archipelago; tighten culling if needed (D9)
+- [x] 4.1 Tests first: object selection (densities, occupancy, forest ground is grass; meadow trees dropped), depth order, seasons, routing, byte-stable clumps
+- [x] 4.2 `art.flora`; catalog briefs; `make sprites`
+- [x] 4.3 `TerrainObjectMap` beside the transition map; object child nodes; season redraw
+- [x] 4.4 Node counts and frame times at zoom 0.25 on the archipelago; tighten culling if needed (D9)
 - [ ] 4.5 Delete `terrain-forest*` ground sprites; in-game before and after (spring, autumn, winter); PR
 
 ## 5. Rocks and scree (D3–D6, D8)

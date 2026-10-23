@@ -13,6 +13,8 @@ extension IsoWorldScene {
     public static let waitingBadgeNodeName = "overlay-waiting-materials"
     /// Name applied to the no-road-access marker child node.
     public static let noRoadBadgeNodeName = "overlay-no-road"
+    /// Name of a terrain object (tree clump) child node.
+    public static let terrainObjectNodeName = "terrain-object"
     /// `userData` key holding the texture name chosen for a tiered house.
     public static let textureNameKey = "textureName"
 
@@ -38,6 +40,9 @@ extension IsoWorldScene {
         return depthZ(tile.col + tile.row) + figureLift
     }
 
+    /// Sinks a terrain object just behind the building at its depth.
+    static let objectSink: CGFloat = 0.003
+
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
@@ -51,14 +56,40 @@ extension IsoWorldScene {
 
     func makeNode(for spec: SpriteSpec) -> SKNode {
         switch spec.kind {
-        case let .terrain(kind, transition):
-            makeTerrainNode(kind: kind, coord: spec.coord, transition: transition)
+        case let .terrain(kind, transition, object):
+            makeTerrainNode(kind: kind, coord: spec.coord, transition: transition, object: object)
         case .building:
             makeBuildingNode(for: spec)
         }
     }
 
-    func makeTerrainNode(kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition? = nil) -> SKNode {
+    func makeTerrainNode(
+        kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition? = nil, object: TerrainObject? = nil
+    ) -> SKNode {
+        let objectName = object.flatMap { object in [object.assetName(in: appliedSeason), object.assetName].first(where: hasSprite) }
+        // Forest floor is meadow, built on or not, and so is the ground under an outcrop (terrain-v2, design D3).
+        let floor: TerrainType = (kind == .forest || objectName != nil) ? .grass : kind
+        let ground = makeGroundNode(kind: floor, coord: coord, transition: transition)
+        if let objectName {
+            ground.addChild(makeObjectNode(named: objectName, coord: coord))
+        }
+        return ground
+    }
+
+    /// A tree clump over its tile: a 144 x 132 pt cell with the tile centre 56 pt from its left and
+    /// 112 pt from its top, sorted like a 1 x 1 building on the tile, just behind any building at
+    /// the same depth so a tie never flips (terrain-v2, design D4). The ground node sits at z 0, and
+    /// a child's z adds to its parent's.
+    private func makeObjectNode(named name: String, coord: TileCoordinate) -> SKSpriteNode {
+        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        node.name = Self.terrainObjectNodeName
+        node.userData = [Self.textureNameKey: name]
+        node.anchorPoint = CGPoint(x: 56.0 / 144.0, y: 20.0 / 132.0)
+        node.zPosition = Self.depthZ(Double(coord.x + coord.y + 1)) - Self.objectSink
+        return node
+    }
+
+    private func makeGroundNode(kind: TerrainType, coord: TileCoordinate, transition: TerrainTransition?) -> SKSpriteNode {
         // Blended shore and grass edges, once the terrain family ships its transition tiles; until
         // then (or for a missing mask) the tile keeps its own sprite. Shore shape outranks seasonal
         // tint, so the transition comes first.
