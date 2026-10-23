@@ -302,24 +302,20 @@ jobs:
           ISOKIT_SKIP_RENDER: "1"
         run: swift test --package-path Tools/IsoKit
 
+  # One runner builds every scheme in turn, into one DerivedData, so
+  # `make generate`, XcodeGen and the package resolution run once and the
+  # macOS app and the CLI share their compiled package products. Each
+  # scheme is its own step that runs even when an earlier one failed, so
+  # one run reports every broken scheme; `Summarize builds` then fails
+  # the job with the list.
   build:
-    name: build (${{ matrix.scheme }})
+    name: build (iOS, Mac, tvOS, cli)
     needs: changes
     if: needs.changes.outputs.apps == 'true'
     runs-on: macos-26
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - scheme: CitybuilderiOS
-            destination: generic/platform=iOS Simulator
-          - scheme: CitybuilderMac
-            destination: platform=macOS
-          - scheme: CitybuilderTV
-            destination: generic/platform=tvOS Simulator
-          - scheme: citybuilder-cli
-            destination: platform=macOS
+    # The four old jobs took 1 to 4 minutes each (3.7 at most) in recent
+    # runs; the budget covers all four plus a cold tvOS runtime download.
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -332,29 +328,63 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Install the tvOS simulator runtime when missing
-        if: matrix.scheme == 'CitybuilderTV'
-        run: |
-          xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
-
       - name: Install XcodeGen
         run: scripts/ci/install-pinned-tools.sh xcodegen
 
       - name: make generate
+        id: generate
         run: make generate
 
-      - name: xcodebuild
-        shell: bash
+      - name: Build CitybuilderiOS
+        id: ios
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderiOS "generic/platform=iOS Simulator"
+
+      - name: Build CitybuilderMac
+        id: mac
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderMac "platform=macOS"
+
+      - name: Build citybuilder-cli
+        id: cli
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh citybuilder-cli "platform=macOS"
+
+      # Only the tvOS build needs the runtime, so the download comes
+      # last and a failed iOS or Mac build doesn't wait for it.
+      - name: Install the tvOS simulator runtime when missing
+        id: tvos_runtime
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
         run: |
-          set -o pipefail
-          xcodebuild \
-            -project Citybuilder.xcodeproj \
-            -scheme "${{ matrix.scheme }}" \
-            -destination "${{ matrix.destination }}" \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            build | xcbeautify --renderer github-actions
+          xcrun simctl list runtimes | grep -q tvOS || xcodebuild -downloadPlatform tvOS
+
+      - name: Build CitybuilderTV
+        id: tvos
+        if: ${{ !cancelled() && steps.tvos_runtime.outcome == 'success' }}
+        run: scripts/ci/xcodebuild-scheme.sh CitybuilderTV "generic/platform=tvOS Simulator"
+
+      - name: Summarize builds
+        if: ${{ !cancelled() }}
+        env:
+          OUTCOMES: >-
+            generate=${{ steps.generate.outcome }}
+            CitybuilderiOS=${{ steps.ios.outcome }}
+            CitybuilderMac=${{ steps.mac.outcome }}
+            citybuilder-cli=${{ steps.cli.outcome }}
+            tvOS-runtime=${{ steps.tvos_runtime.outcome }}
+            CitybuilderTV=${{ steps.tvos.outcome }}
+        run: |
+          failed=""
+          for outcome in $OUTCOMES; do
+            echo "$outcome"
+            case "$outcome" in
+              *=success) ;;
+              *) failed="$failed ${outcome%%=*}" ;;
+            esac
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::did not succeed:$failed"
+            exit 1
+          fi
 
   gamedata-fixture:
     name: gamedata — a fixture pack builds without Swift edits
