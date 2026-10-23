@@ -51,14 +51,22 @@ private func bitmap(width: Int, height: Int) -> CGContext? {
     )
 }
 
-/// Sprites carry a transparent margin for their shadow; the icon is cut to the building so it fills its slot.
-@Test("building icons are cut to their opaque pixels")
-func iconsAreCutToTheirOpaquePixels() throws {
+/// Sprites carry a margin for their shadow; the icon is cut to the building so it fills its slot.
+@Test("building icons are cut to the building, leaving out its translucent shadow")
+func iconsAreCutToTheBuilding() throws {
     let context = try #require(bitmap(width: 40, height: 20))
     context.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
     context.fill(CGRect(x: 5, y: 3, width: 10, height: 6))
-    let cropped = try BuildingIconLoader.croppedToOpaque(#require(context.makeImage()))
+    // The baked shadow: 55% opaque, beside the building.
+    context.setFillColor(red: 0.12, green: 0.08, blue: 0.05, alpha: 0.55)
+    context.fill(CGRect(x: 15, y: 3, width: 20, height: 4))
+    let cropped = try BuildingIconLoader.croppedToBuilding(#require(context.makeImage()))
     #expect(cropped.width == 10 && cropped.height == 6)
+    // Every pixel left is the building's.
+    let check = try #require(bitmap(width: cropped.width, height: cropped.height))
+    check.draw(cropped, in: CGRect(x: 0, y: 0, width: cropped.width, height: cropped.height))
+    let pixels = try #require(check.data).assumingMemoryBound(to: UInt8.self)
+    #expect((0 ..< cropped.width * cropped.height).allSatisfy { pixels[$0 * 4 + 3] == 255 })
     let empty = try #require(bitmap(width: 4, height: 4)?.makeImage())
-    #expect(BuildingIconLoader.croppedToOpaque(empty).width == 4)
+    #expect(BuildingIconLoader.croppedToBuilding(empty).width == 4)
 }

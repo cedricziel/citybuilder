@@ -57,12 +57,16 @@ public enum BuildingIconLoader {
             return Image(systemName: fallbackSymbolName(for: kind))
         }
         let cgImage = atlas.textureNamed(name).cgImage()
-        return Image(decorative: croppedToOpaque(cgImage), scale: 1).interpolation(interpolation(for: kind))
+        return Image(decorative: croppedToBuilding(cgImage), scale: 1).interpolation(interpolation(for: kind))
     }
 
-    /// `image` cut to its opaque pixels. A sprite is wider than its building where its shadow needs room,
-    /// and an icon scaled to fit would shrink by that margin.
-    static func croppedToOpaque(_ image: CGImage) -> CGImage {
+    /// The lowest alpha of a building pixel. The baked shadow is translucent (the rig's shadow colour
+    /// is 55% opaque, about 140 of 255) and the building's anti-aliased edges stay above 230.
+    static let buildingAlpha: UInt8 = 192
+
+    /// `image` cut to its building and plot. A sprite is wider than its building where its shadow needs
+    /// room, and an icon scaled to fit would shrink by that margin, so the shadow is left out of the bounds.
+    static func croppedToBuilding(_ image: CGImage) -> CGImage {
         let width = image.width, height = image.height
         guard let context = CGContext(
             data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
@@ -73,7 +77,7 @@ public enum BuildingIconLoader {
         let alpha = data.assumingMemoryBound(to: UInt8.self)
         var minX = width, maxX = -1, minY = height, maxY = -1
         for row in 0 ..< height {
-            for column in 0 ..< width where alpha[(row * width + column) * 4 + 3] > 0 {
+            for column in 0 ..< width where alpha[(row * width + column) * 4 + 3] >= buildingAlpha {
                 minX = min(minX, column)
                 maxX = max(maxX, column)
                 minY = min(minY, row)
