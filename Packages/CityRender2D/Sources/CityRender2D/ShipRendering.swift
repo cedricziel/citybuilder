@@ -140,11 +140,9 @@ public enum ShoreOrientationMath {
         let stem = "building-\(kind.rawValue)-\(orientation.rawValue)"
         switch state {
         case .constructing:
-            let safeFrame = frame ?? 0
-            return "\(stem)-constructing-\(safeFrame)"
+            return SpriteAnimation.assetName(for: .buildingConstructing(kind, stem: stem), frame: frame ?? 0)
         case .operational:
-            let safeFrame = frame ?? 0
-            return "\(stem)-operational-\(safeFrame)"
+            return SpriteAnimation.assetName(for: .buildingOperational(kind, stem: stem), frame: frame ?? 0)
         case .planned, .none:
             return stem
         }

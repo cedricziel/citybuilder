@@ -10,8 +10,11 @@ public enum SpriteAnimation {
     /// the same catalog so the atlas has one lookup path.
     public enum AnimationKey: Hashable, Sendable {
         case terrain(TerrainType)
-        case buildingOperational(BuildingKind)
-        case buildingConstructing(BuildingKind)
+        /// A building's operational loop and construction frames. `stem` names a look with frames
+        /// of its own (a culture variant, a shore facing); nil means the kind's shared
+        /// `building-<kind>` frames.
+        case buildingOperational(BuildingKind, stem: String? = nil)
+        case buildingConstructing(BuildingKind, stem: String? = nil)
         case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
@@ -45,11 +48,14 @@ public enum SpriteAnimation {
         public let frameCount: Int
         public let timePerFrame: TimeInterval
         public let loop: Loop
+        /// How long each frame shows, when the frames don't all show for `timePerFrame`.
+        public let frameDurations: [TimeInterval]?
 
-        public init(frameCount: Int, timePerFrame: TimeInterval, loop: Loop) {
+        public init(frameCount: Int, timePerFrame: TimeInterval, loop: Loop, frameDurations: [TimeInterval]? = nil) {
             self.frameCount = frameCount
             self.timePerFrame = timePerFrame
             self.loop = loop
+            self.frameDurations = frameDurations
         }
     }
 
@@ -62,7 +68,7 @@ public enum SpriteAnimation {
             case .grass: Entry(frameCount: 2, timePerFrame: 0.60, loop: .forever)
             case .forest, .mountain: nil
             }
-        case let .buildingOperational(kind):
+        case let .buildingOperational(kind, _):
             operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
@@ -85,7 +91,12 @@ public enum SpriteAnimation {
         case .farm: Entry(frameCount: 2, timePerFrame: 0.50, loop: .forever)
         case .bakery: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         case .windmill: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
-        case .house, .warehouse, .road, .port, .shipyard: nil
+        // Cargo comes ashore: lifted, swung onto the quay, set down, swung back (#120).
+        case .port: Entry(frameCount: 6, timePerFrame: 0.45, loop: .forever)
+        // The hull is planked in four stages, held once finished, then launched off an empty
+        // slipway for a beat before the next keel (#120).
+        case .shipyard: Entry(frameCount: 5, timePerFrame: 2.5, loop: .forever, frameDurations: [2.5, 2.5, 2.5, 4.0, 1.25])
+        case .house, .warehouse, .road: nil
         default: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         }
     }
@@ -101,10 +112,10 @@ public enum SpriteAnimation {
         switch key {
         case let .terrain(kind):
             "terrain-\(kind.rawValue)-\(frame)"
-        case let .buildingOperational(kind):
-            "building-\(kind.rawValue)-operational-\(frame)"
-        case let .buildingConstructing(kind):
-            "building-\(kind.rawValue)-constructing-\(frame)"
+        case let .buildingOperational(kind, stem):
+            "\(stem ?? "building-\(kind.rawValue)")-operational-\(frame)"
+        case let .buildingConstructing(kind, stem):
+            "\(stem ?? "building-\(kind.rawValue)")-constructing-\(frame)"
         case let .walker(facing, look):
             "\(look.stem)-\(facing.rawValue)-\(frame)"
         case let .carrier(load, facing):
@@ -137,10 +148,19 @@ public enum SpriteAnimation {
               frames.count > 1
         else { return nil }
 
-        let animate = SKAction.animate(with: frames, timePerFrame: entry.timePerFrame)
-        let looped = SKAction.repeatForever(animate)
+        let looped = SKAction.repeatForever(cycle(frames, entry: entry))
         actionCacheQueue.sync { actionCache[key] = looped }
         return looped
+    }
+
+    /// One pass through `frames` at the entry's cadence.
+    static func cycle(_ frames: [SKTexture], entry: Entry) -> SKAction {
+        guard let durations = entry.frameDurations, durations.count == frames.count else {
+            return .animate(with: frames, timePerFrame: entry.timePerFrame)
+        }
+        return .sequence(zip(frames, durations).flatMap { frame, duration in
+            [SKAction.setTexture(frame), .wait(forDuration: duration)]
+        })
     }
 }
 

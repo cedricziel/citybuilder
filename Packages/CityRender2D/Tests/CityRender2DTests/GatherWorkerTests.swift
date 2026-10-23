@@ -204,7 +204,9 @@ func workerSortsAgainstHutAndClump() throws {
                     coord: coord,
                     object: TerrainObject(kind: .forest, density: .medium, variant: 0)
                 )
-                return try #require(ground.childNode(withName: IsoWorldScene.terrainObjectNodeName))
+                // Over plain ground the clump stands alone; over a transition it rides on its ground node.
+                return try #require(ground.name == IsoWorldScene.terrainObjectNodeName
+                    ? ground : ground.childNode(withName: IsoWorldScene.terrainObjectNodeName))
             }
             #expect(try shown.node.zPosition < clump(at: here).zPosition)
             #expect(try shown.node.zPosition > clump(at: TileCoordinate(x: here.x, y: here.y - 1)).zPosition)

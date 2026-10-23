@@ -79,7 +79,8 @@ extension Recipes {
             Recipe(
                 id: "building-port-\(side.rawValue)",
                 cell: SpriteCell(footprint: 2, rows: 3, heightPx: 128),
-                operationalFrames: 1,
+                operationalFrames: CranePose.cycle.count,
+                moving: MovingPart(name: "crane") { kit, index in kit.craneJib(frame, CranePose.cycle[index]) },
                 customStages: true,
                 plot: nil
             ) { kit, stage in
@@ -90,8 +91,10 @@ extension Recipes {
             Recipe(
                 id: "building-shipyard-\(side.rawValue)",
                 cell: SpriteCell(footprint: 2, rows: 3, heightPx: 128),
-                operationalFrames: 2,
-                moving: MovingPart(name: "hull") { kit, index in shipyardHull(kit, frame, planked: index) },
+                operationalFrames: hullStages.count,
+                moving: MovingPart(name: "hull") { kit, index in
+                    if let strakes = hullStages[index] { shipyardHull(kit, frame, strakes: strakes) }
+                },
                 customStages: true,
                 plot: nil
             ) { kit, stage in
@@ -113,6 +116,10 @@ extension Recipes {
         ) { kit, _ in ship(kit, facing) }
     }
 
+    /// The shipyard's operational frames: keel and ribs, then two, four and six strakes, then the
+    /// empty slipway once the finished hull is launched.
+    static let hullStages: [Int?] = [0, 2, 4, 6, nil]
+
     /// On the quay: a timber-framed warehouse on the land side, a crane at the quay edge, and cargo.
     /// The quay and the wharf come first, so the construction stages show them from the start.
     static func port(_ kit: Builder, _ frame: ShoreFrame) {
@@ -122,7 +129,7 @@ extension Recipes {
         kit.timberFrame(Face.east(wallX: hi.x), span: lo.z ... hi.z, base: 0.5, height: 2.8, posts: 4)
         kit.door(Face.south(wallZ: hi.z), along: (lo.x + hi.x) / 2, base: 0.5, width: 1.4, height: 2.0)
         kit.door(Face.east(wallX: hi.x), along: (lo.z + hi.z) / 2, base: 0.5, width: 1.4, height: 2.0)
-        kit.crane(frame, at: frame.shore - 0.2, along: frame.width - 3.6)
+        kit.cranePost(frame)
         kit.cargo(at: frame.point(1.4, 0.5, frame.width - 2.0))
         kit.barrel(at: frame.point(frame.shore - 1.0, 0.5, frame.width - 1.0))
     }
@@ -134,8 +141,8 @@ extension Recipes {
         kit.logStack(at: frame.point(0.6, 0.5, frame.width - 1.4), length: 1.8, rows: 2, alongX: frame.shoreAlongX)
     }
 
-    /// A hull on the slipway's cradle: keel and ribs, with two strakes (frame 0) or four (frame 1).
-    static func shipyardHull(_ kit: Builder, _ frame: ShoreFrame, planked: Int) {
+    /// A hull on the slipway's cradle: keel and ribs, and `strakes` strakes a side.
+    static func shipyardHull(_ kit: Builder, _ frame: ShoreFrame, strakes: Int) {
         let centre = (frame.slipway.lowerBound + frame.slipway.upperBound) / 2
         let start = frame.shore - 2.6, end = min(frame.shore + 3.4, frame.length - 0.4)
         let beam = { (out: CGFloat) -> CGFloat in 1.25 * sin(.pi * (out - start) / (end - start)).squareRoot() }
@@ -150,7 +157,7 @@ extension Recipes {
                 kit.block(lo, hi, .timber)
             }
         }
-        for strake in 0 ..< (planked == 0 ? 2 : 4) {
+        for strake in 0 ..< strakes {
             let y = 1.0 + 0.32 * CGFloat(strake)
             for index in 0 ..< ribs {
                 let u0 = start + (end - start) * CGFloat(index) / CGFloat(ribs), u1 = u0 + (end - start) / CGFloat(ribs)
@@ -264,15 +271,38 @@ extension Builder {
         }
     }
 
-    /// A timber crane: a post at the quay edge with a jib reaching over the water and a hanging crate.
-    func crane(_ frame: ShoreFrame, at out: CGFloat, along: CGFloat) {
+    /// Where the port's crane stands: at the quay edge, its jib reaching over the wharf.
+    private static func cranePosition(in frame: ShoreFrame) -> (out: CGFloat, along: CGFloat) {
+        (frame.shore - 0.2, frame.width - 3.6)
+    }
+
+    /// The crane's timber post.
+    func cranePost(_ frame: ShoreFrame) {
+        let (out, along) = Self.cranePosition(in: frame)
         let (lo, hi) = frame.box(out: out - 0.18 ... out + 0.18, y: 0.5 ... 5.0, along: along - 0.18 ... along + 0.18)
         block(lo, hi, .timber)
+    }
+
+    /// The crane's jib, rope and crate in `pose`, turned about the post toward the far end of the
+    /// warehouse, where the quay shows in every facing (toward +along in the shore frame).
+    func craneJib(_ frame: ShoreFrame, _ pose: CranePose) {
+        let (out, along) = Self.cranePosition(in: frame)
+        let post = frame.point(out, 0, along)
+        let toQuay: CGFloat = frame.side == .s || frame.side == .w ? 1 : -1
+        let jib = Builder()
         let (jibLo, jibHi) = frame.box(out: out - 0.6 ... out + 2.4, y: 4.6 ... 4.85, along: along - 0.12 ... along + 0.12)
-        block(jibLo, jibHi, .timber)
-        let (ropeLo, ropeHi) = frame.box(out: out + 2.2 ... out + 2.26, y: 2.3 ... 4.6, along: along - 0.03 ... along + 0.03)
-        block(ropeLo, ropeHi, .paint(Shore.rope))
-        crate(at: frame.point(out + 2.23, 1.75, along))
+        jib.block(jibLo, jibHi, .timber)
+        let (ropeLo, ropeHi) = frame.box(out: out + 2.2 ... out + 2.26, y: pose.crateY + 0.55 ... 4.6, along: along - 0.03 ... along + 0.03)
+        jib.block(ropeLo, ropeHi, .paint(Shore.rope))
+        jib.crate(at: frame.point(out + 2.23, pose.crateY, along))
+        let pivot = SCNNode()
+        pivot.position = post
+        pivot.eulerAngles = SCNVector3(0, toQuay * pose.swingDegrees * .pi / 180, 0)
+        for child in jib.root.childNodes {
+            child.position -= post
+            pivot.addChildNode(child)
+        }
+        root.addChildNode(pivot)
     }
 
     /// Builds `body` finished, or cut to construction stage `stage` with scaffold on its own corners;
@@ -308,4 +338,21 @@ extension Builder {
         }
         root.addChildNode(pivot)
     }
+}
+
+/// One pose of the port's crane: how far the jib has swung from the water toward the quay, and how
+/// high the crate hangs.
+struct CranePose {
+    let swingDegrees: CGFloat
+    let crateY: CGFloat
+
+    /// Cargo comes ashore: lifted off the wharf, swung round, set down on the quay, swung back out.
+    static let cycle = [
+        CranePose(swingDegrees: 0, crateY: 0.9),
+        CranePose(swingDegrees: 0, crateY: 2.3),
+        CranePose(swingDegrees: 45, crateY: 2.3),
+        CranePose(swingDegrees: 90, crateY: 2.3),
+        CranePose(swingDegrees: 90, crateY: 1.0),
+        CranePose(swingDegrees: 45, crateY: 2.6)
+    ]
 }

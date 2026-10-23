@@ -32,10 +32,6 @@ public enum SpriteName {
     /// for what is purely a sprite-naming concern.
     public static let shorePlacementKindRawValues: Set<String> = ["port", "shipyard"]
 
-    /// Operational frames per shore kind: the port's operational sprite doesn't loop; the
-    /// shipyard's hull work does.
-    public static let shoreOperationalFrames: [String: Int] = ["port": 1, "shipyard": 2]
-
     /// 8-compass facing set used by ship sprites.
     public static let shipFacings: [String] = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
 

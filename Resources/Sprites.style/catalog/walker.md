@@ -11,7 +11,7 @@ Rendered by IsoKit in the shared light rig, with the cast shadow baked in. A wal
 
 Looks:
 
-- `walker`: the worker: madder tunic, fustian hose, felt cap
+- `walker`: the worker: light madder tunic, light enough to read against the earth roads, fustian hose, felt cap
 - `walker-woman`: a woman in a woad dress with a linen apron and coif, a bread basket on her head
 - `carrier-sack`: a carrier with a sack on the shoulder, straw hat
 - `carrier-crate`: a carrier with a crate on the shoulder

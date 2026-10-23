@@ -6,14 +6,8 @@ import SpriteKit
 /// in the wind.
 @MainActor
 enum TreeSway {
-    enum State: Equatable {
-        /// Swaying.
-        case running
-        /// Paused: holding the current lean.
-        case held
-        /// Far out or with Reduce Motion: upright and still.
-        case stopped
-    }
+    /// Swaying; paused, holding the current lean; or far out or with Reduce Motion, upright and still.
+    typealias State = MotionState
 
     static let key = "sway"
     /// 0.7°, either way.
@@ -53,9 +47,7 @@ extension IsoWorldScene {
     /// Starts, holds or stops every clump on screen when the sway state
     /// changes; on other frames it does nothing.
     func updateTreeSway(zoom: Double, now: TimeInterval) {
-        let state: TreeSway.State = reduceMotion || zoom < 0.5
-            ? .stopped
-            : simulationIsStill(now: now) ? .held : .running
+        let state: TreeSway.State = zoom < 0.5 ? .stopped : motionState(now: now)
         guard state != treeSwayState else { return }
         treeSwayState = state
         for node in presentSprites.values {

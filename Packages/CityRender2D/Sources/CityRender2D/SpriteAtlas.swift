@@ -50,6 +50,14 @@ public enum SpriteAtlas {
     private nonisolated(unsafe) static var atlasCache: [String: SKTextureAtlas] = [:]
     private nonisolated(unsafe) static var atlasNameSetCache: [String: Set<String>] = [:]
     private nonisolated(unsafe) static var textureCache: [String: SKTexture] = [:]
+    /// Textures that stand in for atlas art, by name: the test bundle has no atlases.
+    private nonisolated(unsafe) static var stubs: [String: SKTexture] = [:]
+
+    /// Makes `texture(named:)` answer `textures` before the atlases, until `stub([:])`.
+    static func stub(_ textures: [String: SKTexture]) {
+        cacheQueue.sync { stubs = textures }
+    }
+
     private static let cacheQueue = DispatchQueue(label: "city.spriteatlas.cache")
 
     public enum WalkerFacing: String, CaseIterable, Hashable, Sendable {
@@ -196,7 +204,7 @@ public enum SpriteAtlas {
     /// name is not packed into that atlas (the asset is missing).
     static func texture(named name: String) -> SKTexture? {
         var hit: SKTexture?
-        cacheQueue.sync { hit = textureCache[name] }
+        cacheQueue.sync { hit = stubs[name] ?? textureCache[name] }
         if let hit { return hit }
 
         guard let atlasName = SpriteAtlasRouting.atlasName(for: name) else { return nil }
@@ -340,7 +348,7 @@ public enum SpriteAtlas {
                     for frame in 0 ..< 3 {
                         names.append("\(stem)-constructing-\(frame)")
                     }
-                    for frame in 0 ..< (SpriteName.shoreOperationalFrames[kind.rawValue] ?? 2) {
+                    for frame in 0 ..< (SpriteAnimation.entry(for: .buildingOperational(kind))?.frameCount ?? 0) {
                         names.append("\(stem)-operational-\(frame)")
                     }
                 }

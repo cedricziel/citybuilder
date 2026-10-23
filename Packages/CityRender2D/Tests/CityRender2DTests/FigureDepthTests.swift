@@ -108,7 +108,9 @@ func figuresStayBehindATreeClump() throws {
         guard case .terrain = spec.kind else { return false }
         return spec.coord == TileCoordinate(x: 9, y: 9)
     }?.value)
-    let clump = try #require(ground.children.first { $0.name == IsoWorldScene.terrainObjectNodeName }).zPosition
+    // Over plain ground the clump stands alone; over a transition it rides on its ground node.
+    let clump = try #require(ground.name == IsoWorldScene.terrainObjectNodeName
+        ? ground : ground.children.first { $0.name == IsoWorldScene.terrainObjectNodeName }).zPosition
     // From (a, b - 1) to (a + 1, b - 1) behind the clump on (a, b): behind it for the whole step.
     for along in [0, 0.25, 0.5, 0.7, 0.9, 0.95] {
         #expect(stand(9 + along, 8) < clump, "\(along) of the step")

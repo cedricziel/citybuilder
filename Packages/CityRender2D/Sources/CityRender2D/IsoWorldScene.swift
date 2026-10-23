@@ -41,9 +41,10 @@ public final class IsoWorldScene: SKScene {
     private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
-    /// Open water, drawn by one backdrop sprite rather than a sprite per tile, and the tiles it holds.
-    var deepWaterNode: SKSpriteNode?
-    var deepWaterMask: DeepWaterMask?
+    /// Plain grass, beach and water, drawn by one backdrop sprite rather than a sprite per tile, and
+    /// the looks it shows.
+    var groundBackdropNode: SKSpriteNode?
+    var groundBackdropMap: GroundBackdropMap?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.
@@ -109,6 +110,10 @@ public final class IsoWorldScene: SKScene {
     var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
+    /// Fish jumping near the coast. Spec: `rendering-2_5d` / Fish jump near the coast.
+    let fishLayer = FishLayerNode()
+    /// Sawdust at the working sawmills. Spec: `rendering-2_5d` / Sawdust puffs at the sawmills.
+    let sawdustLayer = SawdustLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
@@ -125,6 +130,7 @@ public final class IsoWorldScene: SKScene {
     /// Whether the tree clumps sway, hold or stand still. Spec:
     /// `rendering-2_5d` / Trees sway in the wind.
     var treeSwayState: TreeSway.State = .running
+    var buildingMotionState: BuildingMotion.State = .running
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -225,6 +231,7 @@ public final class IsoWorldScene: SKScene {
         updateWindowGlow(with: snapshot)
         noteTick(snapshot.tickCount, now: currentTime)
         updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
+        updateBuildingMotion(now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
@@ -233,6 +240,7 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
+        reconcileWaterAndMills(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)
         reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
@@ -345,6 +353,7 @@ public final class IsoWorldScene: SKScene {
         }
         appliedSeason = season
         guard changesLook else { return }
+        refreshGroundBackdropLooks()
         for (coord, spec) in terrainSpecs {
             guard case let .terrain(kind, transition, object) = spec.kind,
                   Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil

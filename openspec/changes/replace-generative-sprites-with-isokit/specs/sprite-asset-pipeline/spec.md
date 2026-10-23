@@ -198,15 +198,15 @@ The public `SpriteAtlas` API remains unchanged.
 - **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
 
 ### Requirement: Shore-building sprites per facing
-For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: one for the Port, whose operational sprite does not loop, and two for the Shipyard, whose hull work does. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
+For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: six for the Port, whose crane brings cargo ashore, and five for the Shipyard, whose hull is planked in four stages and launched. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
 
-#### Scenario: All 20 port sprites declared
+#### Scenario: All 40 port sprites declared
 - **WHEN** the sprite catalog is enumerated for the Port kind
-- **THEN** there are exactly 20 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0`
+- **THEN** there are exactly 40 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` to `-5`
 
-#### Scenario: All 24 shipyard sprites declared
+#### Scenario: All 36 shipyard sprites declared
 - **WHEN** the sprite catalog is enumerated for the Shipyard kind
-- **THEN** there are exactly 24 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` and `-1`
+- **THEN** there are exactly 36 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` to `-4`
 
 #### Scenario: Every declared shore-building sprite resolves
 - **WHEN** the debug-build asset-presence check runs
@@ -364,7 +364,7 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 **Reason**: The port's second operational frame repeated the first, and the shore sprites moved to `Kit.atlas`.
 
-**Migration**: "Shore-building sprites per facing" replaces it: 20 port sprites and 24 shipyard sprites.
+**Migration**: "Shore-building sprites per facing" replaces it: 40 port sprites and 36 shipyard sprites.
 
 ### Requirement: Sprite catalog declares new content
 
