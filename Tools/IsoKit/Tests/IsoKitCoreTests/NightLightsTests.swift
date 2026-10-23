@@ -8,7 +8,7 @@ struct NightLightsTests {
         kit.block(SCNVector3(1, 0, 1), SCNVector3(7, 6, 7), .plaster)
         for storey in 0 ..< 2 {
             for along in [2.0, 3.4, 4.8, 6.2] {
-                kit.window(Face.south(wallZ: 7), along: along, y: 1.5 + CGFloat(storey) * 3, lit: false)
+                kit.window(Face.south(wallZ: 7), along: along, y: 1.5 + CGFloat(storey) * 3)
             }
         }
     }

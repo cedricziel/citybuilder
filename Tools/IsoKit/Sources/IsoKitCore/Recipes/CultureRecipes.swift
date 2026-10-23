@@ -257,7 +257,7 @@ extension Builder {
         for along in stride(from: lo.z, through: hi.z, by: (hi.z - lo.z) / 3) {
             block(SCNVector3(hi.x, base, along - 0.1), SCNVector3(hi.x + 0.1, hi.y, along + 0.1), posts)
         }
-        window(Face.south(wallZ: hi.z + 0.05), along: lo.x + (hi.x - lo.x) * 0.375, y: base + 1.3, lit: true)
+        window(Face.south(wallZ: hi.z + 0.05), along: lo.x + (hi.x - lo.x) * 0.375, y: base + 1.3)
         onFace(
             Face.south(wallZ: hi.z + 0.05),
             FaceRect(along: lo.x + (hi.x - lo.x) * 0.625, y: base + 1.0, width: 1.0, height: 1.9),
@@ -287,7 +287,7 @@ extension Builder {
     /// A shuttered window per entry of `at` on a face.
     func shuttered(_ face: Face, at alongs: [CGFloat], y: CGFloat) {
         for along in alongs {
-            window(face, along: along, y: y, lit: false, shutters: Looks.blueShutter)
+            window(face, along: along, y: y, shutters: Looks.blueShutter)
         }
     }
 

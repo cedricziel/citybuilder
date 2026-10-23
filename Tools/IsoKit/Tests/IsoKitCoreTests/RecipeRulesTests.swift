@@ -40,6 +40,16 @@ struct RecipeRulesTests {
         #expect(RecipeRules.problems(in: recipe) == ["building-test-paint constructing-0: material unnamed is outside the finish set"])
     }
 
+    /// A lit window baked into the day sprite glows at noon and outshines the night lights.
+    @Test("scenario: Day sprites never glow")
+    func daySpritesNeverGlow() {
+        let lamp = Recipe(id: "building-test-lamp", cell: SpriteCell(footprint: 1, heightPx: 64)) { kit, _ in
+            let pane = kit.block(SCNVector3(0.5, 0, 0.5), SCNVector3(3.5, 2, 3.5), .glass)
+            pane.geometry?.firstMaterial?.emission.contents = NSColor.orange
+        }
+        #expect(RecipeRules.problems(in: lamp).contains { $0.contains("glows") })
+    }
+
     @Test("every shipped recipe passes the rules at every stage and moving-part frame")
     func shippedRecipesPassTheRules() {
         #expect(Recipes.all.flatMap(RecipeRules.problems).isEmpty)

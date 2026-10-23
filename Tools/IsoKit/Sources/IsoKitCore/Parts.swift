@@ -250,9 +250,9 @@ extension Builder {
         )
     }
 
-    func window(_ face: Face, along: CGFloat, y: CGFloat, lit: Bool, shutters: NSColor? = nil) {
+    func window(_ face: Face, along: CGFloat, y: CGFloat, shutters: NSColor? = nil) {
         onFace(face, FaceRect(along: along, y: y, width: 0.86, height: 1.0), depth: 0.06, finish: .timber)
-        onFace(face, FaceRect(along: along, y: y, width: 0.64, height: 0.8), depth: 0.09, finish: lit ? .litGlass : .glass)
+        onFace(face, FaceRect(along: along, y: y, width: 0.64, height: 0.8), depth: 0.09, finish: .glass)
         onFace(face, FaceRect(along: along, y: y - 0.55, width: 1.0, height: 0.1), depth: 0.16, finish: .timber)
         if let shutters {
             for side in [CGFloat(-1), 1] {
