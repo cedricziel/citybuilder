@@ -64,7 +64,7 @@ Only two things are session state: the player hid the guide, and the session saw
 The Claude Design canvas put today's HUD next to three options: A, a first-steps card; B, contextual hints only; and C, first steps in the goals sheet. A plus B's caption was picked. A is the only option that shows the ledger before the deficit.
 
 - The card is a 12 pt-radius thin-material panel under the top-right HUD buttons, 300 pt wide. It has a "First steps" headline with a hide button, a tax / upkeep / net row in monospaced figures (net in red below zero), the caption "Per collection, every 50 ticks", and five step rows with a check circle and a one-line reason each.
-- On compact width (iPhone landscape) the card collapses to one capsule, "First steps 2/5 · net −$24", which expands on tap. Apple TV shows the expanded card without the hide button; the Settings pause menu has no entry for it.
+- On compact width (iPhone landscape) the card collapses to one capsule, "First steps 2/5 · net -$24", which expands on tap. Every platform shows the hide button, Apple TV included, where it takes focus like the other HUD buttons.
 - The tool strip warning is appended to the existing hint with " · ", as the in-reach count already is.
 
 ### D4. Measuring the advice with the PlayerBot

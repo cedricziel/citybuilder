@@ -69,11 +69,11 @@ Each step SHALL carry one line saying why it matters: farms feed residents, a ho
 
 ### Requirement: Tool strip warns while the guide shows
 
-While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep $<upkeep> per collection", the difficulty-scaled upkeep of one collection. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
+While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no operational farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep $<upkeep> per collection", the difficulty-scaled upkeep of one collection. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
 
 #### Scenario: Caption warns about food
 
-- **WHEN** the guide shows, the player owns no farm and arms the house
+- **WHEN** the guide shows, the player owns no operational farm and arms the house
 - **THEN** the tool strip caption ends with "No farm yet: residents need food"
 
 #### Scenario: Caption names upkeep
