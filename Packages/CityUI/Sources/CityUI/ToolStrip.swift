@@ -7,7 +7,16 @@ public enum ToolStripText {
     /// `paintingRoad` only matters on Apple TV, where select toggles road
     /// painting. `inReach` is the armed hut's trees or forester's open
     /// grass at its candidate site (`GameSession.armedInReachCount`).
-    public static func hint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false, inReach: Int? = nil) -> String {
+    /// `warning` is the first-hour guide's (`GameSession.armedGuideWarning`).
+    public static func hint(
+        for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false, inReach: Int? = nil, warning: String? = nil
+    ) -> String {
+        let hint = baseHint(for: tool, idiom: idiom, paintingRoad: paintingRoad, inReach: inReach)
+        guard let warning else { return hint }
+        return "\(hint) · \(warning)"
+    }
+
+    private static func baseHint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool, inReach: Int?) -> String {
         let name = tool.displayName.lowercased()
         let touch = idiom.isTouch
         let base = switch (tool, idiom) {
@@ -80,7 +89,7 @@ struct ToolStripView: View {
                     title(tool)
                     Text(ToolStripText.hint(
                         for: tool, idiom: idiom, paintingRoad: session.isPaintingRoad,
-                        inReach: session.armedInReachCount(idiom: idiom)
+                        inReach: session.armedInReachCount(idiom: idiom), warning: session.armedGuideWarning
                     ))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
