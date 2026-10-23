@@ -24,10 +24,10 @@ function atlas(name, prefix, keep) {
   return entries;
 }
 
-const goods = atlas("Icons.atlas", "good-", () => true);
-const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
-// Art-kit renders live in Kit.atlas at @1x and @2x; the web pages take the @1x base sprites.
+// Every atlas holds @1x and @2x files; the web pages take the @1x ones.
 const oneX = (key) => !key.includes("@");
+const goods = atlas("Icons.atlas", "good-", oneX);
+const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
 const buildingBase = (key) =>
   oneX(key) && !/-(constructing|operational)-\d$/.test(key) && !cultureOrEra.test(key) && !/-v\d$/.test(key) &&
   !/-c\d+$/.test(key) && // road connection tiles: the backdrop draws the base road
@@ -61,6 +61,24 @@ const buildingSizes = Object.fromEntries(
 writeFileSync(
   join(out, "buildingSizes.ts"),
   `import type { buildingSpritesKey } from "./buildings";\nexport const buildingSizes: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingSizes)};\n`,
+);
+
+// A sprite can be wider than its footprint (room for its shadow), so the footprint comes from the
+// brief that lists the sprite (`- Cell: 2×3 footprint`), not from the PNG's width.
+const footprintOf = {};
+const catalog = join(resources, "Sprites.style/catalog");
+for (const file of readdirSync(catalog).filter((name) => name.endsWith(".md"))) {
+  const text = readFileSync(join(catalog, file), "utf8");
+  const cell = /^- Cell: (\d+)×(\d+) footprint/m.exec(text);
+  if (!cell) continue;
+  for (const [, name] of text.matchAll(/^- (?:\(\d+, *\d+\): )?`building-([a-z0-9-]+)`/gm)) {
+    footprintOf[name] = [Number(cell[1]), Number(cell[2])];
+  }
+}
+const buildingFootprints = Object.fromEntries(Object.keys(buildings).map((key) => [key, footprintOf[key] ?? [1, 1]]));
+writeFileSync(
+  join(out, "buildingFootprints.ts"),
+  `import type { buildingSpritesKey } from "./buildings";\n// Footprint in tiles: [columns along x, rows along y].\nexport const buildingFootprints: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingFootprints)};\n`,
 );
 console.log(
   `sprites: ${Object.keys(goods).length} goods, ${Object.keys(buildings).length} buildings, ${Object.keys(terrain).length} terrain`,

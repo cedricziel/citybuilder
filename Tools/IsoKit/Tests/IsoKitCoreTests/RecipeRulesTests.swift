@@ -64,6 +64,19 @@ struct RecipeRulesTests {
         #expect(problems.contains { $0.contains("building-test-tower") && $0.contains("top") })
     }
 
+    @Test("scenario: A building's shadow fits its cell")
+    func shadowFitsItsCell() {
+        let tower = Recipe(id: "building-test-tower", cell: SpriteCell(footprint: 2, heightPx: 320)) { kit, _ in
+            kit.block(SCNVector3(3, 0, 3), SCNVector3(5, 16, 5), .ashlar)
+        }
+        #expect(CellFit.problems(in: tower).contains { $0.contains("shadow") })
+        let roomy = CellFit.roomForShadow(tower)
+        #expect(roomy.cell.widthPx > tower.cell.widthPx && roomy.cell.widthPx % 16 == 0)
+        #expect(roomy.cell.heightPx == tower.cell.heightPx)
+        #expect(CellFit.problems(in: roomy).isEmpty, "\(CellFit.problems(in: roomy))")
+        #expect(CellFit.roomForShadow(roomy).cell == roomy.cell)
+    }
+
     @Test("every shipped recipe fits its cell")
     func shippedRecipesFit() {
         for recipe in Recipes.all {

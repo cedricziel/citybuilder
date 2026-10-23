@@ -50,18 +50,7 @@ extension IsoWorldScene {
     }
 
     private func reconcileTerrain(in view: VisibleTiles, with snapshot: WorldSnapshot) {
-        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
-        var redrawAll = false
-        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
-            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
-            redrawAll = true
-        }
-        if objectMap?.matches(width: width, height: height, grid: grid) == true {
-            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
-        } else {
-            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
-            redrawAll = true
-        }
+        let redrawAll = refreshTerrainMaps(for: snapshot)
         guard redrawAll || view != shownTiles || !staleTerrain.isEmpty else { return }
         spriteReconcileCounts.terrainPasses += 1
         for coord in shownTiles?.tiles(notIn: view) ?? [] {
@@ -100,7 +89,7 @@ extension IsoWorldScene {
         shownBuildingInputs = inputs
         spriteReconcileCounts.buildingPasses += 1
         let desired = SnapshotReconciler.buildingSprites(
-            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinkCache.links(for: snapshot)
+            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinks(for: snapshot)
         )
         for spec in buildingSpecs.subtracting(desired) {
             guard let node = presentSprites.removeValue(forKey: spec) else { continue }
@@ -108,9 +97,27 @@ extension IsoWorldScene {
             if buildingNodes[spec.coord] === node { buildingNodes.removeValue(forKey: spec.coord) }
         }
         for spec in desired.subtracting(buildingSpecs) {
-            if let sprite = place(spec) as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
+            let node = placedNode(for: spec)
+            addBuildingInDrawOrder(node)
+            presentSprites[spec] = node
+            if let sprite = node as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
         }
         buildingSpecs = desired
+    }
+
+    /// Nodes at equal depth draw in child order, and side-by-side buildings overlap where a wide sprite's
+    /// shadow margin meets its neighbour. Each building goes after every equal-depth building to its left
+    /// and before every one to its right, so the order is left to right however the buildings come on
+    /// screen: in one pass, across pans, or one at a time as they change.
+    private func addBuildingInDrawOrder(_ node: SKNode) {
+        let rightNeighbours = buildingNodes.values.filter {
+            $0.parent === self && $0.zPosition == node.zPosition && $0.position.x > node.position.x
+        }
+        if let index = rightNeighbours.compactMap({ children.firstIndex(of: $0) }).min() {
+            insertChild(node, at: index)
+        } else {
+            addChild(node)
+        }
     }
 
     @discardableResult
