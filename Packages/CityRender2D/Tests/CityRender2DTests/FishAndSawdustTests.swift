@@ -48,7 +48,7 @@ func scenarioSawdustPuffsAtAWorkingSawmill() throws {
     let (scene, source) = scene(showing: coast())
     scene.update(0)
     let emitter = try #require(scene.sawdustLayer.emitters[mill.id])
-    #expect(emitter.name == SawdustLayerNode.emitterName && emitter.parent === scene.sawdustLayer && emitter.speed == 1)
+    #expect(emitter.name == SawdustLayerNode.emitterName && emitter.parent === scene.sawdustLayer && !emitter.isPaused)
     #expect(emitter.position == SawdustLayerNode.saw(of: mill))
     source.snapshot = coast(tick: 181, issues: [mill.id: .storageFull])
     scene.update(0.1)
@@ -64,19 +64,31 @@ func scenarioSawdustRests() throws {
     let (scene, source) = scene(showing: coast())
     scene.update(0)
     scene.update(1)
-    #expect(try #require(scene.sawdustLayer.emitters[mill.id]).speed == 0, "paused")
+    // SKEmitterNode does not expose its particles: a held emitter is paused
+    // (its puffs freeze in the air) and lets no new puff out.
+    let held = { (emitter: SKEmitterNode) in emitter.isPaused && emitter.particleBirthRate == 0 }
+    #expect(try held(#require(scene.sawdustLayer.emitters[mill.id])), "paused")
     source.snapshot = coast(tick: 780)
     scene.update(1.1)
-    #expect(try #require(scene.sawdustLayer.emitters[mill.id]).speed == 0, "night")
+    #expect(try held(#require(scene.sawdustLayer.emitters[mill.id])), "night")
     source.snapshot = coast(tick: 181)
     scene.update(1.2)
-    #expect(try #require(scene.sawdustLayer.emitters[mill.id]).speed == 1)
-    source.snapshot = coast(tick: 182, zoom: 0.4)
+    let running = try #require(scene.sawdustLayer.emitters[mill.id])
+    #expect(!running.isPaused && running.particleBirthRate == SawdustLayerNode.birthRate)
+    // An emitter taken from the pool while the game is still starts held.
+    source.snapshot = coast(tick: 182, issues: [mill.id: .storageFull])
+    scene.update(1.25)
+    source.snapshot = coast(tick: 780)
     scene.update(1.3)
-    #expect(scene.sawdustLayer.emitters.isEmpty, "too far out")
-    source.snapshot = coast(tick: 183)
-    scene.reduceMotion = true
+    #expect(try held(#require(scene.sawdustLayer.emitters[mill.id])), "a new emitter at night")
+    source.snapshot = coast(tick: 181)
+    scene.update(1.35)
+    source.snapshot = coast(tick: 183, zoom: 0.4)
     scene.update(1.4)
+    #expect(scene.sawdustLayer.emitters.isEmpty, "too far out")
+    source.snapshot = coast(tick: 184)
+    scene.reduceMotion = true
+    scene.update(1.5)
     #expect(scene.sawdustLayer.emitters.isEmpty, "reduce motion")
 }
 
@@ -98,6 +110,20 @@ func scenarioAFishJumpsNearTheCoast() throws {
     source.snapshot = coast(tick: 181)
     scene.update(due + 1)
     #expect(jump.speed == 0, "the jump holds while the game is paused")
+}
+
+@MainActor
+@Test("open water never counts at the map edge")
+func noOpenWaterAtTheMapEdge() {
+    // 6 × 6: land in columns 0 and 1, water elsewhere, up to the map edge.
+    let base = World.fixtureWithTerrain(width: 6, height: 6, fill: .grass, seed: 1).snapshot()
+    let snapshot = WorldSnapshot(
+        tickCount: 180, simulatedTime: base.simulatedTime, mapWidth: 6, mapHeight: 6,
+        terrainGrid: (0 ..< 36).map { $0 % 6 >= 2 ? .water : .grass }, occupiedTiles: [:], buildings: [:], carriers: [],
+        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: 3, centerY: 3, zoom: 1)
+    )
+    let waters = Set(FishLayerNode.waters(in: snapshot, xRange: 0 ... 5, yRange: 0 ... 5))
+    #expect(waters == Set((1 ... 4).flatMap { y in (3 ... 4).map { TileCoordinate(x: $0, y: y) } }))
 }
 
 @MainActor

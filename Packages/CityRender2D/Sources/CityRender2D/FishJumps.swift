@@ -24,7 +24,8 @@ final class FishLayerNode: SKNode {
     /// Open water (water all round, so no shore tile) with land within
     /// `reach` tiles, in reading order.
     static func waters(in snapshot: WorldSnapshot, xRange: ClosedRange<Int>, yRange: ClosedRange<Int>) -> [TileCoordinate] {
-        let isWater = { (x: Int, y: Int) in (snapshot.terrain(at: TileCoordinate(x: x, y: y)) ?? .water) == .water }
+        // Off the map counts as not water, so a tile at the edge is never open water.
+        let isWater = { (x: Int, y: Int) in snapshot.terrain(at: TileCoordinate(x: x, y: y)) == .water }
         return yRange.flatMap { row in xRange.map { TileCoordinate(x: $0, y: row) } }.filter { tile in
             (-1 ... 1).allSatisfy { dy in (-1 ... 1).allSatisfy { dx in isWater(tile.x + dx, tile.y + dy) } }
                 && (-reach ... reach).contains { dy in

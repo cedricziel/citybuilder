@@ -53,7 +53,7 @@ final class SawdustLayerNode: SKNode {
         if still != self.still {
             self.still = still
             for emitter in emitters.values {
-                emitter.speed = still ? 0 : 1
+                Self.hold(emitter, still: still)
             }
         }
     }
@@ -69,12 +69,21 @@ final class SawdustLayerNode: SKNode {
             let emitter = pool.popLast() ?? Self.makeEmitter()
             emitter.position = Self.saw(of: mill)
             emitter.zPosition = IsoWorldScene.figureZ(at: emitter.position)
-            emitter.speed = still ? 0 : 1
             emitter.resetSimulation()
+            emitter.particleBirthRate = Self.birthRate
             addChild(emitter)
             emitter.advanceSimulationTime(TimeInterval(emitter.particleLifetime))
+            Self.hold(emitter, still: still)
             emitters[mill.id] = emitter
         }
+    }
+
+    static let birthRate: CGFloat = 5
+
+    /// Freezes the puffs in the air, and lets none new out, while `still`.
+    static func hold(_ emitter: SKEmitterNode, still: Bool) {
+        emitter.isPaused = still
+        emitter.particleBirthRate = still ? 0 : birthRate
     }
 
     /// Small pale puffs that drift out from the saw and settle.
@@ -82,7 +91,7 @@ final class SawdustLayerNode: SKNode {
         let emitter = SKEmitterNode()
         emitter.name = emitterName
         emitter.particleTexture = AmbientLayerNode.puffTexture
-        emitter.particleBirthRate = 5
+        emitter.particleBirthRate = birthRate
         emitter.particleLifetime = 1.1
         emitter.particleLifetimeRange = 0.3
         emitter.particlePositionRange = CGVector(dx: 6, dy: 2)
