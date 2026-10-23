@@ -38,7 +38,14 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]).union(figureStems)
+    ]).union(houseAgeLooks).union(figureStems)
+
+    /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).
+    static let houseAgeLooks: [String] = ["antiquity", "renaissance", "industrial", "modern"].flatMap { age in
+        ["", "-east-asian", "-mediterranean", "-middle-eastern"].flatMap { culture in
+            ["building-house", "building-house-tier2", "building-house-tier3"].map { "\($0)-\(age)\(culture)" }
+        }
+    }
 
     /// One stem per resident look, carrier load or animal action and facing (`walker-woman-se`,
     /// `carrier-logs-nw`, `animal-sheep-graze-sw`).

@@ -167,6 +167,10 @@ public final class GameSession {
         routeList.commandSink = { [weak self] in self?.enqueue($0) }
         minimap.apply(world.snapshot())
         minimap.camera = world.camera
+        // A save in the red emits no warning on load (`deficit-hint` D2).
+        if world.economy.balance < 0, !world.economy.gameOver {
+            showDeficitHint()
+        }
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -178,6 +182,11 @@ public final class GameSession {
 
     /// The banner on screen and the tick it hides at.
     var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
+    /// True once this session showed the deficit hint (`deficit-hint` D2).
+    var hasShownDeficitHint = false
+    /// The deficit hint while it shows; the simulation waits for the
+    /// player to dismiss it (`deficit-hint` D1).
+    public internal(set) var deficitHint: SessionBanner?
     public var isWinSheetPresented = false
 
     /// Advance the simulation one tick. Drains the per-tick event stream
@@ -186,7 +195,7 @@ public final class GameSession {
     /// While `isPaused == true` the call is a no-op so the world,
     /// snapshot, and audio events stay frozen.
     public func step() {
-        guard !isPaused else { return }
+        guard !isPaused, deficitHint == nil else { return }
         let result = world.tick()
         noteBannerEvents(in: result.events)
         let snapshot = world.snapshot()
@@ -238,7 +247,11 @@ public final class GameSession {
     /// a pause the game makes itself. Spec: `platform-shells` / Interface
     /// actions make a sound.
     public func togglePause() {
-        isPaused.toggle()
+        if deficitHint != nil {
+            dismissDeficitHint()
+        } else {
+            isPaused.toggle()
+        }
         UISounds.play(.toggle)
     }
 
