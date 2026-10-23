@@ -48,5 +48,5 @@ Selecting a building SHALL show the inspector as a callout next to it: 14 points
 
 #### Scenario: Callout names the next tier's needs
 
-- **WHEN** the player selects a citizens' house, and then a peasants' house
-- **THEN** their key lines include "Next: Merchants need bread, tools" and "Next: Citizens need planks"
+- **WHEN** the player selects a citizens' house in a Northern European town, then a peasants' house, then a merchants' house
+- **THEN** the first two have the key lines "Next: Merchants need bread, tools, beer" and "Next: Citizens need planks", and the merchants' house has no "Next:" line

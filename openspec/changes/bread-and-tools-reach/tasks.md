@@ -7,6 +7,6 @@
 
 ## 2. M2 — Showing the chain (CityUI)
 
-- [ ] 2.1 Tests-first: "Callout names the next tier's needs" and "Locked drawer tile names its research"; confirm red
-- [ ] 2.2 Implement to green: the "Next:" key line (design D2) and the locked tile caption (design D3)
-- [ ] 2.3 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
+- [x] 2.1 Tests-first: "Callout names the next tier's needs" and "Locked drawer tile names its research"; confirm red
+- [x] 2.2 Implement to green: the "Next:" key line (design D2) and the locked tile caption (design D3)
+- [x] 2.3 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario from this change
