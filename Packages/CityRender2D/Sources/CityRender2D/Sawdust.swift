@@ -70,6 +70,8 @@ final class SawdustLayerNode: SKNode {
             let emitter = pool.popLast() ?? Self.makeEmitter()
             emitter.position = Self.saw(of: mill)
             emitter.zPosition = IsoWorldScene.figureZ(at: emitter.position)
+            // A pooled emitter may come back paused, and a paused one ignores the prewarm.
+            emitter.isPaused = false
             emitter.resetSimulation()
             emitter.particleBirthRate = Self.birthRate
             addChild(emitter)

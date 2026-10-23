@@ -92,6 +92,43 @@ func scenarioSawdustRests() throws {
     #expect(scene.sawdustLayer.emitters.isEmpty, "reduce motion")
 }
 
+/// How many pixels the sawdust lights around `emitter` on the black
+/// `stage` it lives in: the one way to see its particles, which
+/// SKEmitterNode does not expose.
+@MainActor
+private func litPixels(around emitter: SKEmitterNode, on stage: SKScene) -> Int {
+    let point = emitter.convert(CGPoint.zero, to: stage)
+    let crop = CGRect(x: point.x - 64, y: point.y - 32, width: 128, height: 128)
+    let view = SKView(frame: CGRect(origin: .zero, size: crop.size))
+    guard let image = view.texture(from: stage, crop: crop)?.cgImage(), let data = image.dataProvider?.data as Data?
+    else { return 0 }
+    return stride(from: 0, to: data.count, by: 4).count { data[$0] > 40 }
+}
+
+@MainActor
+@Test("a pooled emitter taken while the game is held still shows its puffs")
+func pooledHeldEmitterIsPrewarmed() throws {
+    // The layer on a black stage of its own, so only the sawdust draws.
+    let stage = SKScene(size: CGSize(width: 256, height: 256))
+    stage.backgroundColor = .black
+    let layer = SawdustLayerNode()
+    stage.addChild(layer)
+    let view = CGSize(width: 1024, height: 768)
+    layer.reconcile(snapshot: coast(), viewSize: view, reduceMotion: false, still: false)
+    let running = try #require(layer.emitters[mill.id])
+    // Centre the mill's saw on the stage.
+    layer.position = CGPoint(x: 128 - running.position.x, y: 128 - running.position.y)
+    #expect(litPixels(around: running, on: stage) > 0, "a running mill puffs")
+    // Night falls, the mill stops while it is held, and its emitter goes to
+    // the pool paused; then the mill works again before dawn.
+    layer.reconcile(snapshot: coast(tick: 780), viewSize: view, reduceMotion: false, still: true)
+    layer.reconcile(snapshot: coast(tick: 781, issues: [mill.id: .storageFull]), viewSize: view, reduceMotion: false, still: true)
+    layer.reconcile(snapshot: coast(tick: 782), viewSize: view, reduceMotion: false, still: true)
+    let emitter = try #require(layer.emitters[mill.id])
+    #expect(emitter === running && emitter.isPaused && emitter.particleBirthRate == 0)
+    #expect(litPixels(around: emitter, on: stage) > 0, "the prewarmed puffs hang in the air")
+}
+
 @MainActor
 @Test("scenario: a fish jumps near the coast")
 func scenarioAFishJumpsNearTheCoast() throws {
