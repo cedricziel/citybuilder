@@ -67,7 +67,7 @@ Filenames MUST remain lowercase, hyphen-separated, with no spaces, underscores, 
 
 ### Requirement: Operational frames share one silhouette
 
-Every building operational frame (`<name>-operational-N`) SHALL keep the base sprite's silhouette: the left, right and bottom edges of its opaque bounding box MUST lie within 2 pixels of the base sprite's. The top edge is exempt, so effects such as chimney smoke may rise above the roof. Frames that IsoKit composites from a declared moving part (sails, wheel) are exempt on the side the part sweeps, because the part's extent changes as it turns; their bottom edge MUST still match. The content gate MUST fail on a frame outside this tolerance with reason `frame_misaligned`. Catalog entries MAY declare `operational = "derived"` to have the pipeline build their operational frames from the base sprite, which satisfies this rule by construction.
+Every building operational frame (`<name>-operational-N`) SHALL keep the base sprite's silhouette: the left, right and bottom edges of its opaque bounding box MUST lie within 2 pixels of the base sprite's. The top edge is exempt, so effects such as chimney smoke may rise above the roof. Frames that IsoKit composites from a declared moving part (sails, wheel) are exempt on the side the part sweeps, because the part's extent changes as it turns; their bottom edge MUST still match. The content gate MUST fail on a frame outside this tolerance with reason `frame_misaligned`.
 
 #### Scenario: Content gate rejects a shifted operational frame
 
@@ -96,6 +96,20 @@ Rationale: indexed encoding keeps every sprite well under the pre-commit 1 MB ba
 #### Scenario: Pipeline writes indexed-mode PNGs by default
 - **WHEN** the art pipeline (`art.finalize`) writes an atlas PNG
 - **THEN** the file is saved with at most a 256-colour palette and `optimize=True`
+
+### Requirement: Animation frames stay coherent with their base sprite
+
+For every sprite that declares animation frames (`<name>-0` … `<name>-N`) or art variants (`<name>-v1` … `<name>-vN`), each frame and variant SHALL stay visually coherent with the base `<name>.png`. The palette-histogram distance between the frame and the base, computed over 16 quantised luminance-hue bins on opaque pixels, MUST NOT exceed the content gate's own threshold, `SpriteContentGate.coherenceMaxDistance` (0.3). The content gate MUST fail on any frame above the threshold.
+
+#### Scenario: Content gate rejects a frame that depicts a different object
+
+- **WHEN** the content gate compares `terrain-water-1.png` (a house) against the `terrain-water.png` base (water)
+- **THEN** the gate fails and names `terrain-water-1.png` with reason `frame_incoherent`
+
+#### Scenario: Content gate accepts coherent water frames
+
+- **WHEN** the content gate compares four water frames that differ only in glint placement against their water base
+- **THEN** the gate passes for all four frames
 
 ### Requirement: Ship sprite inventory
 The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross product of facings `{n, ne, e, se, s, sw, w, nw}` and frames `{0, 1}`. Every declared ship sprite MUST resolve to a non-nil texture in `Kit.atlas` (verified by the asset-presence check from `sprite-asset-pipeline`).
@@ -233,7 +247,7 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 Every sprite PNG under `Resources/{Kit,Icons}.atlas/` SHALL be produced by:
 
 - IsoKit, for buildings and units,
-- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons, or
+- the SVG generators of capability `iso-art-kit`, for terrain, transitions and roads, or
 - committed pixel art, for the status badges drawn over buildings (`overlay-`) and the goods icons (`good-`), each with a nearest-neighbour `@2x` twin. The goods icons came from the retired generative pipeline, three of them (`good-wood`, `good-planks`, `good-food`) from an image-generation API; hand-authored SVG icons replace them, and until then their briefs declare `source = "pixel"`.
 
 Every PNG has an `@1x` file and an `@2x` file with the same stem. No new PNG may come from an image-generation API, and the retired `scripts/generate_sprites_ai` pipeline no longer exists.
@@ -260,7 +274,7 @@ A `make sprites` target SHALL regenerate atlas PNGs from the IsoKit recipes and 
 #### Scenario: make sprites runs offline
 
 - **WHEN** `make sprites` runs on a Mac with no network and no `OPENAI_API_KEY`
-- **THEN** it exits zero and every atlas PNG is written
+- **THEN** it exits zero and writes every atlas PNG except the committed pixel art
 
 #### Scenario: Verification fails on a content defect
 
