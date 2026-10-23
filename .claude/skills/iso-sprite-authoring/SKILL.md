@@ -26,11 +26,12 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   `RenderJob`, and `Recipes/` (one recipe per building look).
 - `scripts/art`: `terrain_tiles` (corner-mask SVG), `ground` (lit ground
   textures), `flora` and `rocks` (ray-cast tree clumps and rock outcrops),
-  `terrain_objects` (object names, cache, SVG embedding), `svg_sprites` (rsvg),
+  `terrain_objects` (object names, cache, SVG embedding), `goods_icons` (the
+  hand-authored goods icons), `svg_sprites` (rsvg),
   `finalize` (libimagequant into `Kit.atlas`), `compare` (tolerance).
 - A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) says how its
-  sprites are made: `source = "isokit"`, `"svg"`, or `"pixel"` for the goods
-  icons and badges committed as is. `make sprites` renders the first two and
+  sprites are made: `source = "isokit"`, `"svg"`, or `"pixel"` for the status
+  badges committed as is. `make sprites` renders the first two and
   leaves pixel art alone. The generative pipeline is gone.
 
 ## Grid and anchors (from the code)

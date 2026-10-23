@@ -97,8 +97,7 @@ Terrain is drawn by the SVG generators in `scripts/art` and filtered linearly li
 ## Forbidden
 
 - **Image-generation models.** No sprite may come from an image-generation model, as a source or
-  as a reference. The goods icons still committed from the retired generative pipeline are
-  replaced with SVG icons by task 4.9.
+  as a reference.
 - **Lights and glow.** No recipe adds a light or a material that emits light.
 - **Stray materials.** No recipe uses a material outside the shared finish set.
 - **Truecolor PNGs.** Every committed atlas PNG is indexed (at most 256 colours).

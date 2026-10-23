@@ -304,16 +304,18 @@ save/load via the `Island.name` Codable field.
 
 ### Adding a new good icon
 
-Goods icons are 24 × 24 pixel art in `Resources/Icons.atlas`, committed
-as is, until hand-authored SVG icons replace them (task 4.9 of
-`replace-generative-sprites-with-isokit`).
+Goods icons are hand-authored SVG on a 24-point grid, drawn by
+`scripts/art/goods_icons.py` and rendered at @1x and @2x into
+`Resources/Kit.atlas`.
 
-1. **Draw the icon** as an indexed PNG, `good-<rawValue>.png`, and add
-   a nearest-neighbour `good-<rawValue>@2x.png` beside it.
+1. **Draw the icon**: add the good's shapes to `GLYPHS` and its colours
+   to `PALETTES` in `scripts/art/goods_icons.py`, in the shared style
+   (natural colours, lit from the upper left, dark outline).
 2. **Write the brief**:
    `Resources/Sprites.style/catalog/good-<rawValue>.md` with
-   `source = "pixel"`, and `Function`, `Visual identity`, `Sprites`
-   and `Recipe` sections.
+   `source = "svg"`, and `Function`, `Visual identity`, `Sprites`
+   and `Recipe` sections. Then run `make sprites`, and
+   `make sprites-svg-verify` to check the committed PNGs.
 3. **Extend `Good`** in
    `Packages/CityCore/Sources/CityCore/Goods.swift` with the matching
    raw value. The HUD reads icons via `GoodIconLoader.image(for:)`,
