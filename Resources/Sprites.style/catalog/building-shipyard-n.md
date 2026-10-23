@@ -7,7 +7,7 @@ Shore-placement ship producer. Consumes wood and planks; emits ships. This entry
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a plank boat shed and a log pile. A stone slipway with timber rails steps down into the water beside the visible edge, with a hull on its cradle: keel and ribs, and strakes being fitted. The four facings move the geometry, never the camera or the sun, so they light alike.
+Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a plank boat shed and a log pile. A stone slipway with timber rails steps down into the water beside the visible edge, with a hull on its cradle. While the yard operates, the hull is planked stage by stage, from keel and ribs to six strakes, then launched, and a new keel is laid. The four facings move the geometry, never the camera or the sun, so they light alike.
 
 ## Sprites
 
@@ -15,13 +15,16 @@ Rendered by IsoKit in the shared light rig. A grey stone quay over the land half
 - `building-shipyard-n-constructing-0` — quay and slipway
 - `building-shipyard-n-constructing-1` — shed walls rising
 - `building-shipyard-n-constructing-2` — shed under its roof, scaffold
-- `building-shipyard-n-operational-0` — hull with two strakes
-- `building-shipyard-n-operational-1` — hull with four strakes
+- `building-shipyard-n-operational-0` — keel and ribs
+- `building-shipyard-n-operational-1` — hull with two strakes
+- `building-shipyard-n-operational-2` — hull with four strakes
+- `building-shipyard-n-operational-3` — hull with six strakes, finished
+- `building-shipyard-n-operational-4` — empty slipway, the hull launched
 
 ## Recipe
 
 - Recipe: `building-shipyard-n` (IsoKit)
 - Cell: 2×3 footprint, 128 pt tall
 - Construction stages: 3
-- Operational frames: 2
+- Operational frames: 5
 - Moving part: hull

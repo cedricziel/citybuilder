@@ -12,6 +12,10 @@ extension SCNVector3 {
         SCNVector3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z)
     }
 
+    static func -= (lhs: inout SCNVector3, rhs: SCNVector3) {
+        lhs = lhs - rhs
+    }
+
     static func * (lhs: SCNVector3, rhs: CGFloat) -> SCNVector3 {
         SCNVector3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs)
     }
