@@ -1,3 +1,6 @@
+---
+source = "pixel"
+---
 ## Function
 
 UI icon for the `wood` good. Used in the goods bar, building tooltips,
@@ -11,16 +14,10 @@ cross-section of light pine end-grain visible. No bark texture detail
 finer than 2 canonical pixels. Palette anchors: `#6E4A2A` bark,
 `#A07C50` pine end-grain, `#5C3F28` bark shadow.
 
-Front-matter override: `sheet_size = "256x256"`, `cell_grid = "1x1"`.
-Downsamples to 24×24 canonical pixels using nearest-neighbour (no
-anti-alias) per design.md §Q2.
+## Sprites
 
-## Sheet
+- `good-wood` — static icon
 
-Grid: 1 cols × 1 rows. Cell is 256×256 sheet pixels.
+## Recipe
 
-- (0, 0): `good-wood` — static icon
-
-## Animation
-
-Static — no animation loop.
+- Source: committed pixel art in `Icons.atlas`, drawn by an image-generation API before the art kit; task 4.9 replaces it with a hand-authored SVG icon

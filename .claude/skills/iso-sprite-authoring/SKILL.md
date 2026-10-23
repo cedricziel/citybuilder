@@ -10,8 +10,8 @@ OpenSpec change: `replace-generative-sprites-with-isokit`.
 
 ```
 make sprites-check                        # recipe/catalog agreement + cell fit, no GPU
-make sprites                              # render migrated entries into Kit.atlas
-make sprites-verify                       # tolerance check + legacy byte check + content gate
+make sprites                              # render every isokit and svg entry into Kit.atlas
+make sprites-verify                       # tolerance check + content gate
 xcrun swift run --package-path Tools/IsoKit isokit render --all --out /tmp/r   # every recipe, scratch
 ISOKIT_SKIP_RENDER=1 xcrun swift test --package-path Tools/IsoKit             # CI's view
 ```
@@ -28,9 +28,10 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
   textures), `flora` and `rocks` (ray-cast tree clumps and rock outcrops),
   `terrain_objects` (object names, cache, SVG embedding), `svg_sprites` (rsvg),
   `finalize` (libimagequant into `Kit.atlas`), `compare` (tolerance).
-- A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) migrates by
-  setting `source = "isokit"` (or `"svg"`). Until then the legacy pipeline owns
-  its PNGs, and `make sprites` leaves them alone.
+- A catalog brief (`Resources/Sprites.style/catalog/<id>.md`) says how its
+  sprites are made: `source = "isokit"`, `"svg"`, or `"pixel"` for the goods
+  icons and badges committed as is. `make sprites` renders the first two and
+  leaves pixel art alone. The generative pipeline is gone.
 
 ## Grid and anchors (from the code)
 
@@ -50,8 +51,8 @@ Never bare `swift`. Rendering needs a Mac GPU; CI never renders.
 
 - A recipe is parts + numbers, 19–38 lines. `id` is the sprite stem; `entry`
   is the catalog brief. One brief can own several recipes (house tiers).
-- The rendered names must equal the brief's Sheet list, or `isokit check`
-  fails. Mirror the atlas you replace: count the `-constructing-N` and
+- The rendered names must equal the brief's `## Sprites` list, or `isokit
+  check` fails. Mirror the atlas you replace: count the `-constructing-N` and
   `-operational-N` files that exist today.
 - **Plot:** every recipe gets a slab over its whole footprint, 3 cm below yard
   slabs (no z-fighting), overhanging the two front edges by 12 cm. Without it,
@@ -131,7 +132,7 @@ files it lists as outside tolerance.
   `-winter` sets, because grass changes with the season) and
   `terrain-beach-water-t<m>`, m = 1..14, plus full tiles. Beach always
   separates grass from water. The brief of the upper terrain lists its
-  transitions in its Sheet; transitions have no brief of their own.
+  transitions in its Sprites list; transitions have no brief of their own.
 - Boundaries cross each tile edge **at its midpoint, leaving perpendicular**.
   Wobble fades to zero at the ends. Neighbours along +col need consistent
   masks (3 next to 7, not 3 next to 6).

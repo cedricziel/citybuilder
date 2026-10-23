@@ -4,7 +4,7 @@ import Foundation
 public struct CatalogEntry: Equatable {
     public let id: String
     public let source: String
-    /// Sprite names listed in the brief (`- (r, c): \`name\`` lines), in file order.
+    /// Sprite names listed in the brief's `## Sprites` section, in file order.
     public let spriteNames: [String]
     /// `- Key: value` lines of the brief's `## Recipe` section.
     public let recipeFacts: [String: String]
@@ -51,13 +51,31 @@ public struct CatalogEntry: Equatable {
         return ""
     }
 
-    /// Sprite names from `- (row, col): \`name\`` lines; spare cells have no name and are skipped.
-    static func spriteNames(fromMarkdown text: String) -> [String] {
-        let pattern = #"^- \(\d+, *\d+\): `([a-z0-9-]+)`"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else { return [] }
-        let range = NSRange(text.startIndex..., in: text)
-        return regex.matches(in: text, range: range).compactMap { match in
-            Range(match.range(at: 1), in: text).map { String(text[$0]) }
+    /// Sprite names from the `## Sprites` section's `- \`name\`` lines, in file order. A brief with no
+    /// Sprites section, an empty one, or a name outside `[a-z0-9-]` is an error: dropping it quietly would
+    /// leave its sprites unrendered and unchecked.
+    static func spriteNames(fromMarkdown text: String, id: String) throws -> [String] {
+        let lines = text.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard let start = lines.firstIndex(of: "## Sprites") else { throw CatalogError.noSprites(id) }
+        let names = try lines[(start + 1)...].prefix { !$0.hasPrefix("## ") }.compactMap { line -> String? in
+            guard line.hasPrefix("- ") else { return nil }
+            guard let match = line.firstMatch(of: #/^- `([a-z0-9-]+)`/#) else { throw CatalogError.badSpriteLine(id, line) }
+            return String(match.1)
+        }
+        guard !names.isEmpty else { throw CatalogError.noSprites(id) }
+        return names
+    }
+}
+
+/// A brief the catalog cannot read.
+public enum CatalogError: Error, Equatable, CustomStringConvertible {
+    case noSprites(String)
+    case badSpriteLine(String, String)
+
+    public var description: String {
+        switch self {
+        case let .noSprites(id): "\(id): no `## Sprites` section, or it lists no sprite"
+        case let .badSpriteLine(id, line): "\(id): sprite line is not - `name`: \(line)"
         }
     }
 }
@@ -74,11 +92,11 @@ public struct Catalog {
             .filter { $0.pathExtension == "md" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         let entries = try files.map { file in
-            let text = try String(contentsOf: file, encoding: .utf8)
-            return CatalogEntry(
-                id: file.deletingPathExtension().lastPathComponent,
+            let text = try String(contentsOf: file, encoding: .utf8), id = file.deletingPathExtension().lastPathComponent
+            return try CatalogEntry(
+                id: id,
                 source: CatalogEntry.source(fromMarkdown: text),
-                spriteNames: CatalogEntry.spriteNames(fromMarkdown: text),
+                spriteNames: CatalogEntry.spriteNames(fromMarkdown: text, id: id),
                 recipeFacts: CatalogEntry.recipeFacts(fromMarkdown: text)
             )
         }
@@ -101,7 +119,7 @@ public enum RecipeRegistry {
                 continue
             }
             let rendered = Set(owned.flatMap(\.spriteNames)), declared = Set(entry.spriteNames)
-            if !declared.isEmpty, rendered != declared {
+            if rendered != declared {
                 let missing = declared.subtracting(rendered).sorted(), extra = rendered.subtracting(declared).sorted()
                 problems.append("\(entry.id) sprite names differ from its brief: missing \(missing), extra \(extra)")
             }

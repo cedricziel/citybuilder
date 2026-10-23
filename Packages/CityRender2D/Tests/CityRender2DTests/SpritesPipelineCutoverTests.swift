@@ -59,7 +59,7 @@ private func catalogId(forSpriteName name: String) -> String {
 @Test("scenario: every committed atlas png has a catalog entry")
 func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
     // A migrated brief lists its sprites by name, transitions included.
-    let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSheetNames)
+    let listed = try Set(GateCatalog.load(resourcesRoot: worktreeRoot().appendingPathComponent("Resources")).migratedSpriteNames)
     let atlases = [
         "Resources/Kit.atlas",
         "Resources/Icons.atlas"
@@ -74,9 +74,7 @@ func scenarioEveryCommittedAtlasPngHasACatalogEntry() throws {
             // `@2x` twins and night lights (`-lights`) belong to their sprite's entry.
             let stem = (entry as NSString).deletingPathExtension.replacingOccurrences(of: "@2x", with: "")
                 .replacingOccurrences(of: "-lights(-[0-9]+)?$", with: "", options: .regularExpression)
-            // The overlay-* family is renderer-internal, not a catalog
-            // entry — skip the routing check for it.
-            if stem.hasPrefix("overlay-") || listed.contains(stem) { continue }
+            if listed.contains(stem) { continue }
             let id = catalogId(forSpriteName: stem)
             let catalog = catalogDir.appendingPathComponent("\(id).md")
             if !FileManager.default.fileExists(atPath: catalog.path) {
@@ -94,7 +92,7 @@ func scenarioLegacyPathIsEmpty() {
     let url = worktreeRoot().appendingPathComponent("scripts/generate-sprites.swift")
     #expect(
         !FileManager.default.fileExists(atPath: url.path),
-        "scripts/generate-sprites.swift must not exist (legacy path quarantined to scripts/legacy/)"
+        "scripts/generate-sprites.swift must not exist: the procedural generator is retired"
     )
 }
 
@@ -118,63 +116,4 @@ func scenarioReadmeReferencesNoProceduralWorkflow() throws {
     )
 }
 
-// MARK: - Requirement: Hermetic regeneration via make sprites
-
-@Test("scenario: offline regen reproduces committed pngs")
-func scenarioOfflineRegenReproducesCommittedPngs() throws {
-    // Drives `make sprites-regen-check`, the byte half of
-    // `make sprites-verify`: it redirects pipeline writes to a tempdir,
-    // runs the pipeline offline against the committed `_sheets/`, and
-    // exits non-zero on any byte mismatch against the committed atlas
-    // PNGs. CI runs the other half, `make sprites-content`, as its own
-    // step, so this test doesn't build the content gate inside `swift test`.
-    let process = Process()
-    process.currentDirectoryURL = worktreeRoot()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["make", "sprites-regen-check"]
-    let pipe = Pipe()
-    process.standardOutput = pipe
-    process.standardError = pipe
-    // Strip OPENAI_API_KEY from the test process so the verify step
-    // also fails fast if it tries to call the API.
-    var env = ProcessInfo.processInfo.environment
-    env["OPENAI_API_KEY"] = ""
-    process.environment = env
-    try process.run()
-    process.waitUntilExit()
-    let output = String(
-        data: pipe.fileHandleForReading.readDataToEndOfFile(),
-        encoding: .utf8
-    ) ?? ""
-    #expect(
-        process.terminationStatus == 0,
-        "make sprites-regen-check exited \(process.terminationStatus):\n\(output)"
-    )
-}
-
-@Test("scenario: ci fails on a cache miss")
-func scenarioCiFailsOnACacheMiss() throws {
-    // CI's reproducibility gate is `make sprites-verify`. The
-    // scenario asserts that contributors who commit a catalog edit
-    // without the matching sheet hit a hard CI failure. We assert
-    // both anchors: `sprites-verify` must be a Makefile target, and
-    // the catalog/sheet consistency hook must be wired into
-    // pre-commit so the failure is caught before the push, not just
-    // at CI time.
-    let makefile = try readFile("Makefile")
-    #expect(
-        makefile.contains("sprites-verify:"),
-        "Makefile must declare a `sprites-verify` target"
-    )
-    let preCommit = try readFile(".pre-commit-config.yaml")
-    #expect(
-        preCommit.contains("check-sprite-catalog-consistency"),
-        "pre-commit must include the catalog-sheet consistency hook"
-    )
-    let ci = try readFile(".github/workflows/ci.yml")
-    #expect(
-        ci.contains("make sprites-verify"),
-        "ci.yml must invoke make sprites-verify"
-    )
-}
 #endif

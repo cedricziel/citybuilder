@@ -13,22 +13,11 @@ animation.
 
 Rendered by IsoKit in the shared light rig. Pale plaster halls between dark timber posts on a stone base, under wide-eaved slate hip roofs, with a sliding plank door and a lit window. Same 2×2 footprint and bottom anchor as `building-house`.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-house-east-asian` — a single-storey hall under a slate hip roof, straw bales in the yard
-- (0, 1): `building-house-tier2-east-asian` — artisans: two storeys, a pent roof skirting the ground floor and a hip roof above
-- (0, 2): `building-house-tier3-east-asian` — scholars: three storeys over a dark slate plinth wall, two pent roofs, red-lacquered posts and a crown roof
-- (0, 3): spare
-- (1, 0): spare
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
+- `building-house-east-asian` — a single-storey hall under a slate hip roof, straw bales in the yard
+- `building-house-tier2-east-asian` — artisans: two storeys, a pent roof skirting the ground floor and a hip roof above
+- `building-house-tier3-east-asian` — scholars: three storeys over a dark slate plinth wall, two pent roofs, red-lacquered posts and a crown roof
 
 ## Recipe
 

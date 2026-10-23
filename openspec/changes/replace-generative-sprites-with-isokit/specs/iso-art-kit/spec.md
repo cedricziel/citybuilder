@@ -117,13 +117,14 @@ The day sprites (finished, construction and operational frames) SHALL show every
 - **WHEN** the committed Kit atlas is checked
 - **THEN** each of the 60 house looks has all three `-lights-<n>` at both scales, and every lights file sits beside its sprite
 
-### Requirement: Terrain and icon tiles come from SVG generators
+### Requirement: Terrain tiles come from SVG generators
 
 A generator under `scripts/art/` SHALL write the SVG sources for:
 
 - the terrain transition tiles
 - the full-tile variants
-- the goods icons
+
+The goods icons are committed pixel art until hand-authored SVG sources replace them.
 
 It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner masks 1–14 for the pairs grass→beach and beach→water. Every boundary MUST cross a tile edge at the edge's midpoint. Texture patterns MUST repeat on a 32×16-point period.
 
