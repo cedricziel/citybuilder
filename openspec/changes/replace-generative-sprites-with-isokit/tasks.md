@@ -54,13 +54,13 @@ Each numbered section below lands as its own PR. Sections 4.x are one asset fami
 - [x] 4.6 Ships and shore buildings: port and shipyard in four orientations (resolve the open question in design.md), ship facings. Facings move the geometry, never the camera or the sun; the port and shipyard render on a 2 × 3 cell and the ship in eight facings of two frames each, all in `Kit.atlas`
 - [x] 4.7 Walkers: done in `realistic-walkers` (storybook-scale people, carrier families and animals, 32×32 pt people, 8 gait frames)
 - [x] 4.8 Terrain: grass/beach/water full tiles and both transition sets, season variants (`Terrain shows the season`), lands together with §3. Moved up after houses: `art.ground` paints lit, tile-periodic ground (grass, beach, water, forest, rock, seasons, frames, rock variants); grass shores have autumn and winter transition sets; `Terrain.atlas` is retired
-- [ ] 4.9 Goods icons: hand-authored SVG sources replace the three image-API icons and the procedural ones
+- [ ] 4.9 Goods icons: hand-authored SVG sources replace the three image-API icons and the procedural ones. Until then the 18 icons are committed pixel art (`source = "pixel"`, with nearest-neighbour `@2x` twins), so §5 could remove the pipeline first
 - [x] 4.10 Night lights: `<sprite id>-lights` masks for every house look and the workshops, drawn additively at night by the renderer (`add-night-glow`)
 
 ## 5. Retire the old pipeline and docs
 
-- [ ] 5.1 Delete `scripts/generate_sprites_ai/`, `Resources/Sprites.style/_sheets/`, `master-reference.png`, `_cache/` and the `model` key, and the `sprites-reference`, `sprites-procedural` and `sprites-offline` targets. Remove `Sheet`/`Animation` from the catalog briefs
-- [ ] 5.2 Rewrite `Resources/Sprites.style/world.md` with the sections of "Style bible declares the kit's visual identity", using values that match IsoKit. Add the section test
-- [ ] 5.3 Rewrite the README sprite workflow, and update the `iso-sprite-authoring` skill to point at `Tools/IsoKit` instead of the prototype
+- [x] 5.1 Delete `scripts/generate_sprites_ai/`, `Resources/Sprites.style/_sheets/`, `master-reference.png`, `_cache/` and `pipeline.toml`, and the `sprites-ai`, `sprites-reference`, `sprites-procedural`, `sprites-offline` and `sprites-regen-check` targets. The briefs' `Sheet` grids become a `Sprites` list, and `Animation` goes. The content gate keeps its coherence threshold itself; CI drops the offline regen and the `_sheets` pre-commit hook
+- [x] 5.2 Rewrite `Resources/Sprites.style/world.md` with the sections of "Style bible declares the kit's visual identity", using values that match IsoKit. Add the section test
+- [x] 5.3 Rewrite the README sprite workflow, and update the `iso-sprite-authoring` skill to point at `Tools/IsoKit` instead of the prototype
 - [ ] 5.4 Run `SCENARIO_COVERAGE_STRICT=1 make test-scenarios` and confirm no uncovered scenario in `iso-art-kit`, `sprite-asset-pipeline`, `sprite-style-catalog` or `rendering-2_5d`
 - [ ] 5.5 Run the verify skill: one walk through a coastal start with every family on screen. Attach the screenshot to the archive PR
