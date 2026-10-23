@@ -215,6 +215,7 @@ func rockAndTreesLevelWithABuildingKeepOneOrder() throws {
     }
     let source = Source(snapshot(.spring))
     let scene = scene(source)
+    var orders: Set<Bool> = []
     for season in Season.allCases {
         source.snapshot = snapshot(season)
         scene.update(1)
@@ -222,8 +223,10 @@ func rockAndTreesLevelWithABuildingKeepOneOrder() throws {
         let rockZ = try #require(clump(at: rock, in: scene)).zPosition
         let treeZ = try #require(clump(at: tree, in: scene)).zPosition
         #expect(rockZ < houseZ && treeZ < houseZ, "\(season)")
-        #expect(treeZ < rockZ, "\(season): objects at one depth sort by column")
+        #expect(rockZ != treeZ, "\(season): objects at one depth never tie")
+        orders.insert(treeZ < rockZ)
     }
+    #expect(orders.count == 1, "the order between them never changes")
 }
 
 @MainActor
@@ -240,6 +243,22 @@ func buildingPlacedInALiveForest() {
     #expect(clump(at: .init(x: 3, y: 3), in: scene) == nil)
     let under = ground(at: .init(x: 3, y: 3), in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String
     #expect(under?.hasPrefix("terrain-grass") == true)
+}
+
+@Test("Overlapping objects at one depth stay apart in Float32 on the largest map")
+func overlappingObjectsStayApartOnTheLargestMap() {
+    // Depth 400: the far corner of a 300 x 300 map is 599. Neighbours that can overlap sit 1 or 2
+    // columns apart; each must stay behind the building at its depth and differ in Float32.
+    for column in 200 ..< 203 {
+        let here = TileCoordinate(x: column, y: 399 - column)
+        let house = Float(IsoWorldScene.depthZ(Double(here.x + here.y + 1)))
+        let objectZ = Float(IsoWorldScene.objectZ(at: here))
+        #expect(objectZ < house)
+        for step in 1 ... 2 {
+            let other = Float(IsoWorldScene.objectZ(at: TileCoordinate(x: column + step, y: 399 - column - step)))
+            #expect(other != objectZ, "column \(column) and \(column + step)")
+        }
+    }
 }
 
 @MainActor

@@ -33,8 +33,15 @@ extension IsoWorldScene {
     /// Sinks a terrain object just behind the building at its depth.
     static let objectSink: CGFloat = 0.003
     /// Orders objects at one depth by column, inside the sink, so two overlapping neighbours (a crag
-    /// beside a clump) never swap when the scene rebuilds.
-    static let objectColumnSpan: CGFloat = 0.0025
+    /// beside a clump) never swap when the scene rebuilds. Objects that overlap at one depth are at
+    /// most two columns apart, so three slots tell them apart, each wide enough to survive Float32 on
+    /// the largest map.
+    static let objectColumnStep: CGFloat = 0.00005
+
+    /// The global z of a terrain object on `coord`.
+    static func objectZ(at coord: TileCoordinate) -> CGFloat {
+        depthZ(Double(coord.x + coord.y + 1)) - objectSink + CGFloat(coord.x % 3) * objectColumnStep
+    }
 
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)
@@ -79,9 +86,7 @@ extension IsoWorldScene {
         node.name = Self.terrainObjectNodeName
         node.userData = [Self.textureNameKey: name]
         node.anchorPoint = CGPoint(x: 56.0 / 144.0, y: 20.0 / 132.0)
-        let depth = coord.x + coord.y + 1
-        let column = CGFloat(coord.x) / CGFloat(depth) * Self.objectColumnSpan
-        node.zPosition = Self.depthZ(Double(depth)) - Self.objectSink + column
+        node.zPosition = Self.objectZ(at: coord)
         return node
     }
 
