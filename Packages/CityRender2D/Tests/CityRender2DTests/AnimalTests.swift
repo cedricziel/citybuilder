@@ -7,7 +7,7 @@ import Testing
 
 private func farmland(
     _ buildings: [Building], tick: UInt64, pops: [EntityID: HousePopulation] = [:], zoom: Double = 1,
-    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil
+    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil, center: (x: Double, y: Double) = (20, 20)
 ) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 40, height: 40, fill: .grass, seed: 1).snapshot()
     var occupied: [TileCoordinate: EntityID] = [:]
@@ -21,7 +21,7 @@ private func farmland(
         tickCount: tick, simulatedTime: base.simulatedTime, mapWidth: 40, mapHeight: 40,
         terrainGrid: grid, occupiedTiles: occupied,
         buildings: Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) }), carriers: [],
-        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: 20, centerY: 20, zoom: zoom), housePopulations: pops,
+        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: center.x, centerY: center.y, zoom: zoom), housePopulations: pops,
         date: GameDate(year: 1200, season: season)
     )
 }
@@ -202,6 +202,23 @@ func scenarioAnimalsStayInBudget() {
     let houses = (0 ..< 40).map { house(UInt32(300 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
     let hens = plan(farmland(houses, tick: 180, pops: residents(houses)))
     #expect(hens.count == AnimalPlanner.maxHens)
+}
+
+@Test("scenario: panning to a farm gives it animals")
+func budgetGoesToTheFarmsNearestTheCamera() {
+    // 40 farms, more sheep than the budget, all in view.
+    let farms = (0 ..< 40).map { farm(UInt32(100 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
+    let homes = { (animals: [AnimalPlanner.Animal]) in Set(animals.map(\.home)) }
+    for center in [(x: 2.0, y: 1.0), (x: 36.0, y: 29.0), (x: 20.0, y: 15.0)] {
+        let animals = plan(farmland(farms, tick: 180, center: center))
+        #expect(animals.count <= AnimalPlanner.maxHerd)
+        // Every farm within 8 tiles of the camera centre keeps its herd.
+        for farm in farms {
+            let dx = Double(farm.anchor.x) - center.x, dy = Double(farm.anchor.y) - center.y
+            guard dx * dx + dy * dy <= 64 else { continue }
+            #expect(homes(animals).contains(farm.id), "farm \(farm.id.raw) near \(center) has no animals")
+        }
+    }
 }
 
 // MARK: - Through the scene
