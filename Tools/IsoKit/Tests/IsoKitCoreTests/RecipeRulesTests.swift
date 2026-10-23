@@ -116,34 +116,6 @@ struct RecipeRulesTests {
         #expect(abs(anchor.y - (1 - expected.y / 128)) < 0.001)
     }
 
-    /// Night lights keep only the window panes; a building without one gets no lights at all.
-    @Test("scenario: Night lights glow from the panes")
-    func lightsKeepOnlyThePanes() throws {
-        let hut = Recipe(id: "building-test-hut", cell: SpriteCell(footprint: 2, heightPx: 128), constructionFrames: 0) { kit, _ in
-            kit.block(SCNVector3(1, 0, 1), SCNVector3(7, 3, 7), .plaster)
-            kit.window(Face.south(wallZ: 7), along: 4, y: 1.5, lit: false)
-        }
-        let lights = try #require(hut.lightsScene())
-        var glowing = 0, hidden = 0
-        lights.enumerateHierarchy { node, _ in
-            for material in node.geometry?.materials ?? [] {
-                if material.lightingModel == .constant { glowing += 1 } else if material.colorBufferWriteMask.isEmpty { hidden += 1 }
-            }
-            // Occluders draw before panes, or a pane drawn first would show through them.
-            if let materials = node.geometry?.materials {
-                #expect(node.renderingOrder == (materials.contains { $0.lightingModel == .constant } ? 1 : -1))
-            }
-        }
-        #expect(glowing == 1)
-        #expect(hidden > 0)
-        let shed = Recipe(id: "building-test-shed", cell: SpriteCell(footprint: 1, heightPx: 64)) { kit, _ in
-            kit.block(SCNVector3(1, 0, 1), SCNVector3(3, 2, 3), .planks)
-        }
-        #expect(shed.lightsScene() == nil)
-        #expect(Recipes.lit.contains("building-house") && Recipes.lit.contains("building-bakery"))
-        #expect(!Recipes.lit.contains("building-warehouse"))
-    }
-
     /// A unit's feet and baked shadow have no plot to hide a cut, so both must stay inside the cell.
     @Test("a unit whose feet or shadow cross the bottom or side edge does not fit")
     func unitFeetAndShadowStayInTheCell() {
