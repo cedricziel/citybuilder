@@ -27,3 +27,33 @@ When no new simulation tick has arrived for 0.3 s, carriers and strollers SHALL 
 
 - **WHEN** a node that walks south-east is asked again for the south-east walk cycle
 - **THEN** it keeps the walk action it has
+
+### Requirement: Figures sort by where they stand
+
+A carrier, stroller or animal SHALL be depth-sorted, every frame, by the iso depth of the point under its feet (fractional column plus row, a tile centre counting as `x + y + 1`, like a building's footprint centre), plus a lift of a hundredth of a depth step. A figure whose feet are behind a building's footprint centre SHALL be hidden by the building; level with it or in front, it SHALL draw over it. A terrain object (tree clump, rock) SHALL sort a fiftieth of a step behind a building at its depth, so a figure passing behind a clump stays behind it until its feet are all but level with the clump.
+
+Flat ground buildings (roads and the plaza paving) SHALL NOT take part in this sort: they draw on a flat layer above the terrain and below every standing building and figure, so a figure walking a road never sinks into the tile it steps onto.
+
+Strollers SHALL stand on a road tile's centre at each end of a leg and move in a straight line between those centres; carriers stand on their path's tile centres the same way.
+
+One depth per footprint sorts correctly only while a footprint is at most one tile longer than it is wide. A footprint 3:1 or longer (|width − height| ≥ 2) can be drawn over by a figure beside its long end; no catalogued building is that long, and a test fails if one becomes so.
+
+#### Scenario: A figure behind a house is hidden by it
+
+- **WHEN** a carrier walks the road along the back edge of a 2×2 house, or steps from there out to the tile beside the house's corner
+- **THEN** its node sorts below the house's node until its feet are level with the house's footprint centre
+
+#### Scenario: A figure in front of a house draws over it
+
+- **WHEN** a figure walks the road down the house's front-right side
+- **THEN** its node sorts above the house's node
+
+#### Scenario: A figure on a road never sinks into it
+
+- **WHEN** a carrier steps from one road tile to the next, down-screen or up-screen
+- **THEN** at every point of the step its node sorts above every road tile it crosses
+
+#### Scenario: A figure passing behind a tree clump stays behind it
+
+- **WHEN** a figure steps from (a, b − 1) to (a + 1, b − 1) behind a clump on (a, b)
+- **THEN** its node sorts below the clump until at least 95 % of the step

@@ -28,18 +28,39 @@ extension IsoWorldScene {
         10 + CGFloat(depth) * 0.01
     }
 
-    /// Lifts a figure just above the building at its depth, below the next.
-    static let figureLift: CGFloat = 0.004
-    /// Sinks a terrain object just behind the building at its depth.
-    static let objectSink: CGFloat = 0.003
+    /// Lifts a figure just above a building at exactly its depth, and no further: a larger lift drew a
+    /// figure still behind a building's corner over its roof.
+    static let figureLift: CGFloat = 0.0001
+
+    /// The z of a figure whose feet stand at `point`: its iso depth there (fractional column plus row,
+    /// a tile centre counting as `x + y + 1` like a building's footprint centre), so a figure behind a
+    /// building, or stepping out from behind it, stays hidden until it is level with or in front of it.
+    static func figureZ(at point: CGPoint) -> CGFloat {
+        let tile = IsoMath.tileCoordinate(forScreenPoint: point)
+        return depthZ(tile.col + tile.row) + figureLift
+    }
+
+    /// Sinks a terrain object just behind the building at its depth: below a building level with it,
+    /// above everything half a depth step behind (0.005), and a figure goes in front only once its feet
+    /// are all but level with the clump, not 0.3 of a step early.
+    static let objectSink: CGFloat = 0.0002
+
+    /// Flat ground buildings (roads, and the plaza that paves the town center's ring) lie on the ground:
+    /// above the terrain and its shading (z 0–1), below everything that stands up. Figures and buildings
+    /// sort only against each other, so a walker on a road never sinks into the tile it steps onto.
+    static let flatGroundZ: CGFloat = 2
+
+    static func liesFlat(_ kind: BuildingKind) -> Bool {
+        kind == .road
+    }
 
     func placedNode(for spec: SpriteSpec) -> SKNode {
         let node = makeNode(for: spec)
         let tile = IsoMath.screenPoint(forTile: spec.coord)
         node.position = CGPoint(x: tile.x + node.position.x, y: tile.y + node.position.y)
-        if case let .building(_, _, footprint, _, _, _, _, _, _, _) = spec.kind {
+        if case let .building(kind, _, footprint, _, _, _, _, _, _, _) = spec.kind {
             let depth = Double(spec.coord.x + spec.coord.y) + Double(footprint.width + footprint.height) / 2
-            node.zPosition = Self.depthZ(depth)
+            node.zPosition = Self.liesFlat(kind) ? Self.flatGroundZ : Self.depthZ(depth)
         }
         return node
     }
