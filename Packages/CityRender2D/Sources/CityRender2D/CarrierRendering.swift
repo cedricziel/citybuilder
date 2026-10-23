@@ -41,6 +41,8 @@ struct CarrierVisual {
     var look: CarrierLook
     var target: CGPoint
     var movedAt: TimeInterval
+    /// False while the game is paused and the carrier stands on its frame 0.
+    var walking = true
 }
 
 struct CarrierLook: Equatable {
@@ -52,7 +54,16 @@ extension IsoWorldScene {
     /// Despawns finished carriers, and glides live ones to their tile over
     /// the time since their last step, so they keep pace at any speed.
     func reconcileCarriers(with snapshot: WorldSnapshot, now: TimeInterval) {
-        guard snapshot.tickCount != lastCarrierTick else { return }
+        guard snapshot.tickCount != lastCarrierTick else {
+            // Paused: carriers stop mid-road on their standing frame instead of walking in place.
+            if simulationIsStill(now: now) {
+                for (id, visual) in carrierVisuals where visual.walking {
+                    Self.animate(visual.node, look: visual.look, moving: false)
+                    carrierVisuals[id]?.walking = false
+                }
+            }
+            return
+        }
         lastCarrierTick = snapshot.tickCount
         let live = Set(snapshot.carriers.map(\.id))
         for (id, visual) in carrierVisuals where !live.contains(id) {
@@ -71,8 +82,9 @@ extension IsoWorldScene {
                 carrierVisuals[carrier.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now)
                 continue
             }
-            if visual.look != look {
+            if visual.look != look || !visual.walking {
                 visual.look = look
+                visual.walking = true
                 Self.animate(visual.node, look: look)
             }
             visual.node.zPosition = Self.zPosition(of: carrier)
@@ -86,8 +98,14 @@ extension IsoWorldScene {
         }
     }
 
-    private static func animate(_ node: SKSpriteNode, look: CarrierLook) {
-        node.playWalkCycle(.carrier(look.load, look.facing), frames: SpriteAtlas.carrierAnimation(load: look.load, facing: look.facing))
+    /// The carrier's own frames, or the walker's while carrier art is missing, each with its own key.
+    private static func animate(_ node: SKSpriteNode, look: CarrierLook, moving: Bool = true) {
+        let own = SpriteAnimation.AnimationKey.carrier(look.load, look.facing)
+        if let frames = SpriteAtlas.frames(for: own) {
+            node.playWalkCycle(own, frames: frames, moving: moving)
+        } else {
+            node.playWalkCycle(.walker(look.facing), frames: SpriteAtlas.walkerAnimation(facing: look.facing), moving: moving)
+        }
     }
 
     /// Facing from the next path segment.

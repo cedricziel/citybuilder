@@ -142,6 +142,20 @@ func plazaNodeLifecycle() throws {
 }
 
 @MainActor
+@Test("plaza figures stand on their feet, unmirrored")
+func plazaNodesStandOnTheirFeet() {
+    let scene = IsoWorldScene()
+    scene.size = CGSize(width: 1024, height: 768)
+    scene.reconcilePlazaCrowd(with: town(residents: 30, tick: 180), now: 0)
+    #expect(!scene.plazaNodes.isEmpty)
+    for shown in scene.plazaNodes.values {
+        #expect(abs(shown.node.anchorPoint.x - SpriteAtlas.walkerAnchor.x) < 0.0001)
+        #expect(abs(shown.node.anchorPoint.y - SpriteAtlas.walkerAnchor.y) < 0.0001)
+        #expect(shown.node.xScale > 0)
+    }
+}
+
+@MainActor
 @Test("a paused game stops walk cycles")
 func pausedGameStopsWalking() {
     let scene = IsoWorldScene()

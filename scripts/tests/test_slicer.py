@@ -51,6 +51,8 @@ NAME_PATTERNS = [
     re.compile(r"^walker-(?:woman-)?(?:ne|nw|se|sw)-\d+$"),
     # Carrier: carrier-<load>-<facing>-<frame>
     re.compile(r"^carrier-(?:sack|crate|barrel|logs)-(?:ne|nw|se|sw)-\d+$"),
+    # Animal: animal-<sheep|cow>-<walk|graze>-<facing>-<frame>, animal-hen-<facing>-<frame>
+    re.compile(r"^animal-(?:(?:sheep|cow)-(?:walk|graze)|hen)-(?:ne|nw|se|sw)-\d+$"),
     # Ship
     re.compile(r"^ship-(?:n|ne|e|se|s|sw|w|nw)-\d+$"),
     # Goods icon

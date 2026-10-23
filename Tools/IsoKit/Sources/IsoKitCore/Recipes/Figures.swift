@@ -226,13 +226,13 @@ extension Builder {
         }
     }
 
-    /// A figure turned to `facing` and scaled, its feet at `ground`.
-    func figure(_ fig: Figure, facing: WalkerFacing, phase: CGFloat, at ground: SCNVector3) {
+    /// Builds `body` (facing +x, standing on the origin) turned to `facing` and scaled, standing on `ground`.
+    func turned(_ facing: WalkerFacing, at ground: SCNVector3, scale: CGFloat = 1, _ body: (Builder) -> Void) {
         let local = Builder()
-        local.figure(fig, phase: phase)
+        body(local)
         local.root.position = ground
         local.root.eulerAngles = SCNVector3(0, facing.yaw, 0)
-        local.root.scale = SCNVector3(fig.scale, fig.scale, fig.scale)
+        local.root.scale = SCNVector3(scale, scale, scale)
         root.addChildNode(local.root)
     }
 }

@@ -184,6 +184,7 @@ private func expectedCatalogIds() -> Set<String> {
         }
     }
     ids.insert("walker")
+    ids.insert("animal")
     ids.insert("ship")
     for good in Good.allCases {
         ids.insert("good-\(good.rawValue)")
