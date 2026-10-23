@@ -8,6 +8,7 @@ import SwiftUI
 extension CityRootView {
     func hudLayer(layout: HUDLayout, hudWidth: CGFloat, worldViewSize: CGSize) -> some View {
         let railInset = layout.railInset
+        let firstStepsGuide = session.firstStepsGuide
         return ZStack {
             VStack(spacing: 8) {
                 // The section includes the inset, so its frame spans the
@@ -21,7 +22,8 @@ extension CityRootView {
                             hud: session.hud,
                             layout: layout,
                             maxWidth: MinimapLayout.trayColumnWidth(
-                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap
+                                hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap,
+                                showsFirstSteps: firstStepsGuide != nil
                             )
                         )
                         SessionBannerView(
@@ -33,9 +35,17 @@ extension CityRootView {
                     }
                     .frame(maxWidth: .infinity)
                     .panelAnimation(value: session.banner)
-                    if MinimapLayout.corner(for: layout) == .topTrailing {
-                        minimap(layout: layout, worldViewSize: worldViewSize)
+                    VStack(alignment: .trailing, spacing: 8) {
+                        if MinimapLayout.corner(for: layout) == .topTrailing {
+                            minimap(layout: layout, worldViewSize: worldViewSize)
+                        }
+                        if let guide = firstStepsGuide {
+                            FirstStepsCardView(guide: guide, layout: layout) { session.hideFirstSteps() }
+                                .panelTransition(.fade)
+                        }
                     }
+                    .tvFocusSection()
+                    .panelAnimation(value: firstStepsGuide == nil)
                 }
                 .padding(.leading, railInset)
             }

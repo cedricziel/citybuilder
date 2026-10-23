@@ -46,7 +46,7 @@ func scenarioDeficitHintNamesTheCause() {
     #expect(session.world.economy.balance < 0)
     #expect(session.banner?.title == "In the red: upkeep $\(figures.upkeep) vs tax $\(figures.tax)")
     #expect(session.banner?.description
-        == "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts.")
+        == "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market.")
 }
 
 @MainActor

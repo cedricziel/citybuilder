@@ -33,9 +33,20 @@ public struct HUDLayout: Equatable, Sendable {
     /// Narrower than 600 points, such as an iPad app in Slide Over: the
     /// minimap takes the phone's size.
     public var isCompactWidth = false
+    /// Shorter than 500 points, such as an iPhone in landscape.
+    public var isCompactHeight = false
 
     public static func make(size: CGSize, idiom: HUDIdiom) -> HUDLayout {
-        HUDLayout(placement: HUDDock.placement(for: size), idiom: idiom, isCompactWidth: size.width < 600)
+        HUDLayout(
+            placement: HUDDock.placement(for: size), idiom: idiom,
+            isCompactWidth: size.width < 600, isCompactHeight: size.height < 500
+        )
+    }
+
+    /// The first-hour guide shows as its one-line capsule. Spec:
+    /// `platform-shells` / First-hour guide.
+    public var collapsesFirstSteps: Bool {
+        isCompactWidth || isCompactHeight
     }
 
     public var isPhone: Bool {

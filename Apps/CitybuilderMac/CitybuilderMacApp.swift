@@ -95,6 +95,11 @@ struct CitybuilderMacApp: App {
                             audio.consumeSnapshot(snapshot)
                         }
                     )
+                    #if DEBUG
+                    if UITestSeed.hidesFirstSteps(fromArguments: ProcessInfo.processInfo.arguments) {
+                        session.hideFirstSteps()
+                    }
+                    #endif
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
                     audio.beginSession()
