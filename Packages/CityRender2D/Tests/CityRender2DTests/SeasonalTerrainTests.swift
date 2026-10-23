@@ -38,8 +38,15 @@ private func renderedGrassTextureNames(season: Season) -> [String?] {
     let source = FixedSnapshot(grassSnapshot(season: season))
     scene.dataSource = source
     scene.update(0)
-    return scene.children.compactMap { $0 as? SKSpriteNode }.filter { $0.zPosition == 0 }
+    return groundNames(scene)
+}
+
+/// The ground sprite of every tile on screen: its own node's, or the one the ground backdrop draws.
+@MainActor
+private func groundNames(_ scene: IsoWorldScene) -> [String?] {
+    let nodes = scene.children.compactMap { $0 as? SKSpriteNode }.filter { $0.zPosition == 0 }
         .map { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+    return nodes + (scene.shownTiles?.tiles ?? []).compactMap { scene.groundSpriteName(at: $0) }
 }
 
 @MainActor
@@ -142,7 +149,7 @@ extension PlaceholderSuite {
         scene.hasSprite = { !$0.contains("-v") }
         scene.dataSource = FixedSnapshot(grassSnapshot(season: .summer))
         scene.update(0)
-        let names = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+        let names = groundNames(scene).compactMap(\.self)
         #expect(!names.isEmpty && names.allSatisfy { $0 == "terrain-grass" })
         let variants = logged.filter { $0.hasPrefix("terrain-grass-v") }
         #expect(!variants.isEmpty)

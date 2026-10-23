@@ -3,16 +3,16 @@ import SpriteKit
 import Testing
 @testable import CityRender2D
 
-// Scenarios from openspec/changes/deep-water-backdrop (rendering-2_5d).
+// Scenarios from openspec/changes/ground-backdrop (rendering-2_5d).
 
-/// A 12 x 12 sea with a 4 x 4 island at (4...7, 4...7): beach round grass.
+/// A 12 x 12 sea with an island at (2...10, 2...10): a beach two tiles wide round grass at (4...8, 4...8).
 private func islandSnapshot(paint: [TileCoordinate: TerrainType] = [:]) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 12, height: 12, fill: .water, seed: 1).snapshot()
     let grid = base.terrainGrid.indices.map { index -> TerrainType in
         let tile = TileCoordinate(x: index % 12, y: index / 12)
         if let painted = paint[tile] { return painted }
-        let island = (4 ... 7).contains(tile.x) && (4 ... 7).contains(tile.y)
-        let core = (5 ... 6).contains(tile.x) && (5 ... 6).contains(tile.y)
+        let island = (2 ... 10).contains(tile.x) && (2 ... 10).contains(tile.y)
+        let core = (4 ... 8).contains(tile.x) && (4 ... 8).contains(tile.y)
         return core ? .grass : island ? .beach : .water
     }
     var camera = base.camera
@@ -47,12 +47,12 @@ private func scene(_ source: Source) -> IsoWorldScene {
 }
 
 @MainActor
-private func hasWaterTile(_ scene: IsoWorldScene, at coord: TileCoordinate) throws -> Bool {
-    try #require(scene.deepWaterMask).contains(coord)
+private func backdropDraws(_ scene: IsoWorldScene, at coord: TileCoordinate) throws -> Bool {
+    try #require(scene.groundBackdropMap).covers(coord)
 }
 
-@Test("The open-water backdrop covers every tile of the map and no more")
-func openWaterBackdropCoversTheMap() {
+@Test("The ground backdrop covers every tile of the map and no more")
+func groundBackdropCoversTheMap() {
     let bounds = IsoWorldScene.mapBounds(width: 300, height: 200)
     let half = CGSize(width: IsoMath.tileWidth / 2, height: IsoMath.tileHeight / 2)
     // The map's four outer corners: west of (0, 199), north of (0, 0), east of (299, 0), south of (299, 199).
@@ -65,53 +65,52 @@ func openWaterBackdropCoversTheMap() {
 }
 
 @MainActor
-@Test("scenario: Open water is one node")
-func openWaterIsOneNode() throws {
+@Test("scenario: Plain ground is one node")
+func plainGroundIsOneNode() throws {
     let scene = scene(Source(islandSnapshot()))
-    let open = TileCoordinate(x: 1, y: 6)
-    #expect(scene.terrainSpecs[open] == nil)
-    #expect(try hasWaterTile(scene, at: open))
-    #expect(scene.children.count { $0.name == IsoWorldScene.deepWaterNodeName } == 1)
-    #expect(scene.deepWaterNode?.size == IsoWorldScene.mapBounds(width: 12, height: 12).size)
+    // Open water, the plain grass in the island's middle and the plain beach round it.
+    for plain in [TileCoordinate(x: 0, y: 6), TileCoordinate(x: 6, y: 6), TileCoordinate(x: 3, y: 6)] {
+        #expect(scene.terrainSpecs[plain] == nil, "\(plain)")
+        #expect(try backdropDraws(scene, at: plain), "\(plain)")
+    }
+    #expect(scene.children.count { $0.name == IsoWorldScene.groundBackdropNodeName } == 1)
+    #expect(scene.groundBackdropNode?.size == IsoWorldScene.mapBounds(width: 12, height: 12).size)
 }
 
 @MainActor
-@Test("scenario: Shore water keeps its transition sprite")
-func shoreWaterKeepsItsTransitionSprite() throws {
-    // Grass straight on the water at (9, 9) turns the corners round it to beach, so the water tile
-    // west of it, (8, 9), draws a beach-water transition as a sprite.
-    let scene = scene(Source(islandSnapshot(paint: [TileCoordinate(x: 9, y: 9): .grass])))
-    let shore = TileCoordinate(x: 8, y: 9)
+@Test("scenario: Transition tiles keep their sprites")
+func transitionTilesKeepTheirSprites() throws {
+    // Grass straight on the water at (0, 6) turns the corners round it to beach, so the water tile
+    // east of it, (1, 6), draws a beach-water transition as a sprite.
+    let rock = TileCoordinate(x: 0, y: 6)
+    let scene = scene(Source(islandSnapshot(paint: [rock: .grass])))
+    let shore = TileCoordinate(x: 1, y: 6)
     guard case let .terrain(kind, transition, _) = try #require(scene.terrainSpecs[shore]).kind else {
         Issue.record("no terrain sprite at \(shore)")
         return
     }
     #expect(kind == .water && transition != nil)
-    #expect(try !hasWaterTile(scene, at: shore))
-    // The island's beach draws its own edge: beach and grass tiles are never open water.
-    #expect(scene.terrainSpecs[TileCoordinate(x: 4, y: 6)] != nil)
-    #expect(try !hasWaterTile(scene, at: TileCoordinate(x: 4, y: 6)))
-    #expect(try !hasWaterTile(scene, at: TileCoordinate(x: 5, y: 5)))
+    #expect(try !backdropDraws(scene, at: shore))
 }
 
 @MainActor
-@Test("scenario: Open water follows the terrain")
-func openWaterFollowsTheTerrain() throws {
+@Test("scenario: Plain ground follows the terrain")
+func plainGroundFollowsTheTerrain() throws {
     let source = Source(islandSnapshot())
     let scene = scene(source)
-    let reef = TileCoordinate(x: 1, y: 1)
-    #expect(try hasWaterTile(scene, at: reef))
+    let reef = TileCoordinate(x: 0, y: 1)
+    #expect(try backdropDraws(scene, at: reef))
     source.snapshot = islandSnapshot(paint: [reef: .grass])
     scene.update(1)
-    #expect(try !hasWaterTile(scene, at: reef))
-    #expect(try !hasWaterTile(scene, at: TileCoordinate(x: 0, y: 1)), "the water round the new land is shore now")
-    #expect(scene.terrainSpecs[TileCoordinate(x: 0, y: 1)] != nil)
-    #expect(try hasWaterTile(scene, at: TileCoordinate(x: 10, y: 10)))
+    #expect(scene.groundSpriteName(at: reef)?.hasPrefix("terrain-grass") == true)
+    #expect(try !backdropDraws(scene, at: TileCoordinate(x: 1, y: 1)), "the water round the new land is shore now")
+    #expect(scene.terrainSpecs[TileCoordinate(x: 1, y: 1)] != nil)
+    #expect(try backdropDraws(scene, at: TileCoordinate(x: 11, y: 6)))
 }
 
 @MainActor
-@Test("The open-water backdrop spans only the screen, clamped to the map")
-func openWaterBackdropSpansOnlyTheScreen() throws {
+@Test("The ground backdrop spans only the screen, clamped to the map")
+func groundBackdropSpansOnlyTheScreen() throws {
     let base = World.fixtureWithTerrain(width: 200, height: 200, fill: .water, seed: 1).snapshot()
     let camera = Camera(centerX: 100, centerY: 100, zoom: 1)
     let snapshot = WorldSnapshot(
@@ -120,9 +119,47 @@ func openWaterBackdropSpansOnlyTheScreen() throws {
         totalPopulation: base.totalPopulation, camera: camera, date: GameDate(year: 1200, season: .summer)
     )
     let scene = scene(Source(snapshot))
-    let node = try #require(scene.deepWaterNode)
+    let node = try #require(scene.groundBackdropNode)
     let screen = Culling.screenBounds(camera: camera, viewSize: scene.size)
     #expect(!node.isHidden)
     #expect(node.frame.width <= screen.width + 0.5 && node.frame.height <= screen.height + 0.5)
     #expect(node.frame.insetBy(dx: -0.5, dy: -0.5).contains(screen))
+}
+
+@MainActor
+@Test("scenario: Trees and rocks keep their place over the backdrop")
+func treesAndRocksKeepTheirPlaceOverTheBackdrop() throws {
+    let wood = TileCoordinate(x: 6, y: 6)
+    let scene = scene(Source(islandSnapshot(paint: [wood: .forest])))
+    #expect(try backdropDraws(scene, at: wood))
+    let clump = try #require(scene.presentSprites.first { $0.key.coord == wood }?.value)
+    #expect(clump.name == IsoWorldScene.terrainObjectNodeName && clump.parent === scene)
+    // SpriteKit keeps z in Float.
+    #expect(Float(clump.zPosition) == Float(IsoWorldScene.objectZ(at: wood)))
+    #expect(clump.position == IsoMath.screenPoint(forTile: wood))
+}
+
+@Test("scenario: Each tile animates on its own phase")
+func eachTileAnimatesOnItsOwnPhase() {
+    let grid = [TerrainType](repeating: .water, count: 64 * 64)
+    let map = GroundBackdropMap(width: 64, height: 64, grid: grid, transitions: TerrainTransitionMap(width: 64, height: 64, grid: grid))
+    let phases = stride(from: 1, to: map.texels.count, by: 4).map { map.texels[$0] }
+    #expect(Set(phases).count > 200, "phases spread over the tiles")
+}
+
+@MainActor
+@Test("scenario: The ground backdrop follows the season")
+func groundBackdropFollowsTheSeason() throws {
+    let source = Source(islandSnapshot())
+    let scene = scene(source)
+    let summer = try #require(scene.groundBackdropNode?.shader?.uniformNamed("u_looks")?.textureValue)
+    let base = islandSnapshot()
+    source.snapshot = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 12, mapHeight: 12, terrainGrid: base.terrainGrid,
+        occupiedTiles: [:], buildings: [:], carriers: base.carriers, economy: base.economy,
+        totalPopulation: base.totalPopulation, camera: base.camera, date: GameDate(year: 1200, season: .winter)
+    )
+    scene.update(1)
+    let winter = try #require(scene.groundBackdropNode?.shader?.uniformNamed("u_looks")?.textureValue)
+    #expect(winter !== summer)
 }
