@@ -12,32 +12,22 @@ signal in the world.
 
 Rendered by IsoKit in the shared light rig. A plank mill under a thatch roof with a dark saw opening in its south wall and four sails on the east gable, logs and sawn planks stacked in a sawdust yard.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size. All 8 cells used.
-
-- (0, 0): `building-sawmill` — canonical operational base (saw at rest,
+- `building-sawmill` — canonical operational base (saw at rest,
   centred)
-- (0, 1): `building-sawmill-constructing-0` — foundation (stone
+- `building-sawmill-constructing-0` — foundation (stone
   plinth, corner posts)
-- (0, 2): `building-sawmill-constructing-1` — frame raised (full
+- `building-sawmill-constructing-1` — frame raised (full
   timber skeleton, no walls)
-- (0, 3): `building-sawmill-constructing-2` — walled + roofing (wall
+- `building-sawmill-constructing-2` — walled + roofing (wall
   planks installed, half-tiled roof)
-- (1, 0): `building-sawmill-operational-0` — saw blade up (top of
+- `building-sawmill-operational-0` — saw blade up (top of
   stroke)
-- (1, 1): `building-sawmill-operational-1` — saw blade upper-mid
-- (1, 2): `building-sawmill-operational-2` — saw blade lower-mid
-- (1, 3): `building-sawmill-operational-3` — saw blade down (cut
+- `building-sawmill-operational-1` — saw blade upper-mid
+- `building-sawmill-operational-2` — saw blade lower-mid
+- `building-sawmill-operational-3` — saw blade down (cut
   contact; small sawdust puff)
-
-## Animation
-
-Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the sails turn through 4 overlay frames.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)` → `(1, 2)` → `(1, 3)`. All four
-  frames are placed in adjacent cells on row 1.
 
 ## Recipe
 

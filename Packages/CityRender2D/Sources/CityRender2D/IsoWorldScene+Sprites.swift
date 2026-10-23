@@ -11,9 +11,11 @@ struct BuildingSpriteInputs: Equatable {
     let buildings: [EntityID: Building]
     let occupiedTiles: [TileCoordinate: EntityID]
     let roadDisconnectedBuildings: Set<EntityID>
-    let housePopulations: [EntityID: HousePopulation]
-    let houseModifiers: [EntityID: HouseModifiers]
-    let rivals: [RivalSummary]
+    /// Each house's tier: the sprite shows it, while the population counts change every tick.
+    let houseTiers: [EntityID: HouseTier]
+    /// The smoky houses, the one house modifier the sprite shows.
+    let smokyHouses: Set<EntityID>
+    let rivals: [RivalLook]
 
     init(_ snapshot: WorldSnapshot, view: VisibleTiles) {
         xRange = view.xRange
@@ -21,9 +23,9 @@ struct BuildingSpriteInputs: Equatable {
         buildings = snapshot.buildings
         occupiedTiles = snapshot.occupiedTiles
         roadDisconnectedBuildings = snapshot.roadDisconnectedBuildings
-        housePopulations = snapshot.housePopulations
-        houseModifiers = snapshot.houseModifiers
-        rivals = snapshot.rivals
+        houseTiers = snapshot.housePopulations.mapValues(\.tier)
+        smokyHouses = Set(snapshot.houseModifiers.lazy.filter(\.value.smoky).map(\.key))
+        rivals = snapshot.rivals.map(RivalLook.init)
     }
 }
 
@@ -50,17 +52,17 @@ extension IsoWorldScene {
     }
 
     private func reconcileTerrain(in view: VisibleTiles, with snapshot: WorldSnapshot) {
-        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
-        var redrawAll = false
-        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
-            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
-            redrawAll = true
+        let redrawAll = refreshTerrainMaps(for: snapshot)
+        if redrawAll, let transitionMap {
+            showGroundBackdrop(GroundBackdropMap(
+                width: snapshot.mapWidth,
+                height: snapshot.mapHeight,
+                grid: snapshot.terrainGrid,
+                transitions: transitionMap
+            ))
         }
-        if objectMap?.matches(width: width, height: height, grid: grid) == true {
-            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
-        } else {
-            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
-            redrawAll = true
+        if redrawAll || view != shownTiles {
+            fitGroundBackdrop(to: Culling.screenBounds(camera: snapshot.camera, viewSize: size))
         }
         guard redrawAll || view != shownTiles || !staleTerrain.isEmpty else { return }
         spriteReconcileCounts.terrainPasses += 1
@@ -77,8 +79,13 @@ extension IsoWorldScene {
         staleTerrain.removeAll()
     }
 
-    /// Places the tile's terrain sprite, replacing the one there when it differs.
+    /// Places the tile's terrain sprite, replacing the one there when it differs. Plain ground has no
+    /// sprite of its own, as the ground backdrop draws it: such a tile places only its tree or rock.
     private func drawTerrain(at coord: TileCoordinate, in snapshot: WorldSnapshot) {
+        guard groundBackdropMap?.covers(coord) != true || objectMap?.object(at: coord) != nil else {
+            removeTerrain(at: coord)
+            return
+        }
         guard let spec = SnapshotReconciler.terrainSprite(at: coord, in: snapshot, transitions: transitionMap, objects: objectMap),
               spec != terrainSpecs[coord]
         else { return }
@@ -100,7 +107,7 @@ extension IsoWorldScene {
         shownBuildingInputs = inputs
         spriteReconcileCounts.buildingPasses += 1
         let desired = SnapshotReconciler.buildingSprites(
-            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinkCache.links(for: snapshot)
+            in: snapshot, xRange: view.xRange, yRange: view.yRange, roadLinks: roadLinks(for: snapshot)
         )
         for spec in buildingSpecs.subtracting(desired) {
             guard let node = presentSprites.removeValue(forKey: spec) else { continue }
@@ -108,9 +115,27 @@ extension IsoWorldScene {
             if buildingNodes[spec.coord] === node { buildingNodes.removeValue(forKey: spec.coord) }
         }
         for spec in desired.subtracting(buildingSpecs) {
-            if let sprite = place(spec) as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
+            let node = placedNode(for: spec)
+            addBuildingInDrawOrder(node)
+            presentSprites[spec] = node
+            if let sprite = node as? SKSpriteNode { buildingNodes[spec.coord] = sprite }
         }
         buildingSpecs = desired
+    }
+
+    /// Nodes at equal depth draw in child order, and side-by-side buildings overlap where a wide sprite's
+    /// shadow margin meets its neighbour. Each building goes after every equal-depth building to its left
+    /// and before every one to its right, so the order is left to right however the buildings come on
+    /// screen: in one pass, across pans, or one at a time as they change.
+    private func addBuildingInDrawOrder(_ node: SKNode) {
+        let rightNeighbours = buildingNodes.values.filter {
+            $0.parent === self && $0.zPosition == node.zPosition && $0.position.x > node.position.x
+        }
+        if let index = rightNeighbours.compactMap({ children.firstIndex(of: $0) }).min() {
+            insertChild(node, at: index)
+        } else {
+            addChild(node)
+        }
     }
 
     @discardableResult

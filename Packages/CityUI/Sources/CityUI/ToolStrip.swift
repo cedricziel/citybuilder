@@ -7,20 +7,40 @@ public enum ToolStripText {
     /// `paintingRoad` only matters on Apple TV, where select toggles road
     /// painting. `inReach` is the armed hut's trees or forester's open
     /// grass at its candidate site (`GameSession.armedInReachCount`).
-    public static func hint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false, inReach: Int? = nil) -> String {
+    /// `warning` is the first-hour guide's (`GameSession.armedGuideWarning`).
+    public static func hint(
+        for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool = false, inReach: Int? = nil, warning: String? = nil
+    ) -> String {
+        let hint = baseHint(for: tool, idiom: idiom, paintingRoad: paintingRoad, inReach: inReach)
+        guard let warning else { return hint }
+        return "\(hint) · \(warning)"
+    }
+
+    private static func baseHint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool, inReach: Int?) -> String {
         let name = tool.displayName.lowercased()
-        let touch = idiom.isTouch
+        // The Apple TV remote's touch surface clicks, so its hints say so.
+        let press = idiom == .tv ? "Click" : verb(for: idiom)
         let base = switch (tool, idiom) {
         case (.inspect, _): ""
-        case (.demolish, _): touch ? "Tap a building to demolish" : "Click a building to demolish"
+        case (.demolish, _): "\(press) a building to demolish"
         case (.place(.road), .tv): paintingRoad ? "Click to stop painting road" : "Click to start painting road"
         case (.place, .tv): "Move, then click to place \(name). Back to cancel."
-        case (.place, _): "\(touch ? "Tap" : "Click") or drag to place \(name)"
+        case (.place, _): "\(press) or drag to place \(name)"
         }
         guard case let .place(kind) = tool, let noun = inReachNoun(kind), let inReach else { return base }
         let count = "\(inReach) \(noun) in reach"
         // The Apple TV instruction ends in a sentence, so the count leads.
         return idiom == .tv ? "\(count) · \(base)" : "\(base) · \(count)"
+    }
+
+    /// The platform's word for activating something: "Tap", "Click" or
+    /// "Select".
+    static func verb(for idiom: HUDIdiom) -> String {
+        switch idiom {
+        case .phone, .pad: "Tap"
+        case .mac: "Click"
+        case .tv: "Select"
+        }
     }
 
     /// What a building of `kind` counts in its catchment, nil when it
@@ -51,18 +71,20 @@ public extension GameSession {
     /// other tools, without a candidate site, or where the building can't
     /// go (`add-forestry` D5).
     func armedInReachCount(idiom: HUDIdiom) -> Int? {
-        let fallback = idiom.isTouch ? world.camera.centerTile() : nil
-        let kind: BuildingKind
-        let anchor: TileCoordinate
-        if let pending = pendingPlacement {
-            (kind, anchor) = (pending.kind, pending.anchor)
-        } else if case let .place(armed) = selectedTool, let tile = hoveredTile ?? fallback {
-            (kind, anchor) = (armed, tile)
-        } else {
-            return nil
-        }
-        guard ToolStripText.inReachNoun(kind) != nil, isValidPlacement(kind, at: anchor) else { return nil }
+        guard let (kind, anchor) = armedCandidateSite(idiom: idiom),
+              ToolStripText.inReachNoun(kind) != nil, isValidPlacement(kind, at: anchor)
+        else { return nil }
         return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
+    }
+
+    /// The building and site the tool strip describes: the pending
+    /// placement, else the armed building at the hovered tile, else on
+    /// touch at the camera-center tile.
+    internal func armedCandidateSite(idiom: HUDIdiom) -> (kind: BuildingKind, anchor: TileCoordinate)? {
+        if let pending = pendingPlacement { return (pending.kind, pending.anchor) }
+        let fallback = idiom.isTouch ? world.camera.centerTile() : nil
+        guard case let .place(armed) = selectedTool, let tile = hoveredTile ?? fallback else { return nil }
+        return (armed, tile)
     }
 }
 
@@ -80,7 +102,7 @@ struct ToolStripView: View {
                     title(tool)
                     Text(ToolStripText.hint(
                         for: tool, idiom: idiom, paintingRoad: session.isPaintingRoad,
-                        inReach: session.armedInReachCount(idiom: idiom)
+                        inReach: session.armedInReachCount(idiom: idiom), warning: session.armedGuideWarning(idiom: idiom)
                     ))
                     .font(.caption2)
                     .foregroundStyle(.secondary)

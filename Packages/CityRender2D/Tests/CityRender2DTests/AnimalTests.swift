@@ -7,7 +7,7 @@ import Testing
 
 private func farmland(
     _ buildings: [Building], tick: UInt64, pops: [EntityID: HousePopulation] = [:], zoom: Double = 1,
-    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil
+    season: Season = .summer, terrain: ((TileCoordinate) -> TerrainType)? = nil, center: (x: Double, y: Double) = (20, 20)
 ) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 40, height: 40, fill: .grass, seed: 1).snapshot()
     var occupied: [TileCoordinate: EntityID] = [:]
@@ -21,7 +21,7 @@ private func farmland(
         tickCount: tick, simulatedTime: base.simulatedTime, mapWidth: 40, mapHeight: 40,
         terrainGrid: grid, occupiedTiles: occupied,
         buildings: Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) }), carriers: [],
-        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: 20, centerY: 20, zoom: zoom), housePopulations: pops,
+        economy: base.economy, totalPopulation: 0, camera: Camera(centerX: center.x, centerY: center.y, zoom: zoom), housePopulations: pops,
         date: GameDate(year: 1200, season: season)
     )
 }
@@ -44,10 +44,19 @@ private func plan(
     _ snapshot: WorldSnapshot, clock: UInt64? = nil,
     free: ((TileCoordinate) -> Bool)? = nil, yard: ((TileCoordinate) -> Bool)? = nil
 ) -> [AnimalPlanner.Animal] {
+    var tours: [AnimalKey: AnimalPlanner.Tour] = [:]
+    return plan(snapshot, clock: clock, free: free, yard: yard, tours: &tours)
+}
+
+private func plan(
+    _ snapshot: WorldSnapshot, clock: UInt64? = nil,
+    free: ((TileCoordinate) -> Bool)? = nil, yard: ((TileCoordinate) -> Bool)? = nil,
+    tours: inout [AnimalKey: AnimalPlanner.Tour]
+) -> [AnimalPlanner.Animal] {
     let open = free ?? { snapshot.terrain(at: $0) == .grass && snapshot.occupiedTiles[$0] == nil }
     return AnimalPlanner.animals(
-        in: snapshot, xRange: 0 ... 39, yRange: 0 ... 39, clock: clock ?? AnimalPlanner.dayClock(tick: snapshot.tickCount),
-        ground: AnimalPlanner.Ground(isFreeGrass: open, isYard: yard ?? open)
+        in: snapshot, visible: (0 ... 39, 0 ... 39), clock: clock ?? AnimalPlanner.dayClock(tick: snapshot.tickCount),
+        ground: AnimalPlanner.Ground(isFreeGrass: open, isYard: yard ?? open), tours: &tours
     )
 }
 
@@ -86,6 +95,30 @@ func scenarioWalksStayOnFreeGrass() {
         }
     }
     #expect(walked)
+}
+
+@Test("scenario: no jump when the pasture is built on")
+func scenarioNoJumpWhenThePastureIsBuiltOn() {
+    let sheepFarm = farm(1, at: 10, 10)
+    let snapshot = farmland([sheepFarm], tick: 180)
+    let footprint = Set(BuildingCatalog.spec(for: .farm).footprint.tiles(anchor: sheepFarm.anchor))
+    // A road grows across the pasture, a tile every 15 ticks, along row 9 then column 9.
+    let road = (8 ... 14).map { TileCoordinate(x: $0, y: 9) } + (10 ... 14).map { TileCoordinate(x: 9, y: $0) }
+    var tours: [AnimalKey: AnimalPlanner.Tour] = [:]
+    var last: [AnimalPlanner.Animal] = []
+    for clock in UInt64(100) ..< 700 {
+        let laid = Set(road.prefix(Int(clock - 100) / 15))
+        let free = { (tile: TileCoordinate) in !footprint.contains(tile) && !laid.contains(tile) }
+        let sheep = plan(snapshot, clock: clock, free: free, tours: &tours)
+        #expect(sheep.count == last.count || last.isEmpty)
+        for (old, new) in zip(last, sheep) {
+            #expect(abs(old.col - new.col) <= 1 && abs(old.row - new.row) <= 1, "jumped at \(clock)")
+        }
+        for animal in sheep where !animal.walking {
+            #expect(free(tile(of: animal)), "a sheep standing on the road at \(tile(of: animal)), clock \(clock)")
+        }
+        last = sheep
+    }
 }
 
 @Test("scenario: no animals inside a tree clump")
@@ -169,6 +202,26 @@ func scenarioAnimalsStayInBudget() {
     let houses = (0 ..< 40).map { house(UInt32(300 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
     let hens = plan(farmland(houses, tick: 180, pops: residents(houses)))
     #expect(hens.count == AnimalPlanner.maxHens)
+}
+
+@Test("scenario: panning to a farm gives it animals")
+func budgetGoesToTheFarmsNearestTheCamera() {
+    // 40 farms, more sheep than the budget, all in view.
+    let farms = (0 ..< 40).map { farm(UInt32(100 + $0), at: ($0 % 8) * 5, ($0 / 8) * 7) }
+    for center in [(x: 35.0, y: 28.0), (x: 0.0, y: 0.0), (x: 20.0, y: 14.0)] {
+        let animals = plan(farmland(farms, tick: 180, center: center))
+        let herded = Set(animals.map(\.home))
+        #expect(animals.count <= AnimalPlanner.maxHerd)
+        // Farms get animals by distance from the camera centre until the budget is full.
+        let byDistance = farms.sorted {
+            let lhs = pow(Double($0.anchor.x) - center.x, 2) + pow(Double($0.anchor.y) - center.y, 2)
+            let rhs = pow(Double($1.anchor.x) - center.x, 2) + pow(Double($1.anchor.y) - center.y, 2)
+            return (lhs, $0.id.raw) < (rhs, $1.id.raw)
+        }
+        #expect(herded.contains(byDistance[0].id), "the farm under the camera at \(center) has no animals")
+        let served = byDistance.prefix { herded.contains($0.id) }.count
+        #expect(served == herded.count, "a farm at \(center) has animals while a nearer one has none")
+    }
 }
 
 // MARK: - Through the scene

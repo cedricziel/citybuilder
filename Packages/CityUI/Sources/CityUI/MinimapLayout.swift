@@ -42,11 +42,16 @@ public enum MinimapLayout {
     }
 
     /// The width the stocks tray and the session banner may take beside the
-    /// minimap in the dock layout, for a HUD `hudWidth` points wide inside
+    /// right column (the minimap in the dock layout, the first-steps card
+    /// while it shows expanded), for a HUD `hudWidth` points wide inside
     /// its margins.
-    public static func trayColumnWidth(hudWidth: CGFloat, layout: HUDLayout, showsMinimap: Bool) -> CGFloat {
-        let card = showsMinimap && corner(for: layout) == .topTrailing ? cardSize(for: layout).width + 8 : 0
-        return max(0, hudWidth - layout.railInset - card)
+    public static func trayColumnWidth(
+        hudWidth: CGFloat, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false
+    ) -> CGFloat {
+        let minimap = showsMinimap && corner(for: layout) == .topTrailing ? cardSize(for: layout).width : 0
+        let guide = showsFirstSteps && !layout.collapsesFirstSteps ? FirstStepsCardView.width : 0
+        let column = max(minimap, guide)
+        return max(0, hudWidth - layout.railInset - (column > 0 ? column + 8 : 0))
     }
 
     /// The minimap card in full-screen coordinates, the space the inspector

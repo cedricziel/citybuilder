@@ -134,7 +134,9 @@ private func scene(_ source: Source) -> IsoWorldScene {
 
 @MainActor
 private func objectNodes(_ scene: IsoWorldScene) -> [SKSpriteNode] {
-    scene.children.flatMap(\.children).compactMap { $0 as? SKSpriteNode }.filter { $0.name == IsoWorldScene.terrainObjectNodeName }
+    // Over a transition the object rides on its ground node; over plain ground it stands alone.
+    (scene.children + scene.children.flatMap(\.children)).compactMap { $0 as? SKSpriteNode }
+        .filter { $0.name == IsoWorldScene.terrainObjectNodeName }
 }
 
 @MainActor
@@ -154,14 +156,16 @@ private func ground(at tile: TileCoordinate, in scene: IsoWorldScene) -> SKNode?
 /// The clump standing on `tile`, if any.
 @MainActor
 private func clump(at tile: TileCoordinate, in scene: IsoWorldScene) -> SKNode? {
-    ground(at: tile, in: scene)?.children.first { $0.name == IsoWorldScene.terrainObjectNodeName }
+    guard let node = ground(at: tile, in: scene) else { return nil }
+    return node.name == IsoWorldScene.terrainObjectNodeName ? node : node.children.first { $0.name == IsoWorldScene.terrainObjectNodeName }
 }
 
 @MainActor
 @Test("scenario: Forest ground has no tile edge")
 func forestGroundHasNoTileEdge() {
     let scene = scene(Source(forestSnapshot()))
-    let ground = scene.children.compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
+    let ground = scene.children.filter { $0.name != IsoWorldScene.terrainObjectNodeName }
+        .compactMap { $0.userData?[IsoWorldScene.textureNameKey] as? String }
     #expect(!ground.contains { $0.hasPrefix("terrain-forest") })
     #expect(objectNodes(scene).count == 9)
 }
@@ -241,7 +245,8 @@ func buildingPlacedInALiveForest() {
     #expect(objectNames(scene).count == 5)
     #expect(objectNames(scene).allSatisfy { $0.hasPrefix("terrain-forest-sparse") })
     #expect(clump(at: .init(x: 3, y: 3), in: scene) == nil)
-    let under = ground(at: .init(x: 3, y: 3), in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String
+    let tile = TileCoordinate(x: 3, y: 3)
+    let under = ground(at: tile, in: scene)?.userData?[IsoWorldScene.textureNameKey] as? String ?? scene.groundSpriteName(at: tile)
     #expect(under?.hasPrefix("terrain-grass") == true)
 }
 

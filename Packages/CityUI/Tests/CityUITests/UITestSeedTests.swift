@@ -48,6 +48,8 @@ func townSeedShowsACategory() {
     #expect(shown.count >= 4, "most gather kinds find a site near the town center")
     #expect(shown.allSatisfy { $0.state == .operational })
     #expect(UITestSeed.showcase(fromArguments: ["app"]).isEmpty)
+    let listed = UITestSeed.showcase(fromArguments: ["app", "-uiTestShowcase", "lumberjack-hut,sawmill"])
+    #expect(listed == [.lumberjackHut, .sawmill], "a list of kinds, for a working sawmill")
 }
 
 @Test("The town seed can start in a given season, for seasonal art shots")
@@ -125,6 +127,17 @@ func startGameFlagSkipsTheTitle() {
     let started = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
     started.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
     #expect(started.committedSession != nil)
+}
+
+@Test("The open-stocks flag starts the game with the stocks tray shown")
+@MainActor
+func openStocksFlagShowsTheTray() {
+    let plain = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    plain.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
+    #expect(plain.committedSession?.hud.isStocksTrayOpen == false)
+    let open = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    open.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame", "-uiTestOpenStocks"])
+    #expect(open.committedSession?.hud.isStocksTrayOpen == true)
 }
 
 @Test("A test or shot launch saves into a folder of its own, a regular launch into the player's")

@@ -7,32 +7,24 @@ Shore-placement ship producer. Consumes wood and planks; emits ships. This entry
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a plank boat shed and a log pile. A stone slipway with timber rails steps down into the water beside the visible edge, with a hull on its cradle: keel and ribs, and strakes being fitted. The four facings move the geometry, never the camera or the sun, so they light alike.
+Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a plank boat shed and a log pile. A stone slipway with timber rails steps down into the water beside the visible edge, with a hull on its cradle. While the yard operates, the hull is planked stage by stage, from keel and ribs to six strakes, then launched, and a new keel is laid. The four facings move the geometry, never the camera or the sun, so they light alike.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-shipyard-s` — finished shipyard
-- (0, 1): `building-shipyard-s-constructing-0` — quay and slipway
-- (0, 2): `building-shipyard-s-constructing-1` — shed walls rising
-- (0, 3): `building-shipyard-s-constructing-2` — shed under its roof, scaffold
-- (1, 0): `building-shipyard-s-operational-0` — hull with two strakes
-- (1, 1): `building-shipyard-s-operational-1` — hull with four strakes
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages: the quay and slipway are there from the start, and the shed rises through rising cuts with scaffold on the visible corners; the hull appears once the yard is finished. The operational frames plank the hull: two strakes, then four.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+- `building-shipyard-s` — finished shipyard
+- `building-shipyard-s-constructing-0` — quay and slipway
+- `building-shipyard-s-constructing-1` — shed walls rising
+- `building-shipyard-s-constructing-2` — shed under its roof, scaffold
+- `building-shipyard-s-operational-0` — keel and ribs
+- `building-shipyard-s-operational-1` — hull with two strakes
+- `building-shipyard-s-operational-2` — hull with four strakes
+- `building-shipyard-s-operational-3` — hull with six strakes, finished
+- `building-shipyard-s-operational-4` — empty slipway, the hull launched
 
 ## Recipe
 
 - Recipe: `building-shipyard-s` (IsoKit)
 - Cell: 2×3 footprint, 128 pt tall
 - Construction stages: 3
-- Operational frames: 2
+- Operational frames: 5
 - Moving part: hull

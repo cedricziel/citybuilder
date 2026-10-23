@@ -7,7 +7,8 @@ import simd
 /// Muted natural dyes. The warm sun saturates them, so they sit greyer than the target.
 enum Cloth {
     static let linen = NSColor(red: 0.80, green: 0.77, blue: 0.68, alpha: 1)
-    static let madder = NSColor(red: 0.40, green: 0.24, blue: 0.21, alpha: 1)
+    /// Light enough that the worker reads against the earth roads at zoom 1.
+    static let madder = NSColor(red: 0.62, green: 0.36, blue: 0.30, alpha: 1)
     static let woad = NSColor(red: 0.30, green: 0.37, blue: 0.47, alpha: 1)
     static let weld = NSColor(red: 0.50, green: 0.47, blue: 0.34, alpha: 1)
     static let walnut = NSColor(red: 0.33, green: 0.25, blue: 0.19, alpha: 1)

@@ -47,11 +47,11 @@ func scenarioWalkerNameRoutesToKitAtlas() {
     }
 }
 
-@Test("scenario: spriteatlasrouting routes good- to icons atlas")
-func scenarioSpriteAtlasRoutingRoutesGoodToIconsAtlas() {
-    #expect(SpriteAtlasRouting.atlasName(for: "good-wood") == "Icons")
-    #expect(SpriteAtlasRouting.atlasName(for: "good-planks") == "Icons")
-    #expect(SpriteAtlasRouting.atlasName(for: "good-food") == "Icons")
+@Test("scenario: SpriteAtlasRouting routes good- to the Kit atlas")
+func scenarioSpriteAtlasRoutingRoutesGoodToKitAtlas() {
+    #expect(SpriteAtlasRouting.atlasName(for: "good-wood") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "good-planks") == "Kit")
+    #expect(SpriteAtlasRouting.atlasName(for: "good-food") == "Kit")
     #expect(SpriteAtlasRouting.iconsAtlasName == "Icons")
 }
 

@@ -9,25 +9,14 @@ Northern European culture signature. Other buildings within 8 tiles of an operat
 
 Rendered by IsoKit in the shared light rig. A long plank hall under a steep shingle roof with crossed gable boards above both ridge ends, red carved door posts, a bench and two barrels.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-mead-hall` — canonical idle base (unserved)
-- (0, 1): `building-mead-hall-constructing-0` — stone pad
-- (0, 2): `building-mead-hall-constructing-1` — timber frame
-- (0, 3): `building-mead-hall-constructing-2` — walls with scaffolding
-- (1, 0): `building-mead-hall-operational-0` — operational frame 0
-- (1, 1): `building-mead-hall-operational-1` — operational frame 1
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages are cut from the recipe at rising heights, with scaffold on the visible corners; the operational frames repeat the finished building.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1. Played only while served.
+- `building-mead-hall` — canonical idle base (unserved)
+- `building-mead-hall-constructing-0` — stone pad
+- `building-mead-hall-constructing-1` — timber frame
+- `building-mead-hall-constructing-2` — walls with scaffolding
+- `building-mead-hall-operational-0` — operational frame 0
+- `building-mead-hall-operational-1` — operational frame 1
 
 ## Recipe
 

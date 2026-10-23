@@ -11,22 +11,11 @@ shared with `building-house`. No operational animation.
 
 Rendered by IsoKit in the shared light rig. Three steps up: a daub hut under thatch, a plastered hall between dark posts under a slate gable behind a yard wall, and a hall with red posts and a portico under a slate hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-house-antiquity-east-asian` — a daub hut under thatch
-- (0, 1): `building-house-tier2-antiquity-east-asian` — a plastered hall under slate behind a yard wall
-- (0, 2): `building-house-tier3-antiquity-east-asian` — a hall with red posts and a columned portico under slate
-- (0, 3): spare
-- (1, 0): spare
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
+- `building-house-antiquity-east-asian` — a daub hut under thatch
+- `building-house-tier2-antiquity-east-asian` — a plastered hall under slate behind a yard wall
+- `building-house-tier3-antiquity-east-asian` — a hall with red posts and a columned portico under slate
 
 ## Recipe
 

@@ -96,4 +96,21 @@ public extension World {
             difficulty.scaledUpkeep(upkeepByOwner(sources: sources)[.player] ?? 0)
         )
     }
+
+    /// The difficulty-scaled upkeep of one collection a new `kind` would
+    /// pay at `anchor`, with any culture upkeep relief there; the catalog
+    /// upkeep without an anchor. Spec: `platform-shells` / Tool strip
+    /// warns while the guide shows.
+    func upkeepPerCollection(of kind: BuildingKind, at anchor: TileCoordinate?, owner: Owner = .player) -> Int64 {
+        let base = BuildingCatalog.spec(for: kind).upkeep
+        guard let anchor else { return difficulty.scaledUpkeep(base) }
+        let candidate = Building(id: EntityID(raw: nextEntityRaw), kind: kind, anchor: anchor, state: .operational, owner: owner)
+        return difficulty.scaledUpkeep(upkeep(of: candidate, sources: activeSignatureSources()))
+    }
+
+    /// Whether a road touches the building's footprint. Spec:
+    /// `platform-shells` / First-hour guide.
+    func isRoadConnected(_ building: Building) -> Bool {
+        anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint) != nil
+    }
 }

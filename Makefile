@@ -1,4 +1,4 @@
-.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-offline sprites-reference sprites-verify sprites-regen-check sprites-content sprites-procedural sprites-art-verify sprites-check sprites-ai
+.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-verify sprites-content sprites-art-verify sprites-svg-verify sprites-check app-icon
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -18,8 +18,7 @@ CITYCORE := Packages/CityCore
 # The Python the audio generators run on; the music renderer needs numpy.
 PYTHON ?= python3
 
-# AI sprite pipeline targets (see Resources/Sprites.style/world.md and
-# openspec/specs/sprite-style-catalog).
+# The art pipeline's Python side (scripts/art): SVG terrain and roads, finalize and compare.
 SPRITES_VENV := .venv/sprites
 SPRITES_PY := $(SPRITES_VENV)/bin/python
 SPRITES_PIPELINE_DIR := scripts
@@ -37,6 +36,7 @@ help:
 	@echo "  audio-check      Fail when a committed sound differs from its recipe"
 	@echo "  music            Render the original music into Resources/Audio/music"
 	@echo "  music-check      Fail when committed music differs from its score"
+	@echo "  app-icon         Render the iOS, macOS and tvOS app icons from the IsoKit house"
 	@echo "  lint             Run SwiftLint in strict mode"
 	@echo "  format           Run SwiftFormat across the repo"
 	@echo "  hooks            Install pre-commit / commit-msg / pre-push hooks"
@@ -145,32 +145,28 @@ sprites-art-verify:
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.svg_sprites --catalog $(CATALOG) --out $(ART_DIR)/verify-raw
 	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.compare $(ART_DIR)/verify-raw $(CURDIR)/Resources
 
+# The SVG half of the tolerance check: terrain, transitions and roads need no GPU, so CI runs it.
+sprites-svg-verify:
+	rm -rf $(ART_DIR)/svg-raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.svg_sprites --catalog $(CATALOG) --out $(ART_DIR)/svg-raw
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.compare $(ART_DIR)/svg-raw $(CURDIR)/Resources
+
 # Recipe/catalog agreement and cell fit, without a GPU.
 sprites-check:
 	$(ISOKIT) check --catalog $(CATALOG)
 
-# Legacy generative pipeline, kept until the last family migrates (tasks §5).
-sprites-ai:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai
-
-sprites-offline:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --offline
-
-sprites-procedural:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --procedural
-
-sprites-reference:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --regenerate-reference
-
-# Tolerance check of the art pipeline, the legacy byte check of entries not yet
-# migrated, then the content gate.
-sprites-verify: sprites-art-verify sprites-regen-check sprites-content
-
-sprites-regen-check:
-	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m generate_sprites_ai --verify
+# Tolerance check of the art pipeline, then the content gate.
+sprites-verify: sprites-art-verify sprites-content
 
 sprites-content:
 	$(SWIFT) run -q --package-path Packages/CityRender2D sprite-content-gate Resources
+
+# The app icon for iOS, macOS and tvOS: the IsoKit house at 8x on a grass plot (scripts/art/app_icon.py).
+# Needs a Mac GPU; the icons are committed, so CI never runs it.
+app-icon:
+	rm -rf $(ART_DIR)/app-icon
+	$(ISOKIT) render --catalog $(CATALOG) --only building-house-tier2 --scales 8 --out $(ART_DIR)/app-icon
+	cd $(SPRITES_PIPELINE_DIR) && ../$(SPRITES_PY) -m art.app_icon --house $(ART_DIR)/app-icon/building-house-tier2@8x.png --repo $(CURDIR)
 
 clean:
 	rm -rf .build DerivedData $(PROJECT) $(WORKSPACE)

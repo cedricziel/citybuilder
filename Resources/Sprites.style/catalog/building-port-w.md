@@ -7,31 +7,25 @@ Shore-placement goods exchange. Carriers deposit and withdraw goods on the land 
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a timber-framed plaster warehouse under a red tile roof and a timber crane whose jib reaches over the water, with crates and barrels. A plank wharf on pilings covers the seaward half, so it stands over the water wherever the shoreline crosses the footprint. The four facings move the geometry, never the camera or the sun, so they light alike.
+Rendered by IsoKit in the shared light rig. A grey stone quay over the land half of the footprint carries a timber-framed plaster warehouse under a red tile roof and a timber crane, with crates and barrels. While the port operates, the crane lifts a crate off the wharf, swings it round onto the quay beside the warehouse, sets it down and swings back out. A plank wharf on pilings covers the seaward half, so it stands over the water wherever the shoreline crosses the footprint. The four facings move the geometry, never the camera or the sun, so they light alike.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-port-w` — finished port
-- (0, 1): `building-port-w-constructing-0` — quay and wharf
-- (0, 2): `building-port-w-constructing-1` — warehouse walls rising
-- (0, 3): `building-port-w-constructing-2` — warehouse under its roof, scaffold
-- (1, 0): `building-port-w-operational-0` — the finished port, operational
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-Construction stages: the quay and wharf are there from the start, and the warehouse and crane rise through rising cuts with scaffold on the visible corners. The operational sprite is the finished port; it has no loop.
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)`, one frame.
+- `building-port-w` — finished port
+- `building-port-w-constructing-0` — quay and wharf
+- `building-port-w-constructing-1` — warehouse walls rising
+- `building-port-w-constructing-2` — warehouse under its roof, scaffold
+- `building-port-w-operational-0` — crate on the wharf, jib over the water
+- `building-port-w-operational-1` — crate lifted
+- `building-port-w-operational-2` — crane swinging toward the quay
+- `building-port-w-operational-3` — crate over the quay
+- `building-port-w-operational-4` — crate set down on the quay
+- `building-port-w-operational-5` — crane swinging back out
 
 ## Recipe
 
 - Recipe: `building-port-w` (IsoKit)
 - Cell: 2×3 footprint, 128 pt tall
 - Construction stages: 3
-- Operational frames: 1
+- Operational frames: 6
+- Moving part: crane

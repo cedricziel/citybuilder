@@ -67,7 +67,7 @@ Filenames MUST remain lowercase, hyphen-separated, with no spaces, underscores, 
 
 ### Requirement: Operational frames share one silhouette
 
-Every building operational frame (`<name>-operational-N`) SHALL keep the base sprite's silhouette: the left, right and bottom edges of its opaque bounding box MUST lie within 2 pixels of the base sprite's. The top edge is exempt, so effects such as chimney smoke may rise above the roof. Frames that IsoKit composites from a declared moving part (sails, wheel) are exempt on the side the part sweeps, because the part's extent changes as it turns; their bottom edge MUST still match. The content gate MUST fail on a frame outside this tolerance with reason `frame_misaligned`. Catalog entries MAY declare `operational = "derived"` to have the pipeline build their operational frames from the base sprite, which satisfies this rule by construction.
+Every building operational frame (`<name>-operational-N`) SHALL keep the base sprite's silhouette: the left, right and bottom edges of its opaque bounding box MUST lie within 2 pixels of the base sprite's. The top edge is exempt, so effects such as chimney smoke may rise above the roof. Frames that IsoKit composites from a declared moving part (sails, wheel) are exempt on the side the part sweeps, because the part's extent changes as it turns; their bottom edge MUST still match. The content gate MUST fail on a frame outside this tolerance with reason `frame_misaligned`.
 
 #### Scenario: Content gate rejects a shifted operational frame
 
@@ -85,17 +85,31 @@ Every building operational frame (`<name>-operational-N`) SHALL keep the base sp
 - **THEN** the gate reports no `frame_misaligned` failure for that frame
 
 ### Requirement: Committed PNGs are indexed-mode and optimized
-Every committed PNG under `Resources/{Kit,Icons}.atlas/` and `Resources/Sprites.style/` (including `master-reference.png` and every `_sheets/<id>.png`) SHALL be encoded as an **indexed-mode PNG with a palette of at most 256 colours** and written with `optimize=True` (Pillow) or the equivalent compression-maximizing flag in any future tooling. RGB or RGBA truecolor PNGs MUST NOT be committed. The committed footprint per binary stays an order of magnitude smaller than truecolor — repo size is a load-bearing concern for clone times.
+Every committed PNG under `Resources/{Kit,Icons}.atlas/` SHALL be encoded as an **indexed-mode PNG with a palette of at most 256 colours** and written with `optimize=True` (Pillow) or the equivalent compression-maximizing flag in any future tooling. RGB or RGBA truecolor PNGs MUST NOT be committed. The committed footprint per binary stays an order of magnitude smaller than truecolor — repo size is a load-bearing concern for clone times.
 
 Rationale: indexed encoding keeps every sprite well under the pre-commit 1 MB bar. Art-kit renders are quantized to 256 colours on write (design D8) with no visible loss, and the retired `Terrain` and `Units` atlases hold no PNGs any more.
 
 #### Scenario: Every committed sprite PNG is indexed-mode
-- **WHEN** every `*.png` under `Resources/{Kit,Icons}.atlas/` and `Resources/Sprites.style/` is inspected
+- **WHEN** every `*.png` under `Resources/{Kit,Icons}.atlas/` is inspected
 - **THEN** Pillow `Image.open(path).mode` reports `P` (indexed) for each — never `RGB`, never `RGBA` truecolor
 
 #### Scenario: Pipeline writes indexed-mode PNGs by default
-- **WHEN** the pipeline writes any output PNG (atlas, `_sheets/`, `master-reference.png`)
+- **WHEN** the art pipeline (`art.finalize`) writes an atlas PNG
 - **THEN** the file is saved with at most a 256-colour palette and `optimize=True`
+
+### Requirement: Animation frames stay coherent with their base sprite
+
+For every sprite that declares animation frames (`<name>-0` … `<name>-N`) or art variants (`<name>-v1` … `<name>-vN`), each frame and variant SHALL stay visually coherent with the base `<name>.png`. The palette-histogram distance between the frame and the base, computed over 16 quantised luminance-hue bins on opaque pixels, MUST NOT exceed the content gate's own threshold, `SpriteContentGate.coherenceMaxDistance` (0.3). The content gate MUST fail on any frame above the threshold.
+
+#### Scenario: Content gate rejects a frame that depicts a different object
+
+- **WHEN** the content gate compares `terrain-water-1.png` (a house) against the `terrain-water.png` base (water)
+- **THEN** the gate fails and names `terrain-water-1.png` with reason `frame_incoherent`
+
+#### Scenario: Content gate accepts coherent water frames
+
+- **WHEN** the content gate compares four water frames that differ only in glint placement against their water base
+- **THEN** the gate passes for all four frames
 
 ### Requirement: Ship sprite inventory
 The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross product of facings `{n, ne, e, se, s, sw, w, nw}` and frames `{0, 1}`. Every declared ship sprite MUST resolve to a non-nil texture in `Kit.atlas` (verified by the asset-presence check from `sprite-asset-pipeline`).
@@ -110,9 +124,28 @@ The sprite catalog SHALL declare exactly 16 ship sprite entries: the cross produ
 
 ## ADDED Requirements
 
+### Requirement: Good-prefix names route to the Kit atlas
+
+The sprite-name grammar SHALL accept the prefix `good-` for good icons, in addition to the existing `terrain-`, `building-`, and `walker-` prefixes. The `SpriteAtlasRouting` table MUST map `good-*` names to the `Kit` atlas, where the goods icons are rendered with the rest of the art kit. Validation MUST continue to reject names with uppercase letters or underscores.
+
+#### Scenario: Sprite-name grammar accepts good- prefix
+
+- **WHEN** `SpriteName.validate("good-wood")` is called
+- **THEN** the validator returns `.success`
+
+#### Scenario: SpriteAtlasRouting routes good- to the Kit atlas
+
+- **WHEN** `SpriteAtlasRouting.atlasName(for: "good-wood")` is called
+- **THEN** it returns `"Kit"`
+
+#### Scenario: Validator rejects good- with underscore
+
+- **WHEN** `SpriteName.validate("good-iron_ore")` is called
+- **THEN** the validator returns `.failure(.spriteNameUsesUnderscore)`
+
 ### Requirement: Overlay sprites route to the Icons atlas
 
-Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x` beside the goods icons.
+Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHALL route to the `Icons` atlas, where they are committed at `@1x` and `@2x`.
 
 #### Scenario: Waiting badge routes to the Icons atlas
 
@@ -120,7 +153,7 @@ Sprite names with the `overlay-` prefix (status badges drawn over buildings) SHA
 - **THEN** it returns `"Icons"`
 
 ### Requirement: Two category atlases, Kit and Icons
-The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, animals and ships), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: goods icons and the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
+The asset pipeline SHALL organize sprite PNGs into two category atlases under the `Resources/` directory, each implemented as a SpriteKit `.atlas` folder. `Kit.atlas/` holds every art-kit render (terrain, buildings, people, animals, ships and goods icons), which filters linearly; `Icons.atlas/` holds the nearest-filtered pixel art: the status badges drawn over buildings. SpriteKit applies one filtering mode to a whole atlas page, so no atlas MAY mix the two. A legacy atlas SHALL be removed when its last sprite migrates: `Terrain.atlas/`, `Buildings.atlas/` and `Units.atlas/` no longer exist. No sprite PNG SHALL exist under any other path. The legacy `Resources/Sprites/` directory MUST NOT exist.
 
 #### Scenario: Kit atlas holds the terrain
 - **WHEN** the repository is inspected
@@ -143,8 +176,8 @@ The `SpriteAtlas` type SHALL resolve every sprite name by routing the lookup to 
 
 | Prefix | Atlas |
 |---|---|
-| `terrain-`, `building-`, `walker-`, `carrier-`, `animal-`, `ship-` | `Kit` |
-| `good-`, `overlay-` | `Icons` |
+| `terrain-`, `building-`, `walker-`, `carrier-`, `animal-`, `ship-`, `good-` | `Kit` |
+| `overlay-` | `Icons` |
 
 The public `SpriteAtlas` API remains unchanged.
 
@@ -165,15 +198,15 @@ The public `SpriteAtlas` API remains unchanged.
 - **THEN** the lookup is performed against `SKTextureAtlas(named: "Kit")` and returns a non-nil texture
 
 ### Requirement: Shore-building sprites per facing
-For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: one for the Port, whose operational sprite does not loop, and two for the Shipyard, whose hull work does. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
+For every building kind opting into the `shorePlacement` rule, the sprite catalog SHALL declare, for each orientation `{n, s, e, w}`, the finished sprite, three construction frames and its operational frames: six for the Port, whose crane brings cargo ashore, and five for the Shipyard, whose hull is planked in four stages and launched. Every declared shore-building sprite MUST resolve to a non-nil texture in `Kit.atlas`.
 
-#### Scenario: All 20 port sprites declared
+#### Scenario: All 40 port sprites declared
 - **WHEN** the sprite catalog is enumerated for the Port kind
-- **THEN** there are exactly 20 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0`
+- **THEN** there are exactly 40 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` to `-5`
 
-#### Scenario: All 24 shipyard sprites declared
+#### Scenario: All 36 shipyard sprites declared
 - **WHEN** the sprite catalog is enumerated for the Shipyard kind
-- **THEN** there are exactly 24 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` and `-1`
+- **THEN** there are exactly 36 entries matching the shore-building grammar: per orientation the finished sprite, `constructing-0` to `-2` and `operational-0` to `-4`
 
 #### Scenario: Every declared shore-building sprite resolves
 - **WHEN** the debug-build asset-presence check runs
@@ -233,15 +266,15 @@ The `IsoWorldScene` scene factory SHALL resolve the texture for a terrain or lan
 Every sprite PNG under `Resources/{Kit,Icons}.atlas/` SHALL be produced by:
 
 - IsoKit, for buildings and units,
-- the SVG generators of capability `iso-art-kit`, for terrain, transitions and goods icons, or
-- hand-drawn pixel art, for the status badges drawn over buildings (`overlay-`), committed as is with a nearest-neighbour `@2x` twin.
+- the SVG generators of capability `iso-art-kit`, for terrain, transitions, roads and the goods icons (`good-`), or
+- committed pixel art, for the status badges drawn over buildings (`overlay-`), each with a nearest-neighbour `@2x` twin.
 
-Every PNG has an `@1x` file and an `@2x` file with the same stem. No PNG may come from an image-generation API or from the retired `scripts/generate_sprites_ai` pipeline.
+Every PNG has an `@1x` file and an `@2x` file with the same stem. No new PNG may come from an image-generation API, and the retired `scripts/generate_sprites_ai` pipeline no longer exists.
 
 #### Scenario: Every atlas PNG has a recipe or an SVG source
 
 - **WHEN** every PNG under the atlases is routed back to its sprite kind
-- **THEN** each kind has an IsoKit recipe or an SVG generator entry
+- **THEN** each kind has an IsoKit recipe, an SVG generator entry, or a brief declaring it committed pixel art
 
 #### Scenario: Every atlas PNG has an @2x twin
 
@@ -251,16 +284,16 @@ Every PNG has an `@1x` file and an `@2x` file with the same stem. No PNG may com
 #### Scenario: The generative pipeline is gone
 
 - **WHEN** the repository is inspected after this change archives
-- **THEN** `scripts/generate_sprites_ai/`, `Resources/Sprites.style/_sheets/` and `Resources/Sprites.style/master-reference.png` do not exist, and no Makefile target references an image API key
+- **THEN** `scripts/generate_sprites_ai/`, `Resources/Sprites.style/_sheets/`, `Resources/Sprites.style/master-reference.png` and `Resources/Sprites.style/pipeline.toml` do not exist, and no Makefile target references an image API key
 
 ### Requirement: Offline regeneration via make sprites
 
-A `make sprites` target SHALL regenerate atlas PNGs from the IsoKit recipes and the SVG generators, with no network access and no API key. It covers every catalog entry whose `source` is `isokit` or `svg`, which after this change archives is every atlas PNG. `make sprites-verify` SHALL run the IsoKit tolerance check, and then the content gate (`make sprites-content`). In CI, the CityRender2D job SHALL run the content gate on every PR. The job MUST exit non-zero if any content-gate rule fails, printing every failing sprite with its reason code, one per line.
+A `make sprites` target SHALL regenerate atlas PNGs from the IsoKit recipes and the SVG generators, with no network access and no API key. It covers every catalog entry whose `source` is `isokit` or `svg`: every atlas PNG except the committed pixel art. `make sprites-verify` SHALL run the IsoKit tolerance check, and then the content gate (`make sprites-content`). In CI, the CityRender2D job SHALL run the content gate on every PR. The job MUST exit non-zero if any content-gate rule fails, printing every failing sprite with its reason code, one per line.
 
 #### Scenario: make sprites runs offline
 
 - **WHEN** `make sprites` runs on a Mac with no network and no `OPENAI_API_KEY`
-- **THEN** it exits zero and every atlas PNG is written
+- **THEN** it exits zero and writes every atlas PNG except the committed pixel art
 
 #### Scenario: Verification fails on a content defect
 
@@ -297,6 +330,18 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 ## REMOVED Requirements
 
+### Requirement: Good-prefix sprite name grammar
+
+**Reason**: It routed the goods icons to the `Icons` atlas as pixel art; they are now SVG renders in `Kit.atlas`.
+
+**Migration**: "Good-prefix names route to the Kit atlas" keeps the grammar and routes `good-*` to `Kit`.
+
+### Requirement: Procedurally generated good icons
+
+**Reason**: The generator that drew them is retired.
+
+**Migration**: Hand-authored SVG goods icons replace them (see "Atlas PNGs are rendered by the art kit" and the `iso-art-kit` requirement "Goods icons come from an SVG generator").
+
 ### Requirement: Overlay sprites route to the Buildings atlas
 
 **Reason**: `Buildings.atlas` is retired; its last sprite, the waiting badge, moved to `Icons.atlas`.
@@ -319,7 +364,7 @@ Every committed terrain sprite (`terrain-*`, including transition tiles) SHALL c
 
 **Reason**: The port's second operational frame repeated the first, and the shore sprites moved to `Kit.atlas`.
 
-**Migration**: "Shore-building sprites per facing" replaces it: 20 port sprites and 24 shipyard sprites.
+**Migration**: "Shore-building sprites per facing" replaces it: 40 port sprites and 36 shipyard sprites.
 
 ### Requirement: Sprite catalog declares new content
 

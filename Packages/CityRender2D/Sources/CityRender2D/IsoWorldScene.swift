@@ -36,13 +36,17 @@ public final class IsoWorldScene: SKScene {
     /// Where a missing variant is reported; tests give a scene its own log.
     var missLog = SpriteAtlas.missLog
     /// Terrain transitions for the current map, rebuilt only when the terrain grid changes.
-    var transitionMap: TerrainTransitionMap?
+    private(set) var transitionMap: TerrainTransitionMap?
     /// What stands on each tile (trees), rebuilt only when terrain or occupancy changes.
-    var objectMap: TerrainObjectMap?
+    private(set) var objectMap: TerrainObjectMap?
     /// Road links, worked out again only when a building is placed or removed.
-    var roadLinkCache = RoadLinkCache()
+    private(set) var roadLinkCache = RoadLinkCache()
     /// The terrain sprite on screen per tile, and the view those tiles fill.
     var terrainSpecs: [TileCoordinate: SpriteSpec] = [:]
+    /// Plain grass, beach and water, drawn by one backdrop sprite rather than a sprite per tile, and
+    /// the looks it shows.
+    var groundBackdropNode: SKSpriteNode?
+    var groundBackdropMap: GroundBackdropMap?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.
@@ -71,7 +75,7 @@ public final class IsoWorldScene: SKScene {
     /// Ghost preview node shown at the hovered tile when a build tool is
     /// armed. The scene polls `ghostProvider` on every update; the
     /// controller (GameSession) returns the current ghost state.
-    private var ghostNode: SKSpriteNode?
+    private(set) var ghostNode: SKSpriteNode?
     public var ghostProvider: (() -> GhostState?)?
     /// Tile the inspector has selected; a selected signature building
     /// shows its range rings.
@@ -94,10 +98,24 @@ public final class IsoWorldScene: SKScene {
     /// farms, Hens peck by the houses.
     var animalNodes: [AnimalKey: (node: SKSpriteNode, pose: AnimalPose)] = [:]
     var lastAnimalPass: AnimalPass?
-    /// The animals' clock while Reduce Motion holds them still.
+    /// The animals' and workers' clock while Reduce Motion holds them still.
     var animalFrozenClock: UInt64?
+    /// Woodcutters and miners by site. Spec: `rendering-2_5d` / Workers
+    /// walk out from the gather sites.
+    var gatherNodes: [EntityID: (node: SKSpriteNode, pose: GatherPose)] = [:]
+    var lastGatherPass: AnimalPass?
+    /// Each gather site's current trip, kept from tick to tick so its worker
+    /// never jumps when the catchment changes.
+    var gatherTrips: [EntityID: GatherWorkerPlanner.Trip] = [:]
+    /// Each animal's round, kept from tick to tick so it never jumps when
+    /// its pasture or yard is built on.
+    var animalTours: [AnimalKey: AnimalPlanner.Tour] = [:]
     /// Flocks and gulls. Spec: `rendering-2_5d` / Birds cross the sky.
     let birdLayer = BirdLayerNode()
+    /// Fish jumping near the coast. Spec: `rendering-2_5d` / Fish jump near the coast.
+    let fishLayer = FishLayerNode()
+    /// Sawdust at the working sawmills. Spec: `rendering-2_5d` / Sawdust puffs at the sawmills.
+    let sawdustLayer = SawdustLayerNode()
     /// The lights texture per first-choice name, or nil when the atlas has
     /// none. Spec: `rendering-2_5d` / Lit windows follow the lights art.
     var lightsNames: [String: String?] = [:]
@@ -111,6 +129,9 @@ public final class IsoWorldScene: SKScene {
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
     public var reduceMotion = false
+    /// Whether the tree clumps sway, hold or stand still. Spec:
+    /// `rendering-2_5d` / Trees sway in the wind.
+    var treeSwayState: TreeSway.State = .running
     var highlightedSignatureTargets: [EntityID] {
         signatureRingSource?.affected ?? []
     }
@@ -210,6 +231,7 @@ public final class IsoWorldScene: SKScene {
         reconcileSprites(with: snapshot)
         updateWindowGlow(with: snapshot)
         noteTick(snapshot.tickCount, now: currentTime)
+        updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
@@ -218,7 +240,9 @@ public final class IsoWorldScene: SKScene {
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
+        reconcileWaterAndMills(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)
+        reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
@@ -245,6 +269,8 @@ public final class IsoWorldScene: SKScene {
             ?? SpriteAtlas.buildingTextureOrPlaceholder(for: ghost.kind, coord: ghost.tile)
         let node = ghostNode ?? SKSpriteNode(texture: texture)
         node.texture = texture
+        // Sprites differ in size (a wide cell fits a long shadow), so the ghost takes each texture's own.
+        node.size = texture.size()
         node.anchorPoint = CGPoint(x: 0.5, y: 0)
         let halfH = IsoMath.tileHeight / 2
         let footprint = BuildingCatalog.spec(for: ghost.kind).footprint
@@ -294,6 +320,29 @@ public final class IsoWorldScene: SKScene {
         shownBuildingInputs = nil
     }
 
+    /// Brings the terrain caches in line with the snapshot. Returns true when the grid changed, so
+    /// any tile may look different; tiles whose object alone changed join `staleTerrain`.
+    func refreshTerrainMaps(for snapshot: WorldSnapshot) -> Bool {
+        let (width, height, grid) = (snapshot.mapWidth, snapshot.mapHeight, snapshot.terrainGrid)
+        var gridChanged = false
+        if transitionMap?.matches(width: width, height: height, grid: grid) != true {
+            transitionMap = TerrainTransitionMap(width: width, height: height, grid: grid)
+            gridChanged = true
+        }
+        if objectMap?.matches(width: width, height: height, grid: grid) == true {
+            staleTerrain.formUnion(objectMap?.update(occupancy: snapshot.occupiedTiles) ?? [])
+        } else {
+            objectMap = TerrainObjectMap(width: width, height: height, grid: grid, occupancy: snapshot.occupiedTiles)
+            gridChanged = true
+        }
+        return gridChanged
+    }
+
+    /// Each operational road's link to its neighbours, from the cache.
+    func roadLinks(for snapshot: WorldSnapshot) -> [TileCoordinate: RoadLink] {
+        roadLinkCache.links(for: snapshot)
+    }
+
     /// Drops present vegetation nodes, and the grass edges that blend them, on a
     /// season change so the next reconcile rebuilds them with the season's sprites.
     /// Seasons with the same look (spring and summer) redraw nothing.
@@ -304,6 +353,7 @@ public final class IsoWorldScene: SKScene {
         }
         appliedSeason = season
         guard changesLook else { return }
+        refreshGroundBackdropLooks()
         for (coord, spec) in terrainSpecs {
             guard case let .terrain(kind, transition, object) = spec.kind,
                   Self.seasonalTerrain.contains(kind) || transition?.upper == .grass || object != nil

@@ -16,10 +16,16 @@ struct TextureFilteringTests {
         #expect(TextureFiltering.mode(for: "terrain-grass-beach-t3", kitRendered: houses) == .linear)
     }
 
-    @Test("scenario: Goods icons stay pixel art")
-    func goodsIconsStayPixelArt() {
-        let everything: Set = ["good-wood", "overlay-waiting-materials"]
-        #expect(TextureFiltering.mode(for: "good-wood", kitRendered: everything) == .nearest)
+    @Test("scenario: Goods icons filter linearly")
+    func goodsIconsFilterLinearly() {
+        #expect(TextureFiltering.mode(for: "good-wood") == .linear)
+        #expect(TextureFiltering.mode(for: "good-tea-leaves") == .linear)
+        #expect(TextureFiltering.mode(for: "good-coffee-cherries") == .linear)
+    }
+
+    @Test("scenario: Status badges stay pixel art")
+    func statusBadgesStayPixelArt() {
+        let everything: Set = ["overlay-waiting-materials"]
         #expect(TextureFiltering.mode(for: "overlay-waiting-materials", kitRendered: everything) == .nearest)
     }
 
@@ -53,7 +59,7 @@ struct TextureFilteringTests {
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Resources")
         let catalog = try GateCatalog.load(resourcesRoot: resources)
-        #expect(!catalog.migratedSheetNames.isEmpty)
-        #expect(TextureFiltering.kitRenderedStems == Set(catalog.migratedSheetNames.map(TextureFiltering.stem)))
+        #expect(!catalog.migratedSpriteNames.isEmpty)
+        #expect(TextureFiltering.kitRenderedStems == Set(catalog.migratedSpriteNames.map(TextureFiltering.stem)))
     }
 }

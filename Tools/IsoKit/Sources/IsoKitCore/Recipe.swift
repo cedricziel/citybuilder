@@ -69,6 +69,14 @@ public struct Recipe {
         self.body = body
     }
 
+    /// This recipe in another cell, everything else unchanged.
+    func with(cell: SpriteCell) -> Recipe {
+        Recipe(
+            id: id, entry: entry, cell: cell, constructionFrames: constructionFrames, operationalFrames: operationalFrames,
+            moving: moving, customStages: customStages, plot: plot, unit: unit, body: body
+        )
+    }
+
     public var allStages: [Stage] {
         (0 ..< constructionFrames).map(Stage.constructing) + [.finished]
     }

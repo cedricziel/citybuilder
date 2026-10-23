@@ -19,9 +19,9 @@ enum FireGlow {
     }
 
     static let hearths: [BuildingKind: Hearth] = [
-        .bakery: Hearth(x: 0.70, y: 0.68, size: 34),
-        .smelter: Hearth(x: 0.64, y: 0.80, size: 30),
-        .toolsmith: Hearth(x: 0.36, y: 0.70, size: 26),
+        .bakery: Hearth(x: 0.66, y: 0.68, size: 34),
+        .smelter: Hearth(x: 0.60, y: 0.80, size: 30),
+        .toolsmith: Hearth(x: 0.375, y: 0.70, size: 26),
         .charcoalBurner: Hearth(x: 0.49, y: 0.72, size: 40)
     ]
 

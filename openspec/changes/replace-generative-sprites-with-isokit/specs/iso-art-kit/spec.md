@@ -26,12 +26,17 @@ IsoKit SHALL render through one orthographic camera with:
 - euler angles (−30°, 45°, 0) and vertical projection
 - a scale of 64 / (4·√2) points per metre, where one tile is 4 m
 
-An n×n footprint renders into a cell 64·n points wide. The footprint's bottom vertex MUST sit at the cell's bottom-centre. Each recipe declares its cell height, and no part of the building may be clipped by the cell's top edge.
+An n×n footprint renders into a cell at least 64·n points wide. A building's cell widens symmetrically, in 16-point steps, until its baked shadow fits, so no shadow ends in a hard edge at the sprite's side. The footprint's bottom vertex MUST sit at the cell's bottom-centre. Each recipe declares its cell height, and no part of the building may be clipped by the cell's top edge.
 
-#### Scenario: A 2×2 house renders 128 points wide
+#### Scenario: A 2×2 house renders centred in its cell
 
 - **WHEN** the peasant house recipe (2×2 footprint) is rendered at @1×
-- **THEN** the PNG is 128 pixels wide and its lowest opaque pixel is in the bottom row at the horizontal centre ±2 pixels
+- **THEN** the PNG is as wide as its cell, at least 128 pixels, and its lowest opaque pixel is in the bottom row at the horizontal centre ±2 pixels
+
+#### Scenario: A building's shadow fits its cell
+
+- **WHEN** a building's baked shadow reaches past its footprint's width
+- **THEN** its cell widens until the shadow fits, and the IsoKit test suite fails for any building whose shadow leaves its cell
 
 #### Scenario: A recipe taller than its cell is rejected
 
@@ -112,13 +117,13 @@ The day sprites (finished, construction and operational frames) SHALL show every
 - **WHEN** the committed Kit atlas is checked
 - **THEN** each of the 60 house looks has all three `-lights-<n>` at both scales, and every lights file sits beside its sprite
 
-### Requirement: Terrain and icon tiles come from SVG generators
+### Requirement: Terrain tiles come from SVG generators
 
 A generator under `scripts/art/` SHALL write the SVG sources for:
 
 - the terrain transition tiles
 - the full-tile variants
-- the goods icons
+
 
 It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner masks 1–14 for the pairs grass→beach and beach→water. Every boundary MUST cross a tile edge at the edge's midpoint. Texture patterns MUST repeat on a 32×16-point period.
 
@@ -160,3 +165,12 @@ It SHALL render them to PNG with `rsvg-convert`. Transition tiles use corner mas
 
 - **WHEN** a recipe's roof finish is changed and the PNGs are not re-rendered
 - **THEN** `make sprites-verify` exits non-zero and names the affected PNGs
+
+### Requirement: Goods icons come from an SVG generator
+
+`scripts/art/goods_icons.py` SHALL write one hand-authored SVG source per good, `good-<good>`, on a 24-point grid. Every icon draws the good as an object in its natural colours, lit from the upper left, inside a dark warm outline, so it reads on light and dark HUDs. `art.svg_sprites` renders each at `@1x` and `@2x` into `Kit.atlas`, and `make sprites-svg-verify` checks the committed PNGs against fresh renders.
+
+#### Scenario: Every good has an icon
+
+- **WHEN** the goods icon generator runs
+- **THEN** it writes one source for every good CityCore defines, and each goods brief declares `source = "svg"`

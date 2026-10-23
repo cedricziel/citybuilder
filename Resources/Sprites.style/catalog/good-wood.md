@@ -1,3 +1,6 @@
+---
+source = "svg"
+---
 ## Function
 
 UI icon for the `wood` good. Used in the goods bar, building tooltips,
@@ -5,22 +8,12 @@ and the warehouse buffer indicator. Single static cell.
 
 ## Visual identity
 
-A short stack of three rough-cut logs seen at the same 30° south-east
-camera tilt as every other sprite. Brown bark exterior with one
-cross-section of light pine end-grain visible. No bark texture detail
-finer than 2 canonical pixels. Palette anchors: `#6E4A2A` bark,
-`#A07C50` pine end-grain, `#5C3F28` bark shadow.
+Two logs on their sides, brown bark with pale cut ends and a growth ring. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
-Front-matter override: `sheet_size = "256x256"`, `cell_grid = "1x1"`.
-Downsamples to 24×24 canonical pixels using nearest-neighbour (no
-anti-alias) per design.md §Q2.
+## Sprites
 
-## Sheet
+- `good-wood` — static icon
 
-Grid: 1 cols × 1 rows. Cell is 256×256 sheet pixels.
+## Recipe
 
-- (0, 0): `good-wood` — static icon
-
-## Animation
-
-Static — no animation loop.
+- Source: `scripts/art/goods_icons.py`, rendered by `art.svg_sprites` at @1x and @2x into `Kit.atlas`

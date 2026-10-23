@@ -8,12 +8,24 @@
 struct PlayerBot {
     let center: Building
     let tradesAtMarket: Bool
+    /// Buildings placed in this order before anything else, one per
+    /// entry, waiting until each fits (`first-hour-guidance` D4).
+    let firstSteps: [BuildingKind]
+    /// Researches and builds the bread, tools and luxury chains once the
+    /// town has `midGameHouses` houses (#186, `PlayerBot+MidGame.swift`).
+    let midGame: MidGameOrder?
     private var script = RivalAIState()
 
-    init(center: Building, tradesAtMarket: Bool) {
+    init(center: Building, tradesAtMarket: Bool, firstSteps: [BuildingKind] = [], midGame: MidGameOrder? = nil) {
         self.center = center
         self.tradesAtMarket = tradesAtMarket
+        self.firstSteps = firstSteps
+        self.midGame = midGame
     }
+
+    /// The first-hour guide's order: food first so houses fill, then the
+    /// planks a house needs, then houses for tax.
+    static let guideSteps: [BuildingKind] = [.farm, .lumberjackHut, .sawmill, .house, .house, .house]
 
     static let cushion: Int64 = 50
     static let sellBelowBalance: Int64 = 150
@@ -22,22 +34,22 @@ struct PlayerBot {
 
     mutating func takeTurn(_ world: inout World) {
         let stock = world.islandStockpile(at: center.anchor, tileToIsland: world.tileToIslandMap())
-        if tradesAtMarket, world.economy.balance < Self.sellBelowBalance {
-            for good in [Good.planks, .wood] {
-                let units = min(stock[good, default: 0] - Self.keepOnSale, world.market.left(good, .sold))
-                if units > 0 {
-                    world.enqueue(.marketSell(center.id, good, units))
-                    return
-                }
-            }
-        }
+        if sellAtMarket(in: &world, stock: stock) { return }
+        if midGame != nil { chooseResearch(in: &world) }
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
+        if let next = nextFirstStep(in: world) {
+            _ = place(next, in: &world, plan: &plan, stock: stock)
+            return
+        }
         let kinds = town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
         for kind in kinds where !town.waiting || kind == .lumberjackHut {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
         }
         guard !town.waiting else { return }
+        for kind in missingMidGameKinds(in: world, town: town) where place(kind, in: &world, plan: &plan, stock: stock) {
+            return
+        }
         if RivalAI.scriptKind(at: script.scriptIndex) == .house, town.houses >= Self.houseCap {
             script.advance()
         }
@@ -49,9 +61,44 @@ struct PlayerBot {
         }
     }
 
+    /// While trading: sells planks, then wood, above `keepOnSale` when
+    /// cash is short, which ends the turn; with the careful mid-game kit
+    /// also sells raw surplus every turn.
+    private func sellAtMarket(in world: inout World, stock: [Good: Int]) -> Bool {
+        guard tradesAtMarket else { return false }
+        func surplus(_ good: Good) -> Int {
+            min(stock[good, default: 0] - Self.keepOnSale, world.market.left(good, .sold))
+        }
+        let shortOfCash = world.economy.balance < Self.sellBelowBalance
+        if shortOfCash, let good = [Good.planks, .wood].first(where: { surplus($0) > 0 }) {
+            world.enqueue(.marketSell(center.id, good, surplus(good)))
+            return true
+        }
+        if midGame == .careful {
+            for good in Self.rawSurplus(world.culture) where surplus(good) > 0 {
+                world.enqueue(.marketSell(center.id, good, surplus(good)))
+            }
+        }
+        return false
+    }
+
+    /// The first entry of `firstSteps` the player's buildings don't
+    /// cover yet, counting every kind in order.
+    private func nextFirstStep(in world: World) -> BuildingKind? {
+        var owned: [BuildingKind: Int] = [:]
+        for building in world.buildings.values where building.owner == .player {
+            owned[building.kind, default: 0] += 1
+        }
+        for kind in firstSteps {
+            guard owned[kind, default: 0] > 0 else { return kind }
+            owned[kind, default: 0] -= 1
+        }
+        return nil
+    }
+
     /// Enqueues any purchase, the ring roads and the building; false
     /// when the bot must wait.
-    private func place(
+    func place(
         _ kind: BuildingKind, in world: inout World, plan: inout RivalTownPlan, stock: [Good: Int]
     ) -> Bool {
         var buys: [Command] = []
@@ -65,7 +112,7 @@ struct PlayerBot {
             price += Int64(missing) * good.marketPrice(.bought)
         }
         let cost = BuildingCatalog.spec(for: kind).cost + Self.cushion + price
-        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) else { return false }
+        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) ?? roadsideMineSlot(kind, in: world) else { return false }
         guard world.economy.balance >= cost + BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
         else { return false }
         for command in buys + slot.roads.map({ .place(.road, at: $0) }) + [.place(kind, at: slot.anchor)] {
@@ -75,7 +122,7 @@ struct PlayerBot {
     }
 
     /// The player's buildings as the threshold rules see them.
-    private struct Town {
+    struct Town {
         var counts: [BuildingKind: Int] = [:]
         var allHuts = 0
         var forestLeft = 0
@@ -114,19 +161,20 @@ struct PlayerBot {
 }
 
 extension World {
-    /// Plays `ticks` ticks of a new game with `bot` taking a turn every
-    /// 50 ticks; true when the game ends in bankruptcy.
-    static func botGoesBankrupt(
-        layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool, ticks: Int
-    ) -> Bool {
+    /// Plays `ticks` ticks of a new game with the bot taking a turn every
+    /// 50 ticks, stopping early at bankruptcy; returns the final world.
+    static func botGame(
+        layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool,
+        firstSteps: [BuildingKind] = [], ticks: Int
+    ) -> World {
         var world = World.newGame(layout: layout, seed: seed, difficulty: difficulty)
         world.calendar = CalendarState(startYear: 1200, isActive: true)
-        guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return false }
-        var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket)
+        guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return world }
+        var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket, firstSteps: firstSteps)
         for tick in 1 ... ticks where !world.economy.gameOver {
             if tick.isMultiple(of: 50) { bot.takeTurn(&world) }
             world.tick()
         }
-        return world.economy.gameOver
+        return world
     }
 }

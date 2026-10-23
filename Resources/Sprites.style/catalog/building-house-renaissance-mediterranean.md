@@ -11,22 +11,11 @@ shared with `building-house`. No operational animation.
 
 Rendered by IsoKit in the shared light rig. An ochre stucco palazzo on a stone base with pale cornices, blue shutters and a low tile hip roof. Same 2×2 footprint and bottom anchor as `building-house`.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-house-renaissance-mediterranean` — a two-storey palazzetto
-- (0, 1): `building-house-tier2-renaissance-mediterranean` — a three-storey palazzo
-- (0, 2): `building-house-tier3-renaissance-mediterranean` — a palazzo with a roof-top loggia tower
-- (0, 3): spare
-- (1, 0): spare
-- (1, 1): spare
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-None: finished sprites only. Construction uses the shared `building-house-constructing-*` frames.
+- `building-house-renaissance-mediterranean` — a two-storey palazzetto
+- `building-house-tier2-renaissance-mediterranean` — a three-storey palazzo
+- `building-house-tier3-renaissance-mediterranean` — a palazzo with a roof-top loggia tower
 
 ## Recipe
 

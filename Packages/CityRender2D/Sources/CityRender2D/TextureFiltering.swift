@@ -1,14 +1,14 @@
+import CityCore
 import SpriteKit
 
 /// rendering-2_5d: World textures are @2x and linearly filtered (design D7).
 ///
-/// Art-kit sprites are anti-aliased renders shipped with `@2x` twins, so they filter linearly.
-/// Goods icons, status badges and the legacy pixel art keep `.nearest`; linear filtering would blur
-/// pixel art. Each family PR adds its sprite stems as it migrates, and once every family has
-/// migrated, every world texture is linear.
+/// Art-kit sprites, goods icons included, are anti-aliased renders shipped with `@2x` twins, so they
+/// filter linearly. The status badges are pixel art and keep `.nearest`; linear filtering would blur
+/// them.
 public enum TextureFiltering {
     /// Sprite stems the art kit renders: one per building look, terrain kind or transition pair, the
-    /// way the migrated briefs' Sheet lists name them. A test keeps this set equal to the catalog.
+    /// way the migrated briefs' Sprites lists name them. A test keeps this set equal to the catalog.
     /// States, frames, variants and transition masks are stripped before the lookup, so
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.
@@ -38,7 +38,10 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]).union(houseAgeLooks).union(figureStems)
+    ]).union(houseAgeLooks).union(figureStems).union(goodsIcons)
+
+    /// One icon per good (`good-tea-leaves`), drawn as SVG.
+    static let goodsIcons: [String] = Good.allCases.map { "good-\($0.rawValue)" }
 
     /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).
     static let houseAgeLooks: [String] = ["antiquity", "renaissance", "industrial", "modern"].flatMap { age in
@@ -54,7 +57,7 @@ public enum TextureFiltering {
     })
 
     public static func mode(for spriteName: String, kitRendered: Set<String> = kitRenderedStems) -> SKTextureFilteringMode {
-        if spriteName.hasPrefix("good-") || spriteName.hasPrefix("overlay-") {
+        if spriteName.hasPrefix("overlay-") {
             return .nearest
         }
         return kitRendered.contains(stem(of: spriteName)) ? .linear : .nearest
