@@ -30,8 +30,9 @@ const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renais
 const oneX = (key) => !key.includes("@");
 const buildingBase = (key) =>
   oneX(key) && !/-(constructing|operational)-\d$/.test(key) && !cultureOrEra.test(key) && !/-v\d$/.test(key) &&
-  !/-c\d+$/.test(key); // road connection tiles: the backdrop draws the base road
-const buildings = { ...atlas("Buildings.atlas", "building-", buildingBase), ...atlas("Kit.atlas", "building-", buildingBase) };
+  !/-c\d+$/.test(key) && // road connection tiles: the backdrop draws the base road
+  !/-lights(-\d+)?$/.test(key); // night-lights masks are drawn over a building, not on their own
+const buildings = atlas("Kit.atlas", "building-", buildingBase);
 // Base terrain tiles only: no animation frames, rock variants or transitions (seasonal sets included).
 const terrain = atlas(
   "Kit.atlas",
