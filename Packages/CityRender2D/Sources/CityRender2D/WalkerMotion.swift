@@ -56,6 +56,19 @@ extension SKNode {
     func glide(to target: CGPoint, duration: TimeInterval = 0.1) {
         run(.move(to: target, duration: duration), withKey: Self.glideKey)
     }
+
+    /// Glides to `target` and sorts by `depth` of where the figure stands:
+    /// on the way, by the further back of its two ends, so a figure leaving
+    /// from behind a building never draws over its corner, and by the
+    /// target once it arrives. A position it is already at needs no move.
+    func glide(to target: CGPoint, sortingBy depth: @escaping (CGPoint) -> CGFloat) {
+        guard hypot(position.x - target.x, position.y - target.y) > 0.01 else {
+            zPosition = depth(target)
+            return
+        }
+        zPosition = min(depth(position), depth(target))
+        run(.sequence([.move(to: target, duration: 0.1), .run { [weak self] in self?.zPosition = depth(target) }]), withKey: Self.glideKey)
+    }
 }
 
 extension StrollerPlanner {
