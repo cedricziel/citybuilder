@@ -180,6 +180,7 @@ struct BuildDrawerView: View {
         let locked = session.isLocked(kind)
         let isArmed = session.selectedTool == .place(kind)
         let name = BuildTool.place(kind).displayName
+        let accessibility = Self.tileAccessibility(for: kind, in: session)
         return Button {
             rail.arm(kind, in: session)
         } label: {
@@ -214,7 +215,16 @@ struct BuildDrawerView: View {
         }
         .buttonStyle(.plain)
         .disabled(locked)
-        .accessibilityLabel(locked ? "\(name), locked" : name)
-        .accessibilityValue("$\(BuildingCatalog.spec(for: kind).cost)")
+        .accessibilityLabel(accessibility.label)
+        .accessibilityValue(accessibility.value)
+    }
+
+    /// What VoiceOver reads for a drawer tile: its name, marked when
+    /// locked, and the caption the tile shows. Spec: `platform-shells` /
+    /// Locked palette entries.
+    @MainActor
+    static func tileAccessibility(for kind: BuildingKind, in session: GameSession) -> (label: String, value: String) {
+        let name = BuildTool.place(kind).displayName
+        return (session.isLocked(kind) ? "\(name), locked" : name, session.drawerCaption(for: kind))
     }
 }

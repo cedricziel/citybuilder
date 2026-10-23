@@ -48,6 +48,13 @@ func scenarioCalloutNamesTheNextTiersNeeds() throws {
     #expect(!merchants.keyLines.contains { $0.hasPrefix("Next:") })
 }
 
+@Test("the next-tier line uses the town's tier names and luxury")
+func nextTierLineFollowsTheCulture() {
+    #expect(InspectorViewModel.nextTierLine(after: .citizens, in: .mediterranean)
+        == ["Next: Patricians need bread, tools, wine"])
+    #expect(InspectorViewModel.nextTierLine(after: .peasants, in: .mediterranean) == ["Next: Citizens need planks"])
+}
+
 @Test("scenario: callout key lines for other buildings")
 func scenarioCalloutKeyLinesForOtherBuildings() throws {
     let inspector = try inspector(for: .lumberjackHut)

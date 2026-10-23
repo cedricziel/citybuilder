@@ -1,6 +1,6 @@
-import CityCore
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/redesign-hud-map-first/specs/platform-shells/spec.md.
@@ -63,7 +63,29 @@ func scenarioLockedDrawerTileDoesNothing() {
 func scenarioLockedDrawerTileNamesItsResearch() {
     let session = GameSession()
     #expect(session.drawerCaption(for: .mine) == "Needs Mining")
-    #expect(session.drawerCaption(for: .farm) == "$60")
+    #expect(session.drawerCaption(for: .farm) == "$\(BuildingCatalog.spec(for: .farm).cost)")
+}
+
+@MainActor
+@Test("VoiceOver reads a drawer tile's caption")
+func drawerTileAccessibilityReadsItsCaption() {
+    let session = GameSession()
+    let mine = BuildDrawerView.tileAccessibility(for: .mine, in: session)
+    #expect(mine.label == "Mine, locked")
+    #expect(mine.value == "Needs Mining")
+    let farm = BuildDrawerView.tileAccessibility(for: .farm, in: session)
+    #expect(farm.label == "Farm")
+    #expect(farm.value == "$\(BuildingCatalog.spec(for: .farm).cost)")
+}
+
+@MainActor
+@Test("a researched building's drawer tile shows its cost again")
+func researchedDrawerTileShowsItsCost() {
+    var world = World.newGame()
+    world.research.markResearched(.mining)
+    let session = GameSession(world: world)
+    #expect(!session.isLocked(.mine))
+    #expect(session.drawerCaption(for: .mine) == "$\(BuildingCatalog.spec(for: .mine).cost)")
 }
 
 @MainActor
