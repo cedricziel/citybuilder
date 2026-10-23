@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       packages: ${{ steps.select.outputs.packages }}
+      test_matrix: ${{ steps.select.outputs.test_matrix }}
       apps: ${{ steps.select.outputs.apps }}
       sprites: ${{ steps.select.outputs.sprites }}
       gamedata_fixture: ${{ steps.select.outputs.gamedata_fixture }}
@@ -71,6 +72,22 @@ jobs:
           fi
           cat "$selection"
           cat "$selection" >> "$GITHUB_OUTPUT"
+
+          # Four small packages share one test job, since each job pays
+          # for a runner, a checkout and an Xcode setup; the others keep
+          # their own. The count check makes a bad grouping fail loudly
+          # rather than drop a package from the matrix.
+          packages=$(sed -n 's/^packages=//p' "$selection")
+          matrix=$(jq -c '
+            map({package: ., group: (if IN("CityAudio", "CityPersistence", "CityRender3D", "GameDataGen") then "small" else . end)})
+            | group_by(.group)
+            | map({name: (map(.package) | join(", ")), packages: (map(.package) | join(" "))})
+          ' <<< "$packages")
+          if [ "$(jq 'map(.packages | split(" ") | length) | add // 0' <<< "$matrix")" != "$(jq length <<< "$packages")" ]; then
+            echo "::error::test matrix does not cover the selected packages: $packages -> $matrix"
+            exit 1
+          fi
+          echo "test_matrix=$matrix" | tee -a "$GITHUB_OUTPUT"
 
   # The sound generator and the music renderer promise the same bytes on
   # every machine; the sprite pipeline's pytest job checks them on macOS,
@@ -137,23 +154,26 @@ jobs:
           SCENARIO_COVERAGE_STRICT: "0"
         run: make test-scenarios
 
+  # CityCore, CityRender2D and CityUI are big enough to keep their own
+  # job; the rest share one (see `test_matrix` in `changes`). A job's
+  # `packages` is a space-separated list, tested one `swift test` each.
   test:
-    name: test (${{ matrix.package }})
+    name: test (${{ matrix.name }})
     needs: changes
-    if: needs.changes.outputs.packages != '[]'
+    if: needs.changes.outputs.test_matrix != '[]'
     runs-on: macos-26
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        include: ${{ fromJSON(needs.changes.outputs.test_matrix) }}
 
     steps:
       - name: Checkout (with full history for diff-cover)
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          fetch-depth: ${{ matrix.package == 'CityCore' && '0' || '1' }}
+          fetch-depth: ${{ matrix.packages == 'CityCore' && '0' || '1' }}
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -169,53 +189,66 @@ jobs:
       # `make sprites-verify`, the hermetic regen gate, so it needs the
       # sprite pipeline's venv.
       - name: Install sprite pipeline libraries
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         # libimagequant decides the atlas PNG bytes, so it is pinned.
         run: scripts/ci/install-pinned-tools.sh sprites
 
       - name: Set up Python for sprite pipeline
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Bootstrap sprite venv
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         run: make sprites-venv
 
+      # A failing package doesn't stop the next, so one run reports every
+      # broken package; the step fails at the end if any did.
       - name: swift test
         env:
           # The hermetic gate must pass without an API key.
           OPENAI_API_KEY: ""
-        run: swift test --package-path "Packages/${{ matrix.package }}" --enable-code-coverage
+          PACKAGES: ${{ matrix.packages }}
+        run: |
+          failed=""
+          for package in $PACKAGES; do
+            echo "==> swift test $package"
+            swift test --package-path "Packages/$package" --enable-code-coverage \
+              || failed="$failed $package"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::swift test failed for:$failed"
+            exit 1
+          fi
 
       # PNG bytes depend on the encoder's zlib, so a sprite made on another
       # OS can fail the byte-exact gate. Regenerate here and upload the
       # atlases, so they can be committed as CI encodes them.
       - name: Regenerate atlases after a sprite gate failure
-        if: failure() && matrix.package == 'CityRender2D'
+        if: failure() && matrix.packages == 'CityRender2D'
         run: make sprites-offline
 
       - name: Upload regenerated atlases
-        if: failure() && matrix.package == 'CityRender2D'
+        if: failure() && matrix.packages == 'CityRender2D'
         uses: actions/upload-artifact@v7
         with:
           name: regenerated-atlases
           path: Resources/*.atlas/
 
       - name: gamedata-check (committed catalogs match the packs)
-        if: matrix.package == 'GameDataGen'
+        if: contains(matrix.packages, 'GameDataGen')
         run: make gamedata-check SWIFT=swift
 
       # Second half of `make sprites-verify`: the CityRender2D tests run
       # the byte check (`make sprites-regen-check`), this runs the content
       # gate once, outside `swift test`.
       - name: Sprite content gate
-        if: matrix.package == 'CityRender2D'
+        if: matrix.packages == 'CityRender2D'
         run: make sprites-content
 
       - name: Coverage gate (CityCore floors + diff-cover vs the base branch)
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         env:
           COVERAGE_BASE_REF: origin/${{ github.base_ref || 'main' }}
           COVERAGE_STRICT: "1"
@@ -226,7 +259,7 @@ jobs:
           ./scripts/check-coverage.sh
 
       - name: DeterminismFixture (macOS) — produce post-tick JSON
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         env:
           # The fixture dumps Dictionary-backed state, whose iteration
           # order is seeded per process unless hashing is pinned.
@@ -238,14 +271,14 @@ jobs:
           shasum -a 256 determinism/macos.json determinism/macos-36k.json
 
       - name: Upload macOS determinism JSON
-        if: matrix.package == 'CityCore'
+        if: matrix.packages == 'CityCore'
         uses: actions/upload-artifact@v7
         with:
           name: determinism-macos
           path: determinism/macos*.json
 
       - name: Upload coverage report
-        if: always() && matrix.package == 'CityCore'
+        if: always() && matrix.packages == 'CityCore'
         uses: actions/upload-artifact@v7
         with:
           name: coverage
