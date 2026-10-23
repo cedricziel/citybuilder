@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "pixel"
 ---
 ## Function
 
@@ -7,18 +7,12 @@ UI icon for the `iron` good. Single static cell.
 
 ## Visual identity
 
-Two stacked grey iron bars. Outlined in `#1A1410`, drawn by `scripts/generate_sprites_ai/procedural.py`.
+Two stacked grey iron bars. Outlined in `#1A1410`, drawn by the retired procedural generator.
 
-## Sheet
+## Sprites
 
-Grid: 1 cols × 1 rows.
-
-- (0, 0): `good-iron` — static icon
-
-## Animation
-
-Static — no animation loop.
+- `good-iron` — static icon
 
 ## Recipe
 
-- SVG source: hand-authored icon, planned (goods icons family)
+- Source: committed pixel art in `Icons.atlas`, drawn by the retired procedural generator; task 4.9 replaces it with a hand-authored SVG icon

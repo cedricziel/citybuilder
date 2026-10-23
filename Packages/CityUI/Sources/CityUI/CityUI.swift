@@ -112,6 +112,9 @@ public struct CityRootView: View {
 @Observable
 public final class GameSession {
     public var world: World
+    /// This session's identity for the views that show it. Unlike the
+    /// object's address, it is never reused by a later session.
+    public let instanceID = UUID()
 
     public let hud: HUDViewModel
     /// Optional sink for the per-tick `WorldEvent` stream. When non-nil,
@@ -171,6 +174,7 @@ public final class GameSession {
         if world.economy.balance < 0, !world.economy.gameOver {
             showDeficitHint()
         }
+        refreshFirstSteps()
         self.tickTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timerFired()
@@ -187,6 +191,13 @@ public final class GameSession {
     /// The deficit hint while it shows; the simulation waits for the
     /// player to dismiss it (`deficit-hint` D1).
     public internal(set) var deficitHint: SessionBanner?
+    /// The player hid the first-hour guide, or met every step, this
+    /// session (`first-hour-guidance` D2).
+    var isFirstStepsDismissed = false
+    /// First steps met so far this session; a met step stays met.
+    var firstStepsMet: Set<FirstStepsGuide.Step> = []
+    /// The first-hour guide while it shows, refreshed every tick.
+    var firstStepsGuide: FirstStepsGuide?
     public var isWinSheetPresented = false
 
     /// Advance the simulation one tick. Drains the per-tick event stream
@@ -198,6 +209,7 @@ public final class GameSession {
         guard !isPaused, deficitHint == nil else { return }
         let result = world.tick()
         noteBannerEvents(in: result.events)
+        refreshFirstSteps()
         let snapshot = world.snapshot()
         hud.apply(snapshot)
         routeList.snapshot = snapshot

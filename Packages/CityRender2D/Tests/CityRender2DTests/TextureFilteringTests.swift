@@ -53,7 +53,7 @@ struct TextureFilteringTests {
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Resources")
         let catalog = try GateCatalog.load(resourcesRoot: resources)
-        #expect(!catalog.migratedSheetNames.isEmpty)
-        #expect(TextureFiltering.kitRenderedStems == Set(catalog.migratedSheetNames.map(TextureFiltering.stem)))
+        #expect(!catalog.migratedSpriteNames.isEmpty)
+        #expect(TextureFiltering.kitRenderedStems == Set(catalog.migratedSpriteNames.map(TextureFiltering.stem)))
     }
 }

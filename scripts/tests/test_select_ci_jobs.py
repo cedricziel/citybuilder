@@ -240,3 +240,13 @@ def test_the_workflow_selects_everything_with_the_same_outputs() -> None:
     output = select_ci_jobs.everything(root).github_output()
 
     assert shell_keys == [line.split("=", 1)[0] for line in output.splitlines()]
+
+
+@pytest.mark.parametrize("path", [
+    "scripts/art/roads.py",
+    "Resources/Sprites.style/catalog/terrain-grass.md",
+    "Resources/Kit.atlas/terrain-grass-beach-t3.png",
+])
+def test_an_svg_source_brief_or_png_change_runs_the_sprites_job(repo: Path, path: str) -> None:
+    # The sprites job compares the SVG-rendered PNGs with their generators (`make sprites-svg-verify`).
+    assert select([path], repo).sprites

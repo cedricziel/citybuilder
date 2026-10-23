@@ -13,7 +13,7 @@ struct BuildingSpriteInputs: Equatable {
     let roadDisconnectedBuildings: Set<EntityID>
     let housePopulations: [EntityID: HousePopulation]
     let houseModifiers: [EntityID: HouseModifiers]
-    let rivals: [RivalSummary]
+    let rivals: [RivalLook]
 
     init(_ snapshot: WorldSnapshot, view: VisibleTiles) {
         xRange = view.xRange
@@ -23,7 +23,7 @@ struct BuildingSpriteInputs: Equatable {
         roadDisconnectedBuildings = snapshot.roadDisconnectedBuildings
         housePopulations = snapshot.housePopulations
         houseModifiers = snapshot.houseModifiers
-        rivals = snapshot.rivals
+        rivals = snapshot.rivals.map(RivalLook.init)
     }
 }
 

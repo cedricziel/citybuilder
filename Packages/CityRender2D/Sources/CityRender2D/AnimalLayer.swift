@@ -2,20 +2,12 @@ import CityCore
 import CoreGraphics
 import SpriteKit
 
-struct AnimalKey: Hashable {
-    let home: EntityID
-    let slot: Int
-}
+typealias AnimalKey = AnimalPlanner.Key
 
 struct AnimalPose: Equatable {
     let action: SpriteAtlas.AnimalAction
     let facing: SpriteAtlas.WalkerFacing
     let moving: Bool
-}
-
-struct MapShape: Equatable {
-    let width: Int
-    let height: Int
 }
 
 struct AnimalPass: Equatable {
@@ -43,29 +35,6 @@ extension IsoWorldScene {
     /// rock: the same occupancy the terrain object map reads.
     func isFreeGrass(_ tile: TileCoordinate, in snapshot: WorldSnapshot) -> Bool {
         snapshot.terrain(at: tile) == .grass && snapshot.occupiedTiles[tile] == nil && objectMap?.object(at: tile) == nil
-    }
-
-    /// A loaded save or a new game: the tick ran backwards or the map
-    /// changed shape. The animals and workers of the old world go, and the
-    /// new world's are planned from scratch.
-    func dropFiguresIfNewWorld(_ snapshot: WorldSnapshot) {
-        let shape = MapShape(width: snapshot.mapWidth, height: snapshot.mapHeight)
-        let isNew = shape != figureWorldShape || snapshot.tickCount < (figureWorldTick ?? 0)
-        figureWorldShape = shape
-        figureWorldTick = snapshot.tickCount
-        guard isNew else { return }
-        for shown in animalNodes.values {
-            shown.node.removeFromParent()
-        }
-        for shown in gatherNodes.values {
-            shown.node.removeFromParent()
-        }
-        animalNodes = [:]
-        gatherNodes = [:]
-        gatherTrips = [:]
-        animalFrozenClock = nil
-        lastAnimalPass = nil
-        lastGatherPass = nil
     }
 
     /// The clock animals and workers move by: the day clock, held where it
@@ -103,10 +72,11 @@ extension IsoWorldScene {
         let clock = ambientClock(for: snapshot)
         let animals = range.map { visible in
             AnimalPlanner.animals(
-                in: snapshot, xRange: visible.xRange, yRange: visible.yRange, clock: clock,
+                in: snapshot, visible: (visible.xRange, visible.yRange), clock: clock,
                 ground: AnimalPlanner.Ground(
                     isFreeGrass: { self.isFreeGrass($0, in: snapshot) }, isYard: { self.isYard($0, in: snapshot) }
-                )
+                ),
+                tours: &animalTours
             )
         } ?? []
         let keys = Set(animals.map { AnimalKey(home: $0.home, slot: $0.slot) })

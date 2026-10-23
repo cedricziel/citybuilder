@@ -93,7 +93,11 @@ extension IsoWorldScene {
         let floor: TerrainType = TerrainObject.kinds.contains(kind) ? .grass : kind
         let ground = makeGroundNode(kind: floor, coord: coord, transition: transition)
         if let objectName {
-            ground.addChild(makeObjectNode(named: objectName, coord: coord))
+            let clump = makeObjectNode(named: objectName, coord: coord)
+            if object?.kind == .forest {
+                TreeSway.arm(clump, coord: coord, state: treeSwayState)
+            }
+            ground.addChild(clump)
         }
         return ground
     }

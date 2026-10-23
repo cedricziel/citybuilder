@@ -9,23 +9,14 @@ Extracts ore; needs at least 2 mountain tiles under it.
 
 Rendered by IsoKit in the shared light rig. An outcrop of tilted grey boulders with a timbered adit in its south face, a cart of ore on a track running out of it, and a dark ore heap.
 
-## Sheet
+## Sprites
 
-Grid: 4 cols × 2 rows. Default sheet size.
-
-- (0, 0): `building-mine` — canonical operational base
-- (0, 1): `building-mine-constructing-0` — stone pad
-- (0, 2): `building-mine-constructing-1` — timber frame
-- (0, 3): `building-mine-constructing-2` — walls with scaffolding
-- (1, 0): `building-mine-operational-0` — operational frame 0
-- (1, 1): `building-mine-operational-1` — operational frame 1
-- (1, 2): spare
-- (1, 3): spare
-
-## Animation
-
-- Construction: `(0, 1)` → `(0, 2)` → `(0, 3)`. Adjacent on row 0.
-- Operational: `(1, 0)` → `(1, 1)`. Adjacent on row 1.
+- `building-mine` — canonical operational base
+- `building-mine-constructing-0` — stone pad
+- `building-mine-constructing-1` — timber frame
+- `building-mine-constructing-2` — walls with scaffolding
+- `building-mine-operational-0` — operational frame 0
+- `building-mine-operational-1` — operational frame 1
 
 ## Recipe
 

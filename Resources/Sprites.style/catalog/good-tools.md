@@ -1,5 +1,5 @@
 ---
-source = "procedural"
+source = "pixel"
 ---
 ## Function
 
@@ -7,18 +7,12 @@ UI icon for the `tools` good. Single static cell.
 
 ## Visual identity
 
-A crossed hammer and saw. Outlined in `#1A1410`, drawn by `scripts/generate_sprites_ai/procedural.py`.
+A crossed hammer and saw. Outlined in `#1A1410`, drawn by the retired procedural generator.
 
-## Sheet
+## Sprites
 
-Grid: 1 cols × 1 rows.
-
-- (0, 0): `good-tools` — static icon
-
-## Animation
-
-Static — no animation loop.
+- `good-tools` — static icon
 
 ## Recipe
 
-- SVG source: hand-authored icon, planned (goods icons family)
+- Source: committed pixel art in `Icons.atlas`, drawn by the retired procedural generator; task 4.9 replaces it with a hand-authored SVG icon

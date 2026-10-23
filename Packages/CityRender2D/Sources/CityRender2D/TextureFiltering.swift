@@ -8,7 +8,7 @@ import SpriteKit
 /// migrated, every world texture is linear.
 public enum TextureFiltering {
     /// Sprite stems the art kit renders: one per building look, terrain kind or transition pair, the
-    /// way the migrated briefs' Sheet lists name them. A test keeps this set equal to the catalog.
+    /// way the migrated briefs' Sprites lists name them. A test keeps this set equal to the catalog.
     /// States, frames, variants and transition masks are stripped before the lookup, so
     /// `building-house-constructing-1` matches `building-house`. The match is exact:
     /// `building-house-mediterranean` is its own (legacy) brief.

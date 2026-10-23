@@ -27,16 +27,17 @@ Its camera, light and finish values MUST match the IsoKit source.
 
 ### Requirement: Catalog entry declares function, identity and recipe
 
-Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual identity` and `Recipe`. What `Recipe` names depends on the entry:
+Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual identity`, `Sprites` and `Recipe`. `Sprites` lists every sprite the entry owns, one `` - `<name>` `` line each. What `Recipe` names depends on the entry:
 
 - **Building:** the IsoKit recipe, cell height, construction stage count, and any moving part with its frame count.
 - **Unit:** the IsoKit recipe, cell size, facings and frames per facing.
-- **Terrain and icons:** the SVG generator entry.
+- **Terrain and roads:** the SVG generator entry.
+- **Pixel art:** where the committed PNG came from, and what replaces it.
 
 #### Scenario: Catalog entry declares all required sections
 
 - **WHEN** a test parses any `Resources/Sprites.style/catalog/<id>.md` for level-2 headings
-- **THEN** the parsed set includes `Function`, `Visual identity` and `Recipe`
+- **THEN** the parsed set includes `Function`, `Visual identity`, `Sprites` and `Recipe`
 
 #### Scenario: Recipe section names a registered recipe
 
@@ -45,17 +46,17 @@ Each `catalog/<id>.md` entry SHALL have the level-2 sections `Function`, `Visual
 
 ### Requirement: One rendered register for world sprites
 
-Every catalog entry for a building (`building-*`) or unit (`walker`, `ship`) SHALL declare `source = "isokit"` in its front matter. Terrain and goods-icon entries SHALL declare `source = "svg"`.
+Every catalog entry for a building (`building-*`) or unit (`walker`, `animal`, `ship`) SHALL declare `source = "isokit"` in its front matter, except the road, whose connection tiles come from the road generator and which declares `source = "svg"`. Terrain entries SHALL declare `source = "svg"`. Goods-icon entries SHALL declare `source = "pixel"`: their 24 × 24 icons are committed as is, from the retired generative pipeline (three of them, `good-wood`, `good-planks` and `good-food`, from an image-generation API), until hand-authored SVG icons replace them.
 
 #### Scenario: Every building and unit entry is rendered by IsoKit
 
-- **WHEN** the catalog entries whose names start with `building-`, `walker` or `ship` are read
+- **WHEN** the catalog entries whose names start with `building-` (the road aside), `walker`, `animal` or `ship` are read
 - **THEN** each declares `source = "isokit"` in its front matter
 
-#### Scenario: Terrain and icon entries are SVG
+#### Scenario: Terrain entries are SVG and goods icons committed pixel art
 
-- **WHEN** the catalog entries whose names start with `terrain-` or `good-` are read
-- **THEN** each declares `source = "svg"` in its front matter
+- **WHEN** the catalog entries whose names start with `terrain-` or `good-`, and the road's, are read
+- **THEN** the terrain entries and the road declare `source = "svg"`, and each goods icon declares `source = "pixel"`
 
 ## REMOVED Requirements
 

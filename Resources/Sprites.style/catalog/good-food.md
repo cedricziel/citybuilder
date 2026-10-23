@@ -1,3 +1,6 @@
+---
+source = "pixel"
+---
 ## Function
 
 UI icon for the `food` good. Used in the goods bar, building tooltips,
@@ -13,15 +16,10 @@ highlight on south face, `#6E4A2A` neck cord. No animal products
 visible — keep iconography vegetal/grain-led so it stays culturally
 neutral.
 
-Front-matter override: `sheet_size = "256x256"`, `cell_grid = "1x1"`.
-Downsamples to 24×24 with nearest-neighbour.
+## Sprites
 
-## Sheet
+- `good-food` — static icon
 
-Grid: 1 cols × 1 rows.
+## Recipe
 
-- (0, 0): `good-food` — static icon
-
-## Animation
-
-Static — no animation loop.
+- Source: committed pixel art in `Icons.atlas`, drawn by an image-generation API before the art kit; task 4.9 replaces it with a hand-authored SVG icon
