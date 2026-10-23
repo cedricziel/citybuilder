@@ -10,7 +10,7 @@ varied rock rather than a row of clones.
 
 ## Visual identity
 
-The tile's ground is grass under a soft scree cover from the macro field. Over it stands one outcrop per tile, ray-cast by `scripts/art/rocks.py` (through `scripts/art/terrain_objects.py`) and lit like the IsoKit rig. Each stone is an ellipsoid cut by planes: at the region's rim (`sparse`, `medium`) many shallow cuts make rounded, weathered tors and boulders; inside (`dense`, `peak`) fewer, deeper cuts make angular crags up to 7 m tall, so a region rises to a summit. Every tile leaves gaps where grass and scree show. The stone leans cool so the warm sun leaves it a neutral warm grey. Flat tops carry lichen, or snow in winter.
+The tile's ground is grass under a soft scree cover from the macro field. Over it stands one outcrop per tile, ray-cast by `scripts/art/rocks.py` (through `scripts/art/terrain_objects.py`) and lit like the IsoKit rig. Each stone is an ellipsoid cut by planes: at the region's rim (`sparse`, `medium`) many shallow cuts make rounded, weathered tors and boulders; inside (`dense`, `peak`) fewer, deeper cuts make angular crags, up to 6 m tall on peaks, so a region rises to a summit. Every tile leaves gaps where grass and scree show. The stone leans cool so the warm sun leaves it a neutral warm grey. Flat tops carry lichen, or snow in winter.
 
 ## Sheet
 

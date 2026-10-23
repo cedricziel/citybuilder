@@ -2,9 +2,9 @@
 
 Each stone is a convex polytope: an ellipsoid cut by planes. At a region's rim (`sparse`, `medium`)
 many shallow cuts make rounded, weathered tors and boulders. Inside (`dense`, `peak`) fewer, deeper
-cuts make angular crags that rise up to 7 m, so a region reads as a hill with a summit rather than
-a heap. Taller masses carry a smaller cap set off-centre, every tile keeps gaps where scree and
-grass show, and flat tops carry lichen (spring), dry grass (autumn) or snow (winter).
+cuts make angular crags, up to 6 m tall on peaks, so a region reads as a hill with a summit rather
+than a heap. Taller masses carry a smaller cap set off-centre, every tile keeps gaps where scree
+and grass show, and flat tops carry lichen (spring), dry grass (autumn) or snow (winter).
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from art import flora, ground
 
 # Per density: masses (count, half-width range, height range) and loose boulders.
 MASSES = {
-    "peak": (2, (1.2, 1.6), (5.0, 7.5)),
-    "dense": (2, (1.0, 1.5), (2.6, 4.6)),
+    "peak": (2, (1.2, 1.6), (4.0, 6.5)),
+    "dense": (2, (1.0, 1.5), (1.6, 3.0)),
     "medium": (2, (1.0, 1.5), (0.8, 1.9)),
     "sparse": (0, (0, 0), (0, 0)),
 }
@@ -149,7 +149,7 @@ def render(blocks: list[Block], season: str, scale: int = 2) -> np.ndarray:
     grain = flora._hash(cells, 7)
     colour = albedo[hit] * (0.88 + 0.24 * grain[:, None])
     colour *= 1 - 0.08 * (np.sin(p[:, 1] * 9 + 3 * flora._hash(np.floor(p / 0.5), 3)) > 0.6)[:, None]  # strata
-    top = (n[:, 1] > (0.55 if season == "winter" else 0.8)) & (grain > (0.0 if season == "winter" else 0.55))
+    top = (n[:, 1] > (0.4 if season == "winter" else 0.8)) & (grain > (0.0 if season == "winter" else 0.55))
     colour[top] = np.array(TOPS[season]) * (0.9 + 0.2 * grain[top, None])
     lambert = np.clip(n @ flora.SUN, 0, 1) * sunlit(p)
     sky = 0.7 + 0.3 * n[:, 1]

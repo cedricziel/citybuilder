@@ -141,8 +141,8 @@ public struct TerrainObjectMap: Sendable {
         let step = max(0, min(distance, 3) - 1 - (crowded ? 1 : 0))
         guard step == 2 else { return ladder[step] }
         let relief = Noise.value(Float(coord.x) / 3.5, Float(coord.y) / 3.5, 11)
-        if relief < -0.35 { return .medium }
-        return relief > 0.3 && distance >= 4 ? .peak : .dense
+        if relief < -0.15 { return .medium }
+        return relief > 0.35 && distance >= 4 ? .peak : .dense
     }
 
     private static func hash(_ coord: TileCoordinate, salt: UInt32) -> UInt32 {
