@@ -15,7 +15,7 @@ The single-island map holds one at 1 road tile on every seed. Without a mine the
 
 - World generation guarantees a mine site whose side touches a tile **at most 10 road tiles** from each town center's road ring. Road tiles are counted over land, through forest and mountain, as the player would lay them.
 - **When no site is that near,** generation raises a near 3×3 rock outcrop: the nearest square of grass (then grass or forest) that lies outside the start area and off the road ring. A 3×3 keeps a crag in its middle; a 2×2 is all edge and draws as scree, which reads as grass with pebbles. The start area's fairness counts (grass, mountain share, hut site) are unchanged because the outcrop lies outside it.
-- The #170 island-wide raise stays as the fallback, for islands too small for a near outcrop.
+- The #170 island-wide raise stays as the fallback, for islands too small for a near outcrop. There the near-site guarantee does not hold: the island keeps (or gets) a mine site, which may lie farther out. On seeds 0–29 of both layouts no town center needs it: all 180 have a site within 10 road tiles.
 - **Measured after:** every archipelago seed 0–29 has a site within 10 road tiles; 19 of the 30 home islands gained an outcrop. Every outcrop sits 6 road tiles out, the nearest square outside the start area. Seeds that already had a near site keep their terrain.
 - Rival islands get the same rule, since town centers are seated before owners are assigned.
 - **(b), relying on the overlay alone, is not enough.** It searches 6 tiles around the cursor, and players have no reason to sweep the cursor across an island. The overlay stays as the way to find the exact plot.

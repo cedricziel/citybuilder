@@ -183,9 +183,10 @@ extension World {
     /// Makes sure a 2×2 square where a mine fits once Mining is researched
     /// lies at most `starterMineRoadReach` road tiles from the town
     /// center's road ring, clear of the ring, which the starter roads take
-    /// later. When none does, raises the nearest 2×2 grass square (then
-    /// grass or forest) outside the start area to mountain. When none fits
-    /// and the island holds no site at all, raises the first grass
+    /// later. When none does, raises the nearest 3×3 grass square (then
+    /// grass or forest) outside the start area to mountain. When none fits,
+    /// the nearest site may stay farther out; if the island holds no site
+    /// at all, raises the first grass
     /// neighbour of its mountains, nearest the town center first, that
     /// makes one, else the first forest neighbour. Tiles in the start area
     /// stay as they are. Spec: `world-terrain` / Starter mine site.
