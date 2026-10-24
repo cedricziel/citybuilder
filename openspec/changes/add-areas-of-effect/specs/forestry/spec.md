@@ -2,7 +2,7 @@
 
 ### Requirement: Catchment radius is game data
 
-A building's catchment radius SHALL come from its `catchmentRadius` field in the game data: the Chebyshev distance from its footprint within which it works. The lumberjack hut and the forester SHALL declare a radius of 2, and every catchment rule (harvesting, planting, the counts in reach, building issues, rival site choice and start sites) SHALL read it from the building's kind. The generator SHALL reject a radius below 1.
+A building's catchment radius SHALL come from its `catchmentRadius` field in the game data: the Chebyshev distance from its footprint within which it works. The lumberjack hut and the forester SHALL declare a radius of 2, and every catchment rule (harvesting, planting, the counts in reach, building issues, rival site choice and start sites) SHALL read it from the building's kind. The generator SHALL reject a radius below 1, a building that plants (`plantTicks`) without a radius, and a lumberjack hut without one.
 
 #### Scenario: Hut and forester declare their radius
 - **WHEN** the generated building kinds are queried for their catchment radius
@@ -10,6 +10,10 @@ A building's catchment radius SHALL come from its `catchmentRadius` field in the
 
 #### Scenario: A non-positive radius is rejected
 - **WHEN** a pack declares a building with `catchmentRadius: 0`
+- **THEN** the generator reports an error naming the building and `catchmentRadius`
+
+#### Scenario: A planter or hut without a radius is rejected
+- **WHEN** a pack declares a building with `plantTicks` but no `catchmentRadius`, or a lumberjack hut without one
 - **THEN** the generator reports an error naming the building and `catchmentRadius`
 
 #### Scenario: The catchment follows the declared radius

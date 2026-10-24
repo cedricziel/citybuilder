@@ -22,7 +22,7 @@ Since #190 the scene keeps node counts low. Plain ground has no sprite, and a tr
 
 The open-grass rule needs island ownership, and the mine-site rule needs research and placement checks. Both live on `World`, not on the snapshot. `GameSession.areaOfEffect()` asks the world for the ghost's area, or, with the inspect tool, for the selected building's. The scene polls the result through a new `areaOfEffectProvider`, as it polls the ghost.
 
-The session caches the result by kind, anchor, placing-or-selected and tick, so the 169 site checks for a mine run at most once per tick and cursor move.
+A ghost that could not be placed shows no catchment, matching the capsule; a mine's ghost still shows the sites nearby, which point the way to a valid plot. A selected rival hut shows its catchment too. The session caches the result by kind, anchor, placing-or-selected and tick, so the 169 site checks for a mine run at most once per tick and cursor move.
 
 Alternative considered: deriving the area in the renderer from the snapshot. That would mean copying the ownership and placement rules into CityRender2D, so it was rejected.
 
@@ -37,7 +37,7 @@ Its `count` is the number of targets. For a mine site it is instead the number o
 `World.areaOfEffect(of:at:owner:placing:)` builds it:
 - **Catchment kind** (`catchmentRadius` set): the tiles are every tile of the footprint grown by the radius, clipped to the map. The targets are the tiles the building would work, the footprint left out, as `catchmentCount` counts them.
 - **Terrain-requirement kind while placing:** the tiles are the footprints of every anchor within `AreaOfEffect.siteSearchRadius` (6) of the cursor that passes the site rules. Materials are left out: a short island still shows where the mine could stand. The targets are the tiles of the required terrain among them: the rock a mine could stand on.
-- **Any other kind,** or a selected terrain-requirement building: nil.
+- **Any other kind,** a selected terrain-requirement building, or an anchor off the map: nil.
 
 ### D3. Three shape nodes on the ground
 
@@ -71,7 +71,7 @@ Tones:
 - amber (orange at 88%, dark text) at 1–4;
 - red (red at 85%, white text) at 0.
 
-The capsule shows only for a ghost whose placement is valid, matching the tool strip's count. It is never interactive (`allowsHitTesting(false)`).
+The capsule shows only for a ghost whose placement is valid, matching the tool strip's count. On iOS, while the placement HUD shows, the capsule stays a gap above the upper nudge arrows: they keep their 44 pt size at any zoom, so at zoom 0.5 the roof lift alone would put the capsule over them. It is never interactive (`allowsHitTesting(false)`).
 
 The capsule's bottom sits a fixed roof allowance (`AreaCountCapsuleLayout.roofLift`, 44 pt at zoom 1, plus a 6 pt gap) above the plot's top corner. A 2×2 hut's chimney then clears the capsule, as the shots show.
 

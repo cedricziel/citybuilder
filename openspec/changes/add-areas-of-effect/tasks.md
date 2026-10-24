@@ -25,3 +25,11 @@
 - [x] 5.1 `-uiTestPlace` and `-uiTestSelect`, with tests
 - [x] 5.2 Before and after shots on the Mac, an iPhone simulator and an Apple TV simulator: hut, forester, mine, a selected hut, and night or winter
 - [x] 5.3 `make lint`, `make format`, the package tests, then `/simplify`
+
+## 6. Review follow-ups (#242)
+
+- [x] 6.1 The generator requires `catchmentRadius` with `plantTicks` and on the lumberjack hut
+- [x] 6.2 No area for an anchor off the map; the shot flags ignore off-map tiles
+- [x] 6.3 The capsule clears the touch nudge arrows at any zoom
+- [x] 6.4 A red ghost with a catchment shows no area
+- [x] 6.5 Test: the cached area is asked again on a new tick
