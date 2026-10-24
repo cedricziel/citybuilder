@@ -120,6 +120,43 @@ func aConsumerWithNoRoomLeftGetsNoDelivery() {
     ])
 }
 
+/// A charcoal burner, a smelter short of charcoal, a warehouse holding
+/// `iron`, and a stocked steam engine that also burns charcoal, so the
+/// smelter rests once the warehouse holds 40 iron.
+private struct SmelterTown {
+    let world: World
+    let burner: EntityID
+    let smelter: EntityID
+    let warehouse: EntityID
+}
+
+private func smelterTown(iron: Int) -> SmelterTown {
+    var world = roadStrip()
+    let burner = inject(.charcoalBurner, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.charcoal: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0), contents: [.iron: iron])
+    let smelter = inject(.smelter, in: &world, at: TileCoordinate(x: 14, y: 1))
+    _ = inject(.steamEngine, in: &world, at: TileCoordinate(x: 19, y: 1), contents: [.charcoal: 2])
+    world.tick()
+    return SmelterTown(world: world, burner: burner, smelter: smelter, warehouse: warehouse)
+}
+
+@Test("scenario: a resting producer gets no direct delivery")
+func scenarioARestingProducerGetsNoDirectDelivery() throws {
+    let town = smelterTown(iron: 40)
+    #expect(try town.world.isResting(#require(town.world.buildings[town.smelter])) == .iron)
+    #expect(missions(from: town.burner, in: town.world) == [
+        .deliver(good: .charcoal, amount: 1, fromProducer: town.burner, toWarehouse: town.warehouse)
+    ])
+}
+
+@Test("scenario: a producer below the rest level gets a direct delivery")
+func scenarioAProducerBelowTheRestLevelGetsADirectDelivery() {
+    let town = smelterTown(iron: 39)
+    #expect(missions(from: town.burner, in: town.world) == [
+        .deliverToConsumer(good: .charcoal, amount: 1, fromProducer: town.burner, toConsumer: town.smelter)
+    ])
+}
+
 @Test("scenario: construction materials still go to storage")
 func scenarioConstructionMaterialsStillGoToStorage() {
     var world = roadStrip()
