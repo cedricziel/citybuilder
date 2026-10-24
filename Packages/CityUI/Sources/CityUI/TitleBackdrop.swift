@@ -96,7 +96,7 @@ struct TitleBackdrop: View {
                 frame.tickCount = motion.tickCount(at: elapsed)
                 return frame
             },
-            { _ in }, { _ in }, { _ in }, { _ in }, { nil }, { nil }, { nil }
+            { _ in }, { _ in }, { _ in }, { _ in }, { nil }, { nil }, { nil }, { nil }
         )
     }
 
