@@ -16,7 +16,7 @@ The title screen SHALL offer a Campaigns entry next to New Game. It SHALL open t
 
 ### Requirement: Chapter intro and ending cards
 
-Starting a chapter SHALL show its intro card, with the chapter title, its illustration, the intro text and the goal list. The simulation SHALL stay paused while the card is open. Winning SHALL show the ending card in place of the plain win sheet, with the ending text, the laurels earned and the reward granted, and an action to go to the next chapter. A lost chapter SHALL show a short lost card with the reason, and actions to retry or keep building. The cards SHALL follow the Claude Design canvas approved for them.
+Starting a chapter SHALL show its intro card, with the chapter title, its illustration, the intro text and the goal list. The simulation SHALL stay paused while the card is open. Winning SHALL show the ending card in place of the plain win sheet, with the ending text, the laurels earned and the reward granted, and an action to go to the next chapter. When there is no next chapter to open, because the chapter is its campaign's last or the next one is coming later, the action SHALL go back to chapter select instead. A lost chapter SHALL show a short lost card with the reason, and actions to retry or keep building. The cards SHALL follow the Claude Design canvas approved for them.
 
 #### Scenario: Intro pauses the game
 
@@ -27,6 +27,11 @@ Starting a chapter SHALL show its intro card, with the chapter title, its illust
 
 - **WHEN** a tick emits `scenarioWon` in The Long Chronicle chapter 2
 - **THEN** the session shows the chapter's ending card with an action to start chapter 3
+
+#### Scenario: The last chapter's ending card goes back to chapter select
+
+- **WHEN** a tick emits `scenarioWon` in The Long Chronicle chapter 6
+- **THEN** the ending card offers "Back to chapters" in place of a next-chapter action
 
 #### Scenario: Lost card names the reason
 

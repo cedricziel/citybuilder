@@ -99,7 +99,7 @@ A goal SHALL be able to be marked as a bonus goal. A bonus goal SHALL be tracked
 A scenario SHALL be able to have lose conditions besides bankruptcy, checked on the goal interval:
 
 - **Deadline:** the scenario is lost when a given year starts and a goal that is not a bonus goal is still unmet.
-- **Rival race:** the scenario is lost when any rival meets a given goal (age or population) before the player does. A rival's progress SHALL be measured as the player's would be.
+- **Rival race:** the scenario is lost when any rival meets a given goal (age or population) before the player does. A rival's progress SHALL be measured as the player's would be. When the player and a rival first meet it at the same goal check, the player wins the race.
 - **Collapse:** once the player's population has reached a given floor, the scenario is lost if it falls below that floor and stays below it for a season.
 
 When a scenario is lost, the world SHALL emit `scenarioLost` once with the reason, and SHALL stop checking goals. A scenario lost to a deadline, a rival race or a collapse SHALL NOT stop player commands, so the player can keep building in a finished game. Bankruptcy SHALL also lose a scenario and emit `scenarioLost` with the reason bankruptcy, alongside `gameOver`. A bankrupt game SHALL still stop player commands, as game over does today.
@@ -118,6 +118,11 @@ When a scenario is lost, the world SHALL emit `scenarioLost` once with the reaso
 
 - **WHEN** a scenario has the rival race "first to the Renaissance" and rival 2 enters the Renaissance while the player is in the Medieval age
 - **THEN** that goal check emits `scenarioLost` with reason rival race, naming rival 2
+
+#### Scenario: The player wins a tied race
+
+- **WHEN** a scenario has the rival race "first to the Renaissance", and the player and rival 1 both enter the Renaissance before the same goal check
+- **THEN** no `scenarioLost` is emitted, and the race goal counts as met for the player
 
 #### Scenario: Collapse after a dip that lasts
 

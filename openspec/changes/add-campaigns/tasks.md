@@ -39,11 +39,12 @@
 - [ ] 4.2 Chapter sweep harness behind `RIVAL_SWEEP=1`: the guided and naive bots, chapter seed +0…+9, Easy, Normal and Hard; prints a `CHAPTER_SWEEP` line per run.
 - [ ] 4.3 Author The Long Chronicle 1–6 in `campaigns.yaml`. Tune each against the gates and record the measured table in design D10.
 - [ ] 4.4 Author The Merchant Sea 1, 2 and 4, and tune them.
-- [ ] 4.5 Author The Merchant Sea 5 without rival pressure, and tune it.
+- [ ] 4.5 Author The Merchant Sea 5 with its three rivals and its held "outgrow every rival" goal. Rival attitudes (#263) stay off, and the chapter has no rival-race loss. Tune it.
 - [ ] 4.6 Author Hard Ground 1, and tune it.
-- [ ] 4.7 Write the card text into the pack, and check that each text is 320 characters or fewer.
-- [ ] 4.8 Add the "Guided play wins every chapter" and "Hard stays hard" sweep tests for these chapters.
-- [ ] 4.9 Refactor under a green bar.
+- [ ] 4.7 Mark The Merchant Sea 3 and Hard Ground 2, 3 and 4 as coming later in the pack.
+- [ ] 4.8 Write the card text into the pack, and check that each text is 320 characters or fewer.
+- [ ] 4.9 Add the "Guided play wins every chapter" and "Hard stays hard" sweep tests for these chapters.
+- [ ] 4.10 Refactor under a green bar.
 
 ## 5. M5 — Chapters that need later features
 
@@ -51,7 +52,7 @@
 - [ ] 5.2 Hard Ground 2, once winter needs (#259) exist: winter kit, authoring and tuning.
 - [ ] 5.3 Hard Ground 4, once events with counterplay (#257) exist: events kit, authoring and tuning.
 - [ ] 5.4 Hard Ground 3, once handcarts (#238 M3) exist: authoring and tuning.
-- [ ] 5.5 Add these chapters to the sweep tests.
+- [ ] 5.5 Clear each chapter's coming-later mark as it ships, and add it to the sweep tests.
 
 ## 6. Wrap-up
 

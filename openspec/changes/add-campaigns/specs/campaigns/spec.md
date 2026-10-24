@@ -93,7 +93,7 @@ A chapter SHALL be able to close buildings that research would otherwise open, a
 
 ### Requirement: Chapter progression
 
-Winning a chapter SHALL unlock the next chapter of its campaign. The first chapter of The Long Chronicle SHALL be open from the start. The first chapters of The Merchant Sea and Hard Ground SHALL open when The Long Chronicle chapter 3 is won. A won chapter SHALL record the difficulty it was won on and its laurels, and SHALL keep the best of each across wins. A lost chapter SHALL change nothing. Unlocking SHALL NOT depend on difficulty.
+Winning a chapter SHALL unlock the next chapter of its campaign. The first chapter of The Long Chronicle SHALL be open from the start. The first chapters of The Merchant Sea and Hard Ground SHALL open when The Long Chronicle chapter 3 is won. A won chapter SHALL record the difficulty it was won on and its laurels, and SHALL keep the best of each across wins. A lost chapter SHALL change nothing. Unlocking SHALL NOT depend on difficulty. The pack SHALL be able to mark a chapter as coming later. Such a chapter SHALL show but never open, and unlocking SHALL skip it, so winning the chapter before it opens the next chapter that is available. When a coming-later chapter becomes available, it SHALL open if the chapter before it has been won. For the best result, Hard SHALL rank above Normal and Normal above Easy, and more laurels rank above fewer, each compared on its own.
 
 #### Scenario: Winning opens the next chapter
 
@@ -104,6 +104,21 @@ Winning a chapter SHALL unlock the next chapter of its campaign. The first chapt
 
 - **WHEN** the player wins The Long Chronicle chapter 3
 - **THEN** The Merchant Sea chapter 1 and Hard Ground chapter 1 are open
+
+#### Scenario: Unlocking skips a chapter that is coming later
+
+- **WHEN** The Merchant Sea chapter 3 is marked coming later and the player wins chapter 2
+- **THEN** chapter 4 is open and chapter 3 shows as coming later
+
+#### Scenario: A chapter that becomes available opens
+
+- **WHEN** the player has won The Merchant Sea chapter 2 and an update makes chapter 3 available
+- **THEN** chapter 3 is open
+
+#### Scenario: Normal outranks Easy
+
+- **WHEN** one device has a chapter won on Normal with 0 laurels and another has it won on Easy with 0 laurels
+- **THEN** the merged record shows Normal
 
 #### Scenario: Best result is kept
 
