@@ -5,32 +5,29 @@ import Foundation
 /// `goods-and-production` / Producers draw inputs from goods buffers,
 /// Producer behavior.
 extension World {
-    /// Chebyshev radius around a lumberjack's footprint it harvests from.
-    public static let lumberjackCatchmentRadius = 2
-
     /// First forest tile within the catchment, scanning row-major from
     /// the top-left corner, or nil when the catchment is cleared.
-    func firstForestInCatchment(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
-        firstInCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest)
+    func firstForestInCatchment(of kind: BuildingKind, anchor: TileCoordinate) -> TileCoordinate? {
+        firstInCatchment(of: kind, anchor: anchor, where: isUnoccupiedForest)
     }
 
     /// First catchment tile matching `isTarget`, row-major from the
     /// top-left corner.
     func firstInCatchment(
-        anchor: TileCoordinate, footprint: Footprint, where isTarget: (TileCoordinate) -> Bool
+        of kind: BuildingKind, anchor: TileCoordinate, where isTarget: (TileCoordinate) -> Bool
     ) -> TileCoordinate? {
         var first: TileCoordinate?
-        visitCatchment(anchor: anchor, footprint: footprint, where: isTarget) { tile in
+        visitCatchment(of: kind, anchor: anchor, where: isTarget) { tile in
             first = tile
             return false
         }
         return first
     }
 
-    /// Unoccupied forest tiles within the catchment.
-    func forestTiles(inCatchmentOf anchor: TileCoordinate, footprint: Footprint) -> Int {
+    /// Unoccupied forest tiles within the catchment of a `kind` at `anchor`.
+    func forestTiles(inCatchmentOf kind: BuildingKind, at anchor: TileCoordinate) -> Int {
         var count = 0
-        visitCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest) { _ in
+        visitCatchment(of: kind, anchor: anchor, where: isUnoccupiedForest) { _ in
             count += 1
             return true
         }
@@ -41,15 +38,23 @@ extension World {
         terrain(at: tile) == .forest && occupiedTiles[tile] == nil
     }
 
-    /// Visits the catchment's tiles matching `isTarget` row-major from
-    /// the top-left corner while `visit` returns true. Lumberjacks and
-    /// foresters share it and it runs per building per tick, so it
-    /// allocates nothing.
+    /// The footprint of every kind with a catchment, looked up once: a
+    /// building spec carries its material costs, which `visitCatchment`
+    /// would otherwise copy on every call.
+    private static let catchmentFootprints = Dictionary(uniqueKeysWithValues: BuildingKind.allCases.compactMap { kind in
+        kind.catchmentRadius.map { _ in (kind, BuildingCatalog.spec(for: kind).footprint) }
+    })
+
+    /// Visits the tiles matching `isTarget` within `kind`'s catchment
+    /// radius of its footprint at `anchor`, row-major from the top-left
+    /// corner, while `visit` returns true. A kind without a catchment
+    /// visits nothing. Lumberjacks and foresters share it and it runs per
+    /// building per tick, so it allocates nothing.
     func visitCatchment(
-        anchor: TileCoordinate, footprint: Footprint,
+        of kind: BuildingKind, anchor: TileCoordinate,
         where isTarget: (TileCoordinate) -> Bool, _ visit: (TileCoordinate) -> Bool
     ) {
-        let radius = Self.lumberjackCatchmentRadius
+        guard let radius = kind.catchmentRadius, let footprint = Self.catchmentFootprints[kind] else { return }
         for y in anchor.y - radius ... anchor.y + footprint.height - 1 + radius {
             for x in anchor.x - radius ... anchor.x + footprint.width - 1 + radius {
                 let tile = TileCoordinate(x: x, y: y)

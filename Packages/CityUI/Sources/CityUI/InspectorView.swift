@@ -109,8 +109,8 @@ public struct InspectorViewModel: Sendable {
         switch issue {
         case .noRoad: "No road: connect it to a road"
         case .noRouteToStorage: "Its road doesn't reach a warehouse or the town center"
-        case .noTreesInReach: "No forest within \(World.lumberjackCatchmentRadius) tiles: build a forester beside it"
-        case .noRoomToPlant: "No open grass within \(World.lumberjackCatchmentRadius) tiles to plant"
+        case .noTreesInReach: "No forest within \(BuildingKind.lumberjackHut.catchmentRadius ?? 0) tiles: build a forester beside it"
+        case .noRoomToPlant: "No open grass within \(BuildingKind.forester.catchmentRadius ?? 0) tiles to plant"
         case let .missingInputs(goods):
             "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
         case .storageFull: "Store full: no carrier can take its goods"

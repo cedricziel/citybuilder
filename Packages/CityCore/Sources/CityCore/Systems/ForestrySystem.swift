@@ -19,9 +19,8 @@ extension World {
         guard !foresters.isEmpty else { return }
         let tileToIsland = tileToIslandMap()
         for (forester, cycle) in foresters {
-            let footprint = BuildingCatalog.spec(for: forester.kind).footprint
             let isOpen = openGrass(for: forester.owner, tileToIsland: tileToIsland)
-            guard let tile = firstInCatchment(anchor: forester.anchor, footprint: footprint, where: isOpen) else { continue }
+            guard let tile = firstInCatchment(of: forester.kind, anchor: forester.anchor, where: isOpen) else { continue }
             var progress = productions[forester.id] ?? ProductionProgress()
             if !(isCropWinter && Self.seasonalCrops.contains(forester.kind) && tickCount.isMultiple(of: 2)) {
                 progress.ticksThisCycle &+= 1
@@ -77,7 +76,7 @@ extension World {
         let footprint = BuildingCatalog.spec(for: kind).footprint
         let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
         var count = 0
-        visitCatchment(anchor: anchor, footprint: footprint, where: isTarget) { tile in
+        visitCatchment(of: kind, anchor: anchor, where: isTarget) { tile in
             if !(columns.contains(tile.x) && rows.contains(tile.y)) { count += 1 }
             return true
         }

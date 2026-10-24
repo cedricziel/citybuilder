@@ -268,7 +268,6 @@ extension World {
     private func rivalTurn(_ rival: RivalTown, stock: [Good: Int]) -> RivalTurn {
         var turn = RivalTurn(rival: rival, stock: stock)
         turn.centerFreeSpace = stockpiles[rival.townCenterID]?.freeSpace ?? 0
-        let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         for building in buildings.values where building.owner == rival.owner {
             turn.cappedBuildings += building.kind == .road || building.kind == .forester ? 0 : 1
             let isStore = building.state == .operational && Self.logisticsBufferKinds.contains(building.kind)
@@ -285,7 +284,7 @@ extension World {
             }
             if building.kind == .lumberjackHut {
                 turn.allHuts += 1
-                let forest = forestTiles(inCatchmentOf: building.anchor, footprint: hutFootprint)
+                let forest = forestTiles(inCatchmentOf: building.kind, at: building.anchor)
                 turn.forestLeft += forest
                 guard forest >= RivalAI.hutLowForest else { continue }
             }

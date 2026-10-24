@@ -134,12 +134,11 @@ struct PlayerBot {
         }
 
         init(world: World) {
-            let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
             for building in world.buildings.values where building.owner == .player {
                 if building.state == .constructing, building.constructionState == .waitingForMaterials { waiting = true }
                 if building.kind == .lumberjackHut {
                     allHuts += 1
-                    let forest = world.forestTiles(inCatchmentOf: building.anchor, footprint: hutFootprint)
+                    let forest = world.forestTiles(inCatchmentOf: building.kind, at: building.anchor)
                     forestLeft += forest
                     guard forest >= RivalAI.hutLowForest else { continue }
                 }

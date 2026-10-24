@@ -32,9 +32,8 @@ public extension World {
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
             if Self.isPlanter(building.kind) {
-                let footprint = BuildingCatalog.spec(for: building.kind).footprint
                 let isOpen = openGrass(for: building.owner, tileToIsland: tileToIsland)
-                if firstInCatchment(anchor: building.anchor, footprint: footprint, where: isOpen) == nil {
+                if firstInCatchment(of: building.kind, anchor: building.anchor, where: isOpen) == nil {
                     issues[building.id] = .noRoomToPlant
                 }
                 continue
@@ -47,7 +46,7 @@ public extension World {
                 continue
             }
             let lacksForest = building.kind == .lumberjackHut
-                && firstForestInCatchment(anchor: building.anchor, footprint: footprint) == nil
+                && firstForestInCatchment(of: building.kind, anchor: building.anchor) == nil
             if lacksForest {
                 issues[building.id] = .noTreesInReach
                 continue
