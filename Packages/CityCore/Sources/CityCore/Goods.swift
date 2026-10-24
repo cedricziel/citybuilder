@@ -45,6 +45,14 @@ public struct Stockpile: Hashable, Codable, Sendable {
         return accepted
     }
 
+    /// Takes back `amount` units that left this stockpile, even past its
+    /// capacity, so goods that found nowhere else to go are never lost.
+    /// A stockpile over capacity takes no new deposits until it drains.
+    public mutating func takeBack(_ good: Good, amount: Int) {
+        guard amount > 0 else { return }
+        contents[good, default: 0] += amount
+    }
+
     /// Withdraw up to `amount`. Returns the number actually returned.
     @discardableResult
     public mutating func withdraw(_ good: Good, amount: Int) -> Int {

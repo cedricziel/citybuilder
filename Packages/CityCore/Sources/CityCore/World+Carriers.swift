@@ -53,7 +53,14 @@ extension World {
         case let .deliver(good, amount, _, destination),
              let .retrieve(good, amount, _, destination),
              let .deliverToConsumer(good, amount, _, destination):
-            let placed = stockpiles[destination]?.deposit(good, amount: amount) ?? 0
+            let placed: Int
+            if destination == carrier.mission.source, stockpiles[destination] != nil {
+                // Goods coming back to where they left always fit.
+                stockpiles[destination]?.takeBack(good, amount: amount)
+                placed = amount
+            } else {
+                placed = stockpiles[destination]?.deposit(good, amount: amount) ?? 0
+            }
             if placed > 0 {
                 events.append(.carrierArrived(carrier: carrier.id, at: arrivalTile, good: good, amount: placed))
             }
@@ -122,14 +129,15 @@ extension World {
     ) {
         // Spawning carriers moves goods, not buildings, so list the
         // candidate destinations once for every producer.
-        let candidates = DestinationCandidates(
+        var candidates = DestinationCandidates(
             buffers: goodsBuffers().filter { $0.state == .operational },
             waitingSites: buildings.values
                 .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
                 .sorted { $0.id.raw < $1.id.raw },
             consumers: Self.consumersByGood(consumers),
             tileToIsland: tileToIsland,
-            components: RoadComponents(roadGraph)
+            components: RoadComponents(roadGraph),
+            inbound: carriers.values.reduce(into: [:]) { $0[$1.mission.destination, default: 0] += $1.mission.amount }
         )
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
@@ -148,6 +156,7 @@ extension World {
                     CarrierSpawn(producerId: producerId, road: road, good: good, mission: mission, path: path),
                     events: &events
                 )
+                candidates.inbound[mission.destination, default: 0] += mission.amount
                 break
             }
         }
@@ -160,6 +169,9 @@ extension World {
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
         let components: RoadComponents
+        /// Units on the way to each building, so a buffer is not sent
+        /// more than it has room for.
+        var inbound: [EntityID: Int]
     }
 
     /// Road component labels, worked out the first time a tick asks,
@@ -195,7 +207,9 @@ extension World {
         ) {
             return (.deliverToConsumer(good: good, amount: 1, fromProducer: producer.id, toConsumer: consumerId), path)
         }
-        if let (bufferId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: candidates.buffers) {
+        if let (bufferId, path) = findRoadConnectedBuffer(
+            fromRoad: road, good: good, among: candidates.buffers, inbound: candidates.inbound
+        ) {
             return (.deliver(good: good, amount: 1, fromProducer: producer.id, toWarehouse: bufferId), path)
         }
         return nil
@@ -358,11 +372,13 @@ extension World {
     /// Returns (bufferId, road path) on the shortest path; nil if none
     /// reachable. Equal-length paths resolve to the lowest entity ID.
     /// `buffers` are the operational goods buffers in entity order, when
-    /// the caller has already listed them.
+    /// the caller has already listed them. A buffer needs free room for
+    /// its `inbound` units plus one.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good,
-        among buffers: [Building]? = nil
+        among buffers: [Building]? = nil,
+        inbound: [EntityID: Int] = [:]
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
@@ -372,7 +388,7 @@ extension World {
                 footprint: BuildingCatalog.spec(for: building.kind).footprint
             )
             else { continue }
-            guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
+            guard let stock = stockpiles[id], stock.freeSpace > inbound[id, default: 0] else { continue }
             _ = good // future: check warehouse accepts this good type
             guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
