@@ -92,6 +92,15 @@ That costs one search per producer with output, about the same as today's search
 
 *Waiting for a load (found in milestone 3):* a producer ships each unit as soon as it is ready, so its stock never reaches 3, and carts never appeared on producer hauls. On a haul of 12 tiles or more, a producer now waits for a cart load before it sends anything to storage. Supply to a consumer never waits; it uses a cart only when the consumer is short of 3 or more, which needs a recipe that takes 2 at a time. The edge case: a producer that stops producing, such as a lumberjack whose forest is gone, keeps its last one or two units.
 
+*M3 result before the output cap,* PlayerBot sweeps on main 4f3e8a0c against the handcart branch alone, release build:
+- First-hour solvency: 0/20 bankrupt on both.
+- Guided Hard start: 0/20 bankrupt on both; residents min/median 29/52.5 → 37/58.5.
+- Rivals: year 5 min 15 on both; year 15 median 57.5 → 59.
+- The no-market control seed 2 stays solvent, as under M1.
+- Pacing: 101 of 180 arms reach a merchant against 121, bankruptcies 9 against 11.
+
+Carts make hauls cheaper, like M1's hops, so the run is re-measured on top of the output cap before merge.
+
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
 ### D6. Saves
