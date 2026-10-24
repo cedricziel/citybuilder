@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.2.3](https://github.com/cedricziel/citybuilder/compare/v0.2.2...v0.2.3) (2026-10-24)
+
+
+### Features
+
+* **art:** draw the building status icons as SVG ([d939696](https://github.com/cedricziel/citybuilder/commit/d9396960ee6cf10128f63b168283800b48989ba7))
+* **citycore:** rest producers while the stores hold plenty ([0beac42](https://github.com/cedricziel/citybuilder/commit/0beac4273eca60b493aa0526eb39bb6c719753e5))
+* **core:** answer what a building reaches ([f0e2020](https://github.com/cedricziel/citybuilder/commit/f0e202098a9126fe623efd427f653efa60316db4))
+* **core:** guarantee a mine site near every town center ([49fe31f](https://github.com/cedricziel/citybuilder/commit/49fe31f95eef92f20efd5d66a8cf90250f7b876b))
+* **core:** raise a near mine outcrop when the nearest site is far ([8de8a07](https://github.com/cedricziel/citybuilder/commit/8de8a07afb5147ec39f777e04460b73c04158d80))
+* **design-sync:** preview the HUD pieces, figures and ships ([bfdf39a](https://github.com/cedricziel/citybuilder/commit/bfdf39ac70ba07f8ba9a23b52279077bb8362ff2))
+* **design-sync:** preview the new art and HUD pieces and typecheck the previews ([1db3d9d](https://github.com/cedricziel/citybuilder/commit/1db3d9d8c55970bb3cac293e38ec776a66866744))
+* **design:** add the StatusIcon component ([bebe18d](https://github.com/cedricziel/citybuilder/commit/bebe18d77e2066167dda3ef3f71dc6ded22ffa2a))
+* **design:** preview StatusIcon for the design system sync ([ad3c98a](https://github.com/cedricziel/citybuilder/commit/ad3c98aea6ddcc24cda8450678e9844dd5cbe0a9))
+* float status icons over buildings that are stuck ([26eb39f](https://github.com/cedricziel/citybuilder/commit/26eb39fed21c96e34364a8eb1d6d2db93dc993a5))
+* **gamedata:** declare catchment radius in the packs ([021fe83](https://github.com/cedricziel/citybuilder/commit/021fe83c8f4541550f70a8d36c6efa1270ab7ae0))
+* **render2d:** draw what a building reaches on the ground ([b64bb65](https://github.com/cedricziel/citybuilder/commit/b64bb6544f8d3151ba314f129ae616ea4fe692ee))
+* **render:** float a status icon over buildings that are stuck ([eff4994](https://github.com/cedricziel/citybuilder/commit/eff49941e29b3032f393dda2fc94c691212dab43))
+* **render:** select a building by tapping its status icon ([c11eebf](https://github.com/cedricziel/citybuilder/commit/c11eebfb125931ce413d3ff657d837280861a43e))
+* show what a building reaches while placing and selecting ([7638fc5](https://github.com/cedricziel/citybuilder/commit/7638fc5f40e8fad55a1aa0e43eb855d4b97a8ec8))
+* **ui:** arm a building or select a tile from launch flags ([aff65ac](https://github.com/cedricziel/citybuilder/commit/aff65ac192fb6e148e01461b7f274723631e1834))
+* **ui:** show the area and its count while placing and selecting ([d81b491](https://github.com/cedricziel/citybuilder/commit/d81b4912c4b1e10dba83759c95bc3ca77dc9e630))
+* **web:** add the first-steps card, count capsule, build drawer and hint banners ([506d760](https://github.com/cedricziel/citybuilder/commit/506d7604ab47af33e7afb8839120279c231db444))
+* **web:** add the status pill, menu buttons, stocks tray, build rail, tool strip and minimap ([47ec5ab](https://github.com/cedricziel/citybuilder/commit/47ec5ab34f1906c683ea72ff7faeac0668c8c5a7))
+* **web:** add the town market, rival market and standings panels ([0f64d4b](https://github.com/cedricziel/citybuilder/commit/0f64d4b2a04b2a0836918a0c81d6ef608d1c51f4))
+* **web:** add walker, carrier, animal and ship sprites ([3896df3](https://github.com/cedricziel/citybuilder/commit/3896df3dbc17a828cf39eb691842c3cd9b9659b5))
+* **web:** bring the game's HUD, figures and ships into design/web ([8493b3c](https://github.com/cedricziel/citybuilder/commit/8493b3c3c81c783b6229373a8ca49396bb3da99a))
+* **web:** catch design/web up with the game ([6280740](https://github.com/cedricziel/citybuilder/commit/62807400e41ae24ef61e3bfdb9a9b030e2e06a6c))
+* **web:** draw the world's trees, rocks, shores, night and area ring ([d8ed250](https://github.com/cedricziel/citybuilder/commit/d8ed250dce7eb22ec09499d326eaf9558abcc84f))
+* **web:** inline SVG goods icons, night lights, terrain objects and the app icon ([c13e3eb](https://github.com/cedricziel/citybuilder/commit/c13e3ebdec41edeb96b5b9410ac0ddd23d47a28f))
+* **web:** inline the figure, animal and ship animation frames ([40fc732](https://github.com/cedricziel/citybuilder/commit/40fc7320c9b792344ea747fbae35c9c9ce82c98d))
+* **web:** lay out GameScreen like the game's HUD ([d094d74](https://github.com/cedricziel/citybuilder/commit/d094d748fd3c7f85ed64e3a3fe6e60fc5baf3b23))
+
+
+### Bug Fixes
+
+* **citycore:** rest a producer only while another building shares its input ([758b049](https://github.com/cedricziel/citybuilder/commit/758b0496b86a6c40f3b0323ebe1535ed075e515a))
+* **core:** give an anchor off the map no area ([521fcf3](https://github.com/cedricziel/citybuilder/commit/521fcf3f0ecb966db2f4cbb9d9c9fc3e1eeb140e))
+* **gamedata:** require a catchment radius where one is used ([14a26d1](https://github.com/cedricziel/citybuilder/commit/14a26d1d2cfa7dca5d32472d175dce5152b5d818))
+* **render:** only let the Inspect tool select a building through its status icon ([597ecd8](https://github.com/cedricziel/citybuilder/commit/597ecd8066c6417609631283d8ff32d988e485d1))
+* **render:** seat status icons on the sprite's opaque top ([daa818e](https://github.com/cedricziel/citybuilder/commit/daa818ee1a95891dff4d6e58694aebea8b9a2edd))
+* **ui:** ignore shot flag tiles off the map ([9781a6e](https://github.com/cedricziel/citybuilder/commit/9781a6e4d5e43a8b78650b09cd4a8c991f410f87))
+* **ui:** keep the capsule clear of the arrows and off red ghosts ([c81b04c](https://github.com/cedricziel/citybuilder/commit/c81b04c9f903bea4692215f7745dedd28325ed61))
+* **web:** caption the stocks tray "Island" when there is no island name ([fb4a520](https://github.com/cedricziel/citybuilder/commit/fb4a52082119ce1d53d7246b0ab452e2b04f1665))
+* **web:** frame the minimap camera on the backdrop's own centre and zoom ([5e47bda](https://github.com/cedricziel/citybuilder/commit/5e47bda8cd2e57b6e47b8051f7148ee62c878f29))
+* **web:** hold the stocks chevron still under reduced motion ([8dbac6b](https://github.com/cedricziel/citybuilder/commit/8dbac6b6507deacbdbbc0a8bd1148e9e97909f97))
+* **web:** stop gen-sprites when no unit frames match, and count them ([2c8d576](https://github.com/cedricziel/citybuilder/commit/2c8d57603234fe47f01eb68396ac44119673cd3f))
+* **web:** wrap a drawer tile's caption instead of truncating it ([6523107](https://github.com/cedricziel/citybuilder/commit/6523107fc1f552ad94e71cc121163920c6a757f8))
+
 ## [0.2.2](https://github.com/cedricziel/citybuilder/compare/v0.2.1...v0.2.2) (2026-10-24)
 
 
