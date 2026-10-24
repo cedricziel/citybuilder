@@ -20,6 +20,31 @@
   align-self: stretch;
 }
 
+/* A zero-height anchor under the palette: the guide floats at the right over the map, and the
+   banners and captions keep their places. */
+.cb-game__first-steps {
+  position: relative;
+  align-self: stretch;
+  height: 0;
+  margin-bottom: -8px;
+  z-index: 1;
+}
+
+.cb-game__first-steps > * {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* Over the ghost and clear of the placement HUD's upper arrows. */
+.cb-game__count {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translate(-50%, calc(-100% - 112px));
+  pointer-events: none;
+}
+
 .cb-game > .cb-palette {
   align-self: stretch;
 }

@@ -11,6 +11,9 @@ import { Inspector, type InspectorProps } from "../Inspector/Inspector";
 import { Coachmark } from "../Coachmark/Coachmark";
 import { PlacementHUD } from "../PlacementHUD/PlacementHUD";
 import { Button } from "../Button/Button";
+import { FirstStepsCard, type FirstStepsCardProps } from "../FirstStepsCard/FirstStepsCard";
+import { AreaCountCapsule, type AreaCountTone } from "../AreaCountCapsule/AreaCountCapsule";
+import type { AreaOfEffect } from "../WorldBackdrop/WorldBackdrop";
 import "./GameScreen.css";
 
 export interface GameScreenProps {
@@ -31,14 +34,23 @@ export interface GameScreenProps {
   cost?: CostLine[];
   /** The red rejection capsule. */
   rejection?: string;
-  /** The parchment announcement. */
-  banner?: { title: string; description: string };
+  /** The parchment announcement; `onResume` makes it hold the game (the deficit hint). */
+  banner?: { title: string; description: string; onResume?: () => void };
+  /** The first-hour guide under the HUD buttons, as a card or (`collapsed`) a capsule. */
+  firstSteps?: FirstStepsCardProps;
   /** Inspector content (inspect mode only). */
   inspector?: InspectorProps;
   /** Show the iOS first-run "Long-press a tile to build" hint. */
   coachmark?: boolean;
   /** A pending touch placement: a ghost of `art` on an empty tile, centered low on screen under the nudge HUD. */
-  placing?: { art: PlacedBuilding["art"]; valid?: boolean };
+  placing?: {
+    art: PlacedBuilding["art"];
+    valid?: boolean;
+    /** What the ghost's site reaches, in the count capsule over it: "18 trees in reach". */
+    count?: { text: string; tone?: AreaCountTone };
+    /** The gold ring on the ground, in map tiles; the ghost stands at (4, 4). */
+    area?: AreaOfEffect;
+  };
   /** Map props passed to `WorldBackdrop` (map, buildings, zoom, season, selected). */
   world?: Omit<WorldBackdropProps, "width" | "height" | "children">;
   /** A sheet presented over the game (GoalsPanel, ResearchPanel, PauseMenu ...). */
@@ -80,6 +92,7 @@ export function GameScreen({
   cost,
   rejection,
   banner,
+  firstSteps,
   inspector,
   coachmark,
   placing,
@@ -96,6 +109,8 @@ export function GameScreen({
           buildings: [...(world?.buildings ?? defaultTown), { art: placing.art, x: 4, y: 4, ghost: true }],
           center: { x: 4.5, y: 4.5 },
           focusY,
+          // A red ghost shows no area, as it shows no count.
+          area: (placing.valid ?? true) ? (placing.area ?? world?.area) : undefined,
         }
       : { ...world };
   return (
@@ -106,8 +121,13 @@ export function GameScreen({
           <HUDButtonCluster />
         </div>
         <BuildPalette tools={tools} armed={armed} />
+        {firstSteps ? (
+          <div className="cb-game__first-steps">
+            <FirstStepsCard {...firstSteps} />
+          </div>
+        ) : null}
         {rejection ? <RejectionBanner message={rejection} /> : null}
-        {banner ? <SessionBanner title={banner.title} description={banner.description} /> : null}
+        {banner ? <SessionBanner title={banner.title} description={banner.description} onResume={banner.onResume} /> : null}
         {armed && armedCaption ? <HintCapsule>{armedCaption}</HintCapsule> : null}
         {armed && cost && cost.length > 0 ? <CostBreakdown lines={cost} /> : null}
         <div className="cb-game__spacer" />
@@ -127,6 +147,11 @@ export function GameScreen({
           <PlacementHUD valid={placing.valid ?? true}>
             <span />
           </PlacementHUD>
+        </div>
+      ) : null}
+      {touch && placing?.count && (placing.valid ?? true) ? (
+        <div className="cb-game__count">
+          <AreaCountCapsule text={placing.count.text} tone={placing.count.tone} />
         </div>
       ) : null}
       {touch && coachmark && !placing ? (
