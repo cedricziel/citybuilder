@@ -69,12 +69,12 @@ public struct Carrier: Hashable, Codable, Sendable {
 public enum CarrierConfig {
     /// Max in-flight carriers per producer building.
     public static let perProducerCap = 2
-    /// Road tiles a haul must cover before it goes by handcart.
-    public static let cartDistance = 12
-    /// Units that must be ready for one destination before a handcart goes.
-    public static let cartMinLoad = 3
-    /// Units a handcart carries at most.
-    public static let cartCapacity = 4
+    /// Road tiles a haul must cover before it goes by handcart (game data).
+    public static let cartDistance = LogisticsCatalog.cartDistance
+    /// Units that must be ready for one destination before a handcart goes (game data).
+    public static let cartMinLoad = LogisticsCatalog.cartMinLoad
+    /// Units a handcart carries at most (game data).
+    public static let cartCapacity = LogisticsCatalog.cartCapacity
 
     /// What one haul along `path` takes when `ready` units could go: a
     /// handcart with up to `cartCapacity` on a long haul with enough
