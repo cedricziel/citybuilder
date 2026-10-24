@@ -30,6 +30,7 @@ export * from "./components/Minimap/Minimap";
 export * from "./components/MarketPanel/MarketPanel";
 export * from "./components/RivalMarketPanel/RivalMarketPanel";
 export * from "./components/StandingsPanel/StandingsPanel";
+export * from "./components/StatisticsPanel/StatisticsPanel";
 export * from "./components/CostBreakdown/CostBreakdown";
 export * from "./components/HintCapsule/HintCapsule";
 export * from "./components/RejectionBanner/RejectionBanner";
