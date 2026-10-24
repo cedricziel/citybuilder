@@ -10,7 +10,7 @@ extension World {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
         spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(tileToIsland: tileToIsland, events: &events)
+        spawnSupplyCarriers(events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
@@ -19,7 +19,13 @@ extension World {
         for id in carriers.keys.sorted(by: { $0.raw < $1.raw }) {
             guard let carrier = carriers[id] else { continue }
             if carrier.hasArrived {
-                applyCarrierArrival(carrier, events: &events)
+                let kept = applyCarrierArrival(carrier, events: &events)
+                if kept > 0 {
+                    // Its store filled while it walked: it keeps the
+                    // goods and tries again next tick, so none are lost.
+                    carriers[id] = carrier.carrying(kept)
+                    continue
+                }
                 switch carrier.mission {
                 case let .deliver(_, _, fromProducer, _),
                      let .deliverToConstructionSite(_, _, fromProducer, _):
@@ -36,22 +42,26 @@ extension World {
         }
     }
 
-    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) {
+    /// Applies `carrier`'s arrival and returns the units it keeps: those
+    /// its destination, still standing, has no room for.
+    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) -> Int {
         // `currentTile` is `nil` only on a malformed empty path; arrived
         // carriers always have a positive pathIndex < path.count. Use
         // `path.last` as the safe destination fallback.
         let arrivalTile = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
         switch carrier.mission {
-        case let .deliver(good, amount, _, toWarehouse):
-            stockpiles[toWarehouse]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
-        case let .retrieve(good, amount, _, toConsumer):
-            stockpiles[toConsumer]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
+        case let .deliver(good, amount, _, destination), let .retrieve(good, amount, _, destination):
+            // A demolished destination takes nothing and keeps nothing,
+            // as before.
+            guard var pile = stockpiles[destination] else { return 0 }
+            let accepted = pile.deposit(good, amount: amount)
+            stockpiles[destination] = pile
+            if accepted > 0 {
+                events.append(.carrierArrived(
+                    carrier: carrier.id, at: arrivalTile, good: good, amount: accepted
+                ))
+            }
+            return amount - accepted
         case let .deliverToConstructionSite(good, amount, _, toBuilding):
             applyConstructionDelivery(
                 ConstructionDelivery(
@@ -63,6 +73,7 @@ extension World {
                 ),
                 events: &events
             )
+            return 0
         }
     }
 

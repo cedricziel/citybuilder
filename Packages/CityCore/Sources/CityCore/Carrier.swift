@@ -41,6 +41,29 @@ public struct Carrier: Hashable, Codable, Sendable {
     public var hasArrived: Bool {
         pathIndex >= path.count - 1
     }
+
+    /// Units the carrier holds.
+    public var amount: Int {
+        switch mission {
+        case let .deliver(_, amount, _, _), let .retrieve(_, amount, _, _),
+             let .deliverToConstructionSite(_, amount, _, _):
+            amount
+        }
+    }
+
+    /// The same carrier holding `amount` units instead.
+    func carrying(_ amount: Int) -> Carrier {
+        var carrier = self
+        switch mission {
+        case let .deliver(good, _, from, to):
+            carrier.mission = .deliver(good: good, amount: amount, fromProducer: from, toWarehouse: to)
+        case let .retrieve(good, _, from, to):
+            carrier.mission = .retrieve(good: good, amount: amount, fromWarehouse: from, toConsumer: to)
+        case let .deliverToConstructionSite(good, _, from, to):
+            carrier.mission = .deliverToConstructionSite(good: good, amount: amount, fromProducer: from, toBuilding: to)
+        }
+        return carrier
+    }
 }
 
 public enum CarrierConfig {

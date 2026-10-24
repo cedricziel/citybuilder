@@ -71,8 +71,9 @@ public struct Stockpile: Hashable, Codable, Sendable {
         return accepted
     }
 
-    /// Makes `capacity` a per-good limit, keeping every unit held: the
-    /// save migration for stores written while they were pooled.
+    /// Makes `capacity` a per-good limit, keeping every unit held, as a
+    /// store migrated from a pooled save does: stock above the limit
+    /// stays as overflow.
     mutating func limitEachGood(to perGood: Int) {
         capacity = max(0, perGood)
         limitsEachGood = true

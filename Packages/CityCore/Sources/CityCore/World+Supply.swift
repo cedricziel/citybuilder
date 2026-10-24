@@ -66,7 +66,7 @@ extension World {
     /// Dispatch buffer→producer carriers for producers short of inputs.
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
-    mutating func spawnSupplyCarriers(tileToIsland _: [TileCoordinate: IslandID], events: inout [WorldEvent]) {
+    mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
         let consumers = buildings.values
             .filter { $0.state == .operational }
             .map { ($0, Self.suppliedGoods(of: $0)) }
@@ -101,10 +101,13 @@ extension World {
     }
 
     /// Whether `consumer` should get more `good`: stock plus inbound below
-    /// twice the amount it uses at a time.
+    /// twice the amount it uses at a time, with room for one more unit
+    /// beyond those already on their way.
     func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
-        guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
-        let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
+        let inbound = supplyCarrierCount(to: consumer)
+        let pile = stockpiles[consumer]
+        guard inbound < CarrierConfig.perProducerCap, (pile?.room(for: good) ?? 0) > inbound else { return false }
+        let onHand = pile?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
     }
 

@@ -155,3 +155,50 @@ func scenarioPortRespectsBufferCapacityOnLandSideDeposit() {
         .deliver(good: .wood, amount: 1, fromProducer: hut, toWarehouse: warehouse)
     ])
 }
+
+/// Units of `goods` in every stockpile and every carrier.
+private func total(of goods: [Good], in world: World) -> Int {
+    let stored = world.stockpiles.values.reduce(0) { sum, pile in sum + goods.reduce(0) { $0 + pile.quantity(of: $1) } }
+    let carried = world.carriers.values.reduce(0) { sum, carrier in
+        switch carrier.mission {
+        case let .deliver(good, amount, _, _), let .retrieve(good, amount, _, _),
+             let .deliverToConstructionSite(good, amount, _, _):
+            goods.contains(good) ? sum + amount : sum
+        }
+    }
+    return stored + carried
+}
+
+@Test("scenario: a stuck producer gets no more inputs and nothing is lost")
+func scenarioAStuckProducerGetsNoMoreInputsAndNothingIsLost() {
+    var world = roadStrip()
+    let sawmill = inject(.sawmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.planks: 15])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0), contents: [.planks: warehouseLimit, .wood: 60])
+    let before = total(of: [.wood, .planks], in: world)
+    for _ in 0 ..< 2000 {
+        world.tick()
+    }
+    #expect(total(of: [.wood, .planks], in: world) == before)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .wood) == 59)
+    #expect(world.stockpiles[sawmill]?.quantity(of: .wood) == 1)
+    #expect(world.buildingIssues()[sawmill] == .outputStuck(.planks))
+}
+
+@Test("scenario: a carrier whose store filled on the way keeps its goods")
+func scenarioACarrierWhoseStoreFilledOnTheWayKeepsItsGoods() {
+    var world = roadStrip()
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    world.tick()
+    world.stockpiles[warehouse]?.deposit(.bread, amount: warehouseLimit)
+    for _ in 0 ..< 40 {
+        world.tick()
+    }
+    #expect(world.carriers.count == 1)
+    #expect(total(of: [.bread], in: world) == warehouseLimit + 1)
+    world.stockpiles[warehouse]?.withdraw(.bread, amount: 1)
+    world.tick()
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .bread) == warehouseLimit)
+    #expect(world.carrierCountByProducer[bakery] == 0)
+}
