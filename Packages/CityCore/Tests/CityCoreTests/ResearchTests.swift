@@ -35,10 +35,45 @@ func scenarioResearchCompletesWhenItsCostIsReached() {
     world.enqueue(.chooseResearch(.milling))
     world.tick()
     #expect(world.research.current == .milling)
-    world.research.knowledge += 40
+    world.research.knowledge += 399
+    world.tick()
+    #expect(!world.research.isResearched(.milling))
+    world.research.knowledge += 1
     world.tick()
     #expect(world.research.isResearched(.milling))
     #expect(world.research.current == nil)
+}
+
+/// Knowledge a `difficulty` world spends before Milling is researched,
+/// fed one point a tick.
+private func millingCost(on difficulty: Difficulty) -> Int {
+    var world = World.newGame(layout: .singleIsland, seed: 0, difficulty: difficulty)
+    world.enqueue(.chooseResearch(.milling))
+    world.tick()
+    var spent = 0
+    while !world.research.isResearched(.milling), spent < 1000 {
+        world.research.knowledge += 1
+        spent += 1
+        world.tick()
+    }
+    return spent
+}
+
+@Test("scenario: easy research is cheaper")
+func scenarioEasyResearchIsCheaper() {
+    #expect(millingCost(on: .easy) == 320)
+}
+
+@Test("scenario: hard research is dearer")
+func scenarioHardResearchIsDearer() {
+    #expect(millingCost(on: .hard) == 480)
+}
+
+@Test("the scaled cost rounds down")
+func scaledResearchCostRoundsDown() {
+    var world = World.newGame(layout: .singleIsland, seed: 0, difficulty: .easy)
+    world.research = ResearchState(researched: [])
+    #expect(world.researchCost(of: .scholarship) == 24)
 }
 
 @Test("scenario: a tech with unmet prerequisites cannot be chosen")

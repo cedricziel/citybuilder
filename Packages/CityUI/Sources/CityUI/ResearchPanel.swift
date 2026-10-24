@@ -44,7 +44,7 @@ public struct ResearchPanelModel: Equatable {
             return Row(
                 tech: tech,
                 state: state,
-                cost: tech.cost,
+                cost: world.researchCost(of: tech),
                 progress: research.current == tech ? research.progress : 0,
                 prerequisites: Self.requirements(of: tech, in: world),
                 unlocks: tech.era.map { "The \($0.displayName) age" }

@@ -54,6 +54,14 @@ public struct ResearchState: Hashable, Codable, Sendable {
     }
 }
 
+public extension World {
+    /// `tech`'s cost on this world's difficulty, rounded down. Spec:
+    /// `research` / Research cost scales with difficulty.
+    func researchCost(of tech: Tech) -> Int {
+        tech.cost * difficulty.researchCostPercent / 100
+    }
+}
+
 extension World {
     static let libraryKnowledgeIntervalTicks: UInt64 = 10
     static let residentKnowledgeIntervalTicks: UInt64 = 100
@@ -74,8 +82,9 @@ extension World {
         guard let tech = research.current else { return }
         research.progress += research.knowledge
         research.knowledge = 0
-        if research.progress >= tech.cost {
-            research.knowledge = research.progress - tech.cost
+        let cost = researchCost(of: tech)
+        if research.progress >= cost {
+            research.knowledge = research.progress - cost
             research.progress = 0
             research.current = nil
             research.markResearched(tech)

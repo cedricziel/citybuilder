@@ -255,10 +255,10 @@ items:
   # --- Techs ---------------------------------------------------------
   # Spec: research / Tech tree
   - { kind: Tech, id: scholarship, cost: 30, age: antiquity }
-  - { kind: Tech, id: milling,     cost: 40, age: medieval }
-  - { kind: Tech, id: mining,      cost: 40, age: medieval }
-  - { kind: Tech, id: metallurgy,  cost: 80, age: medieval, prerequisites: [mining] }
+  - { kind: Tech, id: milling,     cost: 400, age: medieval }
+  - { kind: Tech, id: mining,      cost: 400, age: medieval }
+  - { kind: Tech, id: metallurgy,  cost: 800, age: medieval, prerequisites: [mining] }
   - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
   # Unlocks every culture's luxury chain. Spec: culture-content /
   # Cultivation unlocks the luxury chain
-  - { kind: Tech, id: cultivation, cost: 50, age: medieval }
+  - { kind: Tech, id: cultivation, cost: 500, age: medieval }

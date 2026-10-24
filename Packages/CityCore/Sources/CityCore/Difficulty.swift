@@ -25,6 +25,16 @@ public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
+    /// A tech's research cost as a percent of its catalog cost. Spec:
+    /// `research` / Research cost scales with difficulty.
+    public var researchCostPercent: Int {
+        switch self {
+        case .easy: 80
+        case .normal: 100
+        case .hard: 120
+        }
+    }
+
     public var upkeepPercent: Int64 {
         switch self {
         case .easy: 75
