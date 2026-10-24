@@ -54,6 +54,16 @@ func scenarioASawmillWorksBelowTheRestLevel() throws {
     #expect(woodCarriers(to: sawmill, in: world) > 0)
 }
 
+/// Direct hops from a producer to a short consumer ask `needsSupply` too,
+/// so the rest check there covers every route that feeds a producer.
+@Test("no route offers a resting producer more input")
+func noRouteOffersARestingProducerMoreInput() {
+    let (resting, sawmill) = town(.sawmill, warehouse: [.planks: 40])
+    #expect(!resting.needsSupply(sawmill, good: .wood, amount: 1, stored: resting.storedTotals(of: .player)))
+    let (working, other) = town(.sawmill, warehouse: [.planks: 39])
+    #expect(working.needsSupply(other, good: .wood, amount: 1, stored: working.storedTotals(of: .player)))
+}
+
 @Test("scenario: a resting producer finishes its cycle")
 func scenarioARestingProducerFinishesItsCycle() {
     var (world, sawmill) = town(.sawmill, warehouse: [.planks: 40])

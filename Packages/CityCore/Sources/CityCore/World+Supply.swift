@@ -75,7 +75,6 @@ extension World {
         for (consumer, needs) in consumers {
             let ownerStored = stored[consumer.owner] ?? storedTotals(of: consumer.owner)
             stored[consumer.owner] = ownerStored
-            guard isResting(consumer, stored: ownerStored) == nil else { continue }
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
                 footprint: BuildingCatalog.spec(for: consumer.kind).footprint
@@ -83,7 +82,7 @@ extension World {
             else { continue }
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
-                while needsSupply(consumer.id, good: good, amount: amount) {
+                while needsSupply(consumer.id, good: good, amount: amount, stored: ownerStored) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
                 }
@@ -101,10 +100,17 @@ extension World {
         return needs
     }
 
-    private func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
-        guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
+    /// Whether `consumer` should get more `good`. Every route that feeds
+    /// a producer asks this, so a resting producer gets nothing from any
+    /// of them. `stored` is the owner's `storedTotals`, summed once per
+    /// pass by the caller.
+    func needsSupply(_ consumer: EntityID, good: Good, amount: Int, stored: [Good: Int]) -> Bool {
+        guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap,
+              let building = buildings[consumer]
+        else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
+            && isResting(building, stored: stored) == nil
     }
 
     mutating func dispatchSupply(

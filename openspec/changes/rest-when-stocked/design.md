@@ -32,9 +32,8 @@ Supply carriers serve producers in entity order (`spawnSupplyCarriers`). The ear
 ### D2. One predicate, both paths
 
 - `World.isResting(_ producer: Building) -> Good?` returns the first output good it rests on.
-- `spawnSupplyCarriers` skips a resting consumer.
-- Walkers' #232 direct hops (producer → producer) skip a resting target through the same predicate. #232 lands first; this change merges main and adds the check there.
-- The sum over the owner's stores runs once per producer per supply pass, which is cheap next to the path search.
+- `needsSupply` returns false for a resting consumer. Supply dispatch asks it today, and walkers' #232 direct hops (producer → producer) ask it too, so one check covers both routes whichever lands first.
+- Callers sum the owner's stores once per pass and pass the totals in; `needsSupply` checks resting last, after the cheap carrier and on-hand checks.
 
 ### D3. Research retune: ×14
 

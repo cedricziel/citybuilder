@@ -3,7 +3,7 @@
 - [ ] 1.1 GameDataGen: optional `restAt` on goods (schema, loader, validator, emitter) with tests; packs set 40 (design D1)
 - [ ] 1.2 Tests-first: the "Producers rest while the stores hold plenty" scenarios; confirm red
 - [ ] 1.3 Implement `World.isResting(_:)` and skip resting consumers in supply dispatch (design D2)
-- [ ] 1.4 After #232 lands: merge main; direct hops skip resting targets through the same predicate, with a test
+- [ ] 1.4 Put the rest check in `needsSupply`, which #232 direct hops also ask, with a test
 
 ## 2. Visible and calm
 
