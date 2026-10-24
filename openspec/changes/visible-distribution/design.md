@@ -173,16 +173,17 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
 - **Rival viability:** rivals now depend on porters too (D11). *Acceptance:* the rival-viability sweep stays green.
 - **First hour (milestone 2):** a starting town has to be fully covered by its town center hub. *Acceptance:* the first-hour guided sweep stays at 0 of 20 bankruptcies.
 - **Intermediates in storage (milestone 1):** fewer intermediates reach warehouses, so sales at the market shift. Watch the first-hour solvency sweep.
-  - *M1 result*, PlayerBot sweeps on main 334c173d against the M1 branch after review, release build:
+  - *M1 result*, PlayerBot sweeps on main 4f3e8a0c (with the slower medieval research) against the M1 branch after review, release build:
     - First-hour solvency with the market: 0/20 bankrupt on both.
     - Guided Hard start: 0/20 bankrupt on both. Residents at tick 12,000 rose from min 29, median 52.5 to min 38, median 57.
     - Rival viability: year 5 min 15 → 19 (median 59.5 → 58); year 15 median 57.5 → 61.
     - The no-market control kept seeds 2, 6 and 21 solvent, so it now uses seeds 1, 3, 9 and 11, which still go bankrupt without the market.
-    - Mid-game pacing (a measurement, not a gate):
-      - Arms that reach a merchant on both get there about 0.9 years sooner (median 3.9 → 3.0).
-      - 35 arms lost their merchant and 14 gained one (120 → 99 of 180). Bankruptcies went from 7 to 11.
-      - The losses cluster in naive build orders, 8 of 10 on normal/single-island/naive. A probe of seed 5 there shows the mechanism. Direct ore and charcoal hops make iron sooner. The toolsmith then draws planks through supply and piles up tools, so storage runs short of planks, the brewery is never built, and merchants never get beer.
-      - That is plank competition between chains, which designer2's supply output cap (resting producers in `needsSupply`) targets.
+    - **Mid-game pacing regresses:**
+      - 70 of 180 arms reach a merchant against 121 on main, though sooner when they do (median 3.8 against 5.0 years).
+      - Bankruptcies go from 11 to 25.
+      - Hops make chains so efficient that a good with no sink yet gluts storage. Probe of hard/single-island/careful seed 0: grain and flour hop to the mills and bakeries, bread piles up to 194 before any merchant eats it, and a full warehouse leaves no room for planks or food.
+      - A prototype of designer2's supply output cap (no inputs while the owner's stores hold 40 of a producer's output) fixes the probe. With hops it reaches 20 merchants by year 8, against none without the cap.
+      - So M1 should merge only together with, or after, that cap. The cap belongs in `needsSupply`, which hops already go through.
 - **Performance:** D2's search is per producer with output. Porters add at most 8 carriers per hub. The carrier count stays within today's peak, since direct hops shorten trips.
 - **Visual clutter:** more figures on roads. Carts reduce the count on long hauls, and walker density limits still apply.
 
