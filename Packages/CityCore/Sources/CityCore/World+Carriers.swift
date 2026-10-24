@@ -115,6 +115,14 @@ extension World {
         let waitingSites = buildings.values
             .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
             .sorted { $0.id.raw < $1.id.raw }
+        // Units on their way to each store, so its room for a good is
+        // not promised twice.
+        var inbound: [EntityID: [Good: Int]] = [:]
+        for carrier in carriers.values {
+            if case let .deliver(good, amount, _, warehouse) = carrier.mission {
+                inbound[warehouse, default: [:]][good, default: 0] += amount
+            }
+        }
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
@@ -146,9 +154,10 @@ extension World {
                     break
                 }
                 guard let (warehouseId, path) = findRoadConnectedBuffer(
-                    fromRoad: road, good: good, among: buffers
+                    fromRoad: road, good: good, among: buffers, inbound: { inbound[$1]?[$0] ?? 0 }
                 )
                 else { continue }
+                inbound[warehouseId, default: [:]][good, default: 0] += 1
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,
@@ -263,11 +272,13 @@ extension World {
     /// Returns (bufferId, road path) on the shortest path; nil if none
     /// reachable. Equal-length paths resolve to the lowest entity ID.
     /// `buffers` are the operational goods buffers in entity order, when
-    /// the caller has already listed them.
+    /// the caller has already listed them. A buffer qualifies only with
+    /// room for `good` beyond the units `inbound` says are on their way.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good,
-        among buffers: [Building]? = nil
+        among buffers: [Building]? = nil,
+        inbound: (Good, EntityID) -> Int = { _, _ in 0 }
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
@@ -277,8 +288,7 @@ extension World {
                 footprint: BuildingCatalog.spec(for: building.kind).footprint
             )
             else { continue }
-            guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
-            _ = good // future: check warehouse accepts this good type
+            guard let stock = stockpiles[id], stock.room(for: good) > inbound(good, id) else { continue }
             guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {

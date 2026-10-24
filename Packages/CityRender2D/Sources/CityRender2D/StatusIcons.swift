@@ -35,9 +35,8 @@ enum StatusIcons {
         case .noRouteToStorage: "status-no-route"
         case .noTreesInReach: "status-no-trees"
         case .noRoomToPlant: "status-no-room-to-plant"
-        case .storageFull: "status-storage-full"
         case let .missingInputs(goods): goods.first.map(short)
-        case let .resting(good): stuck(good)
+        case let .outputStuck(good): stuck(good)
         }
     }
 
@@ -46,7 +45,7 @@ enum StatusIcons {
         "status-\(good.rawValue)-short"
     }
 
-    /// The good with an amber pause: output with nowhere to go, or a producer resting on stock.
+    /// The good with an amber pause: output with nowhere to go.
     static func stuck(_ good: Good) -> String {
         "status-\(good.rawValue)-stuck"
     }

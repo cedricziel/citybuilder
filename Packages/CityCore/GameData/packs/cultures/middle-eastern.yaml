@@ -31,7 +31,7 @@ items:
                     Omar, Rania, Samir, Tariq, Yasmin, Zayd, Hala, Idris, Leena, Nabil, Salma, Yusuf]
 
   - { kind: Good, id: coffee-cherries, name: Coffee Cherries, unit: sacks, basePrice: 3, market: { sell: 20 } }
-  - { kind: Good, id: coffee, name: Coffee, unit: sacks, basePrice: 16, market: { sell: 20 }, restAt: 40 }
+  - { kind: Good, id: coffee, name: Coffee, unit: sacks, basePrice: 16, market: { sell: 20 } }
 
   - kind: Building
     id: coffee-grove

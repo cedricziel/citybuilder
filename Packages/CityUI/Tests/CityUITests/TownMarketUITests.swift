@@ -112,7 +112,7 @@ private func addWarehouse(beside center: EntityID, in world: inout World) {
     for tile in footprint.tiles(anchor: site) {
         world.occupiedTiles[tile] = id
     }
-    world.stockpiles[id] = World.stockpileCapacity(for: .warehouse).map { Stockpile(capacity: $0) }
+    world.stockpiles[id] = World.newStockpile(for: .warehouse)
 }
 
 @MainActor

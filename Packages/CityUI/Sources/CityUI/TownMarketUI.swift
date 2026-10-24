@@ -42,7 +42,7 @@ public struct TownMarketSection: Equatable, Sendable {
                 text: GoodsCatalog.spec(for: quote.good).displayName + " — " + sides.joined(separator: " · "),
                 isBuyable: buyable,
                 isSellable: sellable,
-                canBuy: !isGameOver && quote.buyLeft > 0 && reach.freeSpace > 0 && balance >= quote.buyPrice,
+                canBuy: !isGameOver && quote.buyLeft > 0 && reach.room[quote.good, default: 0] > 0 && balance >= quote.buyPrice,
                 canSell: !isGameOver && quote.sellLeft > 0 && reach.stock[quote.good, default: 0] > 0
             )
         }

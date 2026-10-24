@@ -4,14 +4,14 @@ import Foundation
 /// goods on its island to sell. Spec: `platform-shells` / Town center
 /// market panel (design D6).
 public struct MarketReach: Equatable, Sendable {
-    /// Free space across the operational player goods buffers on the
-    /// town center's island: room a purchase can fill.
-    public let freeSpace: Int
+    /// Room for each good across the operational player goods buffers
+    /// on the town center's island: what a purchase of it can fill.
+    public let room: [Good: Int]
     /// Goods across the operational player goods buffers on its island.
     public let stock: [Good: Int]
 
-    public init(freeSpace: Int, stock: [Good: Int]) {
-        self.freeSpace = freeSpace
+    public init(room: [Good: Int], stock: [Good: Int]) {
+        self.room = room
         self.stock = stock
     }
 }
@@ -40,15 +40,17 @@ public extension World {
     func marketReach(at townCenter: EntityID) -> MarketReach? {
         guard let center = marketTownCenter(townCenter) else { return nil }
         var stock: [Good: Int] = [:]
-        var freeSpace = 0
+        var room: [Good: Int] = [:]
         for buffer in marketBuffers(of: center) {
             guard let pile = stockpiles[buffer.id] else { continue }
             for (good, amount) in pile.contents where amount > 0 {
                 stock[good, default: 0] += amount
             }
-            freeSpace += pile.freeSpace
+            for good in Good.allCases {
+                room[good, default: 0] += pile.room(for: good)
+            }
         }
-        return MarketReach(freeSpace: freeSpace, stock: stock)
+        return MarketReach(room: room, stock: stock)
     }
 }
 

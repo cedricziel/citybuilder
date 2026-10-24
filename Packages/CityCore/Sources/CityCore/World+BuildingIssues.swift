@@ -9,11 +9,11 @@ public enum BuildingIssue: Hashable, Sendable {
     case noTreesInReach
     /// A forester's catchment holds no open grass.
     case noRoomToPlant
-    /// The stores hold plenty of what it makes, so it gets no inputs
-    /// (`rest-when-stocked` D4). Names the first such good.
-    case resting(Good)
     case missingInputs([Good])
-    case storageFull
+    /// Its own store is full of what it makes and no store, consumer or
+    /// site has room for it, so it stopped. Names the good it holds most
+    /// of (`per-good-storage`).
+    case outputStuck(Good)
 }
 
 public extension World {
@@ -32,7 +32,6 @@ public extension World {
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).flatMap { components[$0] }
         })
         var issues: [EntityID: BuildingIssue] = [:]
-        let contexts = restContexts(of: .player, tileToIsland: tileToIsland)
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
             if Self.isPlanter(building.kind) {
@@ -60,15 +59,7 @@ public extension World {
                 continue
             }
             guard let recipe, let issue = productionIssue(of: building.id, recipe: recipe) else { continue }
-            // A resting producer works off the inputs on hand; it reads as
-            // resting once they fall short of a cycle.
-            let context = islandFor(building: building, tileToIsland: tileToIsland).flatMap { contexts[$0] }
-            let resting = Self.restingGood(for: recipe, of: building.kind, context: context ?? IslandRestContext())
-            if case .missingInputs = issue, let resting {
-                issues[building.id] = .resting(resting)
-            } else {
-                issues[building.id] = issue
-            }
+            issues[building.id] = issue
         }
         return issues
     }
@@ -83,7 +74,9 @@ extension World {
             .sorted { $0.rawValue < $1.rawValue }
         if !missing.isEmpty { return .missingInputs(missing) }
         if recipe.outputs.values.contains(where: { stockpile.totalStored + $0 > stockpile.capacity }) {
-            return .storageFull
+            let held = Good.allCases.filter { recipe.outputs[$0] != nil }
+            let stuck = held.max { stockpile.quantity(of: $0) < stockpile.quantity(of: $1) }
+            return stuck.map(BuildingIssue.outputStuck)
         }
         return nil
     }

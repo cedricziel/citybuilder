@@ -87,18 +87,18 @@ func purchasesWithdrawInIDOrder() {
     #expect(fixture.world.stockpiles[fixture.warehouse]?.quantity(of: .wood) == 25)
 }
 
-@Test("a sale stops at the free space of the rival's buffers, filling the town center first")
-func saleLimitedByFreeSpace() {
+@Test("a sale fills the town center first, then the other buffers with room for the good")
+func saleFillsTheTownCenterFirst() {
     var fixture = TradeFixture()
-    fixture.setStock([.food: 38], in: fixture.townCenter)
-    fixture.setStock([.grain: 197])
-    fixture.setStock([.ore: 199], in: fixture.rivalPort)
+    // Stock above the town center's limit, as an old save may hold: it
+    // has no room for tools, so the purchase goes to the warehouse.
+    fixture.setStock([.tools: 2], in: fixture.townCenter)
+    fixture.world.stockpiles[fixture.townCenter]?.limitEachGood(to: 2)
     let ship = fixture.dockShip(at: fixture.rivalPort, actions: [.unloadUpTo(good: .tools, qty: 30)], cargo: [.tools: 30])
     _ = fixture.dock()
-    #expect(fixture.world.ships[ship]?.cargo[.tools] == 24)
+    #expect(fixture.world.ships[ship]?.cargo[.tools] == 12)
     #expect(fixture.world.stockpiles[fixture.townCenter]?.quantity(of: .tools) == 2)
-    #expect(fixture.world.stockpiles[fixture.warehouse]?.quantity(of: .tools) == 3)
-    #expect(fixture.world.stockpiles[fixture.rivalPort]?.quantity(of: .tools) == 1)
+    #expect(fixture.world.stockpiles[fixture.warehouse]?.quantity(of: .tools) == 18)
 }
 
 @Test("no trade moves anything after game over")

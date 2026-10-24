@@ -50,7 +50,7 @@ func scenarioSawdustPuffsAtAWorkingSawmill() throws {
     let emitter = try #require(scene.sawdustLayer.emitters[mill.id])
     #expect(emitter.name == SawdustLayerNode.emitterName && emitter.parent === scene.sawdustLayer && !emitter.isPaused)
     #expect(emitter.position == SawdustLayerNode.saw(of: mill))
-    source.snapshot = coast(tick: 181, issues: [mill.id: .storageFull])
+    source.snapshot = coast(tick: 181, issues: [mill.id: .outputStuck(.planks)])
     scene.update(0.1)
     #expect(scene.sawdustLayer.emitters.isEmpty && emitter.parent == nil, "an idle mill makes no sawdust")
     source.snapshot = coast(tick: 182)
@@ -76,7 +76,7 @@ func scenarioSawdustRests() throws {
     let running = try #require(scene.sawdustLayer.emitters[mill.id])
     #expect(!running.isPaused && running.particleBirthRate == SawdustLayerNode.birthRate)
     // An emitter taken from the pool while the game is still starts held.
-    source.snapshot = coast(tick: 182, issues: [mill.id: .storageFull])
+    source.snapshot = coast(tick: 182, issues: [mill.id: .outputStuck(.planks)])
     scene.update(1.25)
     source.snapshot = coast(tick: 780)
     scene.update(1.3)
@@ -122,7 +122,7 @@ func pooledHeldEmitterIsPrewarmed() throws {
     // Night falls, the mill stops while it is held, and its emitter goes to
     // the pool paused; then the mill works again before dawn.
     layer.reconcile(snapshot: coast(tick: 780), viewSize: view, reduceMotion: false, still: true)
-    layer.reconcile(snapshot: coast(tick: 781, issues: [mill.id: .storageFull]), viewSize: view, reduceMotion: false, still: true)
+    layer.reconcile(snapshot: coast(tick: 781, issues: [mill.id: .outputStuck(.planks)]), viewSize: view, reduceMotion: false, still: true)
     layer.reconcile(snapshot: coast(tick: 782), viewSize: view, reduceMotion: false, still: true)
     let emitter = try #require(layer.emitters[mill.id])
     #expect(emitter === running && emitter.isPaused && emitter.particleBirthRate == 0)

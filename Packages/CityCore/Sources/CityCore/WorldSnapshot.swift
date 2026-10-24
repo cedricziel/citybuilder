@@ -10,9 +10,9 @@ public struct IslandSummary: Hashable, Sendable {
     public let bounds: TileBoundingBox
     /// Aggregate stockpile in good-buffer buildings on this island.
     public let stockpile: [Good: Int]
-    /// Aggregate total capacity in good-buffer buildings on this
-    /// island. With mixed-storage `Stockpile`, every good in the
-    /// catalog receives the same total — buildings don't specialize.
+    /// Aggregate capacity for each good in good-buffer buildings on this
+    /// island: a store's per-good limit, or a shared stockpile's whole
+    /// capacity, which any one good could fill.
     public let capacity: [Good: Int]
 
     public init(
@@ -271,7 +271,7 @@ public extension World {
         tileToIsland: [TileCoordinate: IslandID]
     ) -> [IslandID: IslandSummary] {
         var stockpileByIsland: [IslandID: [Good: Int]] = [:]
-        var capacityTotalByIsland: [IslandID: Int] = [:]
+        var capacityByIsland: [IslandID: [Good: Int]] = [:]
         for (id, building) in buildings {
             guard Self.goodsBufferKinds.contains(building.kind) else { continue }
             guard let islandID = islandID(forBuilding: building, tileToIsland: tileToIsland)
@@ -280,20 +280,18 @@ public extension World {
                 for (good, amount) in stockpile.contents where amount > 0 {
                     stockpileByIsland[islandID, default: [:]][good, default: 0] += amount
                 }
-                capacityTotalByIsland[islandID, default: 0] += stockpile.capacity
+                if stockpile.capacity > 0 {
+                    for good in Good.allCases {
+                        capacityByIsland[islandID, default: [:]][good, default: 0] += stockpile.capacity
+                    }
+                }
             }
         }
         var summaries: [IslandID: IslandSummary] = [:]
         summaries.reserveCapacity(islands.count)
         for island in islands {
             let stocks = stockpileByIsland[island.id] ?? [:]
-            let total = capacityTotalByIsland[island.id] ?? 0
-            var capacity: [Good: Int] = [:]
-            if total > 0 {
-                for good in Good.allCases {
-                    capacity[good] = total
-                }
-            }
+            let capacity = capacityByIsland[island.id] ?? [:]
             summaries[island.id] = IslandSummary(
                 id: island.id,
                 name: island.name,
