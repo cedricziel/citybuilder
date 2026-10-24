@@ -31,7 +31,7 @@ The sheep farm SHALL be a gather building and the weaver a craft building, both 
 - **WHEN** the catalog is read for the sheep farm and the weaver
 - **THEN** each has a 2×2 footprint, the sheep farm costs 70 with 3 wood of materials, and the weaver costs 130 with 3 wood and 3 planks of materials
 
-#### Scenario: Cloth travels from the weaver to a merchant house
+#### Scenario: Cloth reaches a warehouse
 
-- **WHEN** a sheep farm, a weaver, a warehouse and a merchant house share a road network and enough ticks pass
-- **THEN** the warehouse holds cloth made from the sheep farm's wool
+- **WHEN** two sheep farms, a weaver and a warehouse share a road network and 900 ticks pass
+- **THEN** the warehouse holds cloth made from the sheep farms' wool
