@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.3](https://github.com/cedricziel/citybuilder/compare/v0.2.2...v0.2.3) (2026-10-24)
+
+
+### Features
+
+* **citycore:** rest producers while the stores hold plenty ([0beac42](https://github.com/cedricziel/citybuilder/commit/0beac4273eca60b493aa0526eb39bb6c719753e5))
+* **core:** answer what a building reaches ([f0e2020](https://github.com/cedricziel/citybuilder/commit/f0e202098a9126fe623efd427f653efa60316db4))
+* **gamedata:** declare catchment radius in the packs ([021fe83](https://github.com/cedricziel/citybuilder/commit/021fe83c8f4541550f70a8d36c6efa1270ab7ae0))
+* **render2d:** draw what a building reaches on the ground ([b64bb65](https://github.com/cedricziel/citybuilder/commit/b64bb6544f8d3151ba314f129ae616ea4fe692ee))
+* show what a building reaches while placing and selecting ([7638fc5](https://github.com/cedricziel/citybuilder/commit/7638fc5f40e8fad55a1aa0e43eb855d4b97a8ec8))
+* **ui:** arm a building or select a tile from launch flags ([aff65ac](https://github.com/cedricziel/citybuilder/commit/aff65ac192fb6e148e01461b7f274723631e1834))
+* **ui:** show the area and its count while placing and selecting ([d81b491](https://github.com/cedricziel/citybuilder/commit/d81b4912c4b1e10dba83759c95bc3ca77dc9e630))
+
+
+### Bug Fixes
+
+* **citycore:** rest a producer only while another building shares its input ([758b049](https://github.com/cedricziel/citybuilder/commit/758b0496b86a6c40f3b0323ebe1535ed075e515a))
+* **core:** give an anchor off the map no area ([521fcf3](https://github.com/cedricziel/citybuilder/commit/521fcf3f0ecb966db2f4cbb9d9c9fc3e1eeb140e))
+* **gamedata:** require a catchment radius where one is used ([14a26d1](https://github.com/cedricziel/citybuilder/commit/14a26d1d2cfa7dca5d32472d175dce5152b5d818))
+* **ui:** ignore shot flag tiles off the map ([9781a6e](https://github.com/cedricziel/citybuilder/commit/9781a6e4d5e43a8b78650b09cd4a8c991f410f87))
+* **ui:** keep the capsule clear of the arrows and off red ghosts ([c81b04c](https://github.com/cedricziel/citybuilder/commit/c81b04c9f903bea4692215f7745dedd28325ed61))
+
 ## [0.2.2](https://github.com/cedricziel/citybuilder/compare/v0.2.1...v0.2.2) (2026-10-24)
 
 
