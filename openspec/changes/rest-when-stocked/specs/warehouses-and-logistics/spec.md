@@ -2,7 +2,7 @@
 
 ### Requirement: Buildings report why they are idle
 
-The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; its road does not reach a road beside an operational warehouse, port or town center; for a producer, resting while the stores hold plenty of what it makes (naming the first such good); for a producer, inputs short of its recipe (listing the short goods); for a producer, a store with no room for a cycle's output. A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result.
+The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; its road does not reach a road beside an operational warehouse, port or town center; for a producer, inputs short of its recipe: resting (naming the first good it rests on) while it rests on the stores on its island, otherwise listing the short goods; for a producer, a store with no room for a cycle's output. A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result.
 
 #### Scenario: A producer without a road reports no road
 - **WHEN** a farm has no road beside it

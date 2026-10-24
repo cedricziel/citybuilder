@@ -33,6 +33,11 @@ private func place(_ kind: BuildingKind, at anchor: TileCoordinate, owner: Owner
     return id
 }
 
+/// The player's store totals on the island of the fixture town.
+private func homeStored(_ world: World) -> [Good: Int] {
+    world.storedTotals(of: .player, tileToIsland: world.tileToIslandMap()).values.first ?? [:]
+}
+
 private func woodCarriers(to consumer: EntityID, in world: World) -> Int {
     world.carriers.values.count { carrier in
         if case let .retrieve(good, _, _, toConsumer) = carrier.mission { return good == .wood && toConsumer == consumer }
@@ -59,9 +64,71 @@ func scenarioASawmillWorksBelowTheRestLevel() throws {
 @Test("no route offers a resting producer more input")
 func noRouteOffersARestingProducerMoreInput() {
     let (resting, sawmill) = town(.sawmill, warehouse: [.planks: 40])
-    #expect(!resting.needsSupply(sawmill, good: .wood, amount: 1, stored: resting.storedTotals(of: .player)))
+    #expect(!resting.needsSupply(sawmill, good: .wood, amount: 1, stored: homeStored(resting)))
     let (working, other) = town(.sawmill, warehouse: [.planks: 39])
-    #expect(working.needsSupply(other, good: .wood, amount: 1, stored: working.storedTotals(of: .player)))
+    #expect(working.needsSupply(other, good: .wood, amount: 1, stored: homeStored(working)))
+}
+
+@Test("scenario: supply resumes below the rest level")
+func scenarioSupplyResumesBelowTheRestLevel() throws {
+    var (world, sawmill) = town(.sawmill, warehouse: [.planks: 40, .wood: 20])
+    #expect(woodCarriers(to: sawmill, in: world) == 0)
+    let store = try #require(world.buildings.values.first { $0.kind == .warehouse }?.id)
+    world.stockpiles[store]?.withdraw(.planks, amount: 1)
+    world.tick()
+    #expect(woodCarriers(to: sawmill, in: world) > 0)
+}
+
+@Test("scenario: every output must be stocked")
+func scenarioEveryOutputMustBeStocked() {
+    let twoOutputs = ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1, .flour: 1], cycleTicks: 25)
+    #expect(World.restingGood(for: twoOutputs, stored: [.planks: 40]) == nil)
+    #expect(World.restingGood(for: twoOutputs, stored: [.planks: 40, .flour: 40]) == .planks)
+    let unlevelled = ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1, .food: 1], cycleTicks: 25)
+    #expect(World.restingGood(for: unlevelled, stored: [.planks: 40, .food: 400]) == nil)
+}
+
+/// Archipelago seed 0 starts the player with a town center on two
+/// islands. Home holds plenty of planks; the outpost holds none, so its
+/// sawmill must keep working: home's stores never reach its sites.
+@Test("scenario: an outpost rests only on its own island's stores")
+func scenarioAnOutpostRestsOnlyOnItsOwnIslandsStores() throws {
+    var world = World.newGame(layout: .archipelago, seed: 0, difficulty: .easy)
+    let map = world.tileToIslandMap()
+    let centers = world.buildings.values
+        .filter { $0.kind == .townCenter && $0.owner == .player }
+        .sorted { $0.id.raw < $1.id.raw }
+    let home = try #require(centers.first)
+    let outpost = try #require(centers.first { map[$0.anchor] != map[home.anchor] })
+    let outpostPlanks = world.stockpiles[outpost.id]?.quantity(of: .planks) ?? 0
+    world.stockpiles[outpost.id]?.withdraw(.planks, amount: outpostPlanks)
+    world.stockpiles[outpost.id]?.deposit(.wood, amount: 10)
+    world.stockpiles[home.id]?.deposit(.planks, amount: 40)
+    let sawmill = try #require(placeBesideRoad(.sawmill, near: outpost, in: &world, map: map))
+    world.tick()
+    #expect(try world.isResting(#require(world.buildings[sawmill])) == nil)
+    #expect(woodCarriers(to: sawmill, in: world) > 0)
+}
+
+/// An operational `kind` on free grass of `center`'s island, beside a road.
+private func placeBesideRoad(
+    _ kind: BuildingKind, near center: Building, in world: inout World, map: [TileCoordinate: IslandID]
+) -> EntityID? {
+    let footprint = BuildingCatalog.spec(for: kind).footprint
+    let island = map[center.anchor]
+    for dy in -10 ... 10 {
+        for dx in -10 ... 10 {
+            let anchor = TileCoordinate(x: center.anchor.x + dx, y: center.anchor.y + dy)
+            let free = footprint.tiles(anchor: anchor).allSatisfy {
+                map[$0] == island && world.occupiedTiles[$0] == nil && world.terrain(at: $0) == .grass
+                    && !world.roadGraph.roadTiles.contains($0)
+            }
+            if free, world.anyAdjacentRoad(anchor: anchor, footprint: footprint) != nil {
+                return place(kind, at: anchor, owner: .player, in: &world)
+            }
+        }
+    }
+    return nil
 }
 
 @Test("scenario: a resting producer finishes its cycle")
@@ -92,4 +159,11 @@ func rivalProducerRestsOnRivalStores() throws {
 func scenarioARestingProducerReportsResting() {
     let (world, sawmill) = town(.sawmill, warehouse: [.planks: 40])
     #expect(world.buildingIssues()[sawmill] == .resting(.planks))
+}
+
+@Test("a resting producer with inputs on hand still reads as working")
+func restingProducerWithInputsOnHandReadsAsWorking() {
+    var (world, sawmill) = town(.sawmill, warehouse: [.planks: 40])
+    world.stockpiles[sawmill]?.deposit(.wood, amount: 1)
+    #expect(world.buildingIssues()[sawmill] == nil)
 }

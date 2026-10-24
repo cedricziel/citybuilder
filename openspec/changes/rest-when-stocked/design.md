@@ -24,7 +24,8 @@ Supply carriers serve producers in entity order (`spawnSupplyCarriers`). The ear
 ### D1. Rest level per good, in data
 
 - `restAt` is an optional field on a `Good` pack item.
-- A producer rests when every output good declares `restAt` and the owner's operational town centers, warehouses and ports hold at least that much of it in total.
+- A producer rests when every output good declares `restAt` and the owner's operational town centers, warehouses and ports on the producer's island hold at least that much of it in total.
+- Totals are per island because stores never feed another island's construction sites. With owner-wide totals, an outpost sawmill rested on the home island's planks while the outpost's own house waited for planks for good (found in review).
 - Producers with no inputs (lumberjacks, farms, gardens) never rest, so wood, food and raw goods keep flowing; the idle-good hint covers raw goods piling up.
 - 40 matches the town center's whole store, so a single store never rests a producer unless it is full of that one good.
 - Ships, the shipyard and projects make no stored goods, so they never rest.
@@ -33,7 +34,7 @@ Supply carriers serve producers in entity order (`spawnSupplyCarriers`). The ear
 
 - `World.isResting(_ producer: Building) -> Good?` returns the first output good it rests on.
 - `needsSupply` returns false for a resting consumer. Supply dispatch asks it today, and walkers' #232 direct hops (producer → producer) ask it too, so one check covers both routes whichever lands first.
-- Callers sum the owner's stores once per pass and pass the totals in; `needsSupply` checks resting last, after the cheap carrier and on-hand checks.
+- Supply dispatch sums the owner's stores per island once per pass, passes the consumer's island totals in, and subtracts each unit it dispatches so the totals stay current. `needsSupply` checks resting last, after the cheap carrier and on-hand checks.
 
 ### D3. Research retune: ×14
 
@@ -52,7 +53,7 @@ Careful scripted player, market on, seeds 0–9 × both layouts per difficulty, 
 
 ### D4. Visible and idle
 
-- `BuildingIssue.resting(Good)` is checked after the route to storage and before missing inputs, since a resting producer is also short of inputs.
+- `BuildingIssue.resting(Good)` replaces missing inputs for a resting producer. While it still works off inputs on hand it has no issue, so it is not drawn cold while it works.
 - The inspector shows it as "Resting: stores hold plenty of planks": no warning symbol and no "Problem:" prefix.
 - Rendering already treats a building with any issue as idle: no chimney smoke, no window glow, and no working animation.
 
