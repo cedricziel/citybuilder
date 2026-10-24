@@ -93,9 +93,7 @@ extension World {
     }
 
     private mutating func sampleProducers() {
-        for building in operationalProducersInEntityOrder() where building.owner == .player {
-            guard let recipe = Self.activeRecipe(of: building) else { continue }
-            let state = producerState(of: building, recipe: recipe)
+        for (building, state) in playerProducerStates() {
             var activity = statistics.current.producers[building.kind, default: ProducerActivity()]
             switch state {
             case .working: activity.working += 1
@@ -107,6 +105,24 @@ extension World {
             }
             statistics.current.producers[building.kind] = activity
         }
+    }
+
+    /// Every operational player producer and what it is doing, in entity order.
+    private func playerProducerStates() -> [(Building, ProducerState)] {
+        operationalProducersInEntityOrder().compactMap { building in
+            guard building.owner == .player, let recipe = Self.activeRecipe(of: building) else { return nil }
+            return (building, producerState(of: building, recipe: recipe))
+        }
+    }
+
+    /// Player producers stopped now because their output has nowhere to
+    /// go, by the good that is stuck. The same rule the history samples.
+    public var stuckProducerCounts: [Good: Int] {
+        var counts: [Good: Int] = [:]
+        for case let (_, .stuck(good)) in playerProducerStates() {
+            counts[good, default: 0] += 1
+        }
+        return counts
     }
 
     private enum ProducerState: Equatable {

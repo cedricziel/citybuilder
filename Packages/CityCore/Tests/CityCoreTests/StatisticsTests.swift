@@ -380,3 +380,17 @@ func theStuckGoodIsTheOneTheProducerHoldsMostOf() {
     #expect(flows[.bread]?.stuckSamples == 1)
     #expect(flows[.flour]?.stuckSamples == nil)
 }
+
+@Test("stuck producers are counted by the good that is stuck")
+func stuckProducersAreCountedByTheGoodThatIsStuck() {
+    var world = grassWorld()
+    #expect(world.stuckProducerCounts.isEmpty)
+    _ = bakery(in: &world, flour: 1, bread: 15)
+    let second = world.testPlace(.bakery, at: TileCoordinate(x: 8, y: 2), owner: .player)
+    world.stockpiles[second] = Stockpile(capacity: 16)
+    world.stockpiles[second]?.deposit(.flour, amount: 1)
+    world.stockpiles[second]?.deposit(.bread, amount: 15)
+    world.testPlace(.farm, at: TileCoordinate(x: 14, y: 2), owner: .player)
+    _ = world.testRun(ticks: 5)
+    #expect(world.stuckProducerCounts == [.bread: 2])
+}

@@ -21,7 +21,8 @@ public struct GoodFlow: Codable, Hashable, Sendable {
         usedByHouses + usedByProduction + usedByConstruction
     }
 
-    var isEmpty: Bool {
+    /// Nothing made, used, sold, bought, stored or stuck.
+    public var isEmpty: Bool {
         self == GoodFlow()
     }
 }
