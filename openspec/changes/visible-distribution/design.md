@@ -30,12 +30,16 @@ The logistics today, from `World+Carriers.swift`, `World+Supply.swift` and `Worl
 For each unit a producer sends, it looks for a destination in this order:
 
 1. **A waiting construction site** that still needs the good. This is unchanged.
-2. **A short consumer.** It must be operational, have the same owner, and share the producer's road network. Its recipe inputs or fuel include the good, and its stock plus inbound units is below twice the recipe amount. This is the same threshold `needsSupply` uses today. The nearest one by road path wins; ties go to the lower entity ID.
+2. **A short consumer**, unless the good is a construction material or a house need (see below). It must be operational, have the same owner, and share the producer's road network. Its recipe inputs or fuel include the good, and its stock plus inbound units is below twice the recipe amount. This is the same threshold `needsSupply` uses today. The nearest one by road path wins; ties go to the lower entity ID.
 3. **The nearest goods buffer with room.** This is unchanged, except as D5 adds for milestone 2.
 
 **New mission.** Deliveries in step 2 use a new mission case, `.deliverToConsumer(good:amount:fromProducer:toConsumer:)`. On arrival it deposits into the consumer's stockpile.
 
 **No double supply.** `supplyCarrierCount(to:)` counts these deliveries as inbound, so a consumer fed directly does not also get a supply carrier for the same need.
+
+**Storage goods skip step 2.** Construction materials (wood, planks, iron: any good a building costs) and goods a house tier of the owner's culture needs always go to storage. Building placement and house consumption draw on storage, and a workshop taking them at the source starves both.
+- *Evidence:* the first M1 build sent every good to short consumers. Lumberjack wood went to sawmills and charcoal burners before storage. The mid-game pacing sweep lost its first merchant in 61 of 180 arms, and bankruptcies rose from 7 to 27 of 180. The guided first-hour sweep lost residents in 14 of 20 games. A probe of normal/single-island/careful seed 0 showed the town never building its bakery or a second sawmill, with wood in storage near 0 for two years.
+- With storage goods excluded, the same probe reaches the Renaissance at 3.75 years as on main. What still hops is the intermediates: grain → windmill, flour → bakery, ore and charcoal → smelter, hops → brewery and the like. That is the chain the owner asked to see.
 
 *Why:* this is the smallest rule that makes chains visible, and it reuses the existing shortage threshold, so consumers neither starve nor hoard.
 
@@ -43,17 +47,20 @@ For each unit a producer sends, it looks for a destination in this order:
 
 ### D2. Distances without a search per pair (milestone 1)
 
-A short consumer is chosen by road distance. Pathfinding to every candidate, for every producer, every tick, costs too much on the archipelago.
+A short consumer is chosen by road distance.
 
-- Per tick, list the short consumers per good once, in entity order.
-- From each producer's road, run one breadth-first search that stops at the first road tile adjacent to any short consumer of the good.
-- Cache the result per (producer, good) until `RoadGraph.generation` or the short set changes.
+- Per tick, list the consumers per good once, in entity order.
+- A producer with output paths only to the consumers that are short right now, the same per-candidate search it already runs toward each goods buffer. Paths between islands are refused without a search.
+- Shortness is checked live, so a unit dispatched earlier in the tick counts as inbound for the next producer.
 
-That costs one search per producer with output, about the same as today's search toward the nearest buffer.
+The candidate list is small: only consumers of the good that are short. Measured in a release build after a 12,000-tick guided bot game (seed 3), the mean tick went from 0.9 to 1.2 ms on a single island and from 2.0 to 1.9 ms on the archipelago, against a 100 ms budget. So the single-search-plus-cache variant stays in reserve for when profiling asks for it.
 
 ### D3. Market hubs (milestone 2)
 
 - **What counts as a hub:** a town center or a `marketplace`, the player's or a rival's. The marketplace is a new building, smaller and cheaper than a town center, so a town can grow beyond one hub. It gets its own canvas, cost and research gate before milestone 2 starts.
+- **The marketplace building (M2b):** id `marketplace` (`BuildingKind.marketplace`). Its look is option B from the canvas at https://claude.ai/artifact/XtPfzGyD3oVW5juaZgzP1f: an open market hall on posts with stalls, 2 × 2 tiles, with culture variants. The sprites are `building-marketplace` and `building-marketplace-<culture>`, made by the art agent.
+  - **Where porters leave and return:** the building's normal road-access tile, the first road tile next to the footprint (`anyAdjacentRoad`), as for every other carrier. There is no fixed entrance side, so the hall reads as open from every edge.
+  - Porters never enter the footprint. Idle porters are not drawn.
 - **Shipping together:** milestone 2a (the town center as hub) and 2b (the marketplace) land in the same milestone sequence. The player never gets a build where the town center is the only hub, because one hub can't feed a large merchant town (see Risks, Throughput).
 - **Hub radius:** a hub serves the houses whose road path to it is at most `radius` road tiles, read from the hub building's game data (D9). The starting value is 18. A house within reach of several hubs is served by the nearest; ties go to the lower ID.
 - **Hub stock:** hubs keep their goods-buffer role. In addition, house goods prefer them:
@@ -150,6 +157,12 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
 - **Rival viability:** rivals now depend on porters too (D11). *Acceptance:* the rival-viability sweep stays green.
 - **First hour (milestone 2):** a starting town has to be fully covered by its town center hub. *Acceptance:* the first-hour guided sweep stays at 0 of 20 bankruptcies.
 - **Intermediates in storage (milestone 1):** fewer intermediates reach warehouses, so sales at the market shift. Watch the first-hour solvency sweep.
+  - *M1 result*, PlayerBot sweeps on main 334c173d against the M1 branch, release build:
+    - First-hour solvency with the market: 0/20 bankrupt on both.
+    - Guided Hard start: 0/20 bankrupt on both, with residents at tick 12,000 identical (min 29, median 52.5).
+    - Rival viability: identical (year 5 min 15, median 59.5).
+    - Mid-game pacing (a measurement, not a gate): the first merchant came sooner (median 3.95 years against 4.2), but fewer arms reached one (112 of 180 against 120), and bankruptcies rose from 7 to 17 of 180, mostly in the naive build order.
+    - A probe of normal/single-island/naive seed 5 shows the mechanism. Iron reaches storage earlier, so the naive bot builds a toolsmith before a brewery, runs short of cash and never gets the beer merchants need. That is build-order sensitivity in the bot, for designer2 to weigh in the pacing work, rather than a starved chain.
 - **Performance:** D2's search is per producer with output. Porters add at most 8 carriers per hub. The carrier count stays within today's peak, since direct hops shorten trips.
 - **Visual clutter:** more figures on roads. Carts reduce the count on long hauls, and walker density limits still apply.
 

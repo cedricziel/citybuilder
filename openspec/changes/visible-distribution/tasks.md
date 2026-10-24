@@ -5,11 +5,11 @@
 
 ## 1. Milestone 1: direct chain hops
 
-- [ ] 1.1 Spec delta (`warehouses-and-logistics` / Producers deliver to short consumers); tests-first, confirm red
-- [ ] 1.2 `.deliverToConsumer` mission, destination order (D1), inbound counting in supply
-- [ ] 1.3 Short-consumer search per tick (D2)
-- [ ] 1.4 Determinism baseline regenerated; CityCore 100 % diff coverage
-- [ ] 1.5 PlayerBot sweeps before and after (first-hour solvency, rivals, pacing)
+- [x] 1.1 Spec delta (`warehouses-and-logistics` / Producers deliver to short consumers); tests-first, confirm red
+- [x] 1.2 `.deliverToConsumer` mission, destination order (D1), inbound counting in supply
+- [x] 1.3 Short-consumer search per tick (D2)
+- [x] 1.4 Determinism baseline regenerated; CityCore 100 % diff coverage
+- [x] 1.5 PlayerBot sweeps before and after (first-hour solvency, rivals, pacing)
 
 ## 2. Milestone 3: handcarts
 
