@@ -1,0 +1,21 @@
+.cb-standing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.cb-standing--player {
+  font-weight: 700;
+}
+
+.cb-standing__dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.cb-standing__name {
+  flex: 1;
+}

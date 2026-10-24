@@ -1,15 +1,30 @@
+/* The HUD layer: 16pt margins (8 on a phone), the top bar, then a middle row of the stocks tray and
+   banners beside the right column, with the build controls on the left edge or along the bottom. */
 .cb-game {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
   padding: 16px;
   pointer-events: none;
 }
 
+.cb-game--phone {
+  padding: 8px;
+}
+
 .cb-game > * {
+  pointer-events: none;
+}
+
+.cb-game * > .cb-glass,
+.cb-game .cb-status-pill,
+.cb-game .cb-hud-cluster__row,
+.cb-game .cb-session-banner,
+.cb-game .cb-rejection,
+.cb-game .cb-first-steps-capsule,
+.cb-game .cb-button {
   pointer-events: auto;
 }
 
@@ -17,23 +32,105 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  align-self: stretch;
 }
 
-/* A zero-height anchor under the palette: the guide floats at the right over the map, and the
-   banners and captions keep their places. */
-.cb-game__first-steps {
-  position: relative;
-  align-self: stretch;
-  height: 0;
-  margin-bottom: -8px;
-  z-index: 1;
+.cb-game__top-side {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.cb-game__first-steps > * {
+.cb-game__top-side--end {
+  justify-content: flex-end;
+}
+
+/* The rail takes the left 76pt and an 8pt gap; everything under the top bar keeps clear of it. */
+.cb-game--rail .cb-game__middle,
+.cb-game--rail .cb-game__bottom {
+  margin-left: 84px;
+}
+
+.cb-game--rail.cb-game--phone .cb-game__middle,
+.cb-game--rail.cb-game--phone .cb-game__bottom {
+  margin-left: 64px;
+}
+
+.cb-game__middle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.cb-game__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.cb-game__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* The rail is centred on the left edge, its open drawer beside it. */
+.cb-game__rail {
   position: absolute;
   top: 0;
-  right: 0;
+  bottom: 0;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-game--phone .cb-game__rail {
+  left: 8px;
+}
+
+.cb-game__bottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.cb-game__bottom-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cb-game__dock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-game__dock > .cb-game__inspector {
+  align-self: stretch;
+}
+
+.cb-game__inspector {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.cb-game__placing {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translate(-130px, -104px);
 }
 
 /* Over the ghost and clear of the placement HUD's upper arrows. */
@@ -45,34 +142,11 @@
   pointer-events: none;
 }
 
-.cb-game > .cb-palette {
-  align-self: stretch;
-}
-
-.cb-game__spacer {
-  flex: 1 1 auto;
-  pointer-events: none;
-}
-
-.cb-game__bottom {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  align-self: stretch;
-}
-
-.cb-game__placing {
-  position: absolute;
-  left: 50%;
-  top: 62%;
-  transform: translate(-130px, -104px);
-}
-
 .cb-game__coachmark {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 24px;
+  bottom: 96px;
   display: flex;
   justify-content: center;
 }

@@ -1,0 +1,54 @@
+.cb-market {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 340px;
+}
+
+.cb-market__header {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.cb-market__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cb-market__text {
+  font-family: var(--cb-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.cb-market__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+}
+
+/* SwiftUI's borderless button: accent text, dimmed when disabled. */
+.cb-market__button,
+.cb-market__others {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cb-accent);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cb-market__button:disabled {
+  color: var(--cb-tertiary-label);
+  cursor: default;
+}
+
+.cb-market__others {
+  align-self: stretch;
+  text-align: left;
+}

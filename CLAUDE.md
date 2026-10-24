@@ -26,4 +26,4 @@ The "Citybuilder" design system (https://claude.ai/artifact/4jaGCEE3CUjDaC6G1LKb
 
 1. **Update `design/web` in the same PR.** A visual change to an art family, a HUD element, a sheet, a banner or an icon isn't done until its `design/web` counterpart exists or matches the game: the component in `design/web/src/components/`, its preview in `.design-sync/previews/`, and the sprite or icon source in `design/web/scripts/gen-sprites.mjs`. Keep `npm run typecheck` and `npm run build` in `design/web` green.
 2. **Say so in the PR.** Put a `## Design system` section in the PR body naming the `design/web` components you added or changed, or "none" with the reason.
-3. **Republish after merge.** Once the PR is on `main`, republish the changed components to the design system from `design/web`, one component at a time, updating the artifact in place.
+3. **Republish after merge.** Once the PR is on `main`, republish the changed components to the design system from `design/web`, one component at a time, updating the artifact in place. `npm run ds:build` in `design/web` builds the files; `design/web/scripts/design-system/README.md` has the steps.

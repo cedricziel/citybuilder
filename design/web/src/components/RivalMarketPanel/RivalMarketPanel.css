@@ -1,0 +1,23 @@
+.cb-rival-market {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cb-rival-market__header {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.cb-rival-market__sub {
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 700;
+}
+
+.cb-rival-market__line {
+  font-family: var(--cb-font-mono);
+  font-size: 12px;
+  line-height: 16px;
+}

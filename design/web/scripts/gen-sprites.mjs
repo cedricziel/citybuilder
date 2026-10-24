@@ -124,6 +124,32 @@ writeFileSync(
   `import type { buildingSpritesKey } from "./buildings";\n// Footprint in tiles: [columns along x, rows along y].\nexport const buildingFootprints: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingFootprints)};\n`,
 );
 
+// Figures and ships, every animation frame: `walker-ne-0` … `walker-ne-7` become `walker-ne: [8 frames]`,
+// with each cycle's frame size.
+const unitFrames = {};
+const unitSizes = {};
+for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.localeCompare(b, "en", { numeric: true }))) {
+  const match = /^((?:walker|carrier|animal|ship)-[a-z-]+)-(\d+)\.png$/.exec(file);
+  if (!match) continue;
+  const png = readFileSync(join(resources, "Kit.atlas", file));
+  (unitFrames[match[1]] ??= [])[Number(match[2])] = `data:image/png;base64,${png.toString("base64")}`;
+  unitSizes[match[1]] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+}
+// No match would emit `export type unitSpritesKey = ;`, and a missing frame a hole in a cycle; stop with a reason.
+if (Object.keys(unitFrames).length === 0) {
+  throw new Error("gen-sprites: no walker, carrier, animal or ship frames (`<name>-<n>.png`) in Resources/Kit.atlas");
+}
+for (const [cycle, frames] of Object.entries(unitFrames)) {
+  const missing = Array.from(frames.keys()).filter((index) => frames[index] === undefined);
+  if (missing.length > 0) throw new Error(`gen-sprites: ${cycle} is missing frame(s) ${missing.join(", ")} in Resources/Kit.atlas`);
+}
+writeFileSync(
+  join(out, "units.ts"),
+  `export type unitSpritesKey = ${Object.keys(unitFrames).map((key) => JSON.stringify(key)).join(" | ")};\n` +
+    `export const unitSprites: Record<unitSpritesKey, string[]> = ${JSON.stringify(unitFrames)};\n` +
+    `export const unitSizes: Record<unitSpritesKey, [number, number]> = ${JSON.stringify(unitSizes)};\n`,
+);
+
 // The app icon (`scripts/art/app_icon.py`): the gable house on its grass plot, at the macOS 256 px
 // size, which carries its own rounded square.
 const appIcon = readFileSync(join(repo, "Apps/CitybuilderMac/Assets.xcassets/AppIcon.appiconset/icon-256.png"));
@@ -134,5 +160,6 @@ writeFileSync(
 
 console.log(
   `sprites: ${Object.keys(goods).length} goods, ${Object.keys(buildings).length} buildings (${Object.keys(lights).length} lit), ` +
-    `${Object.keys(terrain).length} terrain tiles, ${Object.keys(terrainObjects).length} terrain objects`,
+    `${Object.keys(terrain).length} terrain tiles, ${Object.keys(terrainObjects).length} terrain objects, ` +
+    `${Object.keys(unitFrames).length} unit cycles (${Object.values(unitFrames).reduce((sum, frames) => sum + frames.length, 0)} frames)`,
 );
