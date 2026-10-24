@@ -82,7 +82,7 @@ extension World {
                     let short = amount * 2 - (stockpiles[consumer.id]?.quantity(of: good) ?? 0)
                         - inboundUnits(to: consumer.id, good: good)
                     let held = stockpiles[bufferID]?.quantity(of: good) ?? 0
-                    let haul = CarrierConfig.haul(ready: min(held, short), along: path)
+                    let haul = CarrierConfig.haul(ready: min(held, short), along: path) ?? (1, .onFoot)
                     dispatchSupply(
                         good, from: bufferID, to: consumer.id, along: path,
                         haul: haul, events: &events

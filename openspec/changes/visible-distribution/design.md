@@ -90,6 +90,8 @@ That costs one search per producer with output, about the same as today's search
 
 *Why this rule:* it is decided entirely from integer state the source already has, so it stays deterministic. It also means a cart never leaves half-empty on a short trip.
 
+*Waiting for a load (found in milestone 3):* a producer ships each unit as soon as it is ready, so its stock never reaches 3, and carts never appeared on producer hauls. On a haul of 12 tiles or more, a producer now waits for a cart load before it sends anything to storage. Supply to a consumer never waits; it uses a cart only when the consumer is short of 3 or more, which needs a recipe that takes 2 at a time. The edge case: a producer that stops producing, such as a lumberjack whose forest is gone, keeps its last one or two units.
+
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
 ### D6. Saves

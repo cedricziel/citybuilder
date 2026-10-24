@@ -60,15 +60,18 @@ func scenarioAShortHaulStaysOnFoot() throws {
     #expect(vehicle == .onFoot)
 }
 
-@Test("scenario: a long haul with too little ready stays on foot")
-func scenarioALongHaulWithTooLittleReadyStaysOnFoot() throws {
+@Test("scenario: a long haul to storage waits for a cart load")
+func scenarioALongHaulToStorageWaitsForACartLoad() throws {
     var world = roadStrip()
     let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 2])
     let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
     world.tick()
+    #expect(world.carriers.isEmpty)
+    _ = world.stockpiles[hut]?.deposit(.wood, amount: 1)
+    world.tick()
     let (mission, vehicle) = try #require(departures(in: world).first)
-    #expect(mission == .deliver(good: .wood, amount: 1, fromProducer: hut, toWarehouse: warehouse))
-    #expect(vehicle == .onFoot)
+    #expect(mission == .deliver(good: .wood, amount: 3, fromProducer: hut, toWarehouse: warehouse))
+    #expect(vehicle == .handcart)
 }
 
 @Test("a handcart takes no more than the buffer has room for")

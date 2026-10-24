@@ -150,7 +150,11 @@ extension World {
                 )
                 else { continue }
                 let room = stockpiles[warehouseId]?.freeSpace ?? 0
-                let haul = CarrierConfig.haul(ready: min(producerStock.quantity(of: good), room), along: path)
+                // A long haul to storage waits for a cart load.
+                guard let haul = CarrierConfig.haul(
+                    ready: min(producerStock.quantity(of: good), room), along: path, waitForLoad: true
+                )
+                else { continue }
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,

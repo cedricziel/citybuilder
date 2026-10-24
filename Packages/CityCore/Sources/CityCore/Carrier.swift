@@ -78,9 +78,14 @@ public enum CarrierConfig {
 
     /// What one haul along `path` takes when `ready` units could go: a
     /// handcart with up to `cartCapacity` on a long haul with enough
-    /// ready, else one unit on foot.
-    static func haul(ready: Int, along path: [TileCoordinate]) -> (amount: Int, vehicle: Carrier.Vehicle) {
-        guard path.count - 1 >= cartDistance, ready >= cartMinLoad else { return (1, .onFoot) }
+    /// ready, else one unit on foot. With `waitForLoad`, a long haul with
+    /// too little ready takes nothing yet (nil), so the goods wait for a
+    /// cart load instead of trickling out on foot.
+    static func haul(
+        ready: Int, along path: [TileCoordinate], waitForLoad: Bool = false
+    ) -> (amount: Int, vehicle: Carrier.Vehicle)? {
+        guard path.count - 1 >= cartDistance else { return (1, .onFoot) }
+        guard ready >= cartMinLoad else { return waitForLoad ? nil : (1, .onFoot) }
         return (min(ready, cartCapacity), .handcart)
     }
 }
