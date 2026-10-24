@@ -28,7 +28,7 @@ enum Cloth {
 
 /// What a figure carries.
 enum Load {
-    case none, basket, sack, crate, barrel, logs
+    case none, basket, sack, crate, barrel, logs, push, yoke
 }
 
 enum Headwear {
@@ -153,6 +153,12 @@ extension Builder {
         case (.sack, true), (.crate, true), (.barrel, true), (.logs, true):
             // Right elbow out in front, the hand up on the shouldered load.
             return (top + SCNVector3(0.18, -0.10, 0.08), top + SCNVector3(0.08, 0.28, 0.02))
+        case (.push, _):
+            // Both hands forward at the hips, on the cart's handles.
+            return (top + SCNVector3(0.16, -0.24, side * 0.03), top + SCNVector3(0.42, -0.44, side * 0.04))
+        case (.yoke, true):
+            // Right hand up on the pole over the shoulder.
+            return (top + SCNVector3(0.16, -0.06, 0.04), top + SCNVector3(0.10, 0.12, 0.10))
         case (.basket, false):
             // Left elbow out to the side, the hand up steadying the basket on the head.
             return (top + SCNVector3(0.10, 0.04, -0.14), top + SCNVector3(0.06, 0.36, 0.04))
@@ -184,8 +190,10 @@ extension Builder {
     private func carry(_ fig: Figure, shoulder: SCNVector3, headTop: CGFloat) {
         let right = shoulder + SCNVector3(-0.02, 0.12, 0.17)
         switch fig.load {
-        case .none:
+        case .none, .push:
             break
+        case .yoke:
+            yoke(shoulder: shoulder)
         case .basket:
             let base = SCNVector3(0.02, headTop + 0.02, 0)
             add(
@@ -224,6 +232,27 @@ extension Builder {
                     euler: SCNVector3(0, 0, CGFloat.pi / 2 - 0.12)
                 )
             }
+        }
+    }
+
+    /// A pole across the shoulders with a basket of loaves hanging from each end.
+    private func yoke(shoulder: SCNVector3) {
+        let pole = SCNVector3(0.02, shoulder.y + 0.1, 0)
+        add(
+            SCNCylinder(radius: 0.03, height: 1.25),
+            Finish.paint(Cloth.bark).material(),
+            at: pole,
+            euler: SCNVector3(CGFloat.pi / 2, 0, 0)
+        )
+        for side in [CGFloat(-1), 1] {
+            let end = pole + SCNVector3(0, 0, side * 0.58)
+            limb(end, end + SCNVector3(0, -0.5, 0), radius: 0.01, Cloth.straw)
+            add(
+                SCNCone(topRadius: 0.2, bottomRadius: 0.14, height: 0.24),
+                Finish.paint(Cloth.wicker).material(),
+                at: end + SCNVector3(0, -0.62, 0)
+            )
+            ball(end + SCNVector3(0, -0.5, 0), radius: 0.15, Cloth.loaf, scale: SCNVector3(1, 0.4, 1))
         }
     }
 
