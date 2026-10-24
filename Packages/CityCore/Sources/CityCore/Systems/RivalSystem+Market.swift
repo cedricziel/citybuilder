@@ -14,11 +14,9 @@ extension RivalAI {
     static let feedUnits = 5
     /// Goods a rival in need sells, in this order.
     static let saleOrder: [Good] = [.planks, .wood, .food]
-    /// Below this much room for planks, or for wood, across its stores a
-    /// rival sells surplus of that good, keeping this many
+    /// Planks and wood a rival sells when its stores have room for less
+    /// than a quarter of their limit for that good, keeping half the limit
     /// (`rival-surplus-sales` D1, per good since `per-good-storage`).
-    static let crowdedRoom = 20
-    static let keepSurplus = 60
     static let surplusGoods: [Good] = [.planks, .wood]
 }
 
@@ -35,8 +33,11 @@ extension World {
                 if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
             }
         }
-        for good in RivalAI.surplusGoods where turn.surplusRoom[good, default: 0] < RivalAI.crowdedRoom {
-            let units = min(turn.ownStock[good, default: 0] - RivalAI.keepSurplus, rival.market.left(good, .sold))
+        for good in RivalAI.surplusGoods {
+            let limit = turn.surplusLimit[good, default: 0]
+            guard turn.surplusRoom[good, default: 0] * 4 < limit else { continue }
+            let kept = limit / 2
+            let units = min(turn.ownStock[good, default: 0] - kept, rival.market.left(good, .sold))
             if units > 0 { return [.rivalMarketSell(rival.id, good, units)] }
         }
         if turn.stock[.food, default: 0] < 4, turn.hasHouseShortOfFood, rival.treasury >= RivalAI.feedThreshold {

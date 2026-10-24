@@ -133,11 +133,12 @@ func clearingTheStoreSellsFromTheTownCenterFirst() throws {
 
 @Test("scenario: rival sells surplus planks from crowded stores")
 func scenarioRivalSellsSurplusPlanksFromCrowdedStores() throws {
-    // Planks fill the town center and all but 19 of the warehouse beside
-    // it, so the rival sells the season's 20 of its 101.
-    var crowded = try crowdedRival(planks: 101).world
+    // Planks fill the town center and all but 29 of the warehouse beside
+    // it, under a quarter of the 120 they hold, so the rival sells the
+    // season's 20 of its 91.
+    var crowded = try crowdedRival(planks: 91).world
     #expect(crowded.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
-    var roomy = try crowdedRival(planks: 100).world
+    var roomy = try crowdedRival(planks: 90).world
     #expect(rivalTrades(roomy.takeTurn(1)).isEmpty)
 }
 
@@ -157,23 +158,25 @@ private func crowdedRival(planks: Int, wood: Int = 0) throws -> (world: World, w
     return (world, warehouse)
 }
 
-@Test("surplus sales start below 20 units of room for the good")
-func surplusSalesStartBelow20UnitsOfRoomForTheGood() throws {
+@Test("surplus sales start below a quarter of the room for the good")
+func surplusSalesStartBelowAQuarterOfTheRoomForTheGood() throws {
     #expect(storesLimit == 120)
-    var crowded = try crowdedRival(planks: 101, wood: 100).world
+    var crowded = try crowdedRival(planks: 91, wood: 90).world
     #expect(crowded.takeTurn(1) == [.rivalMarketSell(1, .planks, 20)])
-    var roomy = try crowdedRival(planks: 100, wood: 100).world
+    var roomy = try crowdedRival(planks: 90, wood: 90).world
     #expect(rivalTrades(roomy.takeTurn(1)).isEmpty)
 }
 
-@Test("surplus sales keep 60 units")
-func surplusSalesKeep60Units() {
-    // A town center alone, full of planks: no room left, but 40 is less
-    // than the 60 a rival keeps.
-    var world = normalWorld()
-    world.setRival(1) { $0.treasury = 5000 }
-    world.setRivalStock(1, [.food: 10, .planks: 40])
-    #expect(rivalTrades(world.takeTurn(1)).isEmpty)
+@Test("surplus sales keep half of what the stores hold")
+func surplusSalesKeepHalfOfWhatTheStoresHold() throws {
+    // A town center alone, nearly full of planks: it keeps 20 of its 31.
+    var alone = normalWorld()
+    alone.setRival(1) { $0.treasury = 5000 }
+    alone.setRivalStock(1, [.food: 10, .planks: 31])
+    #expect(alone.takeTurn(1) == [.rivalMarketSell(1, .planks, 11)])
+    // With a warehouse too, 61 planks crowd nothing; full wood sells.
+    var kept = try crowdedRival(planks: 61, wood: 120).world
+    #expect(kept.takeTurn(1) == [.rivalMarketSell(1, .wood, 20)])
 }
 
 @Test("a rival with surplus wood only sells wood")

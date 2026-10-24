@@ -92,8 +92,9 @@ struct RivalTurn {
     /// The town center's stockpile, where market purchases go.
     var center = Stockpile(capacity: 0)
     /// Room for each surplus good across the rival's operational goods
-    /// buffers.
+    /// buffers, and their limit for it.
     var surplusRoom: [Good: Int] = [:]
+    var surplusLimit: [Good: Int] = [:]
     /// Goods in those buffers: what a sale draws on. The island stock
     /// also counts the player's stores on the island.
     var ownStock: [Good: Int] = [:]
@@ -149,9 +150,10 @@ struct RivalTurn {
         }
     }
 
-    /// True when the town center has no room for the farms' food.
+    /// True when the town center has almost no room left for some good,
+    /// so its farms, huts or sawmill will soon have nowhere to send it.
     var storeFull: Bool {
-        center.room(for: .food) < RivalAI.fullStoreSpace
+        Good.allCases.contains { center.room(for: $0) < RivalAI.fullStoreSpace }
     }
 
     /// True when the town center is full and no warehouse stands or is
@@ -274,7 +276,9 @@ extension World {
             let isStore = building.state == .operational && Self.logisticsBufferKinds.contains(building.kind)
             if isStore, let pile = stockpiles[building.id] {
                 for good in RivalAI.surplusGoods {
-                    turn.surplusRoom[good, default: 0] += pile.room(for: good)
+                    let room = pile.room(for: good)
+                    turn.surplusRoom[good, default: 0] += room
+                    turn.surplusLimit[good, default: 0] += room + pile.quantity(of: good)
                 }
                 turn.ownStock.merge(pile.contents) { $0 + $1 }
             }
