@@ -26,6 +26,28 @@
   the nudge arrows don't cover the armed caption. A custom `world.map`/`buildings` must leave (4,4)-(5,5) free.
 - npm here blocks install scripts (`allow-scripts`); esbuild still works through its platform package.
 
+- `gen-sprites.mjs` also inlines the goods icons as their hand-authored SVG (`scripts/art/goods_icons.py`, run with
+  `python3`; it falls back to the @2x PNGs without it), each lit building's `-lights-0` mask, the ground tiles with
+  their grass variants and shore transitions, the tree and rock objects (144x132 cells), and the macOS 256 px app icon.
+- `WorldBackdrop` ports the world view's ground rules from CityRender2D (`terrain.ts`): grass variants by tile hash,
+  corner-mask shore transitions, and forest and rock density by distance to the region's edge. Deep rock picks tall
+  tors by tile hash where the game reads world noise, so a backdrop's tors don't match the game tile for tile.
+- `npm run typecheck` also typechecks these previews (`design/web/tsconfig.previews.json`), so CI catches a preview
+  that names a sprite or prop that no longer exists.
+
+## Second sync (2026-10-24)
+
+Caught up with main after two weeks of drift: SVG goods icons, Kit.atlas buildings with footprints and night lights,
+trees, rocks and shore transitions in the backdrop, the area-of-effect ring and count capsule (#242), the first-steps
+card and capsule, the idle-good and deficit banners, the build drawer with "Needs <Tech>" captions, the inspector's
+"Next:" and "Resting:" lines, and the app icon. The design system was republished by hand, component by component,
+in the migrated layout it already had (`_ds_bundle.js`, `_preview/<Name>.js`, `components/<group>/<Name>/`), not by
+`/design-sync`.
+
+Not recreated yet: the build rail and HUD dock (the game replaced the horizontal palette with a left rail and category
+drawers; `BuildPalette` and `GameScreen` still show the old strip), the minimap, the tool strip, the stocks tray, the
+market and rival panels, and walkers, carriers, animals and ships.
+
 ## Known render warns
 
 - None at the first sync.
