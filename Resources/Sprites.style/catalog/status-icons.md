@@ -24,6 +24,8 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-bread-stuck`
 - `status-charcoal-short`
 - `status-charcoal-stuck`
+- `status-cloth-short`
+- `status-cloth-stuck`
 - `status-coffee-cherries-short`
 - `status-coffee-cherries-stuck`
 - `status-coffee-short`
@@ -59,6 +61,8 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-wine-stuck`
 - `status-wood-short`
 - `status-wood-stuck`
+- `status-wool-short`
+- `status-wool-stuck`
 
 ## Recipe
 
