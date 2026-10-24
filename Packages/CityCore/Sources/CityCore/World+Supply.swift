@@ -102,7 +102,9 @@ extension World {
     }
 
     func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
-        guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
+        let inbound = supplyCarrierCount(to: consumer)
+        // Every unit on the way needs room on arrival, or it is lost.
+        guard inbound < CarrierConfig.perProducerCap, (stockpiles[consumer]?.freeSpace ?? 0) > inbound else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
     }

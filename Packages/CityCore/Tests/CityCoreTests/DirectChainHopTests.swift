@@ -106,6 +106,20 @@ func scenarioTiesGoToTheLowerEntityID() {
     ])
 }
 
+@Test("a consumer with no room left gets no delivery")
+func aConsumerWithNoRoomLeftGetsNoDelivery() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
+    world.stockpiles[bakery] = Stockpile(capacity: 4)
+    _ = world.stockpiles[bakery]?.deposit(.bread, amount: 4)
+    world.tick()
+    #expect(missions(from: windmill, in: world) == [
+        .deliver(good: .flour, amount: 1, fromProducer: windmill, toWarehouse: warehouse)
+    ])
+}
+
 @Test("scenario: construction materials still go to storage")
 func scenarioConstructionMaterialsStillGoToStorage() {
     var world = roadStrip()
