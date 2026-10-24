@@ -35,7 +35,7 @@ struct PlayerBot {
     mutating func takeTurn(_ world: inout World) {
         let stock = world.islandStockpile(at: center.anchor, tileToIsland: world.tileToIslandMap())
         if sellAtMarket(in: &world, stock: stock) { return }
-        if midGame != nil { chooseResearch(in: &world) }
+        if midGame != nil { chooseResearch(in: &world, stock: stock) }
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
         if followIdleGoodHint(in: &world, plan: &plan, stock: stock) { return }
@@ -48,7 +48,8 @@ struct PlayerBot {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
         }
         guard !town.waiting else { return }
-        for kind in missingMidGameKinds(in: world, town: town) where place(kind, in: &world, plan: &plan, stock: stock) {
+        let chain = missingMidGameKinds(in: world, town: town) + missingWoolChainKinds(in: world, town: town, stock: stock)
+        for kind in chain where place(kind, in: &world, plan: &plan, stock: stock) {
             return
         }
         if RivalAI.scriptKind(at: script.scriptIndex) == .house, town.houses >= Self.houseCap {

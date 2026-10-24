@@ -3,21 +3,55 @@ import Foundation
 
 /// The PlayerBot's opt-in mid-game kit (#186): research toward the tools,
 /// bread and luxury chains and the Renaissance, then one building of
-/// each chain per 12 houses.
+/// each chain per 12 houses. The wool chain is the exception: it is built
+/// on demand, from the houses that want cloth (#239).
 extension PlayerBot {
     /// Houses before the kit starts building.
     static let midGameHouses = 6
 
     /// Research in this order, each once it can be chosen.
-    static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .printingPress]
+    static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .weaving, .printingPress]
 
     /// Starts the next tech of `midGameResearch` while nothing is being
-    /// researched.
-    func chooseResearch(in world: inout World) {
-        guard world.research.current == nil,
-              let tech = Self.midGameResearch.first(where: { world.canChooseResearch($0) })
+    /// researched; Weaving waits until a house wants cloth.
+    func chooseResearch(in world: inout World, stock: [Good: Int]) {
+        guard world.research.current == nil else { return }
+        let wantsCloth = clothDemand(in: world, stock: stock) > 0
+        guard let tech = Self.midGameResearch.first(where: {
+            world.canChooseResearch($0) && ($0 != .weaving || wantsCloth)
+        })
         else { return }
         world.enqueue(.chooseResearch(tech))
+    }
+
+    /// Houses that want cloth (#239): merchant houses, and full citizens
+    /// houses that already have bread and tools in reach and so lack only
+    /// cloth to become merchants.
+    func clothDemand(in world: World, stock: [Good: Int]) -> Int {
+        let chainsRun = stock[.bread, default: 0] > 0 && stock[.tools, default: 0] > 0
+        return world.buildings.values.reduce(0) { count, building in
+            guard building.owner == .player, building.kind == .house,
+                  let house = world.populations[building.id]
+            else { return count }
+            let wantsCloth = house.tier == .merchants
+                || (chainsRun && house.tier == .citizens && house.population == house.capacity)
+            return count + (wantsCloth ? 1 : 0)
+        }
+    }
+
+    /// The wool chain buildings the town lacks for its cloth demand: one
+    /// weaver per two houses and two sheep farms per weaver, as many as
+    /// the demand wants. `.naive` builds the sheep farms first, `.careful`
+    /// the weaver first.
+    func missingWoolChainKinds(in world: World, town: Town, stock: [Good: Int]) -> [BuildingKind] {
+        guard midGame != nil else { return [] }
+        let weavers = (clothDemand(in: world, stock: stock) + 1) / 2
+        let wanted: [(kind: BuildingKind, count: Int)] = midGame == .careful
+            ? [(.weaver, weavers), (.sheepFarm, 2 * weavers)]
+            : [(.sheepFarm, 2 * weavers), (.weaver, weavers)]
+        return wanted.compactMap { kind, count in
+            town.counts[kind, default: 0] < count && world.research.isAvailable(kind) ? kind : nil
+        }
     }
 
     /// The chain buildings the town lacks, in build order, each unlocked,
@@ -172,7 +206,7 @@ extension PlayerBot {
 
     /// Raw goods the careful kit sells above `keepOnSale` units.
     static func rawSurplus(_ culture: Culture) -> [Good] {
-        [.grain, .ore, .charcoal, culture.luxuryChain.raw]
+        [.grain, .ore, .charcoal, .wool, culture.luxuryChain.raw]
     }
 }
 
