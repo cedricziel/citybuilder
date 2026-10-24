@@ -57,10 +57,9 @@ struct RivalTownPlan {
     /// A hut goes where its catchment holds the most forest, at least
     /// `RivalAI.hutMinForest` tiles.
     private mutating func hutSlot(homeOpen: Bool) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
-        let footprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         let world = world
         return bestSlot(for: .lumberjackHut, homeOpen: homeOpen) { anchor in
-            let forest = world.forestTiles(inCatchmentOf: anchor, footprint: footprint)
+            let forest = world.forestTiles(inCatchmentOf: .lumberjackHut, at: anchor)
             return forest >= RivalAI.hutMinForest ? forest : nil
         }
     }
@@ -73,11 +72,10 @@ struct RivalTownPlan {
         let footprint = BuildingCatalog.spec(for: .forester).footprint
         let world = world
         let isOpen = world.openGrass(for: owner, tileToIsland: tileToIsland)
-        let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
         var hutGrass: [Set<TileCoordinate>] = []
         for hut in world.buildings.values where hut.owner == owner && hut.kind == .lumberjackHut {
             var grass = Set<TileCoordinate>()
-            world.visitCatchment(anchor: hut.anchor, footprint: hutFootprint, where: isOpen) { tile in
+            world.visitCatchment(of: hut.kind, anchor: hut.anchor, where: isOpen) { tile in
                 grass.insert(tile)
                 return true
             }
@@ -88,7 +86,7 @@ struct RivalTownPlan {
         return bestSlot(for: .forester, homeOpen: homeOpen) { anchor in
             let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
             var shared = [Int](repeating: 0, count: hutGrass.count)
-            world.visitCatchment(anchor: anchor, footprint: footprint, where: anyHutGrass.contains) { tile in
+            world.visitCatchment(of: .forester, anchor: anchor, where: anyHutGrass.contains) { tile in
                 guard !(columns.contains(tile.x) && rows.contains(tile.y)) else { return true }
                 for (index, grass) in hutGrass.enumerated() where grass.contains(tile) {
                     shared[index] += 1

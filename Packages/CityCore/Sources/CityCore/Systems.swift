@@ -34,9 +34,8 @@ extension World {
             // Lumberjack: forest harvested from the world rather than the
             // stockpile, so we accept "no inputs needed" + grass-adjacency
             // proxy by checking adjacent forest tiles.
-            let footprint = BuildingCatalog.spec(for: building.kind).footprint
             let lumberjackHasForest = building.kind == .lumberjackHut
-                ? firstForestInCatchment(anchor: building.anchor, footprint: footprint) != nil
+                ? firstForestInCatchment(of: building.kind, anchor: building.anchor) != nil
                 : true
 
             // Capture the prior-tick stall state so transitions emit
@@ -70,7 +69,7 @@ extension World {
                 for (good, amount) in recipe.outputs {
                     stockpile.deposit(good, amount: amount)
                 }
-                clearHarvestedForest(after: building, footprint: footprint)
+                clearHarvestedForest(after: building)
                 // Shipyard emits a Ship entity on cycle completion.
                 // Spec: `port-and-shipyard` / Shipyard emits ship on
                 // recipe completion. Persist the stockpile mutation
@@ -94,9 +93,9 @@ extension World {
     }
 
     /// A lumberjack's completed cycle clears a forest tile.
-    private mutating func clearHarvestedForest(after building: Building, footprint: Footprint) {
+    private mutating func clearHarvestedForest(after building: Building) {
         guard building.kind == .lumberjackHut,
-              let tile = firstForestInCatchment(anchor: building.anchor, footprint: footprint)
+              let tile = firstForestInCatchment(of: building.kind, anchor: building.anchor)
         else { return }
         terrainGrid[tile.y * mapWidth + tile.x] = .grass
     }

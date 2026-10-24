@@ -50,13 +50,13 @@ private func sharedOpenGrass(forester: TileCoordinate, hut: TileCoordinate, in w
     let footprint = Footprint(width: 2, height: 2)
     let isOpen = world.openGrass(for: .rival(1), tileToIsland: world.tileToIslandMap())
     var hutTiles = Set<TileCoordinate>()
-    world.visitCatchment(anchor: hut, footprint: footprint, where: isOpen) { tile in
+    world.visitCatchment(of: .lumberjackHut, anchor: hut, where: isOpen) { tile in
         hutTiles.insert(tile)
         return true
     }
     let site = Set(footprint.tiles(anchor: forester))
     var shared = 0
-    world.visitCatchment(anchor: forester, footprint: footprint, where: isOpen) { tile in
+    world.visitCatchment(of: .forester, anchor: forester, where: isOpen) { tile in
         if hutTiles.contains(tile), !site.contains(tile) { shared += 1 }
         return true
     }

@@ -120,7 +120,6 @@ func scenarioForesterAndLumberjackHutSustainEachOther() {
     var world = grassWorld(width: 14, height: 12)
     let hut = inject(.lumberjackHut, at: TileCoordinate(x: 4, y: 4), in: &world)
     inject(.forester, at: TileCoordinate(x: 7, y: 4), in: &world)
-    let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
     var cycles = 0
     var harvested = false
     var bareStreak = 0
@@ -130,7 +129,7 @@ func scenarioForesterAndLumberjackHutSustainEachOther() {
         cycles += events.count { $0 == .productionCycleCompleted(producer: hut, kind: .lumberjackHut) }
         world.stockpiles[hut] = Stockpile(capacity: 16)
         harvested = harvested || cycles > 0
-        let trees = world.forestTiles(inCatchmentOf: TileCoordinate(x: 4, y: 4), footprint: hutFootprint)
+        let trees = world.forestTiles(inCatchmentOf: .lumberjackHut, at: TileCoordinate(x: 4, y: 4))
         bareStreak = harvested && trees == 0 ? bareStreak + 1 : 0
         longestBareStreak = max(longestBareStreak, bareStreak)
     }
@@ -251,4 +250,20 @@ func scenarioAForesterWithoutARoadReportsNoIssue() {
     let event = WorldEvent.forestPlanted(at: TileCoordinate(x: 1, y: 2), forester: EntityID(raw: 7))
     #expect(event.primaryEntityID == EntityID(raw: 7))
     #expect(event.buildingKind == nil)
+}
+
+@Test("scenario: hut and forester declare their radius")
+func catchmentRadiusIsGameData() {
+    #expect(BuildingKind.lumberjackHut.catchmentRadius == 2)
+    #expect(BuildingKind.forester.catchmentRadius == 2)
+    #expect(BuildingKind.sawmill.catchmentRadius == nil)
+}
+
+@Test("scenario: the catchment follows the declared radius")
+func catchmentEndsAtTheRadius() {
+    var world = World.fixtureWithTerrain(width: 12, height: 12, fill: .grass, seed: 1)
+    // A 2×2 hut at (4, 4): (2, 4) is 2 tiles from its footprint, (1, 4) is 3.
+    world.terrainGrid[4 * world.mapWidth + 2] = .forest
+    world.terrainGrid[4 * world.mapWidth + 1] = .forest
+    #expect(world.catchmentCount(kind: .lumberjackHut, anchor: TileCoordinate(x: 4, y: 4), owner: .player) == 1)
 }

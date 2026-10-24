@@ -73,7 +73,7 @@ extension World {
                     terrain(at: $0) == .grass && occupiedTiles[$0] == nil
                 }
                 if onFreeGrass {
-                    bestTrees = max(bestTrees, forestTiles(inCatchmentOf: site, footprint: hut))
+                    bestTrees = max(bestTrees, forestTiles(inCatchmentOf: .lumberjackHut, at: site))
                 }
             }
         }

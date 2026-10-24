@@ -208,6 +208,7 @@ public final class TitleScreenViewModel {
         if UITestSeed.opensStocks(fromArguments: arguments) {
             committedSession?.hud.toggleStocksTray()
         }
+        committedSession?.applyTestTool(fromArguments: arguments)
     }
 
     public func commit(world: World) {
