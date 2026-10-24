@@ -54,7 +54,7 @@ Out of scope:
 - **Sequencing:**
   - Implementation starts after visible-distribution M2 (market porters and the marketplace, #238) and the wool → cloth chain (#239) have merged, as #237 asks.
   - Goals are tuned against per-good storage with producer backpressure, direct hops (#232) and porters. Tuning earlier means retuning after every economy change.
-  - Chapters that need a roadmap feature ship in a later milestone than the ones that don't. Those features are orders, events with counterplay, winter needs and transport per age. Design D9 lists what each chapter needs.
+  - Chapters that need a roadmap feature ship in a later milestone than the ones that don't. Those features are orders, events with counterplay, winter needs and transport per age. Design D12 lists what each chapter needs.
 - **CityCore:**
   - `Goal` gains cases, and `GoalState` gains `isBonus` and a holding timer.
   - `World` gains lose conditions, `scenarioLost` and a `scenarioLost` event.

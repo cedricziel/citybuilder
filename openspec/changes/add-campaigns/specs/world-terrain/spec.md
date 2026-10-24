@@ -7,7 +7,7 @@ A new game SHALL be able to carry an ordered list of terrain directives. World g
 The directives are:
 
 - **Thin forest** (island, keep share): on the named island, each forest tile outside the starter grove stays forest only when a hash of the seed and the tile coordinate, taken modulo 100, is below the keep share in percent. Every other forest tile becomes grass.
-- **Clear mountains near the town center** (radius): every mountain tile within the given Chebyshev radius of the player's home town center anchor becomes grass. When this removes the starter mine site, the directive SHALL NOT raise a new one.
+- **Push the mine out** (radius): every mountain tile within the given Chebyshev radius of the player's home town center anchor becomes grass. When the home island then holds no mine site, the starter mine site rule SHALL run again on the home island, considering only candidates farther than the radius from the anchor.
 - **No mountains** (island): every mountain tile on the named island becomes grass.
 - **Raise a mine site** (island): the starter mine site rule runs again for the town center on the named island.
 
@@ -28,10 +28,10 @@ The directives are:
 - **WHEN** two games with the same layout, seed and directives are created
 - **THEN** their terrain is byte-identical
 
-#### Scenario: Clearing mountains near the town center
+#### Scenario: Pushing the mine out
 
-- **WHEN** a single-island game is created with the directive "clear mountains within 24 tiles of the town center"
-- **THEN** no mountain tile lies within 24 tiles of the player's town center anchor, and mountain tiles farther away are unchanged
+- **WHEN** an archipelago game with seed 303 is created with the directive "push the mine out to 16 tiles"
+- **THEN** no mountain tile lies within 16 tiles of the player's home town center anchor, and the home island holds a mine site farther out
 
 #### Scenario: No mountains removes the home mine site
 

@@ -42,9 +42,10 @@ Starting a chapter at a difficulty SHALL create a new world with these propertie
 - its terrain directives applied;
 - its starting money and starting stock for that difficulty, in place of the difficulty's defaults;
 - its pre-researched techs complete;
-- its goals, bonus goals and lose conditions.
+- its goals, bonus goals and lose conditions;
+- for each age, the earliest year a rival may enter it, when the chapter sets one. A rival SHALL then need both its age's residents and that year.
 
-The difficulty SHALL still set upkeep, bankruptcy grace, research cost scaling and history-event odds. Two worlds started from the same chapter at the same difficulty SHALL be equal.
+On Easy, each deadline SHALL fall a third of the chapter's span later, rounded up to a whole year. The difficulty SHALL still set upkeep, bankruptcy grace, research cost scaling and history-event odds. Two worlds started from the same chapter at the same difficulty SHALL be equal.
 
 #### Scenario: Chronicle chapter 1 setup
 
@@ -56,10 +57,20 @@ The difficulty SHALL still set upkeep, bankruptcy grace, research cost scaling a
 - **WHEN** a chapter with 1 rival is started on Hard
 - **THEN** the world has exactly 1 rival
 
+#### Scenario: A rival waits for its year
+
+- **WHEN** a chapter sets 1207 as the earliest year rivals may enter the Renaissance, and a rival has 64 residents in 1204
+- **THEN** the rival stays in the Medieval age until 1207
+
 #### Scenario: Fixed culture ignores the player's pick
 
 - **WHEN** Hard Ground chapter 1, fixed to Northern European, is started after the player last chose East Asian
 - **THEN** the world is Northern European
+
+#### Scenario: Easy deadlines come later
+
+- **WHEN** a chapter starting in 1200 with deadline 1206 is started on Easy
+- **THEN** its deadline is 1208
 
 #### Scenario: Chapter starts are reproducible
 
