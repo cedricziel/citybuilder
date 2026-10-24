@@ -71,9 +71,6 @@ The candidate list is small: only consumers of the good that are short. Measured
 ### D3. Market hubs (milestone 2)
 
 - **What counts as a hub:** a town center or a `marketplace`, the player's or a rival's. The marketplace is a new building, smaller and cheaper than a town center, so a town can grow beyond one hub. It gets its own canvas, cost and research gate before milestone 2 starts.
-- **The marketplace building (M2b):** id `marketplace` (`BuildingKind.marketplace`). Its look is option B from the canvas at https://claude.ai/artifact/XtPfzGyD3oVW5juaZgzP1f: an open market hall on posts with stalls, 2 × 2 tiles, with culture variants. The sprites are `building-marketplace` and `building-marketplace-<culture>`, made by the art agent.
-  - **Where porters leave and return:** the building's normal road-access tile, the first road tile next to the footprint (`anyAdjacentRoad`), as for every other carrier. There is no fixed entrance side, so the hall reads as open from every edge.
-  - Porters never enter the footprint. Idle porters are not drawn.
 - **Shipping together:** milestone 2a (the town center as hub) and 2b (the marketplace) land in the same milestone sequence. The player never gets a build where the town center is the only hub, because one hub can't feed a large merchant town (see Risks, Throughput).
 - **Hub radius:** a hub serves the houses whose road path to it is at most `radius` road tiles, read from the hub building's game data (D9). The starting value is 18. A house within reach of several hubs is served by the nearest; ties go to the lower ID.
 - **Hub stock:** hubs keep their goods-buffer role. In addition, house goods prefer them:
