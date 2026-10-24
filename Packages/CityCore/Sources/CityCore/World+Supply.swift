@@ -61,8 +61,8 @@ extension World {
     /// Dispatch buffer→producer carriers for producers short of inputs.
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
-    mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
-        let consumers = operationalConsumers()
+    /// `consumers` come from `operationalConsumers()`.
+    mutating func spawnSupplyCarriers(consumers: [(Building, [Good: Int])], events: inout [WorldEvent]) {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {

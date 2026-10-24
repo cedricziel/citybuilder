@@ -192,3 +192,157 @@ func aDirectDeliveryMissionSurvivesASaveRoundTrip() throws {
     let data = try JSONEncoder().encode(mission)
     #expect(try JSONDecoder().decode(Carrier.Mission.self, from: data) == mission)
 }
+
+private func flour(in world: World, _ ids: [EntityID]) -> Int {
+    let stored = ids.reduce(0) { $0 + (world.stockpiles[$1]?.quantity(of: .flour) ?? 0) }
+    let carried = world.carriers.values.reduce(0) { sum, carrier in
+        carrier.mission.good == .flour ? sum + carrier.mission.amount : sum
+    }
+    return stored + carried
+}
+
+@Test("a second producer in the same tick sees the first one's delivery")
+func aSecondProducerInTheSameTickSeesTheFirstOnesDelivery() {
+    var world = roadStrip()
+    let first = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    let second = inject(.windmill, in: &world, at: TileCoordinate(x: 4, y: 1), contents: [.flour: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 18, y: 0))
+    // One unit brings the bakery to twice its recipe amount.
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 9, y: 1), contents: [.flour: 1])
+    world.tick()
+    #expect(missions(from: first, in: world) == [
+        .deliverToConsumer(good: .flour, amount: 1, fromProducer: first, toConsumer: bakery)
+    ])
+    #expect(missions(from: second, in: world) == [
+        .deliver(good: .flour, amount: 1, fromProducer: second, toWarehouse: warehouse)
+    ])
+}
+
+@Test("scenario: goods for a consumer that filled up go to storage")
+func scenarioGoodsForAConsumerThatFilledUpGoToStorage() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    world.tick()
+    world.stockpiles[bakery] = Stockpile(capacity: 0)
+    for _ in 0 ..< 40 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
+    #expect(world.carrierCountByProducer[windmill] == 0)
+}
+
+@Test("scenario: goods for a demolished consumer go to storage")
+func scenarioGoodsForADemolishedConsumerGoToStorage() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 18, y: 0))
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 12, y: 1))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 12, y: 1), events: &events)
+    #expect(world.buildings[bakery] == nil)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
+    #expect(flour(in: world, [windmill, warehouse]) == 1)
+}
+
+@Test("goods with no storage left go back to where they came from")
+func goodsWithNoStorageLeftGoBackToWhereTheyCameFrom() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 12, y: 1))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 12, y: 1), events: &events)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 1)
+}
+
+@Test("a delivery to a demolished warehouse goes to the next one")
+func aDeliveryToADemolishedWarehouseGoesToTheNextOne() {
+    var world = roadStrip(width: 30)
+    _ = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 1])
+    _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0))
+    let far = inject(.warehouse, in: &world, at: TileCoordinate(x: 20, y: 0))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 6, y: 0), events: &events)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.stockpiles[far]?.quantity(of: .wood) == 1)
+}
+
+@Test("a retrieval for a demolished consumer goes back to storage")
+func aRetrievalForADemolishedConsumerGoesBackToStorage() {
+    var world = roadStrip()
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 1, y: 0), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 14, y: 1))
+    world.tick()
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 0)
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 14, y: 1), events: &events)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
+}
+
+@Test("a carrier with nowhere to go waits for room")
+func aCarrierWithNowhereToGoWaitsForRoom() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
+    world.tick()
+    world.stockpiles[bakery] = Stockpile(capacity: 4)
+    _ = world.stockpiles[bakery]?.deposit(.bread, amount: 4)
+    world.stockpiles[windmill] = Stockpile(capacity: 0)
+    for _ in 0 ..< 20 {
+        world.tick()
+    }
+    #expect(world.carriers.count == 1)
+    _ = world.stockpiles[bakery]?.withdraw(.bread, amount: 1)
+    world.tick()
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[bakery]?.quantity(of: .flour) == 1)
+}
+
+@Test("the storage-goods rule follows the owner's culture")
+func theStorageGoodsRuleFollowsTheOwnersCulture() {
+    var world = roadStrip()
+    world.testSeatRival()
+    let rivalLuxury = world.culture(of: .rival(1)).luxury
+    #expect(rivalLuxury != world.culture(of: .player).luxury)
+    #expect(world.goesThroughStorage(rivalLuxury, for: .rival(1)))
+    #expect(!world.goesThroughStorage(rivalLuxury, for: .player))
+    #expect(world.goesThroughStorage(.wood, for: .rival(1)))
+    #expect(!world.goesThroughStorage(.flour, for: .rival(1)))
+}
+
+@Test("a world with a direct delivery in flight survives a save round trip")
+func aWorldWithADirectDeliveryInFlightSurvivesASaveRoundTrip() throws {
+    var world = roadStrip()
+    _ = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 12, y: 1))
+    world.tick()
+    world.tick()
+    #expect(world.carriers.values.contains { if case .deliverToConsumer = $0.mission { true } else { false } })
+    let decoded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
+    #expect(decoded == world)
+    var original = world, restored = decoded
+    for _ in 0 ..< 20 {
+        original.tick()
+        restored.tick()
+    }
+    #expect(original == restored)
+}

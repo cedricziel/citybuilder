@@ -9,53 +9,57 @@ extension World {
     mutating func runCarrierSystem(events: inout [WorldEvent]) {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
-        spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(events: &events)
+        let consumers = operationalConsumers()
+        spawnCarriersFromProducers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
+        spawnSupplyCarriers(consumers: consumers, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
         // Arrivals fill shared stockpiles, so carriers move in entity order.
         for id in carriers.keys.sorted(by: { $0.raw < $1.raw }) {
-            guard let carrier = carriers[id] else { continue }
-            if carrier.hasArrived {
-                applyCarrierArrival(carrier, events: &events)
-                switch carrier.mission {
-                case let .deliver(_, _, fromProducer, _),
-                     let .deliverToConsumer(_, _, fromProducer, _),
-                     let .deliverToConstructionSite(_, _, fromProducer, _):
-                    carrierCountByProducer[fromProducer, default: 1] -= 1
-                case .retrieve:
-                    break
-                }
-                carriers.removeValue(forKey: id)
-            } else {
-                var updated = carrier
-                updated.pathIndex += 1
-                carriers[id] = updated
+            guard var carrier = carriers[id] else { continue }
+            guard carrier.hasArrived else {
+                carrier.pathIndex += 1
+                carriers[id] = carrier
+                continue
             }
+            let undelivered = applyCarrierArrival(carrier, events: &events)
+            if undelivered > 0, let onward = redirected(carrier, carrying: undelivered) {
+                carriers[id] = onward
+                continue
+            }
+            switch carrier.mission {
+            case let .deliver(_, _, fromProducer, _),
+                 let .deliverToConsumer(_, _, fromProducer, _),
+                 let .deliverToConstructionSite(_, _, fromProducer, _):
+                carrierCountByProducer[fromProducer, default: 1] -= 1
+            case .retrieve:
+                break
+            }
+            carriers.removeValue(forKey: id)
         }
     }
 
-    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) {
+    /// Unloads an arrived carrier and returns the units its destination
+    /// could not take: none when it had room, all of them when it is
+    /// gone.
+    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) -> Int {
         // `currentTile` is `nil` only on a malformed empty path; arrived
         // carriers always have a positive pathIndex < path.count. Use
         // `path.last` as the safe destination fallback.
         let arrivalTile = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
         switch carrier.mission {
-        case let .deliver(good, amount, _, toWarehouse):
-            stockpiles[toWarehouse]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
-        case let .retrieve(good, amount, _, toConsumer),
-             let .deliverToConsumer(good, amount, _, toConsumer):
-            stockpiles[toConsumer]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
+        case let .deliver(good, amount, _, destination),
+             let .retrieve(good, amount, _, destination),
+             let .deliverToConsumer(good, amount, _, destination):
+            let placed = stockpiles[destination]?.deposit(good, amount: amount) ?? 0
+            if placed > 0 {
+                events.append(.carrierArrived(carrier: carrier.id, at: arrivalTile, good: good, amount: placed))
+            }
+            return amount - placed
         case let .deliverToConstructionSite(good, amount, _, toBuilding):
-            applyConstructionDelivery(
+            let delivered = applyConstructionDelivery(
                 ConstructionDelivery(
                     building: toBuilding,
                     good: good,
@@ -65,6 +69,7 @@ extension World {
                 ),
                 events: &events
             )
+            return delivered ? 0 : amount
         }
     }
 
@@ -84,11 +89,13 @@ extension World {
         let arrivalTile: TileCoordinate
     }
 
+    /// Returns false when the site is gone or already built, so the
+    /// carrier takes the goods elsewhere.
     private mutating func applyConstructionDelivery(
         _ delivery: ConstructionDelivery,
         events: inout [WorldEvent]
-    ) {
-        guard var site = buildings[delivery.building] else { return }
+    ) -> Bool {
+        guard var site = buildings[delivery.building], site.state == .constructing else { return false }
         site.materialsDelivered[delivery.good, default: 0] += delivery.amount
         let satisfied = site.hasAllMaterials
         let wasWaiting = site.constructionState == .waitingForMaterials
@@ -105,9 +112,11 @@ extension World {
         if wasWaiting, satisfied {
             events.append(.constructionStarted(building: delivery.building))
         }
+        return true
     }
 
     private mutating func spawnCarriersFromProducers(
+        consumers: [(Building, [Good: Int])],
         tileToIsland: [TileCoordinate: IslandID],
         events: inout [WorldEvent]
     ) {
@@ -118,8 +127,9 @@ extension World {
             waitingSites: buildings.values
                 .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
                 .sorted { $0.id.raw < $1.id.raw },
-            consumers: consumersByGood(),
-            tileToIsland: tileToIsland
+            consumers: Self.consumersByGood(consumers),
+            tileToIsland: tileToIsland,
+            components: RoadComponents(roadGraph)
         )
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
@@ -149,6 +159,19 @@ extension World {
         let waitingSites: [Building]
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
+        let components: RoadComponents
+    }
+
+    /// Road component labels, worked out the first time a tick asks,
+    /// so a consumer on another road network is skipped without a
+    /// failed path search.
+    private final class RoadComponents {
+        private let graph: RoadGraph
+        private(set) lazy var labels: [TileCoordinate: Int] = graph.componentLabels()
+
+        init(_ graph: RoadGraph) {
+            self.graph = graph
+        }
     }
 
     /// Where one unit of `good` from `producer` goes, and the road path
@@ -187,8 +210,7 @@ extension World {
     /// take these before it. Spec: `warehouses-and-logistics` /
     /// Producers deliver to short consumers.
     func goesThroughStorage(_ good: Good, for owner: Owner) -> Bool {
-        let culture = culture(of: owner)
-        return Self.materialGoods.contains(good) || HouseTier.allCases.contains { $0.needs(in: culture).contains(good) }
+        Self.materialGoods.contains(good) || HouseTier.allNeeds(in: culture(of: owner)).contains(good)
     }
 
     /// A consumer of a good, with the amount its recipe or fuel uses at a time.
@@ -197,11 +219,11 @@ extension World {
         let amount: Int
     }
 
-    /// Operational buildings that take each good as a recipe input or
-    /// fuel, in entity order.
-    func consumersByGood() -> [Good: [GoodConsumer]] {
+    /// `consumers` (from `operationalConsumers()`) grouped by the goods
+    /// they take, in entity order.
+    static func consumersByGood(_ list: [(Building, [Good: Int])]) -> [Good: [GoodConsumer]] {
         var consumers: [Good: [GoodConsumer]] = [:]
-        for (building, needs) in operationalConsumers() {
+        for (building, needs) in list {
             for (good, amount) in needs {
                 consumers[good, default: []].append(GoodConsumer(building: building, amount: amount))
             }
@@ -220,7 +242,7 @@ extension World {
         road: TileCoordinate,
         among candidates: DestinationCandidates
     ) -> (EntityID, [TileCoordinate])? {
-        let island = candidates.tileToIsland[road]
+        let component = candidates.components.labels[road]
         var best: (EntityID, [TileCoordinate])?
         for consumer in candidates.consumers[good] ?? [] {
             let building = consumer.building
@@ -230,7 +252,7 @@ extension World {
                       anchor: building.anchor,
                       footprint: BuildingCatalog.spec(for: building.kind).footprint
                   ),
-                  candidates.tileToIsland[consumerRoad] == island,
+                  candidates.components.labels[consumerRoad] == component,
                   let path = PathFinder.path(from: road, to: consumerRoad, in: roadGraph)
             else { continue }
             if best.map({ path.count < $0.1.count }) ?? true {
