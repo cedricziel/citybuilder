@@ -32,7 +32,7 @@ extension IsoWorldScene {
         guard (SpriteAtlas.terrainVariantCounts[kind] ?? 1) > 1 else { return stem }
         let variant = SpriteAtlas.variantAssetName(stem: stem, variant: index)
         guard hasSprite(variant) else {
-            SpriteAtlas.logMissOnce(variant) // rendering-2_5d: Missing-sprite fallback in release
+            missLog.logOnce(variant) // rendering-2_5d: Missing-sprite fallback in release
             return stem
         }
         return variant
@@ -41,7 +41,7 @@ extension IsoWorldScene {
     /// A tile drawn from its own terrain, looping `<name>-<frame>` when its kind animates.
     func plainTerrainNode(kind: TerrainType, coord: TileCoordinate) -> SKSpriteNode {
         let name = terrainSpriteName(kind: kind, coord: coord)
-        let node = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name))
+        let node = SKSpriteNode(texture: textureOrPlaceholder(named: name))
         node.userData = [Self.textureNameKey: name]
         if let action = Self.terrainLoop(name: name, kind: kind) {
             node.run(action, withKey: "anim")
