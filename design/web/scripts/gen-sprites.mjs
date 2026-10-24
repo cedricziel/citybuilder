@@ -135,6 +135,14 @@ for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.lo
   (unitFrames[match[1]] ??= [])[Number(match[2])] = `data:image/png;base64,${png.toString("base64")}`;
   unitSizes[match[1]] = [png.readUInt32BE(16), png.readUInt32BE(20)];
 }
+// No match would emit `export type unitSpritesKey = ;`, and a missing frame a hole in a cycle; stop with a reason.
+if (Object.keys(unitFrames).length === 0) {
+  throw new Error("gen-sprites: no walker, carrier, animal or ship frames (`<name>-<n>.png`) in Resources/Kit.atlas");
+}
+for (const [cycle, frames] of Object.entries(unitFrames)) {
+  const missing = Array.from(frames.keys()).filter((index) => frames[index] === undefined);
+  if (missing.length > 0) throw new Error(`gen-sprites: ${cycle} is missing frame(s) ${missing.join(", ")} in Resources/Kit.atlas`);
+}
 writeFileSync(
   join(out, "units.ts"),
   `export type unitSpritesKey = ${Object.keys(unitFrames).map((key) => JSON.stringify(key)).join(" | ")};\n` +
@@ -152,5 +160,6 @@ writeFileSync(
 
 console.log(
   `sprites: ${Object.keys(goods).length} goods, ${Object.keys(buildings).length} buildings (${Object.keys(lights).length} lit), ` +
-    `${Object.keys(terrain).length} terrain tiles, ${Object.keys(terrainObjects).length} terrain objects`,
+    `${Object.keys(terrain).length} terrain tiles, ${Object.keys(terrainObjects).length} terrain objects, ` +
+    `${Object.keys(unitFrames).length} unit cycles (${Object.values(unitFrames).reduce((sum, frames) => sum + frames.length, 0)} frames)`,
 );
