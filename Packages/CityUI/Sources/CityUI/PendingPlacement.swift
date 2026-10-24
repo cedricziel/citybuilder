@@ -56,6 +56,23 @@ public extension GameSession {
         }
     }
 
+    /// `-uiTestPlace` arms a building with its ghost on a tile, pending
+    /// where placement waits for a confirmation; `-uiTestSelect` selects a
+    /// tile. Debug launches only.
+    internal func applyTestTool(fromArguments arguments: [String]) {
+        if let (kind, tile) = UITestSeed.placement(fromArguments: arguments) {
+            selectTool(.place(kind))
+            if needsConfirmation(kind) {
+                beginPendingPlacement(kind: kind, at: tile)
+            } else {
+                hoveredTile = tile
+            }
+        } else if let tile = UITestSeed.selection(fromArguments: arguments) {
+            selectTool(.inspect)
+            selectedTile = tile
+        }
+    }
+
     func beginPendingPlacement(kind: BuildingKind, at tile: TileCoordinate) {
         guard !isGameOver else { return }
         pendingPlacement = PendingPlacement(kind: kind, anchor: tile, origin: tile)
