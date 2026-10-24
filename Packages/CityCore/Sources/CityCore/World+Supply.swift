@@ -62,20 +62,37 @@ extension World {
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
     /// `consumers` come from `operationalConsumers()`.
-    mutating func spawnSupplyCarriers(consumers: [(Building, [Good: Int])], events: inout [WorldEvent]) {
+    mutating func spawnSupplyCarriers(
+        consumers: [(Building, [Good: Int])],
+        tileToIsland: [TileCoordinate: IslandID],
+        events: inout [WorldEvent]
+    ) {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
+        // Store totals per owner and island for the rest check, summed once
+        // and kept current as carriers draw from the stores.
+        var contexts: [Owner: [IslandID: IslandRestContext]] = [:]
         for (consumer, needs) in consumers {
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
                 footprint: BuildingCatalog.spec(for: consumer.kind).footprint
-            )
+            ),
+                let island = islandFor(building: consumer, tileToIsland: tileToIsland)
             else { continue }
+            if contexts[consumer.owner] == nil {
+                contexts[consumer.owner] = restContexts(of: consumer.owner, tileToIsland: tileToIsland)
+            }
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
-                while needsSupply(consumer.id, good: good, amount: amount) {
+                while needsSupply(
+                    consumer.id,
+                    good: good,
+                    amount: amount,
+                    context: contexts[consumer.owner]?[island] ?? IslandRestContext()
+                ) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
+                    contexts[consumer.owner]?[island]?.stored[good]? -= 1
                 }
             }
         }
@@ -101,12 +118,20 @@ extension World {
         return needs
     }
 
-    func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
+    /// Whether `consumer` should get more `good`. Every route that feeds
+    /// a producer asks this, so a resting producer gets nothing from any
+    /// of them. `context` describes the consumer's island, built once per
+    /// pass by the caller.
+    func needsSupply(_ consumer: EntityID, good: Good, amount: Int, context: IslandRestContext) -> Bool {
         let inbound = supplyCarrierCount(to: consumer)
         // Every unit on the way needs room on arrival, or it is lost.
-        guard inbound < CarrierConfig.perProducerCap, (stockpiles[consumer]?.freeSpace ?? 0) > inbound else { return false }
+        guard inbound < CarrierConfig.perProducerCap,
+              (stockpiles[consumer]?.freeSpace ?? 0) > inbound,
+              let building = buildings[consumer]
+        else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
+            && isResting(building, context: context) == nil
     }
 
     mutating func dispatchSupply(

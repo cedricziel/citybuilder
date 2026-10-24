@@ -11,7 +11,7 @@ extension World {
         let tileToIsland = tileToIslandMap()
         let consumers = operationalConsumers()
         spawnCarriersFromProducers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(consumers: consumers, events: &events)
+        spawnSupplyCarriers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
@@ -129,7 +129,8 @@ extension World {
                 .sorted { $0.id.raw < $1.id.raw },
             consumers: Self.consumersByGood(consumers),
             tileToIsland: tileToIsland,
-            components: RoadComponents(roadGraph)
+            components: RoadComponents(roadGraph),
+            restContexts: RestContexts()
         )
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
@@ -160,6 +161,23 @@ extension World {
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
         let components: RoadComponents
+        let restContexts: RestContexts
+    }
+
+    /// Each owner's island rest contexts, summed the first time a tick
+    /// asks for that owner. Hops never draw from the stores, so the sums
+    /// hold for the whole tick.
+    private final class RestContexts {
+        private var byOwner: [Owner: [IslandID: IslandRestContext]] = [:]
+
+        /// The rest context of `building`'s island.
+        func context(of building: Building, in world: World, tileToIsland: [TileCoordinate: IslandID]) -> IslandRestContext {
+            if byOwner[building.owner] == nil {
+                byOwner[building.owner] = world.restContexts(of: building.owner, tileToIsland: tileToIsland)
+            }
+            return world.islandFor(building: building, tileToIsland: tileToIsland)
+                .flatMap { byOwner[building.owner]?[$0] } ?? IslandRestContext()
+        }
     }
 
     /// Road component labels, worked out the first time a tick asks,
@@ -247,7 +265,14 @@ extension World {
         for consumer in candidates.consumers[good] ?? [] {
             let building = consumer.building
             guard building.id != producer.id, building.owner == producer.owner,
-                  needsSupply(building.id, good: good, amount: consumer.amount),
+                  needsSupply(
+                      building.id,
+                      good: good,
+                      amount: consumer.amount,
+                      context: candidates.restContexts.context(
+                          of: building, in: self, tileToIsland: candidates.tileToIsland
+                      )
+                  ),
                   let consumerRoad = anyAdjacentRoad(
                       anchor: building.anchor,
                       footprint: BuildingCatalog.spec(for: building.kind).footprint

@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import SpriteKit
+import Synchronization
 import Testing
 @testable import CityRender2D
 
@@ -11,60 +12,54 @@ import Testing
 // texture, an unknown sprite resolves to a 32×32 magenta placeholder
 // and the missing name is logged exactly once per process lifetime.
 
-@Suite(.serialized)
-struct PlaceholderSuite {
-    @Test("scenario: placeholder drawn for missing sprite")
-    func scenarioPlaceholderDrawnForMissingSprite() {
-        SpriteAtlas.resetMissLogForTesting()
-        let tex = SpriteAtlas.textureOrPlaceholder(named: "building-truly-not-real")
-        // Placeholder is 32×32 magenta. Verify the geometry the spec
-        // requires; the magenta color is a visual contract enforced
-        // by the implementation rather than asserted here.
-        let size = tex.size()
-        #expect(size.width == 32)
-        #expect(size.height == 32)
+/// Records what a test's own miss log reports, so tests running in parallel never share one.
+private final class MissRecorder: Sendable {
+    private let names = Mutex<[String]>([])
+
+    func record(_ name: String) {
+        names.withLock { $0.append(name) }
     }
 
-    @Test("scenario: missing sprite logged once")
-    func scenarioMissingSpriteLoggedOnce() {
-        SpriteAtlas.resetMissLogForTesting()
-        let name = "walker-truly-not-real"
-        // Filter to this test's name so concurrent tests in other suites
-        // that happen to also call `textureOrPlaceholder` for unrelated
-        // missing sprites can't pollute the observed list.
-        var observed: [String] = []
-        SpriteAtlas.missLogHook = { hooked in
-            if hooked == name { observed.append(hooked) }
-        }
-        defer { SpriteAtlas.missLogHook = nil }
-
-        _ = SpriteAtlas.textureOrPlaceholder(named: name)
-        _ = SpriteAtlas.textureOrPlaceholder(named: name)
-        _ = SpriteAtlas.textureOrPlaceholder(named: name)
-
-        #expect(observed == [name], "expected exactly one log entry for \(name)")
+    var logged: [String] {
+        names.withLock(\.self)
     }
+}
 
-    @Test("scenario: missing sprite distinct names log independently")
-    func scenarioMissingSpriteDistinctNamesLogIndependently() {
-        SpriteAtlas.resetMissLogForTesting()
-        let watched: Set = [
-            "terrain-truly-not-real-a",
-            "terrain-truly-not-real-b"
-        ]
-        var observed: [String] = []
-        SpriteAtlas.missLogHook = { hooked in
-            if watched.contains(hooked) { observed.append(hooked) }
-        }
-        defer { SpriteAtlas.missLogHook = nil }
+@Test("scenario: placeholder drawn for missing sprite")
+func scenarioPlaceholderDrawnForMissingSprite() {
+    let tex = SpriteAtlas.textureOrPlaceholder(named: "building-truly-not-real", log: MissLog(sink: MissRecorder().record))
+    // Placeholder is 32×32 magenta. Verify the geometry the spec
+    // requires; the magenta color is a visual contract enforced
+    // by the implementation rather than asserted here.
+    let size = tex.size()
+    #expect(size.width == 32)
+    #expect(size.height == 32)
+}
 
-        _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-a")
-        _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-b")
-        _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-a")
+@Test("scenario: missing sprite logged once")
+func scenarioMissingSpriteLoggedOnce() {
+    let recorder = MissRecorder()
+    let log = MissLog(sink: recorder.record)
+    let name = "walker-truly-not-real"
 
-        #expect(observed.sorted() == [
-            "terrain-truly-not-real-a",
-            "terrain-truly-not-real-b"
-        ])
-    }
+    _ = SpriteAtlas.textureOrPlaceholder(named: name, log: log)
+    _ = SpriteAtlas.textureOrPlaceholder(named: name, log: log)
+    _ = SpriteAtlas.textureOrPlaceholder(named: name, log: log)
+
+    #expect(recorder.logged == [name], "expected exactly one log entry for \(name)")
+}
+
+@Test("scenario: missing sprite distinct names log independently")
+func scenarioMissingSpriteDistinctNamesLogIndependently() {
+    let recorder = MissRecorder()
+    let log = MissLog(sink: recorder.record)
+
+    _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-a", log: log)
+    _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-b", log: log)
+    _ = SpriteAtlas.textureOrPlaceholder(named: "terrain-truly-not-real-a", log: log)
+
+    #expect(recorder.logged == [
+        "terrain-truly-not-real-a",
+        "terrain-truly-not-real-b"
+    ])
 }

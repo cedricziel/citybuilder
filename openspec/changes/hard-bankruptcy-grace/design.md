@@ -32,7 +32,7 @@ Every failed game bottomed out at −$1 or −$2.
 The bot is the #47 playtest bot: the rival AI's opening and growth loop and town plan (`RivalAI`, `RivalTownPlan`) for the player, with the simple threshold rules the rivals had then, plus the market trades in the requirement. It keeps those rules on purpose, so its numbers stay comparable with #47 and #72. It lives in the test target only, as test support.
 
 - The sweep plays seeds 0–9 on both layouts for 36,000 ticks with the market.
-- A control plays archipelago seeds 2, 6, 9 and 21 for 4,000 ticks without it; all four go bankrupt by tick 3,850, so the sweep fails loudly if it stops testing what the market does.
+- A control plays archipelago seeds 0 to 29 for 4,000 ticks with and without the market: at least 2 of 30 must go bankrupt without it and at most 1 with it, so the sweep fails loudly if it stops testing what the market does. It first named four seeds that went bankrupt; `rest-when-stocked` saved two of them, and picking new failing seeds would bend the control to the result, so it counts over all 30 instead.
 - Both run behind `RIVAL_SWEEP=1`, the flag the rival sweep already uses, in the weekly `rival-sweep` workflow.
 - None runs in the default suite. No Normal seed among the first 50 goes bankrupt without the market before tick 3,400, and a 3,500-tick bot game takes about 2 minutes in a debug build, so a check with a control cannot fit a CI budget of a minute. The rule defect itself is guarded in the default suite by "A dip on a collection tick sees the next collection".
 

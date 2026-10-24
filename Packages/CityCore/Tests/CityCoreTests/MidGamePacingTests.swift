@@ -36,6 +36,8 @@ func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
                         + "twentyMerchants=\(MidGameMilestones.years(run.twentyMerchants)) "
                         + "renaissance=\(MidGameMilestones.years(run.renaissance)) "
                         + "bankrupt=\(MidGameMilestones.years(run.bankruptAt)) "
+                        + "merchantsAtTen=\(run.merchantsAtTen.map(String.init) ?? "-") "
+                        + "heldShare=\(run.heldShare.map { String(format: "%.2f", $0) } ?? "-") "
                         + "hints=\(run.hinted.isEmpty ? "-" : run.hinted.map(\.rawValue).joined(separator: ","))"
                 )
             }

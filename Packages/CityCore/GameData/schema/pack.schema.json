@@ -78,6 +78,10 @@
               "name": { "type": "string" },
               "unit": { "description": "Plural stack noun, e.g. logs.", "type": "string" },
               "basePrice": { "$ref": "#/$defs/positive" },
+              "restAt": {
+                "description": "Stock across the owner's stores at which producers of this good rest (rest-when-stocked D1).",
+                "$ref": "#/$defs/positive"
+              },
               "market": {
                 "description": "Seasonal town market limits: units the market sells to the player (buy) and buys from the player (sell). Each defaults to 0.",
                 "type": "object",

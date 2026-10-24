@@ -30,7 +30,7 @@ items:
                     Ragna, Sven, Tilda, Ulf, Vera, Wim, Elsa, Frode, Hilde, Ivar, Liv, Otto]
 
   - { kind: Good, id: hops, name: Hops, unit: bales, basePrice: 3, market: { sell: 20 } }
-  - { kind: Good, id: beer, name: Beer, unit: casks, basePrice: 16, market: { sell: 20 } }
+  - { kind: Good, id: beer, name: Beer, unit: casks, basePrice: 16, market: { sell: 20 }, restAt: 40 }
 
   - kind: Building
     id: hop-garden

@@ -173,7 +173,7 @@ enum Fixtures {
 
     /// Every optional field of each kind, as raw YAML values.
     static let optionalFields: [String: [String: String]] = [
-        "Good": ["market": "{ buy: 10, sell: 20 }", "neededBy": "[merchants]"],
+        "Good": ["market": "{ buy: 10, sell: 20 }", "neededBy": "[merchants]", "restAt": "40"],
         "Building": [
             "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16", "plantTicks": "40",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",

@@ -1,3 +1,4 @@
+import Foundation
 @testable import CityCore
 
 /// The PlayerBot's opt-in mid-game kit (#186): research toward the tools,
@@ -197,12 +198,41 @@ struct MidGameMilestones {
     var firstMerchant: Int?
     var twentyMerchants: Int?
     var renaissance: Int?
+    /// With PACING_RETENTION=1: merchants at the end of year 10 and the
+    /// share of years 8–10's bot turns with 20 or more merchants (#223).
+    var merchantsAtTen: Int?
+    var heldShare: Double?
     var bankruptAt: Int?
     /// Goods the idle-good hint would have named, in first-seen order.
     var hinted: [Good] = []
 
     static func years(_ tick: Int?) -> String {
         tick.map { String(format: "%.1f", Double($0) / Double(CalendarState.ticksPerYear)) } ?? "-"
+    }
+}
+
+extension MidGameMilestones {
+    /// Notes this bot turn's milestones; true when the run can stop. With
+    /// `retention` the run goes on to year 10 and records the merchants
+    /// there and the share of years 8–10's turns with 20 or more (#223).
+    mutating func note(_ world: World, tick: Int, retention: Bool, late: inout (turns: Int, held: Int)) -> Bool {
+        for idle in world.idleGoods(of: .player) where !hinted.contains(idle.good) {
+            hinted.append(idle.good)
+        }
+        let merchants = world.residents(atLeast: .merchants)
+        if firstMerchant == nil, merchants > 0 { firstMerchant = tick }
+        if twentyMerchants == nil, merchants >= 20 { twentyMerchants = tick }
+        if renaissance == nil, world.age >= .renaissance { renaissance = tick }
+        guard retention else { return renaissance != nil }
+        let year = Int(CalendarState.ticksPerYear)
+        if tick > 8 * year {
+            late.turns += 1
+            if merchants >= 20 { late.held += 1 }
+        }
+        guard tick >= 10 * year else { return false }
+        merchantsAtTen = merchants
+        heldShare = Double(late.held) / Double(max(late.turns, 1))
+        return true
     }
 }
 
@@ -213,20 +243,14 @@ extension World {
         var world = World.newGame(layout: arm.layout, seed: seed, difficulty: arm.difficulty)
         world.calendar = CalendarState(startYear: 1200, isActive: true)
         var milestones = MidGameMilestones()
+        let retention = ProcessInfo.processInfo.environment["PACING_RETENTION"] == "1"
+        var late = (turns: 0, held: 0)
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
         var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
         for tick in 1 ... ticks {
             if tick.isMultiple(of: 50) {
                 bot.takeTurn(&world)
-                for idle in world.idleGoods(of: .player) where !milestones.hinted.contains(idle.good) {
-                    milestones.hinted.append(idle.good)
-                }
-                if milestones.firstMerchant == nil, world.residents(atLeast: .merchants) > 0 { milestones.firstMerchant = tick }
-                if milestones.twentyMerchants == nil, world.residents(atLeast: .merchants) >= 20 {
-                    milestones.twentyMerchants = tick
-                }
-                if milestones.renaissance == nil, world.age >= .renaissance { milestones.renaissance = tick }
-                if milestones.renaissance != nil { break }
+                if milestones.note(world, tick: tick, retention: retention, late: &late) { break }
             }
             world.tick()
             if world.economy.gameOver {

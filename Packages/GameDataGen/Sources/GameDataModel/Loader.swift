@@ -127,7 +127,7 @@ private struct ItemReader {
         return Good(
             id: id, name: name, unit: unit, basePrice: price,
             market: market ?? MarketLimits(), neededBy: fields.strings("neededBy", required: false) ?? [],
-            origin: fields.origin
+            restAt: fields.int("restAt", required: false), origin: fields.origin
         )
     }
 

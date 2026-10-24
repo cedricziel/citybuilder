@@ -31,7 +31,7 @@ items:
                     Min, Natsu, Ping, Ren, Sakura, Tao, Wen, Xiu, Yuki, Yong, Zhen, Kaito]
 
   - { kind: Good, id: tea-leaves, name: Tea Leaves, unit: baskets, basePrice: 3, market: { sell: 20 } }
-  - { kind: Good, id: tea, name: Tea, unit: chests, basePrice: 16, market: { sell: 20 } }
+  - { kind: Good, id: tea, name: Tea, unit: chests, basePrice: 16, market: { sell: 20 }, restAt: 40 }
 
   - kind: Building
     id: tea-garden

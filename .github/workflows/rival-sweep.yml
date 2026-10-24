@@ -57,7 +57,7 @@ jobs:
           set -o pipefail
           status=0
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
-            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioWithoutTheMarketTheSameTownsGoBankrupt|scenarioGuidedHardStartStaysSolventAndGrows|scenarioUnguidedHardStartGoesBankrupt" 2>&1 | tee solvency-sweep.log || status=$?
+            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioWithoutTheMarketMoreTownsGoBankrupt|scenarioGuidedHardStartStaysSolventAndGrows|scenarioUnguidedHardStartGoesBankrupt" 2>&1 | tee solvency-sweep.log || status=$?
           grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
           exit "$status"
 
@@ -65,6 +65,7 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           RIVAL_SWEEP: "1"
+          PACING_RETENTION: "1"
         shell: bash
         run: |
           set -o pipefail

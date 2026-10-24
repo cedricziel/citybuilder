@@ -25,7 +25,7 @@ items:
     eraGate: { tier: citizens, residents: 20 }
   - kind: Tech
     id: printing-press
-    cost: 2500
+    cost: 3500
     age: medieval
     prerequisites: [feudal-order]
     era: renaissance

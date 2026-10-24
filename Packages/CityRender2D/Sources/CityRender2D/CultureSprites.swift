@@ -48,6 +48,6 @@ extension IsoWorldScene {
             Self.cultureTextureName(kind: kind, houseTier: houseTier, culture: culture).map { [$0] } ?? []
         }
         guard let name = candidates.first(where: hasSprite) else { return nil }
-        return (name, SpriteAtlas.textureOrPlaceholder(named: name))
+        return (name, textureOrPlaceholder(named: name))
     }
 }

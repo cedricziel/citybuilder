@@ -19,9 +19,9 @@ The tech catalog SHALL define these techs:
 | Tech | Cost | Requires | Unlocks |
 |---|---|---|---|
 | Scholarship | 30 | — | library |
-| Milling | 40 | — | windmill |
-| Mining | 40 | — | mine, charcoal burner |
-| Metallurgy | 80 | Mining | smelter, toolsmith |
+| Milling | 400 | — | windmill |
+| Mining | 400 | — | mine, charcoal burner |
+| Metallurgy | 800 | Mining | smelter, toolsmith |
 | Seafaring | 60 | — | port, shipyard |
 
 A new game MUST start with Scholarship researched. Every building kind not listed MUST be available from the start.
@@ -37,7 +37,7 @@ The player SHALL choose the current research with a command. Only a tech that is
 
 #### Scenario: Research completes when its cost is reached
 
-- **WHEN** the player chooses Milling and 40 knowledge points accumulate
+- **WHEN** the player of a Normal world chooses Milling and 400 knowledge points accumulate
 - **THEN** Milling is researched and no research is current
 
 #### Scenario: A tech with unmet prerequisites cannot be chosen
@@ -65,7 +65,7 @@ Scholarship SHALL belong to Antiquity, and Milling, Mining, Metallurgy and Seafa
 
 ### Requirement: Era techs need a thriving city
 
-The era techs SHALL be Feudal Order (150, opens Medieval, needs 20 residents at citizens or above), Printing Press (250, needs Feudal Order, opens Renaissance, needs 20 merchants), Steam Power (400, needs Printing Press, opens Industrial, needs 40 merchants) and Electricity (600, needs Steam Power, opens Modern, needs 60 merchants). An era tech SHALL be choosable only when it opens the age right after the world's age and its residents condition holds when it is chosen.
+The era techs SHALL be Feudal Order (150, opens Medieval, needs 20 residents at citizens or above), Printing Press (2,500, needs Feudal Order, opens Renaissance, needs 20 merchants), Steam Power (400, needs Printing Press, opens Industrial, needs 40 merchants) and Electricity (600, needs Steam Power, opens Modern, needs 60 merchants). An era tech SHALL be choosable only when it opens the age right after the world's age and its residents condition holds when it is chosen.
 
 #### Scenario: Era tech needs residents
 
@@ -104,3 +104,17 @@ Knowledge added by temple gardens SHALL accumulate and flow into the current res
 
 - **WHEN** Milling (40) is the current research with no progress, and 100 ticks pass with a single citizen house of 6 residents within 6 tiles of a served temple garden and no library
 - **THEN** Milling's progress is 18
+
+### Requirement: Research cost scales with difficulty
+
+A tech's research cost SHALL be its catalog cost times the difficulty's research percent, rounded down: 80% on Easy, 100% on Normal and 120% on Hard. Research completes when its progress reaches that scaled cost, and the research panel SHALL show the scaled cost.
+
+#### Scenario: Easy research is cheaper
+
+- **WHEN** an Easy world researches Milling
+- **THEN** Milling is researched after 320 knowledge points
+
+#### Scenario: Hard research is dearer
+
+- **WHEN** a Hard world researches Milling
+- **THEN** Milling is researched after 480 knowledge points and not after 479
