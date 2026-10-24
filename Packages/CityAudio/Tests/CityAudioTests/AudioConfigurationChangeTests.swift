@@ -49,9 +49,15 @@ func playerKeepsItsPlaceAcrossAConfigurationChange() throws {
     }
     let before = position(of: node)
     changeConfiguration(of: engine)
-    Thread.sleep(forTimeInterval: 0.1)
+    // The restarted engine renders its first cycle some time later; on a slow
+    // runner that can exceed any fixed sleep, so poll against a deadline.
+    let deadline = Date().addingTimeInterval(2)
+    while position(of: node) <= before, Date() < deadline {
+        Thread.sleep(forTimeInterval: 0.01)
+    }
     #expect(node.isPlaying)
     #expect(before > 0)
+    // A reset would put the position back near 0, below `before`, and never recover past it.
     #expect(position(of: node) > before)
 }
 
