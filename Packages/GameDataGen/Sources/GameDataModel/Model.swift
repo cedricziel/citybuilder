@@ -49,6 +49,8 @@ public struct Good: Equatable, Sendable {
     public var market: MarketLimits
     /// Tiers whose needs this good joins (design D2 of `tier-needs-data`).
     public var neededBy: [String]
+    /// Stock at which producers of this good rest (`rest-when-stocked` D1).
+    public var restAt: Int?
     public var origin: Origin
 }
 

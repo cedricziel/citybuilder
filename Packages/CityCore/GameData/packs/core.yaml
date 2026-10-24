@@ -13,16 +13,18 @@ items:
   # prices (add-rival-trade D1).
   # market: units per season the town market sells to (buy) and buys
   # from (sell) the player; 0 when left out (add-town-market D3, D4).
+  # restAt: stock across the owner's stores at which producers of the
+  # good rest (rest-when-stocked D1).
   - { kind: Good, id: wood,     name: Wood,     unit: logs,    basePrice: 4,  market: { buy: 10, sell: 20 } }
-  - { kind: Good, id: planks,   name: Planks,   unit: bundles, basePrice: 8,  market: { buy: 10, sell: 20 } }
+  - { kind: Good, id: planks,   name: Planks,   unit: bundles, basePrice: 8,  market: { buy: 10, sell: 20 }, restAt: 40 }
   - { kind: Good, id: food,     name: Food,     unit: rations, basePrice: 4,  market: { buy: 10, sell: 20 } }
-  - { kind: Good, id: bread,    name: Bread,    unit: loaves,  basePrice: 12, market: { sell: 20 } }
+  - { kind: Good, id: bread,    name: Bread,    unit: loaves,  basePrice: 12, market: { sell: 20 }, restAt: 40 }
   - { kind: Good, id: grain,    name: Grain,    unit: sheaves, basePrice: 3,  market: { sell: 20 } }
-  - { kind: Good, id: flour,    name: Flour,    unit: sacks,   basePrice: 6,  market: { sell: 20 } }
+  - { kind: Good, id: flour,    name: Flour,    unit: sacks,   basePrice: 6,  market: { sell: 20 }, restAt: 40 }
   - { kind: Good, id: ore,      name: Ore,      unit: loads,   basePrice: 5,  market: { sell: 20 } }
-  - { kind: Good, id: charcoal, name: Charcoal, unit: baskets, basePrice: 5,  market: { sell: 20 } }
-  - { kind: Good, id: iron,     name: Iron,     unit: bars,    basePrice: 14, market: { sell: 20 } }
-  - { kind: Good, id: tools,    name: Tools,    unit: sets,    basePrice: 30, market: { sell: 20 } }
+  - { kind: Good, id: charcoal, name: Charcoal, unit: baskets, basePrice: 5,  market: { sell: 20 }, restAt: 40 }
+  - { kind: Good, id: iron,     name: Iron,     unit: bars,    basePrice: 14, market: { sell: 20 }, restAt: 40 }
+  - { kind: Good, id: tools,    name: Tools,    unit: sets,    basePrice: 30, market: { sell: 20 }, restAt: 40 }
 
   # --- House tiers ---------------------------------------------------
   # Spec: population-and-needs / Houses have a population tier.

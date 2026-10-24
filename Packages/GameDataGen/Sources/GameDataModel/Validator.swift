@@ -86,6 +86,7 @@ struct Validator {
         let report = reporter("Good", good.id, good.origin)
         if good.basePrice <= 0 { report("`basePrice` must be positive") }
         if good.market.buy < 0 || good.market.sell < 0 { report("`market` limits must not be negative") }
+        if let restAt = good.restAt, restAt <= 0 { report("`restAt` must be positive") }
         var named = Set<String>()
         for tier in good.neededBy {
             guard let declared = refs.tiers[tier] else {

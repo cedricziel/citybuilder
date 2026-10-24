@@ -11,7 +11,7 @@ public enum ItemSchema {
     }
 
     public static let kinds: [String: Fields] = [
-        "Good": Fields(required: ["id", "name", "unit", "basePrice"], optional: ["market", "neededBy"]),
+        "Good": Fields(required: ["id", "name", "unit", "basePrice"], optional: ["market", "neededBy", "restAt"]),
         "Building": Fields(
             required: ["id", "footprint", "cost"],
             optional: [

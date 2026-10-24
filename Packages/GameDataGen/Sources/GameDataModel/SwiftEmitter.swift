@@ -92,7 +92,8 @@ private struct Types {
             property("basePrice", "Int64", all.map { ($0.id, "\($0.basePrice)") }),
             property("marketTerms", "MarketTerms", all.map { good in
                 (good.id, "MarketTerms(buyLimit: \(good.market.buy), sellLimit: \(good.market.sell))")
-            })
+            }),
+            property("restAt", "Int?", all.map { ($0.id, $0.restAt.map(String.init) ?? "nil") })
         ])
     }
 
