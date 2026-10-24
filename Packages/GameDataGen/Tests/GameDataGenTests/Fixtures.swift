@@ -30,6 +30,7 @@ enum Fixtures {
         footprint: [2, 2]
         cost: 80
         storage: 16
+        catchmentRadius: 2
         category: gather
         recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
       - kind: Building

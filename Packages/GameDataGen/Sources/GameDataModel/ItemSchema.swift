@@ -30,4 +30,7 @@ public enum ItemSchema {
 
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]
     public static let terrainTypes: Set<String> = ["grass", "forest", "beach", "water", "mountain"]
+    /// Buildings whose hand-written behaviour harvests within their catchment, so they must declare
+    /// `catchmentRadius`.
+    public static let catchmentHarvesters: Set<String> = ["lumberjack-hut"]
 }

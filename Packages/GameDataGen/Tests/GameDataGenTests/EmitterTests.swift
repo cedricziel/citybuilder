@@ -113,7 +113,8 @@ func addingCulturePack() throws {
 }
 
 @Test func emitsPlantingCycles() throws {
-    let extra = "items:\n  - { kind: Building, id: grove-keeper, effect: code, footprint: [2, 2], cost: 60, plantTicks: 40 }\n"
+    let extra = "items:\n  - { kind: Building, id: grove-keeper, effect: code, footprint: [2, 2], cost: 60, "
+        + "plantTicks: 40, catchmentRadius: 2 }\n"
     let source = try emitted("BuildingKind+Generated.swift", from: Fixtures.withExtraPack(extra))
     #expect(source.contains("var plantTicks: UInt64? {"))
     #expect(source.contains("case .groveKeeper: 40"))

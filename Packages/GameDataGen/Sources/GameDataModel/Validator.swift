@@ -136,13 +136,26 @@ struct Validator {
         }
     }
 
+    /// A planter plants within its catchment, and a harvester's Swift behaviour cuts within it, so
+    /// both need a radius.
+    private func checkCatchment(_ building: Building, _ report: (String) -> Void) {
+        guard let radius = building.catchmentRadius else {
+            if building.plantTicks != nil { report("`plantTicks` needs a `catchmentRadius` to plant within") }
+            if ItemSchema.catchmentHarvesters.contains(building.id) {
+                report("`catchmentRadius` is required: its Swift behaviour harvests within it")
+            }
+            return
+        }
+        if radius <= 0 { report("`catchmentRadius` must be positive") }
+    }
+
     private func checkNumbers(_ building: Building, _ report: (String) -> Void) {
         if building.footprint.width <= 0 || building.footprint.height <= 0 { report("`footprint` must be positive") }
         if building.cost < 0 || building.upkeep < 0 { report("`cost` and `upkeep` must not be negative") }
         if building.buildTicks <= 0 { report("`buildTicks` must be positive") }
         if let storage = building.storage, storage <= 0 { report("`storage` must be positive; omit it for none") }
         if let ticks = building.plantTicks, ticks <= 0 { report("`plantTicks` must be positive") }
-        if let radius = building.catchmentRadius, radius <= 0 { report("`catchmentRadius` must be positive") }
+        checkCatchment(building, report)
         if let ticks = building.recipe?.cycleTicks, ticks <= 0 { report("`recipe.cycleTicks` must be positive") }
         switch building.placement {
         case let .shore(land, water)? where land <= 0 || water <= 0:

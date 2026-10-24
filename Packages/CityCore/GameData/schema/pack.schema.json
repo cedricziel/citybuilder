@@ -101,6 +101,7 @@
           "then": {
             "additionalProperties": false,
             "required": ["kind", "id", "footprint", "cost"],
+            "dependentRequired": { "plantTicks": ["catchmentRadius"] },
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
