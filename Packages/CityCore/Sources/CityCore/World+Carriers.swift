@@ -145,16 +145,17 @@ extension World {
                     )
                     break
                 }
+                let held = producerStock.quantity(of: good)
+                // A long haul to storage waits for a cart load, so with too little
+                // ready and every buffer far away there is nothing to search for.
+                if held < CarrierConfig.cartMinLoad, allFar(from: road, among: buffers) { continue }
                 guard let (warehouseId, path) = findRoadConnectedBuffer(
                     fromRoad: road, good: good, among: buffers
                 )
                 else { continue }
-                let room = stockpiles[warehouseId]?.freeSpace ?? 0
-                // A long haul to storage waits for a cart load.
-                guard let haul = CarrierConfig.haul(
-                    ready: min(producerStock.quantity(of: good), room), along: path, waitForLoad: true
-                )
-                else { continue }
+                let ready = min(held, stockpiles[warehouseId]?.freeSpace ?? 0)
+                if CarrierConfig.isLong(path), ready < CarrierConfig.cartMinLoad { continue }
+                let haul = CarrierConfig.haul(ready: ready, along: path)
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,
@@ -171,6 +172,17 @@ extension World {
                 )
                 break
             }
+        }
+    }
+
+    /// True when every buffer's road lies at least the cart distance from
+    /// `road` along the grid, so any road path to it is a long haul.
+    private func allFar(from road: TileCoordinate, among buffers: [Building]) -> Bool {
+        buffers.allSatisfy { buffer in
+            let footprint = BuildingCatalog.spec(for: buffer.kind).footprint
+            return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).map {
+                abs($0.x - road.x) + abs($0.y - road.y) >= CarrierConfig.cartDistance
+            } ?? true
         }
     }
 
