@@ -9,11 +9,15 @@ export interface StockLine {
 }
 
 export interface StocksTrayProps {
-  /** The island's name, for the caption: "GREENHOLD STOCKS · 6 GOODS". */
-  island: string;
+  /** The island's name, for the caption: "GREENHOLD STOCKS · 6 GOODS". Without one it reads "ISLAND STOCKS". */
+  island?: string;
   /** Every good the island holds, in catalog order. Empty -> renders nothing. */
   stocks: StockLine[];
-  /** Columns of 96pt chips: at most 3 on a phone and 6 elsewhere, fewer to fit beside the minimap. Default 3. */
+  /**
+   * Columns of 96pt chips. The game picks as many as fit the width beside
+   * the right column, up to 3 on a phone and 6 elsewhere, and never more
+   * than there are goods. Default 3.
+   */
   columns?: number;
 }
 
@@ -24,7 +28,7 @@ export function StocksTray({ island, stocks, columns = 3 }: StocksTrayProps) {
   return (
     <Glass radius={12} padding="10px 14px" className="cb-stocks" aria-label="Island stocks">
       <div className="cb-stocks__caption">
-        {island} stocks · {stocks.length} goods
+        {island || "Island"} stocks · {stocks.length} goods
       </div>
       <div className="cb-stocks__grid" style={{ gridTemplateColumns: `repeat(${count}, 96px)` }}>
         {stocks.map((stock) => (
