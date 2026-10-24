@@ -68,15 +68,21 @@ public extension World {
 extension World {
     private func productionIssue(of id: EntityID, recipe: ProductionRecipe) -> BuildingIssue? {
         let stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
+        // A store full of its own output stops it whatever it is given,
+        // so that comes before missing inputs.
+        let made = Good.allCases.filter { recipe.outputs[$0] != nil }
+        let full = recipe.outputs.contains { good, amount in stockpile.room(for: good) < amount }
+        let most = made.max { stockpile.quantity(of: $0) < stockpile.quantity(of: $1) }
+        if full, let most, stockpile.quantity(of: most) > 0 {
+            return .outputStuck(most)
+        }
         let missing = recipe.inputs
             .filter { good, amount in stockpile.quantity(of: good) < amount }
             .map(\.key)
             .sorted { $0.rawValue < $1.rawValue }
         if !missing.isEmpty { return .missingInputs(missing) }
-        if recipe.outputs.values.contains(where: { stockpile.totalStored + $0 > stockpile.capacity }) {
-            let held = Good.allCases.filter { recipe.outputs[$0] != nil }
-            let stuck = held.max { stockpile.quantity(of: $0) < stockpile.quantity(of: $1) }
-            return stuck.map(BuildingIssue.outputStuck)
+        if full, let first = made.first {
+            return .outputStuck(first)
         }
         return nil
     }
