@@ -48,7 +48,7 @@ Careful scripted player, market on, seeds 0–9 × both layouts per difficulty, 
 | Resting, ×12 | 4.6 / 5.8 / 6.8 | 55 | 14 | 0.29 | 1 |
 | **Resting, ×14** | **4.9 / 6.8 / 7.8** | **54** | **12** | **0.31** | **0** |
 
-×14 keeps Normal inside 6–8 years and keeps Easy clearly faster and Hard slower. Hard reaches the Renaissance in 17 of 20 starts instead of 20. These numbers are from before walkers' #232 (direct hops, no more goods lost at a full store); they are re-measured after it lands and the factor is adjusted if Normal leaves 6–8 years.
+×14 keeps Normal inside 6–8 years and keeps Easy clearly faster and Hard slower. Hard reaches the Renaissance in 17 of 20 starts instead of 20. These numbers are from before walkers' #232 (direct hops, no more goods lost at a full store). This change lands first; #232 re-measures pacing on top of it, and the factor is adjusted if Normal leaves 6–8 years.
 
 ### D4. Visible and idle
 
