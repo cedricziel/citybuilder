@@ -69,7 +69,13 @@ extension World {
             .sorted { $0.0.id.raw < $1.0.id.raw }
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
+        // Supply moves inputs, never a producer's outputs, so the totals
+        // its rest check reads stay put during the pass.
+        var stored: [Owner: [Good: Int]] = [:]
         for (consumer, needs) in consumers {
+            let ownerStored = stored[consumer.owner] ?? storedTotals(of: consumer.owner)
+            stored[consumer.owner] = ownerStored
+            guard isResting(consumer, stored: ownerStored) == nil else { continue }
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
                 footprint: BuildingCatalog.spec(for: consumer.kind).footprint

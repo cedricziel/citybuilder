@@ -9,6 +9,9 @@ public enum BuildingIssue: Hashable, Sendable {
     case noTreesInReach
     /// A forester's catchment holds no open grass.
     case noRoomToPlant
+    /// The stores hold plenty of what it makes, so it gets no inputs
+    /// (`rest-when-stocked` D4). Names the first such good.
+    case resting(Good)
     case missingInputs([Good])
     case storageFull
 }
@@ -29,6 +32,7 @@ public extension World {
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).flatMap { components[$0] }
         })
         var issues: [EntityID: BuildingIssue] = [:]
+        let stored = storedTotals(of: .player)
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
             if Self.isPlanter(building.kind) {
@@ -54,6 +58,10 @@ public extension World {
             }
             guard let component = components[road], storageComponents.contains(component) else {
                 issues[building.id] = .noRouteToStorage
+                continue
+            }
+            if let good = isResting(building, stored: stored) {
+                issues[building.id] = .resting(good)
                 continue
             }
             if let recipe, let issue = productionIssue(of: building.id, recipe: recipe) {
