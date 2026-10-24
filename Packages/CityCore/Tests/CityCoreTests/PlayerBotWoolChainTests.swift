@@ -46,6 +46,12 @@ func botCountsFullCitizensHouses() throws {
     #expect(town.bot.clothDemand(in: town.world, stock: [.tools: 2]) == 0)
 }
 
+@Test("only the next few full citizens houses count ahead of their promotion")
+func botCapsTheReadyHouses() throws {
+    let town = try WoolTown(order: .careful, houses: Array(repeating: (.citizens, 6), count: 5) + [(.merchants, 8)])
+    #expect(town.bot.clothDemand(in: town.world, stock: breadAndTools) == 1 + PlayerBot.readyHouses)
+}
+
 @Test("merchant houses want cloth whatever the stock")
 func botCountsMerchantHouses() throws {
     let town = try WoolTown(order: .careful, houses: [(.merchants, 8), (.merchants, 2)])
@@ -106,4 +112,18 @@ func botResearchesWeavingOnDemand() throws {
     wanting.bot.chooseResearch(in: &wantingWorld, stock: breadAndTools)
     wantingWorld.tick()
     #expect(wantingWorld.research.current == .weaving)
+}
+
+@Test("the bot builds at most three weavers")
+func botCapsTheWeavers() throws {
+    let merchants = Array(repeating: (HouseTier.merchants, UInt32(8)), count: 12)
+    let town = try WoolTown(order: .careful, houses: merchants, built: Array(repeating: .weaver, count: PlayerBot.maxWeavers))
+    #expect(town.missing() == [.sheepFarm])
+}
+
+@Test("the bot builds no more of the wool chain while cloth piles up")
+func botStopsWhenClothPilesUp() throws {
+    let town = try WoolTown(order: .careful, houses: [(.merchants, 8), (.merchants, 8)])
+    #expect(town.missing(stock: [.cloth: PlayerBot.clothSurplus - 1]) == [.weaver, .sheepFarm])
+    #expect(town.missing(stock: [.cloth: PlayerBot.clothSurplus]).isEmpty)
 }

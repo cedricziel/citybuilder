@@ -9,6 +9,17 @@ extension PlayerBot {
     /// Houses before the kit starts building.
     static let midGameHouses = 6
 
+    /// Full citizens houses the bot builds cloth for ahead of their promotion.
+    static let readyHouses = 2
+
+    /// Weavers the bot builds at most. The stores are shared, so cloth beyond
+    /// what three weavers make crowds out the bread and tools merchants need,
+    /// and merchants fall back (measured in the pacing sweep, #239).
+    static let maxWeavers = 3
+
+    /// Cloth in the stores at which the bot stops building the wool chain.
+    static let clothSurplus = 20
+
     /// Research in this order, each once it can be chosen.
     static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .weaving, .printingPress]
 
@@ -24,28 +35,34 @@ extension PlayerBot {
         world.enqueue(.chooseResearch(tech))
     }
 
-    /// Houses that want cloth (#239): merchant houses, and full citizens
-    /// houses that already have bread and tools in reach and so lack only
-    /// cloth to become merchants.
+    /// Houses that want cloth (#239): merchant houses, and the next
+    /// `readyHouses` full citizens houses that already have bread and tools
+    /// in reach and so lack only cloth to become merchants. Counting every
+    /// full citizens house would build weavers for houses that are not
+    /// about to move up.
     func clothDemand(in world: World, stock: [Good: Int]) -> Int {
         let chainsRun = stock[.bread, default: 0] > 0 && stock[.tools, default: 0] > 0
-        return world.buildings.values.reduce(0) { count, building in
-            guard building.owner == .player, building.kind == .house,
-                  let house = world.populations[building.id]
-            else { return count }
-            let wantsCloth = house.tier == .merchants
-                || (chainsRun && house.tier == .citizens && house.population == house.capacity)
-            return count + (wantsCloth ? 1 : 0)
+        var merchants = 0
+        var ready = 0
+        for building in world.buildings.values where building.owner == .player && building.kind == .house {
+            guard let house = world.populations[building.id] else { continue }
+            if house.tier == .merchants {
+                merchants += 1
+            } else if chainsRun, house.tier == .citizens, house.population == house.capacity {
+                ready += 1
+            }
         }
+        return merchants + min(ready, Self.readyHouses)
     }
 
     /// The wool chain buildings the town lacks for its cloth demand: one
-    /// weaver per two houses and two sheep farms per weaver, as many as
-    /// the demand wants. `.naive` builds the sheep farms first, `.careful`
-    /// the weaver first.
+    /// weaver per two houses (at most `maxWeavers`) and two sheep farms per
+    /// weaver, as many as the demand wants, and none while `clothSurplus` cloth already waits
+    /// in the stores. `.naive` builds the sheep farms first, `.careful` the
+    /// weaver first.
     func missingWoolChainKinds(in world: World, town: Town, stock: [Good: Int]) -> [BuildingKind] {
-        guard midGame != nil else { return [] }
-        let weavers = (clothDemand(in: world, stock: stock) + 1) / 2
+        guard midGame != nil, stock[.cloth, default: 0] < Self.clothSurplus else { return [] }
+        let weavers = min((clothDemand(in: world, stock: stock) + 1) / 2, Self.maxWeavers)
         let wanted: [(kind: BuildingKind, count: Int)] = midGame == .careful
             ? [(.weaver, weavers), (.sheepFarm, 2 * weavers)]
             : [(.sheepFarm, 2 * weavers), (.weaver, weavers)]
@@ -204,9 +221,9 @@ extension PlayerBot {
         ]
     }
 
-    /// Raw goods the careful kit sells above `keepOnSale` units.
+    /// Raw goods, and the cloth, the careful kit sells above `keepOnSale` units.
     static func rawSurplus(_ culture: Culture) -> [Good] {
-        [.grain, .ore, .charcoal, .wool, culture.luxuryChain.raw]
+        [.grain, .ore, .charcoal, .wool, .cloth, culture.luxuryChain.raw]
     }
 }
 
