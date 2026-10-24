@@ -110,8 +110,8 @@ func seasonLabelsFollowTheCalendar() {
     let model = StatisticsModel(seasons: [season(0), season(5)], calendar: calendar)
     #expect(model.title(ofSeason: 0) == "Spring 1200")
     #expect(model.title(ofSeason: 5) == "Summer 1201")
-    #expect(model.axisLabel(ofSeason: 4) == "Sp 1201")
-    #expect(model.axisLabel(ofSeason: 5) == "Su")
+    #expect(model.axisLabel(ofSeason: 4) == "1201")
+    #expect(model.axisLabel(ofSeason: 5) == "")
 }
 
 @Test("money series: income above the axis, spending below")

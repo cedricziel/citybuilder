@@ -20,7 +20,6 @@ public struct StatisticsModel: Equatable, Sendable {
     /// One value of a series, at the season it belongs to.
     public struct Point: Equatable, Identifiable, Sendable {
         public let season: Int
-        public let label: String
         public let value: Int
 
         public var id: Int {
@@ -141,15 +140,14 @@ public struct StatisticsModel: Equatable, Sendable {
         calendar.date(atTick: UInt64(season) * CalendarState.ticksPerSeason).displayText
     }
 
-    /// "Sp" on the axis, "Sp 1203" at the start of a year.
+    /// The year on the axis at the start of a year, nothing between.
     public func axisLabel(ofSeason season: Int) -> String {
         let date = calendar.date(atTick: UInt64(season) * CalendarState.ticksPerSeason)
-        let short = String(date.season.displayName.prefix(2))
-        return date.season == .spring ? "\(short) \(date.year)" : short
+        return date.season == .spring ? "\(date.year)" : ""
     }
 
     private func points(_ value: (SeasonStatistics) -> Int) -> [Point] {
-        seasons.map { Point(season: $0.season, label: axisLabel(ofSeason: $0.season), value: value($0)) }
+        seasons.map { Point(season: $0.season, value: value($0)) }
     }
 
     // MARK: Goods

@@ -24,6 +24,7 @@ struct StatisticsSheetView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 .padding(.horizontal)
                 content
             }
@@ -32,6 +33,9 @@ struct StatisticsSheetView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
             }
         }
+        #if os(macOS)
+        .frame(minWidth: 820, idealWidth: 880, minHeight: 640, idealHeight: 720)
+        #endif
         .task {
             // The history changes once a season; once a second is plenty.
             while !Task.isCancelled {

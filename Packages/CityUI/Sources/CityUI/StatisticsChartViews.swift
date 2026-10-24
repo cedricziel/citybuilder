@@ -73,9 +73,10 @@ struct StatisticsGoodDetailView: View {
 
     private func figure(_ title: String, _ value: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary)
+            Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             Text("\(value)").font(.title3.weight(.semibold)).monospacedDigit()
         }
+        .fixedSize()
     }
 
     @ViewBuilder
