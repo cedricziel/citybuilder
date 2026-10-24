@@ -11,6 +11,8 @@ public enum LogisticsCatalog {
     public static let cartMinLoad = 3
     /// Units a handcart carries at most.
     public static let cartCapacity = 4
+    /// Ticks a producer's output waits for a handcart load before it goes anyway.
+    public static let cartMaxWait = 200
 }
 
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

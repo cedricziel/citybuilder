@@ -75,6 +75,8 @@ public enum CarrierConfig {
     public static let cartMinLoad = LogisticsCatalog.cartMinLoad
     /// Units a handcart carries at most (game data).
     public static let cartCapacity = LogisticsCatalog.cartCapacity
+    /// Ticks a producer's output waits for a handcart load before it goes anyway (game data).
+    public static let cartMaxWait = LogisticsCatalog.cartMaxWait
 
     /// What one haul along `path` takes when `ready` units could go: a
     /// handcart with up to `cartCapacity` on a long haul with enough

@@ -176,5 +176,7 @@ public struct Logistics: Equatable, Sendable {
     public var cartMinLoad: Int
     /// Units a handcart carries at most.
     public var cartCapacity: Int
+    /// Ticks a producer's output waits for a handcart load before it goes anyway.
+    public var cartMaxWait: Int
     public var origin: Origin
 }

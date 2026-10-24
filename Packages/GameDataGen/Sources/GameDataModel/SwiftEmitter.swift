@@ -199,6 +199,8 @@ private struct Types {
             \(access)static let cartMinLoad = \(values.cartMinLoad)
             /// Units a handcart carries at most.
             \(access)static let cartCapacity = \(values.cartCapacity)
+            /// Ticks a producer's output waits for a handcart load before it goes anyway.
+            \(access)static let cartMaxWait = \(values.cartMaxWait)
         }
 
         """

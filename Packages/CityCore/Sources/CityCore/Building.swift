@@ -146,6 +146,10 @@ public struct Building: Hashable, Codable, Sendable {
     /// The player or a rival. Spec: `buildings-and-construction` /
     /// Buildings have an owner.
     public internal(set) var owner: Owner
+    /// Ticks this producer's output has waited for a handcart load on a
+    /// long haul, 0 when nothing waits. Spec: `warehouses-and-logistics`
+    /// / Handcarts carry long and bulk hauls.
+    public internal(set) var cartWaitTicks: UInt32
 
     public init(
         id: EntityID,
@@ -163,7 +167,8 @@ public struct Building: Hashable, Codable, Sendable {
         commissionTicksLeft: UInt32 = 0,
         exportGood: Good? = nil,
         lastCaravan: CaravanSale? = nil,
-        owner: Owner = .player
+        owner: Owner = .player,
+        cartWaitTicks: UInt32 = 0
     ) {
         self.id = id
         self.kind = kind
@@ -181,6 +186,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.exportGood = exportGood
         self.lastCaravan = lastCaravan
         self.owner = owner
+        self.cartWaitTicks = cartWaitTicks
     }
 }
 
@@ -218,6 +224,7 @@ public extension Building {
         self.projectStages = try container.decodeIfPresent(UInt8.self, forKey: .projectStages) ?? 0
         self.fuelled = try container.decodeIfPresent(Bool.self, forKey: .fuelled) ?? false
         self.commissionTicksLeft = try container.decodeIfPresent(UInt32.self, forKey: .commissionTicksLeft) ?? 0
+        self.cartWaitTicks = try container.decodeIfPresent(UInt32.self, forKey: .cartWaitTicks) ?? 0
         self.exportGood = try container.decodeIfPresent(Good.self, forKey: .exportGood)
         self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
         self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player

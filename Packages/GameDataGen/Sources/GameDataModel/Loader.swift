@@ -235,9 +235,13 @@ private struct ItemReader {
     }
 
     private func logistics(_ id: String) -> Logistics? {
-        let distance = fields.int("cartDistance"), minLoad = fields.int("cartMinLoad"), capacity = fields.int("cartCapacity")
-        guard let distance, let minLoad, let capacity else { return nil }
-        return Logistics(id: id, cartDistance: distance, cartMinLoad: minLoad, cartCapacity: capacity, origin: fields.origin)
+        let distance = fields.int("cartDistance"), minLoad = fields.int("cartMinLoad")
+        let capacity = fields.int("cartCapacity"), maxWait = fields.int("cartMaxWait")
+        guard let distance, let minLoad, let capacity, let maxWait else { return nil }
+        return Logistics(
+            id: id, cartDistance: distance, cartMinLoad: minLoad, cartCapacity: capacity, cartMaxWait: maxWait,
+            origin: fields.origin
+        )
     }
 
     private func age(_ id: String) -> Age? {

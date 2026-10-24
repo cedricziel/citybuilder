@@ -26,7 +26,7 @@ When a producer sends a unit of a good and no waiting construction site needs it
 
 ### Requirement: Handcarts carry long and bulk hauls
 
-A carrier SHALL travel with a handcart when its road path is at least the cart distance of 12 road tiles and at least the cart minimum load of 3 units is ready for the same destination. Ready means the source holds the units and the destination can take them: a goods buffer has room for them, and a consumer is short of them by at least that many. A handcart SHALL carry as many ready units as fit, up to the cart capacity of 4. A producer whose haul to storage is that long SHALL wait until a cart load is ready rather than send single units on foot. Every other haul SHALL go on foot with 1 unit. The cart distance, minimum load and capacity SHALL come from the game data. A handcart SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
+A carrier SHALL travel with a handcart when its road path is at least the cart distance of 12 road tiles and at least the cart minimum load of 3 units is ready for the same destination. Ready means the source holds the units and the destination can take them: a goods buffer has room for them, and a consumer is short of them by at least that many. A handcart SHALL carry as many ready units as fit, up to the cart capacity of 4. A producer whose haul to storage is that long SHALL wait until a cart load is ready rather than send single units on foot, but for no more than the cart's maximum wait of 200 ticks; then it SHALL send what is ready by handcart. Every other haul SHALL go on foot with 1 unit. The cart distance, minimum load, capacity and maximum wait SHALL come from the game data. A handcart SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
 
 #### Scenario: A long haul with enough ready goes by handcart
 
@@ -42,6 +42,11 @@ A carrier SHALL travel with a handcart when its road path is at least the cart d
 
 - **WHEN** a lumberjack hut holds 2 wood and its nearest goods buffer with room lies 15 road tiles away
 - **THEN** no carrier leaves until a third wood is ready, and then one handcart leaves with 3
+
+#### Scenario: Goods that wait too long for a cart load go anyway
+
+- **WHEN** a lumberjack hut whose forest is gone has held 2 wood for 200 ticks, and its nearest goods buffer with room lies 15 road tiles away
+- **THEN** one handcart leaves with the 2 wood
 
 #### Scenario: A handcart brings only what a consumer is short of
 

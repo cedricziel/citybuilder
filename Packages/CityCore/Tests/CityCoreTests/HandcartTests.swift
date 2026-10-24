@@ -162,3 +162,32 @@ func theDeterminismFixturesLongHaulGoesByHandcart() {
     }
     #expect(carts > 0)
 }
+
+@Test("scenario: goods that wait too long for a cart load go anyway")
+func scenarioGoodsThatWaitTooLongForACartLoadGoAnyway() throws {
+    var world = roadStrip()
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 2])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
+    // The hut's catchment holds no forest, so no third log is coming.
+    for _ in 0 ..< CarrierConfig.cartMaxWait {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.buildings[hut]?.cartWaitTicks == UInt32(CarrierConfig.cartMaxWait))
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first)
+    #expect(mission == .deliver(good: .wood, amount: 2, fromProducer: hut, toWarehouse: warehouse))
+    #expect(vehicle == .handcart)
+    #expect(world.buildings[hut]?.cartWaitTicks == 0)
+}
+
+@Test("a producer saved without a cart wait loads with none")
+func aProducerSavedWithoutACartWaitLoadsWithNone() throws {
+    var building = Building(id: EntityID(raw: 3), kind: .sawmill, anchor: TileCoordinate(x: 1, y: 1), state: .operational)
+    building.cartWaitTicks = 7
+    var json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(building)) as? [String: Any])
+    #expect(json["cartWaitTicks"] as? Int == 7)
+    json.removeValue(forKey: "cartWaitTicks")
+    let old = try JSONDecoder().decode(Building.self, from: JSONSerialization.data(withJSONObject: json))
+    #expect(old.cartWaitTicks == 0)
+}

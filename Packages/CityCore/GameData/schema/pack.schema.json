@@ -222,13 +222,14 @@
           "if": { "properties": { "kind": { "const": "Logistics" } } },
           "then": {
             "additionalProperties": false,
-            "required": ["kind", "id", "cartDistance", "cartMinLoad", "cartCapacity"],
+            "required": ["kind", "id", "cartDistance", "cartMinLoad", "cartCapacity", "cartMaxWait"],
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
               "cartDistance": { "description": "Road tiles a haul must cover before it goes by handcart.", "$ref": "#/$defs/positive" },
               "cartMinLoad": { "description": "Units that must be ready for one destination before a handcart goes.", "$ref": "#/$defs/positive" },
-              "cartCapacity": { "description": "Units a handcart carries at most.", "$ref": "#/$defs/positive" }
+              "cartCapacity": { "description": "Units a handcart carries at most.", "$ref": "#/$defs/positive" },
+              "cartMaxWait": { "description": "Ticks a producer's output waits for a handcart load before it goes anyway.", "$ref": "#/$defs/positive" }
             }
           }
         }

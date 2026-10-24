@@ -36,7 +36,7 @@ items:
 
   # How goods travel. Spec: warehouses-and-logistics / Handcarts carry
   # long and bulk hauls (visible-distribution design D9).
-  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4 }
+  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4, cartMaxWait: 200 }
 
   # --- Buildings -----------------------------------------------------
   # Holds residents. Spec: population-and-needs

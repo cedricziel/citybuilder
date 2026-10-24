@@ -152,7 +152,7 @@ func forwardReference() throws {
 
 // visible-distribution design D9: the distribution tunables.
 
-private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4 }\n"
+private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4, cartMaxWait: 200 }\n"
 
 @Test func logisticsLoadsIntoTheModel() throws {
     let data = try Fixtures.load().get()
@@ -168,7 +168,7 @@ private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance:
 
 @Test func secondLogisticsItemIsRejected() {
     let errors = Fixtures.errors(Fixtures.withExtraPack(
-        "items:\n  - { kind: Logistics, id: more, cartDistance: 5, cartMinLoad: 2, cartCapacity: 2 }\n"
+        "items:\n  - { kind: Logistics, id: more, cartDistance: 5, cartMinLoad: 2, cartCapacity: 2, cartMaxWait: 9 }\n"
     ))
     #expect(errors.contains { $0.contains("Logistics more") && $0.contains("second") })
 }

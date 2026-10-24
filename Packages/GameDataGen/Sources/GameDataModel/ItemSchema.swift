@@ -26,7 +26,7 @@ public enum ItemSchema {
         "Tech": Fields(required: ["id", "cost", "age"], optional: ["name", "prerequisites", "era", "eraGate"]),
         "Age": Fields(required: ["id", "startYear", "blurb", "signature", "rivalResidents"], optional: ["name"]),
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: []),
-        "Logistics": Fields(required: ["id", "cartDistance", "cartMinLoad", "cartCapacity"], optional: [])
+        "Logistics": Fields(required: ["id", "cartDistance", "cartMinLoad", "cartCapacity", "cartMaxWait"], optional: [])
     ]
 
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]

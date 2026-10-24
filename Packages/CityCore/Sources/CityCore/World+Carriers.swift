@@ -145,17 +145,10 @@ extension World {
                     )
                     break
                 }
-                let held = producerStock.quantity(of: good)
-                // A long haul to storage waits for a cart load, so with too little
-                // ready and every buffer far away there is nothing to search for.
-                if held < CarrierConfig.cartMinLoad, allFar(from: road, among: buffers) { continue }
-                guard let (warehouseId, path) = findRoadConnectedBuffer(
-                    fromRoad: road, good: good, among: buffers
+                guard let haul = storageHaul(
+                    of: good, held: producerStock.quantity(of: good), from: building, road: road, among: buffers
                 )
                 else { continue }
-                let ready = min(held, stockpiles[warehouseId]?.freeSpace ?? 0)
-                if CarrierConfig.isLong(path), ready < CarrierConfig.cartMinLoad { continue }
-                let haul = CarrierConfig.haul(ready: ready, along: path)
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,
@@ -163,9 +156,9 @@ extension World {
                         good: good,
                         mission: .deliver(
                             good: good, amount: haul.amount,
-                            fromProducer: producerId, toWarehouse: warehouseId
+                            fromProducer: producerId, toWarehouse: haul.buffer
                         ),
-                        path: path,
+                        path: haul.path,
                         vehicle: haul.vehicle
                     ),
                     events: &events
@@ -173,6 +166,39 @@ extension World {
                 break
             }
         }
+    }
+
+    /// The goods buffer `producer` sends `held` units of `good` to, the path, and the haul. A long haul
+    /// waits for a cart load, up to `cartMaxWait` ticks, and counts the wait on the producer; then it
+    /// returns nil. With too little ready and every buffer far away, it skips the path search.
+    private mutating func storageHaul(
+        of good: Good, held: Int, from producer: Building, road: TileCoordinate, among buffers: [Building]
+    ) -> StorageHaul? {
+        let flush = producer.cartWaitTicks >= UInt32(CarrierConfig.cartMaxWait)
+        if held < CarrierConfig.cartMinLoad, !flush, allFar(from: road, among: buffers) {
+            buildings[producer.id]?.cartWaitTicks += 1
+            return nil
+        }
+        guard let (warehouseId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers)
+        else { return nil }
+        let ready = min(held, stockpiles[warehouseId]?.freeSpace ?? 0)
+        guard CarrierConfig.isLong(path) else {
+            let haul = CarrierConfig.haul(ready: ready, along: path)
+            return StorageHaul(buffer: warehouseId, path: path, amount: haul.amount, vehicle: haul.vehicle)
+        }
+        if ready < CarrierConfig.cartMinLoad, !flush {
+            buildings[producer.id]?.cartWaitTicks += 1
+            return nil
+        }
+        return StorageHaul(buffer: warehouseId, path: path, amount: min(ready, CarrierConfig.cartCapacity), vehicle: .handcart)
+    }
+
+    /// Where a producer's goods go to storage, along which road, and how.
+    private struct StorageHaul {
+        let buffer: EntityID
+        let path: [TileCoordinate]
+        let amount: Int
+        let vehicle: Carrier.Vehicle
     }
 
     /// True when every buffer's road lies at least the cart distance from
@@ -206,6 +232,7 @@ extension World {
         nextEntityRaw &+= 1
         carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission, vehicle: spawn.vehicle)
         carrierCountByProducer[spawn.producerId, default: 0] += 1
+        buildings[spawn.producerId]?.cartWaitTicks = 0
         events.append(.carrierDeparted(
             carrier: carrierId, from: spawn.road, good: spawn.good
         ))

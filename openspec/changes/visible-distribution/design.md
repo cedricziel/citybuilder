@@ -90,7 +90,7 @@ That costs one search per producer with output, about the same as today's search
 
 *Why this rule:* it is decided entirely from integer state the source already has, so it stays deterministic. It also means a cart never leaves half-empty on a short trip.
 
-*Waiting for a load (found in milestone 3):* a producer ships each unit as soon as it is ready, so its stock never reaches 3, and carts never appeared on producer hauls. On a haul of 12 tiles or more, a producer now waits for a cart load before it sends anything to storage. Supply to a consumer never waits; it uses a cart only when the consumer is short of 3 or more, which needs a recipe that takes 2 at a time. The edge case: a producer that stops producing, such as a lumberjack whose forest is gone, keeps its last one or two units.
+*Waiting for a load (found in milestone 3):* a producer ships each unit as soon as it is ready, so its stock never reaches 3, and carts never appeared on producer hauls. On a haul of 12 tiles or more, a producer now waits for a cart load before it sends anything to storage. Supply to a consumer never waits; it uses a cart only when the consumer is short of 3 or more, which needs a recipe that takes 2 at a time. So that a producer that stops producing, such as a lumberjack whose forest is gone, does not strand its last units, the wait ends after `cartMaxWait` ticks (200, in the `Logistics` data). Then whatever is ready goes by handcart. The wait counts on the producer (`Building.cartWaitTicks`, 0 in old saves) and resets whenever it sends a carrier.
 
 *M3 result before the output cap,* PlayerBot sweeps on main 4f3e8a0c against the handcart branch alone, release build:
 - First-hour solvency: 0/20 bankrupt on both.
@@ -133,7 +133,7 @@ The canvas proposes the looks: https://claude.ai/artifact/2pupecCf6JAYUSkfi5LsWp
 The distribution numbers are starting values, so they go in the game-data packs, not in Swift constants. designer2 tunes them in the pacing sweeps without a code change.
 
 - **Hubs:** a hub building's pack item gets a `hub` mapping: `radius` (18), `housesPerPorter` (4), `maxPorters` (8), `basketUnits` (10) and `reserveConsumptions` (2). The town center and the marketplace each carry one, so the marketplace can be tuned apart from the town center.
-- **Carts:** one `Logistics` item in `core.yaml` holds `cartDistance` (12), `cartMinLoad` (3) and `cartCapacity` (4).
+- **Carts:** one `Logistics` item in `core.yaml` holds `cartDistance` (12), `cartMinLoad` (3), `cartCapacity` (4) and `cartMaxWait` (200 ticks).
 - **House stock:** the same item holds `houseStockConsumptions` (2) and `houseStockMinimum` (2).
 - The schema validates them, `make gamedata` generates the Swift catalog, and `gamedata-check` keeps the two in sync.
 
