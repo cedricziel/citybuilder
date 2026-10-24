@@ -39,9 +39,9 @@ When a producer sends a unit of a good and no waiting construction site needs it
 - **WHEN** a bakery holds no flour but its stockpile has no free room
 - **THEN** the windmill's carrier leaves for the nearest goods buffer with room
 
-### Requirement: Carried goods are never lost
+### Requirement: Carried goods go on to storage
 
-A carrier whose destination cannot take everything it carries, because the destination is full or was demolished, SHALL carry the rest on to the nearest operational goods buffer of the same owner with room. With no such buffer it SHALL carry the rest back to the building the goods came from. With neither, it SHALL wait where it stands and try its destination again each tick. A producer's goods redirected this way SHALL keep occupying one of that producer's carrier slots until they arrive.
+A carrier whose destination cannot take everything it carries, because the destination is full or was demolished, SHALL carry the rest on to the nearest operational goods buffer of the same owner with room. With no such buffer it SHALL carry the rest back to the building the goods came from, if that building still stands and has room. When no building has room, the goods SHALL be lost, as before, so a town with full stores sheds its overflow rather than stalling. A producer's goods redirected this way SHALL keep occupying one of that producer's carrier slots until they arrive.
 
 #### Scenario: Goods for a demolished consumer go to storage
 
@@ -55,5 +55,5 @@ A carrier whose destination cannot take everything it carries, because the desti
 
 #### Scenario: Goods with no storage go back
 
-- **WHEN** a carrier's destination is demolished and its owner has no goods buffer with room
+- **WHEN** a carrier's destination is demolished, its owner has no goods buffer with room, and the building the goods came from has room
 - **THEN** the carrier takes the goods back to the building they came from

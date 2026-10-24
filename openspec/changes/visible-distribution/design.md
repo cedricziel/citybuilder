@@ -47,15 +47,16 @@ For each unit a producer sends, it looks for a destination in this order:
 
 *Rejected:* always delivering producer → consumer. Then output would pile up at the producer whenever nobody is short, and storage and the market would stop seeing intermediates.
 
-### D1b. Carried goods are never lost
+### D1b. Carried goods go on to storage
 
 A carrier whose destination cannot take all it carries keeps the rest. That happens when the destination is full or was demolished while the carrier walked, and it holds for every mission.
 - It goes on to the nearest goods buffer of its owner with room, by road from where it stands.
-- With none, it goes back to where the goods came from.
-- With neither, it waits where it stands and tries its destination again each tick.
+- With none, it goes back to where the goods came from, if that still stands and has room.
 - A producer's goods continue as a delivery to storage, so the producer's carrier slot frees on final arrival. A retrieval stays a retrieval.
 - A construction delivery to a site that is gone or already built is handled the same way.
-- Only when both ends of the trip are gone, so no owner is known, is the unit dropped.
+- When no building has room, the goods are lost, as they always were.
+
+*Rejected: never losing goods.* We tried a version that takes goods back past the source's capacity, has carriers wait at a full door, and reserves buffer room for units on the way. A full town then stalls every producer instead of shedding overflow. Intermediates clog storage, food stops getting in, and the pacing sweep's bankruptcies rose from 7 to 52 of 180, with direct hops on or off. The overflow sink belongs to the economy until something like designer2's supply output cap keeps stores from filling. That change can revisit it.
 
 ### D2. Distances without a search per pair (milestone 1)
 
