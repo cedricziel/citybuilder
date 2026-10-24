@@ -19,6 +19,8 @@ enum StatusIcons {
     #endif
     /// The disc's share of the icon's cell: a 24-point disc on a 28-point cell.
     static let discFraction: CGFloat = 24.0 / 28.0
+    /// The icon's cell at zoom 1, in points, before its zoom scale.
+    static let side = discPoints / discFraction
     /// The icon's on-screen size follows the zoom within these bounds, so it shrinks less than the world.
     static let zoomRange: ClosedRange<CGFloat> = 0.75 ... 1.25
     /// The smallest touch target around an icon, in on-screen points.
@@ -52,17 +54,18 @@ enum StatusIcons {
     /// The icon for each of the player's buildings that needs one: its issue, else a house's first
     /// short need in `Good` order, else no road.
     static func icons(in snapshot: WorldSnapshot) -> [EntityID: String] {
+        let isPlayers = { (id: EntityID) in snapshot.buildings[id]?.owner == .player }
         var icons: [EntityID: String] = [:]
-        for id in snapshot.roadDisconnectedBuildings {
-            icons[id] = "status-no-road"
+        for id in snapshot.roadDisconnectedBuildings where isPlayers(id) {
+            icons[id] = textureName(for: .noRoad)
         }
-        for (id, population) in snapshot.housePopulations where !population.shortGoods.isEmpty {
+        for (id, population) in snapshot.housePopulations where isPlayers(id) {
             if let good = Good.allCases.first(where: population.isShort) { icons[id] = short(good) }
         }
-        for (id, issue) in snapshot.buildingIssues {
-            icons[id] = textureName(for: issue)
+        for (id, issue) in snapshot.buildingIssues where isPlayers(id) {
+            if let name = textureName(for: issue) { icons[id] = name }
         }
-        return icons.filter { snapshot.buildings[$0.key]?.owner == .player }
+        return icons
     }
 
     /// Node scale that keeps the on-screen size at `clamp(zoom)` of its zoom-1 size.
@@ -73,17 +76,17 @@ enum StatusIcons {
     }
 
     /// A 2 pt bob over 1.8 s, started part-way through by the building's id so a street of icons
-    /// does not move in step.
-    static func bob(for id: EntityID) -> SKAction {
-        let half = SKAction.moveBy(x: 0, y: 2, duration: 0.9)
+    /// does not move in step. `scale` is the icon's zoom scale, so the bob follows the icon's size.
+    static func bob(for id: EntityID, scale: CGFloat) -> SKAction {
+        let half = SKAction.moveBy(x: 0, y: 2 * scale, duration: 0.9)
         half.timingMode = .easeInEaseOut
         let phase = Double(UInt64(id.raw) &* 0x9E37_79B9 % 18) / 10
         return .sequence([.wait(forDuration: phase), .repeatForever(.sequence([half, half.reversed()]))])
     }
 
     /// Over the roof: the top of the sprite's opaque pixels, since a render's cell leaves headroom.
-    static func restPosition(on sprite: SKSpriteNode) -> CGPoint {
-        CGPoint(x: 0, y: sprite.size.height * contentTop(of: sprite.texture) + lift)
+    static func restPosition(on sprite: SKSpriteNode, scale: CGFloat) -> CGPoint {
+        CGPoint(x: 0, y: sprite.size.height * contentTop(of: sprite.texture) + lift * scale)
     }
 
     private nonisolated(unsafe) static var contentTops: [ObjectIdentifier: CGFloat] = [:]
@@ -120,18 +123,23 @@ enum StatusIcons {
     }
 
     static func make(named name: String, on sprite: SKSpriteNode, id: EntityID, zoom: Double, reduceMotion: Bool) -> SKSpriteNode {
-        let side = discPoints / discFraction
         let icon = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name), size: CGSize(width: side, height: side))
         icon.name = nodeName
         icon.userData = [IsoWorldScene.textureNameKey: name]
         icon.anchorPoint = CGPoint(x: 0.5, y: 0)
-        icon.position = restPosition(on: sprite)
         icon.zPosition = 100 // over the night shade (95), like the construction badge
-        icon.setScale(scale(zoom: zoom))
         icon.alpha = 0
         icon.run(.fadeIn(withDuration: 0.2))
-        if !reduceMotion { icon.run(bob(for: id), withKey: bobKey) }
+        settle(icon, on: sprite, id: id, scale: scale(zoom: zoom), reduceMotion: reduceMotion)
         return icon
+    }
+
+    /// Sizes the icon for the zoom, puts it back at rest and restarts its bob, if any.
+    static func settle(_ icon: SKSpriteNode, on sprite: SKSpriteNode, id: EntityID, scale: CGFloat, reduceMotion: Bool) {
+        icon.removeAction(forKey: bobKey)
+        icon.setScale(scale)
+        icon.position = restPosition(on: sprite, scale: scale)
+        if !reduceMotion { icon.run(bob(for: id, scale: scale), withKey: bobKey) }
     }
 }
 
@@ -141,12 +149,13 @@ extension IsoWorldScene {
     func reconcileStatusIcons(with snapshot: WorldSnapshot) {
         let wanted = StatusIcons.icons(in: snapshot)
         let scale = StatusIcons.scale(zoom: snapshot.camera.zoom)
-        for (id, icon) in statusIcons {
+        let gone = statusIcons.filter { id, icon in
             let sprite = snapshot.buildings[id].flatMap { buildingNodes[$0.anchor] }
-            if wanted[id] == nil || sprite == nil || icon.parent !== sprite {
-                icon.removeFromParent()
-                statusIcons.removeValue(forKey: id)
-            }
+            return wanted[id] == nil || sprite == nil || icon.parent !== sprite
+        }
+        for (id, icon) in gone {
+            icon.removeFromParent()
+            statusIcons.removeValue(forKey: id)
         }
         for (id, name) in wanted {
             guard let building = snapshot.buildings[id], let sprite = buildingNodes[building.anchor] else { continue }
@@ -160,32 +169,30 @@ extension IsoWorldScene {
                 icon.texture = SpriteAtlas.textureOrPlaceholder(named: name)
                 icon.userData?[Self.textureNameKey] = name
             }
-            if icon.xScale != scale { icon.setScale(scale) }
             let bobbing = icon.action(forKey: StatusIcons.bobKey) != nil
-            if reduceMotion, bobbing {
-                icon.removeAction(forKey: StatusIcons.bobKey)
-                icon.position = StatusIcons.restPosition(on: sprite)
-            } else if !reduceMotion, !bobbing {
-                icon.run(StatusIcons.bob(for: id), withKey: StatusIcons.bobKey)
+            if icon.xScale != scale || bobbing == reduceMotion {
+                StatusIcons.settle(icon, on: sprite, id: id, scale: scale, reduceMotion: reduceMotion)
             }
         }
     }
 
     /// The anchor of the building whose status icon covers `sceneLocation`, with the hit area
-    /// grown to 44 on-screen points.
+    /// grown to 44 on-screen points. Where hit areas overlap, the icon whose centre is nearest wins.
     func statusIconTile(at sceneLocation: CGPoint) -> TileCoordinate? {
         guard let snapshot = dataSource?.currentSnapshot() else { return nil }
         let screenPerLocal = CGFloat(snapshot.camera.zoom)
+        var best: (anchor: TileCoordinate, distance: CGFloat)?
         for (id, icon) in statusIcons {
             guard let building = snapshot.buildings[id], icon.scene === self else { continue }
             let point = convert(sceneLocation, to: icon)
-            // In the icon's own (unscaled) units; `size` already includes its scale.
-            let side = icon.size.width / icon.xScale
+            // In the icon's own, unscaled units.
+            let side = StatusIcons.side
             let reach = max(side, StatusIcons.hitPoints / (screenPerLocal * icon.xScale)) / 2
-            if abs(point.x) <= reach, abs(point.y - side / 2) <= reach {
-                return building.anchor
-            }
+            let offset = CGPoint(x: point.x, y: point.y - side / 2)
+            guard abs(offset.x) <= reach, abs(offset.y) <= reach else { continue }
+            let distance = hypot(offset.x, offset.y) * icon.xScale
+            if distance < best?.distance ?? .infinity { best = (building.anchor, distance) }
         }
-        return nil
+        return best?.anchor
     }
 }

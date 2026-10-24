@@ -26,8 +26,9 @@ extension IsoWorldScene {
     }
 
     private func dispatchTap(at sceneLocation: CGPoint) {
-        // A tap on a status icon selects its building, unless a build tool shows its ghost.
-        if ghostProvider?() == nil, let anchor = statusIconTile(at: sceneLocation) {
+        // A tap on a status icon selects its building, but only with the Inspect tool: under
+        // Demolish or a place tool the tap belongs to the tile underneath.
+        if inspectingProvider?() == true, let anchor = statusIconTile(at: sceneLocation) {
             intentSink?(.tapTile(anchor))
             return
         }

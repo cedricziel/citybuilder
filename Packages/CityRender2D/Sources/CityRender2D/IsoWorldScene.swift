@@ -86,6 +86,9 @@ public final class IsoWorldScene: SKScene {
     /// Tile the inspector has selected; a selected signature building
     /// shows its range rings.
     public var selectionProvider: (() -> TileCoordinate?)?
+    /// Whether the Inspect tool is the armed one. Only then does a tap on a status icon select its
+    /// building; under Demolish or a place tool the tap goes to the tile underneath.
+    public var inspectingProvider: (() -> Bool)?
     /// Range rings and highlights, keyed by the source they show.
     let signatureRingLayer = SKNode()
     var signatureRingSource: SignatureRingSource?
@@ -407,6 +410,7 @@ public struct IsoWorldView: View {
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
+        inspectingProvider: (@MainActor @Sendable () -> Bool)? = nil,
         areaOfEffectProvider: (@MainActor @Sendable () -> AreaOfEffect?)? = nil,
         routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
         cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil,
@@ -428,6 +432,9 @@ public struct IsoWorldView: View {
         }
         if let selectionProvider {
             prepared.selectionProvider = { selectionProvider() }
+        }
+        if let inspectingProvider {
+            prepared.inspectingProvider = { inspectingProvider() }
         }
         if let areaOfEffectProvider {
             prepared.areaOfEffectProvider = { areaOfEffectProvider() }

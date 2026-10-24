@@ -11,7 +11,7 @@ A building that isn't working only says why in the inspector, so the player has 
 - **Size:** 22 pt on iPhone and iPad, 20 pt on Mac, 30 pt on Apple TV at zoom 1. The icon scales by clamp(zoom, 0.75, 1.25), so it shrinks less than the world.
 - **Motion:** a 2 pt bob over 1.8 s, phase-offset per building. Under Reduce Motion the icon is static.
 - **Cost:** at most one sprite node per affected building, textured from the Kit atlas. It is touched only when the issue or the zoom changes.
-- **Input:** a tap or click on the icon selects its building, unless a build tool is armed.
+- **Input:** with the Inspect tool, a tap or click on the icon selects its building. Under Demolish or a place tool, the tap goes to the tile underneath. Where hit areas overlap, the nearest icon wins.
 - **Removed:** the pulsing `SKShapeNode` no-road disc. The no-road status icon replaces it.
 - **Design system:** `design/web` gains a `StatusIcon` component.
 

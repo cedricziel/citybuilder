@@ -486,6 +486,8 @@ public final class GameSession {
             longPressSink: longPressSink,
             ghostProvider: ghostProvider,
             selectionProvider: { [weak self] in self?.inspectedTile },
+            // The tool `handleTap` uses (Inspect once the game is over), and not while authoring a route.
+            inspectingProvider: { [weak self] in self?.activeTool == .inspect && self?.routeAuthoring == nil },
             areaOfEffectProvider: { [weak self] in self?.areaOfEffect() },
             routeOverlayProvider: { [weak self] in self?.routeOverlay() }
         )
