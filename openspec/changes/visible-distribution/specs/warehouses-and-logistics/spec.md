@@ -23,3 +23,37 @@ When a producer sends a unit of a good and no waiting construction site needs it
 
 - **WHEN** two short bakeries lie at the same road distance from a windmill
 - **THEN** the windmill's carrier goes to the bakery with the lower entity ID
+
+### Requirement: Handcarts carry long and bulk hauls
+
+A carrier SHALL travel with a handcart when its road path is at least the cart distance of 12 road tiles and at least the cart minimum load of 3 units is ready for the same destination. Ready means the source holds the units and the destination can take them: a goods buffer has room for them, and a consumer is short of them by at least that many. A handcart SHALL carry as many ready units as fit, up to the cart capacity of 4. Every other haul SHALL go on foot with 1 unit. The cart distance, minimum load and capacity SHALL come from the game data. A handcart SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
+
+#### Scenario: A long haul with enough ready goes by handcart
+
+- **WHEN** a lumberjack hut holds 4 wood and its nearest goods buffer with room lies 15 road tiles away
+- **THEN** one handcart leaves with 4 wood
+
+#### Scenario: A short haul stays on foot
+
+- **WHEN** a lumberjack hut holds 4 wood and its nearest goods buffer with room lies 5 road tiles away
+- **THEN** a carrier leaves on foot with 1 wood
+
+#### Scenario: A long haul with too little ready stays on foot
+
+- **WHEN** a lumberjack hut holds 2 wood and its nearest goods buffer with room lies 15 road tiles away
+- **THEN** a carrier leaves on foot with 1 wood
+
+#### Scenario: A handcart brings only what a consumer is short of
+
+- **WHEN** a goods buffer 15 road tiles from a charcoal burner holds 10 wood, and the burner holds 1 wood and needs 2 at a time
+- **THEN** one handcart leaves for the burner with 3 wood
+
+#### Scenario: A consumer short of little gets a walker
+
+- **WHEN** a goods buffer 15 road tiles from a charcoal burner holds 10 wood, and the burner holds 2 wood and needs 2 at a time
+- **THEN** a carrier leaves for the burner on foot with 1 wood
+
+#### Scenario: A handcart counts as one of the producer's carriers
+
+- **WHEN** a producer has one handcart and one carrier on foot on the road
+- **THEN** it sends no third carrier until one of them arrives
