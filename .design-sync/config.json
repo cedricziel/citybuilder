@@ -15,7 +15,10 @@
   "componentSrcMap": {
     "PaletteButton": null,
     "HUDButtonCluster": null,
-    "ListRow": null
+    "ListRow": null,
+    "AnimatedSprite": null,
+    "SpeedControl": null,
+    "HUDMenuButtons": null
   },
   "overrides": {
     "BuildingSprite": {
@@ -88,6 +91,42 @@
       "cardMode": "column"
     },
     "MenuPicker": {
+      "cardMode": "column"
+    },
+    "AreaCountCapsule": {
+      "cardMode": "column"
+    },
+    "BuildDrawer": {
+      "cardMode": "column"
+    },
+    "FirstStepsCard": {
+      "cardMode": "column"
+    },
+    "StatusPill": {
+      "cardMode": "column"
+    },
+    "StocksTray": {
+      "cardMode": "column"
+    },
+    "ToolStrip": {
+      "cardMode": "column"
+    },
+    "BuildRail": {
+      "cardMode": "column"
+    },
+    "MarketPanel": {
+      "cardMode": "column"
+    },
+    "RivalMarketPanel": {
+      "cardMode": "column"
+    },
+    "StandingsPanel": {
+      "cardMode": "column"
+    },
+    "ShipSprite": {
+      "cardMode": "column"
+    },
+    "Minimap": {
       "cardMode": "column"
     }
   },
