@@ -177,7 +177,7 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
     - First-hour solvency with the market: 0/20 bankrupt on both.
     - Guided Hard start: 0/20 bankrupt on both. Residents at tick 12,000 rose from min 29, median 52.5 to min 38, median 57.
     - Rival viability: year 5 min 15 → 19 (median 59.5 → 58); year 15 median 57.5 → 61.
-    - The no-market control kept seeds 2, 6 and 21 solvent, so it now uses seeds 1, 3, 9 and 11, which still go bankrupt without the market.
+    - The no-market control's seeds 2, 6 and 21 stay solvent; #235 replaces the hand-picked seeds with an aggregate over seeds 0–29.
     - **Mid-game pacing regresses:**
       - 70 of 180 arms reach a merchant against 121 on main, though sooner when they do (median 3.8 against 5.0 years).
       - Bankruptcies go from 11 to 25.
