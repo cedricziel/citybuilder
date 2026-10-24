@@ -88,6 +88,8 @@ public struct Building: Equatable, Sendable {
     public var storage: Int?
     /// Ticks per planted forest tile, for buildings that plant.
     public var plantTicks: Int?
+    /// Chebyshev radius around the footprint a gathering or planting building works.
+    public var catchmentRadius: Int?
     public var category: String?
     public var materials: GoodAmounts
     public var recipe: Recipe?

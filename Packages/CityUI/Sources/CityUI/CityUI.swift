@@ -58,6 +58,7 @@ public struct CityRootView: View {
                 #if os(tvOS)
                 .modifier(TVHUDCommands(root: self, isInspector: true))
                 #endif
+            AreaCountCapsule(session: session, idiom: HUDMetrics.idiom)
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
                 let insets = proxy.safeAreaInsets
@@ -419,6 +420,10 @@ public final class GameSession {
     /// before a drag starts, or when the pointer leaves the world view).
     public var hoveredTile: TileCoordinate?
 
+    /// The last area of effect asked for, kept for the tick it was asked
+    /// on. The scene and the count capsule both ask every frame.
+    @ObservationIgnored var areaOfEffectCache: AreaOfEffectCache?
+
     /// Apply a hover update from the renderer. `nil` clears the hover.
     public func handleHover(at tile: TileCoordinate?) {
         hoveredTile = tile
@@ -480,7 +485,8 @@ public final class GameSession {
             hoverSink: hoverSink,
             longPressSink: longPressSink,
             ghostProvider: ghostProvider,
-            selectionProvider: { [weak self] in self?.selectedTool == .inspect ? self?.selectedTile : nil },
+            selectionProvider: { [weak self] in self?.inspectedTile },
+            areaOfEffectProvider: { [weak self] in self?.areaOfEffect() },
             routeOverlayProvider: { [weak self] in self?.routeOverlay() }
         )
     }

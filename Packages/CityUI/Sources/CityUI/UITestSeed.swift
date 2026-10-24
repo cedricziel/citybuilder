@@ -135,6 +135,26 @@ public enum UITestSeed {
         arguments.contains("-uiTestShowStats")
     }
 
+    /// `-uiTestPlace kind@x,y`: the building a started game arms, and the tile its ghost stands on, so
+    /// shots of placing need no input. A kind the world has not researched yet shows a red ghost.
+    public static func placement(fromArguments arguments: [String]) -> (kind: BuildingKind, tile: TileCoordinate)? {
+        guard let flag = arguments.firstIndex(of: "-uiTestPlace"), arguments.indices.contains(flag + 1) else { return nil }
+        let parts = arguments[flag + 1].split(separator: "@")
+        guard parts.count == 2, let kind = BuildingKind(rawValue: String(parts[0])), let tile = tile(String(parts[1])) else { return nil }
+        return (kind, tile)
+    }
+
+    /// `-uiTestSelect x,y`: the tile a started game selects with the inspect tool.
+    public static func selection(fromArguments arguments: [String]) -> TileCoordinate? {
+        guard let flag = arguments.firstIndex(of: "-uiTestSelect"), arguments.indices.contains(flag + 1) else { return nil }
+        return tile(arguments[flag + 1])
+    }
+
+    private static func tile(_ value: String) -> TileCoordinate? {
+        let values = value.split(separator: ",").compactMap { Int($0) }
+        return values.count == 2 ? TileCoordinate(x: values[0], y: values[1]) : nil
+    }
+
     /// The camera after `-uiTestCamera x,y,zoom` (tile coordinates and zoom), if any.
     public static func camera(fromArguments arguments: [String]) -> Camera? {
         guard let flag = arguments.firstIndex(of: "-uiTestCamera"), arguments.indices.contains(flag + 1) else { return nil }
