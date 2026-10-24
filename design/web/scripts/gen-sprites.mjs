@@ -124,6 +124,24 @@ writeFileSync(
   `import type { buildingSpritesKey } from "./buildings";\n// Footprint in tiles: [columns along x, rows along y].\nexport const buildingFootprints: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingFootprints)};\n`,
 );
 
+// Figures and ships, every animation frame: `walker-ne-0` … `walker-ne-7` become `walker-ne: [8 frames]`,
+// with each cycle's frame size.
+const unitFrames = {};
+const unitSizes = {};
+for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.localeCompare(b, "en", { numeric: true }))) {
+  const match = /^((?:walker|carrier|animal|ship)-[a-z-]+)-(\d+)\.png$/.exec(file);
+  if (!match) continue;
+  const png = readFileSync(join(resources, "Kit.atlas", file));
+  (unitFrames[match[1]] ??= [])[Number(match[2])] = `data:image/png;base64,${png.toString("base64")}`;
+  unitSizes[match[1]] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+}
+writeFileSync(
+  join(out, "units.ts"),
+  `export type unitSpritesKey = ${Object.keys(unitFrames).map((key) => JSON.stringify(key)).join(" | ")};\n` +
+    `export const unitSprites: Record<unitSpritesKey, string[]> = ${JSON.stringify(unitFrames)};\n` +
+    `export const unitSizes: Record<unitSpritesKey, [number, number]> = ${JSON.stringify(unitSizes)};\n`,
+);
+
 // The app icon (`scripts/art/app_icon.py`): the gable house on its grass plot, at the macOS 256 px
 // size, which carries its own rounded square.
 const appIcon = readFileSync(join(repo, "Apps/CitybuilderMac/Assets.xcassets/AppIcon.appiconset/icon-256.png"));
