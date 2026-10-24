@@ -7,7 +7,6 @@ struct StatisticsSheetView: View {
     let session: GameSession
     let done: () -> Void
     @State private var model: StatisticsModel
-    @State private var tab: StatisticsModel.Tab = .goods
 
     init(session: GameSession, done: @escaping () -> Void) {
         self.session = session
@@ -18,7 +17,7 @@ struct StatisticsSheetView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                Picker("View", selection: $tab) {
+                Picker("View", selection: tabBinding) {
                     ForEach(model.tabs) { tab in
                         Text(tab.title).tag(tab)
                     }
@@ -46,6 +45,15 @@ struct StatisticsSheetView: View {
         }
     }
 
+    private var tabBinding: Binding<StatisticsModel.Tab> {
+        Binding(get: { currentTab }, set: { session.statisticsTab = $0 })
+    }
+
+    /// The session's tab, unless this world has no such tab (no rivals).
+    private var currentTab: StatisticsModel.Tab {
+        model.tabs.contains(session.statisticsTab) ? session.statisticsTab : .goods
+    }
+
     @ViewBuilder
     private var content: some View {
         if model.isEmpty {
@@ -55,7 +63,7 @@ struct StatisticsSheetView: View {
                 description: Text("Come back when the first season ends.")
             )
         } else {
-            switch tab {
+            switch currentTab {
             case .goods: StatisticsGoodsTab(model: model)
             case .money: StatisticsMoneyTab(model: model)
             case .people: StatisticsPeopleTab(model: model)
@@ -81,8 +89,7 @@ struct StatisticsGoodsTab: View {
 
     private var current: Good? {
         selected.flatMap { good in model.goods.contains { $0.good == good } ? good : nil }
-            ?? model.goods.first(where: { $0.stoppedNow > 0 })?.good
-            ?? model.goods.first?.good
+            ?? model.defaultGood
     }
 
     var body: some View {

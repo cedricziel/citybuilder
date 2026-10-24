@@ -210,6 +210,7 @@ public final class TitleScreenViewModel {
         }
         if UITestSeed.opensStatistics(fromArguments: arguments) {
             committedSession?.isStatisticsPresented = true
+            committedSession?.statisticsTab = UITestSeed.statisticsTab(fromArguments: arguments)
         }
         committedSession?.applyTestTool(fromArguments: arguments)
     }

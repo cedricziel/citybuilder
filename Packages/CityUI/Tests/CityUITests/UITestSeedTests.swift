@@ -205,4 +205,12 @@ func openStatisticsFlagShowsTheSheet() {
     let open = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
     open.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame", "-uiTestOpenStatistics"])
     #expect(open.committedSession?.isStatisticsPresented == true)
+    #expect(open.committedSession?.statisticsTab == .goods)
+    let money = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    money.startGameIfRequested(arguments: [
+        "Citybuilder", "-uiTestStartGame", "-uiTestOpenStatistics", "money"
+    ])
+    #expect(money.committedSession?.statisticsTab == .money)
+    #expect(UITestSeed.statisticsTab(fromArguments: ["-uiTestOpenStatistics", "nonsense"]) == .goods)
+    #expect(UITestSeed.statisticsTab(fromArguments: ["-uiTestOpenStatistics"]) == .goods)
 }

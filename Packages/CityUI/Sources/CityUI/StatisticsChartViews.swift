@@ -54,6 +54,7 @@ struct StatisticsGoodDetailView: View {
             }
             .chartForegroundStyleScale(["Made": StatisticsPalette.made, "Used": StatisticsPalette.used])
             .chartXAxis { seasonAxis(model, seasons) }
+            .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 150)
             .accessibilityLabel("\(detail.row.name) made and used per season")
             Text("In store at season end").font(.footnote.weight(.semibold))
@@ -64,6 +65,7 @@ struct StatisticsGoodDetailView: View {
                     .foregroundStyle(StatisticsPalette.stored)
             }
             .chartXAxis { seasonAxis(model, seasons) }
+            .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 100)
             .accessibilityLabel("\(detail.row.name) in store at season end")
             stuckStrip(detail, seasons: seasons)
@@ -90,6 +92,7 @@ struct StatisticsGoodDetailView: View {
             .chartYScale(domain: 0 ... 1)
             .chartYAxis(.hidden)
             .chartXAxis { seasonAxis(model, seasons) }
+            .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 50)
             .accessibilityLabel("Share of each season the \(detail.row.name) producers were stopped, output stuck")
         }
@@ -149,13 +152,16 @@ struct StatisticsMoneyTab: View {
                     "Tax": Color.green, "Trade": Color.blue, "Upkeep": Color.orange, "Bought": Color.purple
                 ])
                 .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 200)
                 .accessibilityLabel("Tax and trade income above zero, upkeep and purchases below, per season")
                 Text("Balance at season end").font(.footnote.weight(.semibold))
                 Chart(model.balance) { point in
                     LineMark(x: .value("Season", point.season), y: .value("Balance", point.value))
                 }
+                .chartYScale(domain: .automatic(includesZero: false))
                 .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 120)
                 .accessibilityLabel("Balance at the end of each season")
             }
@@ -181,6 +187,7 @@ struct StatisticsPeopleTab: View {
                     }
                 }
                 .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 260)
                 .accessibilityLabel("Residents by house tier at the end of each season")
             }
@@ -210,6 +217,7 @@ struct StatisticsRivalsTab: View {
                     domain: lines.map(\.name), range: model.residentLineColours.map { Color(hex: $0) }
                 )
                 .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 220)
                 .accessibilityLabel("Residents of your town and each rival at the end of each season")
                 ForEach(model.standings) { row in

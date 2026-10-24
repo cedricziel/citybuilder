@@ -133,9 +133,17 @@ public enum UITestSeed {
         arguments.contains("-uiTestOpenStocks")
     }
 
-    /// `-uiTestOpenStatistics`: the started game opens with the Statistics sheet shown.
+    /// `-uiTestOpenStatistics`: the started game opens with the Statistics sheet shown, on the tab named after it.
     public static func opensStatistics(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestOpenStatistics")
+    }
+
+    /// `-uiTestOpenStatistics money|people|rivals`: the tab the Statistics sheet opens on.
+    public static func statisticsTab(fromArguments arguments: [String]) -> StatisticsModel.Tab {
+        guard let flag = arguments.firstIndex(of: "-uiTestOpenStatistics"), arguments.indices.contains(flag + 1),
+              let tab = StatisticsModel.Tab(rawValue: arguments[flag + 1])
+        else { return .goods }
+        return tab
     }
 
     /// `-uiTestSeasons n`: the seeded game runs `n` more seasons (at most 40) before the camera

@@ -205,6 +205,8 @@ public final class GameSession {
     public var isWinSheetPresented = false
     /// The Statistics sheet is open. Session state, never saved.
     public var isStatisticsPresented = false
+    /// The Statistics sheet's open tab, kept between openings.
+    public var statisticsTab: StatisticsModel.Tab = .goods
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes

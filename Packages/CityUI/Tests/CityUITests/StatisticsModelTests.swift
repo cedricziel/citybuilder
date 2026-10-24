@@ -177,3 +177,11 @@ func modelFromWorld() {
     #expect(model.stoppedProducersNow == 0)
     #expect(model.tabs == [.goods, .money, .people])
 }
+
+@Test("the Goods tab opens on a stopped good, else the busiest")
+func defaultGoodIsStoppedThenBusiest() {
+    let seasons = [season(0, goods: [.wood: flow(made: 2), .bread: flow(made: 9, used: 3), .food: flow(made: 1)])]
+    #expect(StatisticsModel(seasons: seasons, calendar: calendar).defaultGood == .bread)
+    #expect(StatisticsModel(seasons: seasons, calendar: calendar, stuckNow: [.food: 1]).defaultGood == .food)
+    #expect(StatisticsModel(seasons: [], calendar: calendar).defaultGood == nil)
+}

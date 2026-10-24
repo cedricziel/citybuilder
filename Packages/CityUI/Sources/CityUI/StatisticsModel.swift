@@ -160,6 +160,17 @@ public struct StatisticsModel: Equatable, Sendable {
         }
     }
 
+    /// The good the Goods tab opens on: one with a producer stopped, else the
+    /// busiest in the latest season, else the first.
+    public var defaultGood: Good? {
+        let rows = goods
+        return (rows.first { $0.stoppedNow > 0 } ?? rows.max { activity($0) < activity($1) })?.good
+    }
+
+    private func activity(_ row: GoodRow) -> Int {
+        (row.made.last?.value ?? 0) + (row.used.last?.value ?? 0)
+    }
+
     private func row(for good: Good) -> GoodRow {
         let latest = seasons.last?.goods[good]
         return GoodRow(
