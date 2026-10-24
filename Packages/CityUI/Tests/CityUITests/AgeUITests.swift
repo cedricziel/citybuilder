@@ -43,3 +43,13 @@ func eraTechRowShowsTheAgeItOpensAndItsGate() throws {
     #expect(feudal.state == .locked)
     #expect(rows.first { $0.tech == .milling }?.prerequisites == "Medieval age")
 }
+
+// research / Research cost scales with difficulty
+// (openspec/changes/slow-the-mid-game).
+
+@Test("the research panel shows the difficulty's cost")
+func researchPanelShowsScaledCost() throws {
+    let easy = ResearchPanelModel(world: World.newGame(layout: .singleIsland, seed: 0, difficulty: .easy))
+    let milling = try #require(easy.rows.first { $0.tech == .milling })
+    #expect(milling.cost == 320)
+}

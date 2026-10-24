@@ -59,9 +59,9 @@ func scenarioGuildHallAfterPrintingPress() {
     world.populations[EntityID(raw: 9999)] = merchants
     Fixture.inject(.guildHall, at: origin, in: &world)
     let sawmill = Fixture.suppliedSawmill(at: east(of: 3, gap: 3), in: &world)
-    world.enqueue(.chooseResearch(.printingPress))
-    world.tick()
-    world.research.knowledge += Tech.printingPress.cost
+    // The era gate itself is covered in AgeTests.
+    world.research.current = .printingPress
+    world.research.knowledge += world.researchCost(of: .printingPress)
     world.tick()
     #expect(world.age == .renaissance)
     #expect(Fixture.cycleTicks(of: sawmill, in: &world) == 20)
