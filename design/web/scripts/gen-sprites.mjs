@@ -54,6 +54,29 @@ function goodsFromSvg() {
 }
 const goods = goodsFromSvg();
 
+// The building status icons are hand-authored SVG too (`scripts/art/status_icons.py`, built on the
+// goods icons), so they come the same way, with the same fallback to the @2x renders.
+function statusFromSvg() {
+  const program = [
+    "import json, sys",
+    `sys.path.insert(0, ${JSON.stringify(join(repo, "scripts"))})`,
+    "from art import status_icons",
+    "print(json.dumps(status_icons.sources()))",
+  ].join("\n");
+  try {
+    const sources = JSON.parse(execFileSync("python3", ["-I", "-c", program], { encoding: "utf8" }));
+    return Object.fromEntries(
+      Object.entries(sources)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, svg]) => [name.slice("status-".length), `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`]),
+    );
+  } catch (error) {
+    console.warn(`gen-sprites: no SVG status icons (${String(error.message).split("\n")[0]}); using the @2x renders`);
+    return atlas("Kit.atlas", "status-", (key) => key.endsWith("@2x"), (key) => key.slice(0, -3));
+  }
+}
+const status = statusFromSvg();
+
 const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
 const buildingBase = (key) =>
   oneX(key) && !/-(constructing|operational)-\d$/.test(key) && !cultureOrEra.test(key) && !/-v\d$/.test(key) &&
@@ -88,6 +111,7 @@ function emit(file, exportName, entries) {
 
 mkdirSync(out, { recursive: true });
 emit("goods.ts", "goodSprites", goods);
+emit("status.ts", "statusSprites", status);
 emit("buildings.ts", "buildingSprites", buildings);
 emit("terrain.ts", "terrainSprites", terrain);
 emit("terrainObjects.ts", "terrainObjectSprites", terrainObjects);
@@ -159,7 +183,8 @@ writeFileSync(
 );
 
 console.log(
-  `sprites: ${Object.keys(goods).length} goods, ${Object.keys(buildings).length} buildings (${Object.keys(lights).length} lit), ` +
+  `sprites: ${Object.keys(goods).length} goods, ${Object.keys(status).length} status icons, ` +
+    `${Object.keys(buildings).length} buildings (${Object.keys(lights).length} lit), ` +
     `${Object.keys(terrain).length} terrain tiles, ${Object.keys(terrainObjects).length} terrain objects, ` +
     `${Object.keys(unitFrames).length} unit cycles (${Object.values(unitFrames).reduce((sum, frames) => sum + frames.length, 0)} frames)`,
 );

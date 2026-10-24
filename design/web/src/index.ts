@@ -9,6 +9,7 @@ export * from "./components/BuildingSprite/BuildingSprite";
 export * from "./components/TerrainTile/TerrainTile";
 export * from "./components/StatBadge/StatBadge";
 export * from "./components/GoodChip/GoodChip";
+export * from "./components/StatusIcon/StatusIcon";
 export * from "./components/HUDFrame/HUDFrame";
 export * from "./components/HUDButton/HUDButton";
 export * from "./components/BuildPalette/BuildPalette";
