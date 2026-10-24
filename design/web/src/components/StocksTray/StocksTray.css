@@ -1,0 +1,34 @@
+.cb-stocks {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cb-stocks__caption {
+  font-size: 11px;
+  line-height: 13px;
+  text-transform: uppercase;
+  color: var(--cb-secondary-label);
+}
+
+.cb-stocks__grid {
+  display: grid;
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+.cb-stocks__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cb-stocks__name {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--cb-secondary-label);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

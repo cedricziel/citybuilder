@@ -5,6 +5,8 @@ import { buildingSizes } from "../../generated/buildingSizes";
 import { buildingLights } from "../../generated/lights";
 import { terrainSprites } from "../../generated/terrain";
 import { terrainObjectSprites } from "../../generated/terrainObjects";
+import { unitSprites, type unitSpritesKey } from "../../generated/units";
+import type { Facing } from "../AnimatedSprite/AnimatedSprite";
 import { groundSprite, terrainObjects, terrainOf } from "./terrain";
 import "./WorldBackdrop.css";
 
@@ -16,6 +18,43 @@ export interface PlacedBuilding {
   y: number;
   /** Draw as a translucent ghost (a pending placement). */
   ghost?: boolean;
+}
+
+/**
+ * A figure, animal or ship standing on the map, drawn at its first frame
+ * (use `WalkerSprite`, `CarrierSprite`, `AnimalSprite` or `ShipSprite` for
+ * the animated art on its own). `x` and `y` are map tiles; fractions place
+ * it between tile centres.
+ */
+export type PlacedUnit = { x: number; y: number } & (
+  | { unit: "walker" | "woman"; facing?: Facing }
+  | { unit: "carrier"; load: "logs" | "sack" | "crate" | "barrel"; facing?: Facing }
+  | { unit: "cow" | "sheep"; action?: "walk" | "graze"; facing?: Facing }
+  | { unit: "hen"; facing?: Facing }
+  | { unit: "ship"; heading?: "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" }
+);
+
+/** A unit's cycle, and where its feet (or a ship's waterline) sit in its cell, from the top left. */
+function unitArt(unit: PlacedUnit): { cycle: unitSpritesKey; footX: number; footY: number } {
+  const facing = "facing" in unit && unit.facing ? unit.facing : "se";
+  switch (unit.unit) {
+    case "walker":
+    case "woman": {
+      const cycle: unitSpritesKey = unit.unit === "woman" ? `walker-woman-${facing}` : `walker-${facing}`;
+      return { cycle, footX: 12, footY: 32 - 5 };
+    }
+    case "carrier":
+      return { cycle: `carrier-${unit.load}-${facing}`, footX: 12, footY: 32 - 5 };
+    case "cow":
+      return { cycle: `animal-cow-${unit.action ?? "graze"}-${facing}`, footX: 21, footY: 44 - 11 };
+    case "sheep":
+      return { cycle: `animal-sheep-${unit.action ?? "graze"}-${facing}`, footX: 14, footY: 26 - 7 };
+    case "hen":
+      return { cycle: `animal-hen-${facing}`, footX: 8, footY: 14 - 4 };
+    case "ship":
+      // The ship node anchors at (0.5, 0.3) from its bottom left.
+      return { cycle: `ship-${unit.heading ?? "se"}`, footX: 32, footY: 72 * 0.7 };
+  }
 }
 
 export interface TileCoordinate {
@@ -61,6 +100,8 @@ export interface WorldBackdropProps {
   selected?: { x: number; y: number };
   /** An area of effect on the ground: the gold ring of #242. */
   area?: AreaOfEffect;
+  /** Walkers, carriers, animals and ships on the map. */
+  units?: PlacedUnit[];
   /** HUD and overlays drawn above the map. */
   children?: ReactNode;
   style?: CSSProperties;
@@ -132,6 +173,7 @@ export function WorldBackdrop({
   focusY = 0.5,
   selected,
   area,
+  units = [],
   children,
   style,
 }: WorldBackdropProps) {
@@ -204,6 +246,23 @@ export function WorldBackdrop({
         />
       ),
       lights: lit ? <img key={`${key}-lights`} className="cb-world__lights cb-pixel" src={lit} alt="" style={place} /> : undefined,
+    });
+  });
+  units.forEach((unit, index) => {
+    const { cycle, footX, footY } = unitArt(unit);
+    // A figure stands on the tile centre at (x, y); fractions interpolate between centres.
+    const pos = { left: (unit.x - cx - (unit.y - cy)) * HALF_W, top: (unit.x - cx + (unit.y - cy)) * HALF_H };
+    standing.push({
+      depth: unit.x + unit.y + 0.5,
+      node: (
+        <img
+          key={`unit-${index}`}
+          className="cb-world__unit cb-pixel"
+          src={unitSprites[cycle][0]}
+          alt=""
+          style={{ left: pos.left - footX, top: pos.top - footY }}
+        />
+      ),
     });
   });
   standing.sort((a, b) => a.depth - b.depth);

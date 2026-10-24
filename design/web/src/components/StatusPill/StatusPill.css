@@ -1,0 +1,132 @@
+.cb-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  height: 50px;
+  padding: 3px 3px 3px 16px;
+  border-radius: var(--cb-radius-pill);
+  background: var(--cb-material);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 0 0 0.5px var(--cb-material-border);
+  white-space: nowrap;
+}
+
+.cb-status-pill--mac {
+  height: 40px;
+}
+
+.cb-status-pill--phone {
+  gap: 12px;
+}
+
+.cb-status-pill__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cb-secondary-label);
+}
+
+.cb-status-pill__stat {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.cb-status-pill__caption {
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--cb-secondary-label);
+}
+
+.cb-status-pill__value {
+  font-size: 15px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.cb-status-pill__island {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--cb-radius-sm);
+  background: none;
+  color: var(--cb-label);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cb-status-pill__chevron {
+  display: inline-flex;
+  color: var(--cb-secondary-label);
+  transition: transform 0.2s;
+}
+
+.cb-status-pill__chevron--open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-status-pill__chevron {
+    transition: none;
+  }
+}
+
+/* The speed control: a capsule inside the pill, 6pt shorter. */
+.cb-speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: calc(100% - 3px);
+  padding: 3px;
+  border-radius: var(--cb-radius-pill);
+  background: var(--cb-material);
+}
+
+.cb-speed__pause,
+.cb-speed__segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 100%;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--cb-radius-pill);
+  background: none;
+  color: var(--cb-label);
+  cursor: pointer;
+}
+
+.cb-speed__pause {
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.cb-speed__pause--on {
+  background: var(--cb-accent);
+  color: var(--cb-on-accent);
+}
+
+.cb-speed__segment {
+  font-family: var(--cb-font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cb-secondary-label);
+}
+
+.cb-speed__segment--on {
+  font-weight: 700;
+  color: var(--cb-label);
+  background: rgba(120, 120, 128, 0.28);
+}
+
+.cb-speed__segment--cycle {
+  color: var(--cb-label);
+}

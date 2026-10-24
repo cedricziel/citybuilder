@@ -1,4 +1,12 @@
-import { HUDButton, HUDButtonCluster, WorldBackdrop } from "@citybuilder/ui";
+import { HUDButton, HUDButtonCluster, HUDMenuButtons, WorldBackdrop } from "@citybuilder/ui";
+
+export const MenuButtons = () => (
+  <WorldBackdrop width={400} height={80} zoom={2}>
+    <div style={{ padding: 16, display: "flex", justifyContent: "flex-end" }}>
+      <HUDMenuButtons standings routes />
+    </div>
+  </WorldBackdrop>
+);
 
 export const Cluster = () => (
   <WorldBackdrop width={200} height={120} zoom={2}>

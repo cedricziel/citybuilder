@@ -1,0 +1,111 @@
+.cb-rail {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.cb-rail--rail {
+  flex-direction: column;
+  width: 76px;
+}
+
+.cb-rail--rail.cb-rail--phone {
+  width: 56px;
+}
+
+.cb-rail--dock {
+  flex-direction: row;
+  align-items: center;
+}
+
+.cb-rail__slot {
+  display: contents;
+}
+
+.cb-rail__separator {
+  flex: none;
+  background: var(--cb-separator);
+}
+
+.cb-rail--rail .cb-rail__separator {
+  height: 1px;
+  margin: 4px 6px;
+}
+
+.cb-rail--dock .cb-rail__separator {
+  width: 1px;
+  height: 40px;
+  margin: 0 2px;
+}
+
+.cb-rail__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--cb-radius-sm);
+  background: none;
+  color: var(--cb-label);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cb-rail--rail .cb-rail__item {
+  width: 100%;
+}
+
+.cb-rail--dock .cb-rail__item {
+  width: 76px;
+}
+
+.cb-rail--dock.cb-rail--phone .cb-rail__item {
+  width: 64px;
+}
+
+.cb-rail--no-labels .cb-rail__item {
+  height: 44px;
+}
+
+/* The accent at 18% with a 1.5pt accent outline. */
+.cb-rail__item--on {
+  background: color-mix(in srgb, var(--cb-accent) 18%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--cb-accent);
+}
+
+.cb-rail__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+}
+
+.cb-rail__art > img {
+  max-width: 44px;
+  max-height: 30px;
+  object-fit: contain;
+}
+
+.cb-rail__label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cb-rail__hotkey {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-family: var(--cb-font-mono);
+  font-size: 9px;
+  line-height: 11px;
+  font-weight: 600;
+  color: var(--cb-tertiary-label);
+}

@@ -48,6 +48,18 @@ Not recreated yet: the build rail and HUD dock (the game replaced the horizontal
 drawers; `BuildPalette` and `GameScreen` still show the old strip), the minimap, the tool strip, the stocks tray, the
 market and rival panels, and walkers, carriers, animals and ships.
 
+## Third sync (2026-10-24)
+
+The HUD now matches the game's layout: `StatusPill` (with `SpeedControl`), `HUDMenuButtons`, `StocksTray`, `BuildRail` (rail
+or dock) with `BuildDrawer`, `ToolStrip`, `Minimap`, `MarketPanel`, `RivalMarketPanel` and `StandingsPanel`, all composed by
+`GameScreen`. `BuildPalette`, `HUDFrame`, `HUDButtonCluster`, `HintCapsule` and `CostBreakdown` stay in the library for older
+mocks, but `GameScreen` no longer uses them. The figures and ships are art components too (`WalkerSprite`,
+`CarrierSprite`, `AnimalSprite`, `ShipSprite`), and `WorldBackdrop` places them with `units`. `npm run ds:build`
+(`design/web/scripts/design-system/`) now builds the published layout, replacing the scratch scripts of the second sync.
+
+Still not recreated: the inspector callout's pointer and its expanded Details, route authoring, the manifest editor,
+the Apple TV overview and remote focus, and birds, fish and fire effects.
+
 ## Known render warns
 
 - None at the first sync.
