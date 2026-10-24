@@ -359,3 +359,26 @@ func theDeterminismFixturesChainSendsGoodsStraightToConsumers() {
     }
     #expect(hopped == [.grain, .flour])
 }
+
+@Test("every mission reports its trip and keeps its kind when it carries less")
+func everyMissionReportsItsTripAndKeepsItsKindWhenItCarriesLess() {
+    let from = EntityID(raw: 1), to = EntityID(raw: 2), elsewhere = EntityID(raw: 3)
+    let missions: [Carrier.Mission] = [
+        .deliver(good: .flour, amount: 3, fromProducer: from, toWarehouse: to),
+        .retrieve(good: .flour, amount: 3, fromWarehouse: from, toConsumer: to),
+        .deliverToConsumer(good: .flour, amount: 3, fromProducer: from, toConsumer: to),
+        .deliverToConstructionSite(good: .flour, amount: 3, fromProducer: from, toBuilding: to)
+    ]
+    for mission in missions {
+        #expect(mission.good == .flour && mission.amount == 3)
+        #expect(mission.source == from && mission.destination == to)
+        let fewer = mission.carrying(1)
+        #expect(fewer.amount == 1 && fewer.destination == to && fewer.source == from)
+        let onward = mission.redirected(to: elsewhere, amount: 1)
+        #expect(onward.destination == elsewhere && onward.amount == 1)
+    }
+    #expect(missions[1].redirected(to: elsewhere, amount: 1)
+        == .retrieve(good: .flour, amount: 1, fromWarehouse: from, toConsumer: elsewhere))
+    #expect(missions[2].redirected(to: elsewhere, amount: 1)
+        == .deliver(good: .flour, amount: 1, fromProducer: from, toWarehouse: elsewhere))
+}
