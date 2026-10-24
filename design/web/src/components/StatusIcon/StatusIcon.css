@@ -1,0 +1,24 @@
+.cb-status-icon {
+  display: inline-block;
+  flex: none;
+}
+
+.cb-status-icon--bob {
+  animation: cb-status-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes cb-status-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-status-icon--bob {
+    animation: none;
+  }
+}

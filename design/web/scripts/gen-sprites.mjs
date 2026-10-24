@@ -29,6 +29,8 @@ function atlas(name, prefix, keep, rename = (key) => key) {
 // they are drawn at 14 and 16 px from a 24 px icon, so the @2x one keeps them sharp on a Retina screen.
 const oneX = (key) => !key.includes("@");
 const goods = atlas("Kit.atlas", "good-", (key) => key.endsWith("@2x"), (key) => key.slice(0, -3));
+// The building status icons: a 28 px cell drawn at 20–30 px, so the @2x files keep them sharp too.
+const status = atlas("Kit.atlas", "status-", (key) => key.endsWith("@2x"), (key) => key.slice(0, -3));
 const cultureOrEra = /-(east-asian|mediterranean|middle-eastern|antiquity|renaissance|industrial|modern)$/;
 const buildingBase = (key) =>
   oneX(key) && !/-(constructing|operational)-\d$/.test(key) && !cultureOrEra.test(key) && !/-v\d$/.test(key) &&
@@ -55,6 +57,7 @@ function emit(file, exportName, entries) {
 
 mkdirSync(out, { recursive: true });
 emit("goods.ts", "goodSprites", goods);
+emit("status.ts", "statusSprites", status);
 emit("buildings.ts", "buildingSprites", buildings);
 emit("terrain.ts", "terrainSprites", terrain);
 const buildingSizes = Object.fromEntries(
@@ -83,5 +86,5 @@ writeFileSync(
   `import type { buildingSpritesKey } from "./buildings";\n// Footprint in tiles: [columns along x, rows along y].\nexport const buildingFootprints: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingFootprints)};\n`,
 );
 console.log(
-  `sprites: ${Object.keys(goods).length} goods, ${Object.keys(buildings).length} buildings, ${Object.keys(terrain).length} terrain`,
+  `sprites: ${Object.keys(goods).length} goods, ${Object.keys(status).length} status icons, ${Object.keys(buildings).length} buildings, ${Object.keys(terrain).length} terrain`,
 );
