@@ -43,6 +43,10 @@ extension World {
     static let startAreaReach = 8
     /// Side of the starter grove.
     static let groveSide = 6
+    /// Most road tiles from a town center's road ring to its nearest mine site.
+    static let starterMineRoadReach = 10
+    /// The rock outcrop raised when no mine site is that near.
+    static let starterMineOutcrop = Footprint(width: 3, height: 3)
     /// Farthest a grove's corner may be from its target, per axis.
     static let groveSearchReach = 12
     /// Grass tiles the grove's clearing adds at most: a site with fewer
@@ -176,12 +180,15 @@ extension World {
         }
     }
 
-    /// Makes sure `island` holds a 2×2 square where a mine fits once
-    /// Mining is researched, clear of the town center's road ring, which
-    /// the starter roads take later: when it holds none, raises the first
-    /// grass neighbour of its mountains, nearest the town center first,
-    /// that makes one, else the first forest neighbour. Tiles in the start
-    /// area stay as they are. Spec: `world-terrain` / Starter mine site.
+    /// Makes sure a 2×2 square where a mine fits once Mining is researched
+    /// lies at most `starterMineRoadReach` road tiles from the town
+    /// center's road ring, clear of the ring, which the starter roads take
+    /// later. When none does, raises the nearest 2×2 grass square (then
+    /// grass or forest) outside the start area to mountain. When none fits
+    /// and the island holds no site at all, raises the first grass
+    /// neighbour of its mountains, nearest the town center first, that
+    /// makes one, else the first forest neighbour. Tiles in the start area
+    /// stay as they are. Spec: `world-terrain` / Starter mine site.
     mutating func raiseStarterMineSite(
         besideTownCenterAt anchor: TileCoordinate,
         island: Island,
@@ -199,8 +206,24 @@ extension World {
             !footprint.tiles(anchor: corner).contains(where: ring.contains)
                 && probe.siteRejection(.mine, at: corner, for: .player, tileToIsland: tileToIsland) == nil
         }
-        guard !islandTiles.contains(where: isMineSite) else { return }
+        let roads = roadSteps(fromRingOf: anchor, island: island.id, tileToIsland: tileToIsland)
+        let stepsToSite = { (corner: TileCoordinate) in Self.sideNeighbours(of: footprint, at: corner).compactMap { roads[$0] }.min() }
+        guard !islandTiles.contains(where: { stepsToSite($0) != nil && isMineSite($0) }) else { return }
         let (startXs, startYs) = startBounds(ofTownCenterAt: anchor)
+        let occupied = occupiedTiles
+        let isRaisable = { (tile: TileCoordinate) in
+            tileToIsland[tile] == island.id && occupied[tile] == nil && !(startXs.contains(tile.x) && startYs.contains(tile.y))
+        }
+        if raiseNearMineOutcrop(
+            among: islandTiles,
+            raisable: { isRaisable($0) && !ring.contains($0) },
+            roads: roads,
+            probe: probe,
+            tileToIsland: tileToIsland
+        ) {
+            return
+        }
+        guard !islandTiles.contains(where: isMineSite) else { return }
         func distance(_ tile: TileCoordinate) -> Int {
             (tile.x - anchor.x) * (tile.x - anchor.x) + (tile.y - anchor.y) * (tile.y - anchor.y)
         }
@@ -211,10 +234,7 @@ extension World {
             for mountain in mountains {
                 for (dx, dy) in [(1, 0), (0, 1), (-1, 0), (0, -1)] {
                     let tile = TileCoordinate(x: mountain.x + dx, y: mountain.y + dy)
-                    guard terrain(at: tile) == raised,
-                          tileToIsland[tile] == island.id, occupiedTiles[tile] == nil,
-                          !(startXs.contains(tile.x) && startYs.contains(tile.y))
-                    else { continue }
+                    guard terrain(at: tile) == raised, isRaisable(tile) else { continue }
                     let index = tile.y * mapWidth + tile.x
                     probe.terrainGrid[index] = .mountain
                     // A new site holds the raised tile, so one of the four
@@ -228,6 +248,81 @@ extension World {
                 }
             }
         }
+    }
+
+    /// Raises the 3×3 outcrop nearest the road ring, by the road tiles in
+    /// `roads` beside it, then by row and column, whose tiles are all
+    /// `raisable` grass (then grass or forest) and that holds a mine site
+    /// once it is mountain. A 3×3 keeps a rock crag in its middle, where a
+    /// 2×2 would be all edge and draw as scree. Returns false when none
+    /// fits. `probe` is this world with Mining researched.
+    private mutating func raiseNearMineOutcrop(
+        among islandTiles: [TileCoordinate],
+        raisable: (TileCoordinate) -> Bool,
+        roads: [TileCoordinate: Int],
+        probe: World,
+        tileToIsland: [TileCoordinate: IslandID]
+    ) -> Bool {
+        let outcrop = Self.starterMineOutcrop
+        // Grass squares first, so the trees a hut site counts on stay.
+        for terrains in [Set([TerrainType.grass]), [.grass, .forest]] {
+            let squares = islandTiles.compactMap { corner -> (steps: Int, corner: TileCoordinate)? in
+                guard outcrop.tiles(anchor: corner).allSatisfy({ terrains.contains(terrain(at: $0) ?? .water) && raisable($0) }),
+                      let steps = Self.sideNeighbours(of: outcrop, at: corner).compactMap({ roads[$0] }).min()
+                else { return nil }
+                return (steps, corner)
+            }
+            for square in squares.sorted(by: { ($0.steps, $0.corner.y, $0.corner.x) < ($1.steps, $1.corner.y, $1.corner.x) }) {
+                var raised = probe
+                for tile in outcrop.tiles(anchor: square.corner) {
+                    raised.terrainGrid[tile.y * mapWidth + tile.x] = .mountain
+                }
+                // Every side tile of a 3×3 touches one of the 2×2 squares inside it.
+                let sites = [(0, 0), (1, 0), (0, 1), (1, 1)].map { TileCoordinate(x: square.corner.x + $0.0, y: square.corner.y + $0.1) }
+                guard sites.contains(where: { raised.siteRejection(.mine, at: $0, for: .player, tileToIsland: tileToIsland) == nil })
+                else { continue }
+                terrainGrid = raised.terrainGrid
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Road tiles from the town center's road ring, by land on its island: 0 for a ring tile, n for a
+    /// tile n steps beyond it, up to `starterMineRoadReach`. Roads may cross forest and mountain.
+    func roadSteps(
+        fromRingOf anchor: TileCoordinate, island: IslandID, tileToIsland: [TileCoordinate: IslandID]
+    ) -> [TileCoordinate: Int] {
+        var steps: [TileCoordinate: Int] = [:]
+        // The ring is free at world generation and road once the starter roads are laid.
+        var queue = Self.ringSquare(of: anchor).filter { tile in
+            tileToIsland[tile] == island && occupiedTiles[tile].map { buildings[$0]?.kind == .road } ?? true
+        }
+        for tile in queue {
+            steps[tile] = 0
+        }
+        var head = 0
+        while head < queue.count {
+            let tile = queue[head]
+            head += 1
+            guard let step = steps[tile], step < Self.starterMineRoadReach else { continue }
+            let free = Self.sideNeighbours(of: Footprint(width: 1, height: 1), at: tile).filter { next in
+                steps[next] == nil && tileToIsland[next] == island && occupiedTiles[next] == nil
+            }
+            for next in free {
+                steps[next] = step + 1
+                queue.append(next)
+            }
+        }
+        return steps
+    }
+
+    /// The tiles beside a footprint at `anchor`: right, lower, left and upper neighbours of its edge
+    /// tiles, outside it.
+    static func sideNeighbours(of footprint: Footprint, at anchor: TileCoordinate) -> [TileCoordinate] {
+        let xs = anchor.x ..< anchor.x + footprint.width, ys = anchor.y ..< anchor.y + footprint.height
+        return ys.flatMap { y in [TileCoordinate(x: xs.upperBound, y: y), TileCoordinate(x: xs.lowerBound - 1, y: y)] }
+            + xs.flatMap { x in [TileCoordinate(x: x, y: ys.upperBound), TileCoordinate(x: x, y: ys.lowerBound - 1)] }
     }
 
     /// Points the camera at the middle of the player's home town center:
