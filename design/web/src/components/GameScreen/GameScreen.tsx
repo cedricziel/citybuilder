@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { WorldBackdrop, defaultTown, type AreaOfEffect, type PlacedBuilding, type WorldBackdropProps } from "../WorldBackdrop/WorldBackdrop";
+import { WorldBackdrop, defaultIsland, defaultTown, type AreaOfEffect, type PlacedBuilding, type WorldBackdropProps } from "../WorldBackdrop/WorldBackdrop";
 import type { HUDFrameProps } from "../HUDFrame/HUDFrame";
 import { HUDMenuButtons, type HUDMenuButtonsProps } from "../HUDButton/HUDButton";
 import { StatusPill, type GameSpeed } from "../StatusPill/StatusPill";
@@ -126,6 +126,7 @@ export function GameScreen({
   const phone = kind === "phone";
   const layout = placement ?? (width > height ? "rail" : "dock");
   const showsMinimap = minimap ?? !phone;
+  const mapRows = world?.map ?? defaultIsland;
   const focusY = 0.62;
   const worldProps: Omit<WorldBackdropProps, "width" | "height" | "children"> =
     touch && placing
@@ -144,7 +145,12 @@ export function GameScreen({
     <Minimap
       map={world?.map}
       buildings={(world?.buildings ?? defaultTown) as MinimapBuilding[]}
-      camera={{ x: world?.center?.x ?? 7.5, y: world?.center?.y ?? 7.5, tilesAcross: width / (64 * (world?.zoom ?? 1.5)) * 2 }}
+      camera={{
+        // The backdrop's own centre and zoom, the placing override included; it defaults to the map's centre.
+        x: worldProps.center?.x ?? (Math.max(...mapRows.map((row) => row.length)) - 1) / 2,
+        y: worldProps.center?.y ?? (mapRows.length - 1) / 2,
+        tilesAcross: (width / (64 * (worldProps.zoom ?? 1.5))) * 2,
+      }}
       device={kind === "mac" ? "mac" : phone ? "phone" : "pad"}
     />
   ) : null;
