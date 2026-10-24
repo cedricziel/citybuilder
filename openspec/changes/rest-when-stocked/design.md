@@ -56,3 +56,7 @@ Careful scripted player, market on, seeds 0–9 × both layouts per difficulty, 
 - `BuildingIssue.resting(Good)` is checked after the route to storage and before missing inputs, since a resting producer is also short of inputs.
 - The inspector shows it as "Resting: stores hold plenty of planks": no warning symbol and no "Problem:" prefix.
 - Rendering already treats a building with any issue as idle: no chimney smoke, no window glow, and no working animation.
+
+### D5. The no-market control counts over 30 seeds
+
+Resting keeps archipelago seeds 6 and 21 solvent without the market, so the `hard-bankruptcy-grace` control, which named four seeds that all went bankrupt, failed. Swapping in other seeds that still fail would bend the test to the result. The control now counts bankruptcies over archipelago seeds 0–29 on Normal at 4,000 ticks: at least 2 of 30 without the market and at most 1 of 30 with it. Measured with resting: 4 of 30 without (seeds 2, 9, 11, 27) and 0 of 30 with, so each threshold leaves a margin.

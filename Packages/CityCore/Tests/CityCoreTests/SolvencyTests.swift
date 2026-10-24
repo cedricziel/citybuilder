@@ -24,19 +24,40 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
     }
 }
 
-/// The control: without the market these seeds go bankrupt by tick
-/// 3,850, so the sweep above tests what the market does.
+/// The control: over archipelago seeds 0 to 29 on Normal, at least
+/// `controlBankruptWithout` towns go bankrupt by tick 4,000 without the
+/// market, and at most `controlBankruptWith` with it. The scan for
+/// `rest-when-stocked` measured 4 of 30 without and 0 of 30 with; the
+/// thresholds leave a margin of two and one so tuning noise does not flip
+/// the control, while still showing what the market does.
+private let controlSeeds = Array(UInt64(0) ..< 30)
+private let controlBankruptWithout = 2
+private let controlBankruptWith = 1
+
 @Test(
-    "scenario: without the market the same towns go bankrupt",
-    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: [UInt64(2), 6, 9, 21]
+    "scenario: without the market more towns go bankrupt",
+    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1")
 )
-func scenarioWithoutTheMarketTheSameTownsGoBankrupt(seed: UInt64) {
-    let bankrupt = World.botGame(
-        layout: .archipelago, seed: seed, difficulty: .normal, tradesAtMarket: false, ticks: 4000
-    ).economy.gameOver
-    print("SOLVENCY_SWEEP seed=\(seed) layout=archipelago market=false bankrupt=\(bankrupt)")
-    #expect(bankrupt, "archipelago seed \(seed)")
+func scenarioWithoutTheMarketMoreTownsGoBankrupt() async {
+    let without = await bankruptCount(tradesAtMarket: false)
+    let with = await bankruptCount(tradesAtMarket: true)
+    print("SOLVENCY_SWEEP control seeds=0-29 layout=archipelago bankrupt_without=\(without) bankrupt_with=\(with)")
+    #expect(without >= controlBankruptWithout)
+    #expect(with <= controlBankruptWith)
+}
+
+private func bankruptCount(tradesAtMarket: Bool) async -> Int {
+    await withTaskGroup(of: Bool.self) { group in
+        for seed in controlSeeds {
+            group.addTask {
+                World.botGame(
+                    layout: .archipelago, seed: seed, difficulty: .normal,
+                    tradesAtMarket: tradesAtMarket, ticks: 4000
+                ).economy.gameOver
+            }
+        }
+        return await group.reduce(0) { $0 + ($1 ? 1 : 0) }
+    }
 }
 
 // economy / Following the first steps keeps a Hard start solvent and
