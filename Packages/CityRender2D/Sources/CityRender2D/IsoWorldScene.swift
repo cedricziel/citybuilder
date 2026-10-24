@@ -89,6 +89,15 @@ public final class IsoWorldScene: SKScene {
     /// Range rings and highlights, keyed by the source they show.
     let signatureRingLayer = SKNode()
     var signatureRingSource: SignatureRingSource?
+    /// What the ghost or the selected building reaches, polled every
+    /// frame. Spec: `rendering-2_5d` / Areas of effect while placing and
+    /// selecting.
+    public var areaOfEffectProvider: (() -> AreaOfEffect?)?
+    /// The area's outline and tints, and the area they show.
+    let areaLayer = SKNode()
+    var shownArea: AreaOfEffect?
+    /// The terrain pass the area's trees and rock were last brightened after.
+    var areaBrightenedAfterPass: Int?
     /// The route to draw, polled every frame. Spec: `rendering-2_5d` /
     /// Route overlay from the session.
     public var routeOverlayProvider: (() -> RouteOverlay?)?
@@ -257,6 +266,7 @@ public final class IsoWorldScene: SKScene {
         reconcileGatherWorkers(with: snapshot, now: currentTime)
         reconcileGhost(with: snapshot)
         reconcileSignatureRings(with: snapshot)
+        reconcileAreaOfEffect(with: snapshot)
         pushListenerIfDue(currentTime: currentTime, camera: snapshot.camera)
     }
 
@@ -393,6 +403,7 @@ public struct IsoWorldView: View {
         intentSink: (@MainActor @Sendable (Intent) -> Void)? = nil,
         ghostProvider: (@MainActor @Sendable () -> IsoWorldScene.GhostState?)? = nil,
         selectionProvider: (@MainActor @Sendable () -> TileCoordinate?)? = nil,
+        areaOfEffectProvider: (@MainActor @Sendable () -> AreaOfEffect?)? = nil,
         routeOverlayProvider: (@MainActor @Sendable () -> IsoWorldScene.RouteOverlay?)? = nil,
         cameraListener: (@MainActor @Sendable (TileCoordinate) -> Void)? = nil,
         showsStats: Bool = false
@@ -413,6 +424,9 @@ public struct IsoWorldView: View {
         }
         if let selectionProvider {
             prepared.selectionProvider = { selectionProvider() }
+        }
+        if let areaOfEffectProvider {
+            prepared.areaOfEffectProvider = { areaOfEffectProvider() }
         }
         if let routeOverlayProvider {
             prepared.routeOverlayProvider = { routeOverlayProvider() }
