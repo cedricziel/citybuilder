@@ -63,8 +63,8 @@ public final class IsoWorldScene: SKScene {
     var spriteReconcileCounts = SpriteReconcileCounts()
     /// The ground macro field, built again only when terrain, occupancy or the season's look changes.
     var groundMacroCache = GroundMacroCache()
-    /// Whether a macro field is building off the main thread, and the latest request waiting for it.
-    var groundMacroBuilding = false
+    /// The macro field building off the main thread, if any, and the latest request waiting for it.
+    var groundMacroBuild: Task<Void, Never>?
     var groundMacroPending: GroundMacroInputs?
     /// What the macro field on screen was built from.
     var groundMacroShown: GroundMacroInputs?
