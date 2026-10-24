@@ -79,8 +79,28 @@ The owner's model (memory: storage backpressure) is per-good storage, producers 
 
 ### D7. Measurement (final configuration)
 
-- Release sweeps with `RIVAL_SWEEP=1` on main 6559bd9d against this change, all three play orders: careful, naive, following hints. The two runs share the same seeds and difficulties.
-- See the table in the PR. The design keeps the decision record, and the PR body carries the final numbers.
+Release sweeps with `RIVAL_SWEEP=1`, main 6559bd9d against this change, same seeds, all three play orders:
+
+| | main | per-good storage |
+|---|---|---|
+| Arms reaching a merchant (of 180) | 120 | 170 |
+| Bankrupt (of 180) | 14 | 0 |
+| Merchant reached: careful / naive / following hints (of 60) | 56 / 30 / 34 | 57 / 56 / 57 |
+| Careful Renaissance median, Easy / Normal / Hard | 4.9 / 6.3 / 7.8 | 5.3 / 6.4 / 7.6 |
+| All arms, Normal Renaissance median | 7.4 | 6.4 |
+| Market-trading solvency (of 20) | 0 bankrupt | 0 bankrupt |
+| Guided Hard start: bankrupt; residents min / median | 0/20; 29 / 55 | 0/20; 97 / 110 |
+| Rivals: year 5 min / median; year 15 median | 15 / 60; 56.5 | 20 / 56; 56 |
+
+### D9. The no-market control checks that the market does no harm
+
+- The control used to require that at least 2 of 30 towns without the market go bankrupt by tick 4,000. Per-good storage ends the store clog that bankrupted them: 0 of 30 do now, with or without the market. A control that requires bankruptcies would demand the bug back.
+- **New control:** with the market, towns go bankrupt no more often and house no fewer residents than without it. Measured: 0 / 0 bankrupt, 992 / 990 residents across the 30 games.
+- **What the market adds now** (pacing sweep with `PACING_FULL=1`, 180 paired arms each):
+  - First merchant, median over all arms: 4.7 years with the market, 5.5 without. Paired, the market brings the first merchant a median 0.2 years sooner (mean 0.45).
+  - Arms reaching a merchant: 170 with the market, 173 without. The three extra misses are all on archipelago seed 7, which struggles either way.
+  - Bankruptcies: 0 either way.
+- The market's value is small and mixed, so no positive-value threshold is set. The question goes to the M2 market and porters work (issue linked in the PR).
 
 ### D8. Save migration v9 → v10
 

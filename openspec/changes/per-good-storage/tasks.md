@@ -28,6 +28,10 @@
 - [x] 6.1 Research retune sweep; set ×18 (design D6)
 - [x] 6.2 Final configuration: pacing, first-hour solvency with the aggregate control, guided Hard start, rival viability against main
 
-## 7. Wrap-up
+## 7. Market control
 
-- [x] 7.1 `make lint`, `make format`, `openspec validate per-good-storage --strict`, `SCENARIO_COVERAGE_STRICT=1 make test-scenarios`, diff coverage 100%, determinism fixture twice
+- [x] 7.1 Replace the no-market bankruptcy control with "The market does not make towns worse off"; measure the market's pacing value with `PACING_FULL=1` (design D9)
+
+## 8. Wrap-up
+
+- [x] 8.1 `make lint`, `make format`, `openspec validate per-good-storage --strict`, `SCENARIO_COVERAGE_STRICT=1 make test-scenarios`, diff coverage 100%, determinism fixture twice

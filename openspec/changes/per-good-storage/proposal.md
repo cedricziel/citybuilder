@@ -20,6 +20,7 @@ The owner's model removes the cause instead:
 - **The rest rule goes.** `restAt`, the resting check and the resting issue are removed: per-good limits cap every good without them (design D4, measured).
 - **Everything that reads room reads it per good.** This covers market purchases, ship unloads, rival port trades, the bountiful harvest, rival purchases and the island summary's capacity.
 - **Rival rules change.** A rival builds its first warehouse when its town center has no room for food. It sells surplus planks or wood when its stores have room for fewer than 20 more of that good. The "clear a full town center" sale and the "no purchase into a full town center" rule can no longer fire, so they are removed.
+- **The no-market control changes.** With no store clog, towns no longer go bankrupt without the market. The control in `hard-bankruptcy-grace` now checks that the market makes no town worse off (design D9). This amends that active change's scenario in place.
 - **Research is retuned** so Normal stays at 6–8 years to the Renaissance (design D6).
 - **Saves move to version 10.** Each store takes its per-good limit and keeps every unit it holds, overflow included, until the overflow is used.
 
@@ -36,6 +37,7 @@ The owner's model removes the cause instead:
 - `rival-towns`: the warehouse trigger and market trades read room per good.
 - `research`: retuned costs.
 - `persistence-save-load`: saves before per-good storage keep their stock.
+- `economy` (in the active `hard-bankruptcy-grace`): the no-market control's scenario becomes "The market does not make towns worse off".
 
 ## Impact
 
