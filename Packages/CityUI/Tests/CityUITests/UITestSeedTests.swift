@@ -149,3 +149,36 @@ func uiTestLaunchesKeepTheirOwnSaves() throws {
         #expect(directory.path.hasPrefix(FileManager.default.temporaryDirectory.path))
     }
 }
+
+@MainActor
+@Test("-uiTestPlace arms a building over a tile and -uiTestSelect selects one")
+func shotFlagsArmAndSelect() {
+    #expect(UITestSeed.placement(fromArguments: ["-uiTestPlace", "lumberjack-hut@34,64"])?.tile == TileCoordinate(x: 34, y: 64))
+    #expect(UITestSeed.placement(fromArguments: ["-uiTestPlace", "nothing@1,2"]) == nil)
+    #expect(UITestSeed.selection(fromArguments: ["-uiTestSelect", "36,59"]) == TileCoordinate(x: 36, y: 59))
+
+    let session = GameSession()
+    session.confirmsBuildingPlacement = false
+    session.applyTestTool(fromArguments: ["-uiTestPlace", "forester@34,64"])
+    #expect(session.selectedTool == .place(.forester))
+    #expect(session.hoveredTile == TileCoordinate(x: 34, y: 64))
+
+    let touch = GameSession()
+    touch.confirmsBuildingPlacement = true
+    touch.applyTestTool(fromArguments: ["-uiTestPlace", "forester@34,64"])
+    #expect(touch.pendingPlacement?.anchor == TileCoordinate(x: 34, y: 64))
+
+    let inspect = GameSession()
+    inspect.applyTestTool(fromArguments: ["-uiTestSelect", "36,59"])
+    #expect(inspect.selectedTool == .inspect && inspect.selectedTile == TileCoordinate(x: 36, y: 59))
+}
+
+@MainActor
+@Test("-uiTestPlace and -uiTestSelect ignore a tile off the map")
+func shotFlagsIgnoreOffMapTiles() {
+    let session = GameSession()
+    session.applyTestTool(fromArguments: ["-uiTestPlace", "lumberjack-hut@500,500"])
+    #expect(session.selectedTool == .inspect && session.ghostState() == nil && session.areaOfEffect() == nil)
+    session.applyTestTool(fromArguments: ["-uiTestSelect", "500,500"])
+    #expect(session.selectedTile == nil)
+}

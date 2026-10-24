@@ -75,6 +75,7 @@ items:
     category: gather
     cost: 80                         # money only, so wood can always restart
     buildTicks: 25
+    catchmentRadius: 2               # cuts forest within 2 tiles of its plot
     recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
 
   # Plants one forest tile on open grass within 2 tiles every cycle;
@@ -87,6 +88,7 @@ items:
     cost: 60
     buildTicks: 20
     plantTicks: 40                   # a hut cuts a tree every 30 ticks
+    catchmentRadius: 2               # the same reach as a hut
 
   - kind: Building
     id: sawmill
