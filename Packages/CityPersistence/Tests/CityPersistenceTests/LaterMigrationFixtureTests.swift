@@ -211,7 +211,7 @@ func scenarioV8SaveLoadsWithoutRivals() throws {
     #expect(parsed["version"] as? Int == 8, "fixture must be a v8 save")
     let migrated = try MigrationRegistry().migrate(payload: data, toVersion: SaveFile.currentVersion)
     let migratedJSON = try JSONSerialization.jsonObject(with: migrated) as? [String: Any] ?? [:]
-    #expect(migratedJSON["version"] as? Int == 9)
+    #expect(migratedJSON["version"] as? Int == SaveFile.currentVersion)
     let loaded = try decodeWorld(data)
     #expect(loaded.layout == .archipelago)
     #expect(loaded.rivals.isEmpty)
@@ -219,4 +219,38 @@ func scenarioV8SaveLoadsWithoutRivals() throws {
     #expect(loaded.buildings.values.allSatisfy { $0.owner == .player })
     #expect(loaded.ships.values.allSatisfy { $0.owner == .player })
     #expect(loaded.islands.allSatisfy { loaded.owner(ofIsland: $0.id) == .player })
+}
+
+private func v9FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v9_single_island.json")
+}
+
+/// Encode a World as a v9 save: the current shape, written before the
+/// `deliverToConsumer` carrier mission existed.
+private func makeV9Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 9
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v9 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV9SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    let world = World.newGame(layout: .singleIsland, seed: 0, difficulty: .normal, rivals: false)
+    var data = try makeV9Payload(world: world, writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v9FixtureURL())
+}
+
+@Test("scenario: v9 save loads as v10")
+func scenarioV9SaveLoadsAsV10() throws {
+    let data = try Data(contentsOf: v9FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 9, "fixture must be a v9 save")
+    let loaded = try decodeWorld(data)
+    #expect(loaded.layout == .singleIsland)
+    #expect(!loaded.buildings.isEmpty)
 }

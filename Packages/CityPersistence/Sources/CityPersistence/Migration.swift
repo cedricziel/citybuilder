@@ -28,7 +28,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV5ToV6(),
         MigrationV6ToV7(),
         MigrationV7ToV8(),
-        MigrationV8ToV9()
+        MigrationV8ToV9(),
+        MigrationV9ToV10()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -314,6 +315,24 @@ public struct MigrationV8ToV9: Migration {
         guard var world = root["world"] as? [String: Any] else { return root }
         world["rivals"] = [Any]()
         root["world"] = world
+        return root
+    }
+}
+
+/// Migration #9: v9 → v10. v10 carriers may carry a
+/// `deliverToConsumer` mission (visible-distribution milestone 1),
+/// which a v9 build cannot decode, so the version moves on and an
+/// older build refuses the save cleanly. A v9 payload is already valid
+/// v10: no carrier in it can hold the new mission.
+public struct MigrationV9ToV10: Migration {
+    public let fromVersion = 9
+    public let toVersion = 10
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 10
         return root
     }
 }

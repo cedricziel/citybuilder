@@ -30,26 +30,44 @@ The logistics today, from `World+Carriers.swift`, `World+Supply.swift` and `Worl
 For each unit a producer sends, it looks for a destination in this order:
 
 1. **A waiting construction site** that still needs the good. This is unchanged.
-2. **A short consumer.** It must be operational, have the same owner, and share the producer's road network. Its recipe inputs or fuel include the good, and its stock plus inbound units is below twice the recipe amount. This is the same threshold `needsSupply` uses today. The nearest one by road path wins; ties go to the lower entity ID.
+2. **A short consumer**, unless the good is a construction material or a house need (see below). It must be operational, have the same owner, and share the producer's road network. Its recipe inputs or fuel include the good, and its stock plus inbound units is below twice the recipe amount. This is the same threshold `needsSupply` uses today. The nearest one by road path wins; ties go to the lower entity ID.
 3. **The nearest goods buffer with room.** This is unchanged, except as D5 adds for milestone 2.
+
+**Room.** A consumer counts as short only while its stockpile has free room for every unit already on the way plus one. That applies to supply carriers from storage too.
 
 **New mission.** Deliveries in step 2 use a new mission case, `.deliverToConsumer(good:amount:fromProducer:toConsumer:)`. On arrival it deposits into the consumer's stockpile.
 
 **No double supply.** `supplyCarrierCount(to:)` counts these deliveries as inbound, so a consumer fed directly does not also get a supply carrier for the same need.
 
+**Storage goods skip step 2.** Construction materials (wood, planks, iron: any good a building costs) and goods a house tier of the owner's culture needs always go to storage. Building placement and house consumption draw on storage, and a workshop taking them at the source starves both.
+- *Evidence:* the first M1 build sent every good to short consumers. Lumberjack wood went to sawmills and charcoal burners before storage. The mid-game pacing sweep lost its first merchant in 61 of 180 arms, and bankruptcies rose from 7 to 27 of 180. The guided first-hour sweep lost residents in 14 of 20 games. A probe of normal/single-island/careful seed 0 showed the town never building its bakery or a second sawmill, with wood in storage near 0 for two years.
+- With storage goods excluded, the same probe reaches the Renaissance at 3.75 years as on main. What still hops is the intermediates: grain → windmill, flour → bakery, ore and charcoal → smelter, hops → brewery and the like. That is the chain the owner asked to see.
+
 *Why:* this is the smallest rule that makes chains visible, and it reuses the existing shortage threshold, so consumers neither starve nor hoard.
 
 *Rejected:* always delivering producer → consumer. Then output would pile up at the producer whenever nobody is short, and storage and the market would stop seeing intermediates.
 
+### D1b. Carried goods go on to storage
+
+A carrier whose destination cannot take all it carries keeps the rest. That happens when the destination is full or was demolished while the carrier walked, and it holds for every mission.
+- It goes on to the nearest goods buffer of its owner with room, by road from where it stands.
+- With none, it goes back to where the goods came from, if that still stands and has room.
+- A producer's goods continue as a delivery to storage, so the producer's carrier slot frees on final arrival. A retrieval stays a retrieval.
+- A construction delivery to a site that is gone or already built is handled the same way.
+- When no building has room, the goods are lost, as they always were.
+
+*Rejected: never losing goods.* We tried a version that takes goods back past the source's capacity, has carriers wait at a full door, and reserves buffer room for units on the way. A full town then stalls every producer instead of shedding overflow. Intermediates clog storage, food stops getting in, and the pacing sweep's bankruptcies rose from 7 to 52 of 180, with direct hops on or off. The overflow sink belongs to the economy until something like designer2's supply output cap keeps stores from filling. That change can revisit it.
+
 ### D2. Distances without a search per pair (milestone 1)
 
-A short consumer is chosen by road distance. Pathfinding to every candidate, for every producer, every tick, costs too much on the archipelago.
+A short consumer is chosen by road distance.
 
-- Per tick, list the short consumers per good once, in entity order.
-- From each producer's road, run one breadth-first search that stops at the first road tile adjacent to any short consumer of the good.
-- Cache the result per (producer, good) until `RoadGraph.generation` or the short set changes.
+- Per tick, list the consumers per good once, in entity order.
+- A producer with output paths only to the consumers that are short right now, the same per-candidate search it already runs toward each goods buffer. A consumer on another road network is skipped without a search: road component labels are worked out once per tick, and only when a candidate needs them.
+- There is no cache across ticks. A consumer stays a candidate only while it is short, so the repeated searches are few.
+- Shortness is checked live, so a unit dispatched earlier in the tick counts as inbound for the next producer.
 
-That costs one search per producer with output, about the same as today's search toward the nearest buffer.
+The candidate list is small: only consumers of the good that are short. Measured in a release build after a 12,000-tick guided bot game (seed 3), the mean tick went from 0.9 to 1.2 ms on a single island and from 2.0 to 1.9 ms on the archipelago, against a 100 ms budget. So the single-search-plus-cache variant stays in reserve for when profiling asks for it.
 
 ### D3. Market hubs (milestone 2)
 
@@ -93,6 +111,8 @@ That costs one search per producer with output, about the same as today's search
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
 ### D6. Saves
+
+Milestone 1 moves the save version from 9 to 10, with a migration that only bumps the number, so an older build refuses a save that might hold a `deliverToConsumer` carrier instead of failing to decode it. A v9 fixture save checks the step.
 
 All new fields decode with `decodeIfPresent` and defaults:
 - `Carrier.vehicle` defaults to `.onFoot`.
@@ -153,6 +173,17 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
 - **Rival viability:** rivals now depend on porters too (D11). *Acceptance:* the rival-viability sweep stays green.
 - **First hour (milestone 2):** a starting town has to be fully covered by its town center hub. *Acceptance:* the first-hour guided sweep stays at 0 of 20 bankruptcies.
 - **Intermediates in storage (milestone 1):** fewer intermediates reach warehouses, so sales at the market shift. Watch the first-hour solvency sweep.
+  - *M1 result*, PlayerBot sweeps on main 4f3e8a0c (with the slower medieval research) against the M1 branch after review, release build:
+    - First-hour solvency with the market: 0/20 bankrupt on both.
+    - Guided Hard start: 0/20 bankrupt on both. Residents at tick 12,000 rose from min 29, median 52.5 to min 38, median 57.
+    - Rival viability: year 5 min 15 → 19 (median 59.5 → 58); year 15 median 57.5 → 61.
+    - The no-market control kept seeds 2, 6 and 21 solvent, so it now uses seeds 1, 3, 9 and 11, which still go bankrupt without the market.
+    - **Mid-game pacing regresses:**
+      - 70 of 180 arms reach a merchant against 121 on main, though sooner when they do (median 3.8 against 5.0 years).
+      - Bankruptcies go from 11 to 25.
+      - Hops make chains so efficient that a good with no sink yet gluts storage. Probe of hard/single-island/careful seed 0: grain and flour hop to the mills and bakeries, bread piles up to 194 before any merchant eats it, and a full warehouse leaves no room for planks or food.
+      - A prototype of designer2's supply output cap (no inputs while the owner's stores hold 40 of a producer's output) fixes the probe. With hops it reaches 20 merchants by year 8, against none without the cap.
+      - So M1 should merge only together with, or after, that cap. The cap belongs in `needsSupply`, which hops already go through.
 - **Performance:** D2's search is per producer with output. Porters add at most 8 carriers per hub. The carrier count stays within today's peak, since direct hops shorten trips.
 - **Visual clutter:** more figures on roads. Carts reduce the count on long hauls, and walker density limits still apply.
 
