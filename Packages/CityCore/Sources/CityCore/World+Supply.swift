@@ -71,7 +71,7 @@ extension World {
         let buffers = goodsBuffers().filter { $0.state == .operational }
         // Store totals per owner and island for the rest check, summed once
         // and kept current as carriers draw from the stores.
-        var stored: [Owner: [IslandID: [Good: Int]]] = [:]
+        var contexts: [Owner: [IslandID: IslandRestContext]] = [:]
         for (consumer, needs) in consumers {
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
@@ -79,15 +79,20 @@ extension World {
             ),
                 let island = islandFor(building: consumer, tileToIsland: tileToIsland)
             else { continue }
-            if stored[consumer.owner] == nil {
-                stored[consumer.owner] = storedTotals(of: consumer.owner, tileToIsland: tileToIsland)
+            if contexts[consumer.owner] == nil {
+                contexts[consumer.owner] = restContexts(of: consumer.owner, tileToIsland: tileToIsland)
             }
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
-                while needsSupply(consumer.id, good: good, amount: amount, stored: stored[consumer.owner]?[island] ?? [:]) {
+                while needsSupply(
+                    consumer.id,
+                    good: good,
+                    amount: amount,
+                    context: contexts[consumer.owner]?[island] ?? IslandRestContext()
+                ) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
-                    stored[consumer.owner]?[island]?[good]? -= 1
+                    contexts[consumer.owner]?[island]?.stored[good]? -= 1
                 }
             }
         }
@@ -105,15 +110,15 @@ extension World {
 
     /// Whether `consumer` should get more `good`. Every route that feeds
     /// a producer asks this, so a resting producer gets nothing from any
-    /// of them. `stored` holds the totals on the consumer's island, summed
-    /// once per pass by the caller.
-    func needsSupply(_ consumer: EntityID, good: Good, amount: Int, stored: [Good: Int]) -> Bool {
+    /// of them. `context` describes the consumer's island, built once per
+    /// pass by the caller.
+    func needsSupply(_ consumer: EntityID, good: Good, amount: Int, context: IslandRestContext) -> Bool {
         guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap,
               let building = buildings[consumer]
         else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
         return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
-            && isResting(building, stored: stored) == nil
+            && isResting(building, context: context) == nil
     }
 
     mutating func dispatchSupply(

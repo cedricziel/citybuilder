@@ -20,7 +20,7 @@ Measured (careful scripted player, market on, 60 starts, to year 10):
 ## What Changes
 
 - **Producers rest while the stores hold plenty.** A good can declare a rest level in its pack; the shipped goods made from inputs get 40.
-  - While the owner's stores hold that much of everything a producer makes, nothing brings it inputs: no supply pull, and no direct hop from another producer.
+  - While the owner's stores on the producer's island hold that much of everything it makes, and another kind of building there takes one of its inputs, nothing brings it inputs: no supply pull, and no direct hop from another producer.
   - The inputs then go to the buildings that need them.
 - **It's visible and calm.** The inspector shows "Resting: stores hold plenty of planks" in place of a problem line, with no warning symbol. A resting building draws as idle, with no smoke and unlit, because it has an issue.
 - **Research is retuned** so Normal stays at 6–8 years to the Renaissance. Resting speeds the climb up by about a year. The new costs are set by measurement in this change (design D3).

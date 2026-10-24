@@ -85,17 +85,22 @@ func scenarioProblemTextForEveryBuildingIssue() {
 
 @Test("scenario: a resting producer reads calm")
 func scenarioARestingProducerReadsCalm() {
-    var world = World.fixtureWithTerrain(width: 14, height: 6, fill: .grass, seed: 1)
+    var world = World.fixtureWithTerrain(width: 14, height: 8, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
-    for (raw, kind, anchor) in [(1, BuildingKind.sawmill, TileCoordinate(x: 1, y: 1)), (2, .warehouse, TileCoordinate(x: 9, y: 0))] {
-        let id = EntityID(raw: UInt32(raw))
+    // The charcoal burner shares the sawmill's wood, so the sawmill rests.
+    let layout: [(BuildingKind, TileCoordinate)] = [
+        (.sawmill, TileCoordinate(x: 1, y: 1)), (.warehouse, TileCoordinate(x: 9, y: 0)),
+        (.charcoalBurner, TileCoordinate(x: 1, y: 4))
+    ]
+    for (index, (kind, anchor)) in layout.enumerated() {
+        let id = EntityID(raw: UInt32(index + 1))
         world.buildings[id] = Building(id: id, kind: kind, anchor: anchor, state: .operational)
         for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
             world.occupiedTiles[tile] = id
         }
         world.stockpiles[id] = World.stockpileCapacity(for: kind).map { Stockpile(capacity: $0) }
     }
-    world.nextEntityRaw = 3
+    world.nextEntityRaw = 4
     world.stockpiles[EntityID(raw: 2)]?.deposit(.planks, amount: 40)
     for x in 0 ... 12 {
         world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))

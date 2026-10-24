@@ -6,11 +6,18 @@ import Testing
 // (openspec/changes/rest-when-stocked).
 
 /// A warehouse holding `contents` and a `kind` producer on one road, after
-/// the tick that lays the road and runs the first supply pass.
-private func town(_ kind: BuildingKind, warehouse contents: [Good: Int], owner: Owner = .player) -> (World, EntityID) {
-    var world = World.fixtureWithTerrain(width: 14, height: 6, fill: .grass, seed: 1)
+/// the tick that lays the road and runs the first supply pass. A charcoal
+/// burner below the road shares the sawmill's wood unless `sharer` is nil.
+private func town(
+    _ kind: BuildingKind, warehouse contents: [Good: Int], owner: Owner = .player,
+    sharer: BuildingKind? = .charcoalBurner
+) -> (World, EntityID) {
+    var world = World.fixtureWithTerrain(width: 14, height: 8, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
     let producer = place(kind, at: TileCoordinate(x: 1, y: 1), owner: owner, in: &world)
+    if let sharer {
+        _ = place(sharer, at: TileCoordinate(x: 1, y: 4), owner: owner, in: &world)
+    }
     let store = place(.warehouse, at: TileCoordinate(x: 9, y: 0), owner: owner, in: &world)
     for (good, amount) in contents.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
         world.stockpiles[store]?.deposit(good, amount: amount)
@@ -33,9 +40,9 @@ private func place(_ kind: BuildingKind, at anchor: TileCoordinate, owner: Owner
     return id
 }
 
-/// The player's store totals on the island of the fixture town.
-private func homeStored(_ world: World) -> [Good: Int] {
-    world.storedTotals(of: .player, tileToIsland: world.tileToIslandMap()).values.first ?? [:]
+/// What the rest check reads about the fixture town's island.
+private func homeContext(_ world: World) -> IslandRestContext {
+    world.restContexts(of: .player, tileToIsland: world.tileToIslandMap()).values.first ?? IslandRestContext()
 }
 
 private func woodCarriers(to consumer: EntityID, in world: World) -> Int {
@@ -64,9 +71,9 @@ func scenarioASawmillWorksBelowTheRestLevel() throws {
 @Test("no route offers a resting producer more input")
 func noRouteOffersARestingProducerMoreInput() {
     let (resting, sawmill) = town(.sawmill, warehouse: [.planks: 40])
-    #expect(!resting.needsSupply(sawmill, good: .wood, amount: 1, stored: homeStored(resting)))
+    #expect(!resting.needsSupply(sawmill, good: .wood, amount: 1, context: homeContext(resting)))
     let (working, other) = town(.sawmill, warehouse: [.planks: 39])
-    #expect(working.needsSupply(other, good: .wood, amount: 1, stored: homeStored(working)))
+    #expect(working.needsSupply(other, good: .wood, amount: 1, context: homeContext(working)))
 }
 
 @Test("scenario: supply resumes below the rest level")
@@ -81,11 +88,14 @@ func scenarioSupplyResumesBelowTheRestLevel() throws {
 
 @Test("scenario: every output must be stocked")
 func scenarioEveryOutputMustBeStocked() {
-    let twoOutputs = ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1, .flour: 1], cycleTicks: 25)
-    #expect(World.restingGood(for: twoOutputs, stored: [.planks: 40]) == nil)
-    #expect(World.restingGood(for: twoOutputs, stored: [.planks: 40, .flour: 40]) == .planks)
-    let unlevelled = ProductionRecipe(inputs: [.wood: 1], outputs: [.planks: 1, .food: 1], cycleTicks: 25)
-    #expect(World.restingGood(for: unlevelled, stored: [.planks: 40, .food: 400]) == nil)
+    let shared: [Good: Set<BuildingKind>] = [.wood: [.sawmill, .charcoalBurner]]
+    func resting(_ outputs: [Good: Int], _ stored: [Good: Int]) -> Good? {
+        let recipe = ProductionRecipe(inputs: [.wood: 1], outputs: outputs, cycleTicks: 25)
+        return World.restingGood(for: recipe, of: .sawmill, context: IslandRestContext(stored: stored, inputUsers: shared))
+    }
+    #expect(resting([.planks: 1, .flour: 1], [.planks: 40]) == nil)
+    #expect(resting([.planks: 1, .flour: 1], [.planks: 40, .flour: 40]) == .planks)
+    #expect(resting([.planks: 1, .food: 1], [.planks: 40, .food: 400]) == nil)
 }
 
 /// Archipelago seed 0 starts the player with a town center on two
@@ -105,6 +115,7 @@ func scenarioAnOutpostRestsOnlyOnItsOwnIslandsStores() throws {
     world.stockpiles[outpost.id]?.deposit(.wood, amount: 10)
     world.stockpiles[home.id]?.deposit(.planks, amount: 40)
     let sawmill = try #require(placeBesideRoad(.sawmill, near: outpost, in: &world, map: map))
+    _ = try #require(placeBesideRoad(.charcoalBurner, near: outpost, in: &world, map: map))
     world.tick()
     #expect(try world.isResting(#require(world.buildings[sawmill])) == nil)
     #expect(woodCarriers(to: sawmill, in: world) > 0)
@@ -129,6 +140,13 @@ private func placeBesideRoad(
         }
     }
     return nil
+}
+
+@Test("scenario: a producer that shares no input keeps working")
+func scenarioAProducerThatSharesNoInputKeepsWorking() throws {
+    let (world, sawmill) = town(.sawmill, warehouse: [.planks: 40, .wood: 20], sharer: nil)
+    #expect(try world.isResting(#require(world.buildings[sawmill])) == nil)
+    #expect(woodCarriers(to: sawmill, in: world) > 0)
 }
 
 @Test("scenario: a resting producer finishes its cycle")
