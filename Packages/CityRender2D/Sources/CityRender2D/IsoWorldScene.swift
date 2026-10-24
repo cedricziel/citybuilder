@@ -140,6 +140,9 @@ public final class IsoWorldScene: SKScene {
     /// Hearth glows on screen, by building. Spec: `rendering-2_5d` / Fire
     /// trades glow at night.
     var fireGlows: [EntityID: SKNode] = [:]
+    /// Status icons on screen, by building. Spec: `rendering-2_5d` / Buildings show a status icon
+    /// while something is wrong.
+    var statusIcons: [EntityID: SKSpriteNode] = [:]
     /// Residents on the town center plazas. Spec: `rendering-2_5d`
     /// / Residents gather on the plaza.
     var plazaNodes: [PlazaFigureKey: (node: SKSpriteNode, pose: PlazaPose)] = [:]
@@ -260,6 +263,7 @@ public final class IsoWorldScene: SKScene {
         reconcilePlazaCrowd(with: snapshot, now: currentTime)
         reconcileAmbient(with: snapshot)
         reconcileFireGlow(with: snapshot)
+        reconcileStatusIcons(with: snapshot)
         reconcileBirds(with: snapshot, now: currentTime)
         reconcileWaterAndMills(with: snapshot, now: currentTime)
         reconcileAnimals(with: snapshot, now: currentTime)

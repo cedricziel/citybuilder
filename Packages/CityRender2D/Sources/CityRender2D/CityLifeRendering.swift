@@ -38,7 +38,7 @@ extension IsoWorldScene {
         let glow = CGFloat(time.darkness / TimeOfDay.nightDarkness) * WindowLights.strength
         let bedtime = WindowLights.bedtime(at: time)
         for spec in buildingSpecs {
-            guard case let .building(kind, state, _, _, _, _, _, _, _, _) = spec.kind,
+            guard case let .building(kind, state, _, _, _, _, _, _, _) = spec.kind,
                   state == .operational, kind != .road, let node = presentSprites[spec]
             else { continue }
             let lit = glow > 0 && isLit(kind: kind, at: spec.coord, in: snapshot)

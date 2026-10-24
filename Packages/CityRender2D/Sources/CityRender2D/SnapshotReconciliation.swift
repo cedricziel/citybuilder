@@ -34,9 +34,6 @@ public struct SpriteSpec: Hashable, Sendable {
             // `overlay-waiting-materials` child — the moment the
             // substate flips.
             isWaitingForMaterials: Bool,
-            // True when no road touches the footprint; drives the
-            // `overlay-no-road` marker.
-            isRoadDisconnected: Bool = false,
             // Houses draw a different sprite per tier; part of the key
             // so a tier change swaps the node.
             houseTier: HouseTier = .peasants,
@@ -137,7 +134,6 @@ public enum SnapshotReconciler {
                     constructionFrameIndex: frameIndex,
                     orientation: orientation,
                     isWaitingForMaterials: isWaiting,
-                    isRoadDisconnected: snapshot.roadDisconnectedBuildings.contains(building.id),
                     houseTier: snapshot.housePopulations[building.id]?.tier ?? .peasants,
                     look: SignatureLooks.look(for: building, in: snapshot),
                     roadLink: building.kind == .road && building.state == .operational ? roadLinks[building.anchor] : nil
