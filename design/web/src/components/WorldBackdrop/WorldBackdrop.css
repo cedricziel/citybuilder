@@ -15,6 +15,7 @@
 .cb-world__tile,
 .cb-world__object,
 .cb-world__building,
+.cb-world__unit,
 .cb-world__lights {
   position: absolute;
   display: block;
