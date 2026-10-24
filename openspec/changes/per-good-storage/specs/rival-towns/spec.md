@@ -4,7 +4,7 @@
 
 A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step.
 
-Before the threshold rules, a rival whose town center has room for fewer than 4 food, so the farms' next harvest has nowhere to go, with no warehouse built or under construction and no site waiting for materials, SHALL build a warehouse if it can carry the step out. It SHALL take this step at the building cap too.
+Before the threshold rules, a rival whose town center has room for fewer than 4 more of some good, so its farms, huts or sawmill will soon have nowhere to send it, with no warehouse built or under construction and no site waiting for materials, SHALL build a warehouse if it can carry the step out. It SHALL take this step at the building cap too.
 
 The threshold rules, in order:
 
@@ -135,7 +135,7 @@ A rival SHALL trade at its own town center's market in four cases.
 
 1. **Unblock.** When a step it takes (a threshold rule or a script step) lacks only wood or planks that its own huts and sawmill cannot supply, and the treasury covers the purchase, the step and $50, the rival SHALL buy the shortfall in the same batch, ahead of the step's roads and building, so no carrier takes the goods first. A step that its huts or sawmill can still supply SHALL be placed without a purchase and SHALL wait for their delivery, because the market charges 150%. A rival at the building cap, or on a house step at the house cap, takes no step and so buys nothing for one.
 2. **Pay debts.** On its turn, before the threshold rules, while the treasury is below $150, the rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn. The trade takes the turn.
-3. **Sell surplus.** On its turn, before the threshold rules, for planks, then wood, while its goods buffers together have room for fewer than 20 more of that good, the rival SHALL sell every unit of it above 60, one good per turn. The trade takes the turn.
+3. **Sell surplus.** On its turn, before the threshold rules, for planks, then wood, while its goods buffers together have room for less than a quarter of their limit for that good, the rival SHALL sell every unit of it above half that limit, one good per turn. The trade takes the turn.
 4. **Feed.** On its turn, before the threshold rules, while food is below 4, one of the rival's houses is short of food and the treasury is at least $300, the rival SHALL buy up to 5 food. The trade takes the turn.
 
 Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. The units a sale keeps or sells SHALL be counted in the rival's own operational goods buffers, not in the player's stores on the same island. A rival SHALL NOT buy more of a good than its town center has room for, so a town center full of that good never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
@@ -152,8 +152,8 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 #### Scenario: Rival sells surplus planks from crowded stores
 
-- **WHEN** a rival with $5,000, 10 food and 101 planks, whose town center and warehouse together have room for 19 more planks, takes a turn
-- **THEN** it sells 20 planks, the seasonal limit, while with 100 planks and room for 20 it sells none
+- **WHEN** a rival with $5,000, 10 food and 91 planks, whose town center and warehouse together hold up to 120 planks, takes a turn
+- **THEN** it sells 20 planks, the seasonal limit, while with 90 planks it sells none
 
 #### Scenario: Rival sales count only its own stores
 

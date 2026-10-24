@@ -12,7 +12,7 @@ The tech catalog SHALL define these techs:
 | Metallurgy | 1,440 | Mining | smelter, toolsmith |
 | Seafaring | 60 | — | port, shipyard |
 
-A new game MUST start with Scholarship researched. Every building kind not listed MUST be available from the start.
+A new game MUST start with Scholarship researched. Every building kind that neither this table nor another tech gates (Cultivation's luxury buildings, the era techs' signature buildings) MUST be available from the start.
 
 #### Scenario: New game starts with Scholarship only
 

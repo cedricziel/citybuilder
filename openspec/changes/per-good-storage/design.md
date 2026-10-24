@@ -35,11 +35,13 @@ The owner's model (memory: storage backpressure) is per-good storage, producers 
 - A producer picks the nearest store whose room for the good is greater than the units of that good already on their way to it.
 - Inbound units are counted once per tick from the carriers in flight and updated as each carrier is spawned. Without that, eight sawmills would all aim at the last free plank slot.
 - With no destination, the output stays in the producer's own stockpile. Production already stalls when that stockpile can't take a cycle's output, so the producer stops by itself and resumes when room opens.
-- Nothing new is dropped. A carrier can still find its store full on arrival if a market purchase, a ship or a harvest filled it meanwhile; main's existing drop-on-arrival remains for that case, and #232's redirects replace it.
+- **Arrival never destroys goods.** A market purchase, a ship or a harvest can still fill a store after a carrier set out for it; those deposits ignore reservations. A carrier that finds its store, still standing, without room keeps what does not fit and tries again each tick. Before, it dropped the rest. A demolished destination still drops, as before; #232's redirects will send those on.
+- **Supply carriers check room too.** A producer whose own stockpile is full of output gets no inputs: `needsSupply` asks for room for one more unit beyond those on their way. Without it, a stuck sawmill took wood that did not fit, and the arrival deleted it, every cycle (review of #269).
 
 ### D3. "Output stuck" replaces "Store full"
 
 - `BuildingIssue.storageFull` becomes `.outputStuck(Good)`. It names the good the producer holds most of; on a tie, the first in catalog order.
+- It is checked before missing inputs: a producer full of output cannot work whatever it is given.
 - The inspector reads "Output stuck: no room for bread". The status icons (art2) map it to their good-plus-pause pictogram.
 - The issue's place in the check order is unchanged.
 
@@ -57,8 +59,8 @@ The owner's model (memory: storage backpressure) is per-good storage, producers 
 
 ### D5. Rivals read room per good
 
-- **First warehouse:** a rival's town center counts as full when it has room for fewer than 4 food, which is what stops the farms. The rival then builds its first warehouse.
-- **Surplus sales:** a rival sells planks or wood when its stores have room for fewer than 20 more of that good, keeping 60. This replaces the 40 units of shared room.
+- **First warehouse:** a rival's town center counts as full when it has room for fewer than 4 more of any good: food from the farms, or wood and planks from its huts and sawmill. The rival then builds its first warehouse.
+- **Surplus sales:** a rival sells planks or wood when its stores have room for less than a quarter of their limit for that good, and keeps half the limit: with a town center alone, it sells above 20 once it holds more than 30; with a warehouse too, it sells above 60 once it holds more than 90. Both scale with the limits, since a fixed 60 kept would exceed a town center's 40 and a rival without a warehouse could never sell (review of #269).
 - **Removed:** the debt-or-clear sale's "full and starving" trigger, and the "no purchase into a full town center" rule. With per-good stores a town center can't be full of food and short of it at once, and other goods can't block a food purchase. Purchases are limited by the town center's room for the good bought.
 - Rival viability is re-measured below.
 

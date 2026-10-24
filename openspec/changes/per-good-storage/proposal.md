@@ -15,7 +15,7 @@ The owner's model removes the cause instead:
 ## What Changes
 
 - **Stores hold each good separately.** Town centers, warehouses and ports hold up to a per-good limit set in the pack (`storagePerGood`): 40 for the town center, 80 for the warehouse and the port. Producer and house stockpiles keep one shared capacity.
-- **Producers ship only where there is room.** A producer's output leaves only for a waiting construction site, or for a store with room for that good. Room counts the units already on their way, so it is never promised twice. Otherwise the output stays put, nothing is lost, and the producer stops when its own stockpile is full. It resumes as soon as room opens.
+- **Producers ship only where there is room.** A producer's output leaves only for a waiting construction site, or for a store with room for that good. Room counts the units already on their way, so it is never promised twice. Otherwise the output stays put and the producer stops when its own stockpile is full. It resumes as soon as room opens. A carrier whose store filled while it walked keeps its goods until there is room, so nothing is lost on arrival either.
 - **Output stuck is a building issue.** "Output stuck: no room for bread" replaces "Store full". It names the good, so the status icons can show it.
 - **The rest rule goes.** `restAt`, the resting check and the resting issue are removed: per-good limits cap every good without them (design D4, measured).
 - **Everything that reads room reads it per good.** This covers market purchases, ship unloads, rival port trades, the bountiful harvest, rival purchases and the island summary's capacity.

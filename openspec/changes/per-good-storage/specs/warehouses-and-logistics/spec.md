@@ -66,7 +66,7 @@ When multiple road-connected goods buffers are reachable, producers SHALL prefer
 
 ### Requirement: Buildings report what stops them
 
-The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; its road does not reach a road beside an operational warehouse, port or town center; for a producer, inputs short of its recipe (listing the short goods); for a producer whose own stockpile has no room for a cycle's output, output stuck, naming the good it makes that it holds most of (the first in catalog order on a tie). A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result.
+The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; its road does not reach a road beside an operational warehouse, port or town center; for a producer whose own stockpile has no room for a cycle's output, output stuck, naming the good it makes that it holds most of (the first in catalog order on a tie), since inputs could not help it; for a producer, inputs short of its recipe (listing the short goods). A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result.
 
 #### Scenario: A producer without a road reports no road
 - **WHEN** a farm has no road beside it
@@ -92,6 +92,10 @@ The world SHALL report, for each operational player house, producer and forester
 - **WHEN** a connected sawmill holds no wood
 - **THEN** its issue is missing inputs: wood
 
+#### Scenario: A producer full of output reports it stuck, not short
+- **WHEN** a connected sawmill holds 16 planks and no wood
+- **THEN** its issue is output stuck, naming planks
+
 #### Scenario: A house off the storage network reports no route to storage
 - **WHEN** a house's road and a warehouse's road are not connected
 - **THEN** the house's issue is no route to storage
@@ -111,7 +115,7 @@ The world SHALL report, for each operational player house, producer and forester
 
 ### Requirement: Producers ship only where there is room
 
-A producer's output SHALL leave its own stockpile only for a destination that takes it: a construction site waiting for that good, or a goods buffer its road reaches with room for that good. Otherwise the output SHALL stay in the producer's stockpile, nothing is lost, and the producer stops once that stockpile has no room for a cycle's output; it resumes as soon as a destination has room again. A store's room grows when its stock of the good is drawn down: by construction, by houses, by supply carriers, or by a market or trade sale.
+A producer's output SHALL leave its own stockpile only for a destination that takes it: a construction site waiting for that good, or a goods buffer its road reaches with room for that good. Otherwise the output SHALL stay in the producer's stockpile, nothing is lost, and the producer stops once that stockpile has no room for a cycle's output; it resumes as soon as a destination has room again. A carrier whose destination, still standing, has no room for what it carries on arrival SHALL keep what does not fit and deliver it once room opens, so no good is destroyed by a full store, whatever else filled it meanwhile (a purchase, a ship, a harvest). A supply carrier SHALL set out only for a consumer with room for one more unit beyond those already on their way to it. A store's room grows when its stock of the good is drawn down: by construction, by houses, by supply carriers, or by a market or trade sale.
 
 #### Scenario: Output with nowhere to go stays with its producer
 - **WHEN** a bakery holding 1 bread shares a road only with a warehouse holding its limit of bread
@@ -124,6 +128,14 @@ A producer's output SHALL leave its own stockpile only for a destination that ta
 #### Scenario: Output leaves once the store has room again
 - **WHEN** a bakery holds 1 bread, the only warehouse holds its limit of bread, and 1 bread is then taken from the warehouse
 - **THEN** on the next tick a carrier takes the bakery's bread to that warehouse
+
+#### Scenario: A carrier whose store filled on the way keeps its goods
+- **WHEN** a carrier walks 1 bread to a warehouse that fills with bread before it arrives
+- **THEN** the carrier keeps the bread, and delivers it on the tick the warehouse has room again
+
+#### Scenario: A stuck producer gets no more inputs and nothing is lost
+- **WHEN** a sawmill holds 15 planks in its 16-unit stockpile and the only warehouse holds its limit of planks and 60 wood
+- **THEN** after 2,000 ticks the sawmill holds 15 planks and 1 wood, the warehouse 59 wood, and no wood or plank has been lost
 
 ## REMOVED Requirements
 
