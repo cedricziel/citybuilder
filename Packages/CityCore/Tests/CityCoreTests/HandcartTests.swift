@@ -191,3 +191,22 @@ func aProducerSavedWithoutACartWaitLoadsWithNone() throws {
     let old = try JSONDecoder().decode(Building.self, from: JSONSerialization.data(withJSONObject: json))
     #expect(old.cartWaitTicks == 0)
 }
+
+@Test("a producer near storage on the grid but far by road waits for a cart load")
+func aProducerNearStorageOnTheGridButFarByRoadWaitsForACartLoad() {
+    var world = World.fixtureWithTerrain(width: 14, height: 10, fill: .grass, seed: 1)
+    world.testMaterialCredits = [:]
+    // A U-shaped road: out along y = 3, down x = 12, back along y = 6.
+    for x in 0 ... 12 {
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 6))
+    }
+    for y in 4 ... 5 {
+        world.roadGraph.addRoad(at: TileCoordinate(x: 12, y: y))
+    }
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 2])
+    _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 1, y: 7))
+    world.tick()
+    #expect(world.carriers.isEmpty)
+    #expect(world.buildings[hut]?.cartWaitTicks == 1)
+}
