@@ -46,30 +46,37 @@ private func mountains(onIsland island: IslandID, seed: UInt64) -> (world: Int, 
     )
 }
 
-/// Road tiles from the home town center's road ring to its nearest mine site, once Mining is
-/// researched; nil beyond `World.starterMineRoadReach`.
-private func homeMineRoadSteps(_ world: World) throws -> Int? {
+/// Road tiles from `center`'s road ring to its nearest mine site, once Mining is researched; nil
+/// beyond `World.starterMineRoadReach`.
+private func mineRoadSteps(from center: Building, in world: World) throws -> Int? {
     var probe = world
     probe.research.markResearched(.mining)
     let map = probe.tileToIslandMap()
-    let center = try #require(probe.occupiedTiles[probe.camera.centerTile()].flatMap { probe.buildings[$0] })
     let island = try #require(map[center.anchor])
     let steps = probe.roadSteps(fromRingOf: center.anchor, island: island, tileToIsland: map)
     let ring = Set(World.ringSquare(of: center.anchor))
     let mine = BuildingCatalog.spec(for: .mine).footprint
     return map.filter { $0.value == island }.keys.compactMap { corner -> Int? in
         guard !mine.tiles(anchor: corner).contains(where: ring.contains),
-              probe.siteRejection(.mine, at: corner, for: .player, tileToIsland: map) == nil
+              probe.siteRejection(.mine, at: corner, for: center.owner, tileToIsland: map) == nil
         else { return nil }
         return World.sideNeighbours(of: mine, at: corner).compactMap { steps[$0] }.min()
     }.min()
 }
 
-@Test("scenario: a mine site lies near every home town center", arguments: Array(UInt64(0) ..< 30))
-func scenarioAMineSiteLiesNearEveryHomeTownCenter(seed: UInt64) throws {
+private func homeMineRoadSteps(_ world: World) throws -> Int? {
+    let center = try #require(world.occupiedTiles[world.camera.centerTile()].flatMap { world.buildings[$0] })
+    return try mineRoadSteps(from: center, in: world)
+}
+
+@Test("scenario: a mine site lies near every town center", arguments: Array(UInt64(0) ..< 30))
+func scenarioAMineSiteLiesNearEveryTownCenter(seed: UInt64) throws {
     for layout in WorldLayout.allCases {
-        let steps = try homeMineRoadSteps(World.newGame(layout: layout, seed: seed))
-        #expect(steps != nil, "\(layout) seed \(seed)")
+        // Without rivals every town center stays as generation left it, before rival towns build.
+        let world = World.newGame(layout: layout, seed: seed, rivals: false)
+        for center in world.buildings.values where center.kind == .townCenter {
+            #expect(try mineRoadSteps(from: center, in: world) != nil, "\(layout) seed \(seed) town center \(center.id.raw)")
+        }
     }
 }
 
