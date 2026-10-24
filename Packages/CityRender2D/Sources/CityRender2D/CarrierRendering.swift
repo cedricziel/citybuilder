@@ -48,6 +48,7 @@ struct CarrierVisual {
 struct CarrierLook: Equatable {
     let load: CarrierLoad
     let facing: SpriteAtlas.WalkerFacing
+    var vehicle: Carrier.Vehicle = .onFoot
 }
 
 extension IsoWorldScene {
@@ -76,7 +77,7 @@ extension IsoWorldScene {
             carrierVisuals.removeValue(forKey: id)
         }
         for carrier in snapshot.carriers {
-            let look = CarrierLook(load: CarrierLoad.family(of: carrier.good), facing: Self.facing(of: carrier))
+            let look = CarrierLook(load: CarrierLoad.family(of: carrier.good), facing: Self.facing(of: carrier), vehicle: carrier.vehicle)
             let target = Self.position(of: carrier)
             guard var visual = carrierVisuals[carrier.id] else {
                 let node = SKSpriteNode.walker()
@@ -104,6 +105,12 @@ extension IsoWorldScene {
 
     /// The carrier's own frames, or the walker's while carrier art is missing, each with its own key.
     private static func animate(_ node: SKSpriteNode, look: CarrierLook, moving: Bool = true) {
+        if look.vehicle == .handcart, let frames = SpriteAtlas.frames(for: .handcart(look.facing)) {
+            node.anchorPoint = SpriteAtlas.handcartAnchor
+            node.playWalkCycle(.handcart(look.facing), frames: frames, moving: moving)
+            return
+        }
+        node.anchorPoint = SpriteAtlas.walkerAnchor
         let own = SpriteAnimation.AnimationKey.carrier(look.load, look.facing)
         if let frames = SpriteAtlas.frames(for: own) {
             node.playWalkCycle(own, frames: frames, moving: moving)
