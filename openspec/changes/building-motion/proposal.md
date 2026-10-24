@@ -4,7 +4,7 @@ Building animations (the windmill's sails, the sawmill's saw, the port's crane, 
 
 ## What Changes
 
-- **Reduce Motion:** each animated building rests on the frame it was drawn with, its operational frame 0.
+- **Reduce Motion:** each animated building rests on its operational frame 0, culture looks included.
 - **Pause:** when the game is paused, which here means no tick for 0.3 s, as for figures, building animations hold their current frame. They run again on the next tick.
 - **One scene-level state:** running, held or stopped. It changes only when the state flips, the same pattern as `TreeSway`, and costs nothing per frame. Only each building's animation slows; badges, glows and pennants on the building keep their own motion.
 - **One frame resolver (refactor, no behaviour change):**

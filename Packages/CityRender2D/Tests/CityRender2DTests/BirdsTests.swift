@@ -21,10 +21,10 @@ private let view = CGSize(width: 1024, height: 768)
 @Test("scenario: a flock crosses by day")
 func scenarioAFlockCrossesByDay() throws {
     let layer = BirdLayerNode()
-    layer.reconcile(snapshot: land(tick: 180), viewSize: view, reduceMotion: false, now: 0)
+    layer.reconcile(snapshot: land(tick: 180), viewSize: view, motion: .running, now: 0)
     #expect(layer.flock == nil)
     let due = try #require(layer.nextFlockAt)
-    layer.reconcile(snapshot: land(tick: 181), viewSize: view, reduceMotion: false, now: due + 0.1)
+    layer.reconcile(snapshot: land(tick: 181), viewSize: view, motion: .running, now: due + 0.1)
     let flock = try #require(layer.flock)
     let birds = flock.children.filter { $0.zPosition == 0 }
     #expect(BirdPlanner.flockSizes.contains(birds.count))
@@ -36,13 +36,13 @@ func scenarioAFlockCrossesByDay() throws {
 @Test("scenario: no birds at night or with reduce motion")
 func scenarioNoBirdsAtNightOrWithReduceMotion() throws {
     let layer = BirdLayerNode()
-    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, reduceMotion: false, now: 0)
+    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, motion: .running, now: 0)
     let due = try #require(layer.nextFlockAt)
-    layer.reconcile(snapshot: land(tick: 181, coast: true), viewSize: view, reduceMotion: false, now: due + 1)
+    layer.reconcile(snapshot: land(tick: 181, coast: true), viewSize: view, motion: .running, now: due + 1)
     #expect(!layer.children.isEmpty)
-    layer.reconcile(snapshot: land(tick: 780, coast: true), viewSize: view, reduceMotion: false, now: due + 2)
+    layer.reconcile(snapshot: land(tick: 780, coast: true), viewSize: view, motion: .running, now: due + 2)
     #expect(layer.children.isEmpty)
-    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, reduceMotion: true, now: due + 3)
+    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, motion: .stopped, now: due + 3)
     #expect(layer.children.isEmpty && layer.nextFlockAt == nil)
 }
 
@@ -50,14 +50,14 @@ func scenarioNoBirdsAtNightOrWithReduceMotion() throws {
 @Test("scenario: gulls wheel over the coast")
 func scenarioGullsWheelOverTheCoast() throws {
     let layer = BirdLayerNode()
-    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, reduceMotion: false, now: 0)
+    layer.reconcile(snapshot: land(tick: 180, coast: true), viewSize: view, motion: .running, now: 0)
     let gulls = try #require(layer.gulls)
     #expect(gulls.children.count == BirdPlanner.gullCount)
     let tile = IsoMath.nearestTile(toScreenPoint: gulls.position)
     #expect(land(tick: 0, coast: true).terrain(at: tile) == .water)
-    layer.reconcile(snapshot: land(tick: 240), viewSize: view, reduceMotion: false, now: 0.1)
+    layer.reconcile(snapshot: land(tick: 240), viewSize: view, motion: .running, now: 0.1)
     #expect(layer.gulls == nil, "no coast, no gulls")
-    layer.reconcile(snapshot: land(tick: 241, coast: true, zoom: 0.4), viewSize: view, reduceMotion: false, now: 0.2)
+    layer.reconcile(snapshot: land(tick: 241, coast: true, zoom: 0.4), viewSize: view, motion: .running, now: 0.2)
     #expect(layer.gulls == nil, "too far out for gulls")
 }
 
@@ -75,4 +75,24 @@ func flockShape() {
     #expect(offsets.first == .zero)
     #expect(offsets.dropFirst().allSatisfy { $0.x < 0 })
     #expect(Set(offsets.map { "\($0.x),\($0.y)" }).count == 7)
+}
+
+@MainActor
+@Test("scenario: Pausing holds the birds")
+func pausingHoldsTheBirds() throws {
+    let layer = BirdLayerNode()
+    layer.reconcile(snapshot: land(tick: 180), viewSize: view, motion: .running, now: 0)
+    let due = try #require(layer.nextFlockAt)
+    layer.reconcile(snapshot: land(tick: 181), viewSize: view, motion: .running, now: due + 0.1)
+    let flock = try #require(layer.flock)
+    let next = try #require(layer.nextFlockAt)
+    // Held from the last running frame for 30.9 s: the birds hang still, and the wait for the next
+    // flock pauses with them.
+    layer.reconcile(snapshot: land(tick: 181), viewSize: view, motion: .held, now: due + 1)
+    #expect(layer.speed == 0)
+    layer.reconcile(snapshot: land(tick: 181), viewSize: view, motion: .held, now: due + 31)
+    #expect(layer.flock === flock)
+    #expect(try abs(#require(layer.nextFlockAt) - (next + 30.9)) < 0.001)
+    layer.reconcile(snapshot: land(tick: 182), viewSize: view, motion: .running, now: due + 31.1)
+    #expect(layer.speed == 1)
 }

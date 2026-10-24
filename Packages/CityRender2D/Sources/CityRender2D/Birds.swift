@@ -93,6 +93,7 @@ final class BirdLayerNode: SKNode {
     private(set) var nextFlockAt: TimeInterval?
     private var gullTile: TileCoordinate?
     private var lastRange: String?
+    private var lastSeen: TimeInterval?
 
     override init() {
         super.init()
@@ -112,12 +113,20 @@ final class BirdLayerNode: SKNode {
         childNode(withName: Self.gullsName)
     }
 
-    func reconcile(snapshot: WorldSnapshot, viewSize: CGSize, reduceMotion: Bool, now: TimeInterval) {
-        guard StrollerPlanner.residentsOut(atTick: snapshot.tickCount), !reduceMotion else {
+    func reconcile(snapshot: WorldSnapshot, viewSize: CGSize, motion: MotionState, now: TimeInterval) {
+        defer { lastSeen = now }
+        guard StrollerPlanner.residentsOut(atTick: snapshot.tickCount), motion != .stopped else {
             removeAllChildren()
             nextFlockAt = nil
             gullTile = nil
             lastRange = nil
+            return
+        }
+        // Paused, the birds hang where they are and no flock sets out; the wait for the next one
+        // resumes where it stopped.
+        speed = motion == .held ? 0 : 1
+        guard motion == .running else {
+            nextFlockAt = nextFlockAt.map { $0 + now - (lastSeen ?? now) }
             return
         }
         let range = Culling.visibleTileRange(
@@ -209,6 +218,6 @@ final class BirdLayerNode: SKNode {
 extension IsoWorldScene {
     func reconcileBirds(with snapshot: WorldSnapshot, now: TimeInterval) {
         if birdLayer.parent == nil { addChild(birdLayer) }
-        birdLayer.reconcile(snapshot: snapshot, viewSize: size, reduceMotion: reduceMotion, now: now)
+        birdLayer.reconcile(snapshot: snapshot, viewSize: size, motion: motionState(now: now), now: now)
     }
 }

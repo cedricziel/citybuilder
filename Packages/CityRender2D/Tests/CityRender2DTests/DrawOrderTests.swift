@@ -49,7 +49,9 @@ private func order(_ snapshots: [WorldSnapshot], left: TileCoordinate, right: Ti
     let leftNode = try #require(scene.buildingNodes[left]), rightNode = try #require(scene.buildingNodes[right])
     #expect(leftNode.zPosition == rightNode.zPosition)
     #expect(leftNode.position.x < rightNode.position.x)
-    return try (#require(scene.children.firstIndex(of: leftNode)), #require(scene.children.firstIndex(of: rightNode)))
+    let layer = try #require(leftNode.parent)
+    #expect(rightNode.parent === layer)
+    return try (#require(layer.children.firstIndex(of: leftNode)), #require(layer.children.firstIndex(of: rightNode)))
 }
 
 /// Side by side at one depth, two wide sprites overlap; the right one must draw last every time, or a

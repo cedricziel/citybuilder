@@ -45,6 +45,9 @@ public final class IsoWorldScene: SKScene {
     /// the looks it shows.
     var groundBackdropNode: SKSpriteNode?
     var groundBackdropMap: GroundBackdropMap?
+    /// The backdrop's animation clock: it advances only while motion runs.
+    var groundClock: TimeInterval = 0
+    var groundClockSeen: TimeInterval?
     var shownTiles: VisibleTiles?
     /// Tiles whose terrain sprite the next reconcile works out again: their object changed, or a
     /// season change dropped their node.
@@ -90,6 +93,9 @@ public final class IsoWorldScene: SKScene {
     let ambientLayer = AmbientLayerNode()
     var lastAmbientPass: AmbientPass?
     var smokeSources: [SmokeSource] = []
+    /// Every building sprite, its children sorted by depth and then left to right, at z 0 so each
+    /// building's global depth stays its own `zPosition`.
+    let buildingLayer = SKNode()
     /// Building sprites on screen by anchor tile, kept with `presentSprites`.
     var buildingNodes: [TileCoordinate: SKSpriteNode] = [:]
     /// Sheep, cows and hens. Spec: `rendering-2_5d` / Animals graze by the
@@ -232,6 +238,7 @@ public final class IsoWorldScene: SKScene {
         noteTick(snapshot.tickCount, now: currentTime)
         updateTreeSway(zoom: snapshot.camera.zoom, now: currentTime)
         updateBuildingMotion(now: currentTime)
+        updateGroundMotion(now: currentTime)
         reconcileCarriers(with: snapshot, now: currentTime)
         reconcileRoutes(with: snapshot)
         reconcileShips(with: snapshot)
