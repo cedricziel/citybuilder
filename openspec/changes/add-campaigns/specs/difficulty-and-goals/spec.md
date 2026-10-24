@@ -32,7 +32,7 @@ A scenario SHALL be able to use these goals besides population, age, stock and o
 - **Net income:** the player's tax minus upkeep over the last completed season is at least X.
 - **Trade earnings:** the money the player has earned since the game started from selling at the town market and at rival ports is at least X. Caravan income and tax SHALL NOT count.
 - **Landed by ship:** at least N units of a good have been unloaded from the player's ships into a player port on the home island since the game started.
-- **Orders:** the player has fulfilled at least N orders. This kind SHALL only be used once orders exist (roadmap issue "Orders from the crown and neighbours").
+- **Orders:** the player has fulfilled at least N orders. This kind SHALL only be used once orders exist (#255, "Orders from the crown and neighbours").
 
 The trade-earnings and landed-by-ship counters SHALL be part of the world state and SHALL survive a save and load.
 
@@ -102,7 +102,7 @@ A scenario SHALL be able to have lose conditions besides bankruptcy, checked on 
 - **Rival race:** the scenario is lost when any rival meets a given goal (age or population) before the player does. A rival's progress SHALL be measured as the player's would be.
 - **Collapse:** once the player's population has reached a given floor, the scenario is lost if it falls below that floor and stays below it for a season.
 
-When a scenario is lost, the world SHALL emit `scenarioLost` once with the reason, and SHALL stop checking goals. Unlike bankruptcy, a lost scenario SHALL NOT stop player commands, so the player can keep building in a finished game. Bankruptcy SHALL also lose a scenario and emit `scenarioLost` with the reason bankruptcy, alongside `gameOver`.
+When a scenario is lost, the world SHALL emit `scenarioLost` once with the reason, and SHALL stop checking goals. A scenario lost to a deadline, a rival race or a collapse SHALL NOT stop player commands, so the player can keep building in a finished game. Bankruptcy SHALL also lose a scenario and emit `scenarioLost` with the reason bankruptcy, alongside `gameOver`. A bankrupt game SHALL still stop player commands, as game over does today.
 
 #### Scenario: Deadline passes
 
@@ -132,7 +132,7 @@ When a scenario is lost, the world SHALL emit `scenarioLost` once with the reaso
 #### Scenario: Bankruptcy loses the scenario
 
 - **WHEN** a scenario game goes bankrupt
-- **THEN** that tick emits both `gameOver` and `scenarioLost` with reason bankruptcy
+- **THEN** that tick emits both `gameOver` and `scenarioLost` with reason bankruptcy, and a later house placement is rejected as after any game over
 
 #### Scenario: Building goes on after a loss
 

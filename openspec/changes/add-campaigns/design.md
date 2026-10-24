@@ -54,13 +54,13 @@ This matches today's spread ($1,500 / $1,000 / $700). A chapter can override a v
 
 ### D4. A holding goal holds for one season
 
-A holding goal needs its condition at every goal check for 600 ticks. A season is long enough that a town cannot win on a lucky spike, as Guild Town's "30 merchants" can today. It is short enough to read as one beat. This also brings back the idea of a sustained-merchants gate that `slow-the-mid-game` dropped. It belongs as a chapter goal, not a global era gate, until #223 steadies merchants.
+A holding goal needs its condition at every goal check for 600 ticks. A season is long enough that a town cannot win on a lucky spike, as Guild Town's "30 merchants" can today. It is short enough to read as one beat. This also brings back the idea of a sustained-merchants gate that `slow-the-mid-game` dropped. It belongs as a chapter goal, not a global era gate, until merchants hold steadily. Per-good storage with backpressure and the cloth chain (#239) are expected to bring that.
 
-*Alternative:* a year. The #223 traces show merchants rarely hold that long today, so a year would make chapters unwinnable until #223 lands.
+*Alternative:* a year. The baseline in this design shows merchants swinging between 0 and 60 within two years, so a year-long hold would make chapters unwinnable until merchants steady.
 
 ### D5. Losing ends the chapter, not the game
 
-A deadline, a rival race or a collapse emits `scenarioLost`, stops goal checks and shows the lost card. The player can retry, or keep building in a finished game. Only bankruptcy stops commands, as today. Deadlines are stored as years after the start year and shown as "years left".
+A deadline, a rival race or a collapse emits `scenarioLost`, stops goal checks and shows the lost card. The player can retry, or keep building in a finished game. Bankruptcy is the one loss that also stops commands, as today. It emits `scenarioLost` with the reason bankruptcy, next to `gameOver`, and keeps today's game-over tools. Deadlines are stored as years after the start year and shown as "years left".
 
 *Alternatives:*
 - Treat every loss like bankruptcy. That punishes the player twice.
@@ -291,7 +291,7 @@ What this means for the chapters:
 - **[Risk]** The economy rework moves every number again after the chapters are tuned. → Chapters are data (D1), and the sweep runs weekly. A chapter that falls out of its gates fails the sweep and gets a data retune, not a redesign. Implementation waits for #238 M2 and #239 (#237).
 - **[Risk]** Fixed seeds make a chapter feel scripted on a replay. → History events and rival choices vary with the difficulty. Map presets let a player who wants variety take the map into the sandbox.
 - **[Risk]** Bot kits grow into a second AI that is harder to maintain than the rival AI. → Kits stay in test support, reuse `RivalTownPlan` and `RivalAI` where they can, and each one is a few dozen lines with its own test.
-- **[Risk]** Required roadmap features (orders, winter, events) slip, and three chapters wait. → Those chapters ship in the last milestone. The other twelve make complete campaigns without them, with Merchant Sea 3 and Hard Ground 2 and 4 shown as "coming later".
+- **[Risk]** Required roadmap features (orders, winter, events) slip, and three chapters wait. → Those chapters ship in the last milestone, along with Hard Ground 3, which waits for handcarts (#238 M3). The other eleven make complete campaigns without them, with the late chapters shown as "coming later".
 - **[Risk]** Deadlines feel punishing to players who like to build slowly. → On Easy, deadlines are a third longer than on Normal. The lost card offers "keep building", and the sandbox has no deadlines.
 - **[Trade-off]** Laurels and banners are a small reward. → This is on purpose: the campaign is a guided path through the game, and the sandbox is the game. Rewards that changed the sandbox's balance would split the player base's experience.
 

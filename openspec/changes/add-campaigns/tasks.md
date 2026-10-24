@@ -33,24 +33,25 @@
 - [ ] 3.6 Refactor under a green bar.
 - [ ] 3.7 Verify `make test-scenarios` is clean for `platform-shells`.
 
-## 4. M4 — Twelve chapters that need nothing new
+## 4. M4 — Eleven chapters that need nothing new
 
 - [ ] 4.1 PlayerBot kits: signature, sea and trade (design D10), each with its own test.
 - [ ] 4.2 Chapter sweep harness behind `RIVAL_SWEEP=1`: the guided and naive bots, chapter seed +0…+9, Easy, Normal and Hard; prints a `CHAPTER_SWEEP` line per run.
 - [ ] 4.3 Author The Long Chronicle 1–6 in `campaigns.yaml`. Tune each against the gates and record the measured table in design D10.
 - [ ] 4.4 Author The Merchant Sea 1, 2 and 4, and tune them.
 - [ ] 4.5 Author The Merchant Sea 5 without rival pressure, and tune it.
-- [ ] 4.6 Author Hard Ground 1 and 3, and tune them. Hard Ground 3 waits for handcarts (#238 M3).
+- [ ] 4.6 Author Hard Ground 1, and tune it.
 - [ ] 4.7 Write the card text into the pack, and check that each text is 320 characters or fewer.
 - [ ] 4.8 Add the "Guided play wins every chapter" and "Hard stays hard" sweep tests for these chapters.
 - [ ] 4.9 Refactor under a green bar.
 
-## 5. M5 — Chapters that need roadmap features
+## 5. M5 — Chapters that need later features
 
-- [ ] 5.1 The Merchant Sea 3, once orders exist: orders kit, authoring and tuning.
-- [ ] 5.2 Hard Ground 2, once winter needs exist: winter kit, authoring and tuning.
-- [ ] 5.3 Hard Ground 4, once events with counterplay exist: events kit, authoring and tuning.
-- [ ] 5.4 Add these chapters to the sweep tests.
+- [ ] 5.1 The Merchant Sea 3, once orders (#255) exist: orders kit, authoring and tuning.
+- [ ] 5.2 Hard Ground 2, once winter needs (#259) exist: winter kit, authoring and tuning.
+- [ ] 5.3 Hard Ground 4, once events with counterplay (#257) exist: events kit, authoring and tuning.
+- [ ] 5.4 Hard Ground 3, once handcarts (#238 M3) exist: authoring and tuning.
+- [ ] 5.5 Add these chapters to the sweep tests.
 
 ## 6. Wrap-up
 
