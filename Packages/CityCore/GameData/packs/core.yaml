@@ -35,8 +35,11 @@ items:
   - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [food, planks, bread, tools] }
 
   # How goods travel. Spec: warehouses-and-logistics / Handcarts carry
-  # long and bulk hauls (visible-distribution design D9).
-  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4, cartMaxWait: 200 }
+  # long and bulk hauls (visible-distribution design D9). A haul this long
+  # with this much ready takes the owner's age's vehicle.
+  - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }
+  # The vehicle each age uses from its start; earlier ages walk (#236).
+  - { kind: Vehicle, id: handcart, age: medieval, capacity: 4 }
 
   # --- Buildings -----------------------------------------------------
   # Holds residents. Spec: population-and-needs

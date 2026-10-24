@@ -82,7 +82,9 @@ extension World {
                     let short = amount * 2 - (stockpiles[consumer.id]?.quantity(of: good) ?? 0)
                         - inboundUnits(to: consumer.id, good: good)
                     let held = stockpiles[bufferID]?.quantity(of: good) ?? 0
-                    let haul = CarrierConfig.haul(ready: min(held, short), along: path)
+                    let haul = CarrierConfig.haul(
+                        ready: min(held, short), along: path, vehicle: CarrierConfig.vehicle(in: age(of: consumer.owner))
+                    )
                     dispatchSupply(
                         good, from: bufferID, to: consumer.id, along: path,
                         haul: haul, events: &events
@@ -113,7 +115,7 @@ extension World {
         from buffer: EntityID,
         to consumer: EntityID,
         along path: [TileCoordinate],
-        haul: (amount: Int, vehicle: Carrier.Vehicle) = (1, .onFoot),
+        haul: (amount: Int, vehicle: Vehicle?) = (1, nil),
         events: inout [WorldEvent]
     ) {
         stockpiles[buffer]?.withdraw(good, amount: haul.amount)

@@ -33,7 +33,7 @@ private func roadStrip(width: Int = 30) -> World {
     return world
 }
 
-private func departures(in world: World) -> [(Carrier.Mission, Carrier.Vehicle)] {
+private func departures(in world: World) -> [(Carrier.Mission, Vehicle?)] {
     world.carriers.values.sorted { $0.id.raw < $1.id.raw }.map { ($0.mission, $0.vehicle) }
 }
 
@@ -57,7 +57,7 @@ func scenarioAShortHaulStaysOnFoot() throws {
     world.tick()
     let (mission, vehicle) = try #require(departures(in: world).first)
     #expect(mission == .deliver(good: .wood, amount: 1, fromProducer: hut, toWarehouse: warehouse))
-    #expect(vehicle == .onFoot)
+    #expect(vehicle == nil)
 }
 
 @Test("scenario: a long haul to storage waits for a cart load")
@@ -107,7 +107,7 @@ func scenarioAConsumerShortOfLittleGetsAWalker() throws {
     world.tick()
     let (mission, vehicle) = try #require(departures(in: world).first)
     #expect(mission == .retrieve(good: .wood, amount: 1, fromWarehouse: warehouse, toConsumer: burner))
-    #expect(vehicle == .onFoot)
+    #expect(vehicle == nil)
 }
 
 @Test("scenario: a handcart counts as one of the producer's carriers")
@@ -145,7 +145,7 @@ func aCarrierSavedWithoutAVehicleLoadsOnFoot() throws {
     #expect(json["vehicle"] as? String == "handcart")
     json.removeValue(forKey: "vehicle")
     let old = try JSONDecoder().decode(Carrier.self, from: JSONSerialization.data(withJSONObject: json))
-    #expect(old.vehicle == .onFoot)
+    #expect(old.vehicle == nil)
     #expect(try JSONDecoder().decode(Carrier.self, from: JSONEncoder().encode(carrier)) == carrier)
 }
 
@@ -169,27 +169,27 @@ func scenarioGoodsThatWaitTooLongForACartLoadGoAnyway() throws {
     let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 2])
     let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
     // The hut's catchment holds no forest, so no third log is coming.
-    for _ in 0 ..< CarrierConfig.cartMaxWait {
+    for _ in 0 ..< CarrierConfig.haulMaxWait {
         world.tick()
     }
     #expect(world.carriers.isEmpty)
-    #expect(world.buildings[hut]?.cartWaitTicks == UInt32(CarrierConfig.cartMaxWait))
+    #expect(world.buildings[hut]?.haulWaitTicks == UInt32(CarrierConfig.haulMaxWait))
     world.tick()
     let (mission, vehicle) = try #require(departures(in: world).first)
     #expect(mission == .deliver(good: .wood, amount: 2, fromProducer: hut, toWarehouse: warehouse))
     #expect(vehicle == .handcart)
-    #expect(world.buildings[hut]?.cartWaitTicks == 0)
+    #expect(world.buildings[hut]?.haulWaitTicks == 0)
 }
 
 @Test("a producer saved without a cart wait loads with none")
 func aProducerSavedWithoutACartWaitLoadsWithNone() throws {
     var building = Building(id: EntityID(raw: 3), kind: .sawmill, anchor: TileCoordinate(x: 1, y: 1), state: .operational)
-    building.cartWaitTicks = 7
+    building.haulWaitTicks = 7
     var json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(building)) as? [String: Any])
-    #expect(json["cartWaitTicks"] as? Int == 7)
-    json.removeValue(forKey: "cartWaitTicks")
+    #expect(json["haulWaitTicks"] as? Int == 7)
+    json.removeValue(forKey: "haulWaitTicks")
     let old = try JSONDecoder().decode(Building.self, from: JSONSerialization.data(withJSONObject: json))
-    #expect(old.cartWaitTicks == 0)
+    #expect(old.haulWaitTicks == 0)
 }
 
 @Test("a producer near storage on the grid but far by road waits for a cart load")
@@ -208,5 +208,21 @@ func aProducerNearStorageOnTheGridButFarByRoadWaitsForACartLoad() {
     _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 1, y: 7))
     world.tick()
     #expect(world.carriers.isEmpty)
-    #expect(world.buildings[hut]?.cartWaitTicks == 1)
+    #expect(world.buildings[hut]?.haulWaitTicks == 1)
+}
+
+@Test("the vehicle follows the owner's age")
+func theVehicleFollowsTheOwnersAge() throws {
+    #expect(CarrierConfig.vehicle(in: .antiquity) == nil)
+    #expect(CarrierConfig.vehicle(in: .medieval) == .handcart)
+    #expect(CarrierConfig.vehicle(in: .modern) == Vehicle.allCases.max { $0.age < $1.age })
+    var world = roadStrip()
+    world.age = .antiquity
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 4])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first)
+    #expect(mission == .deliver(good: .wood, amount: 1, fromProducer: hut, toWarehouse: warehouse))
+    #expect(vehicle == nil)
+    #expect(world.buildings[hut]?.haulWaitTicks == 0)
 }

@@ -168,29 +168,30 @@ extension World {
         }
     }
 
-    /// The goods buffer `producer` sends `held` units of `good` to, the path, and the haul. A long haul
-    /// waits for a cart load, up to `cartMaxWait` ticks, and counts the wait on the producer; then it
-    /// returns nil. With too little ready and every buffer far away, it skips the path search.
+    /// The goods buffer `producer` sends `held` units of `good` to, the path, and the haul. When the
+    /// owner's age has a vehicle, a long haul waits for a vehicle load, up to `haulMaxWait` ticks,
+    /// and counts the wait on the producer; then it returns nil. With too little ready and every
+    /// buffer far away, it skips the path search.
     private mutating func storageHaul(
         of good: Good, held: Int, from producer: Building, road: TileCoordinate, among buffers: [Building]
     ) -> StorageHaul? {
-        let flush = producer.cartWaitTicks >= UInt32(CarrierConfig.cartMaxWait)
-        if held < CarrierConfig.cartMinLoad, !flush, allFar(from: road, among: buffers) {
-            buildings[producer.id]?.cartWaitTicks += 1
+        let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
+        let waits = vehicle != nil && producer.haulWaitTicks < UInt32(CarrierConfig.haulMaxWait)
+        if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
+            buildings[producer.id]?.haulWaitTicks += 1
             return nil
         }
         guard let (warehouseId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers)
         else { return nil }
         let ready = min(held, stockpiles[warehouseId]?.freeSpace ?? 0)
-        guard CarrierConfig.isLong(path) else {
-            let haul = CarrierConfig.haul(ready: ready, along: path)
-            return StorageHaul(buffer: warehouseId, path: path, amount: haul.amount, vehicle: haul.vehicle)
+        guard let vehicle, CarrierConfig.isLong(path) else {
+            return StorageHaul(buffer: warehouseId, path: path, amount: 1, vehicle: nil)
         }
-        if ready < CarrierConfig.cartMinLoad, !flush {
-            buildings[producer.id]?.cartWaitTicks += 1
+        if ready < CarrierConfig.haulMinLoad, waits {
+            buildings[producer.id]?.haulWaitTicks += 1
             return nil
         }
-        return StorageHaul(buffer: warehouseId, path: path, amount: min(ready, CarrierConfig.cartCapacity), vehicle: .handcart)
+        return StorageHaul(buffer: warehouseId, path: path, amount: min(ready, vehicle.capacity), vehicle: vehicle)
     }
 
     /// Where a producer's goods go to storage, along which road, and how.
@@ -198,7 +199,7 @@ extension World {
         let buffer: EntityID
         let path: [TileCoordinate]
         let amount: Int
-        let vehicle: Carrier.Vehicle
+        let vehicle: Vehicle?
     }
 
     /// True when every buffer's road lies at least the cart distance from
@@ -207,7 +208,7 @@ extension World {
         buffers.allSatisfy { buffer in
             let footprint = BuildingCatalog.spec(for: buffer.kind).footprint
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).map {
-                abs($0.x - road.x) + abs($0.y - road.y) >= CarrierConfig.cartDistance
+                abs($0.x - road.x) + abs($0.y - road.y) >= CarrierConfig.haulDistance
             } ?? true
         }
     }
@@ -220,7 +221,7 @@ extension World {
         let good: Good
         let mission: Carrier.Mission
         let path: [TileCoordinate]
-        var vehicle: Carrier.Vehicle = .onFoot
+        var vehicle: Vehicle?
     }
 
     private mutating func spawnCarrier(
@@ -232,7 +233,7 @@ extension World {
         nextEntityRaw &+= 1
         carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission, vehicle: spawn.vehicle)
         carrierCountByProducer[spawn.producerId, default: 0] += 1
-        buildings[spawn.producerId]?.cartWaitTicks = 0
+        buildings[spawn.producerId]?.haulWaitTicks = 0
         events.append(.carrierDeparted(
             carrier: carrierId, from: spawn.road, good: spawn.good
         ))

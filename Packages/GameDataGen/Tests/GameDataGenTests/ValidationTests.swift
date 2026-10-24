@@ -150,15 +150,19 @@ func forwardReference() throws {
     #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("Good salt") && $0.contains("rent") })
 }
 
-// visible-distribution design D9: the distribution tunables.
+// visible-distribution design D9 and #236: the distribution tunables and vehicles.
 
-private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4, cartMaxWait: 200 }\n"
+private let logisticsLine = "  - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }\n"
+
+private func withVehicles(_ items: String) -> InMemorySource {
+    Fixtures.withExtraPack("items:\n" + items)
+}
 
 @Test func logisticsLoadsIntoTheModel() throws {
     let data = try Fixtures.load().get()
-    #expect(data.logistics.map(\.cartDistance) == [12])
-    #expect(data.logistics.map(\.cartMinLoad) == [3])
-    #expect(data.logistics.map(\.cartCapacity) == [4])
+    #expect(data.logistics.map(\.haulDistance) == [12])
+    #expect(data.logistics.map(\.haulMinLoad) == [3])
+    #expect(data.logistics.map(\.haulMaxWait) == [200])
 }
 
 @Test func missingLogisticsIsRejected() {
@@ -167,24 +171,35 @@ private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance:
 }
 
 @Test func secondLogisticsItemIsRejected() {
-    let errors = Fixtures.errors(Fixtures.withExtraPack(
-        "items:\n  - { kind: Logistics, id: more, cartDistance: 5, cartMinLoad: 2, cartCapacity: 2, cartMaxWait: 9 }\n"
-    ))
+    let errors = Fixtures.errors(withVehicles("  - { kind: Logistics, id: more, haulDistance: 5, haulMinLoad: 2, haulMaxWait: 9 }\n"))
     #expect(errors.contains { $0.contains("Logistics more") && $0.contains("second") })
 }
 
-@Test(arguments: [
-    ("cartDistance: 12", "cartDistance: 0", "`cartDistance` must be at least 1"),
-    ("cartMinLoad: 3", "cartMinLoad: 5", "`cartMinLoad` must not exceed `cartCapacity`")
-])
-func invalidLogisticsValuesAreRejected(from: String, to: String, message: String) {
-    let core = Fixtures.core.replacingOccurrences(of: logisticsLine, with: logisticsLine.replacingOccurrences(of: from, with: to))
-    #expect(Fixtures.errors(Fixtures.withCore(core)).contains { $0.contains(message) })
+@Test func nonPositiveLogisticsValueIsRejected() {
+    let core = Fixtures.core.replacingOccurrences(
+        of: logisticsLine,
+        with: logisticsLine.replacingOccurrences(of: "haulDistance: 12", with: "haulDistance: 0")
+    )
+    #expect(Fixtures.errors(Fixtures.withCore(core)).contains { $0.contains("`haulDistance` must be at least 1") })
 }
 
-@Test func logisticsEmitsTheCartConstants() throws {
-    let files = try SwiftEmitter.emit(Fixtures.load().get())
-    let source = try #require(files["Logistics+Generated.swift"])
-    #expect(source.contains("public static let cartDistance = 12"))
-    #expect(source.contains("public static let cartCapacity = 4"))
+@Test(arguments: [
+    ("  - { kind: Vehicle, id: cart, age: bronze, capacity: 4 }\n", "unknown age `bronze`"),
+    ("  - { kind: Vehicle, id: cart, age: medieval, capacity: 2 }\n", "`capacity` must hold the `haulMinLoad` of 3"),
+    (
+        "  - { kind: Vehicle, id: cart, age: medieval, capacity: 4 }\n  - { kind: Vehicle, id: wagon, age: medieval, capacity: 6 }\n",
+        "age `medieval` already has vehicle `cart`"
+    )
+])
+func invalidVehiclesAreRejected(items: String, message: String) {
+    #expect(Fixtures.errors(withVehicles(items)).contains { $0.contains(message) })
+}
+
+@Test func vehiclesEmitTheirAgeAndCapacity() throws {
+    let data = try Fixtures.load(withVehicles("  - { kind: Vehicle, id: cart, age: medieval, capacity: 4 }\n")).get()
+    let source = try #require(SwiftEmitter.emit(data)["Logistics+Generated.swift"])
+    #expect(source.contains("public static let haulDistance = 12"))
+    #expect(source.contains("public enum Vehicle: String, CaseIterable, Codable, Hashable, Sendable"))
+    #expect(source.contains("case .cart: .medieval"))
+    #expect(source.contains("case .cart: 4"))
 }

@@ -9,6 +9,8 @@ public struct GameData: Equatable, Sendable {
     public var tiers: [Tier] = []
     /// The distribution tunables; exactly one item declares them.
     public var logistics: [Logistics] = []
+    /// Vehicles in load order.
+    public var vehicles: [Vehicle] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -166,17 +168,26 @@ public struct Tier: Equatable, Sendable {
     public var origin: Origin
 }
 
-/// How goods travel: when a haul takes a handcart, and how much it
-/// carries (visible-distribution design D9).
+/// How goods travel: when a haul takes a vehicle rather than going on
+/// foot (visible-distribution design D9).
 public struct Logistics: Equatable, Sendable {
     public var id: String
-    /// Road tiles a haul must cover before it goes by handcart.
-    public var cartDistance: Int
-    /// Units that must be ready for one destination before a handcart goes.
-    public var cartMinLoad: Int
-    /// Units a handcart carries at most.
-    public var cartCapacity: Int
-    /// Ticks a producer's output waits for a handcart load before it goes anyway.
-    public var cartMaxWait: Int
+    /// Road tiles a haul must cover before it takes a vehicle.
+    public var haulDistance: Int
+    /// Units that must be ready for one destination before a vehicle goes.
+    public var haulMinLoad: Int
+    /// Ticks a producer's output waits for a vehicle load before it goes anyway.
+    public var haulMaxWait: Int
+    public var origin: Origin
+}
+
+/// A vehicle carriers use on long and bulk hauls from its age on, until a
+/// later age's vehicle replaces it (#236).
+public struct Vehicle: Equatable, Sendable {
+    public var id: String
+    /// The first age that uses it.
+    public var age: String
+    /// Units it carries at most.
+    public var capacity: Int
     public var origin: Origin
 }

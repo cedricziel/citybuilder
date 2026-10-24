@@ -21,9 +21,10 @@ public enum SpriteAtlasRouting {
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
-        // Every terrain, building, people, handcart, animal and ship family and the goods icons are art-kit
+        // Every terrain, building, people, vehicle, animal and ship family and the goods icons are art-kit
         // renders; the Terrain, Buildings and Units atlases are retired.
-        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "handcart-", "animal-", "ship-", "good-"]
+        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-"]
+            + Vehicle.allCases.map { "\($0.rawValue)-" }
         if kitPrefixes.contains(where: spriteName.hasPrefix) { return kitAtlasName }
         // The status badges drawn over buildings are pixel art.
         if spriteName.hasPrefix("overlay-") { return iconsAtlasName }
@@ -101,9 +102,14 @@ public enum SpriteAtlas {
     /// stand on their feet.
     public static let walkerAnchor = CGPoint(x: 12.0 / 32.0, y: 5.0 / 32.0)
 
-    /// Handcart sprites stand the pusher 14 pt above the bottom of their 64 x 48 pt cell, centred, so the
-    /// cart ahead and its shadow fit in every facing. Spec: `rendering-2_5d` / Handcarts render.
-    public static let handcartAnchor = CGPoint(x: 0.5, y: 14.0 / 48.0)
+    /// Where each vehicle's sprites stand the carrier's feet in their cell. Handcart sprites stand the
+    /// pusher 14 pt above the bottom of their 64 x 48 pt cell, centred, so the cart ahead and its shadow
+    /// fit in every facing. Spec: `rendering-2_5d` / Handcarts render.
+    public static func vehicleAnchor(_ vehicle: Vehicle) -> CGPoint {
+        switch vehicle {
+        case .handcart: CGPoint(x: 0.5, y: 14.0 / 48.0)
+        }
+    }
 
     public static func terrainTexture(for kind: TerrainType) -> SKTexture? {
         texture(named: "terrain-\(kind.rawValue)")

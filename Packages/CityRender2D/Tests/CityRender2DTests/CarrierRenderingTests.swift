@@ -63,7 +63,7 @@ func scenarioCarrierSpriteFallsBackToTheWalker() {
 @MainActor
 @Test("scenario: A handcart shows the handcart look")
 func scenarioAHandcartShowsTheHandcartLook() throws {
-    let names = (0 ..< 8).map { SpriteAnimation.assetName(for: .handcart(.se), frame: $0) }
+    let names = (0 ..< 8).map { SpriteAnimation.assetName(for: .vehicle(.handcart, .se), frame: $0) }
     SpriteAtlas.stub(Dictionary(uniqueKeysWithValues: names.map { ($0, SKTexture()) }))
     defer { SpriteAtlas.stub([:]) }
     var cart = carrier(at: 0)
@@ -72,9 +72,9 @@ func scenarioAHandcartShowsTheHandcartLook() throws {
     scene.reconcileCarriers(with: snapshot(carriers: [cart]), now: 0)
     let node = try #require(scene.carrierVisuals[EntityID(raw: 7)]?.node)
     // SpriteKit keeps the anchor in single precision.
-    #expect(abs(node.anchorPoint.y - SpriteAtlas.handcartAnchor.y) < 1e-6 && node.anchorPoint.x == 0.5)
-    #expect(node.userData?[SKSpriteNode.walkKey] as? SpriteAnimation.AnimationKey == .handcart(.se))
-    #expect(SpriteAnimation.assetName(for: .handcart(.se), frame: 1) == "handcart-se-1")
+    #expect(abs(node.anchorPoint.y - SpriteAtlas.vehicleAnchor(.handcart).y) < 1e-6 && node.anchorPoint.x == 0.5)
+    #expect(node.userData?[SKSpriteNode.walkKey] as? SpriteAnimation.AnimationKey == .vehicle(.handcart, .se))
+    #expect(SpriteAnimation.assetName(for: .vehicle(.handcart, .se), frame: 1) == "handcart-se-1")
     #expect(SpriteAtlasRouting.atlasName(for: "handcart-se-0") == SpriteAtlasRouting.kitAtlasName)
 
     // On foot again, the carrier goes back to its load look and the walker anchor.

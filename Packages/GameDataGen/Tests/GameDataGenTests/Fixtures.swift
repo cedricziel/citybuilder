@@ -15,7 +15,7 @@ enum Fixtures {
       - { kind: Tier, id: peasants, name: Peasants, capacity: 4, taxPerResident: 1, needs: [planks] }
       - { kind: Tier, id: citizens, name: Citizens, capacity: 6, taxPerResident: 2, needs: [planks] }
       - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [planks, wood] }
-      - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4, cartMaxWait: 200 }
+      - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }
       - kind: Building
         id: house
         effect: code
@@ -170,7 +170,8 @@ enum Fixtures {
         "Tech": ["id": "salting", "cost": "10", "age": "antiquity"],
         "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"],
         "Tier": ["id": "nobles", "name": "Nobles", "capacity": "10", "taxPerResident": "8", "needs": "[wood]"],
-        "Logistics": ["id": "carts", "cartDistance": "8", "cartMinLoad": "2", "cartCapacity": "3", "cartMaxWait": "50"]
+        "Logistics": ["id": "carts", "haulDistance": "8", "haulMinLoad": "2", "haulMaxWait": "50"],
+        "Vehicle": ["id": "barrow", "age": "antiquity", "capacity": "3"]
     ]
 
     /// Every optional field of each kind, as raw YAML values.

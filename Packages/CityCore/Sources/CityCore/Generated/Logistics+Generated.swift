@@ -5,14 +5,28 @@
 import Foundation
 
 public enum LogisticsCatalog {
-    /// Road tiles a haul must cover before it goes by handcart.
-    public static let cartDistance = 12
-    /// Units that must be ready for one destination before a handcart goes.
-    public static let cartMinLoad = 3
-    /// Units a handcart carries at most.
-    public static let cartCapacity = 4
-    /// Ticks a producer's output waits for a handcart load before it goes anyway.
-    public static let cartMaxWait = 200
+    /// Road tiles a haul must cover before it takes a vehicle.
+    public static let haulDistance = 12
+    /// Units that must be ready for one destination before a vehicle goes.
+    public static let haulMinLoad = 3
+    /// Ticks a producer's output waits for a vehicle load before it goes anyway.
+    public static let haulMaxWait = 200
+}
+
+public enum Vehicle: String, CaseIterable, Codable, Hashable, Sendable {
+    case handcart
+
+    public var age: Age {
+        switch self {
+        case .handcart: .medieval
+        }
+    }
+
+    public var capacity: Int {
+        switch self {
+        case .handcart: 4
+        }
+    }
 }
 
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

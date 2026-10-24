@@ -32,7 +32,7 @@ public enum SwiftEmitter {
             ("Tech+Generated.swift", types.tech),
             ("Age+Generated.swift", types.age),
             ("HouseTier+Generated.swift", types.houseTier),
-            ("Logistics+Generated.swift", types.logistics)
+            ("Logistics+Generated.swift", types.logistics + types.vehicle)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -193,17 +193,25 @@ private struct Types {
         return """
 
         \(access)enum LogisticsCatalog {
-            /// Road tiles a haul must cover before it goes by handcart.
-            \(access)static let cartDistance = \(values.cartDistance)
-            /// Units that must be ready for one destination before a handcart goes.
-            \(access)static let cartMinLoad = \(values.cartMinLoad)
-            /// Units a handcart carries at most.
-            \(access)static let cartCapacity = \(values.cartCapacity)
-            /// Ticks a producer's output waits for a handcart load before it goes anyway.
-            \(access)static let cartMaxWait = \(values.cartMaxWait)
+            /// Road tiles a haul must cover before it takes a vehicle.
+            \(access)static let haulDistance = \(values.haulDistance)
+            /// Units that must be ready for one destination before a vehicle goes.
+            \(access)static let haulMinLoad = \(values.haulMinLoad)
+            /// Ticks a producer's output waits for a vehicle load before it goes anyway.
+            \(access)static let haulMaxWait = \(values.haulMaxWait)
         }
 
         """
+    }
+
+    /// The vehicles, in load order, with their first age and capacity.
+    var vehicle: String {
+        let all = data.vehicles
+        guard !all.isEmpty else { return "" }
+        return enumDecl("Vehicle", "String, CaseIterable, Codable, Hashable, Sendable", all.map(\.id), [
+            property("age", "Age", all.map { ($0.id, ".\(caseName($0.age))") }),
+            property("capacity", "Int", all.map { ($0.id, "\($0.capacity)") })
+        ])
     }
 
     // MARK: - Values

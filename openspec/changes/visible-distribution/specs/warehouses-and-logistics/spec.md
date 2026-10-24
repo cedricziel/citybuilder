@@ -26,7 +26,7 @@ When a producer sends a unit of a good and no waiting construction site needs it
 
 ### Requirement: Handcarts carry long and bulk hauls
 
-A carrier SHALL travel with a handcart when its road path is at least the cart distance of 12 road tiles and at least the cart minimum load of 3 units is ready for the same destination. Ready means the source holds the units and the destination can take them: a goods buffer has room for them, and a consumer is short of them by at least that many. A handcart SHALL carry as many ready units as fit, up to the cart capacity of 4. A producer whose haul to storage is that long SHALL wait until a cart load is ready rather than send single units on foot, but for no more than the cart's maximum wait of 200 ticks; then it SHALL send what is ready by handcart. Every other haul SHALL go on foot with 1 unit. The cart distance, minimum load, capacity and maximum wait SHALL come from the game data. A handcart SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
+A carrier SHALL travel with its owner's vehicle when its road path is at least the haul distance of 12 road tiles and at least the haul minimum load of 3 units is ready for the same destination. The owner's vehicle is the one whose age began most recently by the owner's age: a handcart from the medieval age on, carrying up to 4. Before the first vehicle's age, every haul SHALL go on foot. Ready means the source holds the units and the destination can take them: a goods buffer has room for them, and a consumer is short of them by at least that many. A vehicle SHALL carry as many ready units as fit, up to its capacity. A producer whose haul to storage is that long SHALL wait until a vehicle load is ready rather than send single units on foot, but for no more than the haul's maximum wait of 200 ticks; then it SHALL send what is ready by vehicle. Every other haul SHALL go on foot with 1 unit. The haul distance, minimum load and maximum wait, and each vehicle's age and capacity, SHALL come from the game data. A vehicle SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
 
 #### Scenario: A long haul with enough ready goes by handcart
 
@@ -62,3 +62,8 @@ A carrier SHALL travel with a handcart when its road path is at least the cart d
 
 - **WHEN** a producer has one handcart and one carrier on foot on the road
 - **THEN** it sends no third carrier until one of them arrives
+
+#### Scenario: Carriers walk before the first vehicle's age
+
+- **WHEN** a lumberjack hut in the antiquity holds 4 wood and its nearest goods buffer with room lies 15 road tiles away
+- **THEN** a carrier leaves on foot with 1 wood

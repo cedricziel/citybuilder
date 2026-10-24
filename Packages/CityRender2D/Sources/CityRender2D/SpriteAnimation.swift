@@ -18,8 +18,8 @@ public enum SpriteAnimation {
         case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
-        /// A carrier pushing a handcart; shares the walker's cycle.
-        case handcart(SpriteAtlas.WalkerFacing)
+        /// A carrier with a vehicle (a handcart, later the age's wagon); shares the walker's cycle.
+        case vehicle(Vehicle, SpriteAtlas.WalkerFacing)
 
         /// An animal walking, grazing or pecking (realistic-walkers).
         case animal(SpriteAtlas.AnimalAction, SpriteAtlas.WalkerFacing)
@@ -27,7 +27,7 @@ public enum SpriteAnimation {
         /// Every resident look and carrier load in every facing (realistic-walkers).
         public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
-                + [.handcart(facing)]
+                + Vehicle.allCases.map { .vehicle($0, facing) }
         }
 
         /// Every animal action in every facing.
@@ -75,7 +75,7 @@ public enum SpriteAnimation {
             operationalEntry(for: kind)
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
-        case .walker, .carrier, .handcart:
+        case .walker, .carrier, .vehicle:
             // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
             Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
         case let .animal(action, _):
@@ -123,8 +123,8 @@ public enum SpriteAnimation {
             "\(look.stem)-\(facing.rawValue)-\(frame)"
         case let .carrier(load, facing):
             "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
-        case let .handcart(facing):
-            "handcart-\(facing.rawValue)-\(frame)"
+        case let .vehicle(vehicle, facing):
+            "\(vehicle.rawValue)-\(facing.rawValue)-\(frame)"
         case let .animal(action, facing):
             "\(action.stem)-\(facing.rawValue)-\(frame)"
         }

@@ -120,7 +120,7 @@ private func expectedCatalogIds() -> Set<String> {
     // The status badge drawn over a waiting construction site.
     ids.insert(IsoWorldScene.waitingBadgeNodeName)
     ids.insert("walker")
-    ids.insert("handcart")
+    ids.formUnion(Vehicle.allCases.map(\.rawValue))
     ids.insert("animal")
     ids.insert("ship")
     for good in Good.allCases {

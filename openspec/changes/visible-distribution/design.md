@@ -133,7 +133,9 @@ The canvas proposes the looks: https://claude.ai/artifact/2pupecCf6JAYUSkfi5LsWp
 The distribution numbers are starting values, so they go in the game-data packs, not in Swift constants. designer2 tunes them in the pacing sweeps without a code change.
 
 - **Hubs:** a hub building's pack item gets a `hub` mapping: `radius` (18), `housesPerPorter` (4), `maxPorters` (8), `basketUnits` (10) and `reserveConsumptions` (2). The town center and the marketplace each carry one, so the marketplace can be tuned apart from the town center.
-- **Carts:** one `Logistics` item in `core.yaml` holds `cartDistance` (12), `cartMinLoad` (3), `cartCapacity` (4) and `cartMaxWait` (200 ticks).
+- **Hauls and vehicles:** one `Logistics` item in `core.yaml` holds `haulDistance` (12), `haulMinLoad` (3) and `haulMaxWait` (200 ticks). Each `Vehicle` item names the first age that uses it and its `capacity`: `handcart` from the medieval age, carrying 4. The generator emits a `Vehicle` enum.
+  - A carrier's `vehicle` is that enum, nil on foot, and is resolved per owner's age: the latest vehicle whose age has begun.
+  - So #236 (mule cart in the Renaissance, horse wagon in the Industrial age, motor truck in the Modern age, faster vehicles) adds `Vehicle` items, art and a `speed` field, without a save migration: saves store the vehicle id.
 - **House stock:** the same item holds `houseStockConsumptions` (2) and `houseStockMinimum` (2).
 - The schema validates them, `make gamedata` generates the Swift catalog, and `gamedata-check` keeps the two in sync.
 

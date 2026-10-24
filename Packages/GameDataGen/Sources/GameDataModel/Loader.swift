@@ -114,6 +114,7 @@ private struct ItemReader {
         case "Tech": tech(id).map { data.techs.append($0) }
         case "Tier": tier(id).map { data.tiers.append($0) }
         case "Logistics": logistics(id).map { data.logistics.append($0) }
+        case "Vehicle": vehicle(id).map { data.vehicles.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }
@@ -235,13 +236,15 @@ private struct ItemReader {
     }
 
     private func logistics(_ id: String) -> Logistics? {
-        let distance = fields.int("cartDistance"), minLoad = fields.int("cartMinLoad")
-        let capacity = fields.int("cartCapacity"), maxWait = fields.int("cartMaxWait")
-        guard let distance, let minLoad, let capacity, let maxWait else { return nil }
-        return Logistics(
-            id: id, cartDistance: distance, cartMinLoad: minLoad, cartCapacity: capacity, cartMaxWait: maxWait,
-            origin: fields.origin
-        )
+        let distance = fields.int("haulDistance"), minLoad = fields.int("haulMinLoad"), maxWait = fields.int("haulMaxWait")
+        guard let distance, let minLoad, let maxWait else { return nil }
+        return Logistics(id: id, haulDistance: distance, haulMinLoad: minLoad, haulMaxWait: maxWait, origin: fields.origin)
+    }
+
+    private func vehicle(_ id: String) -> Vehicle? {
+        let age = fields.string("age"), capacity = fields.int("capacity")
+        guard let age, let capacity else { return nil }
+        return Vehicle(id: id, age: age, capacity: capacity, origin: fields.origin)
     }
 
     private func age(_ id: String) -> Age? {
