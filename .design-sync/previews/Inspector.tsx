@@ -42,9 +42,9 @@ export const NextTier = () => (
   </OnMap>
 );
 
-export const Resting = () => (
+export const OutputStuck = () => (
   <OnMap h={200}>
-    <Inspector lines={["Kind: bakery", "State: operational", "Road: connected", "Resting: stores hold plenty of bread"]} />
+    <Inspector lines={["Kind: bakery", "State: operational", "Road: connected", "Problem: Output stuck: no room for bread"]} />
   </OnMap>
 );
 
