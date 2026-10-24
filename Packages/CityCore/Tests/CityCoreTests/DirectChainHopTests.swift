@@ -346,3 +346,16 @@ func aWorldWithADirectDeliveryInFlightSurvivesASaveRoundTrip() throws {
     }
     #expect(original == restored)
 }
+
+@Test("the determinism fixture's chain sends goods straight to consumers")
+func theDeterminismFixturesChainSendsGoodsStraightToConsumers() {
+    var world = World.chainFixture()
+    var hopped: Set<Good> = []
+    for _ in 0 ..< 600 {
+        world.tick()
+        for carrier in world.carriers.values {
+            if case let .deliverToConsumer(good, _, _, _) = carrier.mission { hopped.insert(good) }
+        }
+    }
+    #expect(hopped == [.grain, .flour])
+}
