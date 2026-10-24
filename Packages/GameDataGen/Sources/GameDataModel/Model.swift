@@ -7,6 +7,8 @@ public struct GameData: Equatable, Sendable {
     public var techs: [Tech] = []
     public var ages: [Age] = []
     public var tiers: [Tier] = []
+    /// The distribution tunables; exactly one item declares them.
+    public var logistics: [Logistics] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -161,5 +163,18 @@ public struct Tier: Equatable, Sendable {
     /// The tier's needs: as written while validating, then with every
     /// `neededBy` merged in.
     public var needs: [String]
+    public var origin: Origin
+}
+
+/// How goods travel: when a haul takes a handcart, and how much it
+/// carries (visible-distribution design D9).
+public struct Logistics: Equatable, Sendable {
+    public var id: String
+    /// Road tiles a haul must cover before it goes by handcart.
+    public var cartDistance: Int
+    /// Units that must be ready for one destination before a handcart goes.
+    public var cartMinLoad: Int
+    /// Units a handcart carries at most.
+    public var cartCapacity: Int
     public var origin: Origin
 }

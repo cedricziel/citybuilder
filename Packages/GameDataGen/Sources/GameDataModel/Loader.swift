@@ -113,6 +113,7 @@ private struct ItemReader {
         case "Culture": culture(id).map { data.cultures.append($0) }
         case "Tech": tech(id).map { data.techs.append($0) }
         case "Tier": tier(id).map { data.tiers.append($0) }
+        case "Logistics": logistics(id).map { data.logistics.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }
@@ -231,6 +232,12 @@ private struct ItemReader {
         let tax = fields.int("taxPerResident"), needs = fields.strings("needs")
         guard let name, let capacity, let tax, let needs else { return nil }
         return Tier(id: id, name: name, capacity: capacity, taxPerResident: tax, needs: needs, origin: fields.origin)
+    }
+
+    private func logistics(_ id: String) -> Logistics? {
+        let distance = fields.int("cartDistance"), minLoad = fields.int("cartMinLoad"), capacity = fields.int("cartCapacity")
+        guard let distance, let minLoad, let capacity else { return nil }
+        return Logistics(id: id, cartDistance: distance, cartMinLoad: minLoad, cartCapacity: capacity, origin: fields.origin)
     }
 
     private func age(_ id: String) -> Age? {

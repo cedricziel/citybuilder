@@ -31,7 +31,8 @@ public enum SwiftEmitter {
             ("Culture+Generated.swift", types.culture),
             ("Tech+Generated.swift", types.tech),
             ("Age+Generated.swift", types.age),
-            ("HouseTier+Generated.swift", types.houseTier)
+            ("HouseTier+Generated.swift", types.houseTier),
+            ("Logistics+Generated.swift", types.logistics)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -184,6 +185,23 @@ private struct Types {
             property("taxPerResident", "Int64", all.map { ($0.id, "\($0.taxPerResident)") }),
             property("displayName", "String", all.map { ($0.id, literal($0.name)) })
         ])
+    }
+
+    /// The distribution tunables as constants.
+    var logistics: String {
+        guard let values = data.logistics.first else { return "" }
+        return """
+
+        \(access)enum LogisticsCatalog {
+            /// Road tiles a haul must cover before it goes by handcart.
+            \(access)static let cartDistance = \(values.cartDistance)
+            /// Units that must be ready for one destination before a handcart goes.
+            \(access)static let cartMinLoad = \(values.cartMinLoad)
+            /// Units a handcart carries at most.
+            \(access)static let cartCapacity = \(values.cartCapacity)
+        }
+
+        """
     }
 
     // MARK: - Values

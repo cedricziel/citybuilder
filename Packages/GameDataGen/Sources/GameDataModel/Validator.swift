@@ -25,6 +25,7 @@ struct Validator {
         if data.tiers.isEmpty {
             log.error("no house tiers: declare at least one `Tier` item in a pack", at: Origin(file: "index.yaml"))
         }
+        checkLogistics()
     }
 
     private struct References {
@@ -268,6 +269,28 @@ struct Validator {
         }
         for tech in data.techs {
             visit(tech.id, path: [])
+        }
+    }
+}
+
+extension Validator {
+    /// Exactly one `Logistics` item, with positive values and a handcart
+    /// that holds its minimum load.
+    func checkLogistics() {
+        guard let first = data.logistics.first else {
+            log.error("no logistics: declare one `Logistics` item in a pack", at: Origin(file: "index.yaml"))
+            return
+        }
+        for extra in data.logistics.dropFirst() {
+            log.error("a second `Logistics` item, first declared at \(first.origin)", at: extra.origin, item: "Logistics \(extra.id)")
+        }
+        let report = { (message: String) in log.error(message, at: first.origin, item: "Logistics \(first.id)") }
+        let values = [("cartDistance", first.cartDistance), ("cartMinLoad", first.cartMinLoad), ("cartCapacity", first.cartCapacity)]
+        for (field, value) in values where value < 1 {
+            report("`\(field)` must be at least 1")
+        }
+        if first.cartMinLoad > first.cartCapacity {
+            report("`cartMinLoad` must not exceed `cartCapacity`")
         }
     }
 }

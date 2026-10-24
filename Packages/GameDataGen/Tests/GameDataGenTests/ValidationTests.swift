@@ -149,3 +149,42 @@ func forwardReference() throws {
     let extra = "items:\n  - { kind: Good, id: salt, name: Salt, unit: sacks, basePrice: 3, market: { rent: 1 } }\n"
     #expect(Fixtures.errors(Fixtures.withExtraPack(extra)).contains { $0.contains("Good salt") && $0.contains("rent") })
 }
+
+// visible-distribution design D9: the distribution tunables.
+
+private let logisticsLine = "  - { kind: Logistics, id: logistics, cartDistance: 12, cartMinLoad: 3, cartCapacity: 4 }\n"
+
+@Test func logisticsLoadsIntoTheModel() throws {
+    let data = try Fixtures.load().get()
+    #expect(data.logistics.map(\.cartDistance) == [12])
+    #expect(data.logistics.map(\.cartMinLoad) == [3])
+    #expect(data.logistics.map(\.cartCapacity) == [4])
+}
+
+@Test func missingLogisticsIsRejected() {
+    let errors = Fixtures.errors(Fixtures.withCore(Fixtures.core.replacingOccurrences(of: logisticsLine, with: "")))
+    #expect(errors.contains { $0.contains("no logistics") })
+}
+
+@Test func secondLogisticsItemIsRejected() {
+    let errors = Fixtures.errors(Fixtures.withExtraPack(
+        "items:\n  - { kind: Logistics, id: more, cartDistance: 5, cartMinLoad: 2, cartCapacity: 2 }\n"
+    ))
+    #expect(errors.contains { $0.contains("Logistics more") && $0.contains("second") })
+}
+
+@Test(arguments: [
+    ("cartDistance: 12", "cartDistance: 0", "`cartDistance` must be at least 1"),
+    ("cartMinLoad: 3", "cartMinLoad: 5", "`cartMinLoad` must not exceed `cartCapacity`")
+])
+func invalidLogisticsValuesAreRejected(from: String, to: String, message: String) {
+    let core = Fixtures.core.replacingOccurrences(of: logisticsLine, with: logisticsLine.replacingOccurrences(of: from, with: to))
+    #expect(Fixtures.errors(Fixtures.withCore(core)).contains { $0.contains(message) })
+}
+
+@Test func logisticsEmitsTheCartConstants() throws {
+    let files = try SwiftEmitter.emit(Fixtures.load().get())
+    let source = try #require(files["Logistics+Generated.swift"])
+    #expect(source.contains("public static let cartDistance = 12"))
+    #expect(source.contains("public static let cartCapacity = 4"))
+}
