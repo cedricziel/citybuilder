@@ -65,21 +65,30 @@ extension World {
     private func catchmentCount(
         kind: BuildingKind, anchor: TileCoordinate, owner: Owner, tileToIsland: [TileCoordinate: IslandID]
     ) -> Int {
+        var count = 0
+        visitCatchmentTargets(of: kind, anchor: anchor, owner: owner, tileToIsland: tileToIsland) { _ in count += 1 }
+        return count
+    }
+
+    /// Visits, row-major, the tiles a `kind` at `anchor` would work: unoccupied forest for a
+    /// lumberjack hut, open grass for a forester. Tiles under the footprint itself never count.
+    func visitCatchmentTargets(
+        of kind: BuildingKind, anchor: TileCoordinate, owner: Owner, tileToIsland: [TileCoordinate: IslandID],
+        _ visit: (TileCoordinate) -> Void
+    ) {
         let isTarget: (TileCoordinate) -> Bool
         if kind == .lumberjackHut {
             isTarget = isUnoccupiedForest
         } else if Self.isPlanter(kind) {
             isTarget = openGrass(for: owner, tileToIsland: tileToIsland)
         } else {
-            return 0
+            return
         }
         let footprint = BuildingCatalog.spec(for: kind).footprint
         let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
-        var count = 0
         visitCatchment(of: kind, anchor: anchor, where: isTarget) { tile in
-            if !(columns.contains(tile.x) && rows.contains(tile.y)) { count += 1 }
+            if !(columns.contains(tile.x) && rows.contains(tile.y)) { visit(tile) }
             return true
         }
-        return count
     }
 }
