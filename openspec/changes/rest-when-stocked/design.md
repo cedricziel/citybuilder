@@ -36,9 +36,20 @@ Supply carriers serve producers in entity order (`spawnSupplyCarriers`). The ear
 - Walkers' #232 direct hops (producer → producer) skip a resting target through the same predicate. #232 lands first; this change merges main and adds the check there.
 - The sum over the owner's stores runs once per producer per supply pass, which is cheap next to the path search.
 
-### D3. Research retune
+### D3. Research retune: ×14
 
-Resting brings the Renaissance about a year sooner on Normal (6.5 → 5.3 years with research ×10). The medieval tech costs are raised again so the Normal median stays inside 6–8 years and Easy stays clearly faster than Hard. The sweep picks the factor, and the `research` and `culture-content` deltas record it before the packs change.
+Resting brings the Renaissance about a year sooner on Normal (6.5 → 5.3 years with research ×10). The medieval techs and the printing press move from ×10 to ×14 of their original costs: milling 560, mining 560, metallurgy 1,120, cultivation 700, printing press 3,500.
+
+Careful scripted player, market on, seeds 0–9 × both layouts per difficulty, run to year 10:
+
+| Variant | Renaissance (median years: Easy / Normal / Hard) | Reached of 60 | 20+ merchants at year 10 | Held share, years 8–10 | Bankrupt |
+|---|---|---|---|---|---|
+| Today (×10, no resting) | 4.9 / 6.5 / 8.0 | 56 | 8 | 0.06 | 0 |
+| Resting, ×10 | 4.1 / 5.3 / 6.4 | 57 | 6 | 0.26 | 0 |
+| Resting, ×12 | 4.6 / 5.8 / 6.8 | 55 | 14 | 0.29 | 1 |
+| **Resting, ×14** | **4.9 / 6.8 / 7.8** | **54** | **12** | **0.31** | **0** |
+
+×14 keeps Normal inside 6–8 years and keeps Easy clearly faster and Hard slower. Hard reaches the Renaissance in 17 of 20 starts instead of 20. These numbers are from before walkers' #232 (direct hops, no more goods lost at a full store); they are re-measured after it lands and the factor is adjusted if Normal leaves 6–8 years.
 
 ### D4. Visible and idle
 
