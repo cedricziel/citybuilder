@@ -97,6 +97,10 @@ public struct World: Codable, Sendable, Equatable {
     /// empty ledger (see the `KeyedDecodingContainer` overload in
     /// `TownMarket.swift`).
     public internal(set) var market: MarketLedger = .init()
+    /// The player's last 40 seasons. Spec: `statistics`. Saves without it
+    /// decode an empty history (see the `KeyedDecodingContainer` overload
+    /// in `Statistics.swift`).
+    public internal(set) var statistics: StatisticsHistory = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -240,6 +244,7 @@ public struct World: Codable, Sendable, Equatable {
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)
+        runStatisticsSystem(events: events)
 
         let endNanos = currentMonotonicNanoseconds()
         let elapsed = endNanos > startNanos ? endNanos - startNanos : 0

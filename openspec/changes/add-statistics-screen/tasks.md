@@ -1,13 +1,13 @@
 ## 1. History in CityCore
 
-- [ ] 1.1 Tests-first: ring bound, sparse maps, rollover, Codable round trip, missing key decodes empty
-- [ ] 1.2 `Statistics.swift`: `StatisticsHistory`, `SeasonStatistics`, `GoodFlow`, `MoneyFlow`, `ProducerActivity`
-- [ ] 1.3 Tests-first: made, used, sold, bought, tax, upkeep, trade, fuel, construction and house consumption
-- [ ] 1.4 `World+Statistics.swift`: `runStatisticsSystem(events:)`, called last in `tick()`; the hook in `consumeIfDue`
-- [ ] 1.5 Tests-first: producer sampling (working, waiting, stuck with its good, blocked)
-- [ ] 1.6 Boundary snapshot: stock, residents by tier, balance, rivals
+- [x] 1.1 Tests-first: ring bound, sparse maps, rollover, Codable round trip, missing key decodes empty
+- [x] 1.2 `Statistics.swift`: `StatisticsHistory`, `SeasonStatistics`, `GoodFlow`, `MoneyFlow`, `ProducerActivity`
+- [x] 1.3 Tests-first: made, used, sold, bought, tax, upkeep, trade, fuel, construction and house consumption
+- [x] 1.4 `World+Statistics.swift`: `runStatisticsSystem(events:)`, called last in `tick()`; the hook in `consumeIfDue`
+- [x] 1.5 Tests-first: producer sampling (working, waiting, stuck with its good, blocked)
+- [x] 1.6 Boundary snapshot: stock, residents by tier, balance, rivals
 - [ ] 1.7 Determinism: two replays equal, save and load mid-season equal, `DeterminismFixture` unchanged on macOS and Linux
-- [ ] 1.8 `WorldSnapshot.statistics`
+- [x] 1.8 `WorldSnapshot.statistics`
 
 ## 2. The sheet
 
