@@ -179,3 +179,17 @@ func everyIssueMapsToADrawnIcon() {
     ])
     #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))
 }
+
+@Test("the icon sits on the sprite's opaque top, not on its cell's headroom")
+func theIconSitsOnTheOpaqueTop() throws {
+    let width = 4, height = 10
+    let context = try #require(CGContext(
+        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ))
+    // Opaque bottom 6 rows (CoreGraphics' origin is bottom-left), clear headroom above.
+    context.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: width, height: 6))
+    let image = try #require(context.makeImage())
+    #expect(abs(StatusIcons.measureContentTop(image) - 0.6) < 0.001)
+}

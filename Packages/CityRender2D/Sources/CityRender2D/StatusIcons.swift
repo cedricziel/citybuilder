@@ -81,13 +81,51 @@ enum StatusIcons {
         return .sequence([.wait(forDuration: phase), .repeatForever(.sequence([half, half.reversed()]))])
     }
 
+    /// Over the roof: the top of the sprite's opaque pixels, since a render's cell leaves headroom.
+    static func restPosition(on sprite: SKSpriteNode) -> CGPoint {
+        CGPoint(x: 0, y: sprite.size.height * contentTop(of: sprite.texture) + lift)
+    }
+
+    private nonisolated(unsafe) static var contentTops: [ObjectIdentifier: CGFloat] = [:]
+
+    /// The height of a texture's topmost opaque row, as a fraction of its height (1 when it has
+    /// no image to read, as in tests), measured once per texture.
+    static func contentTop(of texture: SKTexture?) -> CGFloat {
+        guard let texture else { return 1 }
+        let key = ObjectIdentifier(texture)
+        if let top = contentTops[key] { return top }
+        let top = measureContentTop(texture.cgImage())
+        contentTops[key] = top
+        return top
+    }
+
+    static func measureContentTop(_ image: CGImage) -> CGFloat {
+        let width = image.width, height = image.height
+        guard width > 0, height > 0,
+              let context = CGContext(
+                  data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ),
+              let data = context.data
+        else { return 1 }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let pixels = data.bindMemory(to: UInt8.self, capacity: width * height * 4)
+        // Row 0 of the bitmap is the image's top row.
+        for row in 0 ..< height {
+            for column in 0 ..< width where pixels[(row * width + column) * 4 + 3] > 32 {
+                return CGFloat(height - row) / CGFloat(height)
+            }
+        }
+        return 1
+    }
+
     static func make(named name: String, on sprite: SKSpriteNode, id: EntityID, zoom: Double, reduceMotion: Bool) -> SKSpriteNode {
         let side = discPoints / discFraction
         let icon = SKSpriteNode(texture: SpriteAtlas.textureOrPlaceholder(named: name), size: CGSize(width: side, height: side))
         icon.name = nodeName
         icon.userData = [IsoWorldScene.textureNameKey: name]
         icon.anchorPoint = CGPoint(x: 0.5, y: 0)
-        icon.position = CGPoint(x: 0, y: sprite.size.height + lift)
+        icon.position = restPosition(on: sprite)
         icon.zPosition = 100 // over the night shade (95), like the construction badge
         icon.setScale(scale(zoom: zoom))
         icon.alpha = 0
@@ -126,7 +164,7 @@ extension IsoWorldScene {
             let bobbing = icon.action(forKey: StatusIcons.bobKey) != nil
             if reduceMotion, bobbing {
                 icon.removeAction(forKey: StatusIcons.bobKey)
-                icon.position = CGPoint(x: 0, y: sprite.size.height + StatusIcons.lift)
+                icon.position = StatusIcons.restPosition(on: sprite)
             } else if !reduceMotion, !bobbing {
                 icon.run(StatusIcons.bob(for: id), withKey: StatusIcons.bobKey)
             }
