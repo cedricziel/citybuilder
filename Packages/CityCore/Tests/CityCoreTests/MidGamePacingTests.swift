@@ -14,7 +14,7 @@ private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == 
 private let markets = ProcessInfo.processInfo.environment["PACING_FULL"] == "1" ? [true, false] : [true]
 /// PACING_CAREFUL_ONLY=1 runs the careful order alone, for lever studies.
 private let orders: [MidGameOrder] = ProcessInfo.processInfo.environment["PACING_CAREFUL_ONLY"] == "1"
-    ? [.careful] : [.careful, .naive]
+    ? [.careful] : [.careful, .naive, .naiveFollowingHints]
 
 /// 20 years: every climb measured so far took under 15.
 private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
