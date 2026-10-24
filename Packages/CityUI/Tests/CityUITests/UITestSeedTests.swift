@@ -172,3 +172,13 @@ func shotFlagsArmAndSelect() {
     inspect.applyTestTool(fromArguments: ["-uiTestSelect", "36,59"])
     #expect(inspect.selectedTool == .inspect && inspect.selectedTile == TileCoordinate(x: 36, y: 59))
 }
+
+@MainActor
+@Test("-uiTestPlace and -uiTestSelect ignore a tile off the map")
+func shotFlagsIgnoreOffMapTiles() {
+    let session = GameSession()
+    session.applyTestTool(fromArguments: ["-uiTestPlace", "lumberjack-hut@500,500"])
+    #expect(session.selectedTool == .inspect && session.ghostState() == nil && session.areaOfEffect() == nil)
+    session.applyTestTool(fromArguments: ["-uiTestSelect", "500,500"])
+    #expect(session.selectedTile == nil)
+}
