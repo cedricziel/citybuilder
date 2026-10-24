@@ -6,13 +6,12 @@ The renderer SHALL float one status icon over the roof of every player building 
 
 1. The building's `BuildingIssue`, mapped as follows:
    - `.missingInputs(goods)` → the first good's "short" icon.
-   - `.resting(good)` → that good's "stuck" icon.
-   - `.storageFull` → the storage-full pictogram.
+   - `.outputStuck(good)` → that good's "stuck" icon (`per-good-storage`).
    - `.noRoad`, `.noRouteToStorage`, `.noTreesInReach` and `.noRoomToPlant` → their pictograms.
 2. Otherwise, for a house, the "short" icon of the first good in its `shortGoods`, in `Good` order.
 3. Otherwise, if the building is in `roadDisconnectedBuildings`, the no-road pictogram.
 
-A "short" icon is the good on a cream disc with a red "!" pip. A "stuck" icon is the good with an amber pause pip. Pictograms are white on a red disc, or on an amber disc for storage full.
+A "short" icon is the good on a cream disc with a red "!" pip. A "stuck" icon is the good with an amber pause pip. Pictograms are white on a red disc.
 
 The icon SHALL be one sprite node, a child of the building's sprite, centred over the sprite's top. Its size at zoom 1 SHALL be 22 pt on iOS, 20 pt on macOS and 30 pt on tvOS. Its on-screen size SHALL follow clamp(zoom, 0.75, 1.25). It SHALL draw above the night overlay. It SHALL bob 2 pt (times its zoom scale) over 1.8 s with a phase that depends on the building's id, and SHALL be still while Reduce Motion is on.
 
