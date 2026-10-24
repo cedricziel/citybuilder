@@ -28,7 +28,7 @@ enum Cloth {
 
 /// What a figure carries.
 enum Load {
-    case none, basket, sack, crate, barrel, logs
+    case none, basket, sack, crate, barrel, logs, push
 }
 
 enum Headwear {
@@ -153,6 +153,9 @@ extension Builder {
         case (.sack, true), (.crate, true), (.barrel, true), (.logs, true):
             // Right elbow out in front, the hand up on the shouldered load.
             return (top + SCNVector3(0.18, -0.10, 0.08), top + SCNVector3(0.08, 0.28, 0.02))
+        case (.push, _):
+            // Both hands forward at the hips, on the cart's handles.
+            return (top + SCNVector3(0.16, -0.24, side * 0.03), top + SCNVector3(0.42, -0.44, side * 0.04))
         case (.basket, false):
             // Left elbow out to the side, the hand up steadying the basket on the head.
             return (top + SCNVector3(0.10, 0.04, -0.14), top + SCNVector3(0.06, 0.36, 0.04))
@@ -184,7 +187,7 @@ extension Builder {
     private func carry(_ fig: Figure, shoulder: SCNVector3, headTop: CGFloat) {
         let right = shoulder + SCNVector3(-0.02, 0.12, 0.17)
         switch fig.load {
-        case .none:
+        case .none, .push:
             break
         case .basket:
             let base = SCNVector3(0.02, headTop + 0.02, 0)
