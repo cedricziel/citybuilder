@@ -37,7 +37,9 @@ public enum TextureFiltering {
         "building-house-east-asian", "building-house-tier2-east-asian", "building-house-tier3-east-asian",
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
-        "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
+        "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern",
+        "building-marketplace", "building-marketplace-east-asian", "building-marketplace-mediterranean",
+        "building-marketplace-middle-eastern"
     ]).union(houseAgeLooks).union(figureStems).union(goodsIcons)
 
     /// One icon per good (`good-tea-leaves`), drawn as SVG.
