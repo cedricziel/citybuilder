@@ -8,7 +8,7 @@ tooltips. Single static cell.
 
 ## Visual identity
 
-A bunch of purple grapes with a stem and a vine leaf. Hand-authored SVG on a 24-point grid, in the goods icon style shared by all 18 goods: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
+A bunch of purple grapes with a stem and a vine leaf. Hand-authored SVG on a 24-point grid, in the style every goods icon shares: natural colours in three tones, lit from the upper left like the world, inside a dark warm outline (`#2B1E15`) that keeps the silhouette readable on light and dark HUDs.
 
 ## Sprites
 
