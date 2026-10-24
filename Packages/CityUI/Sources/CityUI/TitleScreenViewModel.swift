@@ -208,6 +208,9 @@ public final class TitleScreenViewModel {
         if UITestSeed.opensStocks(fromArguments: arguments) {
             committedSession?.hud.toggleStocksTray()
         }
+        if UITestSeed.opensStatistics(fromArguments: arguments) {
+            committedSession?.isStatisticsPresented = true
+        }
         committedSession?.applyTestTool(fromArguments: arguments)
     }
 

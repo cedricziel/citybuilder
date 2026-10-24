@@ -80,6 +80,9 @@ public enum UITestSeed {
     /// checked in that order. `-uiTestCamera x,y,zoom` then moves its camera.
     public static func world(fromArguments arguments: [String]) -> World? {
         guard var world = seededWorld(fromArguments: arguments) else { return nil }
+        for _ in 0 ..< seasons(fromArguments: arguments) * Int(CalendarState.ticksPerSeason) {
+            _ = world.tick()
+        }
         if let camera = camera(fromArguments: arguments) {
             world.camera = camera
         }
@@ -128,6 +131,20 @@ public enum UITestSeed {
     /// `-uiTestOpenStocks`: the started game opens with the stocks tray shown, for shots of the goods icons.
     public static func opensStocks(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestOpenStocks")
+    }
+
+    /// `-uiTestOpenStatistics`: the started game opens with the Statistics sheet shown.
+    public static func opensStatistics(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestOpenStatistics")
+    }
+
+    /// `-uiTestSeasons n`: the seeded game runs `n` more seasons (at most 40) before the camera
+    /// goes on it, so the Statistics sheet has a history to draw.
+    public static func seasons(fromArguments arguments: [String]) -> Int {
+        guard let flag = arguments.firstIndex(of: "-uiTestSeasons"), arguments.indices.contains(flag + 1),
+              let count = Int(arguments[flag + 1])
+        else { return 0 }
+        return min(max(count, 0), StatisticsHistory.capacity)
     }
 
     /// `-uiTestShowStats`: frame rate, node and draw counts in the corner of the map, for performance shots.

@@ -182,3 +182,27 @@ func shotFlagsIgnoreOffMapTiles() {
     session.applyTestTool(fromArguments: ["-uiTestSelect", "500,500"])
     #expect(session.selectedTile == nil)
 }
+
+@Test("-uiTestSeasons runs the seeded game on, so the Statistics sheet has a history")
+func seasonsFlagRunsTheSeededGameOn() {
+    #expect(UITestSeed.seasons(fromArguments: []) == 0)
+    #expect(UITestSeed.seasons(fromArguments: ["-uiTestSeasons"]) == 0)
+    #expect(UITestSeed.seasons(fromArguments: ["-uiTestSeasons", "many"]) == 0)
+    #expect(UITestSeed.seasons(fromArguments: ["-uiTestSeasons", "-3"]) == 0)
+    #expect(UITestSeed.seasons(fromArguments: ["-uiTestSeasons", "99"]) == StatisticsHistory.capacity)
+    let plain = UITestSeed.world(fromArguments: ["-uiTestSeedTown"])
+    #expect(plain?.statistics.seasons.isEmpty == true)
+    let aged = UITestSeed.world(fromArguments: ["-uiTestSeedTown", "-uiTestSeasons", "2"])
+    #expect(aged?.statistics.seasons.count == 2)
+}
+
+@Test("The open-statistics flag starts the game with the Statistics sheet shown")
+@MainActor
+func openStatisticsFlagShowsTheSheet() {
+    let plain = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    plain.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame"])
+    #expect(plain.committedSession?.isStatisticsPresented == false)
+    let open = TitleScreenViewModel(saveStore: NoSaves(), sessionFactory: { GameSession(world: $0) })
+    open.startGameIfRequested(arguments: ["Citybuilder", "-uiTestStartGame", "-uiTestOpenStatistics"])
+    #expect(open.committedSession?.isStatisticsPresented == true)
+}
