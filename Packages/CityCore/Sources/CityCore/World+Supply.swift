@@ -79,7 +79,14 @@ extension World {
                 guard let amount = needs[good] else { continue }
                 while needsSupply(consumer.id, good: good, amount: amount) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
-                    dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
+                    let short = amount * 2 - (stockpiles[consumer.id]?.quantity(of: good) ?? 0)
+                        - inboundUnits(to: consumer.id, good: good)
+                    let held = stockpiles[bufferID]?.quantity(of: good) ?? 0
+                    let haul = CarrierConfig.haul(ready: min(held, short), along: path)
+                    dispatchSupply(
+                        good, from: bufferID, to: consumer.id, along: path,
+                        haul: haul, events: &events
+                    )
                 }
             }
         }
@@ -98,7 +105,7 @@ extension World {
     private func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
         guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
         let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
-        return onHand + supplyCarrierCount(to: consumer, good: good) < amount * 2
+        return onHand + inboundUnits(to: consumer, good: good) < amount * 2
     }
 
     mutating func dispatchSupply(
@@ -106,17 +113,30 @@ extension World {
         from buffer: EntityID,
         to consumer: EntityID,
         along path: [TileCoordinate],
+        haul: (amount: Int, vehicle: Carrier.Vehicle) = (1, .onFoot),
         events: inout [WorldEvent]
     ) {
-        stockpiles[buffer]?.withdraw(good, amount: 1)
+        stockpiles[buffer]?.withdraw(good, amount: haul.amount)
         let carrierID = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         carriers[carrierID] = Carrier(
             id: carrierID,
             path: path,
-            mission: .retrieve(good: good, amount: 1, fromWarehouse: buffer, toConsumer: consumer)
+            mission: .retrieve(good: good, amount: haul.amount, fromWarehouse: buffer, toConsumer: consumer),
+            vehicle: haul.vehicle
         )
         events.append(.carrierDeparted(carrier: carrierID, from: path[0], good: good))
+    }
+
+    /// Units supply carriers are bringing to `consumer`, optionally only
+    /// of `good`. A handcart brings several.
+    func inboundUnits(to consumer: EntityID, good: Good? = nil) -> Int {
+        carriers.values.reduce(0) { sum, carrier in
+            guard case let .retrieve(carried, amount, _, toConsumer) = carrier.mission,
+                  toConsumer == consumer, good == nil || carried == good
+            else { return sum }
+            return sum + amount
+        }
     }
 
     func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {

@@ -21,16 +21,39 @@ public struct Carrier: Hashable, Codable, Sendable {
         )
     }
 
+    /// How a carrier moves its load. Spec: `warehouses-and-logistics` /
+    /// Handcarts carry long and bulk hauls.
+    public enum Vehicle: String, Hashable, Codable, Sendable {
+        case onFoot
+        case handcart
+    }
+
     public let id: EntityID
     public var path: [TileCoordinate]
     public var pathIndex: Int
     public var mission: Mission
+    public var vehicle: Vehicle
 
-    public init(id: EntityID, path: [TileCoordinate], pathIndex: Int = 0, mission: Mission) {
+    public init(id: EntityID, path: [TileCoordinate], pathIndex: Int = 0, mission: Mission, vehicle: Vehicle = .onFoot) {
         self.id = id
         self.path = path
         self.pathIndex = pathIndex
         self.mission = mission
+        self.vehicle = vehicle
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, path, pathIndex, mission, vehicle
+    }
+
+    /// Saves written before handcarts have no vehicle: those carriers walk.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(EntityID.self, forKey: .id)
+        path = try container.decode([TileCoordinate].self, forKey: .path)
+        pathIndex = try container.decode(Int.self, forKey: .pathIndex)
+        mission = try container.decode(Mission.self, forKey: .mission)
+        vehicle = try container.decodeIfPresent(Vehicle.self, forKey: .vehicle) ?? .onFoot
     }
 
     public var currentTile: TileCoordinate? {
@@ -46,4 +69,28 @@ public struct Carrier: Hashable, Codable, Sendable {
 public enum CarrierConfig {
     /// Max in-flight carriers per producer building.
     public static let perProducerCap = 2
+    /// Road tiles a haul must cover before it goes by handcart.
+    public static let cartDistance = 12
+    /// Units that must be ready for one destination before a handcart goes.
+    public static let cartMinLoad = 3
+    /// Units a handcart carries at most.
+    public static let cartCapacity = 4
+
+    /// What one haul along `path` takes when `ready` units could go: a
+    /// handcart with up to `cartCapacity` on a long haul with enough
+    /// ready, else one unit on foot.
+    static func haul(ready: Int, along path: [TileCoordinate]) -> (amount: Int, vehicle: Carrier.Vehicle) {
+        guard path.count - 1 >= cartDistance, ready >= cartMinLoad else { return (1, .onFoot) }
+        return (min(ready, cartCapacity), .handcart)
+    }
+}
+
+public extension Carrier.Mission {
+    /// The units carried.
+    var amount: Int {
+        switch self {
+        case let .deliver(_, amount, _, _), let .retrieve(_, amount, _, _),
+             let .deliverToConstructionSite(_, amount, _, _): amount
+        }
+    }
 }

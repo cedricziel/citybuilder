@@ -149,16 +149,19 @@ extension World {
                     fromRoad: road, good: good, among: buffers
                 )
                 else { continue }
+                let room = stockpiles[warehouseId]?.freeSpace ?? 0
+                let haul = CarrierConfig.haul(ready: min(producerStock.quantity(of: good), room), along: path)
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,
                         road: road,
                         good: good,
                         mission: .deliver(
-                            good: good, amount: 1,
+                            good: good, amount: haul.amount,
                             fromProducer: producerId, toWarehouse: warehouseId
                         ),
-                        path: path
+                        path: path,
+                        vehicle: haul.vehicle
                     ),
                     events: &events
                 )
@@ -175,16 +178,17 @@ extension World {
         let good: Good
         let mission: Carrier.Mission
         let path: [TileCoordinate]
+        var vehicle: Carrier.Vehicle = .onFoot
     }
 
     private mutating func spawnCarrier(
         _ spawn: CarrierSpawn,
         events: inout [WorldEvent]
     ) {
-        stockpiles[spawn.producerId]?.withdraw(spawn.good, amount: 1)
+        stockpiles[spawn.producerId]?.withdraw(spawn.good, amount: spawn.mission.amount)
         let carrierId = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
-        carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission)
+        carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission, vehicle: spawn.vehicle)
         carrierCountByProducer[spawn.producerId, default: 0] += 1
         events.append(.carrierDeparted(
             carrier: carrierId, from: spawn.road, good: spawn.good
