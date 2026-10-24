@@ -31,7 +31,7 @@ items:
                     Paola, Quinto, Rosa, Sandro, Tullia, Ugo, Valeria, Zeno, Flavia, Lucio, Marta, Silvio]
 
   - { kind: Good, id: grapes, name: Grapes, unit: baskets, basePrice: 3, market: { sell: 20 } }
-  - { kind: Good, id: wine, name: Wine, unit: amphorae, basePrice: 16, market: { sell: 20 } }
+  - { kind: Good, id: wine, name: Wine, unit: amphorae, basePrice: 16, market: { sell: 20 }, restAt: 40 }
 
   - kind: Building
     id: vineyard

@@ -10,7 +10,7 @@ extension World {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
         spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(events: &events)
+        spawnSupplyCarriers(tileToIsland: tileToIsland, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 

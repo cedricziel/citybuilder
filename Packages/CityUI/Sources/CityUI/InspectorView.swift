@@ -80,7 +80,9 @@ public struct InspectorViewModel: Sendable {
             ] + Self.nextTierLine(after: pop.tier, in: culture) + houseNotes(modifiers)
                 + residentLines(house: entityID, population: pop, culture: culture)
         }
-        let problem = snapshot.buildingIssues[entityID].map(problemText)
+        let issue = snapshot.buildingIssues[entityID]
+        let resting = issue.flatMap(Self.restingLine)
+        let problem = resting == nil ? issue.map(problemText) : nil
         return InspectorViewModel(
             bullets: [
                 "Kind: \(building.kind.rawValue)",
@@ -90,7 +92,7 @@ public struct InspectorViewModel: Sendable {
                 "Build: \(buildProgress)",
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + signatureLines(for: building, in: snapshot) +
-                houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
+                houseLines + (problem.map { ["Problem: \($0)"] } ?? []) + (resting.map { [$0] } ?? []),
             title: BuildTool.place(building.kind).displayName,
             tier: tier,
             residentsFill: residentsFill,
@@ -114,7 +116,14 @@ public struct InspectorViewModel: Sendable {
         case let .missingInputs(goods):
             "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
         case .storageFull: "Store full: no carrier can take its goods"
+        case let .resting(good): "Resting: stores hold plenty of \(GoodsCatalog.spec(for: good).displayName.lowercased())"
         }
+    }
+
+    /// A producer resting on plenty reads as a calm key line, not a
+    /// problem. Spec: `platform-shells` / Inspector callout.
+    static func restingLine(_ issue: BuildingIssue) -> String? {
+        if case .resting = issue { problemText(issue) } else { nil }
     }
 }
 
@@ -218,7 +227,7 @@ extension InspectorViewModel {
     /// Inspector callout.
     public var keyLines: [String] {
         let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:", "Next:"]
-        return (head + ["Problem:"]).compactMap { marker in
+        return (head + ["Problem:", "Resting:"]).compactMap { marker in
             bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
         }
     }

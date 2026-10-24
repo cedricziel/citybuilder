@@ -1,7 +1,7 @@
-import CityCore
 import CoreGraphics
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/redesign-hud-map-first/specs/platform-shells/spec.md.
@@ -79,6 +79,38 @@ func scenarioProblemTextForEveryBuildingIssue() {
     #expect(InspectorViewModel.problemText(.noRoomToPlant) == "No open grass within 2 tiles to plant")
     #expect(InspectorViewModel.problemText(.missingInputs([.wood, .grain])) == "Waiting for wood, grain")
     #expect(InspectorViewModel.problemText(.storageFull) == "Store full: no carrier can take its goods")
+}
+
+// platform-shells / Inspector callout (openspec/changes/rest-when-stocked).
+
+@Test("scenario: a resting producer reads calm")
+func scenarioARestingProducerReadsCalm() {
+    var world = World.fixtureWithTerrain(width: 14, height: 8, fill: .grass, seed: 1)
+    world.testMaterialCredits = [:]
+    // The charcoal burner shares the sawmill's wood, so the sawmill rests.
+    let layout: [(BuildingKind, TileCoordinate)] = [
+        (.sawmill, TileCoordinate(x: 1, y: 1)), (.warehouse, TileCoordinate(x: 9, y: 0)),
+        (.charcoalBurner, TileCoordinate(x: 1, y: 4))
+    ]
+    for (index, (kind, anchor)) in layout.enumerated() {
+        let id = EntityID(raw: UInt32(index + 1))
+        world.buildings[id] = Building(id: id, kind: kind, anchor: anchor, state: .operational)
+        for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
+            world.occupiedTiles[tile] = id
+        }
+        world.stockpiles[id] = World.stockpileCapacity(for: kind).map { Stockpile(capacity: $0) }
+    }
+    world.nextEntityRaw = 4
+    world.stockpiles[EntityID(raw: 2)]?.deposit(.planks, amount: 40)
+    for x in 0 ... 12 {
+        world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))
+    }
+    world.tick()
+    let snapshot = world.snapshot()
+    let inspector = InspectorViewModel.make(from: snapshot, tile: TileCoordinate(x: 1, y: 1), buildings: snapshot.buildings)
+    #expect(inspector.keyLines.last == "Resting: stores hold plenty of planks")
+    #expect(inspector.problem == nil)
+    #expect(!inspector.bullets.contains { $0.hasPrefix("Problem:") })
 }
 
 private let viewBounds = CGRect(x: 0, y: 0, width: 844, height: 390)

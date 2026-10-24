@@ -46,6 +46,14 @@ func scenarioIdleWorkshopIsCold() {
     #expect(sources.map(\.id) == [working.id])
 }
 
+/// rest-when-stocked D4: a resting producer draws as idle.
+@Test("a resting workshop is cold")
+func restingWorkshopIsCold() {
+    let working = operational(1, .bakery, at: 2, 2), resting = operational(2, .bakery, at: 6, 6)
+    let sources = ChimneyPlanner.sources(in: snapshot([working, resting], issues: [resting.id: .resting(.bread)]))
+    #expect(sources.map(\.id) == [working.id])
+}
+
 @Test("rival workshops stay cold; rival houses still smoke")
 func rivalWorkshopsStayCold() {
     let bakery = Building(
