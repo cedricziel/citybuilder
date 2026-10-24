@@ -12,6 +12,9 @@ import Testing
 
 private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == "1"
 private let markets = ProcessInfo.processInfo.environment["PACING_FULL"] == "1" ? [true, false] : [true]
+/// PACING_CAREFUL_ONLY=1 runs the careful order alone, for lever studies.
+private let orders: [MidGameOrder] = ProcessInfo.processInfo.environment["PACING_CAREFUL_ONLY"] == "1"
+    ? [.careful] : [.careful, .naive]
 
 /// 20 years: every climb measured so far took under 15.
 private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
@@ -24,7 +27,7 @@ private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
 func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
         for market in markets {
-            for order in [MidGameOrder.careful, .naive, .naiveFollowingHints] {
+            for order in orders {
                 let arm = MidGameArm(layout: layout, difficulty: difficulty, tradesAtMarket: market, order: order)
                 let run = World.midGameRun(arm, seed: seed, ticks: pacingTicks)
                 print(
