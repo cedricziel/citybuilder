@@ -10,8 +10,9 @@ extension World {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
         let consumers = operationalConsumers()
-        spawnCarriersFromProducers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
+        let rest = RestContexts(tileToIsland: tileToIsland)
+        spawnCarriersFromProducers(consumers: consumers, rest: rest, events: &events)
+        spawnSupplyCarriers(consumers: consumers, rest: rest, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
@@ -117,7 +118,7 @@ extension World {
 
     private mutating func spawnCarriersFromProducers(
         consumers: [(Building, [Good: Int])],
-        tileToIsland: [TileCoordinate: IslandID],
+        rest: RestContexts,
         events: inout [WorldEvent]
     ) {
         // Spawning carriers moves goods, not buildings, so list the
@@ -128,9 +129,9 @@ extension World {
                 .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
                 .sorted { $0.id.raw < $1.id.raw },
             consumers: Self.consumersByGood(consumers),
-            tileToIsland: tileToIsland,
+            tileToIsland: rest.tileToIsland,
             components: RoadComponents(roadGraph),
-            restContexts: RestContexts()
+            rest: rest
         )
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
@@ -161,23 +162,7 @@ extension World {
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
         let components: RoadComponents
-        let restContexts: RestContexts
-    }
-
-    /// Each owner's island rest contexts, summed the first time a tick
-    /// asks for that owner. Hops never draw from the stores, so the sums
-    /// hold for the whole tick.
-    private final class RestContexts {
-        private var byOwner: [Owner: [IslandID: IslandRestContext]] = [:]
-
-        /// The rest context of `building`'s island.
-        func context(of building: Building, in world: World, tileToIsland: [TileCoordinate: IslandID]) -> IslandRestContext {
-            if byOwner[building.owner] == nil {
-                byOwner[building.owner] = world.restContexts(of: building.owner, tileToIsland: tileToIsland)
-            }
-            return world.islandFor(building: building, tileToIsland: tileToIsland)
-                .flatMap { byOwner[building.owner]?[$0] } ?? IslandRestContext()
-        }
+        let rest: RestContexts
     }
 
     /// Road component labels, worked out the first time a tick asks,
@@ -269,8 +254,10 @@ extension World {
                       building.id,
                       good: good,
                       amount: consumer.amount,
-                      context: candidates.restContexts.context(
-                          of: building, in: self, tileToIsland: candidates.tileToIsland
+                      context: candidates.rest.context(
+                          of: building.owner,
+                          on: islandFor(building: building, tileToIsland: candidates.tileToIsland),
+                          in: self
                       )
                   ),
                   let consumerRoad = anyAdjacentRoad(

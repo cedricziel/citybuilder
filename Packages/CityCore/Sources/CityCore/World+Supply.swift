@@ -64,35 +64,29 @@ extension World {
     /// `consumers` come from `operationalConsumers()`.
     mutating func spawnSupplyCarriers(
         consumers: [(Building, [Good: Int])],
-        tileToIsland: [TileCoordinate: IslandID],
+        rest: RestContexts,
         events: inout [WorldEvent]
     ) {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
-        // Store totals per owner and island for the rest check, summed once
-        // and kept current as carriers draw from the stores.
-        var contexts: [Owner: [IslandID: IslandRestContext]] = [:]
         for (consumer, needs) in consumers {
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
                 footprint: BuildingCatalog.spec(for: consumer.kind).footprint
             ),
-                let island = islandFor(building: consumer, tileToIsland: tileToIsland)
+                let island = islandFor(building: consumer, tileToIsland: rest.tileToIsland)
             else { continue }
-            if contexts[consumer.owner] == nil {
-                contexts[consumer.owner] = restContexts(of: consumer.owner, tileToIsland: tileToIsland)
-            }
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
                 while needsSupply(
                     consumer.id,
                     good: good,
                     amount: amount,
-                    context: contexts[consumer.owner]?[island] ?? IslandRestContext()
+                    context: rest.context(of: consumer.owner, on: island, in: self)
                 ) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
                     dispatchSupply(good, from: bufferID, to: consumer.id, along: path, events: &events)
-                    contexts[consumer.owner]?[island]?.stored[good]? -= 1
+                    rest.draw(good, of: consumer.owner, on: island)
                 }
             }
         }

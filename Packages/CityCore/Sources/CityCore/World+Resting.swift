@@ -22,6 +22,33 @@ public extension World {
     }
 }
 
+/// Each owner's island rest contexts for one carrier pass, summed the
+/// first time an owner comes up and kept current as supply carriers draw
+/// from the stores. Producer deliveries reach the stores only on arrival,
+/// so the sums hold for the whole pass.
+final class RestContexts {
+    let tileToIsland: [TileCoordinate: IslandID]
+    private var byOwner: [Owner: [IslandID: IslandRestContext]] = [:]
+
+    init(tileToIsland: [TileCoordinate: IslandID]) {
+        self.tileToIsland = tileToIsland
+    }
+
+    /// The rest context of `owner`'s `island`; empty off any island.
+    func context(of owner: Owner, on island: IslandID?, in world: World) -> IslandRestContext {
+        guard let island else { return IslandRestContext() }
+        if byOwner[owner] == nil {
+            byOwner[owner] = world.restContexts(of: owner, tileToIsland: tileToIsland)
+        }
+        return byOwner[owner]?[island] ?? IslandRestContext()
+    }
+
+    /// Counts one unit of `good` taken from `owner`'s stores on `island`.
+    func draw(_ good: Good, of owner: Owner, on island: IslandID) {
+        byOwner[owner]?[island]?.stored[good]? -= 1
+    }
+}
+
 extension World {
     /// `context` describes the producer's island.
     func isResting(_ producer: Building, context: IslandRestContext) -> Good? {
