@@ -168,7 +168,7 @@ extension World {
             return (.deliverToConstructionSite(good: good, amount: 1, fromProducer: producer.id, toBuilding: siteId), path)
         }
         if let (consumerId, path) = nearestShortConsumer(
-            of: good, from: producer, road: road, among: candidates.consumers[good] ?? []
+            of: good, from: producer, road: road, among: candidates
         ) {
             return (.deliverToConsumer(good: good, amount: 1, fromProducer: producer.id, toConsumer: consumerId), path)
         }
@@ -188,8 +188,8 @@ extension World {
     /// fuel, in entity order.
     func consumersByGood() -> [Good: [GoodConsumer]] {
         var consumers: [Good: [GoodConsumer]] = [:]
-        for building in buildings.values.sorted(by: { $0.id.raw < $1.id.raw }) where building.state == .operational {
-            for (good, amount) in Self.suppliedGoods(of: building) {
+        for (building, needs) in operationalConsumers() {
+            for (good, amount) in needs {
                 consumers[good, default: []].append(GoodConsumer(building: building, amount: amount))
             }
         }
@@ -205,10 +205,11 @@ extension World {
         of good: Good,
         from producer: Building,
         road: TileCoordinate,
-        among consumers: [GoodConsumer]
+        among candidates: DestinationCandidates
     ) -> (EntityID, [TileCoordinate])? {
+        let island = candidates.tileToIsland[road]
         var best: (EntityID, [TileCoordinate])?
-        for consumer in consumers {
+        for consumer in candidates.consumers[good] ?? [] {
             let building = consumer.building
             guard building.id != producer.id, building.owner == producer.owner,
                   needsSupply(building.id, good: good, amount: consumer.amount),
@@ -216,7 +217,8 @@ extension World {
                       anchor: building.anchor,
                       footprint: BuildingCatalog.spec(for: building.kind).footprint
                   ),
-                  let path = roadPath(from: road, to: consumerRoad)
+                  candidates.tileToIsland[consumerRoad] == island,
+                  let path = PathFinder.path(from: road, to: consumerRoad, in: roadGraph)
             else { continue }
             if best.map({ path.count < $0.1.count }) ?? true {
                 best = (building.id, path)

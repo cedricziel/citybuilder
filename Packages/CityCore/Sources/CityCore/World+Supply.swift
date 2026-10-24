@@ -62,11 +62,7 @@ extension World {
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
     mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
-        let consumers = buildings.values
-            .filter { $0.state == .operational }
-            .map { ($0, Self.suppliedGoods(of: $0)) }
-            .filter { !$0.1.isEmpty }
-            .sorted { $0.0.id.raw < $1.0.id.raw }
+        let consumers = operationalConsumers()
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {
@@ -83,6 +79,16 @@ extension World {
                 }
             }
         }
+    }
+
+    /// Operational buildings with goods to be supplied, in entity order,
+    /// with those goods and amounts.
+    func operationalConsumers() -> [(Building, [Good: Int])] {
+        buildings.values
+            .filter { $0.state == .operational }
+            .map { ($0, Self.suppliedGoods(of: $0)) }
+            .filter { !$0.1.isEmpty }
+            .sorted { $0.0.id.raw < $1.0.id.raw }
     }
 
     /// Goods supply carriers bring to `building`, with the amount used at
