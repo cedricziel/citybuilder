@@ -148,3 +148,17 @@ func aCarrierSavedWithoutAVehicleLoadsOnFoot() throws {
     #expect(old.vehicle == .onFoot)
     #expect(try JSONDecoder().decode(Carrier.self, from: JSONEncoder().encode(carrier)) == carrier)
 }
+
+@Test("the determinism fixture's long haul goes by handcart")
+func theDeterminismFixturesLongHaulGoesByHandcart() {
+    var world = World.haulFixture()
+    var carts = 0
+    var seen = Set<EntityID>()
+    for _ in 0 ..< 1500 {
+        world.tick()
+        for carrier in world.carriers.values where carrier.vehicle == .handcart && seen.insert(carrier.id).inserted {
+            carts += 1
+        }
+    }
+    #expect(carts > 0)
+}
