@@ -88,6 +88,7 @@ func scenarioEveryGoodIsPriced() {
     #expect(Good.allCases.allSatisfy { $0.basePrice >= 1 })
     let expected: [Good: Int64] = [
         .wood: 4, .planks: 8, .food: 4, .bread: 12, .grain: 3, .flour: 6, .ore: 5, .charcoal: 5, .iron: 14, .tools: 30,
+        .wool: 3, .cloth: 14,
         .hops: 3, .grapes: 3, .teaLeaves: 3, .coffeeCherries: 3, .beer: 16, .wine: 16, .tea: 16, .coffee: 16
     ]
     #expect(Dictionary(uniqueKeysWithValues: Good.allCases.map { ($0, $0.basePrice) }) == expected)

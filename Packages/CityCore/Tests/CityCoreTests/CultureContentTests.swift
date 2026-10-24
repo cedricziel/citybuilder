@@ -43,7 +43,7 @@ func scenarioBreweryNeedsCultivation() {
 
 @Test("scenario: east asian merchants need tea")
 func scenarioEastAsianMerchantsNeedTea() {
-    #expect(HouseTier.merchants.needs(in: .eastAsian) == [.food, .planks, .bread, .tools, .tea])
+    #expect(HouseTier.merchants.needs(in: .eastAsian) == [.food, .planks, .bread, .tools, .cloth, .tea])
     #expect(HouseTier.citizens.needs(in: .eastAsian) == [.food, .planks])
 }
 

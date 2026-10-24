@@ -19,7 +19,7 @@ private struct Street {
         let goods = goods ?? HouseTier.merchants.needs(in: world.culture)
         warehouse = Fixture.inject(.warehouse, at: TileCoordinate(x: 0, y: 1), in: &world)
         for good in goods {
-            world.stockpiles[warehouse]?.deposit(good, amount: 40)
+            world.stockpiles[warehouse]?.deposit(good, amount: 30)
         }
         for x in 0 ... 30 {
             world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 4)))

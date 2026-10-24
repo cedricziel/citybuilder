@@ -24,7 +24,7 @@ func scenarioALibraryProducesKnowledge() throws {
 func scenarioNewGameStartsWithScholarshipOnly() {
     let research = World.newGame().research
     #expect(research.isResearched(.scholarship))
-    for tech in [Tech.milling, .mining, .metallurgy, .seafaring] {
+    for tech in [Tech.milling, .mining, .metallurgy, .seafaring, .weaving] {
         #expect(!research.isResearched(tech), "\(tech)")
     }
 }
@@ -82,6 +82,17 @@ func scenarioATechWithUnmetPrerequisitesCannotBeChosen() {
     world.enqueue(.chooseResearch(.metallurgy))
     world.tick()
     #expect(world.research.current == nil)
+}
+
+@Test("scenario: weaving unlocks the wool chain")
+func scenarioWeavingUnlocksTheWoolChain() {
+    var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
+    world.research = ResearchState(researched: [])
+    #expect(world.canPlace(.sheepFarm, at: TileCoordinate(x: 1, y: 1)) == .rejected(.locked(.weaving)))
+    #expect(world.canPlace(.weaver, at: TileCoordinate(x: 4, y: 4)) == .rejected(.locked(.weaving)))
+    world.research = ResearchState(researched: [.weaving])
+    #expect(world.canPlace(.sheepFarm, at: TileCoordinate(x: 1, y: 1)) == .allowed)
+    #expect(world.canPlace(.weaver, at: TileCoordinate(x: 4, y: 4)) == .allowed)
 }
 
 @Test("scenario: mine is locked before mining")

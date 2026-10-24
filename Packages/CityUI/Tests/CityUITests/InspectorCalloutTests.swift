@@ -41,7 +41,7 @@ func scenarioCalloutTitleAndKeyLines() throws {
 func scenarioCalloutNamesTheNextTiersNeeds() throws {
     let citizens = try inspector(for: .house, residents: 6, tier: .citizens)
     // A Northern European town: its merchants' luxury is beer.
-    #expect(citizens.keyLines.contains("Next: Merchants need bread, tools, beer"))
+    #expect(citizens.keyLines.contains("Next: Merchants need bread, tools, cloth, beer"))
     let peasants = try inspector(for: .house, residents: 2)
     #expect(peasants.keyLines.contains("Next: Citizens need planks"))
     let merchants = try inspector(for: .house, residents: 8, tier: .merchants)
@@ -51,7 +51,7 @@ func scenarioCalloutNamesTheNextTiersNeeds() throws {
 @Test("the next-tier line uses the town's tier names and luxury")
 func nextTierLineFollowsTheCulture() {
     #expect(InspectorViewModel.nextTierLine(after: .citizens, in: .mediterranean)
-        == ["Next: Patricians need bread, tools, wine"])
+        == ["Next: Patricians need bread, tools, cloth, wine"])
     #expect(InspectorViewModel.nextTierLine(after: .peasants, in: .mediterranean) == ["Next: Citizens need planks"])
 }
 

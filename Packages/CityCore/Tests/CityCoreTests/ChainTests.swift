@@ -117,3 +117,66 @@ func scenarioMineOnTheMountainsideIsAllowed() {
     world.terrainGrid[1 * 6 + 2] = .mountain
     #expect(world.canPlace(.mine, at: TileCoordinate(x: 1, y: 1)) == .allowed)
 }
+
+// MARK: - Wool and cloth chain (openspec/changes/add-wool-cloth-chain)
+
+@Test("scenario: sheep farm shears wool")
+func scenarioSheepFarmShearsWool() throws {
+    var world = grass()
+    let id = try operational(.sheepFarm, in: &world, at: TileCoordinate(x: 1, y: 1))
+    run(&world, ticks: 40)
+    #expect(world.stockpiles[id]?.quantity(of: .wool) == 1)
+}
+
+@Test("scenario: weaver weaves cloth from wool")
+func scenarioWeaverWeavesClothFromWool() throws {
+    var world = grass()
+    let id = try operational(.weaver, in: &world, at: TileCoordinate(x: 1, y: 1))
+    world.stockpiles[id]?.deposit(.wool, amount: 2)
+    run(&world, ticks: 50)
+    #expect(world.stockpiles[id]?.quantity(of: .cloth) == 1)
+    #expect(world.stockpiles[id]?.quantity(of: .wool) == 0)
+}
+
+@Test("scenario: weaver needs two wool")
+func scenarioWeaverNeedsTwoWool() throws {
+    var world = grass()
+    let id = try operational(.weaver, in: &world, at: TileCoordinate(x: 1, y: 1))
+    world.stockpiles[id]?.deposit(.wool, amount: 1)
+    run(&world, ticks: 60)
+    #expect(world.stockpiles[id]?.quantity(of: .cloth) == 0)
+    #expect(world.stockpiles[id]?.quantity(of: .wool) == 1)
+}
+
+@Test("scenario: wool chain building specs are catalogued")
+func scenarioWoolChainBuildingSpecsAreCatalogued() {
+    let expected: [BuildingKind: (cost: Int64, materials: [Good: Int])] = [
+        .sheepFarm: (70, [.wood: 3]),
+        .weaver: (130, [.wood: 3, .planks: 3])
+    ]
+    for (kind, price) in expected {
+        let spec = BuildingCatalog.spec(for: kind)
+        #expect(spec.footprint == Footprint(width: 2, height: 2), "\(kind)")
+        #expect(spec.cost == price.cost, "\(kind)")
+        #expect(spec.materialCost == price.materials, "\(kind)")
+    }
+    #expect(BuildingKind.sheepFarm.category == "gather")
+    #expect(BuildingKind.weaver.category == "craft")
+}
+
+@Test("scenario: cloth reaches a warehouse")
+func scenarioClothReachesAWarehouse() throws {
+    var world = World.fixtureWithTerrain(width: 16, height: 12, fill: .grass, seed: 1)
+    world.economy.credit(10000)
+    world.enqueue(.place(.sheepFarm, at: TileCoordinate(x: 1, y: 1)))
+    world.enqueue(.place(.sheepFarm, at: TileCoordinate(x: 4, y: 1)))
+    world.enqueue(.place(.weaver, at: TileCoordinate(x: 7, y: 1)))
+    world.enqueue(.place(.warehouse, at: TileCoordinate(x: 4, y: 4)))
+    for x in 1 ... 9 {
+        world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))
+    }
+    world.tick()
+    run(&world, ticks: 900)
+    let warehouse = try #require(world.buildings.first { $0.value.kind == .warehouse }?.key)
+    #expect((world.stockpiles[warehouse]?.quantity(of: .cloth) ?? 0) >= 1)
+}
