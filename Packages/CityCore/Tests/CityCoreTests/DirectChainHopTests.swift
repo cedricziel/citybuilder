@@ -106,6 +106,30 @@ func scenarioTiesGoToTheLowerEntityID() {
     ])
 }
 
+@Test("scenario: construction materials still go to storage")
+func scenarioConstructionMaterialsStillGoToStorage() {
+    var world = roadStrip()
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    _ = inject(.sawmill, in: &world, at: TileCoordinate(x: 6, y: 1))
+    world.tick()
+    #expect(missions(from: hut, in: world) == [
+        .deliver(good: .wood, amount: 1, fromProducer: hut, toWarehouse: warehouse)
+    ])
+}
+
+@Test("scenario: goods houses need still go to storage")
+func scenarioGoodsHousesNeedStillGoToStorage() {
+    var world = roadStrip()
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    _ = inject(.monument, in: &world, at: TileCoordinate(x: 5, y: 0))
+    world.tick()
+    #expect(missions(from: bakery, in: world) == [
+        .deliver(good: .bread, amount: 1, fromProducer: bakery, toWarehouse: warehouse)
+    ])
+}
+
 @Test("a direct delivery stocks the consumer and frees the producer's carrier slot")
 func aDirectDeliveryStocksTheConsumerAndFreesTheProducersCarrierSlot() {
     var world = roadStrip()

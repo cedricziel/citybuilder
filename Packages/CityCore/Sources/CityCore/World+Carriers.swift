@@ -167,7 +167,7 @@ extension World {
         ) {
             return (.deliverToConstructionSite(good: good, amount: 1, fromProducer: producer.id, toBuilding: siteId), path)
         }
-        if let (consumerId, path) = nearestShortConsumer(
+        if !goesThroughStorage(good, for: producer.owner), let (consumerId, path) = nearestShortConsumer(
             of: good, from: producer, road: road, among: candidates
         ) {
             return (.deliverToConsumer(good: good, amount: 1, fromProducer: producer.id, toConsumer: consumerId), path)
@@ -176,6 +176,19 @@ extension World {
             return (.deliver(good: good, amount: 1, fromProducer: producer.id, toWarehouse: bufferId), path)
         }
         return nil
+    }
+
+    /// Goods any building costs as a construction material.
+    private static let materialGoods = Set(BuildingCatalog.all.flatMap(\.materialCost.keys))
+
+    /// True for goods that always go to storage first: construction
+    /// materials, and goods a house tier of `owner`'s culture needs.
+    /// Building sites and houses draw on storage, so a workshop must not
+    /// take these before it. Spec: `warehouses-and-logistics` /
+    /// Producers deliver to short consumers.
+    func goesThroughStorage(_ good: Good, for owner: Owner) -> Bool {
+        let culture = culture(of: owner)
+        return Self.materialGoods.contains(good) || HouseTier.allCases.contains { $0.needs(in: culture).contains(good) }
     }
 
     /// A consumer of a good, with the amount its recipe or fuel uses at a time.
