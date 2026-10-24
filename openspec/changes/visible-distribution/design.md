@@ -170,12 +170,16 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
 - **Rival viability:** rivals now depend on porters too (D11). *Acceptance:* the rival-viability sweep stays green.
 - **First hour (milestone 2):** a starting town has to be fully covered by its town center hub. *Acceptance:* the first-hour guided sweep stays at 0 of 20 bankruptcies.
 - **Intermediates in storage (milestone 1):** fewer intermediates reach warehouses, so sales at the market shift. Watch the first-hour solvency sweep.
-  - *M1 result*, PlayerBot sweeps on main 334c173d against the M1 branch, release build:
+  - *M1 result*, PlayerBot sweeps on main 334c173d against the M1 branch after review, release build:
     - First-hour solvency with the market: 0/20 bankrupt on both.
-    - Guided Hard start: 0/20 bankrupt on both, with residents at tick 12,000 identical (min 29, median 52.5).
-    - Rival viability: identical (year 5 min 15, median 59.5).
-    - Mid-game pacing (a measurement, not a gate): the first merchant came sooner (median 3.95 years against 4.2), but fewer arms reached one (112 of 180 against 120), and bankruptcies rose from 7 to 17 of 180, mostly in the naive build order.
-    - A probe of normal/single-island/naive seed 5 shows the mechanism. Iron reaches storage earlier, so the naive bot builds a toolsmith before a brewery, runs short of cash and never gets the beer merchants need. That is build-order sensitivity in the bot, for designer2 to weigh in the pacing work, rather than a starved chain.
+    - Guided Hard start: 0/20 bankrupt on both. Residents at tick 12,000 rose from min 29, median 52.5 to min 38, median 57.
+    - Rival viability: year 5 min 15 → 19 (median 59.5 → 58); year 15 median 57.5 → 61.
+    - The no-market control kept seeds 2, 6 and 21 solvent, so it now uses seeds 1, 3, 9 and 11, which still go bankrupt without the market.
+    - Mid-game pacing (a measurement, not a gate):
+      - Arms that reach a merchant on both get there about 0.9 years sooner (median 3.9 → 3.0).
+      - 35 arms lost their merchant and 14 gained one (120 → 99 of 180). Bankruptcies went from 7 to 11.
+      - The losses cluster in naive build orders, 8 of 10 on normal/single-island/naive. A probe of seed 5 there shows the mechanism. Direct ore and charcoal hops make iron sooner. The toolsmith then draws planks through supply and piles up tools, so storage runs short of planks, the brewery is never built, and merchants never get beer.
+      - That is plank competition between chains, which designer2's supply output cap (resting producers in `needsSupply`) targets.
 - **Performance:** D2's search is per producer with output. Porters add at most 8 carriers per hub. The carrier count stays within today's peak, since direct hops shorten trips.
 - **Visual clutter:** more figures on roads. Carts reduce the count on long hauls, and walker density limits still apply.
 
