@@ -1,6 +1,6 @@
 # Republishing the design system
 
-The "Citybuilder" design system (https://claude.ai/artifact/4jaGCEE3CUjDaC6G1LKb2T) is built from `design/web`. After a PR that changes `design/web` merges, republish the components it changed. `CLAUDE.md` has the rule.
+The "Citybuilder" design system is built from `design/web`. After a PR that changes `design/web` merges, republish the components it changed. `CLAUDE.md` has the rule and the system's URL.
 
 The system keeps the layout its migration gave it: one bundle (`project/_ds_bundle.js`, `project/_ds_bundle.css`), one compiled preview per component (`project/_preview/<Name>.js`), and per component a card, types, a usage note and a re-export under `project/components/<group>/<Name>/`. `build.mjs` writes all of these from `design/web/dist`, `design/web/docs/*.md` (the component list and groups) and `.design-sync/previews/*.tsx` (the card stories).
 
@@ -10,7 +10,7 @@ The system keeps the layout its migration gave it: one bundle (`project/_ds_bund
 2. Read the published system with the Artifact tool, saving its current copies of the files the build edits in place:
 
    ```text
-   Artifact { action: "read", url: "https://claude.ai/artifact/4jaGCEE3CUjDaC6G1LKb2T",
+   Artifact { action: "read", url: "<the system's URL from CLAUDE.md>",
               paths: ["project/design-system.json", "project/_ds_manifest.json", "project/README.md",
                       "project/assets/notes/COMPONENTS.md"] }
    ```
