@@ -6,18 +6,18 @@
 - [x] 1.4 `World+Statistics.swift`: `runStatisticsSystem(events:)`, called last in `tick()`; the hook in `consumeIfDue`
 - [x] 1.5 Tests-first: producer sampling (working, waiting, stuck with its good, blocked)
 - [x] 1.6 Boundary snapshot: stock, residents by tier, balance, rivals
-- [ ] 1.7 Determinism: two replays equal, save and load mid-season equal, `DeterminismFixture` unchanged on macOS and Linux
+- [x] 1.7 Determinism: two replays equal, save and load mid-season equal, `DeterminismFixture` identical across two macOS runs (Linux is CI's compare job)
 - [x] 1.8 `WorldSnapshot.statistics`
 
 ## 2. The sheet
 
-- [ ] 2.1 Tests-first: `StatisticsViewModel` series for each tab
-- [ ] 2.2 `StatisticsSheet` (Goods, Money, People, Rivals) with Swift Charts; the HUD button; Apple TV entry and focus
-- [ ] 2.3 Launch seed for screenshots (`-uiTestSeedLived`) and window shots on the Mac
+- [x] 2.1 Tests-first: `StatisticsViewModel` series for each tab
+- [x] 2.2 `StatisticsSheet` (Goods, Money, People, Rivals) with Swift Charts; the HUD button; Apple TV entry and focus
+- [x] 2.3 Launch flags `-uiTestSeasons n` and `-uiTestOpenStatistics [tab]`; window shots on the Mac. Apple TV and iPhone are compiled, not run: no simulator slot
 
 ## 3. design/web
 
-- [ ] 3.1 `StatisticsPanel` component, the `chart.xyaxis.line` icon, a preview; `npm run typecheck` and `npm run build`
+- [x] 3.1 `StatisticsPanel` component, the `chart.xyaxis.line` icon, a preview; `npm run typecheck` and `npm run build`
 
 ## 4. After `per-good-storage` merges
 

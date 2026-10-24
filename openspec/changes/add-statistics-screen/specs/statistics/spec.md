@@ -100,7 +100,7 @@ Every 10 ticks the system SHALL classify each operational player producer as wor
 
 The game SHALL offer a Statistics sheet from a HUD menu button on iPhone, iPad, Mac and Apple TV. The sheet SHALL be read-only and SHALL have a segmented control with Goods, Money, People and Rivals, and Rivals SHALL appear only when the world has rivals. The sheet SHALL read the snapshot's history and draw its finished seasons, oldest to newest, with the season in progress left out.
 
-- **Goods** SHALL list the goods that have any number in the history, each with made and used per season and the net (made minus used) of the latest season. A good with stuck samples in the latest season SHALL show how many producers were stopped. Selecting a good SHALL show its made and used bars, its store level against the store cap, a strip of the share of the season its producers were stopped with its output stuck, and, per producer kind that makes it, the shares working, waiting, stuck and blocked in the latest season. On a compact width the list SHALL push the detail.
+- **Goods** SHALL list the goods that have any number in the history, each with made and used per season and the net (made minus used) of the latest season. A good that has producers stopped now with its output stuck SHALL show how many, and the list SHALL say how many producers are stopped in all. Selecting a good SHALL show its made and used bars, its store level against the store cap, a strip of the share of the season its producers were stopped with its output stuck, and, per producer kind that makes it, the shares working, waiting, stuck and blocked in the latest season. On a compact width the list SHALL push the detail.
 - **Money** SHALL show tax and trade income above the axis, upkeep below it and the balance line.
 - **People** SHALL show residents per tier, stacked.
 - **Rivals** SHALL show residents per town as lines, and each town's residents, age and wealth.
@@ -108,12 +108,16 @@ The game SHALL offer a Statistics sheet from a HUD menu button on iPhone, iPad, 
 On Apple TV the good list SHALL take focus, the tabs SHALL be focusable above it, and Menu SHALL close the sheet.
 
 #### Scenario: A stopped producer is shown
-- **WHEN** the latest season has 3 stuck samples for bread
-- **THEN** the Goods list shows a stopped pill on bread, and the bread detail shows the stuck strip
+- **WHEN** 2 bakeries are stopped now with bread stuck, and the history has stuck samples for bread
+- **THEN** the Goods list shows "2 stopped" on bread and "2 producers stopped: output stuck" above the list, and the bread detail shows the stuck strip
 
 #### Scenario: Nothing stuck, nothing shown
-- **WHEN** the latest season has no stuck samples for any good
-- **THEN** the Goods list shows no stopped pill and no summary banner
+- **WHEN** no producer is stopped now and the history has no stuck samples
+- **THEN** the Goods list shows no stopped pill and no summary banner, and no good's detail shows the stuck strip
+
+#### Scenario: The sheet opens on the good that needs a look
+- **WHEN** the Goods tab opens
+- **THEN** it selects a good with a producer stopped now, else the good that was busiest in the latest season
 
 #### Scenario: Empty history
 - **WHEN** the sheet opens before the first season has closed
