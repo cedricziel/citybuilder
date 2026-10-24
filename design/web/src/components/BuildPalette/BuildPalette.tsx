@@ -79,6 +79,8 @@ export const defaultPaletteTools: PaletteTool[] = [
   { label: "Charcoal" },
   { label: "Smelter" },
   { label: "Toolsmith", locked: true },
+  { label: "Sheep Farm", locked: true },
+  { label: "Weaver", locked: true },
   { label: "Library" },
   { label: "Hop Garden" },
   { label: "Brewery", locked: true },
