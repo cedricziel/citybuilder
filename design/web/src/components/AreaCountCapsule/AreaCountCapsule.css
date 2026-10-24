@@ -1,0 +1,37 @@
+.cb-area-count {
+  display: inline-block;
+  border-radius: var(--cb-radius-pill);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cb-area-count--touch {
+  padding: 4px 10px;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.cb-area-count--mac {
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 15px;
+}
+
+/* `.regularMaterial` with a soft drop shadow. */
+.cb-area-count--neutral {
+  color: var(--cb-label);
+  background: var(--cb-material);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.cb-area-count--low {
+  color: var(--cb-area-low-ink);
+  background: var(--cb-area-low);
+}
+
+.cb-area-count--none {
+  color: #ffffff;
+  background: var(--cb-area-none);
+}

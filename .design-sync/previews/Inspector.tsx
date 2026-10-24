@@ -26,6 +26,28 @@ export const House = () => (
   </OnMap>
 );
 
+export const NextTier = () => (
+  <OnMap h={240}>
+    <Inspector
+      lines={[
+        "Kind: house",
+        "State: operational",
+        "Road: connected",
+        "Tier: Peasants",
+        "Residents: 4/6",
+        "Needs: food ✓",
+        "Next: Citizens need planks",
+      ]}
+    />
+  </OnMap>
+);
+
+export const Resting = () => (
+  <OnMap h={200}>
+    <Inspector lines={["Kind: bakery", "State: operational", "Road: connected", "Resting: stores hold plenty of bread"]} />
+  </OnMap>
+);
+
 export const UnderConstruction = () => (
   <OnMap h={200}>
     <Inspector lines={["Kind: sawmill", "Anchor: (7, 4)", "Footprint: 2×2", "State: constructing", "Build: 14/40 ticks", "Road: none"]} />

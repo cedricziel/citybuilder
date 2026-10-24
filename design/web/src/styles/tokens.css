@@ -33,6 +33,16 @@
   --cb-parchment-edge: #6b4a29;
   --cb-world: #4f7d3a;
 
+  /* World overlays, the same in both appearances: the night overlay at its darkest, and the gold
+     ring the world view draws round an area of effect (IsoWorldScene+AreaOfEffect). */
+  --cb-night-tint: rgba(13, 18, 56, 0.4);
+  --cb-area-ring: rgba(255, 217, 89, 0.8);
+  --cb-area-under: rgba(20, 14, 0, 0.59);
+  /* The count capsule's warning tones: amber for a low count, red for none. */
+  --cb-area-low: rgba(255, 149, 0, 0.88);
+  --cb-area-low-ink: #2a1700;
+  --cb-area-none: rgba(255, 59, 48, 0.85);
+
   --cb-radius-xs: 6px;
   --cb-radius-sm: 8px;
   --cb-radius-md: 10px;

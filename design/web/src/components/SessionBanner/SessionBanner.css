@@ -22,3 +22,18 @@
   font-size: 12px;
   line-height: 16px;
 }
+
+/* A borderedProminent button tinted with the leather edge. */
+.cb-session-banner__resume {
+  margin-top: 4px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: var(--cb-radius-sm);
+  background: var(--cb-parchment-edge);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  cursor: pointer;
+}

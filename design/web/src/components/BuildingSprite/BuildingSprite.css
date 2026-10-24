@@ -1,0 +1,27 @@
+/* Night as the world view draws it: a blue overlay at the night's darkness (0.4) over the sprite,
+   then the lights art added at the window strength (0.85). */
+.cb-building-sprite--night {
+  position: relative;
+  display: block;
+  width: max-content;
+}
+
+.cb-building-sprite--night > img {
+  display: block;
+  max-width: none;
+}
+
+.cb-building-sprite__tint {
+  position: absolute;
+  inset: 0;
+  background: var(--cb-night-tint);
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+}
+
+.cb-building-sprite--night > .cb-building-sprite__lights {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+  mix-blend-mode: plus-lighter;
+}
