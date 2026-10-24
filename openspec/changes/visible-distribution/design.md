@@ -33,6 +33,8 @@ For each unit a producer sends, it looks for a destination in this order:
 2. **A short consumer**, unless the good is a construction material or a house need (see below). It must be operational, have the same owner, and share the producer's road network. Its recipe inputs or fuel include the good, and its stock plus inbound units is below twice the recipe amount. This is the same threshold `needsSupply` uses today. The nearest one by road path wins; ties go to the lower entity ID.
 3. **The nearest goods buffer with room.** This is unchanged, except as D5 adds for milestone 2.
 
+**Room.** A consumer counts as short only while its stockpile has free room for every unit already on the way plus one. That applies to supply carriers from storage too.
+
 **New mission.** Deliveries in step 2 use a new mission case, `.deliverToConsumer(good:amount:fromProducer:toConsumer:)`. On arrival it deposits into the consumer's stockpile.
 
 **No double supply.** `supplyCarrierCount(to:)` counts these deliveries as inbound, so a consumer fed directly does not also get a supply carrier for the same need.
@@ -45,12 +47,23 @@ For each unit a producer sends, it looks for a destination in this order:
 
 *Rejected:* always delivering producer → consumer. Then output would pile up at the producer whenever nobody is short, and storage and the market would stop seeing intermediates.
 
+### D1b. Carried goods are never lost
+
+A carrier whose destination cannot take all it carries keeps the rest. That happens when the destination is full or was demolished while the carrier walked, and it holds for every mission.
+- It goes on to the nearest goods buffer of its owner with room, by road from where it stands.
+- With none, it goes back to where the goods came from.
+- With neither, it waits where it stands and tries its destination again each tick.
+- A producer's goods continue as a delivery to storage, so the producer's carrier slot frees on final arrival. A retrieval stays a retrieval.
+- A construction delivery to a site that is gone or already built is handled the same way.
+- Only when both ends of the trip are gone, so no owner is known, is the unit dropped.
+
 ### D2. Distances without a search per pair (milestone 1)
 
 A short consumer is chosen by road distance.
 
 - Per tick, list the consumers per good once, in entity order.
-- A producer with output paths only to the consumers that are short right now, the same per-candidate search it already runs toward each goods buffer. Paths between islands are refused without a search.
+- A producer with output paths only to the consumers that are short right now, the same per-candidate search it already runs toward each goods buffer. A consumer on another road network is skipped without a search: road component labels are worked out once per tick, and only when a candidate needs them.
+- There is no cache across ticks. A consumer stays a candidate only while it is short, so the repeated searches are few.
 - Shortness is checked live, so a unit dispatched earlier in the tick counts as inbound for the next producer.
 
 The candidate list is small: only consumers of the good that are short. Measured in a release build after a 12,000-tick guided bot game (seed 3), the mean tick went from 0.9 to 1.2 ms on a single island and from 2.0 to 1.9 ms on the archipelago, against a 100 ms budget. So the single-search-plus-cache variant stays in reserve for when profiling asks for it.
@@ -97,6 +110,8 @@ The candidate list is small: only consumers of the good that are short. Measured
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
 ### D6. Saves
+
+Milestone 1 moves the save version from 9 to 10, with a migration that only bumps the number, so an older build refuses a save that might hold a `deliverToConsumer` carrier instead of failing to decode it. A v9 fixture save checks the step.
 
 All new fields decode with `decodeIfPresent` and defaults:
 - `Carrier.vehicle` defaults to `.onFoot`.
