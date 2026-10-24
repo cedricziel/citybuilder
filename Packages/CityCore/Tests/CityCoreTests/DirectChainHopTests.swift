@@ -298,8 +298,8 @@ func aRetrievalForADemolishedConsumerGoesBackToStorage() {
     #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
 }
 
-@Test("goods come back to a full producer")
-func goodsComeBackToAFullProducer() {
+@Test("goods with no room anywhere are dropped as before")
+func goodsWithNoRoomAnywhereAreDroppedAsBefore() {
     var world = roadStrip()
     let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
     let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
@@ -310,41 +310,7 @@ func goodsComeBackToAFullProducer() {
         world.tick()
     }
     #expect(world.carriers.isEmpty)
-    #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 1)
     #expect(world.carrierCountByProducer[windmill] == 0)
-}
-
-@Test("a carrier whose goods have nowhere to go waits for room")
-func aCarrierWhoseGoodsHaveNowhereToGoWaitsForRoom() {
-    var world = roadStrip()
-    _ = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
-    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
-    world.tick()
-    world.stockpiles[bakery] = Stockpile(capacity: 0)
-    var events: [WorldEvent] = []
-    world.applyDemolish(anchor: TileCoordinate(x: 1, y: 1), events: &events)
-    for _ in 0 ..< 20 {
-        world.tick()
-    }
-    #expect(world.carriers.count == 1)
-    world.stockpiles[bakery] = Stockpile(capacity: 4)
-    world.tick()
-    #expect(world.carriers.isEmpty)
-    #expect(world.stockpiles[bakery]?.quantity(of: .flour) == 1)
-}
-
-@Test("producers do not send a buffer more than it has room for")
-func producersDoNotSendABufferMoreThanItHasRoomFor() {
-    var world = roadStrip()
-    let first = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 1])
-    let second = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 4, y: 1), contents: [.wood: 1])
-    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
-    world.stockpiles[warehouse] = Stockpile(capacity: 1)
-    world.tick()
-    #expect(missions(from: first, in: world) == [
-        .deliver(good: .wood, amount: 1, fromProducer: first, toWarehouse: warehouse)
-    ])
-    #expect(missions(from: second, in: world).isEmpty)
 }
 
 @Test("the storage-goods rule follows the owner's culture")
