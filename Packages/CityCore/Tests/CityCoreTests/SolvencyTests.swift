@@ -25,13 +25,11 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
 }
 
 /// The control: without the market these seeds go bankrupt by tick
-/// 4,000, so the sweep above tests what the market does. Direct hops
-/// (visible-distribution milestone 1) kept seeds 2, 6 and 21 solvent
-/// without it, so they gave way to 1, 3 and 11.
+/// 3,850, so the sweep above tests what the market does.
 @Test(
     "scenario: without the market the same towns go bankrupt",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: [UInt64(1), 3, 9, 11]
+    arguments: [UInt64(2), 6, 9, 21]
 )
 func scenarioWithoutTheMarketTheSameTownsGoBankrupt(seed: UInt64) {
     let bankrupt = World.botGame(
