@@ -1,0 +1,8 @@
+.cb-minimap {
+  display: inline-flex;
+}
+
+.cb-minimap > svg {
+  display: block;
+  overflow: hidden;
+}
