@@ -26,8 +26,9 @@ public extension World {
     /// The area a `kind` at `anchor` reaches: its catchment, or, while `placing` a building with a
     /// terrain requirement, every tile of each valid site within `AreaOfEffect.siteSearchRadius` of
     /// `anchor`. Site checks leave materials out, so an island short of them still shows where the
-    /// building could stand. Nil for any other kind. Read-only.
+    /// building could stand. Nil for any other kind, or for an anchor off the map. Read-only.
     func areaOfEffect(of kind: BuildingKind, at anchor: TileCoordinate, owner: Owner = .player, placing: Bool) -> AreaOfEffect? {
+        guard contains(anchor) else { return nil }
         if let radius = kind.catchmentRadius {
             return catchmentArea(of: kind, at: anchor, radius: radius, owner: owner)
         }

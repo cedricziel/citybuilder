@@ -104,3 +104,13 @@ func areaQueryIsReadOnly() {
     _ = world.areaOfEffect(of: .mine, at: TileCoordinate(x: 4, y: 4), placing: true)
     #expect(world == before)
 }
+
+@Test("an anchor off the map has no area")
+func offMapAnchorHasNoArea() {
+    var world = world()
+    world.research.markResearched(.mining)
+    for anchor in [TileCoordinate(x: 500, y: 500), TileCoordinate(x: 16, y: 3), TileCoordinate(x: -10, y: -10)] {
+        #expect(world.areaOfEffect(of: .lumberjackHut, at: anchor, placing: true) == nil)
+        #expect(world.areaOfEffect(of: .mine, at: anchor, placing: true) == nil)
+    }
+}
