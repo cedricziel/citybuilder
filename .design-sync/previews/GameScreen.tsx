@@ -22,6 +22,38 @@ export const PlacingHouse = () => (
   />
 );
 
+export const FirstSteps = () => (
+  <GameScreen width={860} height={620} firstSteps={{ ledger: { tax: 8, upkeep: 24 } }} />
+);
+
+const catchment = (() => {
+  const tiles = [];
+  for (let y = 1; y <= 8; y++) for (let x = 1; x <= 8; x++) if (Math.abs(x - 4.5) + Math.abs(y - 4.5) <= 4) tiles.push({ x, y });
+  return tiles;
+})();
+
+export const PlacingLumberjack = () => (
+  <GameScreen
+    width={800}
+    height={600}
+    armed="Lumberjack"
+    armedCaption="Tap or drag to place lumberjack — $80"
+    placing={{ art: "lumberjack-hut", valid: true, count: { text: "3 trees in reach", tone: "low" }, area: { tiles: catchment } }}
+  />
+);
+
+export const DeficitHint = () => (
+  <GameScreen
+    width={800}
+    height={480}
+    banner={{
+      title: "In the red: upkeep $24 vs tax $8",
+      description: "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market.",
+      onResume: () => {},
+    }}
+  />
+);
+
 export const Announcement = () => (
   <GameScreen
     width={800}

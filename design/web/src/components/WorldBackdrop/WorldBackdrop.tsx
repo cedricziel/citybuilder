@@ -2,7 +2,10 @@ import type { CSSProperties, ReactNode } from "react";
 import { buildingSprites, type buildingSpritesKey } from "../../generated/buildings";
 import { buildingFootprints } from "../../generated/buildingFootprints";
 import { buildingSizes } from "../../generated/buildingSizes";
-import { terrainSprites, type terrainSpritesKey } from "../../generated/terrain";
+import { buildingLights } from "../../generated/lights";
+import { terrainSprites } from "../../generated/terrain";
+import { terrainObjectSprites } from "../../generated/terrainObjects";
+import { groundSprite, terrainObjects, terrainOf } from "./terrain";
 import "./WorldBackdrop.css";
 
 export interface PlacedBuilding {
@@ -15,6 +18,22 @@ export interface PlacedBuilding {
   ghost?: boolean;
 }
 
+export interface TileCoordinate {
+  x: number;
+  y: number;
+}
+
+/**
+ * What a building reaches, as the world view draws it while placing or
+ * selecting: a gold outline over a dark under-stroke round `tiles`, with a
+ * faint gold tint, and a stronger tint on `planted` (the open grass a
+ * forester would plant). Trees and rock in reach are brightened.
+ */
+export interface AreaOfEffect {
+  tiles: TileCoordinate[];
+  planted?: TileCoordinate[];
+}
+
 export interface WorldBackdropProps {
   /** Viewport width in px. Default 100% of the parent. */
   width?: number | string;
@@ -23,6 +42,7 @@ export interface WorldBackdropProps {
   /**
    * The map as rows of characters: `~` water, `.` beach, `,` grass,
    * `T` forest, `^` mountain. Default: a small island. Outside the map is sea.
+   * Forest and mountain are grass with tree clumps and rock outcrops on it.
    */
   map?: string[];
   /** Buildings and road tiles on the map. Default: a small medieval town. */
@@ -31,12 +51,16 @@ export interface WorldBackdropProps {
   zoom?: number;
   /** Tile at the viewport center. Default: the map center. */
   center?: { x: number; y: number };
-  /** Seasonal grass and forest. Default `summer`. */
+  /** Seasonal grass, trees and rock. Default `summer`. */
   season?: "summer" | "autumn" | "winter";
+  /** Night: the blue night overlay over the world, with houses' and workshops' windows lit. */
+  night?: boolean;
   /** Where `center` lands vertically, as a fraction of the viewport height. Default 0.5. */
   focusY?: number;
   /** Highlight one tile with the selection diamond. */
   selected?: { x: number; y: number };
+  /** An area of effect on the ground: the gold ring of #242. */
+  area?: AreaOfEffect;
   /** HUD and overlays drawn above the map. */
   children?: ReactNode;
   style?: CSSProperties;
@@ -84,28 +108,15 @@ export const defaultTown: PlacedBuilding[] = [
   { art: "windmill", x: 3, y: 10 },
 ];
 
-const tileArt: Record<string, terrainSpritesKey> = {
-  "~": "water",
-  ".": "beach",
-  ",": "grass",
-  // Forest and rock stand on grass in the game; their trees and outcrops are objects the backdrop
-  // does not draw yet.
-  T: "grass",
-  "^": "grass",
-};
-
-function seasonal(art: terrainSpritesKey, season: WorldBackdropProps["season"]): terrainSpritesKey {
-  if (season === "summer" || !season) return art;
-  if (art === "grass") return season === "autumn" ? "grass-autumn" : "grass-winter";
-  return art;
-}
-
 const HALF_W = 32;
 const HALF_H = 16;
 const PAD = 14;
+/** A terrain object's 144 x 132 cell has the tile centre 56 from its left and 112 from its top. */
+const OBJECT_CENTER = { x: 56, y: 112 };
 
 /**
- * The isometric world map from the game's own pixel art: terrain tiles,
+ * The isometric world map from the game's own art: painterly ground with
+ * its grass variants and shore transitions, tree clumps and rock outcrops,
  * roads and buildings, as the SpriteKit world view draws it. Use it as the
  * backdrop of any in-game screen; HUD pieces go in `children`.
  */
@@ -117,8 +128,10 @@ export function WorldBackdrop({
   zoom = 1.5,
   center,
   season = "summer",
+  night = false,
   focusY = 0.5,
   selected,
+  area,
   children,
   style,
 }: WorldBackdropProps) {
@@ -130,14 +143,14 @@ export function WorldBackdrop({
     left: (x - cx - (y - cy)) * HALF_W,
     top: (x - cx + (y - cy)) * HALF_H,
   });
+  const terrainAt = (x: number, y: number) => terrainOf(map[y]?.[x]);
 
   const tiles: ReactNode[] = [];
   for (let sum = -2 * PAD; sum <= rows + cols + 2 * PAD; sum++) {
     for (let x = -PAD; x < cols + PAD; x++) {
       const y = sum - x;
       if (y < -PAD || y >= rows + PAD) continue;
-      const ch = map[y]?.[x] ?? "~";
-      const art = seasonal(tileArt[ch] ?? "water", season);
+      const art = groundSprite(x, y, terrainAt, season);
       const pos = at(x, y);
       tiles.push(
         <img key={`${x},${y}`} className="cb-world__tile cb-pixel" src={terrainSprites[art]} alt="" style={{ left: pos.left - HALF_W, top: pos.top - HALF_H }} />,
@@ -145,23 +158,55 @@ export function WorldBackdrop({
     }
   }
 
-  const sorted = [...buildings].sort((a, b) => depth(a) - depth(b));
-  const sprites = sorted.map((building, index) => {
+  const occupied = new Set<string>();
+  for (const building of buildings) {
+    if (building.ghost) continue;
+    const [w, h] = buildingFootprints[building.art];
+    for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) occupied.add(`${building.x + dx},${building.y + dy}`);
+  }
+  const inReach = new Set(area?.tiles.map(({ x, y }) => `${x},${y}`));
+
+  // Objects sort like a 1 x 1 building on their tile, just behind a building at the same depth.
+  const standing: { depth: number; node: ReactNode; lights?: ReactNode }[] = [];
+  for (const object of terrainObjects(cols, rows, terrainAt, occupied, season)) {
+    const pos = at(object.x, object.y);
+    standing.push({
+      depth: object.x + object.y - 0.01,
+      node: (
+        <img
+          key={`object-${object.x}-${object.y}`}
+          className={`cb-world__object cb-pixel ${inReach.has(`${object.x},${object.y}`) ? "cb-world__object--in-reach" : ""}`}
+          src={terrainObjectSprites[object.art]}
+          alt=""
+          style={{ left: pos.left - OBJECT_CENTER.x, top: pos.top - OBJECT_CENTER.y }}
+        />
+      ),
+    });
+  }
+  buildings.forEach((building, index) => {
     const [w, h] = buildingSizes[building.art];
     // The sprite is wider than its footprint where its shadow needs room, so place it by its footprint.
-    const [cols, rows] = buildingFootprints[building.art];
-    const bottom = at(building.x + cols - 1, building.y + rows - 1);
-    const centerX = (at(building.x, building.y + rows - 1).left + at(building.x + cols - 1, building.y).left) / 2;
-    return (
-      <img
-        key={`${building.art}-${building.x}-${building.y}-${index}`}
-        className={`cb-world__building cb-pixel ${building.ghost ? "cb-world__building--ghost" : ""}`}
-        src={buildingSprites[building.art]}
-        alt={building.art}
-        style={{ left: centerX - w / 2, top: bottom.top + HALF_H - h }}
-      />
-    );
+    const [fx, fy] = buildingFootprints[building.art];
+    const bottom = at(building.x + fx - 1, building.y + fy - 1);
+    const centerX = (at(building.x, building.y + fy - 1).left + at(building.x + fx - 1, building.y).left) / 2;
+    const place = { left: centerX - w / 2, top: bottom.top + HALF_H - h };
+    const key = `${building.art}-${building.x}-${building.y}-${index}`;
+    const lit = night && !building.ghost ? buildingLights[building.art] : undefined;
+    standing.push({
+      depth: building.x + building.y + (fx - 1) + (fy - 1),
+      node: (
+        <img
+          key={key}
+          className={`cb-world__building cb-pixel ${building.ghost ? "cb-world__building--ghost" : ""}`}
+          src={buildingSprites[building.art]}
+          alt={building.art}
+          style={place}
+        />
+      ),
+      lights: lit ? <img key={`${key}-lights`} className="cb-world__lights cb-pixel" src={lit} alt="" style={place} /> : undefined,
+    });
   });
+  standing.sort((a, b) => a.depth - b.depth);
 
   const selection = selected ? at(selected.x, selected.y) : null;
 
@@ -169,15 +214,45 @@ export function WorldBackdrop({
     <div className="cb-world" style={{ width, height, ...style }}>
       <div className="cb-world__plane" style={{ top: `${focusY * 100}%`, transform: `scale(${zoom})` }}>
         {tiles}
+        {area ? <AreaRing area={area} at={at} /> : null}
         {selection ? <div className="cb-world__selection" style={{ left: selection.left - HALF_W, top: selection.top - HALF_H }} /> : null}
-        {sprites}
+        {standing.map((item) => item.node)}
+        {night ? <div className="cb-world__night" /> : null}
+        {standing.map((item) => item.lights)}
       </div>
       {children ? <div className="cb-world__overlay">{children}</div> : null}
     </div>
   );
 }
 
-function depth(building: PlacedBuilding): number {
-  const [cols, rows] = buildingFootprints[building.art];
-  return building.x + building.y + (cols - 1) + (rows - 1);
+/** The boundary of the area as tile edges with no neighbour inside it, plus the tinted tiles. */
+function AreaRing({ area, at }: { area: AreaOfEffect; at: (x: number, y: number) => { left: number; top: number } }) {
+  const inside = new Set(area.tiles.map(({ x, y }) => `${x},${y}`));
+  // Vertex (vx, vy) is the top corner of tile (vx, vy).
+  const vertex = (vx: number, vy: number) => {
+    const p = at(vx, vy);
+    return `${p.left},${p.top - HALF_H}`;
+  };
+  const diamond = ({ x, y }: TileCoordinate) => `${vertex(x, y)} ${vertex(x + 1, y)} ${vertex(x + 1, y + 1)} ${vertex(x, y + 1)}`;
+  const edges: string[] = [];
+  for (const { x, y } of area.tiles) {
+    // N-E borders (x, y-1), E-S (x+1, y), S-W (x, y+1), W-N (x-1, y).
+    if (!inside.has(`${x},${y - 1}`)) edges.push(`M${vertex(x, y)}L${vertex(x + 1, y)}`);
+    if (!inside.has(`${x + 1},${y}`)) edges.push(`M${vertex(x + 1, y)}L${vertex(x + 1, y + 1)}`);
+    if (!inside.has(`${x},${y + 1}`)) edges.push(`M${vertex(x + 1, y + 1)}L${vertex(x, y + 1)}`);
+    if (!inside.has(`${x - 1},${y}`)) edges.push(`M${vertex(x, y + 1)}L${vertex(x, y)}`);
+  }
+  const outline = edges.join("");
+  return (
+    <svg className="cb-world__area" width="1" height="1" aria-hidden="true">
+      {area.tiles.map((tile) => (
+        <polygon key={`a${tile.x},${tile.y}`} points={diamond(tile)} className="cb-world__area-tint" />
+      ))}
+      {(area.planted ?? []).map((tile) => (
+        <polygon key={`p${tile.x},${tile.y}`} points={diamond(tile)} className="cb-world__area-planted" />
+      ))}
+      <path d={outline} className="cb-world__area-under" />
+      <path d={outline} className="cb-world__area-ring" />
+    </svg>
+  );
 }

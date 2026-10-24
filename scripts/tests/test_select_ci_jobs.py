@@ -182,7 +182,12 @@ def test_the_real_manifests_parse() -> None:
 
 
 def test_a_web_change_runs_only_the_web_build(repo: Path) -> None:
-    for path in ["design/web/src/Hud.tsx", "design/web/package.json", "design/web/scripts/gen-sprites.mjs"]:
+    for path in [
+        "design/web/src/Hud.tsx",
+        "design/web/package.json",
+        "design/web/scripts/gen-sprites.mjs",
+        ".design-sync/previews/Inspector.tsx",
+    ]:
         jobs = select([path], repo)
 
         assert jobs.web
@@ -204,8 +209,14 @@ def test_a_web_change_beside_a_non_package_change_still_runs_everything(repo: Pa
     assert jobs == select_ci_jobs.everything(repo)  # web included
 
 
-def test_an_atlas_change_runs_the_web_build_and_everything_else(repo: Path) -> None:
-    jobs = select(["Resources/Buildings.atlas/building-house.png"], repo)
+@pytest.mark.parametrize("path", [
+    "Resources/Buildings.atlas/building-house.png",
+    "Resources/Sprites.style/catalog/town.md",
+    "scripts/art/goods_icons.py",
+    "Apps/CitybuilderMac/Assets.xcassets/AppIcon.appiconset/icon-256.png",
+])
+def test_inlined_art_runs_the_web_build_and_everything_else(repo: Path, path: str) -> None:
+    jobs = select([path], repo)
 
     assert jobs == select_ci_jobs.everything(repo)
     assert jobs.web

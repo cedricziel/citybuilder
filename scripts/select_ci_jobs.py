@@ -15,9 +15,11 @@ script, its tests or the workflow.
   each `Packages/*/Package.swift`. CityCore affects every package:
   GameDataGen writes CityCore's generated sources.
 - `design/web/` (the React recreation of the HUD, which the app does
-  not use) selects only the web build, as do the sprite atlases it
-  inlines (`Resources/*.atlas/`); the atlases also select everything
-  else, like any other file outside the packages.
+  not use) and `.design-sync/` (its design-system previews) select only
+  the web build. So do the art it inlines (`Resources/*.atlas/`, the
+  sprite catalog, the SVG goods icons, the macOS app icon); that art
+  also selects everything else, like any other file outside the
+  packages.
 - Anything else (apps, `project.yml`, `Resources/`, scripts, the
   Makefile, workflows) selects everything.
 
@@ -45,10 +47,15 @@ from pathlib import Path
 DOCS_ONLY = re.compile(r"^(openspec/|\.claude/|(?!README\.md$)[^/]+\.md$)")
 PACKAGE_CALL = re.compile(r"\.package\(([^)]*)\)")
 LOCAL_DEPENDENCY = re.compile(r'\s*path:\s*"\.\./([^"/]+)"\s*')
-# The web build's own sources, and the sprite atlases gen-sprites.mjs
-# inlines into its bundle.
-WEB_BUILD = re.compile(r"^(design/web/|Resources/[^/]+\.atlas/)")
-WEB_ONLY = re.compile(r"^design/web/")
+# The web build's own sources and the design-system previews it
+# typechecks, and what gen-sprites.mjs inlines into its bundle: the sprite
+# atlases, the footprints in the sprite catalog, the SVG goods icons and
+# the app icon.
+WEB_BUILD = re.compile(
+    r"^(design/web/|\.design-sync/|Resources/[^/]+\.atlas/|Resources/Sprites\.style/catalog/"
+    r"|scripts/art/goods_icons\.py$|Apps/CitybuilderMac/Assets\.xcassets/AppIcon\.appiconset/)"
+)
+WEB_ONLY = re.compile(r"^(design/web/|\.design-sync/)")
 FIXTURE_PACKAGES = re.compile(r"^for package in ([^;]+); do$", re.M)
 
 

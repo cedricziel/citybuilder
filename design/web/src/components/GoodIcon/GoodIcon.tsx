@@ -39,7 +39,11 @@ export interface GoodIconProps {
   style?: CSSProperties;
 }
 
-/** The game's icon for a good, scaled smoothly like the HUD. */
+/**
+ * The game's icon for a good: the object itself in natural colours inside a
+ * dark warm outline, hand-authored as SVG (`scripts/art/goods_icons.py`), so
+ * it stays sharp at any size.
+ */
 export function GoodIcon({ good, size = 16, style }: GoodIconProps) {
   return (
     <img
