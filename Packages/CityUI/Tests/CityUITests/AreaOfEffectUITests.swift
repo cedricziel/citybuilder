@@ -1,6 +1,6 @@
-import CityCore
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/add-areas-of-effect: rendering-2_5d / Areas of effect while
@@ -66,14 +66,35 @@ func capsuleOverAValidGhost() throws {
 }
 
 @MainActor
-@Test("no capsule where the ghost could not be placed")
-func noCapsuleOverAnInvalidGhost() throws {
+@Test("no area and no capsule where the ghost could not be placed")
+func nothingOverAnInvalidGhost() throws {
     let session = GameSession()
     let center = try #require(session.world.buildings.values.first { $0.kind == .townCenter })
     session.selectTool(.place(.lumberjackHut))
     session.handleHover(at: center.anchor)
-    #expect(session.areaOfEffect() != nil)
+    #expect(session.areaOfEffect() == nil)
     #expect(session.areaCountCapsule == nil)
+}
+
+@MainActor
+@Test("the area is asked again on a new tick")
+func areaCacheFollowsTheTick() throws {
+    let session = GameSession()
+    let anchor = try site(for: .lumberjackHut, reaching: 9, in: session.world)
+    session.selectTool(.place(.lumberjackHut))
+    session.handleHover(at: anchor)
+    let before = try #require(session.areaOfEffect())
+    // Open grass in the catchment turns to forest without a tick: the cached area stands.
+    let grass = try #require(before.tiles.sorted { ($0.y, $0.x) < ($1.y, $1.x) }.first { tile in
+        session.world.terrain(at: tile) == .grass && session.world.occupiedTiles[tile] == nil
+            && !BuildingCatalog.spec(for: .lumberjackHut).footprint.tiles(anchor: anchor).contains(tile)
+    })
+    session.world.terrainGrid[grass.y * session.world.mapWidth + grass.x] = .forest
+    #expect(session.areaOfEffect() == before)
+    session.world.tick()
+    let after = try #require(session.areaOfEffect())
+    #expect(after.count == 10)
+    #expect(after.targets.contains(grass))
 }
 
 @Test("scenario: few trees read amber, none read red")
@@ -112,4 +133,19 @@ func capsuleSitsAboveThePlot() {
     let middle = PlacementHUDLayout.viewPoint(forTile: TileCoordinate(x: 10, y: 10), camera: camera, viewSize: view)
     #expect(point.x == middle.x)
     #expect(point.y == middle.y + 16 - 32 - AreaCountCapsuleLayout.roofLift - AreaCountCapsuleLayout.gap)
+}
+
+@Test("on touch the capsule clears the nudge arrows at any zoom")
+func capsuleClearsTheNudgeArrows() {
+    let view = CGSize(width: 844, height: 390)
+    let anchor = TileCoordinate(x: 10, y: 10)
+    for zoom in [0.5, 1.0, 2.0] {
+        let camera = Camera(centerX: 10, centerY: 10, zoom: zoom)
+        let point = AreaCountCapsuleLayout.point(above: .lumberjackHut, at: anchor, camera: camera, viewSize: view, clearsNudgeArrows: true)
+        let center = PlacementHUDLayout.viewPoint(forTile: anchor, camera: camera, viewSize: view)
+        for direction in NudgeDirection.allCases {
+            let arrowTop = center.y + PlacementHUDLayout.arrowOffset(for: direction).height - PlacementHUDLayout.buttonSize / 2
+            #expect(point.y <= arrowTop - AreaCountCapsuleLayout.gap)
+        }
+    }
 }

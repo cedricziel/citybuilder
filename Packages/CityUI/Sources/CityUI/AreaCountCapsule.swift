@@ -17,12 +17,22 @@ struct AreaCountCapsule: View {
                     // A zero-size frame at the point, content bottom-aligned: the capsule rises from it.
                     .frame(width: 0, height: 0, alignment: .bottom)
                     .position(AreaCountCapsuleLayout.point(
-                        above: model.kind, at: model.anchor, camera: session.world.camera, viewSize: proxy.size
+                        above: model.kind, at: model.anchor, camera: session.world.camera, viewSize: proxy.size,
+                        clearsNudgeArrows: showsNudgeArrows
                     ))
             }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+    }
+
+    /// The touch placement HUD's arrows ring a pending placement on iOS.
+    private var showsNudgeArrows: Bool {
+        #if os(iOS)
+        session.pendingPlacement != nil
+        #else
+        false
+        #endif
     }
 
     private func label(_ model: AreaCountCapsuleModel) -> some View {
@@ -79,7 +89,11 @@ enum AreaCountCapsuleLayout {
 
     /// The point the capsule's bottom centre sits on: over the middle of
     /// a `kind` plot at `anchor`, a roof's height above its top corner.
-    static func point(above kind: BuildingKind, at anchor: TileCoordinate, camera: Camera, viewSize: CGSize) -> CGPoint {
+    /// With `clearsNudgeArrows`, it also stays a gap above the placement
+    /// HUD's upper arrows, which keep their size at any zoom.
+    static func point(
+        above kind: BuildingKind, at anchor: TileCoordinate, camera: Camera, viewSize: CGSize, clearsNudgeArrows: Bool = false
+    ) -> CGPoint {
         let footprint = BuildingCatalog.spec(for: kind).footprint
         let first = PlacementHUDLayout.viewPoint(forTile: anchor, camera: camera, viewSize: viewSize)
         let last = PlacementHUDLayout.viewPoint(
@@ -89,6 +103,10 @@ enum AreaCountCapsuleLayout {
         let zoom = CGFloat(camera.zoom)
         let middle = CGPoint(x: (first.x + last.x) / 2, y: (first.y + last.y) / 2)
         let top = middle.y - CGFloat(footprint.width + footprint.height) / 2 * PlacementHUDLayout.halfTileHeight * zoom
-        return CGPoint(x: middle.x, y: top - roofLift * zoom - gap)
+        let overRoof = top - roofLift * zoom - gap
+        guard clearsNudgeArrows else { return CGPoint(x: middle.x, y: overRoof) }
+        let highestArrow = NudgeDirection.allCases.map { PlacementHUDLayout.arrowOffset(for: $0).height }.min() ?? 0
+        let arrowTop = first.y + highestArrow - PlacementHUDLayout.buttonSize / 2
+        return CGPoint(x: middle.x, y: min(overRoof, arrowTop - gap))
     }
 }

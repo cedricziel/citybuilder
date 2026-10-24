@@ -50,6 +50,8 @@ public extension GameSession {
 
     internal func areaOfEffectSource() -> AreaOfEffectCache.Source? {
         if let site = ghostSite() {
+            // A red ghost shows no catchment, as it shows no count; a mine's sites still point the way.
+            guard site.kind.catchmentRadius == nil || isValidPlacement(site.kind, at: site.tile) else { return nil }
             return AreaOfEffectCache.Source(kind: site.kind, anchor: site.tile, owner: .player, placing: true)
         }
         guard let tile = inspectedTile, let id = world.occupiedTiles[tile],
