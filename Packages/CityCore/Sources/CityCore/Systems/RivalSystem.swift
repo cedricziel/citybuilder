@@ -276,9 +276,10 @@ extension World {
             let isStore = building.state == .operational && Self.logisticsBufferKinds.contains(building.kind)
             if isStore, let pile = stockpiles[building.id] {
                 for good in RivalAI.surplusGoods {
-                    let room = pile.room(for: good)
-                    turn.surplusRoom[good, default: 0] += room
-                    turn.surplusLimit[good, default: 0] += room + pile.quantity(of: good)
+                    turn.surplusRoom[good, default: 0] += pile.room(for: good)
+                    // A store's per-good cap, not its stock: overflow from an
+                    // old save does not raise what a rival keeps.
+                    turn.surplusLimit[good, default: 0] += pile.capacity
                 }
                 turn.ownStock.merge(pile.contents) { $0 + $1 }
             }
