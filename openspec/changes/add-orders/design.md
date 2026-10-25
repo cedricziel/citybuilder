@@ -42,7 +42,7 @@ What exists today:
 
 - Orders are issued at season boundaries (`tick % 600 == 0`), so cadence needs no stored timer.
 - **Crown:** from season 4 (the start of year 2), every `n` seasons, where `n` is the age's `orderEvery` scaled by the difficulty's cadence percent (150, 100, 75), rounded to the nearest whole number and at least 1.
-  - `orderEvery` is a field of the Age item: Antiquity 4, Medieval 4, Renaissance 3, Industrial 2.
+  - `orderEvery` is a field of the Age item: Antiquity 4, Medieval 4, Renaissance 3, Industrial 2, Modern 2.
 - **Rivals:** each rival, every 2nd season staggered by its ID, if it has no open order and is short of a good that has a rival template for its age.
 - Both stop when the game is over, and nothing runs while the calendar is inactive (fixtures keep their meaning; `newGame` and the v5 migration activate it).
 - The order of issuing in one season is fixed: the crown first, then the rivals by ID.
@@ -74,7 +74,7 @@ For a template `T` and the player's town:
 1. `recent` is the units of the good the player's producers made over the last up-to-4 closed seasons (`statistics`), `seasons` is how many of those seasons exist.
 2. Not eligible unless at least 1 season is closed and `recent` is positive: the town has to make the good.
 3. `units = recent × T.seasons × T.size / (seasons × 100)`, then times the difficulty's size percent (80, 100, 120) over 100.
-4. `cap` is 75% of what the player's stores road-connected to a town center can hold of the good, summed (`Stockpile.capacity` of each operational store). The quantity is `min(units, T.max, cap)`.
+4. `cap` is 75% of what the player's stores can hold of the good, summed (`Stockpile.capacity` of each operational store): for a crown order the town centers and the stores road-connected to one, for a rival's order every store, since its goods go by ship. The quantity is `min(units, T.max, cap)`.
 5. Not eligible when the quantity is below `T.min`.
 
 The deadline is the end of the season `window` seasons after the issue, where `window` is `T.seasons` times the difficulty's window percent (130, 100, 85) over 100, rounded to the nearest whole season and at least 1. The difficulty changes the time and the quantity, never the reward.
@@ -102,10 +102,10 @@ Delivery is one command, `dispatchOrder`, so the player decides when the goods l
   - the order is not an accepted crown order that has nothing sent yet;
   - the stores together hold fewer units than the quantity;
   - a leg has no path to a town center;
-  - the longest leg would arrive after the deadline (arrival takes `path.count` ticks).
+  - the longest leg would arrive after the deadline (a path of n tiles arrives n − 1 ticks after the dispatch).
 - **All or nothing** means a partial shipment never exists, so a missed deadline never swallows goods (see D6). The UI shows the plan as "In stores 24 of 30" and enables the button at the full amount.
 - **Execution:** the units leave the stores at once and travel as **shipments**: one per store, with a path along the roads to the nearest town center, advanced one tile a tick like a carrier. A store that is the town center itself counts immediately. Shipments are state in `OrdersState`, not `Carrier`s, so the carrier system and its missions are untouched.
-- **Arrival** adds the units to the order. The order is fulfilled in the same tick when the units reach the quantity. A shipment whose town center was demolished while it walked still counts: the crown's agent was already on the road.
+- **Arrival** adds the units to the order. The order is fulfilled in the same tick when the units reach the quantity. A shipment whose order has closed meanwhile (not expected, since a shipment is refused if it would be late) goes back into the store it left. A shipment whose town center was demolished while it walked still counts: the crown's agent was already on the road.
 - **Drawing:** the snapshot appends the shipments to `carriers`, with a `deliver` mission to the town center, so the renderer draws them as the carriers it already has. The canvas decides whether they need their own look (D13).
 - **Per-good storage:** a shipment frees room for the good in the stores it drew from. A producer stopped by backpressure resumes. That is the point of "surplus gets a purpose".
 
@@ -153,7 +153,7 @@ The tables, before and after, go in the PR.
 
 - `World.orders` is an additive Codable field. A decode overload (the pattern of `market` and `statistics`) turns a missing key into an empty `OrdersState`. Nothing else in a save changes, so there is no version bump and no clash with the other in-flight changes that take version numbers.
 - An old save with an active calendar starts issuing orders at the next season boundary after its year-2 mark; the schedule is derived from the tick count, so it needs no stored state.
-- Orders only run with an active calendar, so fixtures and tests that don't set one are unaffected. The determinism fixture gains one game with orders; its baseline moves for that game only, on purpose.
+- Orders only run with an active calendar, so fixtures and tests that don't set one are unaffected. The determinism fixture's JSON gains an empty `orders` key, because its town never makes goods; favour is written under string keys so equal worlds encode to equal bytes. Orders over whole games are replayed by the bot sweeps and by the `orders are deterministic` test.
 
 ### D13. UI is gated on the canvas
 

@@ -17,4 +17,4 @@ A tech's research cost SHALL be its catalog cost times the difficulty's research
 #### Scenario: Crown favour makes research cheaper
 
 - **WHEN** a Normal world with crown favour 6 researches Milling, and another with crown favour 12
-- **THEN** Milling is researched after 543 knowledge points in the first and after 532 in the second, and not one point sooner
+- **THEN** Milling is researched after 698 knowledge points in the first and after 684 in the second, and not one point sooner

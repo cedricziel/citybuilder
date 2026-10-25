@@ -26,7 +26,7 @@
 ## 4. Saves and determinism
 
 - [ ] 4.1 Decode a save without orders; round-trip test; fixture from the previous version
-- [ ] 4.2 One orders run in `DeterminismFixture`; regenerate the baseline on purpose, on macOS and Linux
+- [ ] 4.2 `DeterminismFixture` output: the empty `orders` key, equal on macOS and Linux; favour keys written as strings
 
 ## 5. PlayerBot and sweeps
 

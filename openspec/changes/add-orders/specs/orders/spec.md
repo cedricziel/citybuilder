@@ -4,12 +4,12 @@
 
 A game-data pack SHALL be able to define `Order` templates. A template SHALL have an ID, an issuer (`crown` or `rival`), a good, a title, a line of text of at most 100 characters, a window in seasons from 1 to 8, a size percent from 1 to 300, a minimum and a maximum quantity with the minimum at least 1 and not above the maximum, and a reward percent from 0 to 500. It MAY name a first age, a favour gain and a favour loss, which default to the first age, 2 and 2. An Age item MAY define `orderEvery`, the seasons between crown orders, which defaults to 4. Loading SHALL reject a template that names an unknown good or age, or breaks a bound, and SHALL name the template.
 
-The built-in pack SHALL define six crown templates (wood, planks, food, bread, iron, tools) and five rival templates (wood, planks, food, bread, tools), and `orderEvery` of 4 for Antiquity, 4 for the Middle Ages, 3 for the Renaissance and 2 for the Industrial age.
+The built-in pack SHALL define six crown templates (wood, planks, food, bread, iron, tools) and five rival templates (wood, planks, food, bread, tools), and `orderEvery` of 4 for Antiquity, 4 for the Middle Ages, 3 for the Renaissance and 2 for the Industrial and Modern ages.
 
 #### Scenario: Built-in order templates load
 
 - **WHEN** the game data loads
-- **THEN** it holds 6 crown and 5 rival order templates, and the ages' `orderEvery` are 4, 4, 3 and 2
+- **THEN** it holds 6 crown and 5 rival order templates, and the ages' `orderEvery` are 4, 4, 3, 2 and 2
 
 #### Scenario: Unknown good in an order template is rejected
 
@@ -76,8 +76,8 @@ At a season boundary from season 4, each rival whose ID plus the season number i
 
 #### Scenario: A short rival posts an order
 
-- **WHEN** rival 2 holds 6 planks and $1,000 at season 6, and the player's town makes planks
-- **THEN** rival 2 issues an order for planks
+- **WHEN** rival 1 holds 6 planks and $1,000 at season 5, and the player's town makes planks
+- **THEN** rival 1 issues an order for planks
 
 #### Scenario: A rival with no shortage posts nothing
 
@@ -96,9 +96,9 @@ At a season boundary from season 4, each rival whose ID plus the season number i
 
 ### Requirement: Order size follows the town's output
 
-For a template, the recent output SHALL be the units of its good that the player's producers made over the last up to 4 closed seasons, and the template is eligible only when at least one season is closed and the output is above zero. The quantity SHALL be `recent × seasons × size / (closed × 100)`, rounded down, where `seasons` and `size` are the template's, then times the difficulty's size percent (Easy 80, Normal 100, Hard 120) over 100 rounded down, then at most the template's maximum and at most 75% of what the player's stores road-connected to a town center can hold of the good (the sum of those stores' capacities for it), rounded down. A template whose quantity is below its minimum SHALL NOT be eligible.
+For a template, the recent output SHALL be the units of its good that the player's producers made over the last up to 4 closed seasons, and the template is eligible only when at least one season is closed and the output is above zero. The quantity SHALL be `recent × seasons × size / (closed × 100)`, rounded down, where `seasons` and `size` are the template's, then times the difficulty's size percent (Easy 80, Normal 100, Hard 120) over 100 rounded down, then at most the template's maximum and at most 75% of what the player's stores can hold of the good (the sum of their capacities for it), rounded down. For a crown order the stores are the town centers and the stores whose road network reaches one; for a rival's order, whose goods go by ship, they are all the player's operational stores. A template whose quantity is below its minimum SHALL NOT be eligible.
 
-The deadline SHALL be the end of the season that is `window` seasons after the issue, where `window` is the template's seasons times the difficulty's window percent (Easy 130, Normal 100, Hard 85) over 100, rounded to the nearest whole season and at least 1. The reward SHALL be `quantity × base price × reward percent / 100`, rounded down.
+The deadline SHALL be the tick `window` seasons after the issue, where `window` is the template's seasons times the difficulty's window percent (Easy 130, Normal 100, Hard 85) over 100, rounded to the nearest whole season and at least 1; the order is on time through that tick. The board shows it as the date of the season in which the window ends. The reward SHALL be `quantity × base price × reward percent / 100`, rounded down.
 
 #### Scenario: Size follows recent output
 
@@ -134,11 +134,6 @@ An issued order SHALL be an offer on the board. An offer not accepted by the end
 - **WHEN** an offer issued at tick 2,400 is not accepted and the tick reaches 3,000
 - **THEN** the order is expired, the board holds no offers, and favour is unchanged
 
-#### Scenario: The board holds three offers
-
-- **WHEN** three offers are open and a fourth would be issued
-- **THEN** the fourth is not issued
-
 ### Requirement: The player accepts, declines and abandons orders
 
 `acceptOrder` SHALL turn an offer into an accepted order, if the offer is still open and fewer than 2 orders are accepted. `declineOrder` SHALL remove an offer from the board without effect on favour. `abandonOrder` SHALL fail an accepted order that has nothing sent or delivered yet, with the favour penalty. A command naming an unknown or closed order, or breaking those conditions, SHALL be dropped without effect.
@@ -170,7 +165,7 @@ An issued order SHALL be an offer on the board. An offer not accepted by the end
 
 ### Requirement: Crown orders are delivered by shipments from the stores
 
-`dispatchOrder` on an accepted crown order with nothing sent SHALL send the whole quantity from the player's operational stores that hold the good and are road-connected to a player town center. Stores SHALL be taken nearest first (by path length to a town center, then by entity ID), each as much as it holds and the order still needs. The units SHALL leave the stores at once. A store that is a town center SHALL deliver at once. Every other store's units SHALL travel as one shipment along the roads to the nearest town center, advancing one tile a tick, and SHALL count toward the order when they arrive. The command SHALL do nothing when the stores hold fewer units than the quantity, when a leg has no road path, or when the longest leg's path length in tiles would pass the deadline.
+`dispatchOrder` on an accepted crown order with nothing sent SHALL send the whole quantity from the player's operational stores that hold the good and are road-connected to a player town center. Stores SHALL be taken nearest first (by path length to a town center, then by entity ID), each as much as it holds and the order still needs. The units SHALL leave the stores at once. A store that is a town center SHALL deliver at once. Every other store's units SHALL travel as one shipment along the roads to the nearest town center, advancing one tile a tick, and SHALL count toward the order when they arrive. The command SHALL do nothing when the stores hold fewer units than the quantity, when a leg has no road path, or when a leg would arrive after the deadline (a path of n tiles arrives n − 1 ticks after the dispatch).
 
 `orderDispatchPlan(for:)` SHALL report the same plan, or why there is none, without changing the world, for the UI.
 
@@ -186,8 +181,8 @@ An issued order SHALL be an offer on the board. An offer not accepted by the end
 
 #### Scenario: Dispatch is refused when it would arrive late
 
-- **WHEN** a shipment's path is 40 tiles long and the deadline is 39 ticks away
-- **THEN** the dispatch is refused and the stores keep their goods
+- **WHEN** a shipment's path is 41 tiles long and the deadline is 39 ticks away
+- **THEN** the dispatch is refused and the stores keep their goods, and it is allowed when the deadline is 40 ticks away
 
 #### Scenario: Goods in the town center count at once
 
