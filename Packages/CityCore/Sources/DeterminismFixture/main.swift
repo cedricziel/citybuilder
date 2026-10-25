@@ -17,14 +17,24 @@ import Foundation
 let argv = CommandLine.arguments
 let tickCount: Int = argv.count >= 2 ? Int(argv[1]) ?? 6000 : 6000
 
+// The archipelago game, plus a short grain chain whose producers send
+// grain and flour straight to their consumers (visible-distribution
+// milestone 1), which the archipelago's opening never does.
 var world = World.newGame(layout: .archipelago, seed: 0xC17B)
+var chain = World.chainFixture()
 
 for _ in 0 ..< tickCount {
     _ = world.tick()
+    _ = chain.tick()
+}
+
+struct Fixture: Encodable {
+    let world: World
+    let chain: World
 }
 
 let encoder = JSONEncoder()
 encoder.outputFormatting = [.sortedKeys]
-let data = try encoder.encode(world)
+let data = try encoder.encode(Fixture(world: world, chain: chain))
 FileHandle.standardOutput.write(data)
 FileHandle.standardOutput.write(Data([0x0A]))

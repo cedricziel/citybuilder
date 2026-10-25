@@ -211,6 +211,27 @@ public extension World {
         }
     }
 
+    /// A short grain chain on a grass strip, placed by command: two
+    /// grain farms, a windmill, a bakery and a warehouse along one
+    /// road. Ticked, it sends grain and flour straight from producer to
+    /// consumer, so the determinism gate covers those hops.
+    static func chainFixture() -> World {
+        var world = fixtureWithTerrain(width: 24, height: 6, fill: .grass, seed: 0xC4A1)
+        world.seedTestFunds()
+        for x in 0 ..< 24 {
+            world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))
+        }
+        let chain: [(BuildingKind, TileCoordinate)] = [
+            (.grainFarm, TileCoordinate(x: 0, y: 1)), (.grainFarm, TileCoordinate(x: 3, y: 1)),
+            (.windmill, TileCoordinate(x: 7, y: 1)), (.bakery, TileCoordinate(x: 11, y: 1)),
+            (.warehouse, TileCoordinate(x: 16, y: 0))
+        ]
+        for (kind, anchor) in chain {
+            world.enqueue(.place(kind, at: anchor))
+        }
+        return world
+    }
+
     /// Test helper: a treasury deep enough that a seeded town's upkeep never bankrupts it, so art
     /// reviews screenshot the town rather than the bankruptcy banner.
     mutating func seedTestFunds(_ amount: Int64 = 1_000_000) {

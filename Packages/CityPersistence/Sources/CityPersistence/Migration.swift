@@ -30,7 +30,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV6ToV7(),
         MigrationV7ToV8(),
         MigrationV8ToV9(),
-        MigrationV9ToV10()
+        MigrationV9ToV10(),
+        MigrationV10ToV11()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -366,5 +367,23 @@ public struct MigrationV9ToV10: Migration {
     private static func kind(_ raw: String) -> BuildingKind? {
         guard let data = try? JSONEncoder().encode(raw) else { return nil }
         return try? JSONDecoder().decode(BuildingKind.self, from: data)
+    }
+}
+
+/// Migration #10: v10 → v11. v11 carriers may carry a
+/// `deliverToConsumer` mission (visible-distribution milestone 1),
+/// which a v10 build cannot decode, so the version moves on and an
+/// older build refuses the save cleanly. A v10 payload is already valid
+/// v11: no carrier in it can hold the new mission.
+public struct MigrationV10ToV11: Migration {
+    public let fromVersion = 10
+    public let toVersion = 11
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 11
+        return root
     }
 }
