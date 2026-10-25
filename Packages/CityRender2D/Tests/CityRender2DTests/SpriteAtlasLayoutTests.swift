@@ -244,7 +244,7 @@ func nightLightsAreCommitted() throws {
     let workshops = Set(lights.map { String($0[..<$0.range(of: "-lights-")!.lowerBound]) }.filter { !$0.hasPrefix("building-house") })
     #expect(workshops == [
         "building-bakery", "building-brewery", "building-charcoal-burner", "building-power-plant", "building-quern-house",
-        "building-roastery", "building-toolsmith", "building-windmill", "building-winery"
+        "building-roastery", "building-toolsmith", "building-weaver", "building-windmill", "building-winery"
     ])
     for dark in ["building-smelter", "building-steam-engine", "building-sawmill"] {
         #expect(!files.contains { $0.hasPrefix("\(dark)-lights") }, "\(dark) has no visible window")

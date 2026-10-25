@@ -10,6 +10,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
     case mining
     case metallurgy
     case seafaring
+    case weaving
     case cultivation
     case feudalOrder = "feudal-order"
     case printingPress = "printing-press"
@@ -23,6 +24,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: "Mining"
         case .metallurgy: "Metallurgy"
         case .seafaring: "Seafaring"
+        case .weaving: "Weaving"
         case .cultivation: "Cultivation"
         case .feudalOrder: "Feudal Order"
         case .printingPress: "Printing Press"
@@ -38,6 +40,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: 720
         case .metallurgy: 1440
         case .seafaring: 60
+        case .weaving: 720
         case .cultivation: 900
         case .feudalOrder: 150
         case .printingPress: 4500
@@ -53,6 +56,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: []
         case .metallurgy: [.mining]
         case .seafaring: []
+        case .weaving: []
         case .cultivation: []
         case .feudalOrder: []
         case .printingPress: [.feudalOrder]
@@ -68,6 +72,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: [.mine, .charcoalBurner]
         case .metallurgy: [.smelter, .toolsmith]
         case .seafaring: [.port, .shipyard]
+        case .weaving: [.sheepFarm, .weaver]
         case .cultivation: [.hopGarden, .brewery, .vineyard, .winery, .teaGarden, .teaHouse, .coffeeGrove, .roastery]
         case .feudalOrder: [.guildHall]
         case .printingPress: [.gallery]
@@ -83,6 +88,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: .medieval
         case .metallurgy: .medieval
         case .seafaring: .medieval
+        case .weaving: .medieval
         case .cultivation: .medieval
         case .feudalOrder: .antiquity
         case .printingPress: .medieval
@@ -98,6 +104,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: nil
         case .metallurgy: nil
         case .seafaring: nil
+        case .weaving: nil
         case .cultivation: nil
         case .feudalOrder: .medieval
         case .printingPress: .renaissance
@@ -113,6 +120,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: nil
         case .metallurgy: nil
         case .seafaring: nil
+        case .weaving: nil
         case .cultivation: nil
         case .feudalOrder: (.citizens, 20)
         case .printingPress: (.merchants, 20)

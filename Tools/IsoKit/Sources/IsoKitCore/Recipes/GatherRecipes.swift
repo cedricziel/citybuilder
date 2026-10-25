@@ -32,6 +32,9 @@ extension Recipes {
         },
         Recipe(id: "building-coffee-grove", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in
             coffeeGrove(kit)
+        },
+        Recipe(id: "building-sheep-farm", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
+            sheepFarm(kit)
         }
     ]
 

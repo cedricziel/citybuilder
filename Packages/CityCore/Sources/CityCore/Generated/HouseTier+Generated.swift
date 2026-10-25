@@ -21,7 +21,7 @@ public enum HouseTier: UInt8, CaseIterable, Codable, Sendable {
         switch self {
         case .peasants: [.food]
         case .citizens: [.food, .planks]
-        case .merchants: [.food, .planks, .bread, .tools]
+        case .merchants: [.food, .planks, .bread, .tools, .cloth]
         }
     }
 

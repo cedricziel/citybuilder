@@ -23,6 +23,9 @@ items:
   - { kind: Good, id: charcoal, name: Charcoal, unit: baskets, basePrice: 5,  market: { sell: 20 } }
   - { kind: Good, id: iron,     name: Iron,     unit: bars,    basePrice: 14, market: { sell: 20 } }
   - { kind: Good, id: tools,    name: Tools,    unit: sets,    basePrice: 30, market: { sell: 20 } }
+  - { kind: Good, id: wool,     name: Wool,     unit: fleeces, basePrice: 3,  market: { sell: 20 } }
+  # neededBy: merchants want cloth after tools, before their culture's luxury.
+  - { kind: Good, id: cloth,    name: Cloth,    unit: bolts,   basePrice: 14, market: { sell: 20 }, neededBy: [merchants] }
 
   # --- House tiers ---------------------------------------------------
   # Spec: population-and-needs / Houses have a population tier.
@@ -200,6 +203,28 @@ items:
     unlockedBy: metallurgy
     recipe: { inputs: { iron: 1, planks: 1 }, outputs: { tools: 1 }, cycleTicks: 60 }
 
+  # Wool chain. Spec: goods-and-production / Wool and cloth chain
+  - kind: Building
+    id: sheep-farm
+    <<: *workshop
+    category: gather
+    cost: 60
+    buildTicks: 25
+    materials: { wood: 2 }
+    unlockedBy: weaving
+    recipe: { outputs: { wool: 1 }, cycleTicks: 40 }
+
+  - kind: Building
+    id: weaver
+    <<: *workshop
+    category: craft
+    cost: 120
+    upkeep: 1
+    buildTicks: 30
+    materials: { wood: 3, planks: 3 }
+    unlockedBy: weaving
+    recipe: { inputs: { wool: 2 }, outputs: { cloth: 1 }, cycleTicks: 50 }
+
   # Produces knowledge. Spec: research
   - kind: Building
     id: library
@@ -261,6 +286,7 @@ items:
   - { kind: Tech, id: mining,      cost: 720, age: medieval }
   - { kind: Tech, id: metallurgy,  cost: 1440, age: medieval, prerequisites: [mining] }
   - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
+  - { kind: Tech, id: weaving,     cost: 720, age: medieval }
   # Unlocks every culture's luxury chain. Spec: culture-content /
   # Cultivation unlocks the luxury chain
   - { kind: Tech, id: cultivation, cost: 900, age: medieval }
