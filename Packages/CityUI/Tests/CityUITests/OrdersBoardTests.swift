@@ -10,9 +10,9 @@ import Testing
 
 // MARK: - Fixtures
 
-private let spring1203Deadline: UInt64 = 3 * CalendarState.ticksPerYear + CalendarState.ticksPerSeason
+let spring1203Deadline: UInt64 = 3 * CalendarState.ticksPerYear + CalendarState.ticksPerSeason
 
-private func order(
+func order(
     _ id: OrderID, issuer: OrderIssuer = .crown, good: Good = .planks, quantity: Int = 54, reward: Int64 = 540,
     state: OrderState = .offered, delivered: Int = 0, deadline: UInt64 = spring1203Deadline,
     template: OrderTemplate = .crownTimber, offerEnds: UInt64 = 10 * CalendarState.ticksPerSeason
@@ -25,7 +25,7 @@ private func order(
 
 /// A single-island Normal game with the given orders on the board.
 @MainActor
-private func boardSession(_ orders: [Order], change: (inout World) -> Void = { _ in }) -> GameSession {
+func boardSession(_ orders: [Order], change: (inout World) -> Void = { _ in }) -> GameSession {
     var world = World.newGame()
     world.orders.orders = orders
     world.orders.nextOrderRaw = (orders.map(\.id).max() ?? 0) + 1
@@ -43,7 +43,7 @@ private extension World {
     }
 }
 
-private func centerID(_ world: World) -> EntityID {
+func centerID(_ world: World) -> EntityID {
     world.goodsBuffers(of: .player).first { $0.kind == .townCenter }?.id ?? EntityID(raw: 0)
 }
 
@@ -309,158 +309,4 @@ func scenarioAMissedOrderRaisesABanner() throws {
         .orderAccepted(order: 7)
     ])
     #expect(session.banner == nil)
-}
-
-// MARK: - Layout
-
-private struct SizeClass {
-    let name: String
-    let size: CGSize
-    let idiom: HUDIdiom
-
-    init(_ name: String, _ size: CGSize, _ idiom: HUDIdiom) {
-        self.name = name
-        self.size = size
-        self.idiom = idiom
-    }
-}
-
-private let sizes = [
-    SizeClass("phone landscape", CGSize(width: 844, height: 390), .phone),
-    SizeClass("phone portrait", CGSize(width: 390, height: 844), .phone),
-    SizeClass("pad landscape", CGSize(width: 1180, height: 820), .pad),
-    SizeClass("pad portrait", CGSize(width: 820, height: 1180), .pad),
-    SizeClass("mac", CGSize(width: 1280, height: 800), .mac),
-    SizeClass("slide over", CGSize(width: 320, height: 800), .pad),
-    SizeClass("tv", CGSize(width: 1920, height: 1080), .tv)
-]
-
-@Test("scenario: board stays clear of the minimap and the build rail")
-func scenarioBoardStaysClearOfTheMinimapAndTheBuildRail() {
-    for sizeClass in sizes {
-        let (name, size, idiom) = (sizeClass.name, sizeClass.size, sizeClass.idiom)
-        let layout = HUDLayout.make(size: size, idiom: idiom)
-        let insets = EdgeInsets(top: idiom == .phone ? 0 : 20, leading: 0, bottom: idiom.isTouch ? 20 : 0, trailing: 0)
-        let safe = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-        for showsMinimap in [true, false] {
-            for showsFirstSteps in [true, false] {
-                guard let board = OrderBoardLayout.frame(
-                    in: size, insets: insets, layout: layout, showsMinimap: showsMinimap && idiom != .tv,
-                    showsFirstSteps: showsFirstSteps
-                )
-                else {
-                    continue
-                }
-                #expect(safe.contains(board), "\(name): inside the screen")
-                #expect(board.width == OrderBoardLayout.width(for: layout.idiom), "\(name)")
-                let top = InspectorCalloutLayout.topBarBottom(topInset: insets.top, layout: layout)
-                #expect(board.minY >= top, "\(name): below the top bar")
-                if showsMinimap, idiom != .tv {
-                    let minimap = MinimapLayout.frame(in: size, insets: insets, layout: layout)
-                    #expect(!board.intersects(minimap), "\(name): minimap")
-                }
-                let railWidth = layout.railInset + layout.margin
-                #expect(board.minX >= railWidth, "\(name): build rail")
-                if layout.placement == .bottomDock {
-                    #expect(board.maxY <= size.height - insets.bottom - layout.margin - 74, "\(name): dock")
-                } else {
-                    #expect(
-                        board.maxY <= size.height - insets.bottom - layout.margin - OrderBoardLayout.toolStripBand
-                            || showsMinimap,
-                        "\(name): tool strip"
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Test("scenario: minimap at the top right pushes the board down")
-func scenarioMinimapAtTheTopRightPushesTheBoardDown() throws {
-    let size = CGSize(width: 820, height: 1180)
-    let layout = HUDLayout.make(size: size, idiom: .pad)
-    #expect(layout.placement == .bottomDock)
-    let insets = EdgeInsets()
-    let minimap = MinimapLayout.frame(in: size, insets: insets, layout: layout)
-    let board = try #require(OrderBoardLayout.frame(in: size, insets: insets, layout: layout, showsMinimap: true, showsFirstSteps: false))
-    #expect(board.minY == minimap.maxY + MinimapLayout.gap)
-    let noMap = try #require(OrderBoardLayout.frame(in: size, insets: insets, layout: layout, showsMinimap: false, showsFirstSteps: false))
-    #expect(noMap.minY < board.minY)
-}
-
-@Test("scenario: opening the board collapses the first-steps card")
-func scenarioOpeningTheBoardCollapsesTheFirstStepsCard() {
-    let layout = HUDLayout.make(size: CGSize(width: 1280, height: 800), idiom: .mac)
-    #expect(!layout.collapsesFirstSteps)
-    let collapsed = layout.withFirstStepsCollapsed
-    #expect(collapsed.collapsesFirstSteps)
-    #expect(collapsed.placement == layout.placement && collapsed.idiom == layout.idiom)
-}
-
-@Test("scenario: inspector and board coexist in regular widths")
-func scenarioInspectorAndBoardCoexistInRegularWidths() {
-    let size = CGSize(width: 1180, height: 820)
-    let layout = HUDLayout.make(size: size, idiom: .pad)
-    let insets = EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0)
-    #expect(!OrderBoardLayout.replacesInspector(layout: layout))
-    let with = InspectorCalloutLayout.freeArea(
-        size: size, insets: insets, layout: layout, showsMinimap: true, showsOrdersBoard: true
-    )
-    let without = InspectorCalloutLayout.freeArea(size: size, insets: insets, layout: layout, showsMinimap: true)
-    let board = OrderBoardLayout.frame(in: size, insets: insets, layout: layout, showsMinimap: true, showsFirstSteps: false)
-    #expect(with.maxX <= (board?.minX ?? 0) - MinimapLayout.gap)
-    #expect(with.maxX < without.maxX)
-    #expect(with.minX == without.minX)
-}
-
-@MainActor
-@Test("scenario: one replaces the other in a compact width")
-func scenarioOneReplacesTheOtherInACompactWidth() {
-    let layout = HUDLayout.make(size: CGSize(width: 844, height: 390), idiom: .phone)
-    #expect(OrderBoardLayout.replacesInspector(layout: layout))
-    let session = boardSession([order(1)])
-    session.ordersReplaceInspector = true
-    session.toggleOrdersBoard()
-    session.selectedTile = TileCoordinate(x: 3, y: 3)
-    session.handleTap(at: TileCoordinate(x: 4, y: 4))
-    #expect(!session.isOrdersPresented)
-    #expect(session.selectedTile == TileCoordinate(x: 4, y: 4))
-    session.toggleOrdersBoard()
-    #expect(session.isOrdersPresented)
-    #expect(session.selectedTile == nil)
-    let regular = boardSession([order(1)])
-    regular.selectedTile = TileCoordinate(x: 3, y: 3)
-    regular.toggleOrdersBoard()
-    #expect(regular.isOrdersPresented && regular.selectedTile == TileCoordinate(x: 3, y: 3))
-}
-
-@Test("scenario: board is a sheet on a phone in portrait")
-func scenarioBoardIsASheetOnAPhoneInPortrait() {
-    let portrait = HUDLayout.make(size: CGSize(width: 390, height: 844), idiom: .phone)
-    #expect(OrderBoardLayout.presentation(for: portrait) == .sheet)
-    #expect(OrderBoardLayout.frame(
-        in: CGSize(width: 390, height: 844),
-        insets: EdgeInsets(),
-        layout: portrait,
-        showsMinimap: false,
-        showsFirstSteps: false
-    ) == nil)
-    let landscape = HUDLayout.make(size: CGSize(width: 844, height: 390), idiom: .phone)
-    #expect(OrderBoardLayout.presentation(for: landscape) == .column)
-    let tv = HUDLayout.make(size: CGSize(width: 1920, height: 1080), idiom: .tv)
-    #expect(OrderBoardLayout.presentation(for: tv) == .column)
-    #expect(OrderBoardLayout.width(for: .tv) == 520 && OrderBoardLayout.width(for: .phone) == 300)
-    #expect(OrderBoardLayout.width(for: .pad) == 340 && OrderBoardLayout.width(for: .mac) == 340)
-}
-
-@Test func theColumnFitsWhereThereIsRoom() {
-    for sizeClass in sizes {
-        let (name, size, idiom) = (sizeClass.name, sizeClass.size, sizeClass.idiom)
-        guard OrderBoardLayout.presentation(for: HUDLayout.make(size: size, idiom: idiom)) == .column else { continue }
-        let layout = HUDLayout.make(size: size, idiom: idiom)
-        let frame = OrderBoardLayout.frame(
-            in: size, insets: EdgeInsets(), layout: layout, showsMinimap: idiom != .tv, showsFirstSteps: true
-        )
-        #expect(frame != nil || size.height < 500, "\(name)")
-    }
 }

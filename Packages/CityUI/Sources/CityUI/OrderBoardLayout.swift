@@ -29,6 +29,15 @@ public enum OrderBoardLayout {
         layout.placement == .bottomDock && (layout.isPhone || layout.isCompactWidth) ? .sheet : .column
     }
 
+    /// What the board shows as: the column when its frame fits, else the
+    /// sheet, so the chip always opens something.
+    public static func presentation(
+        in size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool
+    ) -> Presentation {
+        frame(in: size, insets: insets, layout: layout, showsMinimap: showsMinimap, showsFirstSteps: showsFirstSteps) == nil
+            ? .sheet : .column
+    }
+
     /// One replaces the other where the callout, the board and the rail
     /// cannot fit together.
     public static func replacesInspector(layout: HUDLayout) -> Bool {

@@ -95,7 +95,7 @@ public enum InspectorCalloutLayout {
         }
         if showsFirstSteps {
             if layout.collapsesFirstSteps {
-                top = max(top, rightColumnTop + FirstStepsCardView.capsuleHeight + MinimapLayout.gap)
+                top = max(top, rightColumnTop + layout.focusableHeight(FirstStepsCardView.capsuleHeight) + MinimapLayout.gap)
             } else {
                 right = min(right, size.width - insets.trailing - margin - FirstStepsCardView.width - MinimapLayout.gap)
             }
@@ -159,7 +159,10 @@ struct InspectorCalloutView<Actions: View>: View {
             let bounds = InspectorCalloutLayout.freeArea(
                 size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
                 showsFirstSteps: session.firstStepsGuide != nil,
-                showsOrdersBoard: session.isOrdersPresented && OrderBoardLayout.presentation(for: layout) == .column
+                showsOrdersBoard: session.isOrdersPresented && OrderBoardLayout.presentation(
+                    in: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
+                    showsFirstSteps: session.firstStepsGuide != nil
+                ) == .column
             )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,

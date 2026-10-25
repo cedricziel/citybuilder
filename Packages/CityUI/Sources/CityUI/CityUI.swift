@@ -70,7 +70,17 @@ public struct CityRootView: View {
                     .onChange(of: layout, initial: true) {
                         session.ordersReplaceInspector = OrderBoardLayout.replacesInspector(layout: layout)
                     }
-                    .ordersSheet(session: session, layout: layout)
+                    .ordersSheet(
+                        session: session,
+                        presentation: OrderBoardLayout.presentation(
+                            in: CGSize(
+                                width: proxy.size.width + insets.leading + insets.trailing,
+                                height: proxy.size.height + insets.top + insets.bottom
+                            ),
+                            insets: insets, layout: layout, showsMinimap: showsCornerMinimap,
+                            showsFirstSteps: session.firstStepsGuide != nil
+                        )
+                    )
                     #if os(tvOS)
                     .modifier(TVHUDCommands(root: self))
                     #endif

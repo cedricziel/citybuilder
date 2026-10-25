@@ -82,7 +82,7 @@ struct FavourPillsView: View {
     let rows: [OrdersBoardModel.FavourRow]
 
     var body: some View {
-        HStack(spacing: 6) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
             ForEach(rows) { row in
                 HStack(spacing: 5) {
                     Circle().fill(Color(hex: row.colourHex)).frame(width: 9, height: 9)
@@ -234,9 +234,9 @@ extension CityRootView {
 extension View {
     /// The board as a sheet where it has no column. Spec: `platform-shells`
     /// / Order board layout.
-    func ordersSheet(session: GameSession, layout: HUDLayout) -> some View {
+    func ordersSheet(session: GameSession, presentation: OrderBoardLayout.Presentation) -> some View {
         sheet(isPresented: Binding(
-            get: { session.isOrdersPresented && OrderBoardLayout.presentation(for: layout) == .sheet },
+            get: { session.isOrdersPresented && presentation == .sheet },
             set: { if !$0 { session.isOrdersPresented = false } }
         )) {
             OrdersBoardSheet(session: session).hudSheetDetents()
