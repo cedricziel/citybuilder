@@ -29,7 +29,7 @@ The sheep farm SHALL be a gather building and the weaver a craft building, both 
 #### Scenario: Wool chain building specs are catalogued
 
 - **WHEN** the catalog is read for the sheep farm and the weaver
-- **THEN** each has a 2×2 footprint, the sheep farm costs 70 with 3 wood of materials, and the weaver costs 130 with 3 wood and 3 planks of materials
+- **THEN** each has a 2×2 footprint, the sheep farm costs 60 with 2 wood of materials, and the weaver costs 120 with 3 wood and 3 planks of materials
 
 #### Scenario: Cloth reaches a warehouse
 

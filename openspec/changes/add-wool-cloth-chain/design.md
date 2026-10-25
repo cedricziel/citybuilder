@@ -22,13 +22,13 @@ Merchants need food, planks, bread, tools and their culture's luxury. The bread 
 
 The sheep farm yields 1 wool per 40 ticks, the weaver turns 2 wool into 1 cloth per 50. These are the hop garden's and the brewery's cycles. A merchant house of 8 eats 1 cloth per 100 ticks, so one weaver (1 cloth per 50 ticks) feeds two full merchant houses and needs 2.5 sheep farms to run flat out. The bot builds 2 sheep farms per weaver, as it builds 2 gardens per brewery.
 
-Costs: the sheep farm costs 70 and 3 wood, a little above the farm (60, 2 wood) because it carries a flock; the weaver costs 130 with 3 wood and 3 planks and upkeep 1, a little above the brewery's 120 for the loom. Wool sells for 3 and cloth for 14, so the weaver's two wool (6) become a good worth more than the sum.
+Costs copy the luxury chain too: the sheep farm costs 60 and 2 wood like a hop garden, the weaver 120 with 3 wood, 3 planks and upkeep 1 like a brewery. Wool sells for 3 and cloth for 14, so the weaver's two wool (6) become a good worth more than the sum. The first version cost 70 and 130; the pacing sweep put a few marginal towns into bankruptcy, and the luxury chain's prices are the ones the economy is already tuned around.
 
 Alternative: 1 wool → 1 cloth. Rejected: it makes the weaver a pass-through with no reason to be a separate building, and one sheep farm would feed one weaver.
 
 ### D2. A tech gates the chain, not an age
 
-`weaving` is a medieval tech costing 700 (the cost of cultivation). Merchants need cloth, so a town that has bread and tools must also research Weaving before its houses can become merchants. That adds one research beat to the mid-game without a new age.
+`weaving` is a medieval tech costing 560 (the cost of milling and mining; cultivation costs 700, metallurgy 1,120). Merchants need cloth, so a town that has bread and tools must also research Weaving before its houses can become merchants. That adds one research beat to the mid-game without a new age.
 
 Alternative: available from the start. Rejected: a cheap, early chain slows nothing; the point of the pacing work is another step before the Renaissance's 20 merchants.
 Alternative: unlocked by `milling`. Rejected: it would not add a decision, and it ties a textile chain to flour.
@@ -53,7 +53,7 @@ The change adds goods, buildings and a tech to the generated catalogs. `Good.all
 
 - [Merchants take longer, so towns pay less tax for longer] → The sweeps measure merchants at year 10, the Renaissance year and bankruptcies against `main`; the weaver's cost is tuned in D1 if they regress.
 - [The sheep farm's flock art draws ambient sheep, which the graze planner also places at farms] → The grazing planner reads the farm kinds from the catalog; the sheep farm keeps its drawn fold and gets no extra ambient sheep.
-- [Existing saves with merchant houses decline until a weaver exists] → Declared BREAKING in the proposal; the tier decline takes 120 ticks per tier, and the Weaving tech costs 700.
+- [Existing saves with merchant houses decline until a weaver exists] → Declared BREAKING in the proposal; the tier decline takes 120 ticks per tier, and the Weaving tech costs 560.
 - [A second pack format change lands in parallel (`storagePerGood`)] → The new goods and buildings use only fields both formats accept.
 
 ## Evidence

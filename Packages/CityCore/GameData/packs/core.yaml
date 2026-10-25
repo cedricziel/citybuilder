@@ -210,9 +210,9 @@ items:
     id: sheep-farm
     <<: *workshop
     category: gather
-    cost: 70
+    cost: 60
     buildTicks: 25
-    materials: { wood: 3 }
+    materials: { wood: 2 }
     unlockedBy: weaving
     recipe: { outputs: { wool: 1 }, cycleTicks: 40 }
 
@@ -220,7 +220,7 @@ items:
     id: weaver
     <<: *workshop
     category: craft
-    cost: 130
+    cost: 120
     upkeep: 1
     buildTicks: 30
     materials: { wood: 3, planks: 3 }
@@ -288,7 +288,7 @@ items:
   - { kind: Tech, id: mining,      cost: 560, age: medieval }
   - { kind: Tech, id: metallurgy,  cost: 1120, age: medieval, prerequisites: [mining] }
   - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
-  - { kind: Tech, id: weaving,     cost: 700, age: medieval }
+  - { kind: Tech, id: weaving,     cost: 560, age: medieval }
   # Unlocks every culture's luxury chain. Spec: culture-content /
   # Cultivation unlocks the luxury chain
   - { kind: Tech, id: cultivation, cost: 700, age: medieval }

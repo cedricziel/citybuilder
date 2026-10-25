@@ -40,7 +40,7 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
         case .mining: 560
         case .metallurgy: 1120
         case .seafaring: 60
-        case .weaving: 700
+        case .weaving: 560
         case .cultivation: 700
         case .feudalOrder: 150
         case .printingPress: 3500
