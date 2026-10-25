@@ -248,3 +248,69 @@ func aLongHopWithTooLittleReadyWalksOneUnitWithoutWaiting() throws {
     #expect(mission == .deliverToConsumer(good: .grain, amount: 1, fromProducer: farm, toConsumer: windmill))
     #expect(vehicle == nil)
 }
+
+/// A real per-good warehouse holding `wood`, in place of the fixture's
+/// shared one.
+private func store(_ id: EntityID, wood: Int, in world: inout World) {
+    var pile = World.newStockpile(for: .warehouse) ?? Stockpile(capacity: 0)
+    pile.deposit(.wood, amount: wood)
+    world.stockpiles[id] = pile
+}
+
+private let warehouseLimit = BuildingKind.warehouse.storagePerGood ?? 0
+
+@Test("a long haul passes a store with room for a unit or two for one that takes a cart load")
+func aLongHaulPassesAStoreWithRoomForAUnitOrTwoForOneThatTakesACartLoad() throws {
+    var world = roadStrip()
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 8])
+    let near = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    let far = inject(.warehouse, in: &world, at: TileCoordinate(x: 20, y: 0))
+    store(near, wood: warehouseLimit - 1, in: &world)
+    store(far, wood: 0, in: &world)
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first)
+    #expect(mission == .deliver(good: .wood, amount: 4, fromProducer: hut, toWarehouse: far))
+    #expect(vehicle == .handcart)
+}
+
+@Test("a cart that can only partly unload takes the rest to a store with room for all of it")
+func aCartThatCanOnlyPartlyUnloadTakesTheRestToAStoreWithRoomForAllOfIt() {
+    var world = roadStrip()
+    _ = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 4])
+    let first = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    let small = inject(.warehouse, in: &world, at: TileCoordinate(x: 17, y: 0))
+    let big = inject(.warehouse, in: &world, at: TileCoordinate(x: 24, y: 0))
+    for id in [first, small, big] {
+        store(id, wood: 0, in: &world)
+    }
+    world.tick()
+    // The cart set out for the first store with 4; it fills meanwhile, and
+    // the next store along has room for only 2 of the 3 left.
+    store(first, wood: warehouseLimit - 1, in: &world)
+    store(small, wood: warehouseLimit - 2, in: &world)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[first]?.quantity(of: .wood) == warehouseLimit)
+    #expect(world.stockpiles[small]?.quantity(of: .wood) == warehouseLimit - 2)
+    #expect(world.stockpiles[big]?.quantity(of: .wood) == 3)
+}
+
+@Test("a rival's hauls follow the rival's own age")
+func aRivalsHaulsFollowTheRivalsOwnAge() throws {
+    func rivalHaul(in rivalAge: Age) throws -> Vehicle? {
+        var world = roadStrip()
+        world.testSeatRival()
+        world.setRival(1) { $0.age = rivalAge }
+        let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 4])
+        let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
+        world.buildings[hut]?.owner = .rival(1)
+        world.buildings[warehouse]?.owner = .rival(1)
+        world.tick()
+        return try #require(departures(in: world).first).1
+    }
+    // The player's world is medieval either way; only the rival's age counts.
+    #expect(try rivalHaul(in: .antiquity) == nil)
+    #expect(try rivalHaul(in: .medieval) == .handcart)
+}

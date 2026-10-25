@@ -308,12 +308,23 @@ extension World {
         if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
             return wait()
         }
-        guard let (warehouseId, path) = findRoadConnectedBuffer(
+        guard var (warehouseId, path) = findRoadConnectedBuffer(
             fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:)
         )
         else { return nil }
-        let pile = stockpiles[warehouseId] ?? Stockpile(capacity: 0)
-        let ready = min(held, pile.room(for: good) - candidates.inbound.pending(of: good, to: warehouseId, in: pile))
+        func room(at store: EntityID) -> Int {
+            let pile = stockpiles[store] ?? Stockpile(capacity: 0)
+            return pile.room(for: good) - candidates.inbound.pending(of: good, to: store, in: pile)
+        }
+        // A long haul prefers the nearest store that takes a cart load over
+        // a nearer one with room for only a unit or two.
+        let minLoad = CarrierConfig.haulMinLoad
+        if vehicle != nil, CarrierConfig.isLong(path), room(at: warehouseId) < minLoad, let roomier = findRoadConnectedBuffer(
+            fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:), room: minLoad
+        ) {
+            (warehouseId, path) = roomier
+        }
+        let ready = min(held, room(at: warehouseId))
         func deliver(_ amount: Int) -> Carrier.Mission {
             .deliver(good: good, amount: amount, fromProducer: producer.id, toWarehouse: warehouseId)
         }
@@ -436,12 +447,14 @@ extension World {
     /// reachable. Equal-length paths resolve to the lowest entity ID.
     /// `buffers` are the operational goods buffers in entity order, when
     /// the caller has already listed them. A buffer qualifies only with
-    /// room for `good` beyond the units `inbound` says are on their way.
+    /// room for at least `needed` units of `good` beyond those `inbound`
+    /// says are on their way.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good,
         among buffers: [Building]? = nil,
-        inbound: (Good, EntityID) -> Int = { _, _ in 0 }
+        inbound: (Good, EntityID) -> Int = { _, _ in 0 },
+        room needed: Int = 1
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
@@ -451,7 +464,7 @@ extension World {
                 footprint: BuildingCatalog.spec(for: building.kind).footprint
             )
             else { continue }
-            guard let stock = stockpiles[id], stock.room(for: good) > inbound(good, id) else { continue }
+            guard let stock = stockpiles[id], stock.room(for: good) - inbound(good, id) >= needed else { continue }
             guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {
