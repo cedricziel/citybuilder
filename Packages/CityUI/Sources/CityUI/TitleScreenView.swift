@@ -55,7 +55,7 @@ public struct TitleScreenView: View {
             NewGameDialogView(
                 viewModel: NewGameDialogViewModel(),
                 onStart: { world in
-                    viewModel.commit(world: world)
+                    viewModel.commit(world: world, isNewGame: true)
                 },
                 onCancel: {
                     viewModel.presentingNewGameDialog = false

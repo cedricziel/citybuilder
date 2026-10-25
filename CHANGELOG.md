@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.6](https://github.com/cedricziel/citybuilder/compare/v0.2.5...v0.2.6) (2026-10-25)
+
+
+### Features
+
+* **gamedata:** add the wool → cloth chain with cloth as a merchant need ([e23c324](https://github.com/cedricziel/citybuilder/commit/e23c3245bffe541d6b55379b2cbcbca12ace71b6))
+* **playtest:** AI playtester personas and UI auditor for the simulator ([12c2110](https://github.com/cedricziel/citybuilder/commit/12c211059682116f205f2ee3e6d03fed30ca04e6))
+* **ui:** start zoomed out on a phone and name what is wrong, closes part of [#280](https://github.com/cedricziel/citybuilder/issues/280) ([cf79045](https://github.com/cedricziel/citybuilder/commit/cf7904557bc7613ff5949dae70f0bdd5955aacf3))
+* **web:** add the phone date chip and season icons to design/web ([b261d90](https://github.com/cedricziel/citybuilder/commit/b261d909c260558ab54d45b02d22219bc29c81d2)), closes [#280](https://github.com/cedricziel/citybuilder/issues/280)
+
+
+### Bug Fixes
+
+* **audio:** convert one-shots to one pool format ([cb39cad](https://github.com/cedricziel/citybuilder/commit/cb39cad73818050d4094062c4c0263c5e53a2af8)), closes [#264](https://github.com/cedricziel/citybuilder/issues/264)
+* **audio:** limit repeats per cue, not per file or queue length ([2b8bcfe](https://github.com/cedricziel/citybuilder/commit/2b8bcfe5da89c310726433367ded0e61e2311967)), closes [#264](https://github.com/cedricziel/citybuilder/issues/264)
+* **audio:** make voice start and stop idempotent ([57dc70c](https://github.com/cedricziel/citybuilder/commit/57dc70c8b99454514fd5d07d159cdfbd26a2de4b)), closes [#264](https://github.com/cedricziel/citybuilder/issues/264)
+* **audio:** reject a one-shot that doesn't read whole ([c2de5ba](https://github.com/cedricziel/citybuilder/commit/c2de5ba06717797b5a47d31ee175e215fb050260)), closes [#264](https://github.com/cedricziel/citybuilder/issues/264)
+* **audio:** stop a burst of one-shots from stuttering ([a3e4736](https://github.com/cedricziel/citybuilder/commit/a3e473601cb26274682a267fc16d4e8e1d21e494))
+* **audio:** stop a burst of one-shots from stuttering ([43765cb](https://github.com/cedricziel/citybuilder/commit/43765cb796a78f4c2cfa7ebcf7efbec5b5040b72)), closes [#264](https://github.com/cedricziel/citybuilder/issues/264)
+* **ui:** cap Dynamic Type on HUD chrome and fix the phone HUD's small faults ([471c277](https://github.com/cedricziel/citybuilder/commit/471c2770976ae9448cc54acb719ce32ae342f491)), closes [#280](https://github.com/cedricziel/citybuilder/issues/280)
+* **ui:** cap the session banner's text size with the rest of the HUD chrome ([3d600c6](https://github.com/cedricziel/citybuilder/commit/3d600c684e9db0341c1d69da070042fc4a5e1c82)), closes [#280](https://github.com/cedricziel/citybuilder/issues/280)
+* **ui:** polish the first hour on iPhone ([f6e2fdf](https://github.com/cedricziel/citybuilder/commit/f6e2fdf2937473826cb0a07caef50f133798aa53))
+* **ui:** review fixes for the first-hour PR ([a1579aa](https://github.com/cedricziel/citybuilder/commit/a1579aaa1a0710897bb5a26e5ab008a051698ab7)), closes [#280](https://github.com/cedricziel/citybuilder/issues/280)
+
 ## [0.2.5](https://github.com/cedricziel/citybuilder/compare/v0.2.4...v0.2.5) (2026-10-25)
 
 

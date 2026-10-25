@@ -87,7 +87,7 @@ public final class AudioCoordinator: @unchecked Sendable {
             }
 
             let position = resolvePosition(for: event)
-            let dispatched = DispatchedCue(cue: cue, position: position, entity: event.primaryEntityID)
+            let dispatched = DispatchedCue(cue: cue, position: position, entity: event.primaryEntityID, event: key)
 
             if cue.loop == true, let entityId = event.primaryEntityID {
                 // Idempotent loop start — second dispatch for the same

@@ -59,7 +59,8 @@ public enum RivalMarket {
     /// Stock a rival buys the `boughtGoods` up to.
     public static let buyTarget = 20
     /// Goods a rival buys; bread and tools are what its houses need to
-    /// become merchants.
+    /// become merchants. Cloth is not among them: no rival has the wool
+    /// chain, so its houses are never held to cloth (`World.bindingNeeds`).
     public static let boughtGoods: Set<Good> = [.wood, .planks, .food, .bread, .tools]
 
     /// Units of `good` on sale: the stock above the reserve.

@@ -17,9 +17,13 @@ final class PlayerVoice: LoopVoice {
     private let loops: Bool
     /// The node's volume as last set.
     private var level: Float = 1
-    /// Bumped on every start and stop; a re-schedule from an older
-    /// generation is stale and does nothing.
-    private var generation = 0
+    /// A voice starts once and stops once; a stopped voice's node is gone (#264).
+    /// A re-schedule or fade-in from before the stop does nothing.
+    private var phase = Phase.idle
+
+    private enum Phase {
+        case idle, playing, stopped
+    }
 
     init(node: AVAudioPlayerNode, file: AVAudioFile, engine: AudioEngine, volume: Float, loops: Bool = true) {
         self.node = node
@@ -38,23 +42,25 @@ final class PlayerVoice: LoopVoice {
     }
 
     func start(fade: Double) {
-        generation += 1
+        guard phase == .idle else { return }
+        phase = .playing
         setLevel(fade > 0 ? 0 : volume)
         if loops {
             // Two copies queued, one more each time one finishes: the next
             // copy is always waiting, so there's no gap at the wrap.
-            schedule(generation: generation)
-            schedule(generation: generation)
+            schedule()
+            schedule()
         } else {
             engine.nodes.schedule(file, on: node)
         }
         engine.nodes.play(node)
-        ramp(to: volume, over: fade, generation: generation) {}
+        ramp(to: volume, over: fade) {}
     }
 
     func stop(fade: Double) {
-        generation += 1
-        ramp(to: 0, over: fade, generation: generation) { [self] in
+        guard phase != .stopped else { return }
+        phase = .stopped
+        ramp(to: 0, over: fade) { [self] in
             engine.nodes.stopAndDetach(node, from: engine.underlyingEngine)
         }
     }
@@ -67,11 +73,11 @@ final class PlayerVoice: LoopVoice {
     /// Queues the file again each time it finishes playing, while this
     /// generation is current. `.dataPlayedBack` fires when the buffer has
     /// actually played, not when it was read in.
-    private func schedule(generation scheduled: Int) {
+    private func schedule() {
         engine.nodes.schedule(file, on: node) { [weak self] in
             Task { @MainActor in
-                guard let self, self.generation == scheduled else { return }
-                self.schedule(generation: scheduled)
+                guard let self, self.phase == .playing else { return }
+                self.schedule()
             }
         }
     }
@@ -79,10 +85,10 @@ final class PlayerVoice: LoopVoice {
     private func ramp(
         to target: Float,
         over seconds: Double,
-        generation ramping: Int,
         then finish: @escaping @MainActor () -> Void
     ) {
         let start = level
+        let ramping = phase
         let steps = max(1, Int((seconds * Self.stepsPerSecond).rounded()))
         let step = seconds / Double(steps)
         // The fade holds the voice: a stopped voice is already gone from its owner, and its node
@@ -90,8 +96,8 @@ final class PlayerVoice: LoopVoice {
         Task { @MainActor in
             for index in 1 ... steps {
                 if step > 0 { try? await Task.sleep(for: .seconds(step)) }
-                // A newer start or stop owns the volume now; a stop still finishes.
-                if self.generation != ramping {
+                // A stop owns the volume now; a stop's own fade always finishes.
+                if self.phase != ramping {
                     if target == 0 { finish() }
                     return
                 }

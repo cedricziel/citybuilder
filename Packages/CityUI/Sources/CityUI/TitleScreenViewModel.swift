@@ -218,10 +218,11 @@ public final class TitleScreenViewModel {
         committedSession?.applyTestTool(fromArguments: arguments)
     }
 
-    public func commit(world: World) {
+    public func commit(world: World, isNewGame: Bool = false) {
         // End the old game before the factory starts the new one's sounds.
         committedSession?.end()
         let session = sessionFactory(world)
+        session.offersPinchHint = isNewGame
         presentingNewGameDialog = false
         committedSession = session
     }

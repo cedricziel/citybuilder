@@ -25,14 +25,24 @@ struct FirstStepsCardView: View {
         guide.ledger.isNegative ? .red : .primary
     }
 
+    private var countText: some View {
+        Text("First steps \(guide.metCount)/\(guide.stepCount)").font(.caption.weight(.semibold))
+    }
+
     private var capsule: some View {
         Button { isExpanded = true } label: {
-            HStack(spacing: 6) {
-                Text("First steps \(guide.metCount)/\(guide.stepCount)").font(.caption.weight(.semibold))
-                Text("· net \(FirstStepsLedger.money(guide.ledger.net))")
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(guide.ledger.isNegative ? .red : .secondary)
+            // One line that never breaks "First / step / s": the net drops out before the count does.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    countText
+                    Text("· net \(FirstStepsLedger.money(guide.ledger.net))")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(guide.ledger.isNegative ? .red : .secondary)
+                }
+                countText
             }
+            .hudOneLine(minimumScale: 0.6)
+            .hudChromeTypeSize()
             .padding(.horizontal, 12)
             .frame(minHeight: layout.focusableHeight(Self.capsuleHeight))
             .background(.thinMaterial, in: Capsule())

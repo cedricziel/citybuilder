@@ -8,7 +8,7 @@ func scenarioShippedTiersKeepTheirValues() {
     #expect(HouseTier.allCases == [.peasants, .citizens, .merchants])
     #expect(HouseTier.allCases.map(\.rawValue) == [1, 2, 3])
     #expect(HouseTier.allCases.map(\.capacity) == [4, 6, 8])
-    #expect(HouseTier.allCases.map(\.needs) == [[.food], [.food, .planks], [.food, .planks, .bread, .tools]])
+    #expect(HouseTier.allCases.map(\.needs) == [[.food], [.food, .planks], [.food, .planks, .bread, .tools, .cloth]])
     #expect(HouseTier.allCases.map(\.taxPerResident) == [1, 2, 4])
     #expect(HouseTier.allCases.map(\.displayName) == ["Peasants", "Citizens", "Merchants"])
     let names: [Culture: [String]] = [

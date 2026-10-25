@@ -23,6 +23,9 @@ export type IconName =
   | "sunrise.fill"
   | "sunset.fill"
   | "moon.stars.fill"
+  | "camera.macro"
+  | "leaf.fill"
+  | "snowflake"
   | "arrow.up.right"
   | "arrow.down.right"
   | "arrow.down.left"
@@ -212,6 +215,30 @@ const glyphs: Record<IconName, ReactElement> = {
     <g fill="currentColor">
       <path d="M13.5 3.2A8.8 8.8 0 1 0 20.8 15 7 7 0 0 1 13.5 3.2Z" />
       <path d="m18 3 .7 1.6 1.6.7-1.6.7L18 7.6l-.7-1.6-1.6-.7 1.6-.7ZM21 9l.5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5Z" />
+    </g>
+  ),
+  "camera.macro": (
+    <g>
+      <circle cx="12" cy="9.5" r="2.4" fill="currentColor" />
+      <g fill="currentColor">
+        <ellipse cx="12" cy="4.6" rx="2" ry="2.5" />
+        <ellipse cx="12" cy="14.4" rx="2" ry="2.5" />
+        <ellipse cx="7.1" cy="9.5" rx="2.5" ry="2" />
+        <ellipse cx="16.9" cy="9.5" rx="2.5" ry="2" />
+      </g>
+      <path d="M12 15v6.5M12 19c-2.6 0-4-1.1-4.6-2.8 2.1-.2 3.9.5 4.6 2.8Z" {...stroke} strokeWidth={1.7} />
+    </g>
+  ),
+  "leaf.fill": (
+    <g>
+      <path d="M5 19C5 10 10 5 20 4c0 10-5 15-14 15Z" fill="currentColor" />
+      <path d="M4.5 20.5 12 13" {...stroke} strokeWidth={1.8} />
+    </g>
+  ),
+  snowflake: (
+    <g {...stroke} strokeWidth={1.9}>
+      <path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5" />
+      <path d="m9.5 4.2 2.5 2 2.5-2M9.5 19.8l2.5-2 2.5 2" />
     </g>
   ),
   "arrow.up.right": arrow(0),

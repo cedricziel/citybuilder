@@ -20,6 +20,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
     case charcoalBurner = "charcoal-burner"
     case smelter
     case toolsmith
+    case sheepFarm = "sheep-farm"
+    case weaver
     case library
     case townCenter = "town-center"
     case port
@@ -79,6 +81,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: "Charcoal"
         case .smelter: "Smelter"
         case .toolsmith: "Toolsmith"
+        case .sheepFarm: "Sheep Farm"
+        case .weaver: "Weaver"
         case .library: "Library"
         case .townCenter: "Town Ctr."
         case .port: "Port"
@@ -120,6 +124,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: 16
         case .smelter: 16
         case .toolsmith: 16
+        case .sheepFarm: 16
+        case .weaver: 16
         case .library: nil
         case .townCenter: nil
         case .port: nil
@@ -161,6 +167,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: nil
         case .smelter: nil
         case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
         case .library: nil
         case .townCenter: 40
         case .port: 80
@@ -202,6 +210,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: nil
         case .smelter: nil
         case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
         case .library: nil
         case .townCenter: nil
         case .port: nil
@@ -243,6 +253,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: nil
         case .smelter: nil
         case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
         case .library: nil
         case .townCenter: nil
         case .port: nil
@@ -284,6 +296,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: "craft"
         case .smelter: "craft"
         case .toolsmith: "craft"
+        case .sheepFarm: "gather"
+        case .weaver: "craft"
         case .library: "town"
         case .townCenter: nil
         case .port: "town"
@@ -325,6 +339,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: nil
         case .smelter: nil
         case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
         case .library: nil
         case .townCenter: nil
         case .port: nil
@@ -366,6 +382,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .charcoalBurner: nil
         case .smelter: nil
         case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
         case .library: nil
         case .townCenter: nil
         case .port: nil
@@ -416,6 +434,8 @@ public enum BuildingCatalog {
         case .charcoalBurner: BuildingSpec(kind: .charcoalBurner, footprint: Footprint(width: 2, height: 2), cost: 70, upkeep: 1, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.wood: 3], requiredTerrain: nil)
         case .smelter: BuildingSpec(kind: .smelter, footprint: Footprint(width: 2, height: 2), cost: 150, upkeep: 2, buildDurationTicks: 40, shorePlacement: nil, materialCost: [.planks: 4, .wood: 4], requiredTerrain: nil)
         case .toolsmith: BuildingSpec(kind: .toolsmith, footprint: Footprint(width: 2, height: 2), cost: 140, upkeep: 2, buildDurationTicks: 35, shorePlacement: nil, materialCost: [.planks: 4, .wood: 2], requiredTerrain: nil)
+        case .sheepFarm: BuildingSpec(kind: .sheepFarm, footprint: Footprint(width: 2, height: 2), cost: 60, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.wood: 2], requiredTerrain: nil)
+        case .weaver: BuildingSpec(kind: .weaver, footprint: Footprint(width: 2, height: 2), cost: 120, upkeep: 1, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 3, .wood: 3], requiredTerrain: nil)
         case .library: BuildingSpec(kind: .library, footprint: Footprint(width: 2, height: 2), cost: 100, upkeep: 2, buildDurationTicks: 35, shorePlacement: nil, materialCost: [.planks: 4, .wood: 2], requiredTerrain: nil)
         case .townCenter: BuildingSpec(kind: .townCenter, footprint: Footprint(width: 3, height: 3), cost: 0, upkeep: 0, buildDurationTicks: 1, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .port: BuildingSpec(kind: .port, footprint: Footprint(width: 2, height: 3), cost: 250, upkeep: 1, buildDurationTicks: 35, shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1), materialCost: [.planks: 6, .wood: 8], requiredTerrain: nil)

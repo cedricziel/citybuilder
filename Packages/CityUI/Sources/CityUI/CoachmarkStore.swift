@@ -22,6 +22,8 @@ extension UserDefaults: FlagStoring {
 public struct CoachmarkStore {
     public static let touchPlacementKey = "com.cedricziel.citybuilder.coachmark.touchPlacement"
 
+    public static let pinchZoomKey = "com.cedricziel.citybuilder.coachmark.pinchZoom"
+
     private let flags: any FlagStoring
 
     public init(flags: any FlagStoring = UserDefaults.standard) {
@@ -34,5 +36,15 @@ public struct CoachmarkStore {
 
     public func dismissTouchPlacementHint() {
         flags.setFlag(true, forKey: Self.touchPlacementKey)
+    }
+
+    public var shouldShowPinchZoomHint: Bool {
+        !flags.flag(forKey: Self.pinchZoomKey)
+    }
+
+    /// The pinch-to-zoom hint is a banner that expires on its own, so
+    /// showing it is what uses it up: call this once it has shown.
+    public func markPinchZoomHintShown() {
+        flags.setFlag(true, forKey: Self.pinchZoomKey)
     }
 }

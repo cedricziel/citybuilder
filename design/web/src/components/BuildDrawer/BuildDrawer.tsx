@@ -89,6 +89,7 @@ export const gatherDrawerTiles: DrawerTile[] = [
   { label: "Forester", art: "forester", cost: 60 },
   { label: "Farm", art: "farm", cost: 60 },
   { label: "Grain Farm", art: "grain-farm", cost: 60 },
+  { label: "Sheep Farm", art: "sheep-farm", cost: 60, needs: "Weaving" },
   { label: "Mine", art: "mine", cost: 120, needs: "Mining" },
   { label: "Hop Garden", art: "hop-garden", cost: 60, needs: "Cultivation" },
 ];

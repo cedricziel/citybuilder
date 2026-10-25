@@ -14,7 +14,8 @@ export interface ToolStripProps {
   /** Price in dollars; omitted or 0 shows none. */
   cost?: number;
   /**
-   * The hint: "Tap or drag to place house", with " · 18 trees in reach" for a
+   * The hint: "Click or drag to place house" on the Mac, "Tap to position, then tap ✓ to place" for a
+   * building on touch ("Tap or drag to place road" for a road), with " · 18 trees in reach" for a
    * lumberjack and the first-hour guide's warning (" · No farm yet: residents need food").
    */
   hint: string;

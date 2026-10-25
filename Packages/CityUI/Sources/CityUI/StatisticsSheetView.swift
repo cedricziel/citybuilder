@@ -200,7 +200,7 @@ extension CityRootView {
             session.isStatisticsPresented = true
         } label: {
             Image(systemName: "chart.xyaxis.line")
-                .imageScale(.large)
+                .hudIconFont()
                 .padding(8)
                 .background(.thinMaterial, in: Circle())
         }

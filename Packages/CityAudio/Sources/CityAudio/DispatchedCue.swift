@@ -12,11 +12,15 @@ public struct DispatchedCue: Sendable, Equatable {
     /// The event's primary entity. A loop plays once per entity, so two
     /// workshops of one kind each get their own player.
     public let entity: EntityID?
+    /// The binding key the cue was chosen for: an event's case name or `ui.<name>`. One-shots are
+    /// rate-limited per key and file, so two events sharing a file don't hold each other back.
+    public let event: String?
 
-    public init(cue: Bindings.Cue, position: TileCoordinate? = nil, entity: EntityID? = nil) {
+    public init(cue: Bindings.Cue, position: TileCoordinate? = nil, entity: EntityID? = nil, event: String? = nil) {
         self.cue = cue
         self.position = position
         self.entity = entity
+        self.event = event
     }
 
     /// True iff this cue should be routed through the environment node.

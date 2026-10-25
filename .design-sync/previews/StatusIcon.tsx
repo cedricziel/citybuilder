@@ -4,6 +4,8 @@ const issues: StatusIssue[] = [
   { good: "flour", state: "short" },
   { good: "bread", state: "short" },
   { good: "planks", state: "stuck" },
+  { good: "cloth", state: "short" },
+  { good: "wool", state: "stuck" },
   "no-road",
   "no-route",
   "no-trees",

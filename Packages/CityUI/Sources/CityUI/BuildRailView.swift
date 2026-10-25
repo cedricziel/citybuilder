@@ -46,6 +46,7 @@ struct BuildRailView: View {
         .opacity(session.isGameOver ? 0.4 : 1)
         .frame(width: isVertical ? layout.railWidth : nil)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+        .hudChromeTypeSize()
     }
 
     private func arm(_ tool: BuildTool) {
@@ -135,6 +136,17 @@ struct BuildDrawerView: View {
     let session: GameSession
     @Binding var rail: BuildRailModel
     let layout: HUDLayout
+    /// The height the drawer may take, header and padding included: the tiles scroll in what is left.
+    var availableHeight: CGFloat = .infinity
+
+    /// The header, its spacing and the card's padding around the scrolling tiles.
+    private static let chromeHeight: CGFloat = 64
+    private static let maxTilesHeight: CGFloat = 280
+    private static let minTilesHeight: CGFloat = 96
+
+    static func tilesHeight(availableHeight: CGFloat) -> CGFloat {
+        max(minTilesHeight, min(maxTilesHeight, availableHeight - chromeHeight))
+    }
 
     var body: some View {
         if let category = rail.openDrawer, !session.isGameOver {
@@ -166,12 +178,13 @@ struct BuildDrawerView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 280)
+                .frame(maxHeight: Self.tilesHeight(availableHeight: availableHeight))
                 .fixedSize(horizontal: false, vertical: true)
             }
             .padding(10)
             .fixedSize(horizontal: true, vertical: false)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .hudChromeTypeSize()
             .panelTransition(PanelMotion.drawerStyle(for: layout.placement))
         }
     }
@@ -197,9 +210,14 @@ struct BuildDrawerView: View {
                     Text(name).lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .font(.system(size: 11, weight: .semibold))
+                // Two lines at most and a word never breaks: "Needs Cultivation" wraps at its space
+                // and shrinks until the longer word fits the tile.
                 Text(session.drawerCaption(for: kind))
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 4)
