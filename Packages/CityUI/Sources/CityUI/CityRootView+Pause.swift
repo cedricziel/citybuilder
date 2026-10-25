@@ -6,7 +6,7 @@ import SwiftUI
 /// `add-game-pause-menu` / `pause-menu` (pause sheet + HUD button).
 extension CityRootView {
     /// The menu buttons in one row at the top right: goals, research,
-    /// standings and routes when they apply, then settings.
+    /// standings, statistics and routes when they apply, then settings.
     var menuButtons: some View {
         HStack(spacing: 6) {
             #if os(tvOS)
@@ -16,6 +16,7 @@ extension CityRootView {
             goalsButton
             researchButton
             standingsButton
+            statisticsButton
             routesButton
             #if !os(tvOS)
             minimapButton
@@ -55,6 +56,7 @@ extension CityRootView {
             if StandingsPanelModel.isAvailable(in: session.world) {
                 Button("Standings", systemImage: "trophy.fill") { standingsPresented = true }
             }
+            Button("Statistics", systemImage: "chart.xyaxis.line") { session.isStatisticsPresented = true }
             if session.showsRoutesButton {
                 Button("Routes", systemImage: "ferry.fill") { routesPresented = true }
             }

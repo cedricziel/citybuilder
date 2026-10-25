@@ -37,6 +37,8 @@ export interface HUDMenuButtonsProps {
   goals?: boolean;
   /** The standings trophy (only worlds with rivals). Default false. */
   standings?: boolean;
+  /** The statistics chart. Default true. */
+  statistics?: boolean;
   /** Trade routes (once the town has a ship). Default false. */
   routes?: boolean;
   /** The minimap toggle; `shown` fills the map symbol. Default `shown`; `none` hides it (Apple TV). */
@@ -45,17 +47,18 @@ export interface HUDMenuButtonsProps {
   settings?: boolean;
   /** A phone in portrait folds every button into one More menu button. Default false. */
   folded?: boolean;
-  onSelect?: (button: "goals" | "research" | "standings" | "routes" | "minimap" | "settings" | "more") => void;
+  onSelect?: (button: "goals" | "research" | "standings" | "statistics" | "routes" | "minimap" | "settings" | "more") => void;
 }
 
 /**
  * The HUD's menu buttons in one row at the top right, right of the status
- * pill: goals, research, standings, routes, the minimap toggle and settings.
+ * pill: goals, research, standings, statistics, routes, the minimap toggle and settings.
  * Pause lives in the status pill. A phone in portrait folds them into More.
  */
 export function HUDMenuButtons({
   goals = true,
   standings = false,
+  statistics = true,
   routes = false,
   minimap = "shown",
   settings = true,
@@ -74,6 +77,7 @@ export function HUDMenuButtons({
       {goals ? <HUDButton icon="flag.checkered" label="Goals" onClick={() => onSelect?.("goals")} /> : null}
       <HUDButton icon="book.fill" label="Research" onClick={() => onSelect?.("research")} />
       {standings ? <HUDButton icon="trophy.fill" label="Standings" onClick={() => onSelect?.("standings")} /> : null}
+      {statistics ? <HUDButton icon="chart.xyaxis.line" label="Statistics" onClick={() => onSelect?.("statistics")} /> : null}
       {routes ? <HUDButton icon="ferry.fill" label="Routes" onClick={() => onSelect?.("routes")} /> : null}
       {minimap !== "none" ? (
         <HUDButton

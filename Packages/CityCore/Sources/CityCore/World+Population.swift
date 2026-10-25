@@ -30,7 +30,9 @@ extension World {
         }
         for good in pop.tier.needs(in: culture) {
             let amount = HousePopulation.amount(of: good, residents: pop.population)
-            pop.setShort(good, consume(good, amount: amount, by: building) < amount)
+            let drawn = consume(good, amount: amount, by: building)
+            recordHouseUse(of: good, drawn: drawn, by: building)
+            pop.setShort(good, drawn < amount)
         }
     }
 
