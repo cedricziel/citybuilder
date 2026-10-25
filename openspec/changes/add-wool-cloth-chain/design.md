@@ -39,9 +39,9 @@ Cloth uses the default need rate of 1 per 8 residents. No Swift is added to `Hou
 
 ### D4. The bot builds the chain from demand
 
-The old kit builds a fixed set of every chain per 12 houses once there are 6 houses. For the wool chain the bot instead provisions from demand. A house wants cloth when it is a merchant house, or one of the next two inhabited citizens houses while bread and tools are in the stores (so the cloth is ready when they fill up). The bot researches Weaving when a house wants cloth, then builds one weaver per two such houses and two sheep farms per weaver. It builds at most three weavers and nothing while 20 cloth already wait in the stores, and with the market it sells cloth and wool above 12 units like the other surplus. This measures cloth as an extra the player must notice, which is what a person does.
+The old kit builds a fixed set of every chain per 12 houses once there are 6 houses. For the wool chain the bot instead provisions from demand. A house wants cloth when it is a merchant house, or one of the next two inhabited citizens houses while bread and tools are in the stores (so the cloth is ready when they fill up). The bot researches Weaving when a house wants cloth, then builds one weaver per two such houses and two sheep farms per weaver. It builds nothing while 20 cloth already wait in the stores, and with the market it sells cloth and wool above 12 units like the other surplus. This measures cloth as an extra the player must notice, which is what a person does.
 
-The first version counted every full citizens house and had no caps. Counting the next two inhabited citizens houses instead of full ones starts the chain a little earlier, so towns reach their first merchants about as soon as without cloth. In the pacing sweep it built up to ten weavers for houses that never moved up, and the stores filled with cloth (195 of 240 units in one game) while bread and tools ran short, so merchants fell back and held less often than on `main`. The caps keep the chain at the size the merchants use. The shared store is still the limit, which per-good storage removes.
+The first version counted every full citizens house and capped nothing. Before per-good storage it built up to ten weavers for houses that never moved up, and the shared store filled with cloth while bread and tools ran short, so merchants fell back (see Evidence). Per-good storage removed that limit, so the bot no longer caps weavers. The surplus stop and counting the next two inhabited citizens houses (earlier than full ones) remain.
 
 Alternative: add the wool chain to the fixed per-set list. Rejected: it hides the new need behind the same trigger as everything else, and it overbuilds in towns that never reach merchants.
 
@@ -65,22 +65,24 @@ The change adds goods, buildings and a tech to the generated catalogs. `Good.all
 
 ## Evidence
 
-Mid-game pacing (the `rival-sweep` workflow's `midGamePacingAcrossSeeds`, `RIVAL_SWEEP=1 PACING_RETENTION=1`, release build): seeds 0–9 at every difficulty on both layouts with the market, so 20 games per row, each run to year 10. Medians (retention is a mean) on `main` at edb4732d, which has per-good storage, → this change merged with it:
+Mid-game pacing (the `rival-sweep` workflow's `midGamePacingAcrossSeeds`, `RIVAL_SWEEP=1 PACING_RETENTION=1`, release build): seeds 0–9 at every difficulty on both layouts with the market, so 20 games per row, each run to year 10. Medians (retention is a mean) on `main` at bfdce48d, which has per-good storage and direct hops, → this change merged with it:
 
-| Difficulty | Bot order | First merchant (yr) | Renaissance (yr) | No merchant by year 10 | Bankruptcies | Share of turns in years 8–10 with 20+ merchants |
-|---|---|---|---|---|---|---|
-| easy | careful | 4.0 → 4.1 | 5.3 → 5.5 | 2 → 2 | 0 → 0 | 0.79 → 0.82 |
-| easy | naive | 4.2 → 4.2 | 5.2 → 5.4 | 2 → 2 | 0 → 0 | 0.85 → 0.85 |
-| easy | naiveFollowingHints | 3.9 → 3.9 | 5.2 → 5.4 | 1 → 1 | 0 → 0 | 0.84 → 0.86 |
-| normal | careful | 4.6 → 4.9 | 6.6 → 6.5 | 1 → 1 | 0 → 0 | 0.75 → 0.76 |
-| normal | naive | 4.8 → 4.8 | 6.2 → 7.1 | 2 → 2 | 0 → 0 | 0.82 → 0.84 |
-| normal | naiveFollowingHints | 4.5 → 4.6 | 6.3 → 6.3 | 2 → 2 | 0 → 0 | 0.88 → 0.87 |
-| hard | careful | 6.0 → 6.1 | 7.5 → 7.9 | 0 → 0 | 0 → 0 | 0.96 → 0.95 |
-| hard | naive | 6.0 → 6.1 | 7.5 → 7.7 | 0 → 0 | 0 → 0 | 0.94 → 0.95 |
-| hard | naiveFollowingHints | 6.0 → 6.2 | 7.5 → 7.8 | 0 → 0 | 0 → 0 | 0.98 → 0.98 |
+| Difficulty | Bot order | First merchant (yr) | Renaissance (yr) | No merchant by year 10 | Bankruptcies | Merchants at end of year 10 (median) | Games with 20+ merchants at year 10 | Share of turns in years 8–10 with 20+ merchants |
+|---|---|---|---|---|---|---|---|---|
+| easy | careful | 4.0 → 4.1 | 5.3 → 5.5 | 2 → 2 | 0 → 0 | 28 → 24 | 13 → 13 of 20 | 0.79 → 0.79 |
+| easy | naive | 4.2 → 4.2 | 5.2 → 5.4 | 2 → 2 | 0 → 0 | 28 → 29 | 17 → 17 of 20 | 0.87 → 0.86 |
+| easy | naiveFollowingHints | 3.9 → 3.9 | 5.2 → 5.4 | 1 → 1 | 0 → 0 | 32 → 24 | 17 → 15 of 20 | 0.82 → 0.76 |
+| normal | careful | 4.6 → 4.9 | 6.7 → 7.1 | 1 → 1 | 0 → 0 | 32 → 32 | 15 → 15 of 20 | 0.76 → 0.76 |
+| normal | naive | 4.8 → 4.8 | 6.2 → 6.8 | 2 → 2 | 0 → 0 | 28 → 24 | 17 → 16 of 20 | 0.83 → 0.82 |
+| normal | naiveFollowingHints | 4.5 → 4.6 | 6.3 → 6.3 | 2 → 2 | 0 → 0 | 24 → 24 | 17 → 18 of 20 | 0.88 → 0.89 |
+| hard | careful | 6.0 → 6.1 | 7.5 → 7.9 | 0 → 0 | 0 → 0 | 32 → 32 | 19 → 18 of 20 | 0.97 → 0.95 |
+| hard | naive | 6.0 → 6.1 | 7.5 → 7.7 | 0 → 0 | 0 → 0 | 32 → 32 | 20 → 19 of 20 | 0.97 → 0.95 |
+| hard | naiveFollowingHints | 6.0 → 6.2 | 7.5 → 7.8 | 0 → 0 | 0 → 0 | 32 → 32 | 19 → 19 of 20 | 0.95 → 0.95 |
 
-Attainment and solvency hold: bankruptcies stay at 0 in all 180 games, the games without a merchant stay at 10, and the share of turns in years 8–10 with 20 or more merchants is within 0.03 in every row. The Renaissance on Normal careful, the scripted town the pacing target refers to, stays at 6.5 years (6.6 on `main`), inside the 6–8 year goal; cloth did not make it slower there. The naive order on Normal is 0.9 years later (6.2 → 7.1). The other orders and difficulties move by 0.0–0.4 years. The merchants at the end of year 10 are a snapshot that depends on when the town's tools run out: in Normal careful, six games sit at 0 at that tick against one on `main`, while their retention over years 8–10 is 0.88–0.98.
+all arms: bankrupt 0 -> 0 | no merchant 10 -> 10 | >=20 at year 10 154 -> 150 | mean merchants at year 10 27.1 -> 25.0
 
-Other sweeps, `main` against this change, identical: the solvency sweep (no bankruptcy in 20 games; control without the market 4 of 30 bankrupt, with it 0 of 30), the guided Hard start (every game's residents the same) and the rival viability sweep (60 rival lines, every year-3, year-5 and year-15 figure the same). The bot builds nothing of the wool chain in those, and rivals never reach merchants.
+Attainment, solvency and retention hold: bankruptcies stay at 0 in all 180 games, the games without a merchant stay at 10, and the share of turns in years 8–10 with 20 or more merchants is within 0.06 in every row. The merchants at the end of year 10 are a snapshot of a quantity that flickers with the town's bread and tools, and it is slightly lower: 150 games have 20 or more against 154 on `main`, and the mean is 25.0 against 27.1. The Renaissance on Normal careful, the scripted town the pacing target refers to, is at 7.1 years (6.7 on `main`), inside the 6–8 year goal. The naive order on Normal is 0.6 years later; the other rows move by 0.0–0.4 years.
 
-Before per-good storage landed, the shared store made cloth crowd out bread and tools, and the same chain cost more: the first bot, with no caps, built up to ten weavers and filled the stores with cloth (195 of 240 units in one game), and merchants held less often than on `main`. The bot's limits (at most three weavers, nothing while 20 cloth wait, selling surplus cloth and wool, starting the chain for the next two inhabited citizens houses) and the luxury-chain prices (sheep farm 60, weaver 120, Weaving at Milling's price) came out of those sweeps. A balance guard before building the chain was tried and dropped: towns never reached their first merchant.
+Other sweeps, `main` against this change, identical: the solvency sweep (no bankruptcy in 20 games), the market control (no bankruptcy with or without the market; 990 and 992 residents), the guided Hard start (every game's residents the same) and the rival viability sweep (60 rival lines, every year-3, year-5 and year-15 figure the same). The bot builds nothing of the wool chain in those, and rivals never reach merchants.
+
+Before per-good storage landed, the shared store made cloth crowd out bread and tools, and the same chain cost more: the first bot, with no caps, built up to ten weavers and filled the stores with cloth (195 of 240 units in one game), and merchants held less often than on `main`. The bot's limits (nothing while 20 cloth wait, selling surplus cloth and wool, starting the chain for the next two inhabited citizens houses) and the luxury-chain prices (sheep farm 60, weaver 120, Weaving at Milling's price) came out of those sweeps. A balance guard before building the chain was tried and dropped: towns never reached their first merchant. A fixed cap on weavers, and later a cap of 1 + houses / 12, were tried and dropped: with per-good storage neither improved the year-10 count.
