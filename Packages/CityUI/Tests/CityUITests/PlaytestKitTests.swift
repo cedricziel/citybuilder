@@ -9,6 +9,7 @@ private let repoRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent().deletingLastPathComponent()
 
 private let personaSlugs = ["newcomer", "optimizer", "builder", "veteran", "trader", "chaos", "returning"]
+private let allAgentSlugs = personaSlugs + ["ui-auditor"]
 
 /// What each persona's Device section has to name.
 private let deviceMatrix: [String: [String]] = [
@@ -51,12 +52,12 @@ func scenarioEveryPersonaHasAnAgentFile() {
 
 @Test("scenario: persona frontmatter is complete")
 func scenarioPersonaFrontmatterIsComplete() throws {
-    for slug in personaSlugs + ["ui-auditor"] {
+    for slug in allAgentSlugs {
         let (fields, _) = try agent(slug)
+        let raw = try text(of: ".claude/agents/playtester-\(slug).md")
         #expect(fields["name"] == "playtester-\(slug)")
         #expect(fields["description"]?.isEmpty == false, "\(slug) needs a description")
         // An unquoted description with a colon in it is invalid YAML and the agent would not load.
-        let raw = try text(of: ".claude/agents/playtester-\(slug).md")
         #expect(raw.contains("\ndescription: \""), "\(slug)'s description is quoted")
         #expect(fields["model"] == "sonnet")
         #expect(fields["effort"] == "medium")
@@ -82,7 +83,7 @@ func scenarioPersonaBodiesCoverThePlayer() throws {
 
 @Test("scenario: personas forbid desktop control")
 func scenarioPersonasForbidDesktopControl() throws {
-    for slug in personaSlugs + ["ui-auditor"] {
+    for slug in allAgentSlugs {
         let (fields, body) = try agent(slug)
         #expect(body.contains("computer use"), "\(slug) forbids computer use")
         #expect(body.contains("desktop screen control"), "\(slug) forbids desktop screen control")
@@ -140,7 +141,7 @@ func scenarioFlagsInTheSkillExist() throws {
         }
     }
     var documents = try [text(of: ".claude/skills/playtest/SKILL.md")]
-    for slug in personaSlugs + ["ui-auditor"] {
+    for slug in allAgentSlugs {
         try documents.append(agent(slug).body)
     }
     let flags = Set(documents.flatMap { $0.matches(of: /-uiTest[A-Za-z]+/).map { String($0.output) } })

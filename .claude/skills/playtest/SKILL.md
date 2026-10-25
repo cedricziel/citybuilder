@@ -166,3 +166,16 @@ Each device report starts with the setup (device, orientation, build commit, fla
 Severity: **S1** blocks play or hides information the player needs; **S2** hurts reading or reaching something; **S3** polish. A screen with no problem still gets a line saying what was checked.
 
 The matrix has one row per screen, one column per device and orientation, and a cell with `ok`, `S1`, `S2` or `S3` (the worst finding) linking to the report line, `n/a` where the screen does not exist there, and `not exercised` where the platform limits stopped you. Under it, list the three worst cross-device problems.
+
+## Known quirks
+
+Learned from the dogfood runs; they will save you time.
+
+- **A loaded host makes everything late.** Under a load average above about 100, a tap shows its result 5 to 20 seconds later, `launch` times out, and the control tool's `screenshot` and `rotate` fail with "internal error" or "restarting after a crash". Wait for `uptime` to fall, retry, and fall back to `xcrun simctl io <UDID> screenshot <file>` and `xcrun simctl launch`, which keep working. Never queue several taps while the screen lags: they land on a different screen than you meant (a queued Start tap once flipped the New Game dialog to Scenario).
+- **Save screenshots by file, and check them.** The control tool's screenshots are not written to disk. Use `xcrun simctl io <UDID> screenshot playtests/<date>-<persona>/NN-name.png` after the control screenshot shows the state you want, and open the file once to confirm it matches its name. Shrink big batches before you commit them (the repo should not carry 1 MB PNGs by the dozen).
+- **Intro and transition frames.** Take a burst with a shell loop of `xcrun simctl io <UDID> screenshot` and a timestamp in each file name, started before the tap that triggers the transition, and run it in the background while you tap.
+- **Text size, appearance and zoom.** `xcrun simctl ui <UDID> content_size <size>` (`large` is the default, `accessibility-extra-extra-extra-large` the largest) and `xcrun simctl ui <UDID> appearance light|dark` change a running app live. Put both back before you shut down. A pinch with two fingers is `touch2_path` with `points2`, for example fingers at x 101 and 301 moving to 151 and 251 at y 437, which zooms out by about half.
+- **Debug launch flags need `simctl launch`.** `xcrun simctl launch --terminate-running-process <UDID> com.cedricziel.citybuilder -uiTestSeedTown -uiTestStartGame`. The `-uiTest…` seeds give the town about $9,999 of test funds, so do not judge the economy on them.
+- **The first-run coachmark is a flag in the app's own defaults.** It shows once per install. `xcrun simctl uninstall` and install again to see it again.
+- **Layout shifts between modes.** In the New Game dialog the Start button sits lower in Sandbox than in Scenario; take a screenshot before you tap it.
+- **Remove files by literal path.** The shell refuses `rm` on a variable glob like `rm $DIR/*.png`; write the full absolute path, or leave the files.
