@@ -39,7 +39,9 @@ Cloth uses the default need rate of 1 per 8 residents. No Swift is added to `Hou
 
 ### D4. The bot builds the chain from demand
 
-The old kit builds a fixed set of every chain per 12 houses once there are 6 houses. For the wool chain the bot instead provisions from demand: it researches Weaving when it has a citizens' house that lacks only cloth to become merchants, or any merchant house short of cloth, and builds a weaver, then two sheep farms per weaver, only while the cloth stock cannot cover the merchants it has or the citizens next in line. This keeps the fixed order of the other chains and measures cloth as an extra that the player must notice, which is what a person does.
+The old kit builds a fixed set of every chain per 12 houses once there are 6 houses. For the wool chain the bot instead provisions from demand. A house wants cloth when it is a merchant house, or one of the next two full citizens houses while bread and tools are in the stores (so cloth is all it lacks). The bot researches Weaving when a house wants cloth, then builds one weaver per two such houses and two sheep farms per weaver. It builds at most three weavers and nothing while 20 cloth already wait in the stores, and with the market it sells cloth and wool above 12 units like the other surplus. This measures cloth as an extra the player must notice, which is what a person does.
+
+The first version counted every full citizens house and had no caps. In the pacing sweep it built up to ten weavers for houses that never moved up, and the stores filled with cloth (195 of 240 units in one game) while bread and tools ran short, so merchants fell back and held less often than on `main`. The caps keep the chain at the size the merchants use. The shared store is still the limit, which per-good storage removes.
 
 Alternative: add the wool chain to the fixed per-set list. Rejected: it hides the new need behind the same trigger as everything else, and it overbuilds in towns that never reach merchants.
 
