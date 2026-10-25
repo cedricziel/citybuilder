@@ -50,7 +50,9 @@ func boundKeysAreEventNames() throws {
         .commissionEnded(building: entity), .caravanSold(building: entity, goods: [:], revenue: 1),
         .rivalAgeAdvanced(1, .medieval),
         .tradeCompleted(rival: 1, good: .wood, quantity: 1, total: 1, direction: .bought),
-        .marketTraded(good: .wood, quantity: 1, total: 1, direction: .sold)
+        .marketTraded(good: .wood, quantity: 1, total: 1, direction: .sold),
+        .orderOffered(order: 1, issuer: .crown), .orderAccepted(order: 1), .orderFulfilled(order: 1, reward: 1),
+        .orderFailed(order: 1), .orderExpired(order: 1)
     ]
     let keys = Set(events.map(AudioCoordinator.caseKey(for:)))
     let audio = URL(fileURLWithPath: #filePath)

@@ -163,6 +163,11 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .rivalAgeAdvanced: return "rivalAgeAdvanced"
         case .tradeCompleted: return "tradeCompleted"
         case .marketTraded: return "marketTraded"
+        case .orderOffered: return "orderOffered"
+        case .orderAccepted: return "orderAccepted"
+        case .orderFulfilled: return "orderFulfilled"
+        case .orderFailed: return "orderFailed"
+        case .orderExpired: return "orderExpired"
         }
     }
 }

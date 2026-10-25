@@ -65,6 +65,11 @@
       { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
       { "file": "sfx/coins-3.caf", "bus": "sfx", "volume": 0.6 }
     ],
+    "orderFulfilled": [
+      { "file": "sfx/coins-1.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
+      { "file": "sfx/coins-3.caf", "bus": "sfx", "volume": 0.6 }
+    ],
     "caravanSold": [
       { "file": "sfx/coins-1.caf", "bus": "sfx", "volume": 0.6 },
       { "file": "sfx/coins-2.caf", "bus": "sfx", "volume": 0.6 },
