@@ -5,7 +5,7 @@ The first agent playtest (#279) and the owner found that the first hour on an iP
 ## What Changes
 
 - A new game starts at zoom 0.55 on a phone; every other device keeps 1.0. A one-time banner on touch devices says that pinch zooms.
-- HUD chrome (the status pill and More button, the First steps capsule, the coachmark, the build bar and its drawer, the tool strip, the date chip) stops growing at `accessibility1`; one-line labels shrink before they truncate, and a word never breaks. Sheets and panels keep scaling.
+- HUD chrome (the status pill and More button, the First steps capsule, the coachmark, the build bar and its drawer, the tool strip, the session banner, the date chip) stops growing at `accessibility1`; one-line labels shrink before they truncate, and a word never breaks. Sheets and panels keep scaling.
 - A building that has shown a status icon for ten seconds is named once in a banner with its problem; tapping it shows the same line in the callout.
 - On touch, the tool strip's hint for a building reads "Tap to position, then tap ✓ to place". A road keeps "Tap or drag to place road".
 - The road callout moves to another side when its usual side would cover a building next to the road. On a phone the callout is wider so its problem line does not hyphenate.

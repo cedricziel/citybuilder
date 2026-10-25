@@ -33,7 +33,7 @@ On a touch device, the first game screen of a new game SHALL show a banner title
 - **THEN** the banner is gone
 
 ### Requirement: HUD chrome caps Dynamic Type
-The HUD's chrome (the status pill, the More and menu buttons, the First steps capsule, the coachmark, the build bar and its drawer tiles, the tool strip and the date chip) SHALL stop growing at the `accessibility1` text size. Icon buttons SHALL NOT scale with the text. One-line labels SHALL shrink and then truncate rather than wrap, and a word MUST NOT break across lines. Sheets and panels SHALL keep scaling with the text.
+The HUD's chrome (the status pill, the More and menu buttons, the First steps capsule, the coachmark, the build bar and its drawer tiles, the tool strip, the session banner and the date chip) SHALL stop growing at the `accessibility1` text size. Icon buttons SHALL NOT scale with the text. One-line labels SHALL shrink and then truncate rather than wrap, and a word MUST NOT break across lines. Sheets and panels SHALL keep scaling with the text.
 
 #### Scenario: Chrome stays on screen at the largest text
 - **WHEN** the text size is accessibility 5 on an iPhone in portrait

@@ -233,6 +233,7 @@ struct SessionBannerView: View {
             .padding(.vertical, 8)
             .background(Color(red: 0.93, green: 0.86, blue: 0.70), in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.42, green: 0.29, blue: 0.16), lineWidth: 2))
+            .hudChromeTypeSize()
             .padding(.horizontal, 24)
             .panelTransition(.slide(.top))
             .accessibilityElement(children: onResume == nil ? .combine : .contain)
