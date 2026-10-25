@@ -115,7 +115,7 @@ The world SHALL report, for each operational player house, producer and forester
 
 ### Requirement: Producers ship only where there is room
 
-A producer's output SHALL leave its own stockpile only for a destination that takes it: a construction site waiting for that good, or a goods buffer its road reaches with room for that good. Otherwise the output SHALL stay in the producer's stockpile, nothing is lost, and the producer stops once that stockpile has no room for a cycle's output; it resumes as soon as a destination has room again. A carrier whose destination, still standing, has no room for what it carries on arrival SHALL keep what does not fit and deliver it once room opens, so no good is destroyed by a full store, whatever else filled it meanwhile (a purchase, a ship, a harvest). A supply carrier SHALL set out only for a consumer with room for one more unit beyond those already on their way to it. A store's room grows when its stock of the good is drawn down: by construction, by houses, by supply carriers, or by a market or trade sale.
+A producer's output SHALL leave its own stockpile only for a destination that takes it: a construction site waiting for that good, or a goods buffer its road reaches with room for that good. Otherwise the output SHALL stay in the producer's stockpile, nothing is lost, and the producer stops once that stockpile has no room for a cycle's output; it resumes as soon as a destination has room again. A carrier whose destination, still standing, has no room for what it carries on arrival SHALL keep what does not fit, so no good is destroyed by a full store, whatever else filled it meanwhile (a purchase, a ship, a harvest). A producer's carrier SHALL then go on to the nearest other store with room for the good, counting what is already on its way there, or else take the goods home to its producer, which frees its carrier slot; at home with no room it waits and looks again each tick. A supply carrier waits at its consumer until it has room. A supply carrier SHALL set out only for a consumer with room for one more unit beyond those already on their way to it. A store's room grows when its stock of the good is drawn down: by construction, by houses, by supply carriers, or by a market or trade sale.
 
 #### Scenario: Output with nowhere to go stays with its producer
 - **WHEN** a bakery holding 1 bread shares a road only with a warehouse holding its limit of bread
@@ -129,9 +129,13 @@ A producer's output SHALL leave its own stockpile only for a destination that ta
 - **WHEN** a bakery holds 1 bread, the only warehouse holds its limit of bread, and 1 bread is then taken from the warehouse
 - **THEN** on the next tick a carrier takes the bakery's bread to that warehouse
 
-#### Scenario: A carrier whose store filled on the way keeps its goods
-- **WHEN** a carrier walks 1 bread to a warehouse that fills with bread before it arrives
-- **THEN** the carrier keeps the bread, and delivers it on the tick the warehouse has room again
+#### Scenario: A carrier whose store filled on the way goes on to one with room
+- **WHEN** a bakery holding 10 bread has 2 carriers walking to a near warehouse that fills with bread before they arrive, and a far warehouse has room
+- **THEN** all 10 bread reach the far warehouse and none is lost
+
+#### Scenario: A carrier with no store to go to takes its goods home
+- **WHEN** a carrier walks 1 bread to the only warehouse, which fills with bread before it arrives
+- **THEN** it takes the bread back to its bakery, the bakery's carrier slot is free again, and the bread leaves once the warehouse has room
 
 #### Scenario: A stuck producer gets no more inputs and nothing is lost
 - **WHEN** a sawmill holds 15 planks in its 16-unit stockpile and the only warehouse holds its limit of planks and 60 wood
