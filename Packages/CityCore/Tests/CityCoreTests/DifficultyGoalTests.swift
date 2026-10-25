@@ -100,3 +100,15 @@ func scenarioFirstHarvestSetup() {
     #expect(world.culture == .mediterranean)
     #expect(world.goals.map(\.goal) == [.population(40, atLeast: .peasants), .stock(.bread, 20)])
 }
+
+// MARK: - Decline grace (openspec/changes/decline-grace)
+
+@Test("scenario: easy waits one interval longer")
+func scenarioEasyWaitsOneIntervalLonger() {
+    #expect(Difficulty.allCases.map { $0.declineGraceIntervals(base: 3) } == [4, 3, 2])
+}
+
+@Test("scenario: the grace never drops below one")
+func scenarioTheGraceNeverDropsBelowOne() {
+    #expect(Difficulty.hard.declineGraceIntervals(base: 1) == 1)
+}

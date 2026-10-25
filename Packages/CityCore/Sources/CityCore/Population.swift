@@ -31,6 +31,10 @@ public struct HousePopulation: Hashable, Sendable {
     /// Goods the last consumption could not draw in full; a good leaves
     /// the set with the next consumption of it that succeeds.
     public private(set) var shortGoods: Set<Good> = []
+    /// Consecutive consumption intervals each good has been drawn short;
+    /// a good drawn in full has no entry. Spec: `population-and-needs` /
+    /// Houses decline only after a grace period.
+    public private(set) var shortIntervals: [Good: UInt8] = [:]
 
     public static let growthIntervalTicks: UInt64 = 60
     public static let declineIntervalTicks: UInt64 = 60
@@ -75,9 +79,28 @@ public struct HousePopulation: Hashable, Sendable {
         shortGoods.set(good, value)
     }
 
+    /// Consumption intervals in a row `good` has been short.
+    public func shortIntervals(of good: Good) -> Int {
+        Int(shortIntervals[good] ?? 0)
+    }
+
+    /// One consumption of `good`: a short draw extends its run, a full
+    /// one ends it.
+    public mutating func recordConsumption(of good: Good, short: Bool) {
+        setShort(good, short)
+        shortIntervals[good] = short ? min(shortIntervals[good, default: 0], .max - 1) + 1 : nil
+    }
+
+    /// Forgets the runs of goods `needs` does not list, such as those of a
+    /// tier the house has left.
+    mutating func keepShortIntervals(for needs: [Good]) {
+        shortIntervals = shortIntervals.filter { needs.contains($0.key) }
+    }
+
     /// An empty house eats nothing, so nothing is short.
     mutating func clearShortages() {
         shortGoods.removeAll()
+        shortIntervals.removeAll()
     }
 
     public init() {}
@@ -90,7 +113,7 @@ public struct HousePopulation: Hashable, Sendable {
 
 extension HousePopulation: Codable {
     private enum CodingKeys: String, CodingKey {
-        case population, tier, satisfiedGoods, shortGoods
+        case population, tier, satisfiedGoods, shortGoods, shortIntervals
         case ticksAtCurrentSatisfaction, ticksAtTierCondition
     }
 
@@ -109,9 +132,16 @@ extension HousePopulation: Codable {
         ]
     }
 
+    /// One good's run of short intervals, as saved.
+    private struct ShortRun: Codable {
+        let good: Good
+        let intervals: UInt8
+    }
+
     /// Older saves lack tier and timing keys and store satisfaction as
     /// per-good flags; missing values decode as peasants that are not
-    /// short of anything.
+    /// short of anything. A save without runs starts one interval for each
+    /// good the house is short of, so its grace begins on load.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         population = try container.decode(UInt32.self, forKey: .population)
@@ -125,6 +155,9 @@ extension HousePopulation: Codable {
             ?? Self.decodeFlags(LegacyKey.satisfied, from: legacy)
         shortGoods = try container.decodeIfPresent([Good].self, forKey: .shortGoods).map(Set.init)
             ?? Self.decodeFlags(LegacyKey.shortfall, from: legacy)
+        let runs = try container.decodeIfPresent([ShortRun].self, forKey: .shortIntervals)
+            ?? shortGoods.map { ShortRun(good: $0, intervals: 1) }
+        shortIntervals = Dictionary(runs.map { ($0.good, $0.intervals) }, uniquingKeysWith: { $1 })
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -135,6 +168,8 @@ extension HousePopulation: Codable {
         try container.encode(ticksAtCurrentSatisfaction, forKey: .ticksAtCurrentSatisfaction)
         try container.encode(ticksAtTierCondition, forKey: .ticksAtTierCondition)
         try container.encode(shortGoods.sortedByRawValue, forKey: .shortGoods)
+        let runs = shortIntervals.sorted { $0.key.rawValue < $1.key.rawValue }.map { ShortRun(good: $0.key, intervals: $0.value) }
+        try container.encode(runs, forKey: .shortIntervals)
     }
 
     private static func decodeFlags(

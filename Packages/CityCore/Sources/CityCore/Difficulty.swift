@@ -53,6 +53,16 @@ public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
         return intervals * Economy.taxIntervalTicks
     }
 
+    /// Consumption intervals a need may stay short before a house
+    /// declines, from its tier's declared `base` (`decline-grace` D3).
+    public func declineGraceIntervals(base: Int) -> Int {
+        switch self {
+        case .easy: base + 1
+        case .normal: base
+        case .hard: max(1, base - 1)
+        }
+    }
+
     /// Chance in percent that a history event fires at the turn of a year.
     public var eventChancePercent: UInt64 {
         self == .hard ? 65 : 50
