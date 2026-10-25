@@ -301,16 +301,19 @@ extension World {
         let buffers = candidates.buffers
         let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
         let waits = vehicle != nil && producer.haulWaitTicks < UInt32(CarrierConfig.haulMaxWait)
-        if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
+        func wait() -> Haul? {
             buildings[producer.id]?.haulWaitTicks += 1
             return nil
+        }
+        if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
+            return wait()
         }
         guard let (warehouseId, path) = findRoadConnectedBuffer(
             fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:)
         )
         else { return nil }
-        let room = (stockpiles[warehouseId]?.room(for: good) ?? 0) - candidates.inbound.count(of: good, to: warehouseId)
-        let ready = min(held, room)
+        let pile = stockpiles[warehouseId] ?? Stockpile(capacity: 0)
+        let ready = min(held, pile.room(for: good) - candidates.inbound.pending(of: good, to: warehouseId, in: pile))
         func deliver(_ amount: Int) -> Carrier.Mission {
             .deliver(good: good, amount: amount, fromProducer: producer.id, toWarehouse: warehouseId)
         }
@@ -318,8 +321,7 @@ extension World {
             return Haul(mission: deliver(1), path: path)
         }
         if ready < CarrierConfig.haulMinLoad, waits {
-            buildings[producer.id]?.haulWaitTicks += 1
-            return nil
+            return wait()
         }
         return Haul(mission: deliver(min(ready, vehicle.capacity)), path: path, vehicle: vehicle)
     }

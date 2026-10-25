@@ -76,15 +76,16 @@ extension World {
                 footprint: BuildingCatalog.spec(for: consumer.kind).footprint
             )
             else { continue }
+            let vehicle = CarrierConfig.vehicle(in: age(of: consumer.owner))
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
-                while needsSupply(consumer.id, good: good, amount: amount) {
-                    guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
+                while supplyCarrierCount(to: consumer.id) < CarrierConfig.perProducerCap {
                     let short = shortfall(of: good, at: consumer.id, amount: amount)
+                    guard short > 0,
+                          let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers)
+                    else { break }
                     let held = stockpiles[bufferID]?.quantity(of: good) ?? 0
-                    let haul = CarrierConfig.haul(
-                        ready: min(held, short), along: path, vehicle: CarrierConfig.vehicle(in: age(of: consumer.owner))
-                    )
+                    let haul = CarrierConfig.haul(ready: min(held, short), along: path, vehicle: vehicle)
                     dispatchSupply(
                         good, from: bufferID, to: consumer.id, along: path,
                         haul: haul, events: &events
@@ -126,8 +127,9 @@ extension World {
     /// beyond what is already on its way to it.
     func shortfall(of good: Good, at consumer: EntityID, amount: Int) -> Int {
         let pile = stockpiles[consumer]
-        let short = amount * 2 - (pile?.quantity(of: good) ?? 0) - inboundUnits(to: consumer, good: good)
-        return min(short, (pile?.room(for: good) ?? 0) - inboundUnits(to: consumer))
+        let inbound = inboundUnits(to: consumer, good: good)
+        let short = amount * 2 - (pile?.quantity(of: good) ?? 0) - inbound.ofGood
+        return min(short, (pile?.room(for: good) ?? 0) - inbound.all)
     }
 
     mutating func dispatchSupply(
@@ -151,14 +153,16 @@ extension World {
     }
 
     /// Units on their way to `consumer`, from storage or straight from a
-    /// producer, optionally only of `good`. A handcart brings several.
-    func inboundUnits(to consumer: EntityID, good: Good? = nil) -> Int {
-        carriers.values.reduce(0) { sum, carrier in
+    /// producer: of `good`, and of every good. A handcart brings several.
+    func inboundUnits(to consumer: EntityID, good: Good) -> (ofGood: Int, all: Int) {
+        carriers.values.reduce(into: (ofGood: 0, all: 0)) { sum, carrier in
             switch carrier.mission {
             case let .retrieve(carried, amount, _, toConsumer), let .deliverToConsumer(carried, amount, _, toConsumer):
-                toConsumer == consumer && (good == nil || carried == good) ? sum + amount : sum
+                guard toConsumer == consumer else { return }
+                sum.all += amount
+                if carried == good { sum.ofGood += amount }
             case .deliver, .deliverToConstructionSite:
-                sum
+                return
             }
         }
     }

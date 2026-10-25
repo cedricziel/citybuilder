@@ -42,20 +42,6 @@ public struct Carrier: Hashable, Codable, Sendable {
         self.vehicle = vehicle
     }
 
-    private enum CodingKeys: String, CodingKey {
-        case id, path, pathIndex, mission, vehicle
-    }
-
-    /// Saves written before vehicles have none: those carriers walk.
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(EntityID.self, forKey: .id)
-        path = try container.decode([TileCoordinate].self, forKey: .path)
-        pathIndex = try container.decode(Int.self, forKey: .pathIndex)
-        mission = try container.decode(Mission.self, forKey: .mission)
-        vehicle = try container.decodeIfPresent(Vehicle.self, forKey: .vehicle)
-    }
-
     public var currentTile: TileCoordinate? {
         guard pathIndex >= 0, pathIndex < path.count else { return nil }
         return path[pathIndex]
