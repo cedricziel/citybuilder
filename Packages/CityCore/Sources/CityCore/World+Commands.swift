@@ -26,6 +26,8 @@ extension World {
             applySetExport(caravanserai, good: good)
         case .marketBuy, .marketSell, .rivalMarketBuy, .rivalMarketSell:
             applyMarketCommand(command, events: &events)
+        case .acceptOrder, .declineOrder, .abandonOrder, .dispatchOrder:
+            applyOrderCommand(command, events: &events)
         }
     }
 

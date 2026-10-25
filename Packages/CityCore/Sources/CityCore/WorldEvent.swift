@@ -115,6 +115,19 @@ public enum WorldEvent: Sendable {
     /// The player bought or sold `quantity` units of `good` for `total` at
     /// the town market. Spec: `town-market` / Market trades are reported.
     case marketTraded(good: Good, quantity: Int, total: Int64, direction: TradeDirection)
+
+    // MARK: Orders
+
+    /// An order went on the board. Spec: `orders`.
+    case orderOffered(order: OrderID, issuer: OrderIssuer)
+    /// The player accepted an offer.
+    case orderAccepted(order: OrderID)
+    /// An accepted order was delivered in full and paid `reward`.
+    case orderFulfilled(order: OrderID, reward: Int64)
+    /// An accepted order missed its deadline or was abandoned.
+    case orderFailed(order: OrderID)
+    /// An offer was not accepted in time.
+    case orderExpired(order: OrderID)
 }
 
 /// Which way goods went in a trade, from the player's point of view.
@@ -185,6 +198,14 @@ extension WorldEvent: Equatable {
                 && lDirection == rDirection
         case let (.marketTraded(lGood, lQuantity, lTotal, lDirection), .marketTraded(rGood, rQuantity, rTotal, rDirection)):
             return (lGood, lQuantity, lTotal, lDirection) == (rGood, rQuantity, rTotal, rDirection)
+        case let (.orderOffered(lOrder, lIssuer), .orderOffered(rOrder, rIssuer)):
+            return lOrder == rOrder && lIssuer == rIssuer
+        case let (.orderFulfilled(lOrder, lReward), .orderFulfilled(rOrder, rReward)):
+            return lOrder == rOrder && lReward == rReward
+        case let (.orderAccepted(lOrder), .orderAccepted(rOrder)),
+             let (.orderFailed(lOrder), .orderFailed(rOrder)),
+             let (.orderExpired(lOrder), .orderExpired(rOrder)):
+            return lOrder == rOrder
         default:
             return false
         }
@@ -233,7 +254,12 @@ public extension WorldEvent {
              .scenarioWon,
              .rivalAgeAdvanced,
              .tradeCompleted,
-             .marketTraded:
+             .marketTraded,
+             .orderOffered,
+             .orderAccepted,
+             .orderFulfilled,
+             .orderFailed,
+             .orderExpired:
             return nil
         }
     }
@@ -276,7 +302,12 @@ public extension WorldEvent {
              .caravanSold,
              .rivalAgeAdvanced,
              .tradeCompleted,
-             .marketTraded:
+             .marketTraded,
+             .orderOffered,
+             .orderAccepted,
+             .orderFulfilled,
+             .orderFailed,
+             .orderExpired:
             return nil
         }
     }
@@ -318,6 +349,11 @@ public extension WorldEvent {
         case .tradeCompleted: return 28
         case .forestPlanted: return 29
         case .marketTraded: return 30
+        case .orderOffered: return 31
+        case .orderAccepted: return 32
+        case .orderFulfilled: return 33
+        case .orderFailed: return 34
+        case .orderExpired: return 35
         }
     }
 }

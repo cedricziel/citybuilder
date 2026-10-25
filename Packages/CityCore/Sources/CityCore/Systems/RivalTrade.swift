@@ -30,7 +30,7 @@ extension World {
         from rival: RivalTown,
         events: inout [WorldEvent]
     ) -> Bool {
-        let limit = min(qty, ship.freeSpace, Self.unitsPaidFor(by: economy.balance, at: good.rivalPrice(.bought)))
+        let limit = min(qty, ship.freeSpace, Self.unitsPaidFor(by: economy.balance, at: rivalPrice(good, .bought, from: rival.id)))
         guard limit > 0 else { return false }
         let buffers = goodsBuffers(of: rival.owner)
         let held = buffers.reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
@@ -52,7 +52,7 @@ extension World {
         events: inout [WorldEvent]
     ) -> Bool {
         let carried = ship.cargo[good] ?? 0
-        let limit = min(qty, carried, Self.unitsPaidFor(by: rival.treasury, at: good.rivalPrice(.sold)))
+        let limit = min(qty, carried, Self.unitsPaidFor(by: rival.treasury, at: rivalPrice(good, .sold, from: rival.id)))
         guard limit > 0 else { return false }
         let buffers = goodsBuffers(of: rival.owner)
         let held = buffers.reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
@@ -60,11 +60,13 @@ extension World {
             buffers.filter { $0.kind == kind }
         }
         let space = order.reduce(0) { $0 + (stockpiles[$1.id]?.room(for: good) ?? 0) }
-        let units = min(limit, RivalMarket.buyQuantity(of: good, stock: [good: held]), space)
+        let wanted = max(RivalMarket.buyQuantity(of: good, stock: [good: held]), orderDemand(rival: rival.id, good: good))
+        let units = min(limit, wanted, space)
         guard units > 0 else { return false }
         fill(good, upTo: units, into: order)
         ship.cargo[good] = carried == units ? nil : carried - units
         settle(good, units: units, rival: rival, direction: .sold, events: &events)
+        countOrderDelivery(rival: rival.id, good: good, units: units)
         return true
     }
 
@@ -82,7 +84,7 @@ extension World {
         direction: TradeDirection,
         events: inout [WorldEvent]
     ) {
-        let total = Int64(units) * good.rivalPrice(direction)
+        let total = Int64(units) * rivalPrice(good, direction, from: rival.id)
         let (payer, payee): (Owner, Owner) = direction == .bought ? (.player, rival.owner) : (rival.owner, .player)
         credit(-total, to: payer)
         credit(total, to: payee)

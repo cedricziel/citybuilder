@@ -91,4 +91,19 @@ public enum Command: Codable, Equatable, Sendable {
     /// A rival sells up to the quantity of a good from its goods buffers.
     /// Spec: `rival-towns` / Rival market trades.
     case rivalMarketSell(RivalID, Good, Int)
+
+    // MARK: - orders
+
+    /// Take an offer on. Spec: `orders` / The player accepts, declines and
+    /// abandons orders.
+    case acceptOrder(OrderID)
+
+    /// Turn an offer down; it costs nothing.
+    case declineOrder(OrderID)
+
+    /// Give up an accepted order that has nothing sent; it costs favour.
+    case abandonOrder(OrderID)
+
+    /// Send a crown order's goods from the stores to a town center.
+    case dispatchOrder(OrderID)
 }

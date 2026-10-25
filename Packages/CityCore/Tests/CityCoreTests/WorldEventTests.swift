@@ -40,7 +40,12 @@ private let eventSamples: [WorldEvent] = [
     .caravanSold(building: EntityID(raw: 1), goods: [.bread: 4], revenue: 48),
     .rivalAgeAdvanced(1, .medieval),
     .tradeCompleted(rival: 1, good: .wood, quantity: 12, total: 60, direction: .bought),
-    .marketTraded(good: .wood, quantity: 4, total: 24, direction: .bought)
+    .marketTraded(good: .wood, quantity: 4, total: 24, direction: .bought),
+    .orderOffered(order: 1, issuer: .rival(1)),
+    .orderAccepted(order: 1),
+    .orderFulfilled(order: 1, reward: 540),
+    .orderFailed(order: 1),
+    .orderExpired(order: 1)
 ]
 
 @Test("scenario: event enum is exhaustive over mvp capabilities")
@@ -48,7 +53,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
     // Construct one event of every case. Exhaustiveness is enforced by the
     // case-less switch below: removing a case breaks the construction;
     // adding a case without updating the test makes the compiler warn.
-    #expect(eventSamples.count == 31)
+    #expect(eventSamples.count == 36)
     for event in eventSamples {
         switch event {
         case .buildingPlaced,
@@ -81,7 +86,12 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .caravanSold,
              .rivalAgeAdvanced,
              .tradeCompleted,
-             .marketTraded:
+             .marketTraded,
+             .orderOffered,
+             .orderAccepted,
+             .orderFulfilled,
+             .orderFailed,
+             .orderExpired:
             break
         }
     }
