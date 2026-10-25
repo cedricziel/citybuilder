@@ -206,7 +206,13 @@ public extension World {
         }
         orders.favour.adjust(.crown, by: 7)
         orders.favour.adjust(.rival(first), by: 3)
-        if let center = goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) {
+        // Exactly 38 planks in the stores, whatever the starter stock was.
+        let stores = goodsBuffers(of: .player)
+        for store in stores {
+            let held = stockpiles[store.id]?.quantity(of: .planks) ?? 0
+            stockpiles[store.id]?.withdraw(.planks, amount: held)
+        }
+        if let center = stores.first(where: { $0.kind == .townCenter }) {
             stockpiles[center.id]?.deposit(.planks, amount: 38)
         }
     }

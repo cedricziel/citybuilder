@@ -224,7 +224,7 @@ func ordersSeedHasABoard() {
     #expect(world?.orders.orders.compactMap(\.issuer.rivalID) == [1, 2])
     let board = world.map { GameSession(world: $0).ordersBoard }
     #expect(board?.cards.count == 4 && board?.acceptedCount == 2)
-    #expect(board?.cards.first?.status == "In stores 40 of 54")
+    #expect(board?.cards.first?.status == "In stores 38 of 54")
     #expect(UITestSeed.opensOrders(fromArguments: ["app", "-uiTestOpenOrders"]))
     #expect(!UITestSeed.opensOrders(fromArguments: ["app"]))
 }
