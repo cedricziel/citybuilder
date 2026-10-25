@@ -119,7 +119,19 @@ The candidate list is small: only consumers of the good that are short. Measured
 - The no-market control seed 2 stays solvent, as under M1.
 - Pacing: 101 of 180 arms reach a merchant against 121, bankruptcies 9 against 11.
 
-Carts make hauls cheaper, like M1's hops, so the run is re-measured on top of the output cap before merge.
+Carts make hauls cheaper, like M1's hops, so the run is re-measured on top of per-good storage (#269) and M1 (#232) before merge.
+
+*On top of per-good storage and M1:*
+- A long haul to storage still waits for a cart load. "Ready" now reads the store's room for that good minus the units already on their way there, so a cart is never promised room twice.
+- A producer's direct hop to a short consumer is a haul too. On a long road it goes by cart when at least the minimum load is ready and the consumer is short of at least that much. Otherwise it walks one unit without waiting, since a short consumer should not wait for a load.
+- Inbound supply and room counts are in units, not carriers, because a cart brings several.
+- *M3 result on main 574e76c4:* pending the sweep slot. The PR body carries the numbers.
+
+*Campaign need (Hard Ground 3, "The Long Road", `add-campaigns`):* the chapter pushes the mine 16 tiles out on the archipelago home island, starts in the Medieval age with Mining done and Seafaring closed, and teaches long hauls by road with handcarts.
+- That needs carts from the Medieval age on: `handcart`'s `Vehicle` item starts there.
+- The town-to-mine road must reach the 12-tile haul distance: a mine 16 tiles out does on any real road.
+- Ore and iron must go through a warehouse near the mine: iron is a construction material, so it always goes through storage, and the 200-tick wait covers a slow mine.
+- No campaign-specific code is needed. #236's later vehicles (mule cart, wagon, truck) add `Vehicle` items with an age, a capacity and a speed, without a save migration, since carriers store the vehicle id.
 
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
