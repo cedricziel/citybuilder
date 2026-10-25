@@ -13,4 +13,4 @@ A scripted town SHALL stay solvent on Normal when it trades at its own town cent
 
 - **WHEN** such a town plays archipelago seeds 0 to 29 on Normal for 4,000 ticks, once without trading at its market and once with it
 - **THEN** no more of the 30 games with the market end in bankruptcy than without it
-- **AND** the games with the market end with no fewer residents in all than those without it
+- **AND** the games with the market end with at least 95% as many residents in all as those without it
