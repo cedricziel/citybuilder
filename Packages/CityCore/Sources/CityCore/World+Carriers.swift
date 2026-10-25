@@ -10,7 +10,7 @@ extension World {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
         spawnCarriersFromProducers(tileToIsland: tileToIsland, events: &events)
-        spawnSupplyCarriers(tileToIsland: tileToIsland, events: &events)
+        spawnSupplyCarriers(events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
     }
 
@@ -19,7 +19,12 @@ extension World {
         for id in carriers.keys.sorted(by: { $0.raw < $1.raw }) {
             guard let carrier = carriers[id] else { continue }
             if carrier.hasArrived {
-                applyCarrierArrival(carrier, events: &events)
+                if let holding = applyCarrierArrival(carrier, events: &events) {
+                    // Its destination had no room: it keeps the goods,
+                    // so none are lost.
+                    carriers[id] = holding
+                    continue
+                }
                 switch carrier.mission {
                 case let .deliver(_, _, fromProducer, _),
                      let .deliverToConstructionSite(_, _, fromProducer, _):
@@ -36,22 +41,25 @@ extension World {
         }
     }
 
-    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) {
+    /// Applies `carrier`'s arrival. Returns the carrier still holding what
+    /// its destination, still standing, had no room for, sent on where it
+    /// goes next; nil once it has nothing left.
+    private mutating func applyCarrierArrival(_ carrier: Carrier, events: inout [WorldEvent]) -> Carrier? {
         // `currentTile` is `nil` only on a malformed empty path; arrived
         // carriers always have a positive pathIndex < path.count. Use
         // `path.last` as the safe destination fallback.
         let arrivalTile = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
         switch carrier.mission {
-        case let .deliver(good, amount, _, toWarehouse):
-            stockpiles[toWarehouse]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
-        case let .retrieve(good, amount, _, toConsumer):
-            stockpiles[toConsumer]?.deposit(good, amount: amount)
-            events.append(.carrierArrived(
-                carrier: carrier.id, at: arrivalTile, good: good, amount: amount
-            ))
+        case let .deliver(good, amount, producer, store):
+            let kept = deposit(good, amount, into: store, by: carrier, events: &events)
+            return kept > 0 ? rerouted(carrier, good: good, amount: kept, producer: producer, from: store) : nil
+        case let .retrieve(good, amount, buffer, consumer):
+            // A consumer that filled meanwhile gets the rest once it has room.
+            let kept = deposit(good, amount, into: consumer, by: carrier, events: &events)
+            guard kept > 0 else { return nil }
+            var holding = carrier
+            holding.mission = .retrieve(good: good, amount: kept, fromWarehouse: buffer, toConsumer: consumer)
+            return holding
         case let .deliverToConstructionSite(good, amount, _, toBuilding):
             applyConstructionDelivery(
                 ConstructionDelivery(
@@ -63,7 +71,67 @@ extension World {
                 ),
                 events: &events
             )
+            return nil
         }
+    }
+
+    /// Puts what fits of `amount` into `destination` and returns the units
+    /// left over. A demolished destination takes nothing and keeps nothing,
+    /// as before.
+    private mutating func deposit(
+        _ good: Good, _ amount: Int, into destination: EntityID, by carrier: Carrier, events: inout [WorldEvent]
+    ) -> Int {
+        guard var pile = stockpiles[destination] else { return 0 }
+        let accepted = pile.deposit(good, amount: amount)
+        stockpiles[destination] = pile
+        if accepted > 0 {
+            let tile = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
+            events.append(.carrierArrived(carrier: carrier.id, at: tile, good: good, amount: accepted))
+        }
+        return amount - accepted
+    }
+
+    /// A producer's carrier left holding `amount` of `good` at `store`, which
+    /// had no room: on to the nearest other store with room for it, counting
+    /// what is already on its way there, else home to `producer`. At home
+    /// with no room it waits there and looks again next tick, so carriers
+    /// never pile up behind a full store.
+    private func rerouted(
+        _ carrier: Carrier, good: Good, amount: Int, producer: EntityID, from store: EntityID
+    ) -> Carrier {
+        let here = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
+        let inbound = inboundDeliveries()
+        let others = goodsBuffers().filter { $0.state == .operational && $0.id != store }
+        if let (target, path) = findRoadConnectedBuffer(
+            fromRoad: here, good: good, among: others, inbound: { inbound[$1]?[$0] ?? 0 }
+        ) {
+            return Carrier(id: carrier.id, path: path, mission: .deliver(
+                good: good, amount: amount, fromProducer: producer, toWarehouse: target
+            ))
+        }
+        let home = buildings[producer].flatMap {
+            anyAdjacentRoad(anchor: $0.anchor, footprint: BuildingCatalog.spec(for: $0.kind).footprint)
+        }
+        guard store != producer, let home, let path = roadPath(from: here, to: home) else {
+            var waiting = carrier
+            waiting.mission = .deliver(good: good, amount: amount, fromProducer: producer, toWarehouse: store)
+            return waiting
+        }
+        return Carrier(id: carrier.id, path: path, mission: .deliver(
+            good: good, amount: amount, fromProducer: producer, toWarehouse: producer
+        ))
+    }
+
+    /// Units of each good on their way to each store, so its room for a
+    /// good is not promised twice.
+    private func inboundDeliveries() -> [EntityID: [Good: Int]] {
+        var inbound: [EntityID: [Good: Int]] = [:]
+        for carrier in carriers.values {
+            if case let .deliver(good, amount, _, store) = carrier.mission {
+                inbound[store, default: [:]][good, default: 0] += amount
+            }
+        }
+        return inbound
     }
 
     /// Side-effect of a `.deliverToConstructionSite` arrival: bumps
@@ -115,6 +183,7 @@ extension World {
         let waitingSites = buildings.values
             .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
             .sorted { $0.id.raw < $1.id.raw }
+        var inbound = inboundDeliveries()
         for building in operationalProducersInEntityOrder() {
             let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
@@ -146,9 +215,10 @@ extension World {
                     break
                 }
                 guard let (warehouseId, path) = findRoadConnectedBuffer(
-                    fromRoad: road, good: good, among: buffers
+                    fromRoad: road, good: good, among: buffers, inbound: { inbound[$1]?[$0] ?? 0 }
                 )
                 else { continue }
+                inbound[warehouseId, default: [:]][good, default: 0] += 1
                 spawnCarrier(
                     CarrierSpawn(
                         producerId: producerId,
@@ -263,11 +333,13 @@ extension World {
     /// Returns (bufferId, road path) on the shortest path; nil if none
     /// reachable. Equal-length paths resolve to the lowest entity ID.
     /// `buffers` are the operational goods buffers in entity order, when
-    /// the caller has already listed them.
+    /// the caller has already listed them. A buffer qualifies only with
+    /// room for `good` beyond the units `inbound` says are on their way.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good,
-        among buffers: [Building]? = nil
+        among buffers: [Building]? = nil,
+        inbound: (Good, EntityID) -> Int = { _, _ in 0 }
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
@@ -277,8 +349,7 @@ extension World {
                 footprint: BuildingCatalog.spec(for: building.kind).footprint
             )
             else { continue }
-            guard let stock = stockpiles[id], stock.freeSpace > 0 else { continue }
-            _ = good // future: check warehouse accepts this good type
+            guard let stock = stockpiles[id], stock.room(for: good) > inbound(good, id) else { continue }
             guard let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {

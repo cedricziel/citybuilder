@@ -49,13 +49,16 @@ private func makeDockedShip(
 
 // MARK: - Manifest actions
 
+/// Units of each good a port holds.
+private let portCapacity = BuildingKind.port.storagePerGood ?? 0
+
 @Test("scenario: load action up to ship capacity")
 func scenarioLoadActionUpToShipCapacity() throws {
     var world = shoreWorld()
     let portA = placePort(&world, at: TileCoordinate(x: 7, y: 1))
     let portB = placePort(&world, at: TileCoordinate(x: 7, y: 5))
     if var sp = world.stockpiles[portA] {
-        _ = sp.deposit(.wood, amount: 100)
+        _ = sp.deposit(.wood, amount: 70)
         world.stockpiles[portA] = sp
     }
     let routeID = EntityID(raw: 140)
@@ -69,7 +72,7 @@ func scenarioLoadActionUpToShipCapacity() throws {
     _ = world.tick()
     let ship = try #require(world.ships[shipID])
     #expect(ship.cargo[.wood] == 20)
-    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 80)
+    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 50)
 }
 
 @Test("scenario: load action up to port stock")
@@ -101,7 +104,7 @@ func scenarioUnloadActionUpToPortFreeCapacity() throws {
     let portA = placePort(&world, at: TileCoordinate(x: 7, y: 1))
     let portB = placePort(&world, at: TileCoordinate(x: 7, y: 5))
     if var sp = world.stockpiles[portA] {
-        _ = sp.deposit(.wood, amount: 175)
+        _ = sp.deposit(.wood, amount: portCapacity - 25)
         world.stockpiles[portA] = sp
     }
     let routeID = EntityID(raw: 142)
@@ -115,7 +118,7 @@ func scenarioUnloadActionUpToPortFreeCapacity() throws {
     _ = world.tick()
     let ship = try #require(world.ships[shipID])
     #expect(ship.cargo[.wood] == 15)
-    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 200)
+    #expect(world.stockpiles[portA]?.quantity(of: .wood) == portCapacity)
 }
 
 @Test("scenario: manifest actions execute in declared order")
@@ -124,7 +127,7 @@ func scenarioManifestActionsExecuteInDeclaredOrder() throws {
     let portA = placePort(&world, at: TileCoordinate(x: 7, y: 1))
     let portB = placePort(&world, at: TileCoordinate(x: 7, y: 5))
     if var sp = world.stockpiles[portA] {
-        _ = sp.deposit(.wood, amount: 100)
+        _ = sp.deposit(.wood, amount: 70)
         world.stockpiles[portA] = sp
     }
     let routeID = EntityID(raw: 143)
@@ -143,7 +146,7 @@ func scenarioManifestActionsExecuteInDeclaredOrder() throws {
     #expect(ship.cargo[.planks] == 50)
     #expect(ship.cargo[.wood] == 50)
     #expect(world.stockpiles[portA]?.quantity(of: .planks) == 50)
-    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 50)
+    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 20)
 }
 
 // MARK: - Integration is Fixed-only
@@ -193,7 +196,7 @@ func scenarioPortRespectsBufferCapacityOnSeaSideDeposit() throws {
     let portA = placePort(&world, at: TileCoordinate(x: 7, y: 1))
     let portB = placePort(&world, at: TileCoordinate(x: 7, y: 5))
     if var sp = world.stockpiles[portA] {
-        _ = sp.deposit(.wood, amount: 190)
+        _ = sp.deposit(.wood, amount: portCapacity - 10)
         world.stockpiles[portA] = sp
     }
     let routeID = EntityID(raw: 145)
@@ -207,7 +210,7 @@ func scenarioPortRespectsBufferCapacityOnSeaSideDeposit() throws {
     _ = world.tick()
     let ship = try #require(world.ships[shipID])
     #expect(ship.cargo[.wood] == 40)
-    #expect(world.stockpiles[portA]?.quantity(of: .wood) == 200)
+    #expect(world.stockpiles[portA]?.quantity(of: .wood) == portCapacity)
 }
 
 // MARK: - Shipyard production tick

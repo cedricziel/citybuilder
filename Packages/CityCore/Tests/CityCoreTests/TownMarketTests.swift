@@ -7,6 +7,9 @@ import Testing
 /// Two islands across a strait: the player's to the west (x 0…8) holds
 /// the town center and a warehouse, the east one (x 12…17) a second
 /// warehouse. Every buffer starts empty and the player has $1,000.
+/// Units of each good a warehouse holds.
+private let warehouseRoom = BuildingKind.warehouse.storagePerGood ?? 0
+
 private struct MarketFixture {
     var world: World
     let townCenter: EntityID
@@ -101,17 +104,17 @@ func seasonalBuyLimit() {
 @Test("scenario: Full town center")
 func fullTownCenter() {
     var market = MarketFixture()
-    market.world.testSetStock([.planks: 37], in: market.townCenter)
-    market.world.testSetStock([.planks: 200], in: market.warehouse)
+    market.world.testSetStock([.food: 37, .planks: 3], in: market.townCenter)
+    market.world.testSetStock([.food: warehouseRoom], in: market.warehouse)
     market.buy(.food, 10)
-    #expect(market.stock(.food) == 3)
+    #expect(market.stock(.food) == 40)
     #expect(market.stock(.food, in: market.farWarehouse) == 0)
 }
 
 @Test("scenario: A full town center buys into a warehouse")
 func aFullTownCenterBuysIntoAWarehouse() {
     var market = MarketFixture()
-    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.world.testSetStock([.food: 40], in: market.townCenter)
     let events = market.buy(.food, 10)
     #expect(market.stock(.food, in: market.warehouse) == 10)
     #expect(trades(events) == [.marketTraded(good: .food, quantity: 10, total: 10 * Good.food.marketPrice(.bought), direction: .bought)])
@@ -120,9 +123,9 @@ func aFullTownCenterBuysIntoAWarehouse() {
 @Test("scenario: The town center fills first")
 func theTownCenterFillsFirst() {
     var market = MarketFixture()
-    market.world.testSetStock([.planks: 37], in: market.townCenter)
+    market.world.testSetStock([.food: 37], in: market.townCenter)
     market.buy(.food, 10)
-    #expect(market.stock(.food) == 3)
+    #expect(market.stock(.food) == 40)
     #expect(market.stock(.food, in: market.warehouse) == 7)
 }
 
@@ -136,7 +139,7 @@ func storesTheTownCentersRoadsReachFillFirst() {
     }
     let reached = market.world.testPlace(.warehouse, at: TileCoordinate(x: 3, y: 3), owner: .player)
     #expect(market.warehouse.raw < reached.raw)
-    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.world.testSetStock([.food: 40], in: market.townCenter)
     market.buy(.food, 10)
     #expect(market.stock(.food, in: reached) == 10)
     #expect(market.stock(.food, in: market.warehouse) == 0)
@@ -146,11 +149,11 @@ func storesTheTownCentersRoadsReachFillFirst() {
 func warehousesFillBeforePorts() {
     var market = MarketFixture()
     // The fixture's warehouse is full; a port, then a second warehouse.
-    market.world.testSetStock([.planks: 200], in: market.warehouse)
+    market.world.testSetStock([.food: warehouseRoom], in: market.warehouse)
     let port = market.world.testPlace(.port, at: TileCoordinate(x: 7, y: 3), owner: .player)
     let warehouse = market.world.testPlace(.warehouse, at: TileCoordinate(x: 3, y: 3), owner: .player)
     #expect(port.raw < warehouse.raw)
-    market.world.testSetStock([.planks: 40], in: market.townCenter)
+    market.world.testSetStock([.food: 40], in: market.townCenter)
     market.buy(.food, 10)
     #expect(market.stock(.food, in: warehouse) == 10)
     #expect(market.stock(.food, in: port) == 0)
@@ -159,8 +162,8 @@ func warehousesFillBeforePorts() {
 @Test("scenario: Stores on another island stay out of a buy")
 func storesOnAnotherIslandStayOutOfABuy() {
     var market = MarketFixture()
-    market.world.testSetStock([.planks: 40], in: market.townCenter)
-    market.world.testSetStock([.planks: 200], in: market.warehouse)
+    market.world.testSetStock([.food: 40], in: market.townCenter)
+    market.world.testSetStock([.food: warehouseRoom], in: market.warehouse)
     let events = market.buy(.food, 10)
     #expect(market.stock(.food, in: market.farWarehouse) == 0)
     #expect(market.world.economy.balance == 1000)
@@ -431,8 +434,12 @@ func buyingNeverOverdraws() {
     market.world.testSetStock([.bread: 5], in: market.warehouse)
     market.world.testSetStock([.iron: 9], in: market.farWarehouse)
     let reach = market.world.marketReach(at: market.townCenter)
-    // 33 free in the town center and 195 in the warehouse beside it.
-    #expect(reach == MarketReach(freeSpace: 228, stock: [.bread: 8, .wood: 4]))
+    // Each good has its own room: 40 in the town center and 80 in the
+    // warehouse beside it, less what each already holds.
+    #expect(reach?.stock == [.bread: 8, .wood: 4])
+    #expect(reach?.room[.bread] == 37 + 75)
+    #expect(reach?.room[.wood] == 36 + 80)
+    #expect(reach?.room[.iron] == 40 + 80)
 }
 
 @Test func marketReachLeavesOutBuffersUnderConstructionAndRivals() {

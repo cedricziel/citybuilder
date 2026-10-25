@@ -116,9 +116,9 @@ func scenarioTheIconGoesWhenTheIssueIsFixed() throws {
 func aChangedIssueSwapsTheTexture() throws {
     let scene = render(town(.bakery, issue: .missingInputs([.flour])))
     let first = try #require(icon(in: scene))
-    try advance(scene, to: town(.bakery, tick: 181, issue: .storageFull))
+    try advance(scene, to: town(.bakery, tick: 181, issue: .outputStuck(.bread)))
     #expect(icon(in: scene) === first)
-    #expect(iconName(in: scene) == "status-storage-full")
+    #expect(iconName(in: scene) == "status-bread-stuck")
 }
 
 @MainActor
@@ -292,12 +292,12 @@ func anEmptyMissingInputsIssueKeepsTheOtherIcon() {
 @Test("every issue maps to a drawn icon")
 func everyIssueMapsToADrawnIcon() {
     let issues: [BuildingIssue] = [
-        .noRoad, .noRouteToStorage, .noTreesInReach, .noRoomToPlant, .storageFull,
-        .resting(.planks), .missingInputs([.wood, .iron])
+        .noRoad, .noRouteToStorage, .noTreesInReach, .noRoomToPlant,
+        .outputStuck(.planks), .missingInputs([.wood, .iron])
     ]
     let names = issues.compactMap(StatusIcons.textureName(for:))
     #expect(names == [
-        "status-no-road", "status-no-route", "status-no-trees", "status-no-room-to-plant", "status-storage-full",
+        "status-no-road", "status-no-route", "status-no-trees", "status-no-room-to-plant",
         "status-planks-stuck", "status-wood-short"
     ])
     #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))

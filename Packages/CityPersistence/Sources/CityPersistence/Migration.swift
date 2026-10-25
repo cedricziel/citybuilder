@@ -1,3 +1,4 @@
+import CityCore
 import Foundation
 
 /// Pipeline element: takes a parsed JSON object at one schema
@@ -28,7 +29,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV5ToV6(),
         MigrationV6ToV7(),
         MigrationV7ToV8(),
-        MigrationV8ToV9()
+        MigrationV8ToV9(),
+        MigrationV9ToV10()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -315,5 +317,54 @@ public struct MigrationV8ToV9: Migration {
         world["rivals"] = [Any]()
         root["world"] = world
         return root
+    }
+}
+
+/// Migration #9: v9 → v10. v10 town centers, warehouses and ports hold
+/// up to their kind's `storagePerGood` of each good instead of one shared
+/// total. Each one's stockpile takes that per-good limit and keeps every
+/// unit it holds: stock above the limit stays as overflow until it is
+/// used, and leaves no room for that good meanwhile. Spec:
+/// `persistence-save-load` / Saves before per-good storage keep their
+/// stock.
+public struct MigrationV9ToV10: Migration {
+    public let fromVersion = 9
+    public let toVersion = 10
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 10
+        guard var world = root["world"] as? [String: Any],
+              let buildings = world["buildings"] as? [Any],
+              var stockpiles = world["stockpiles"] as? [Any]
+        else { return root }
+        var perGoodByID: [Int: Int] = [:]
+        for index in stride(from: 1, to: buildings.count, by: 2) {
+            guard let building = buildings[index] as? [String: Any],
+                  let id = (building["id"] as? [String: Any])?["raw"] as? Int,
+                  let perGood = (building["kind"] as? String).flatMap(Self.kind)?.storagePerGood
+            else { continue }
+            perGoodByID[id] = perGood
+        }
+        for index in stride(from: 1, to: stockpiles.count, by: 2) {
+            guard let id = (stockpiles[index - 1] as? [String: Any])?["raw"] as? Int,
+                  let perGood = perGoodByID[id],
+                  var stockpile = stockpiles[index] as? [String: Any]
+            else { continue }
+            stockpile["capacity"] = perGood
+            stockpile["limitsEachGood"] = true
+            stockpiles[index] = stockpile
+        }
+        world["stockpiles"] = stockpiles
+        root["world"] = world
+        return root
+    }
+
+    /// The kind a save names, legacy spellings included.
+    private static func kind(_ raw: String) -> BuildingKind? {
+        guard let data = try? JSONEncoder().encode(raw) else { return nil }
+        return try? JSONDecoder().decode(BuildingKind.self, from: data)
     }
 }

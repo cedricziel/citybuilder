@@ -98,9 +98,7 @@ extension World {
         if kind == .road {
             roadGraph.addRoad(at: anchor)
         }
-        if let capacity = Self.stockpileCapacity(for: kind) {
-            stockpiles[id] = Stockpile(capacity: capacity)
-        }
+        stockpiles[id] = Self.newStockpile(for: kind)
         if !materialCost.isEmpty {
             let delivered = deductMaterialsPartial(cost: materialCost, anchor: anchor)
             buildings[id]?.materialsDelivered = delivered
@@ -135,9 +133,11 @@ extension World {
         return result
     }
 
-    /// Stockpile capacity per building kind, the pack's `storage`. nil
-    /// means "this kind has no stockpile", e.g. roads.
-    static func stockpileCapacity(for kind: BuildingKind) -> Int? {
-        kind.storage
+    /// A new, empty stockpile for `kind`: per good for stores with the
+    /// pack's `storagePerGood`, shared for those with `storage`; nil for a
+    /// kind with no stockpile, e.g. roads.
+    static func newStockpile(for kind: BuildingKind) -> Stockpile? {
+        if let perGood = kind.storagePerGood { return Stockpile(perGood: perGood) }
+        return kind.storage.map { Stockpile(capacity: $0) }
     }
 }

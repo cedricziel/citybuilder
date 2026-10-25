@@ -49,9 +49,9 @@ func scenarioReplantingTownsKeepTheirHuts() {
     #expect(placedKind(unplanted.takeTurn(1).last) == .lumberjackHut)
 }
 
-/// A town center with 2 units of room: planks, a little wood, and
-/// enough food that the rival doesn't sell to clear it.
-private let fullCenter: [Good: Int] = [.wood: 2, .planks: 30, .food: 6]
+/// A town center with 2 units of room for food, so the farms' next
+/// harvest has nowhere to go.
+private let fullCenter: [Good: Int] = [.wood: 2, .planks: 30, .food: 38]
 
 @Test("scenario: a full town center gets a warehouse")
 func scenarioAFullTownCenterGetsAWarehouse() {
@@ -61,7 +61,7 @@ func scenarioAFullTownCenterGetsAWarehouse() {
     }
     var roomy = world
     #expect(placedKind(world.takeTurn(1).last) == .warehouse)
-    roomy.setRivalStock(1, [.wood: 2, .planks: 20, .food: 6])
+    roomy.setRivalStock(1, [.wood: 2, .planks: 30, .food: 30])
     #expect(placedKind(roomy.takeTurn(1).last) != .warehouse)
 }
 

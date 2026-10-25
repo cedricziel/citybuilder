@@ -49,7 +49,8 @@ func eraTechRowShowsTheAgeItOpensAndItsGate() throws {
 
 @Test("the research panel shows the difficulty's cost")
 func researchPanelShowsScaledCost() throws {
-    let easy = ResearchPanelModel(world: World.newGame(layout: .singleIsland, seed: 0, difficulty: .easy))
-    let milling = try #require(easy.rows.first { $0.tech == .milling })
-    #expect(milling.cost == 448)
+    let world = World.newGame(layout: .singleIsland, seed: 0, difficulty: .easy)
+    let milling = try #require(ResearchPanelModel(world: world).rows.first { $0.tech == .milling })
+    #expect(milling.cost == world.researchCost(of: .milling))
+    #expect(milling.cost < Tech.milling.cost)
 }

@@ -49,8 +49,6 @@ public struct Good: Equatable, Sendable {
     public var market: MarketLimits
     /// Tiers whose needs this good joins (design D2 of `tier-needs-data`).
     public var neededBy: [String]
-    /// Stock at which producers of this good rest (`rest-when-stocked` D1).
-    public var restAt: Int?
     public var origin: Origin
 }
 
@@ -86,6 +84,8 @@ public struct Building: Equatable, Sendable {
     public var upkeep: Int
     public var buildTicks: Int
     public var storage: Int?
+    /// Units of each good a store holds, for stores that keep goods apart.
+    public var storagePerGood: Int?
     /// Ticks per planted forest tile, for buildings that plant.
     public var plantTicks: Int?
     /// Chebyshev radius around the footprint a gathering or planting building works.

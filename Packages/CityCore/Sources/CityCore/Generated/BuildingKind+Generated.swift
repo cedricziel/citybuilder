@@ -106,7 +106,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
     public var storage: Int? {
         switch self {
         case .house: 8
-        case .warehouse: 200
+        case .warehouse: nil
         case .road: nil
         case .lumberjackHut: 16
         case .forester: nil
@@ -121,8 +121,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .smelter: 16
         case .toolsmith: 16
         case .library: nil
-        case .townCenter: 40
-        case .port: 200
+        case .townCenter: nil
+        case .port: nil
         case .shipyard: 64
         case .hopGarden: 16
         case .brewery: 16
@@ -141,6 +141,47 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: 16
         case .powerPlant: 16
+        }
+    }
+
+    public var storagePerGood: Int? {
+        switch self {
+        case .house: nil
+        case .warehouse: 80
+        case .road: nil
+        case .lumberjackHut: nil
+        case .forester: nil
+        case .sawmill: nil
+        case .farm: nil
+        case .bakery: nil
+        case .grainFarm: nil
+        case .windmill: nil
+        case .quernHouse: nil
+        case .mine: nil
+        case .charcoalBurner: nil
+        case .smelter: nil
+        case .toolsmith: nil
+        case .library: nil
+        case .townCenter: 40
+        case .port: 80
+        case .shipyard: nil
+        case .hopGarden: nil
+        case .brewery: nil
+        case .meadHall: nil
+        case .vineyard: nil
+        case .winery: nil
+        case .forum: nil
+        case .teaGarden: nil
+        case .teaHouse: nil
+        case .templeGarden: nil
+        case .coffeeGrove: nil
+        case .roastery: nil
+        case .caravanserai: nil
+        case .monument: nil
+        case .guildHall: nil
+        case .gallery: nil
+        case .steamEngine: nil
+        case .powerPlant: nil
         }
     }
 

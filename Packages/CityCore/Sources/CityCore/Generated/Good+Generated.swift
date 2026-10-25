@@ -69,29 +69,6 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .coffee: MarketTerms(buyLimit: 0, sellLimit: 20)
         }
     }
-
-    public var restAt: Int? {
-        switch self {
-        case .wood: nil
-        case .planks: 40
-        case .food: nil
-        case .bread: 40
-        case .grain: nil
-        case .flour: 40
-        case .ore: nil
-        case .charcoal: 40
-        case .iron: 40
-        case .tools: 40
-        case .hops: nil
-        case .beer: 40
-        case .grapes: nil
-        case .wine: 40
-        case .teaLeaves: nil
-        case .tea: 40
-        case .coffeeCherries: nil
-        case .coffee: 40
-        }
-    }
 }
 
 public enum GoodsCatalog {
