@@ -45,7 +45,7 @@ public enum TextureFiltering {
 
     /// The building status icons: a pictogram per issue, and per good a "short" and a "stuck" icon
     /// (`status-no-road`, `status-bread-short`), drawn as SVG.
-    static let statusIcons: [String] = ["no-road", "no-route", "no-trees", "no-room-to-plant", "storage-full"]
+    static let statusIcons: [String] = ["no-road", "no-route", "no-trees", "no-room-to-plant"]
         .map { "status-\($0)" } + Good.allCases.flatMap { ["status-\($0.rawValue)-short", "status-\($0.rawValue)-stuck"] }
 
     /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).

@@ -3,8 +3,8 @@
 One icon floats over a building while something is wrong. Two families share a 28-unit grid and the
 goods icons' dark warm outline:
 
-- Pictograms: a white glyph on a state-coloured disc, red when the building is blocked, amber when it
-  waits (`status-no-road`, `status-storage-full`).
+- Pictograms: a white glyph on a red disc, crossed by a slash when something is missing
+  (`status-no-road`).
 - Goods: the existing goods icon on a cream disc, with a pip in the lower right. A red "!" means the
   good is short: a missing input or an unmet house need (`status-bread-short`). An amber pause means
   output is stuck or the building rests on stock (`status-planks-stuck`).
@@ -38,8 +38,6 @@ def _glyphs(colour: str) -> dict[str, str]:
         "no-trees": f'<circle {fill} cx="12" cy="9" r="6"/><path {stroke} stroke-width="2.2" d="M12 14v7"/>',
         "no-room-to-plant": f'<path {stroke} stroke-width="2.2" d="M12 20.5V12M4 20.5h16"/>'
         f'<path {fill} d="M12 12c-4 0-6-2.5-6-6 4 0 6 2.5 6 6zM12 11c0-3.5 2-5.5 6-5.5 0 3.5-2 5.5-6 5.5z"/>',
-        "storage-full": f'<rect {stroke} stroke-width="2.2" x="4" y="8" width="16" height="12.5" rx="1"/>'
-        f'<path {stroke} stroke-width="1.6" d="M4 14h16M12 3.5v5M9 6l3-2.5L15 6"/>',
     }
 
 
@@ -49,7 +47,6 @@ PICTOGRAMS: dict[str, tuple[str, bool]] = {
     "no-route": (RED, True),
     "no-trees": (RED, True),
     "no-room-to-plant": (RED, True),
-    "storage-full": (AMBER, False),
 }
 
 # Good variants: the pip's colour and glyph.

@@ -3,8 +3,8 @@ import { statusSprites } from "../../generated/status";
 import { goodName, type Good } from "../GoodIcon/GoodIcon";
 import "./StatusIcon.css";
 
-/** An issue drawn as a pictogram: red when the building is blocked, amber (storage full) when it waits. */
-export type StatusPictogram = "no-road" | "no-route" | "no-trees" | "no-room-to-plant" | "storage-full";
+/** An issue drawn as a white pictogram on a red disc: something blocks the building. */
+export type StatusPictogram = "no-road" | "no-route" | "no-trees" | "no-room-to-plant";
 
 /**
  * What a status icon shows: a pictogram, or a good with a pip. `short` (red "!") is a missing input
@@ -20,7 +20,6 @@ const pictogramLabels: Record<StatusPictogram, string> = {
   "no-route": "No route to storage",
   "no-trees": "No trees in reach",
   "no-room-to-plant": "No room to plant",
-  "storage-full": "Storage full",
 };
 
 /** "Short of bread", "Output stuck: planks", "No road". */

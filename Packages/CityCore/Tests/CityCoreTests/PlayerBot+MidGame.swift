@@ -252,7 +252,6 @@ extension World {
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
         var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
         var kit = arm.orders ? OrdersKit() : nil
-        defer { milestones.orders = kit.map { OrdersKit.Result($0, world) } }
         for tick in 1 ... ticks {
             if tick.isMultiple(of: 50) {
                 bot.takeTurn(&world)
@@ -265,6 +264,7 @@ extension World {
                 break
             }
         }
+        milestones.orders = kit.map { OrdersKit.Result($0, world) }
         return milestones
     }
 }
