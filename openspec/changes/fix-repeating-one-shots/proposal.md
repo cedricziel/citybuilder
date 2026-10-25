@@ -1,0 +1,25 @@
+## Why
+
+On iOS a single sound sometimes stutters ("drrrrrr") about a hundred times in a row while the game hangs (#264).
+
+A frame can dispatch many copies of one one-shot. At triple speed one timer firing runs three ticks, and a headless run of a rival archipelago game found more than four identical sound-effect cues in 30 % of firings: up to 17 carrier arrivals, and 35 placements plus 34 completions when the rivals lay out their towns. Each bus has four one-shot nodes. Every cue past the fourth takes a busy node, and the node queue stops it, schedules the file again and starts it. `AVAudioPlayerNode.play()` waits for the engine's next I/O cycle, so the queue restarts one node per I/O cycle: the first few milliseconds of the same sample, retriggered every 11 ms on a Mac and every 23 ms or more on iOS. A burst of 100 cues kept the queue busy for 1.1 s on the Mac. While it runs, main-thread graph calls (attaching a loop's node, setting a bus volume) take about one I/O cycle each instead of under 2 ms. The worst second of the modelled run needed 113 restarts, which a 23 ms I/O cycle cannot keep up with, so on iOS the queue falls further behind.
+
+## What Changes
+
+- **Identical one-shots are rate-limited.** A one-shot doesn't start when the same file started under 50 ms ago, or has already started 6 times in the last second. The cue is dropped, not deferred. A burst in one frame plays once.
+- **One-shot starts never back up.** A one-shot is dropped while 4 one-shots already wait on the node queue, so the queue never falls more than a few I/O cycles behind.
+- **A restart drops cues queued before it.** A one-shot queued before the engine stopped or restarted is dropped instead of played in the new run.
+- **Voice start and stop are idempotent.** Starting a voice twice, or stopping it twice, does nothing the second time, and a stopped voice never starts again.
+
+## Capabilities
+
+### New Capabilities
+- (none)
+
+### Modified Capabilities
+- `audio-playback`: new requirements "Identical one-shots are rate-limited", "One-shot starts never back up" and "Voice start and stop are idempotent".
+
+## Impact
+
+- **CityAudio:** a pure `OneShotLimiter`; `OneShotDriver` counts the one-shots waiting on the queue and drops stale ones; `AudioNodeQueue` knows the engine's current run; `PlayerVoice` tracks its phase.
+- **Bindings, the coordinator and ducking are unchanged.** The coordinator still dispatches one cue per event; the cue player decides whether it sounds.
