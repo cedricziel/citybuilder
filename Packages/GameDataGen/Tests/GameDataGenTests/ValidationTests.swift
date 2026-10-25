@@ -187,6 +187,11 @@ private func withVehicles(_ items: String) -> InMemorySource {
     #expect(errors.contains { $0.contains("no logistics") })
 }
 
+@Test func packsWithoutAVehicleAreRejected() {
+    let core = Fixtures.core.replacingOccurrences(of: "  - { kind: Vehicle, id: barrow, age: antiquity, capacity: 3 }\n", with: "")
+    #expect(Fixtures.errors(Fixtures.withCore(core)).contains { $0.contains("no vehicles") })
+}
+
 @Test func secondLogisticsItemIsRejected() {
     let errors = Fixtures.errors(withVehicles("  - { kind: Logistics, id: more, haulDistance: 5, haulMinLoad: 2, haulMaxWait: 9 }\n"))
     #expect(errors.contains { $0.contains("Logistics more") && $0.contains("second") })

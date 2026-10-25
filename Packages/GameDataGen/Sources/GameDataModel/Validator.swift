@@ -304,6 +304,13 @@ extension Validator {
         for (field, value) in values where value < 1 {
             log.error("`\(field)` must be at least 1", at: first.origin, item: "Logistics \(first.id)")
         }
+        if data.vehicles.isEmpty {
+            log.error(
+                "no vehicles: declare at least one `Vehicle` item, the first age's carrier",
+                at: first.origin,
+                item: "Logistics \(first.id)"
+            )
+        }
         let ages = Set(data.ages.map(\.id))
         var byAge: [String: Vehicle] = [:]
         for vehicle in data.vehicles {
