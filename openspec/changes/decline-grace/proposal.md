@@ -10,7 +10,7 @@ The player also has no warning. The red "!" icon shows when a good is short, but
 - N is the tier's `declineGrace` in the packs, in consumption intervals, and scales with difficulty: one more on Easy, as declared on Normal, one fewer on Hard, never below 1. A tier that declares no grace has N = 1, which is today's behaviour.
 - A need that is met again resets its count at the next consumption that draws it in full.
 - A house with no residents has nothing to protect: it keeps today's rule and drops a tier as soon as a need is unmet, so an emptied house can start again.
-- A warning during the grace: the house reports a new `BuildingIssue`, `.runningShort(good, declining:)`, for the binding need that has been short the longest. It maps to that good's existing "short" status icon (no new art, so no canvas), and the inspector's "Problem:" line reads "Short of <good>: residents will leave" during the grace and "Short of <good>: residents are leaving" once it has run out. Details lists how many intervals the need has been short out of N.
+- A warning during the grace: the house reports a new `BuildingIssue`, `.runningShort(good, intervals:, grace:)`, for the binding need that has been short the longest. It maps to that good's existing "short" status icon (no new art, so no canvas), and the inspector's "Problem:" line reads "Short of <good>: residents will leave" during the grace and "Short of <good>: residents are leaving" once it has run out. Details lists how many intervals the need has been short out of N.
 - The count is saved with the house. It is additive, with no version bump: a save without it loads with a count of 1 for each good the house was already short of.
 
 ## Capabilities

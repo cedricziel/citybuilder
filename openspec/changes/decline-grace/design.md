@@ -44,7 +44,7 @@ Alternative: one global N. Rejected: peasants have one need and merchants six, a
 
 ### D4. The warning is a building issue
 
-`BuildingIssue` gets `.runningShort(Good, declining: Bool)`. `World.buildingIssues()` reports it for a player house with residents whose binding needs include one with a count of 1 or more: the one with the largest count, ties in the tier's need order. `declining` is true once that count has reached N. It comes after the house's road checks, so a missing road still wins.
+`BuildingIssue` gets `.runningShort(Good, intervals: Int, grace: Int)`, so the inspector needs no more than the issue. `World.buildingIssues()` reports it for a player house with residents whose binding needs include one with a count of 1 or more: the one with the largest count, ties in the tier's need order. The issue is declining once `intervals` has reached `grace`. It comes after the house's road checks, so a missing road still wins.
 
 `StatusIcons.textureName(for:)` is exhaustive over issues, so the new case has to choose an icon: `short(good)`, the good on a cream disc with a red "!". The icon shows from the first short interval, which is before any decline, and stays through the decline. The inspector's "Problem:" line carries the message, so the existing building-problem banner ("House has a problem") names it once per distinct text. The text holds no countdown, so the banner is not raised again at every interval.
 

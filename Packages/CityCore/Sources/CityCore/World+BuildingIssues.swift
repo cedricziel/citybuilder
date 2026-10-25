@@ -14,6 +14,14 @@ public enum BuildingIssue: Hashable, Sendable {
     /// site has room for it, so it stopped. Names the good it holds most
     /// of (`per-good-storage`).
     case outputStuck(Good)
+    /// A house is short of a need that binds it, for `intervals` of the
+    /// `grace` consumption intervals it may wait (`decline-grace`).
+    case runningShort(Good, intervals: Int, grace: Int)
+
+    /// The shortage has outlasted the grace, so residents are leaving.
+    public var isDeclining: Bool {
+        if case let .runningShort(_, intervals, grace) = self { intervals >= grace } else { false }
+    }
 }
 
 public extension World {
@@ -58,6 +66,10 @@ public extension World {
                 issues[building.id] = .noRouteToStorage
                 continue
             }
+            if building.kind == .house {
+                issues[building.id] = shortageIssue(of: building)
+                continue
+            }
             guard let recipe, let issue = productionIssue(of: building.id, recipe: recipe) else { continue }
             issues[building.id] = issue
         }
@@ -66,6 +78,16 @@ public extension World {
 }
 
 extension World {
+    /// The binding need of a house with residents that has been short the
+    /// longest, ties in the tier's order of needs.
+    private func shortageIssue(of building: Building) -> BuildingIssue? {
+        guard let pop = populations[building.id], pop.population > 0 else { return nil }
+        let worst = bindingNeeds(of: pop.tier, for: building.owner, advancing: false)
+            .filter { pop.shortIntervals(of: $0) > 0 }
+            .max { pop.shortIntervals(of: $0) < pop.shortIntervals(of: $1) }
+        return worst.map { .runningShort($0, intervals: pop.shortIntervals(of: $0), grace: declineGrace(of: pop.tier)) }
+    }
+
     private func productionIssue(of id: EntityID, recipe: ProductionRecipe) -> BuildingIssue? {
         let stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
         // A store full of its own output stops it whatever it is given,

@@ -289,16 +289,28 @@ func anEmptyMissingInputsIssueKeepsTheOtherIcon() {
     #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-no-road")
 }
 
+@Test("scenario: a running-short issue shows the good's short icon")
+func scenarioARunningShortIssueShowsTheGoodsShortIcon() {
+    let house = Building(id: buildingID, kind: .house, anchor: anchor, state: .operational, ticksSincePlacement: 0)
+    // The house's shortGoods name bread first; the issue names the need nearest to decline.
+    let snapshot = meadow(
+        [house], issues: [buildingID: .runningShort(.tools, intervals: 1, grace: 3)],
+        households: [buildingID: household(short: [.bread, .tools], tier: .merchants)]
+    )
+    #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-tools-short")
+}
+
 @Test("every issue maps to a drawn icon")
 func everyIssueMapsToADrawnIcon() {
     let issues: [BuildingIssue] = [
         .noRoad, .noRouteToStorage, .noTreesInReach, .noRoomToPlant,
-        .outputStuck(.planks), .missingInputs([.wood, .iron])
+        .outputStuck(.planks), .missingInputs([.wood, .iron]),
+        .runningShort(.tools, intervals: 1, grace: 3), .runningShort(.cloth, intervals: 3, grace: 3)
     ]
     let names = issues.compactMap(StatusIcons.textureName(for:))
     #expect(names == [
         "status-no-road", "status-no-route", "status-no-trees", "status-no-room-to-plant",
-        "status-planks-stuck", "status-wood-short"
+        "status-planks-stuck", "status-wood-short", "status-tools-short", "status-cloth-short"
     ])
     #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))
 }

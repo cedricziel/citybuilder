@@ -47,7 +47,7 @@ A house SHALL count, for each need of its tier, the consumption intervals in a r
 
 #### Scenario: A house declines once the grace has run out
 - **WHEN** a merchant house with 8 residents stays short of tools for its grace of consumption intervals
-- **THEN** it loses a resident 60 ticks later, and drops to citizens 120 ticks after the grace ran out
+- **THEN** it loses a resident when the grace runs out, another every 60 ticks, and drops to citizens 120 ticks after
 
 #### Scenario: A recovered need resets the count
 - **WHEN** a house short of tools for all but one of its grace's intervals draws tools in full, and is then short of them again for one interval fewer than its grace
