@@ -73,12 +73,7 @@ private struct TouchPlacementDialogs: ViewModifier {
                     menuButton(item, tile: request.tile)
                 }
             }
-            .onAppear {
-                // Only a game that has not started: a loaded save's player knows the gesture.
-                if session.world.tickCount == 0, coachmarks.takePinchZoomHint() {
-                    session.showPinchZoomHint()
-                }
-            }
+            .onAppear { session.showPinchZoomHintIfNew(using: coachmarks) }
             .overlay(alignment: .bottom) {
                 if hintVisible, session.pendingPlacement == nil {
                     CoachmarkView {

@@ -50,22 +50,66 @@ func theCoachMarkFlagLivesUnderItsDocumentedUserDefaultsKey() throws {
 
 // platform-shells / Pinch-to-zoom hint.
 
+private final class StubSaves: SaveStoreFacade, @unchecked Sendable {
+    func mostRecentSave() throws -> SaveSummary? {
+        nil
+    }
+
+    func load(gameID _: UUID) throws -> World {
+        World.newGame()
+    }
+}
+
+@MainActor
 @Test("scenario: pinch hint is offered once")
 func pinchHintIsOfferedOnce() {
     let flags = MemoryFlags()
     let store = CoachmarkStore(flags: flags)
-    #expect(store.takePinchZoomHint())
+    let session = GameSession(world: World.newGame())
+    session.hideFirstSteps()
+    session.offersPinchHint = true
+    session.showPinchZoomHintIfNew(using: store)
+    #expect(session.banner?.title == "Pinch to zoom")
     #expect(flags.values[CoachmarkStore.pinchZoomKey] == true)
-    #expect(!store.takePinchZoomHint())
-    // A later launch reads the same flag.
-    #expect(!CoachmarkStore(flags: flags).takePinchZoomHint())
+    // A later game on the same device reads the same flag.
+    let later = GameSession(world: World.newGame())
+    later.hideFirstSteps()
+    later.offersPinchHint = true
+    later.showPinchZoomHintIfNew(using: CoachmarkStore(flags: flags))
+    #expect(later.banner == nil)
+}
+
+@MainActor
+@Test("scenario: a loaded save skips the pinch hint")
+func loadedSaveSkipsPinchHint() {
+    let flags = MemoryFlags()
+    // A save loaded at tick zero is still a save: only a new game asks for the hint.
+    let session = GameSession(world: World.newGame())
+    session.hideFirstSteps()
+    session.showPinchZoomHintIfNew(using: CoachmarkStore(flags: flags))
+    #expect(session.banner == nil)
+    // The flag stays free for the next new game.
+    #expect(flags.values[CoachmarkStore.pinchZoomKey] != true)
+}
+
+@MainActor
+@Test("scenario: a new game's session offers the pinch hint, a continued one does not")
+func titleCommitMarksNewGames() {
+    let viewModel = TitleScreenViewModel(
+        saveStore: StubSaves(), sessionFactory: { GameSession(world: $0) }
+    )
+    viewModel.commit(world: World.newGame())
+    #expect(viewModel.committedSession?.offersPinchHint == false)
+    viewModel.commit(world: World.newGame(), isNewGame: true)
+    #expect(viewModel.committedSession?.offersPinchHint == true)
 }
 
 @Test("the pinch hint and the placement coach mark are independent")
 func pinchHintIsIndependentOfThePlacementCoachMark() {
     let flags = MemoryFlags()
     let store = CoachmarkStore(flags: flags)
-    #expect(store.takePinchZoomHint())
+    store.markPinchZoomHintShown()
+    #expect(!store.shouldShowPinchZoomHint)
     #expect(store.shouldShowTouchPlacementHint)
 }
 

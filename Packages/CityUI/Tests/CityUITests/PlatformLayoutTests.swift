@@ -194,7 +194,7 @@ func scenarioWindowResizeRelayoutsHUD() {
 @Test("scenario: iPhone short-session defaults")
 func scenarioIPhoneShortSessionDefaults() {
     let decisions = LayoutDecisions.decisions(for: .compact)
-    #expect(decisions.defaultCameraZoom < 1.0, "iPhone starts zoomed out to show the town and its surroundings")
+    #expect(StartZoom.zoom(for: .phone) < StartZoom.zoom(for: .pad), "iPhone starts zoomed out to show the town and its surroundings")
     #expect(!decisions.showsAdvancedControls, "advanced controls hidden by default")
 }
 

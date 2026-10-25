@@ -106,9 +106,18 @@ extension GameSession {
         deficitHint = Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax)
     }
 
-    /// The one-time hint that pinch zooms. The touch shell shows it on a new game's
-    /// first screen. Spec: `platform-shells` / Pinch-to-zoom hint.
-    public func showPinchZoomHint() {
+    /// The one-time hint that pinch zooms, for a new game's first screen on a touch device. A loaded
+    /// save's player knows the gesture, and the store only learns of the hint once it has shown.
+    /// Spec: `platform-shells` / Pinch-to-zoom hint.
+    public func showPinchZoomHintIfNew(using store: CoachmarkStore) {
+        guard offersPinchHint else { return }
+        offersPinchHint = false
+        guard store.shouldShowPinchZoomHint else { return }
+        showPinchZoomHint()
+        store.markPinchZoomHintShown()
+    }
+
+    func showPinchZoomHint() {
         show(SessionBanner(
             title: "Pinch to zoom",
             description: "Pinch to see more of the island, or to look closer."

@@ -3,10 +3,18 @@ import "./DateChip.css";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
+const seasons: readonly string[] = ["spring", "summer", "autumn", "winter"];
+
+/** The season a date such as "Autumn 1203" starts with, or undefined when it is not one of the four. */
+export function seasonOf(date: string): Season | undefined {
+  const word = date.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+  return seasons.includes(word) ? (word as Season) : undefined;
+}
+
 export interface DateChipProps {
   /** Season and year, "Autumn 1203". */
   date: string;
-  /** Picks the glyph. Default `spring`. */
+  /** Picks the glyph; none when omitted. */
   season?: Season;
 }
 
@@ -20,10 +28,12 @@ const symbols = { spring: "camera.macro", summer: "sun.max.fill", autumn: "leaf.
  * row is tight (large text, or a screen too narrow to hold it beside the
  * first-steps capsule).
  */
-export function DateChip({ date, season = "spring" }: DateChipProps) {
+export function DateChip({ date, season }: DateChipProps) {
+  // The date only changes with the season, about once a minute, and the game never announces it:
+  // a status role names the chip for assistive tech while `aria-live="off"` keeps it quiet.
   return (
-    <span className="cb-date-chip" aria-label={`Date: ${date}`}>
-      <Icon name={symbols[season]} size={12} />
+    <span className="cb-date-chip" role="status" aria-live="off" aria-label={`Date: ${date}`}>
+      {season ? <Icon name={symbols[season]} size={12} /> : null}
       <span>{date}</span>
     </span>
   );

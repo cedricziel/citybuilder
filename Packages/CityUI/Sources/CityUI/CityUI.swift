@@ -198,6 +198,8 @@ public final class GameSession {
     var isFirstStepsDismissed = false
     /// Goods the idle-good hint has named this session.
     var hintedIdleGoods: Set<Good> = []
+    /// The session came from a new game, so its first screen may offer the pinch hint once.
+    public internal(set) var offersPinchHint = false
     /// Problems the building-problem hint has named this session, by their text.
     var hintedProblems: Set<String> = []
     /// What each building with a status icon is waiting on and since which tick, so a problem that

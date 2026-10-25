@@ -11,7 +11,6 @@ public enum LayoutSizeClass: String, Sendable, Codable {
 /// Layout decisions derived purely from size class. Where the build
 /// controls sit is `HUDDock`'s call, by orientation.
 public struct LayoutDecisions: Equatable, Sendable {
-    public let defaultCameraZoom: Double
     public let showsAdvancedControls: Bool
     public let showsMenuBar: Bool
     public var labels: HUDLabelConfig = .singleLine
@@ -20,19 +19,16 @@ public struct LayoutDecisions: Equatable, Sendable {
         switch sizeClass {
         case .compact:
             return LayoutDecisions(
-                defaultCameraZoom: StartZoom.phone,
                 showsAdvancedControls: false,
                 showsMenuBar: false
             )
         case .regular:
             return LayoutDecisions(
-                defaultCameraZoom: 1.0,
                 showsAdvancedControls: true,
                 showsMenuBar: false
             )
         case .mac:
             return LayoutDecisions(
-                defaultCameraZoom: 1.0,
                 showsAdvancedControls: true,
                 showsMenuBar: true
             )

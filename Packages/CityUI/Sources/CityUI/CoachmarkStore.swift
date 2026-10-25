@@ -38,12 +38,13 @@ public struct CoachmarkStore {
         flags.setFlag(true, forKey: Self.touchPlacementKey)
     }
 
-    /// True the first time it is asked on this device, and false after:
-    /// the pinch-to-zoom hint is a banner that expires on its own, so
-    /// showing it is what uses it up.
-    public func takePinchZoomHint() -> Bool {
-        guard !flags.flag(forKey: Self.pinchZoomKey) else { return false }
+    public var shouldShowPinchZoomHint: Bool {
+        !flags.flag(forKey: Self.pinchZoomKey)
+    }
+
+    /// The pinch-to-zoom hint is a banner that expires on its own, so
+    /// showing it is what uses it up: call this once it has shown.
+    public func markPinchZoomHintShown() {
         flags.setFlag(true, forKey: Self.pinchZoomKey)
-        return true
     }
 }

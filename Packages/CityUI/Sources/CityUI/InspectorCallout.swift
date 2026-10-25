@@ -35,6 +35,23 @@ public enum InspectorCalloutLayout {
         case trailing, leading, below, above
     }
 
+    /// The buildings a selected road's callout should leave visible: those within `neighbourReach`
+    /// tiles that are not roads. A road beside other roads would otherwise have no clear side. Other
+    /// selections keep the plain placement and get none.
+    static func neighbours(of tile: TileCoordinate, in world: World) -> [Building] {
+        guard let own = world.occupiedTiles[tile], world.buildings[own]?.kind == .road else { return [] }
+        var found: [EntityID: Building] = [:]
+        for dy in -neighbourReach ... neighbourReach {
+            for dx in -neighbourReach ... neighbourReach {
+                let near = TileCoordinate(x: tile.x + dx, y: tile.y + dy)
+                if let id = world.occupiedTiles[near], let building = world.buildings[id], building.kind != .road {
+                    found[id] = building
+                }
+            }
+        }
+        return found.values.sorted { $0.id.raw < $1.id.raw }
+    }
+
     /// The callout's top-left corner for a building centered on `anchor`,
     /// flipped to the other side when the preferred one would leave
     /// `bounds`, then clamped into `bounds`. `avoiding` are the screen
@@ -234,30 +251,15 @@ struct InspectorCalloutView<Actions: View>: View {
     /// Screen rects of the buildings near the selection, taller than their footprint for the roof and
     /// the status icon above it.
     private func neighbourRects(viewSize: CGSize) -> [CGRect] {
-        let world = session.world
-        let own = world.occupiedTiles[tile]
-        // A road is the thing that sits next to what the player wants to see; other buildings keep
-        // the plain placement.
-        guard let own, world.buildings[own]?.kind == .road else { return [] }
-        let zoom = CGFloat(world.camera.zoom)
-        let reach = InspectorCalloutLayout.neighbourReach
-        var seen: Set<EntityID> = []
-        var rects: [CGRect] = []
-        for dy in -reach ... reach {
-            for dx in -reach ... reach {
-                let near = TileCoordinate(x: tile.x + dx, y: tile.y + dy)
-                guard let id = world.occupiedTiles[near], id != own, seen.insert(id).inserted,
-                      let building = world.buildings[id]
-                else { continue }
-                let (center, half) = projection(of: building, viewSize: viewSize)
-                let headroom = 40 * zoom + 24
-                rects.append(CGRect(
-                    x: center.x - half.width, y: center.y - half.height - headroom,
-                    width: half.width * 2, height: half.height * 2 + headroom
-                ))
-            }
+        let zoom = CGFloat(session.world.camera.zoom)
+        let headroom = 40 * zoom + 24
+        return InspectorCalloutLayout.neighbours(of: tile, in: session.world).map { building in
+            let (center, half) = projection(of: building, viewSize: viewSize)
+            return CGRect(
+                x: center.x - half.width, y: center.y - half.height - headroom,
+                width: half.width * 2, height: half.height * 2 + headroom
+            )
         }
-        return rects
     }
 
     /// The details, such as the town center market, scroll when the

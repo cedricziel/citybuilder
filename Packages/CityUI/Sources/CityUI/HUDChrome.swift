@@ -11,10 +11,17 @@ extension View {
         dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
-    /// An icon button's glyph at the body size of the default text setting,
-    /// fixed, so the circle behind it does not grow with Dynamic Type.
+    /// An icon button's glyph. On iOS it is fixed at the body size of the default text setting, so the
+    /// circle behind it does not grow with Dynamic Type, and the Large Content Viewer shows it large
+    /// instead. Other platforms keep their own symbol size: the Mac's 13 pt and Apple TV's focus-sized
+    /// glyphs are not Dynamic Type's to change.
+    @ViewBuilder
     func hudIconFont() -> some View {
-        font(.system(size: 17)).imageScale(.large)
+        #if os(iOS)
+        font(.system(size: 17)).imageScale(.large).accessibilityShowsLargeContentViewer()
+        #else
+        imageScale(.large)
+        #endif
     }
 
     /// One line whose words never break: it shrinks to `minimumScale`, then truncates.

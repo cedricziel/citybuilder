@@ -22,11 +22,19 @@ On iPhone, the default UX SHALL bias toward short sessions: a new game starts zo
 ## ADDED Requirements
 
 ### Requirement: Pinch-to-zoom hint
-On a touch device, the first game screen of a new game SHALL show a banner titled "Pinch to zoom" once per install, through the session banner. A loaded save SHALL NOT show it.
+On a touch device, the first game screen of a new game SHALL show a banner titled "Pinch to zoom" once per install, through the session banner. A session counts as a new game when the title screen committed it from the New Game dialog; a loaded save SHALL NOT show the hint. The device remembers the hint only once the banner has shown.
 
 #### Scenario: Pinch hint is offered once
 - **WHEN** the hint is asked for twice on the same device
 - **THEN** the first time shows it and the second does not
+
+#### Scenario: A new game's session offers the pinch hint, a continued one does not
+- **WHEN** the title screen commits a world from the New Game dialog, and then one from Continue
+- **THEN** the first session offers the hint and the second does not
+
+#### Scenario: A loaded save skips the pinch hint
+- **WHEN** a session that did not come from a new game asks for the hint, even at tick zero
+- **THEN** no banner shows and the hint stays available for the next new game
 
 #### Scenario: Pinch hint shows as a banner that expires
 - **WHEN** the pinch hint shows and the banner's ticks pass
@@ -50,6 +58,10 @@ When a building of the player's has shown a status icon with the same problem fo
 - **WHEN** the farm gets its road before 100 ticks pass
 - **THEN** no problem banner shows
 
+#### Scenario: The problem banner skips a rival's building
+- **WHEN** a rival's building has a status icon for 100 ticks
+- **THEN** no problem banner shows
+
 #### Scenario: Each problem is named once
 - **WHEN** the banner has shown and expired
 - **THEN** the same problem does not raise it again
@@ -67,6 +79,14 @@ When the callout of a selected road would cover a building within three tiles, i
 #### Scenario: Callout keeps off a neighbouring building
 - **WHEN** the road's usual callout side covers a farm and the opposite side is clear
 - **THEN** the callout takes the opposite side
+
+#### Scenario: A road's neighbours are the buildings beside it, not the road network
+- **WHEN** a road in a run of roads is selected beside a farm
+- **THEN** the buildings the callout avoids are the farm alone, and no road
+
+#### Scenario: Other selections have no neighbours to avoid
+- **WHEN** a farm is selected
+- **THEN** the callout avoids nothing
 
 #### Scenario: Callout keeps its usual side when no side is clear
 - **WHEN** every side of the road would cover a building

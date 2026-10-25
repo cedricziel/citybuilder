@@ -3,7 +3,7 @@ import { WorldBackdrop, defaultIsland, defaultTown, type AreaOfEffect, type Plac
 import type { HUDFrameProps } from "../HUDFrame/HUDFrame";
 import { HUDMenuButtons, type HUDMenuButtonsProps } from "../HUDButton/HUDButton";
 import { StatusPill, type GameSpeed } from "../StatusPill/StatusPill";
-import { DateChip, type Season } from "../DateChip/DateChip";
+import { DateChip, seasonOf } from "../DateChip/DateChip";
 import { StocksTray } from "../StocksTray/StocksTray";
 import { BuildRail, type BuildRailItem } from "../BuildRail/BuildRail";
 import { BuildDrawer, type BuildDrawerProps } from "../BuildDrawer/BuildDrawer";
@@ -162,6 +162,10 @@ export function GameScreen({
       {tool && !drawer && !(phone && placing) ? <ToolStrip {...tool} /> : null}
     </div>
   );
+  // The game hides the date chip when the row cannot hold it beside the first-steps capsule
+  // (`DateChipLayout` in CityUI: 112pt chip + 8pt gap + 214pt capsule, in the 8pt-margin HUD width).
+  const phoneHudWidth = width - 16;
+  const showsDateChip = phone && !!hud.date && (!firstSteps || phoneHudWidth >= 112 + 8 + 214);
   // A phone in portrait puts the pill on the left and folds the menu buttons into More.
   const folds = phone && layout === "dock";
   return (
@@ -186,9 +190,9 @@ export function GameScreen({
         </div>
         <div className="cb-game__middle">
           <div className="cb-game__center">
-            {phone && hud.date ? (
+            {showsDateChip ? (
               <span className="cb-game__date">
-                <DateChip date={hud.date} season={hud.date.split(" ")[0].toLowerCase() as Season} />
+                <DateChip date={hud.date!} season={seasonOf(hud.date!)} />
               </span>
             ) : null}
             {stocksOpen && hud.island ? <StocksTray island={hud.island} stocks={hud.stocks ?? []} columns={phone ? 3 : 6} /> : null}

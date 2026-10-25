@@ -45,10 +45,13 @@ func clearedProblemIsNotNamed() throws {
     }
     let anchor = try #require(session.world.buildings[id]?.anchor)
     session.world.enqueue(.place(.road, at: TileCoordinate(x: anchor.x - 1, y: anchor.y)))
+    session.step()
+    // The road is what clears "no road"; the farm may still lack storage, which is another problem.
+    #expect(!session.world.snapshot().roadDisconnectedBuildings.contains(id))
     for _ in 0 ..< 200 {
         session.step()
     }
-    #expect(session.banner?.title != "Farm has a problem")
+    #expect(!session.hintedProblems.contains(InspectorViewModel.problemText(.noRoad)))
 }
 
 @MainActor
@@ -64,6 +67,26 @@ func eachProblemIsNamedOnce() {
     }
     #expect(session.banner == nil)
     for _ in 0 ..< 300 {
+        session.step()
+    }
+    #expect(session.banner == nil)
+}
+
+@MainActor
+@Test("scenario: the problem banner skips a rival's building")
+func problemBannerSkipsRivalBuildings() {
+    var world = World.fixtureWithTerrain(width: 20, height: 12, fill: .grass, seed: 1)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw &+= 1
+    let anchor = TileCoordinate(x: 6, y: 4)
+    world.buildings[id] = Building(id: id, kind: .farm, anchor: anchor, state: .operational, owner: .rival(1))
+    for tile in BuildingCatalog.spec(for: .farm).footprint.tiles(anchor: anchor) {
+        world.occupiedTiles[tile] = id
+    }
+    world.stockpiles[id] = World.newStockpile(for: .farm)
+    let session = GameSession(world: world)
+    session.hideFirstSteps()
+    for _ in 0 ... Int(GameSession.problemHintDelayTicks) + 10 {
         session.step()
     }
     #expect(session.banner == nil)
