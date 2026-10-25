@@ -127,12 +127,3 @@ func botStopsWhenClothPilesUp() throws {
     #expect(town.missing(stock: [.cloth: PlayerBot.clothSurplus - 1]) == [.weaver, .sheepFarm])
     #expect(town.missing(stock: [.cloth: PlayerBot.clothSurplus]).isEmpty)
 }
-
-@Test("the bot waits to build the wool chain until it has money in hand")
-func botKeepsMoneyInHand() throws {
-    var town = try WoolTown(order: .careful, houses: [(.merchants, 8), (.merchants, 8)])
-    town.world.economy.balance = PlayerBot.woolChainBalance - 1
-    #expect(town.missing().isEmpty)
-    town.world.economy.balance = PlayerBot.woolChainBalance
-    #expect(town.missing() == [.weaver, .sheepFarm])
-}

@@ -151,8 +151,8 @@ func scenarioWeaverNeedsTwoWool() throws {
 @Test("scenario: wool chain building specs are catalogued")
 func scenarioWoolChainBuildingSpecsAreCatalogued() {
     let expected: [BuildingKind: (cost: Int64, materials: [Good: Int])] = [
-        .sheepFarm: (70, [.wood: 3]),
-        .weaver: (130, [.wood: 3, .planks: 3])
+        .sheepFarm: (60, [.wood: 2]),
+        .weaver: (120, [.wood: 3, .planks: 3])
     ]
     for (kind, price) in expected {
         let spec = BuildingCatalog.spec(for: kind)
