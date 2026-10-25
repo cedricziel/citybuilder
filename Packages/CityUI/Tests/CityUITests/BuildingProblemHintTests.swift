@@ -33,7 +33,7 @@ func standingProblemIsNamed() {
     #expect(session.banner == nil)
     session.step()
     #expect(session.banner?.title == "Farm has a problem")
-    #expect(session.banner?.description == "No road: connect it to a road. Tap the building for details.")
+    #expect(session.banner?.description == "No road: connect it to a road. Tap it for details.")
 }
 
 @MainActor

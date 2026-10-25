@@ -96,7 +96,7 @@ extension CityRootView {
                 routesPresented = true
             } label: {
                 Image(systemName: "ferry.fill")
-                    .imageScale(.large)
+                    .hudIconFont()
                     .padding(8)
                     .background(.thinMaterial, in: Circle())
             }

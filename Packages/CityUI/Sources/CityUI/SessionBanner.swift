@@ -111,7 +111,7 @@ extension GameSession {
     public func showPinchZoomHint() {
         show(SessionBanner(
             title: "Pinch to zoom",
-            description: "Pinch with two fingers to see more of the island, or to look closer."
+            description: "Pinch to see more of the island, or to look closer."
         ))
     }
 
@@ -184,7 +184,7 @@ extension GameSession {
     }
 
     static func problemHint(name: String, problem: String) -> SessionBanner {
-        SessionBanner(title: "\(name) has a problem", description: "\(problem). Tap the building for details.")
+        SessionBanner(title: "\(name) has a problem", description: "\(problem). Tap it for details.")
     }
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {

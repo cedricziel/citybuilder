@@ -18,6 +18,9 @@ extension CityRootView {
                     .tvFocusSection()
                 HStack(alignment: .top, spacing: 8) {
                     VStack(spacing: 8) {
+                        DateChipView(
+                            hud: session.hud, layout: layout, hudWidth: hudWidth, showsFirstSteps: firstStepsGuide != nil
+                        )
                         StocksTrayView(
                             hud: session.hud,
                             layout: layout,
@@ -74,12 +77,14 @@ extension CityRootView {
                 Spacer(minLength: 0)
                 moreMenu
             }
+            .hudChromeTypeSize()
         } else {
             HStack(alignment: .top, spacing: 8) {
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
                 pill
                 menuButtons.frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .hudChromeTypeSize()
         }
     }
 
@@ -98,13 +103,23 @@ extension CityRootView {
     private func buildControls(layout: HUDLayout, railInset: CGFloat, worldViewSize: CGSize) -> some View {
         switch layout.placement {
         case .leftRail:
-            HStack(alignment: .center, spacing: 8) {
-                BuildRailView(session: session, rail: $buildRail, layout: layout)
-                BuildDrawerView(session: session, rail: $buildRail, layout: layout)
-                Spacer(minLength: 0)
+            // A short landscape screen has no room for a tall drawer beside the rail under the
+            // status pill: the drawer starts below the top bar and shortens to what is left.
+            let topBand = layout.isCompactHeight ? layout.controlHeight + 8 : 0
+            GeometryReader { proxy in
+                HStack(alignment: .center, spacing: 8) {
+                    BuildRailView(session: session, rail: $buildRail, layout: layout)
+                    BuildDrawerView(
+                        session: session, rail: $buildRail, layout: layout,
+                        availableHeight: proxy.size.height - topBand
+                    )
+                    .padding(.top, topBand)
+                    .frame(maxHeight: .infinity)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxHeight: .infinity)
             }
             .tvFocusSection()
-            .frame(maxHeight: .infinity)
             VStack {
                 Spacer()
                 // The minimap shares the bottom row, so the tool strip and

@@ -80,7 +80,7 @@ extension CityRootView {
                 goalsPresented = true
             } label: {
                 Image(systemName: "flag.checkered")
-                    .imageScale(.large)
+                    .hudIconFont()
                     .padding(8)
                     .background(.thinMaterial, in: Circle())
             }

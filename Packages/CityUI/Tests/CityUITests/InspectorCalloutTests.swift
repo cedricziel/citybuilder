@@ -125,3 +125,43 @@ func scenarioDemolishFromTheCallout() {
     #expect(session.world.pendingCommands == [.demolish(at: anchor)])
     #expect(session.selectedTile == nil)
 }
+
+@Test("scenario: callout keeps off a neighbouring building")
+func calloutAvoidsNeighbour() {
+    let bounds = CGRect(x: 0, y: 66, width: 402, height: 640)
+    let anchor = CGPoint(x: 200, y: 300)
+    let half = CGSize(width: 16, height: 8)
+    // A farm just below the road, where the dock layout would put the callout.
+    let farm = CGRect(x: 160, y: 330, width: 80, height: 90)
+    let plain = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock
+    )
+    #expect(plain.side == .below)
+    #expect(CGRect(origin: plain.origin, size: calloutSize).intersects(farm))
+    let placed = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [farm]
+    )
+    #expect(placed.side == .above)
+    #expect(!CGRect(origin: placed.origin, size: calloutSize).intersects(farm))
+}
+
+@Test("scenario: callout keeps its usual side when no side is clear")
+func calloutKeepsUsualSideWithoutAClearSide() {
+    let bounds = CGRect(x: 0, y: 66, width: 402, height: 640)
+    let anchor = CGPoint(x: 200, y: 300)
+    let half = CGSize(width: 16, height: 8)
+    let far = CGRect(x: 0, y: 600, width: 40, height: 40)
+    let usual = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [far]
+    )
+    #expect(usual.side == .below)
+    // Everything covered: the callout falls back to the plain placement.
+    let blanket = CGRect(x: -500, y: -500, width: 2000, height: 2000)
+    let fallback = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [blanket]
+    )
+    #expect(fallback.side == .below)
+}

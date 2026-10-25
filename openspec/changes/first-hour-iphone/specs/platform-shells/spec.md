@@ -40,11 +40,11 @@ The HUD's chrome (the status pill, the More and menu buttons, the First steps ca
 - **THEN** the More button, the First steps capsule and the coachmark keep their `accessibility1` size, and no word in them breaks
 
 ### Requirement: Building-problem hint
-When a building of the player's has shown a status icon with the same problem for 100 ticks, the session SHALL show a banner titled "<Building> has a problem" with the problem text and "Tap the building for details.", once no other banner shows. Each distinct problem text SHALL be named once per session.
+When a building of the player's has shown a status icon with the same problem for 100 ticks, the session SHALL show a banner titled "<Building> has a problem" with the problem text and "Tap it for details.", once no other banner shows. Each distinct problem text SHALL be named once per session.
 
 #### Scenario: A standing problem names the building
 - **WHEN** a farm with no road has stood for 100 ticks
-- **THEN** the banner reads "Farm has a problem" with "No road: connect it to a road. Tap the building for details."
+- **THEN** the banner reads "Farm has a problem" with "No road: connect it to a road. Tap it for details."
 
 #### Scenario: A problem that clears is not named
 - **WHEN** the farm gets its road before 100 ticks pass

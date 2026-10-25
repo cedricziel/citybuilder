@@ -11,13 +11,22 @@ public enum InspectorCalloutLayout {
     /// A TV is read from across the room: at 220 points the market rows
     /// wrap mid-word on a 1920-point screen.
     public static func width(for idiom: HUDIdiom) -> CGFloat {
-        idiom == .tv ? 520 : width
+        switch idiom {
+        case .tv: 520
+        // "Its road doesn't reach a warehouse or the town center" breaks "cen-ter" at 220 points; a
+        // phone has the width to spare.
+        case .phone: 264
+        case .pad, .mac: width
+        }
     }
 
     /// Gap from the building's edge: beside it in the rail layout, below it
     /// in the dock layout.
     public static let sideGap: CGFloat = 14
     public static let belowGap: CGFloat = 12
+    /// Tiles around a selected road whose buildings the callout leaves visible: it would otherwise
+    /// sit on the farm the road leads to.
+    static let neighbourReach = 3
     static let spacing: CGFloat = 6
     static let padding = CGSize(width: 12, height: 10)
 
@@ -28,37 +37,63 @@ public enum InspectorCalloutLayout {
 
     /// The callout's top-left corner for a building centered on `anchor`,
     /// flipped to the other side when the preferred one would leave
-    /// `bounds`, then clamped into `bounds`.
+    /// `bounds`, then clamped into `bounds`. `avoiding` are the screen
+    /// rects of the neighbouring buildings the callout should not hide:
+    /// when the preferred side would cover one, the opposite side and then
+    /// the two beside the building are tried, and the first that fits
+    /// without covering any wins.
     public static func place(
         anchor: CGPoint,
         buildingHalfSize half: CGSize,
         calloutSize size: CGSize,
         bounds: CGRect,
-        placement: HUDDock
+        placement: HUDDock,
+        avoiding: [CGRect] = []
     ) -> (origin: CGPoint, side: Side) {
-        var origin: CGPoint
+        let sides: [Side] = switch placement {
+        case .leftRail: [.trailing, .leading, .below, .above]
+        case .bottomDock: [.below, .above, .trailing, .leading]
+        }
+        let candidates = sides.map { candidate($0, anchor: anchor, half: half, size: size, bounds: bounds) }
+        // The preferred side or its opposite, as before: used when no side clears every neighbour.
+        let fallback = candidates[0].fits ? candidates[0] : candidates[1]
+        guard !avoiding.isEmpty else { return (fallback.origin, fallback.side) }
+        let clear = candidates.first { candidate in
+            candidate.fits && !avoiding.contains { $0.intersects(CGRect(origin: candidate.origin, size: size)) }
+        }
+        let chosen = clear ?? fallback
+        return (chosen.origin, chosen.side)
+    }
+
+    private struct Candidate {
         let side: Side
-        switch placement {
-        case .leftRail:
+        let origin: CGPoint
+        /// The unclamped origin kept the callout inside `bounds` along the side's own axis.
+        let fits: Bool
+    }
+
+    private static func candidate(
+        _ side: Side, anchor: CGPoint, half: CGSize, size: CGSize, bounds: CGRect
+    ) -> Candidate {
+        var origin: CGPoint
+        let fits: Bool
+        switch side {
+        case .trailing:
             origin = CGPoint(x: anchor.x + half.width + sideGap, y: anchor.y - size.height / 2)
-            if origin.x + size.width > bounds.maxX {
-                origin.x = anchor.x - half.width - sideGap - size.width
-                side = .leading
-            } else {
-                side = .trailing
-            }
-        case .bottomDock:
+            fits = origin.x + size.width <= bounds.maxX
+        case .leading:
+            origin = CGPoint(x: anchor.x - half.width - sideGap - size.width, y: anchor.y - size.height / 2)
+            fits = origin.x >= bounds.minX
+        case .below:
             origin = CGPoint(x: anchor.x - size.width / 2, y: anchor.y + half.height + belowGap)
-            if origin.y + size.height > bounds.maxY {
-                origin.y = anchor.y - half.height - belowGap - size.height
-                side = .above
-            } else {
-                side = .below
-            }
+            fits = origin.y + size.height <= bounds.maxY
+        case .above:
+            origin = CGPoint(x: anchor.x - size.width / 2, y: anchor.y - half.height - belowGap - size.height)
+            fits = origin.y >= bounds.minY
         }
         origin.x = clamp(origin.x, length: size.width, from: bounds.minX, to: bounds.maxX)
         origin.y = clamp(origin.y, length: size.height, from: bounds.minY, to: bounds.maxY)
-        return (origin, side)
+        return Candidate(side: side, origin: origin, fits: fits)
     }
 
     /// Where the HUD's top bar ends: the minimap's top in the dock layout
@@ -159,7 +194,8 @@ struct InspectorCalloutView<Actions: View>: View {
                 buildingHalfSize: half,
                 calloutSize: size,
                 bounds: bounds,
-                placement: layout.placement
+                placement: layout.placement,
+                avoiding: neighbourRects(viewSize: proxy.size)
             )
             card(maxHeight: bounds.height)
                 .accessibilityElement(children: .contain)
@@ -173,10 +209,14 @@ struct InspectorCalloutView<Actions: View>: View {
 
     /// The building's center and half extent on screen, from its footprint.
     private func projection(viewSize: CGSize) -> (CGPoint, CGSize) {
-        let camera = session.world.camera
         guard let id = session.world.occupiedTiles[tile], let building = session.world.buildings[id] else {
-            return (PlacementHUDLayout.viewPoint(forTile: tile, camera: camera, viewSize: viewSize), .zero)
+            return (PlacementHUDLayout.viewPoint(forTile: tile, camera: session.world.camera, viewSize: viewSize), .zero)
         }
+        return projection(of: building, viewSize: viewSize)
+    }
+
+    private func projection(of building: Building, viewSize: CGSize) -> (CGPoint, CGSize) {
+        let camera = session.world.camera
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         let first = PlacementHUDLayout.viewPoint(forTile: building.anchor, camera: camera, viewSize: viewSize)
         let last = PlacementHUDLayout.viewPoint(
@@ -189,6 +229,35 @@ struct InspectorCalloutView<Actions: View>: View {
             CGPoint(x: (first.x + last.x) / 2, y: (first.y + last.y) / 2),
             CGSize(width: span * 32, height: span * 16)
         )
+    }
+
+    /// Screen rects of the buildings near the selection, taller than their footprint for the roof and
+    /// the status icon above it.
+    private func neighbourRects(viewSize: CGSize) -> [CGRect] {
+        let world = session.world
+        let own = world.occupiedTiles[tile]
+        // A road is the thing that sits next to what the player wants to see; other buildings keep
+        // the plain placement.
+        guard let own, world.buildings[own]?.kind == .road else { return [] }
+        let zoom = CGFloat(world.camera.zoom)
+        let reach = InspectorCalloutLayout.neighbourReach
+        var seen: Set<EntityID> = []
+        var rects: [CGRect] = []
+        for dy in -reach ... reach {
+            for dx in -reach ... reach {
+                let near = TileCoordinate(x: tile.x + dx, y: tile.y + dy)
+                guard let id = world.occupiedTiles[near], id != own, seen.insert(id).inserted,
+                      let building = world.buildings[id]
+                else { continue }
+                let (center, half) = projection(of: building, viewSize: viewSize)
+                let headroom = 40 * zoom + 24
+                rects.append(CGRect(
+                    x: center.x - half.width, y: center.y - half.height - headroom,
+                    width: half.width * 2, height: half.height * 2 + headroom
+                ))
+            }
+        }
+        return rects
     }
 
     /// The details, such as the town center market, scroll when the
