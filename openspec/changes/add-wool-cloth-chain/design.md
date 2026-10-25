@@ -58,30 +58,22 @@ The change adds goods, buildings and a tech to the generated catalogs. `Good.all
 
 ## Evidence
 
-Mid-game pacing (the `rival-sweep` workflow's `midGamePacingAcrossSeeds`, `RIVAL_SWEEP=1 PACING_RETENTION=1`, release build): seeds 0–9 at every difficulty on both layouts with the market, so 20 games per row, each run to year 10. Medians over those games, `main` (3936db41, before) → this change:
+Mid-game pacing (the `rival-sweep` workflow's `midGamePacingAcrossSeeds`, `RIVAL_SWEEP=1 PACING_RETENTION=1`, release build): seeds 0–9 at every difficulty on both layouts with the market, so 20 games per row, each run to year 10. Medians (retention is a mean) on `main` at edb4732d, which has per-good storage, → this change merged with it:
 
-| Difficulty | Bot order | First merchant (yr) | Renaissance (yr) | No Renaissance by year 10 | Bankruptcies |
-|---|---|---|---|---|---|
-| easy | careful | 3.6 → 3.8 | 4.9 → 5.2 | 2 → 2 | 0 → 0 |
-| easy | naive | 5.8 → 6.0 | 6.8 → 7.2 | 8 → 9 | 1 → 1 |
-| easy | naiveFollowingHints | 5.0 → 5.5 | 6.2 → 6.8 | 8 → 8 | 0 → 0 |
-| normal | careful | 4.7 → 4.9 | 6.3 → 6.8 | 1 → 1 | 1 → 1 |
-| normal | naive | 6.6 → 6.6 | 8.4 → 8.6 | 9 → 10 | 2 → 3 |
-| normal | naiveFollowingHints | 6.0 → 6.4 | 7.9 → 8.3 | 11 → 14 | 0 → 0 |
-| hard | careful | 6.0 → 6.2 | 7.8 → 8.4 | 1 → 2 | 1 → 1 |
-| hard | naive | 7.0 → 7.1 | 9.1 → 9.5 | 14 → 14 | 5 → 5 |
-| hard | naiveFollowingHints | 7.3 → 7.2 | 9.3 → 9.6 | 8 → 11 | 0 → 0 |
+| Difficulty | Bot order | First merchant (yr) | Renaissance (yr) | No merchant by year 10 | Bankruptcies | Share of turns in years 8–10 with 20+ merchants |
+|---|---|---|---|---|---|---|
+| easy | careful | 4.0 → 4.1 | 5.3 → 5.5 | 2 → 2 | 0 → 0 | 0.79 → 0.82 |
+| easy | naive | 4.2 → 4.2 | 5.2 → 5.4 | 2 → 2 | 0 → 0 | 0.85 → 0.85 |
+| easy | naiveFollowingHints | 3.9 → 3.9 | 5.2 → 5.4 | 1 → 1 | 0 → 0 | 0.84 → 0.86 |
+| normal | careful | 4.6 → 4.9 | 6.6 → 6.5 | 1 → 1 | 0 → 0 | 0.75 → 0.76 |
+| normal | naive | 4.8 → 4.8 | 6.2 → 7.1 | 2 → 2 | 0 → 0 | 0.82 → 0.84 |
+| normal | naiveFollowingHints | 4.5 → 4.6 | 6.3 → 6.3 | 2 → 2 | 0 → 0 | 0.88 → 0.87 |
+| hard | careful | 6.0 → 6.1 | 7.5 → 7.9 | 0 → 0 | 0 → 0 | 0.96 → 0.95 |
+| hard | naive | 6.0 → 6.1 | 7.5 → 7.7 | 0 → 0 | 0 → 0 | 0.94 → 0.95 |
+| hard | naiveFollowingHints | 6.0 → 6.2 | 7.5 → 7.8 | 0 → 0 | 0 → 0 | 0.98 → 0.98 |
 
-"No Renaissance by year 10" counts games that did not reach the Renaissance before the run ended at year 10, whether the town went bankrupt or was only slow; a game that gets there at year 10.5 now counts. Normal careful, the scripted town the pacing target refers to, goes from 6.3 to 6.8 years: slower, and inside the 6–8 year goal.
+Attainment and solvency hold: bankruptcies stay at 0 in all 180 games, the games without a merchant stay at 10, and the share of turns in years 8–10 with 20 or more merchants is within 0.03 in every row. The Renaissance on Normal careful, the scripted town the pacing target refers to, stays at 6.5 years (6.6 on `main`), inside the 6–8 year goal; cloth did not make it slower there. The naive order on Normal is 0.9 years later (6.2 → 7.1). The other orders and difficulties move by 0.0–0.4 years. The merchants at the end of year 10 are a snapshot that depends on when the town's tools run out: in Normal careful, six games sit at 0 at that tick against one on `main`, while their retention over years 8–10 is 0.88–0.98.
 
-Over all 180 games, bankruptcies go from 10 to 11 and games with no merchant at all from 60 to 63. The careful order, which is the scripted town, loses none; the one new bankruptcy and the three games without a merchant are all in the naive orders, which build every chain from its raw end and already fail in 9 of 20 Normal games on `main`.
+Other sweeps, `main` against this change, identical: the solvency sweep (no bankruptcy in 20 games; control without the market 4 of 30 bankrupt, with it 0 of 30), the guided Hard start (every game's residents the same) and the rival viability sweep (60 rival lines, every year-3, year-5 and year-15 figure the same). The bot builds nothing of the wool chain in those, and rivals never reach merchants.
 
-Other sweeps, `main` against this change, identical: the solvency sweep (no bankruptcy in 20 games; control without the market 4 of 30 bankrupt, with it 0 of 30), the guided Hard start (all 20 games solvent, residents unchanged) and the rival viability sweep (60 rival lines, every year-3, year-5 and year-15 figure the same). The bot builds nothing of the wool chain in those, and rivals never reach merchants.
-
-How it got here (each row is a full pacing sweep, Normal careful, merchants held at year 10 in 10 seeds of the single island):
-
-- First bot, no caps: Renaissance 7.3, up to ten weavers, stores full of cloth, merchants held less often than on `main`.
-- Weavers capped at three, no building above 20 cloth: held again about as often; some marginal towns still went bankrupt.
-- A balance guard before building the chain: dropped, towns never reached their first merchant and went bankrupt.
-- Luxury-chain prices (sheep farm 60, weaver 120) and Weaving at Milling's price (560 then, 720 after `main` repriced the techs) instead of 70, 130 and 700: bankruptcies back to `main`'s in the careful order.
-- Start the chain for the next two inhabited citizens houses instead of full ones: first merchant about as early as without cloth.
+Before per-good storage landed, the shared store made cloth crowd out bread and tools, and the same chain cost more: the first bot, with no caps, built up to ten weavers and filled the stores with cloth (195 of 240 units in one game), and merchants held less often than on `main`. The bot's limits (at most three weavers, nothing while 20 cloth wait, selling surplus cloth and wool, starting the chain for the next two inhabited citizens houses) and the luxury-chain prices (sheep farm 60, weaver 120, Weaving at Milling's price) came out of those sweeps. A balance guard before building the chain was tried and dropped: towns never reached their first merchant.
