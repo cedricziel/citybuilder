@@ -1,6 +1,7 @@
 import CityCore
 import Foundation
 import SpriteKit
+import Synchronization
 
 #if canImport(UIKit)
 import UIKit
@@ -21,9 +22,9 @@ public enum SpriteAtlasRouting {
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
-        // Every terrain, building, people, vehicle, animal and ship family and the goods icons are art-kit
-        // renders; the Terrain, Buildings and Units atlases are retired.
-        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-"]
+        // Every terrain, building, people, vehicle, animal and ship family, the goods icons and the
+        // building status icons are art-kit renders; the Terrain, Buildings and Units atlases are retired.
+        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-", "status-"]
             + Vehicle.allCases.map { "\($0.rawValue)-" }
         if kitPrefixes.contains(where: spriteName.hasPrefix) { return kitAtlasName }
         // The status badges drawn over buildings are pixel art.
@@ -257,12 +258,8 @@ public enum SpriteAtlas {
     /// `rendering-2_5d` / `Missing-sprite fallback in release`.
     public nonisolated(unsafe) static let placeholderTexture: SKTexture = makePlaceholderTexture()
 
-    /// Test-only hook: when set, called instead of `NSLog` for the
-    /// first miss observed for each name. Tests use this to assert
-    /// the log-once invariant without intercepting the system log.
-    nonisolated(unsafe) static var missLogHook: ((String) -> Void)?
-
-    private nonisolated(unsafe) static var loggedMisses: Set<String> = []
+    /// The process-wide miss log behind `textureOrPlaceholder(named:)`.
+    static let missLog = MissLog { NSLog("[CityRender2D] missing sprite: %@", $0) }
 
     /// Returns the named texture, or `placeholderTexture` if the
     /// lookup fails. The missing name is logged exactly once per
@@ -270,21 +267,14 @@ public enum SpriteAtlas {
     /// `assertCatalogComplete()` check still surfaces loudly in
     /// release without crashing the renderer.
     public static func textureOrPlaceholder(named name: String) -> SKTexture {
-        if let tex = texture(named: name) { return tex }
-        logMissOnce(name)
-        return placeholderTexture
+        textureOrPlaceholder(named: name, log: missLog)
     }
 
-    /// Logs a missing sprite once per process; a fallback that draws something else still reports it.
-    static func logMissOnce(_ name: String) {
-        var shouldLog = false
-        cacheQueue.sync { shouldLog = loggedMisses.insert(name).inserted }
-        guard shouldLog else { return }
-        if let hook = missLogHook {
-            hook(name)
-        } else {
-            NSLog("[CityRender2D] missing sprite: %@", name)
-        }
+    /// `textureOrPlaceholder(named:)`, reporting a miss to `log`.
+    static func textureOrPlaceholder(named name: String, log: MissLog) -> SKTexture {
+        if let tex = texture(named: name) { return tex }
+        log.logOnce(name)
+        return placeholderTexture
     }
 
     private static func makePlaceholderTexture() -> SKTexture {
@@ -309,12 +299,6 @@ public enum SpriteAtlas {
         #endif
         texture.filteringMode = .nearest
         return texture
-    }
-
-    /// Test-only: clears the per-process miss-log set so a follow-up
-    /// test observes the first-miss path.
-    static func resetMissLogForTesting() {
-        cacheQueue.sync { loggedMisses.removeAll() }
     }
 
     // MARK: - Catalog & presence validation
@@ -454,5 +438,20 @@ public enum SpriteAtlas {
             atlasNameSetCache.removeAll()
             textureCache.removeAll()
         }
+    }
+}
+
+/// Reports each missing sprite name to its sink once.
+final class MissLog: Sendable {
+    private let logged = Mutex<Set<String>>([])
+    private let sink: @Sendable (String) -> Void
+
+    init(sink: @escaping @Sendable (String) -> Void) {
+        self.sink = sink
+    }
+
+    func logOnce(_ name: String) {
+        guard logged.withLock({ $0.insert(name).inserted }) else { return }
+        sink(name)
     }
 }

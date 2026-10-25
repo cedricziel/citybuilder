@@ -31,6 +31,7 @@ enum Fixtures {
         footprint: [2, 2]
         cost: 80
         storage: 16
+        catchmentRadius: 2
         category: gather
         recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
       - kind: Building
@@ -178,7 +179,9 @@ enum Fixtures {
     static let optionalFields: [String: [String: String]] = [
         "Good": ["market": "{ buy: 10, sell: 20 }", "neededBy": "[merchants]"],
         "Building": [
-            "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16", "plantTicks": "40",
+            "name": "Salt Pan", "legacyIds": "[salt_pan]", "upkeep": "1", "buildTicks": "20", "storage": "16", "storagePerGood": "8",
+            "plantTicks": "40",
+            "catchmentRadius": "2",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
             "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code"

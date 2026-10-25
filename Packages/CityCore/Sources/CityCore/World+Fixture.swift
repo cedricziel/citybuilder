@@ -112,7 +112,7 @@ public extension World {
             for tile in footprint.tiles(anchor: anchor) {
                 occupiedTiles[tile] = id
             }
-            var stockpile = Stockpile(capacity: World.stockpileCapacity(for: .townCenter) ?? 0)
+            var stockpile = World.newStockpile(for: .townCenter) ?? Stockpile(capacity: 0)
             for (good, amount) in starter {
                 _ = stockpile.deposit(good, amount: amount)
             }
@@ -170,6 +170,27 @@ public extension World {
     /// real goods-buffer stockpiles.
     mutating func seedUnlimitedTestInventory() {
         testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
+    }
+
+    /// A short grain chain on a grass strip, placed by command: two
+    /// grain farms, a windmill, a bakery and a warehouse along one
+    /// road. Ticked, it sends grain and flour straight from producer to
+    /// consumer, so the determinism gate covers those hops.
+    static func chainFixture() -> World {
+        var world = fixtureWithTerrain(width: 24, height: 6, fill: .grass, seed: 0xC4A1)
+        world.seedTestFunds()
+        for x in 0 ..< 24 {
+            world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))
+        }
+        let chain: [(BuildingKind, TileCoordinate)] = [
+            (.grainFarm, TileCoordinate(x: 0, y: 1)), (.grainFarm, TileCoordinate(x: 3, y: 1)),
+            (.windmill, TileCoordinate(x: 7, y: 1)), (.bakery, TileCoordinate(x: 11, y: 1)),
+            (.warehouse, TileCoordinate(x: 16, y: 0))
+        ]
+        for (kind, anchor) in chain {
+            world.enqueue(.place(kind, at: anchor))
+        }
+        return world
     }
 
     /// Four grain farms and a warehouse at one end of a long road and a

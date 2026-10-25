@@ -109,7 +109,9 @@ private struct Types {
             codable(aliases: all.flatMap { building in building.legacyIds.map { ($0, building.id) } }),
             property("displayName", "String", all.map { ($0.id, literal($0.name ?? titleCased($0.id))) }),
             property("storage", "Int?", all.map { ($0.id, $0.storage.map(String.init) ?? "nil") }),
+            property("storagePerGood", "Int?", all.map { ($0.id, $0.storagePerGood.map(String.init) ?? "nil") }),
             property("plantTicks", "UInt64?", all.map { ($0.id, $0.plantTicks.map(String.init) ?? "nil") }),
+            property("catchmentRadius", "Int?", all.map { ($0.id, $0.catchmentRadius.map(String.init) ?? "nil") }),
             property("category", "String?", all.map { ($0.id, $0.category.map(literal) ?? "nil") }),
             property("culture", "Culture?", all.map { ($0.id, optionalCase($0.culture)) }),
             property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) })

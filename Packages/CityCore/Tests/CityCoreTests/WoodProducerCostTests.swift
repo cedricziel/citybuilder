@@ -20,7 +20,7 @@ func scenarioLumberjackHutSpecHasNoMaterialCost() {
 func scenarioATownWithoutWoodCanStillBuildALumberjackHut() throws {
     var world = World.newGame(layout: .singleIsland, seed: 0)
     let townCenter = try #require(world.buildings.values.first { $0.kind == .townCenter })
-    world.stockpiles[townCenter.id] = Stockpile(capacity: World.stockpileCapacity(for: .townCenter) ?? 0)
+    world.stockpiles[townCenter.id] = World.newStockpile(for: .townCenter) ?? Stockpile(capacity: 0)
     world.economy.balance = 500
     let island = try #require(world.islandID(at: townCenter.anchor))
     let site = try #require(world.testFirstPlaceable(.lumberjackHut, onIsland: island, for: .player))

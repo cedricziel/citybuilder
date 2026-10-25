@@ -19,9 +19,8 @@ extension World {
         guard !foresters.isEmpty else { return }
         let tileToIsland = tileToIslandMap()
         for (forester, cycle) in foresters {
-            let footprint = BuildingCatalog.spec(for: forester.kind).footprint
             let isOpen = openGrass(for: forester.owner, tileToIsland: tileToIsland)
-            guard let tile = firstInCatchment(anchor: forester.anchor, footprint: footprint, where: isOpen) else { continue }
+            guard let tile = firstInCatchment(of: forester.kind, anchor: forester.anchor, where: isOpen) else { continue }
             var progress = productions[forester.id] ?? ProductionProgress()
             if !(isCropWinter && Self.seasonalCrops.contains(forester.kind) && tickCount.isMultiple(of: 2)) {
                 progress.ticksThisCycle &+= 1
@@ -66,21 +65,30 @@ extension World {
     private func catchmentCount(
         kind: BuildingKind, anchor: TileCoordinate, owner: Owner, tileToIsland: [TileCoordinate: IslandID]
     ) -> Int {
+        var count = 0
+        visitCatchmentTargets(of: kind, anchor: anchor, owner: owner, tileToIsland: tileToIsland) { _ in count += 1 }
+        return count
+    }
+
+    /// Visits, row-major, the tiles a `kind` at `anchor` would work: unoccupied forest for a
+    /// lumberjack hut, open grass for a forester. Tiles under the footprint itself never count.
+    func visitCatchmentTargets(
+        of kind: BuildingKind, anchor: TileCoordinate, owner: Owner, tileToIsland: [TileCoordinate: IslandID],
+        _ visit: (TileCoordinate) -> Void
+    ) {
         let isTarget: (TileCoordinate) -> Bool
         if kind == .lumberjackHut {
             isTarget = isUnoccupiedForest
         } else if Self.isPlanter(kind) {
             isTarget = openGrass(for: owner, tileToIsland: tileToIsland)
         } else {
-            return 0
+            return
         }
         let footprint = BuildingCatalog.spec(for: kind).footprint
         let columns = anchor.x ..< anchor.x + footprint.width, rows = anchor.y ..< anchor.y + footprint.height
-        var count = 0
-        visitCatchment(anchor: anchor, footprint: footprint, where: isTarget) { tile in
-            if !(columns.contains(tile.x) && rows.contains(tile.y)) { count += 1 }
+        visitCatchment(of: kind, anchor: anchor, where: isTarget) { tile in
+            if !(columns.contains(tile.x) && rows.contains(tile.y)) { visit(tile) }
             return true
         }
-        return count
     }
 }

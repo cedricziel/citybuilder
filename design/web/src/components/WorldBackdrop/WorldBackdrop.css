@@ -13,7 +13,10 @@
 }
 
 .cb-world__tile,
-.cb-world__building {
+.cb-world__object,
+.cb-world__building,
+.cb-world__unit,
+.cb-world__lights {
   position: absolute;
   display: block;
   max-width: none;
@@ -23,12 +26,65 @@
   opacity: 0.6;
 }
 
+/* A tree or rock in reach, lifted toward a warm light as the area shader does. */
+.cb-world__object--in-reach {
+  filter: brightness(1.3) sepia(0.15);
+}
+
 .cb-world__selection {
   position: absolute;
   width: 64px;
   height: 32px;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   background: rgba(255, 255, 255, 0.35);
+}
+
+.cb-world__area {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+}
+
+.cb-world__area-tint {
+  fill: var(--cb-area-ring);
+  fill-opacity: 0.075;
+}
+
+.cb-world__area-planted {
+  fill: var(--cb-area-ring);
+  fill-opacity: 0.2;
+}
+
+.cb-world__area-under,
+.cb-world__area-ring {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cb-world__area-under {
+  stroke: var(--cb-area-under);
+  stroke-width: 4;
+}
+
+.cb-world__area-ring {
+  stroke: var(--cb-area-ring);
+  stroke-width: 2;
+}
+
+.cb-world__night {
+  position: absolute;
+  left: -8192px;
+  top: -8192px;
+  width: 16384px;
+  height: 16384px;
+  background: var(--cb-night-tint);
+}
+
+.cb-world__lights {
+  opacity: 0.85;
+  mix-blend-mode: plus-lighter;
 }
 
 .cb-world__overlay {

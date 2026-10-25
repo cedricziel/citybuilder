@@ -11,5 +11,5 @@
 
 - [x] 2.1 Tests-first: "A dip on a collection tick sees the next collection"; confirm red
 - [x] 2.2 Implement to green: end the game once the deficit lasts more ticks than the grace (design D1); move the tests that pinned the old boundary and drop the test-only `Economy.bankruptcyGraceTicks`
-- [x] 2.3 Move the bot checks to the sweep with a no-market control, "Without the market the same towns go bankrupt" (design D2)
+- [x] 2.3 Move the bot checks to the sweep with a no-market control, "Without the market more towns go bankrupt" (design D2; since `per-good-storage`, "The market does not make towns worse off")
 - [x] 2.4 Re-measure Hard and Normal locally, with and without the market, and record it in design "Evidence"

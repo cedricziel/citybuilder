@@ -58,6 +58,7 @@ public struct CityRootView: View {
                 #if os(tvOS)
                 .modifier(TVHUDCommands(root: self, isInspector: true))
                 #endif
+            AreaCountCapsule(session: session, idiom: HUDMetrics.idiom)
             GeometryReader { proxy in
                 let layout = HUDMetrics.layout(for: proxy.size)
                 let insets = proxy.safeAreaInsets
@@ -84,6 +85,7 @@ public struct CityRootView: View {
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
+        .statisticsSheet(session: session)
         .routesSheet(session: session, isPresented: $routesPresented)
         .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
@@ -100,7 +102,7 @@ public struct CityRootView: View {
 
     var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
-            || session.isPaused || session.isWinSheetPresented
+            || session.isStatisticsPresented || session.isPaused || session.isWinSheetPresented
     }
 }
 
@@ -201,6 +203,10 @@ public final class GameSession {
     /// The first-hour guide while it shows, refreshed every tick.
     var firstStepsGuide: FirstStepsGuide?
     public var isWinSheetPresented = false
+    /// The Statistics sheet is open. Session state, never saved.
+    public var isStatisticsPresented = false
+    /// The Statistics sheet's open tab, kept between openings.
+    public var statisticsTab: StatisticsModel.Tab = .goods
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes
@@ -419,6 +425,10 @@ public final class GameSession {
     /// before a drag starts, or when the pointer leaves the world view).
     public var hoveredTile: TileCoordinate?
 
+    /// The last area of effect asked for, kept for the tick it was asked
+    /// on. The scene and the count capsule both ask every frame.
+    @ObservationIgnored var areaOfEffectCache: AreaOfEffectCache?
+
     /// Apply a hover update from the renderer. `nil` clears the hover.
     public func handleHover(at tile: TileCoordinate?) {
         hoveredTile = tile
@@ -480,7 +490,10 @@ public final class GameSession {
             hoverSink: hoverSink,
             longPressSink: longPressSink,
             ghostProvider: ghostProvider,
-            selectionProvider: { [weak self] in self?.selectedTool == .inspect ? self?.selectedTile : nil },
+            selectionProvider: { [weak self] in self?.inspectedTile },
+            // The tool `handleTap` uses (Inspect once the game is over), and not while authoring a route.
+            inspectingProvider: { [weak self] in self?.activeTool == .inspect && self?.routeAuthoring == nil },
+            areaOfEffectProvider: { [weak self] in self?.areaOfEffect() },
             routeOverlayProvider: { [weak self] in self?.routeOverlay() }
         )
     }

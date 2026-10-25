@@ -5,32 +5,29 @@ import Foundation
 /// `goods-and-production` / Producers draw inputs from goods buffers,
 /// Producer behavior.
 extension World {
-    /// Chebyshev radius around a lumberjack's footprint it harvests from.
-    public static let lumberjackCatchmentRadius = 2
-
     /// First forest tile within the catchment, scanning row-major from
     /// the top-left corner, or nil when the catchment is cleared.
-    func firstForestInCatchment(anchor: TileCoordinate, footprint: Footprint) -> TileCoordinate? {
-        firstInCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest)
+    func firstForestInCatchment(of kind: BuildingKind, anchor: TileCoordinate) -> TileCoordinate? {
+        firstInCatchment(of: kind, anchor: anchor, where: isUnoccupiedForest)
     }
 
     /// First catchment tile matching `isTarget`, row-major from the
     /// top-left corner.
     func firstInCatchment(
-        anchor: TileCoordinate, footprint: Footprint, where isTarget: (TileCoordinate) -> Bool
+        of kind: BuildingKind, anchor: TileCoordinate, where isTarget: (TileCoordinate) -> Bool
     ) -> TileCoordinate? {
         var first: TileCoordinate?
-        visitCatchment(anchor: anchor, footprint: footprint, where: isTarget) { tile in
+        visitCatchment(of: kind, anchor: anchor, where: isTarget) { tile in
             first = tile
             return false
         }
         return first
     }
 
-    /// Unoccupied forest tiles within the catchment.
-    func forestTiles(inCatchmentOf anchor: TileCoordinate, footprint: Footprint) -> Int {
+    /// Unoccupied forest tiles within the catchment of a `kind` at `anchor`.
+    func forestTiles(inCatchmentOf kind: BuildingKind, at anchor: TileCoordinate) -> Int {
         var count = 0
-        visitCatchment(anchor: anchor, footprint: footprint, where: isUnoccupiedForest) { _ in
+        visitCatchment(of: kind, anchor: anchor, where: isUnoccupiedForest) { _ in
             count += 1
             return true
         }
@@ -41,15 +38,23 @@ extension World {
         terrain(at: tile) == .forest && occupiedTiles[tile] == nil
     }
 
-    /// Visits the catchment's tiles matching `isTarget` row-major from
-    /// the top-left corner while `visit` returns true. Lumberjacks and
-    /// foresters share it and it runs per building per tick, so it
-    /// allocates nothing.
+    /// The footprint of every kind with a catchment, looked up once: a
+    /// building spec carries its material costs, which `visitCatchment`
+    /// would otherwise copy on every call.
+    private static let catchmentFootprints = Dictionary(uniqueKeysWithValues: BuildingKind.allCases.compactMap { kind in
+        kind.catchmentRadius.map { _ in (kind, BuildingCatalog.spec(for: kind).footprint) }
+    })
+
+    /// Visits the tiles matching `isTarget` within `kind`'s catchment
+    /// radius of its footprint at `anchor`, row-major from the top-left
+    /// corner, while `visit` returns true. A kind without a catchment
+    /// visits nothing. Lumberjacks and foresters share it and it runs per
+    /// building per tick, so it allocates nothing.
     func visitCatchment(
-        anchor: TileCoordinate, footprint: Footprint,
+        of kind: BuildingKind, anchor: TileCoordinate,
         where isTarget: (TileCoordinate) -> Bool, _ visit: (TileCoordinate) -> Bool
     ) {
-        let radius = Self.lumberjackCatchmentRadius
+        guard let radius = kind.catchmentRadius, let footprint = Self.catchmentFootprints[kind] else { return }
         for y in anchor.y - radius ... anchor.y + footprint.height - 1 + radius {
             for x in anchor.x - radius ... anchor.x + footprint.width - 1 + radius {
                 let tile = TileCoordinate(x: x, y: y)
@@ -61,12 +66,8 @@ extension World {
     /// Dispatch buffer→producer carriers for producers short of inputs.
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
-    mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
-        let consumers = buildings.values
-            .filter { $0.state == .operational }
-            .map { ($0, Self.suppliedGoods(of: $0)) }
-            .filter { !$0.1.isEmpty }
-            .sorted { $0.0.id.raw < $1.0.id.raw }
+    /// `consumers` come from `operationalConsumers()`.
+    mutating func spawnSupplyCarriers(consumers: [(Building, [Good: Int])], events: inout [WorldEvent]) {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {
@@ -79,8 +80,7 @@ extension World {
                 guard let amount = needs[good] else { continue }
                 while needsSupply(consumer.id, good: good, amount: amount) {
                     guard let (bufferID, path) = nearestBuffer(holding: good, toRoad: consumerRoad, among: buffers) else { break }
-                    let short = amount * 2 - (stockpiles[consumer.id]?.quantity(of: good) ?? 0)
-                        - inboundUnits(to: consumer.id, good: good)
+                    let short = shortfall(of: good, at: consumer.id, amount: amount)
                     let held = stockpiles[bufferID]?.quantity(of: good) ?? 0
                     let haul = CarrierConfig.haul(
                         ready: min(held, short), along: path, vehicle: CarrierConfig.vehicle(in: age(of: consumer.owner))
@@ -94,6 +94,16 @@ extension World {
         }
     }
 
+    /// Operational buildings with goods to be supplied, in entity order,
+    /// with those goods and amounts.
+    func operationalConsumers() -> [(Building, [Good: Int])] {
+        buildings.values
+            .filter { $0.state == .operational }
+            .map { ($0, Self.suppliedGoods(of: $0)) }
+            .filter { !$0.1.isEmpty }
+            .sorted { $0.0.id.raw < $1.0.id.raw }
+    }
+
     /// Goods supply carriers bring to `building`, with the amount used at
     /// a time: its recipe inputs plus its fuel (design D5).
     static func suppliedGoods(of building: Building) -> [Good: Int] {
@@ -104,10 +114,20 @@ extension World {
         return needs
     }
 
-    private func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
-        guard supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap else { return false }
-        let onHand = stockpiles[consumer]?.quantity(of: good) ?? 0
-        return onHand + inboundUnits(to: consumer, good: good) < amount * 2
+    /// Whether `consumer` should get more `good`: below twice the amount it
+    /// uses at a time, counting units on their way, with room for one more.
+    func needsSupply(_ consumer: EntityID, good: Good, amount: Int) -> Bool {
+        supplyCarrierCount(to: consumer) < CarrierConfig.perProducerCap
+            && shortfall(of: good, at: consumer, amount: amount) > 0
+    }
+
+    /// Units of `good` `consumer` could take now: what keeps it below twice
+    /// `amount`, counting units on their way, and no more than its room
+    /// beyond what is already on its way to it.
+    func shortfall(of good: Good, at consumer: EntityID, amount: Int) -> Int {
+        let pile = stockpiles[consumer]
+        let short = amount * 2 - (pile?.quantity(of: good) ?? 0) - inboundUnits(to: consumer, good: good)
+        return min(short, (pile?.room(for: good) ?? 0) - inboundUnits(to: consumer))
     }
 
     mutating func dispatchSupply(
@@ -130,21 +150,29 @@ extension World {
         events.append(.carrierDeparted(carrier: carrierID, from: path[0], good: good))
     }
 
-    /// Units supply carriers are bringing to `consumer`, optionally only
-    /// of `good`. A handcart brings several.
+    /// Units on their way to `consumer`, from storage or straight from a
+    /// producer, optionally only of `good`. A handcart brings several.
     func inboundUnits(to consumer: EntityID, good: Good? = nil) -> Int {
         carriers.values.reduce(0) { sum, carrier in
-            guard case let .retrieve(carried, amount, _, toConsumer) = carrier.mission,
-                  toConsumer == consumer, good == nil || carried == good
-            else { return sum }
-            return sum + amount
+            switch carrier.mission {
+            case let .retrieve(carried, amount, _, toConsumer), let .deliverToConsumer(carried, amount, _, toConsumer):
+                toConsumer == consumer && (good == nil || carried == good) ? sum + amount : sum
+            case .deliver, .deliverToConstructionSite:
+                sum
+            }
         }
     }
 
+    /// Carriers on the way to `consumer`, from storage or straight from a
+    /// producer, optionally only those carrying `good`.
     func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
         carriers.values.count { carrier in
-            guard case let .retrieve(carried, _, _, toConsumer) = carrier.mission else { return false }
-            return toConsumer == consumer && (good == nil || carried == good)
+            switch carrier.mission {
+            case let .retrieve(carried, _, _, toConsumer), let .deliverToConsumer(carried, _, _, toConsumer):
+                toConsumer == consumer && (good == nil || carried == good)
+            case .deliver, .deliverToConstructionSite:
+                false
+            }
         }
     }
 

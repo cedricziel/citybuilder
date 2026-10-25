@@ -226,3 +226,25 @@ func theVehicleFollowsTheOwnersAge() throws {
     #expect(vehicle == nil)
     #expect(world.buildings[hut]?.haulWaitTicks == 0)
 }
+
+@Test("scenario: a long hop to a short consumer goes by handcart")
+func scenarioALongHopToAShortConsumerGoesByHandcart() throws {
+    var world = roadStrip()
+    let farm = inject(.grainFarm, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.grain: 4])
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 16, y: 1))
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first)
+    #expect(mission == .deliverToConsumer(good: .grain, amount: 4, fromProducer: farm, toConsumer: windmill))
+    #expect(vehicle == .handcart)
+}
+
+@Test("a long hop with too little ready walks one unit without waiting")
+func aLongHopWithTooLittleReadyWalksOneUnitWithoutWaiting() throws {
+    var world = roadStrip()
+    let farm = inject(.grainFarm, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.grain: 2])
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 16, y: 1))
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first)
+    #expect(mission == .deliverToConsumer(good: .grain, amount: 1, fromProducer: farm, toConsumer: windmill))
+    #expect(vehicle == nil)
+}

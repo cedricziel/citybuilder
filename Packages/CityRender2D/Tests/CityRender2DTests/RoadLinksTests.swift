@@ -52,7 +52,7 @@ struct RoadLinksTests {
             in: snapshot, xRange: 0 ... snapshot.mapWidth - 1, yRange: 0 ... snapshot.mapHeight - 1
         )
         let links = specs.compactMap { spec -> RoadLink? in
-            guard case let .building(.road, .operational, _, _, _, _, _, _, _, link) = spec.kind else { return nil }
+            guard case let .building(.road, .operational, _, _, _, _, _, _, link) = spec.kind else { return nil }
             return link
         }
         #expect(!links.isEmpty)
@@ -79,7 +79,7 @@ struct RoadLinksTests {
         let specs = SnapshotReconciler.desiredSprites(in: snapshot, xRange: 0 ... 7, yRange: 0 ... 7)
         var links: [TileCoordinate: RoadLink?] = [:]
         for spec in specs {
-            if case let .building(.road, _, _, _, _, _, _, _, _, link) = spec.kind { links[spec.coord] = link }
+            if case let .building(.road, _, _, _, _, _, _, _, link) = spec.kind { links[spec.coord] = link }
         }
         #expect(links[TileCoordinate(x: 3, y: 3)] == RoadLink(mask: 1, plaza: false))
         #expect(links[TileCoordinate(x: 4, y: 3)] == RoadLink(mask: 4, plaza: false))

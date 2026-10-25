@@ -9,7 +9,8 @@ A scripted town SHALL stay solvent on Normal when it trades at its own town cent
 - **WHEN** such a town plays single-island and archipelago seeds 0 to 9 on Normal for 36,000 ticks
 - **THEN** none of the games ends in bankruptcy
 
-#### Scenario: Without the market the same towns go bankrupt
+#### Scenario: The market does not make towns worse off
 
-- **WHEN** such a town plays archipelago seeds 2, 6, 9 and 21 on Normal for 4,000 ticks without trading at its market
-- **THEN** every game ends in bankruptcy
+- **WHEN** such a town plays archipelago seeds 0 to 29 on Normal for 4,000 ticks, once without trading at its market and once with it
+- **THEN** no more of the 30 games with the market end in bankruptcy than without it
+- **AND** the games with the market end with no fewer residents in all than those without it

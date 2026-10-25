@@ -84,10 +84,9 @@ extension IsoWorldScene {
     nonisolated static let groundMacroRebuildInterval: Duration = .milliseconds(250)
 
     private func buildPendingGroundMacro() {
-        guard !groundMacroBuilding, let inputs = groundMacroPending else { return }
+        guard groundMacroBuild == nil, let inputs = groundMacroPending else { return }
         groundMacroPending = nil
-        groundMacroBuilding = true
-        Task.detached(priority: .utility) { [weak self] in
+        groundMacroBuild = Task.detached(priority: .utility) { [weak self] in
             let field = inputs.build()
             await self?.show(field, from: inputs)
             try? await Task.sleep(for: Self.groundMacroRebuildInterval)
@@ -96,7 +95,7 @@ extension IsoWorldScene {
     }
 
     private func finishGroundMacroBuild() {
-        groundMacroBuilding = false
+        groundMacroBuild = nil
         buildPendingGroundMacro()
     }
 

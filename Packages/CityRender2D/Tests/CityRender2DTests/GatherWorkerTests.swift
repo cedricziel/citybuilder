@@ -236,7 +236,7 @@ func workerHoldsWhilePausedAndAtNight() throws {
     (scene.dataSource as? FixedSnapshot)?.snapshot = world(
         [hut],
         tick: 181,
-        issues: [hut.id: .storageFull],
+        issues: [hut.id: .outputStuck(.wood)],
         terrain: { $0.x >= 14 ? .forest : .grass }
     )
     scene.update(2.6)

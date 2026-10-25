@@ -112,12 +112,12 @@ private final class FixedSource: IsoWorldDataSource {
     }
 }
 
-/// Updates the scene until its macro field shows `occupied`, for at most two seconds.
+/// Updates the scene, then waits until every macro field it asked for has been built and shown.
 @MainActor
-private func settle(_ scene: IsoWorldScene, showing occupied: Set<TileCoordinate>) async {
-    for _ in 0 ..< 200 where scene.groundMacroShown?.occupied != occupied {
-        scene.update(0)
-        try? await Task.sleep(for: .milliseconds(10))
+private func settle(_ scene: IsoWorldScene) async {
+    scene.update(0)
+    while let build = scene.groundMacroBuild {
+        await build.value
     }
 }
 
@@ -129,7 +129,7 @@ func sceneDrawsTheMacroFieldBetweenGroundAndBuildings() async throws {
     scene.hasSprite = { _ in true }
     let source = FixedSource(snapshot(season: .spring))
     scene.dataSource = source
-    await settle(scene, showing: [])
+    await settle(scene)
     let node = try #require(scene.childNode(withName: IsoWorldScene.groundMacroNodeName) as? SKSpriteNode)
     #expect(node.blendMode == .multiplyX2)
     #expect(node.zPosition > 0 && node.zPosition < 10)
@@ -148,7 +148,7 @@ func rapidChangesEndOnTheNewestField() async {
         source.snapshot = snapshot(season: .spring, occupied: [.init(x: x, y: 2): EntityID(raw: UInt32(x))])
         scene.update(0)
     }
-    await settle(scene, showing: [.init(x: 3, y: 2)])
+    await settle(scene)
     #expect(scene.groundMacroShown?.occupied == [.init(x: 3, y: 2)])
 }
 

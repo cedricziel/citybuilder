@@ -101,6 +101,7 @@
           "then": {
             "additionalProperties": false,
             "required": ["kind", "id", "footprint", "cost"],
+            "dependentRequired": { "plantTicks": ["catchmentRadius"] },
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
@@ -116,8 +117,10 @@
               "cost": { "$ref": "#/$defs/nonNegative" },
               "upkeep": { "$ref": "#/$defs/nonNegative" },
               "buildTicks": { "$ref": "#/$defs/positive" },
-              "storage": { "description": "Stockpile capacity. Omit for none.", "$ref": "#/$defs/positive" },
+              "storage": { "description": "Stockpile capacity shared by every good. Omit for none.", "$ref": "#/$defs/positive" },
+              "storagePerGood": { "description": "Units of each good a store holds; use instead of storage.", "$ref": "#/$defs/positive" },
               "plantTicks": { "description": "Ticks per forest tile planted; only planting buildings set it.", "$ref": "#/$defs/positive" },
+              "catchmentRadius": { "description": "Tiles around the footprint (Chebyshev) a gathering or planting building works. Omit for none.", "$ref": "#/$defs/positive" },
               "category": { "description": "Build drawer. Omit for none.", "enum": ["town", "gather", "craft"] },
               "materials": { "$ref": "#/$defs/amounts" },
               "recipe": { "$ref": "#/$defs/recipe" },

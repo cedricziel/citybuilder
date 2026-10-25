@@ -22,9 +22,22 @@ private func playingEngine() throws -> (AudioEngine, AVAudioPlayerNode) {
     return (engine, node)
 }
 
-/// How far `node` has played, in samples.
-private func position(of node: AVAudioPlayerNode) -> AVAudioFramePosition {
-    node.lastRenderTime.flatMap(node.playerTime(forNodeTime:))?.sampleTime ?? 0
+/// How far `node` has played, in samples, or nil while its timing is unavailable.
+private func position(of node: AVAudioPlayerNode) -> AVAudioFramePosition? {
+    node.lastRenderTime.flatMap(node.playerTime(forNodeTime:))?.sampleTime
+}
+
+/// Polls `node` until `isDone` holds for its position or two seconds pass, and returns the last position.
+private func waitForPosition(
+    of node: AVAudioPlayerNode, until isDone: (AVAudioFramePosition) -> Bool
+) -> AVAudioFramePosition? {
+    let deadline = Date().addingTimeInterval(2)
+    var current = position(of: node)
+    while current.map(isDone) != true, Date() < deadline {
+        Thread.sleep(forTimeInterval: 0.01)
+        current = position(of: node)
+    }
+    return current
 }
 
 @MainActor
@@ -44,15 +57,17 @@ func configurationChangeStartsTheEngineAgain() throws {
 func playerKeepsItsPlaceAcrossAConfigurationChange() throws {
     let (engine, node) = try playingEngine()
     defer { engine.stop() }
-    for _ in 0 ..< 40 where position(of: node) <= 0 {
-        Thread.sleep(forTimeInterval: 0.01)
-    }
-    let before = position(of: node)
+    let before = try #require(waitForPosition(of: node) { $0 > 0 })
     changeConfiguration(of: engine)
-    Thread.sleep(forTimeInterval: 0.1)
+    // The restarted engine renders its first cycle some time later; on a slow
+    // runner that can exceed any fixed sleep, so wait for the first position it
+    // renders. A reset shows here as a first new position below `before`.
+    let first = try #require(waitForPosition(of: node) { $0 != before })
+    #expect(first >= before)
+    let later = try #require(waitForPosition(of: node) { $0 > first })
     #expect(node.isPlaying)
     #expect(before > 0)
-    #expect(position(of: node) > before)
+    #expect(later > first)
 }
 
 @MainActor

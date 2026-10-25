@@ -32,6 +32,9 @@ public enum GatherWorkerPlanner {
 
     static let maxWorkers = 16
     static let minZoom = 0.5
+    /// How far a miner walks from the mine. A mine has no catchment; its
+    /// miner works the rock as close as a woodcutter works the forest.
+    static let minerReach = 2
     static let ticksPerTile: UInt64 = 8
     static let workTicks: UInt64 = 40
     static let restTicks: UInt64 = 20
@@ -47,7 +50,7 @@ public enum GatherWorkerPlanner {
     ) -> [Worker] {
         guard snapshot.camera.zoom >= minZoom else { return [] }
         let (xRange, yRange) = visible
-        let reach = World.lumberjackCatchmentRadius
+        let reach = max(BuildingKind.lumberjackHut.catchmentRadius ?? 0, minerReach)
         let onScreen = { (site: Building) in xRange.contains(site.anchor.x) && yRange.contains(site.anchor.y) }
         // Sites on screen take the budget first, then those just off it, each by id.
         let sites = snapshot.buildings.values.filter {
@@ -149,7 +152,7 @@ public enum GatherWorkerPlanner {
     /// 4-connected step from the one before.
     static func route(from site: Building, ground: Ground, leavingFrom: TileCoordinate? = nil) -> [TileCoordinate]? {
         let footprint = BuildingCatalog.spec(for: site.kind).footprint
-        let reach = World.lumberjackCatchmentRadius
+        let reach = site.kind.catchmentRadius ?? minerReach
         let wanted: TerrainType = site.kind == .mine ? .mountain : .forest
         let cols = (site.anchor.x - reach) ... (site.anchor.x + footprint.width - 1 + reach)
         let rows = (site.anchor.y - reach) ... (site.anchor.y + footprint.height - 1 + reach)

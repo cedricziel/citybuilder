@@ -13,11 +13,14 @@ struct SnapshotHostView: View {
     let longPressSink: @MainActor @Sendable (TileCoordinate) -> Void
     let ghostProvider: @MainActor @Sendable () -> GameSession.GhostPreview?
     let selectionProvider: @MainActor @Sendable () -> TileCoordinate?
+    let inspectingProvider: @MainActor @Sendable () -> Bool
+    let areaOfEffectProvider: @MainActor @Sendable () -> AreaOfEffect?
     let routeOverlayProvider: @MainActor @Sendable () -> RouteOverlay?
     var body: some View {
         if let factory = SnapshotRendererRegistry.shared.factory {
             factory(
-                snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider, routeOverlayProvider
+                snapshotProvider, tapSink, dragSink, hoverSink, longPressSink, ghostProvider, selectionProvider,
+                inspectingProvider, areaOfEffectProvider, routeOverlayProvider
             )
         } else {
             Color.black.overlay(
@@ -49,6 +52,11 @@ public final class SnapshotRendererRegistry {
     /// The inspected tile, so the scene can ring a selected signature
     /// building.
     public typealias SelectionProvider = @MainActor @Sendable () -> TileCoordinate?
+    /// Whether the Inspect tool is armed, so a tap on a building's status icon may select it.
+    public typealias InspectingProvider = @MainActor @Sendable () -> Bool
+    /// What the ghost or the selected building reaches. Spec:
+    /// `rendering-2_5d` / Areas of effect while placing and selecting.
+    public typealias AreaOfEffectProvider = @MainActor @Sendable () -> AreaOfEffect?
     /// The route the scene draws. Spec: `rendering-2_5d` / Route overlay
     /// from the session.
     public typealias RouteOverlayProvider = @MainActor @Sendable () -> RouteOverlay?
@@ -61,6 +69,8 @@ public final class SnapshotRendererRegistry {
         @escaping LongPressSink,
         @escaping GhostProvider,
         @escaping SelectionProvider,
+        @escaping InspectingProvider,
+        @escaping AreaOfEffectProvider,
         @escaping RouteOverlayProvider
     ) -> AnyView
 

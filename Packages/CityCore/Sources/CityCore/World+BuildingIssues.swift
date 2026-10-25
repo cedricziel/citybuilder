@@ -10,7 +10,10 @@ public enum BuildingIssue: Hashable, Sendable {
     /// A forester's catchment holds no open grass.
     case noRoomToPlant
     case missingInputs([Good])
-    case storageFull
+    /// Its own store is full of what it makes and no store, consumer or
+    /// site has room for it, so it stopped. Names the good it holds most
+    /// of (`per-good-storage`).
+    case outputStuck(Good)
 }
 
 public extension World {
@@ -32,9 +35,8 @@ public extension World {
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
             if Self.isPlanter(building.kind) {
-                let footprint = BuildingCatalog.spec(for: building.kind).footprint
                 let isOpen = openGrass(for: building.owner, tileToIsland: tileToIsland)
-                if firstInCatchment(anchor: building.anchor, footprint: footprint, where: isOpen) == nil {
+                if firstInCatchment(of: building.kind, anchor: building.anchor, where: isOpen) == nil {
                     issues[building.id] = .noRoomToPlant
                 }
                 continue
@@ -47,7 +49,7 @@ public extension World {
                 continue
             }
             let lacksForest = building.kind == .lumberjackHut
-                && firstForestInCatchment(anchor: building.anchor, footprint: footprint) == nil
+                && firstForestInCatchment(of: building.kind, anchor: building.anchor) == nil
             if lacksForest {
                 issues[building.id] = .noTreesInReach
                 continue
@@ -56,9 +58,8 @@ public extension World {
                 issues[building.id] = .noRouteToStorage
                 continue
             }
-            if let recipe, let issue = productionIssue(of: building.id, recipe: recipe) {
-                issues[building.id] = issue
-            }
+            guard let recipe, let issue = productionIssue(of: building.id, recipe: recipe) else { continue }
+            issues[building.id] = issue
         }
         return issues
     }
@@ -67,13 +68,21 @@ public extension World {
 extension World {
     private func productionIssue(of id: EntityID, recipe: ProductionRecipe) -> BuildingIssue? {
         let stockpile = stockpiles[id] ?? Stockpile(capacity: 16)
+        // A store full of its own output stops it whatever it is given,
+        // so that comes before missing inputs.
+        let made = Good.allCases.filter { recipe.outputs[$0] != nil }
+        let full = recipe.outputs.contains { good, amount in stockpile.room(for: good) < amount }
+        let most = made.max { stockpile.quantity(of: $0) < stockpile.quantity(of: $1) }
+        if full, let most, stockpile.quantity(of: most) > 0 {
+            return .outputStuck(most)
+        }
         let missing = recipe.inputs
             .filter { good, amount in stockpile.quantity(of: good) < amount }
             .map(\.key)
             .sorted { $0.rawValue < $1.rawValue }
         if !missing.isEmpty { return .missingInputs(missing) }
-        if recipe.outputs.values.contains(where: { stockpile.totalStored + $0 > stockpile.capacity }) {
-            return .storageFull
+        if full, let first = made.first {
+            return .outputStuck(first)
         }
         return nil
     }

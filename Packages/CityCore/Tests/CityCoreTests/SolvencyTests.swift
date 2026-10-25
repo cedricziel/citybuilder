@@ -24,19 +24,44 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
     }
 }
 
-/// The control: without the market these seeds go bankrupt by tick
-/// 3,850, so the sweep above tests what the market does.
+/// The control: over archipelago seeds 0 to 29 on Normal, by tick 4,000,
+/// towns that trade at the market go bankrupt no more often, and house no
+/// fewer residents in all, than the same towns without it. It once asked
+/// for bankruptcies without the market; per-good storage ended the store
+/// clog that caused them (`per-good-storage` D5).
+private let controlSeeds = Array(UInt64(0) ..< 30)
+
 @Test(
-    "scenario: without the market the same towns go bankrupt",
-    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: [UInt64(2), 6, 9, 21]
+    "scenario: the market does not make towns worse off",
+    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1")
 )
-func scenarioWithoutTheMarketTheSameTownsGoBankrupt(seed: UInt64) {
-    let bankrupt = World.botGame(
-        layout: .archipelago, seed: seed, difficulty: .normal, tradesAtMarket: false, ticks: 4000
-    ).economy.gameOver
-    print("SOLVENCY_SWEEP seed=\(seed) layout=archipelago market=false bankrupt=\(bankrupt)")
-    #expect(bankrupt, "archipelago seed \(seed)")
+func scenarioTheMarketDoesNotMakeTownsWorseOff() async {
+    let without = await controlRuns(tradesAtMarket: false)
+    let with = await controlRuns(tradesAtMarket: true)
+    print(
+        "SOLVENCY_SWEEP control seeds=0-29 layout=archipelago bankrupt_without=\(without.bankrupt) "
+            + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
+    )
+    #expect(with.bankrupt <= without.bankrupt)
+    #expect(with.residents >= without.residents)
+}
+
+/// Bankruptcies and residents in all over the control seeds.
+private func controlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, residents: Int) {
+    await withTaskGroup(of: (Bool, Int).self) { group in
+        for seed in controlSeeds {
+            group.addTask {
+                let world = World.botGame(
+                    layout: .archipelago, seed: seed, difficulty: .normal,
+                    tradesAtMarket: tradesAtMarket, ticks: 4000
+                )
+                return (world.economy.gameOver, world.residents(atLeast: .peasants))
+            }
+        }
+        return await group.reduce((bankrupt: 0, residents: 0)) { total, run in
+            (total.bankrupt + (run.0 ? 1 : 0), total.residents + run.1)
+        }
+    }
 }
 
 // economy / Following the first steps keeps a Hard start solvent and

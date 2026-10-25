@@ -52,6 +52,7 @@ func goodsNeverCrossOwners() {
             let (from, to): (EntityID, EntityID) = switch carrier.mission {
             case let .deliver(_, _, producer, warehouse): (producer, warehouse)
             case let .retrieve(_, _, warehouse, consumer): (warehouse, consumer)
+            case let .deliverToConsumer(_, _, producer, consumer): (producer, consumer)
             case let .deliverToConstructionSite(_, _, producer, site): (producer, site)
             }
             #expect(world.owner(of: from) == world.owner(of: to))

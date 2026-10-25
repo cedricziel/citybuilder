@@ -21,9 +21,7 @@ public enum CarrierLoad: String, CaseIterable, Sendable {
 
 extension Carrier {
     var good: Good {
-        switch mission {
-        case let .deliver(good, _, _, _), let .retrieve(good, _, _, _), let .deliverToConstructionSite(good, _, _, _): good
-        }
+        mission.good
     }
 }
 

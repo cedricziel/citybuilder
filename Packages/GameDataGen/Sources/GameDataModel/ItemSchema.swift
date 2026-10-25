@@ -15,7 +15,9 @@ public enum ItemSchema {
         "Building": Fields(
             required: ["id", "footprint", "cost"],
             optional: [
-                "name", "legacyIds", "upkeep", "buildTicks", "storage", "plantTicks", "category", "materials", "recipe",
+                "name", "legacyIds", "upkeep", "buildTicks", "storage", "storagePerGood", "plantTicks", "catchmentRadius", "category",
+                "materials",
+                "recipe",
                 "unlockedBy", "obsoletedBy", "culture", "placement", "effect"
             ]
         ),
@@ -32,4 +34,7 @@ public enum ItemSchema {
 
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]
     public static let terrainTypes: Set<String> = ["grass", "forest", "beach", "water", "mountain"]
+    /// Buildings whose hand-written behaviour harvests within their catchment, so they must declare
+    /// `catchmentRadius`.
+    public static let catchmentHarvesters: Set<String> = ["lumberjack-hut"]
 }

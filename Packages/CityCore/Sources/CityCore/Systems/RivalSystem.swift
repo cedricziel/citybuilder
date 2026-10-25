@@ -89,10 +89,12 @@ struct RivalTurn {
     var occupiedHouses = 0
     /// True when one of the rival's houses went short of food.
     var hasHouseShortOfFood = false
-    /// Room in the town center, where market purchases go.
-    var centerFreeSpace = 0
-    /// Room across the rival's operational goods buffers.
-    var storeFreeSpace = 0
+    /// The town center's stockpile, where market purchases go.
+    var center = Stockpile(capacity: 0)
+    /// Room for each surplus good across the rival's operational goods
+    /// buffers, and their limit for it.
+    var surplusRoom: [Good: Int] = [:]
+    var surplusLimit: [Good: Int] = [:]
     /// Goods in those buffers: what a sale draws on. The island stock
     /// also counts the player's stores on the island.
     var ownStock: [Good: Int] = [:]
@@ -148,9 +150,10 @@ struct RivalTurn {
         }
     }
 
-    /// True when the town center has no room for the farms' food.
+    /// True when the town center has almost no room left for some good,
+    /// so its farms, huts or sawmill will soon have nowhere to send it.
     var storeFull: Bool {
-        centerFreeSpace < RivalAI.fullStoreSpace
+        Good.allCases.contains { center.room(for: $0) < RivalAI.fullStoreSpace }
     }
 
     /// True when the town center is full and no warehouse stands or is
@@ -267,13 +270,17 @@ extension World {
 
     private func rivalTurn(_ rival: RivalTown, stock: [Good: Int]) -> RivalTurn {
         var turn = RivalTurn(rival: rival, stock: stock)
-        turn.centerFreeSpace = stockpiles[rival.townCenterID]?.freeSpace ?? 0
-        let hutFootprint = BuildingCatalog.spec(for: .lumberjackHut).footprint
+        turn.center = stockpiles[rival.townCenterID] ?? Stockpile(capacity: 0)
         for building in buildings.values where building.owner == rival.owner {
             turn.cappedBuildings += building.kind == .road || building.kind == .forester ? 0 : 1
             let isStore = building.state == .operational && Self.logisticsBufferKinds.contains(building.kind)
             if isStore, let pile = stockpiles[building.id] {
-                turn.storeFreeSpace += pile.freeSpace
+                for good in RivalAI.surplusGoods {
+                    turn.surplusRoom[good, default: 0] += pile.room(for: good)
+                    // A store's per-good cap, not its stock: overflow from an
+                    // old save does not raise what a rival keeps.
+                    turn.surplusLimit[good, default: 0] += pile.capacity
+                }
                 turn.ownStock.merge(pile.contents) { $0 + $1 }
             }
             if building.state == .constructing, building.constructionState == .waitingForMaterials {
@@ -285,7 +292,7 @@ extension World {
             }
             if building.kind == .lumberjackHut {
                 turn.allHuts += 1
-                let forest = forestTiles(inCatchmentOf: building.anchor, footprint: hutFootprint)
+                let forest = forestTiles(inCatchmentOf: building.kind, at: building.anchor)
                 turn.forestLeft += forest
                 guard forest >= RivalAI.hutLowForest else { continue }
             }

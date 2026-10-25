@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "node scripts/gen-sprites.mjs && node scripts/build.mjs && tsc -p tsconfig.json",
-    "typecheck": "node scripts/gen-sprites.mjs && tsc -p tsconfig.json --noEmit"
+    "ds:build": "npm run build && node scripts/design-system/build.mjs",
+    "typecheck":"node scripts/gen-sprites.mjs && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.previews.json"
   },
   "peerDependencies": {
     "react": "^19.3.1",

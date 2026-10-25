@@ -7,16 +7,15 @@ extension GameSession {
     /// the tick boundary, so the green / red tint matches reality.
     /// A pending placement overrides the hover.
     public func ghostState() -> GhostPreview? {
-        if let pending = pendingPlacement {
-            return ghostPreview(kind: pending.kind, tile: pending.anchor)
-        }
-        guard let tile = hoveredTile else { return nil }
-        switch selectedTool {
-        case .inspect, .demolish:
-            return nil
-        case let .place(kind):
-            return ghostPreview(kind: kind, tile: tile)
-        }
+        ghostSite().map { ghostPreview(kind: $0.kind, tile: $0.tile) }
+    }
+
+    /// The building and tile the ghost shows: the pending placement, else
+    /// the armed building at the hovered tile.
+    func ghostSite() -> (kind: BuildingKind, tile: TileCoordinate)? {
+        if let pending = pendingPlacement { return (pending.kind, pending.anchor) }
+        guard let tile = hoveredTile, case let .place(kind) = selectedTool else { return nil }
+        return (kind, tile)
     }
 
     private func ghostPreview(kind: BuildingKind, tile: TileCoordinate) -> GhostPreview {

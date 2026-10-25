@@ -1,7 +1,7 @@
-import CityCore
 import CoreGraphics
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/redesign-hud-map-first/specs/platform-shells/spec.md.
@@ -78,7 +78,7 @@ func scenarioProblemTextForEveryBuildingIssue() {
     #expect(InspectorViewModel.problemText(.noTreesInReach) == "No forest within 2 tiles: build a forester beside it")
     #expect(InspectorViewModel.problemText(.noRoomToPlant) == "No open grass within 2 tiles to plant")
     #expect(InspectorViewModel.problemText(.missingInputs([.wood, .grain])) == "Waiting for wood, grain")
-    #expect(InspectorViewModel.problemText(.storageFull) == "Store full: no carrier can take its goods")
+    #expect(InspectorViewModel.problemText(.outputStuck(.bread)) == "Output stuck: no room for bread")
 }
 
 private let viewBounds = CGRect(x: 0, y: 0, width: 844, height: 390)

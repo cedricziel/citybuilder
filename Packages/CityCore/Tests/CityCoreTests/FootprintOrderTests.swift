@@ -10,6 +10,6 @@ import Testing
 func lumberjackPicksForestInRowMajorOrder() {
     let world = World.fixtureWithTerrain(width: 8, height: 8, fill: .forest, seed: 1)
     // The 2-tile catchment of a 2×2 at (3, 3) starts at (1, 1).
-    #expect(world.firstForestInCatchment(anchor: TileCoordinate(x: 3, y: 3), footprint: Footprint(width: 2, height: 2))
+    #expect(world.firstForestInCatchment(of: .lumberjackHut, anchor: TileCoordinate(x: 3, y: 3))
         == TileCoordinate(x: 1, y: 1))
 }

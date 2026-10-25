@@ -61,7 +61,7 @@ items:
     cost: 200
     upkeep: 1
     buildTicks: 40
-    storage: 200
+    storagePerGood: 80
     materials: { wood: 2, planks: 6 }
 
   - kind: Building
@@ -80,6 +80,7 @@ items:
     category: gather
     cost: 80                         # money only, so wood can always restart
     buildTicks: 25
+    catchmentRadius: 2               # cuts forest within 2 tiles of its plot
     recipe: { outputs: { wood: 1 }, cycleTicks: 30 }
 
   # Plants one forest tile on open grass within 2 tiles every cycle;
@@ -92,6 +93,7 @@ items:
     cost: 60
     buildTicks: 20
     plantTicks: 40                   # a hut cuts a tree every 30 ticks
+    catchmentRadius: 2               # the same reach as a hut
 
   - kind: Building
     id: sawmill
@@ -226,7 +228,7 @@ items:
     footprint: [3, 3]
     cost: 0
     buildTicks: 1
-    storage: 40
+    storagePerGood: 40
 
   # Shore building; carriers use the land side, ships the sea side.
   # Spec: port-and-shipyard
@@ -238,7 +240,7 @@ items:
     cost: 250
     upkeep: 1
     buildTicks: 35
-    storage: 200
+    storagePerGood: 80
     materials: { wood: 8, planks: 6 }
     placement: { shore: { minLand: 1, minWater: 1 } }
     unlockedBy: seafaring
@@ -262,10 +264,10 @@ items:
   # --- Techs ---------------------------------------------------------
   # Spec: research / Tech tree
   - { kind: Tech, id: scholarship, cost: 30, age: antiquity }
-  - { kind: Tech, id: milling,     cost: 400, age: medieval }
-  - { kind: Tech, id: mining,      cost: 400, age: medieval }
-  - { kind: Tech, id: metallurgy,  cost: 800, age: medieval, prerequisites: [mining] }
+  - { kind: Tech, id: milling,     cost: 720, age: medieval }
+  - { kind: Tech, id: mining,      cost: 720, age: medieval }
+  - { kind: Tech, id: metallurgy,  cost: 1440, age: medieval, prerequisites: [mining] }
   - { kind: Tech, id: seafaring,   cost: 60, age: medieval }
   # Unlocks every culture's luxury chain. Spec: culture-content /
   # Cultivation unlocks the luxury chain
-  - { kind: Tech, id: cultivation, cost: 500, age: medieval }
+  - { kind: Tech, id: cultivation, cost: 900, age: medieval }
