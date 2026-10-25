@@ -62,6 +62,8 @@ Find a UDID by name: `xcrun simctl list devices available | grep '<name>'`.
 ## Read the screen
 
 - **Screenshot, act, screenshot.** Take a screenshot before every action and another after it. Sheet and panel transitions are slow: take a second screenshot before you decide a tap failed. Under machine load, a screen can lag by several seconds.
+- **A stale screenshot is a lie.** Compare the status-bar clock in the screenshot with `date +%R`. If it is minutes behind, the host is starved and the simulator is not redrawing: stop, check `uptime` and `ps -Ao pcpu,pid,etime,args -r | head`, and wait. Do not play on frames you cannot trust. A hung test run from another session is the usual cause; tell the orchestrator and do not kill it.
+- **Check the orientation first.** A device keeps the orientation it had when it last shut down, and the app follows it: a screenshot wider than tall is landscape. `rotate` is slow and sometimes needs two tries; after it, wait a few seconds and take two screenshots before you tap.
 - **Coordinates are device points**, origin top-left. The screenshot you see may be scaled: its note says "displayed at W×H". Point = pixel × (device width in points ÷ displayed width). For a 750-px-wide SE screenshot that is × 0.5.
 - **Know the tile pitch.** At zoom 1 one tile step in x is about (+32.5, +16) points. Tap a building with no tool armed and the inspector shows its anchor; from two such points you can work out where any tile is.
 - **Pan** with `swipe` on empty map. **Zoom** with `touch2_path` (a pinch). Start swipes more than 4 points from a screen edge, or they become the system edge gestures.
