@@ -9,7 +9,7 @@ extension PlayerBot {
     /// Houses before the kit starts building.
     static let midGameHouses = 6
 
-    /// Full citizens houses the bot builds cloth for ahead of their promotion.
+    /// Inhabited citizens houses the bot builds cloth for ahead of their promotion.
     static let readyHouses = 2
 
     /// Weavers the bot builds at most. The stores are shared, so cloth beyond
@@ -36,10 +36,10 @@ extension PlayerBot {
     }
 
     /// Houses that want cloth (#239): merchant houses, and the next
-    /// `readyHouses` full citizens houses that already have bread and tools
-    /// in reach and so lack only cloth to become merchants. Counting every
-    /// full citizens house would build weavers for houses that are not
-    /// about to move up.
+    /// `readyHouses` inhabited citizens houses once bread and tools are in
+    /// the stores, so the cloth is there when they fill up and lack only
+    /// it to become merchants. Counting every citizens house would build
+    /// weavers for houses that are not about to move up.
     func clothDemand(in world: World, stock: [Good: Int]) -> Int {
         let chainsRun = stock[.bread, default: 0] > 0 && stock[.tools, default: 0] > 0
         var merchants = 0
@@ -48,7 +48,7 @@ extension PlayerBot {
             guard let house = world.populations[building.id] else { continue }
             if house.tier == .merchants {
                 merchants += 1
-            } else if chainsRun, house.tier == .citizens, house.population == house.capacity {
+            } else if chainsRun, house.tier == .citizens, house.population > 0 {
                 ready += 1
             }
         }

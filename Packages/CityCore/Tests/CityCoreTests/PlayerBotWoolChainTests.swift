@@ -31,22 +31,22 @@ private struct WoolTown {
     }
 }
 
-@Test("the bot wants no cloth without merchants or merchants in waiting")
+@Test("the bot wants no cloth from peasants or empty citizens houses")
 func botWantsNoClothWithoutDemand() throws {
-    let peasants = try WoolTown(order: .careful, houses: [(.peasants, 4), (.citizens, 3)])
+    let peasants = try WoolTown(order: .careful, houses: [(.peasants, 4), (.citizens, 0)])
     #expect(peasants.bot.clothDemand(in: peasants.world, stock: breadAndTools) == 0)
     #expect(peasants.missing().isEmpty)
 }
 
-@Test("a full citizens house with bread and tools in reach wants cloth")
-func botCountsFullCitizensHouses() throws {
-    let town = try WoolTown(order: .careful, houses: [(.citizens, 6), (.citizens, 5)])
+@Test("an inhabited citizens house with bread and tools in reach wants cloth")
+func botCountsInhabitedCitizensHouses() throws {
+    let town = try WoolTown(order: .careful, houses: [(.citizens, 3), (.citizens, 0)])
     #expect(town.bot.clothDemand(in: town.world, stock: breadAndTools) == 1)
     #expect(town.bot.clothDemand(in: town.world, stock: [.bread: 4]) == 0)
     #expect(town.bot.clothDemand(in: town.world, stock: [.tools: 2]) == 0)
 }
 
-@Test("only the next few full citizens houses count ahead of their promotion")
+@Test("only the next few citizens houses count ahead of their promotion")
 func botCapsTheReadyHouses() throws {
     let town = try WoolTown(order: .careful, houses: Array(repeating: (.citizens, 6), count: 5) + [(.merchants, 8)])
     #expect(town.bot.clothDemand(in: town.world, stock: breadAndTools) == 1 + PlayerBot.readyHouses)
@@ -99,7 +99,7 @@ func botWaitsForTheKitAndForWeaving() throws {
 
 @Test("the bot researches Weaving once a house wants cloth, not before")
 func botResearchesWeavingOnDemand() throws {
-    let idle = try WoolTown(order: .careful, houses: [(.citizens, 3)])
+    let idle = try WoolTown(order: .careful, houses: [(.peasants, 3)])
     var world = idle.world
     world.research = ResearchState(researched: Tech.allCases.filter { ![.weaving, .printingPress].contains($0) })
     idle.bot.chooseResearch(in: &world, stock: breadAndTools)
