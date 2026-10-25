@@ -9,6 +9,7 @@ extension World {
     /// orders, and at a season boundary issues new ones (design D10).
     mutating func runOrderSystem(events: inout [WorldEvent]) {
         guard calendar.isActive, !economy.gameOver else { return }
+        guard !orders.orders.isEmpty || tickCount.isMultiple(of: Self.seasonTicks) else { return }
         advanceOrderShipments()
         settleOrders(events: &events)
         guard tickCount > 0, tickCount.isMultiple(of: Self.seasonTicks) else { return }
@@ -126,8 +127,9 @@ extension World {
 
     private mutating func issueCrownOrder(events: inout [WorldEvent]) {
         guard offerCount < OrderRules.boardSize else { return }
+        let capacity = orderStoreCapacity(forCrown: true)
         var candidates = OrderTemplate.allCases.filter { $0.issuer == .crown && isAvailable($0) }
-            .compactMap { template in orderQuantity(for: template).map { (template, $0) } }
+            .compactMap { template in orderQuantity(for: template, storeCapacity: capacity).map { (template, $0) } }
         let last = orders.orders.last { $0.issuer == .crown }?.good
         let others = candidates.filter { $0.0.good != last }
         if !others.isEmpty { candidates = others }
@@ -139,9 +141,10 @@ extension World {
               !orders.orders.contains(where: { $0.issuer == .rival(rival.id) && $0.state.isOpen })
         else { return }
         let stock = rivalStock(rival.id)
+        let capacity = orderStoreCapacity(forCrown: false)
         let candidates = OrderTemplate.allCases
             .filter { $0.issuer == .rival && isAvailable($0) && RivalMarket.buyQuantity(of: $0.good, stock: stock) > 0 }
-            .compactMap { template in orderQuantity(for: template).map { (template, $0) } }
+            .compactMap { template in orderQuantity(for: template, storeCapacity: capacity).map { (template, $0) } }
             .filter { Int64($0.1) * $0.0.good.rivalBuyPrice <= rival.treasury }
         issue(from: candidates, by: .rival(rival.id), events: &events)
     }
@@ -171,20 +174,20 @@ extension World {
 
     /// The quantity `template` would ask for now, nil when the town does
     /// not make enough of the good (design D5).
-    func orderQuantity(for template: OrderTemplate) -> Int? {
+    func orderQuantity(for template: OrderTemplate, storeCapacity: Int) -> Int? {
         let closed = statistics.seasons.suffix(OrderRules.outputWindowSeasons)
         let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.made ?? 0) }
         guard !closed.isEmpty, recent > 0 else { return nil }
         let units = recent * template.seasons * template.sizePercent / (closed.count * 100)
         let scaled = units * difficulty.orderSizePercent / 100
-        let cap = orderStoreCapacity(of: template.good, forCrown: template.issuer == .crown) * OrderRules.storeCapPercent / 100
+        let cap = storeCapacity * OrderRules.storeCapPercent / 100
         let quantity = min(scaled, template.maxUnits, cap)
         return quantity >= template.minUnits ? quantity : nil
     }
 
     /// What the player's stores can hold of `good`: the stores a crown
     /// shipment can reach, or every store for a rival, whose goods go by ship.
-    func orderStoreCapacity(of _: Good, forCrown: Bool) -> Int {
+    func orderStoreCapacity(forCrown: Bool) -> Int {
         let stores = forCrown ? crownReachableStores().map(\.id) : goodsBuffers(of: .player).filter { $0.state == .operational }.map(\.id)
         return stores.reduce(0) { $0 + (stockpiles[$1]?.capacity ?? 0) }
     }

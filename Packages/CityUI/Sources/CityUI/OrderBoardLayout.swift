@@ -35,11 +35,6 @@ public enum OrderBoardLayout {
         layout.isPhone || layout.isCompactWidth || layout.isCompactHeight
     }
 
-    /// The first-steps card shows as its capsule while the board is open.
-    public static func collapsesFirstSteps(layout: HUDLayout, boardOpen: Bool) -> Bool {
-        boardOpen || layout.collapsesFirstSteps
-    }
-
     /// The board's frame in full-screen coordinates, or nil when it is a
     /// sheet or there is no room. It uses the callout's free area, so it
     /// clears the top bar, the minimap, the first-steps capsule, the rail
@@ -49,8 +44,8 @@ public enum OrderBoardLayout {
     ) -> CGRect? {
         guard presentation(for: layout) == .column else { return nil }
         let free = InspectorCalloutLayout.freeArea(
-            size: size, insets: insets, layout: layout, showsMinimap: showsMinimap,
-            showsFirstSteps: showsFirstSteps, showsOrdersBoard: false, collapsesFirstSteps: true
+            size: size, insets: insets, layout: layout.withFirstStepsCollapsed, showsMinimap: showsMinimap,
+            showsFirstSteps: showsFirstSteps
         )
         var bottom = free.maxY
         if layout.placement == .leftRail, !showsMinimap {

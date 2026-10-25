@@ -219,7 +219,6 @@ func scenarioChipCountsAcceptedOrders() {
     let chip = session.ordersChip
     #expect(chip?.label == "Orders 1/2")
     #expect(chip?.hasOffer == true)
-    #expect(chip?.badge == "1")
     let none = boardSession([order(1, state: .accepted), order(2, state: .accepted)])
     #expect(none.ordersChip?.hasOffer == false)
 }
@@ -393,8 +392,6 @@ func scenarioMinimapAtTheTopRightPushesTheBoardDown() throws {
 func scenarioOpeningTheBoardCollapsesTheFirstStepsCard() {
     let layout = HUDLayout.make(size: CGSize(width: 1280, height: 800), idiom: .mac)
     #expect(!layout.collapsesFirstSteps)
-    #expect(OrderBoardLayout.collapsesFirstSteps(layout: layout, boardOpen: true))
-    #expect(!OrderBoardLayout.collapsesFirstSteps(layout: layout, boardOpen: false))
     let collapsed = layout.withFirstStepsCollapsed
     #expect(collapsed.collapsesFirstSteps)
     #expect(collapsed.placement == layout.placement && collapsed.idiom == layout.idiom)

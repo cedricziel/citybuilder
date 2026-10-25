@@ -229,7 +229,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier),
+            carriers: orders.shipments.isEmpty ? Array(carriers.values) : Array(carriers.values) + orders.shipments.map(\.asCarrier),
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,

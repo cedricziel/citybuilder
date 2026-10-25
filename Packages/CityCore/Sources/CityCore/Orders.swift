@@ -222,7 +222,7 @@ public enum OrderRules {
     public static let closedOrdersKept = 8
 
     public static func step(of favour: Int) -> Int {
-        stepThresholds.filter { favour >= $0 }.count
+        stepThresholds.count { favour >= $0 }
     }
 }
 

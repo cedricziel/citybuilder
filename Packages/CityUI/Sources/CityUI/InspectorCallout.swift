@@ -73,10 +73,10 @@ public enum InspectorCalloutLayout {
     /// Minimap layout, First-hour guide.
     public static func freeArea(
         size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false,
-        showsOrdersBoard: Bool = false, collapsesFirstSteps: Bool = false
+        showsOrdersBoard: Bool = false
     ) -> CGRect {
         // The open board collapses the first-steps card (`Order board layout`).
-        let layout = showsOrdersBoard || collapsesFirstSteps ? layout.withFirstStepsCollapsed : layout
+        let layout = showsOrdersBoard ? layout.withFirstStepsCollapsed : layout
         let margin = layout.margin
         var top = topBarBottom(topInset: insets.top, layout: layout)
         let left = insets.leading + margin + layout.railInset

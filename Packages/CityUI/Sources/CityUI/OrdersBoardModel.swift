@@ -164,11 +164,6 @@ public struct OrdersChipModel: Equatable {
         "Orders \(accepted)/\(OrderRules.maxAccepted)"
     }
 
-    /// The count on the iPhone's round button.
-    public var badge: String {
-        "\(accepted)"
-    }
-
     public var accessibilityLabel: String {
         label.replacingOccurrences(of: "/", with: " of ") + (hasOffer ? ", an offer waits" : "")
     }

@@ -129,6 +129,7 @@ extension World {
     /// One tile a tick, like a carrier. A shipment whose order has closed
     /// goes back to the store it left.
     mutating func advanceOrderShipments() {
+        guard !orders.shipments.isEmpty else { return }
         var moving: [OrderShipment] = []
         for var shipment in orders.shipments {
             guard shipment.hasArrived else {
@@ -150,8 +151,11 @@ extension World {
     /// Units rival `id` still wants of `good` for an accepted order, so its
     /// buy offer for them rises above the standing target.
     func orderDemand(rival id: RivalID, good: Good) -> Int {
-        orders.orders.filter { $0.issuer == .rival(id) && $0.good == good && $0.state == .accepted }
-            .reduce(0) { $0 + $1.remaining }
+        orders.orders.reduce(0) { $0 + (isOpenOrder($1, from: id, for: good) ? $1.remaining : 0) }
+    }
+
+    private func isOpenOrder(_ order: Order, from rival: RivalID, for good: Good) -> Bool {
+        order.issuer == .rival(rival) && order.good == good && order.state == .accepted
     }
 
     /// Counts `units` sold at rival `id`'s port toward its accepted orders
@@ -160,7 +164,7 @@ extension World {
         var left = units
         for index in orders.orders.indices where left > 0 {
             let order = orders.orders[index]
-            guard order.issuer == .rival(id), order.good == good, order.state == .accepted else { continue }
+            guard isOpenOrder(order, from: id, for: good) else { continue }
             let counted = min(left, order.remaining)
             orders.orders[index].delivered += counted
             left -= counted

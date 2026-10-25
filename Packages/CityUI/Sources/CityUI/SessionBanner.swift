@@ -78,7 +78,7 @@ extension GameSession {
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let verb = order.issuer == .crown ? "orders" : "wants"
             show(SessionBanner(
-                title: "\(name) \(verb) \(order.quantity) \(Self.goodName(order.good))",
+                title: "\(name) \(verb) \(order.quantity) \(InspectorViewModel.goodName(order.good))",
                 description: "\(order.template.title), \(OrdersBoardModel.deadlineText(order, in: world)). "
                     + "Pays \(HUDViewModel.formatMoney(order.reward, locale: .current)) and \(order.favourGain) favour. "
                     + "Open the board to accept."
@@ -87,7 +87,7 @@ extension GameSession {
             guard let order = world.order(id) else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             show(SessionBanner(
-                title: "Order filled: \(order.quantity) \(Self.goodName(order.good))",
+                title: "Order filled: \(order.quantity) \(InspectorViewModel.goodName(order.good))",
                 description: "\(name) pays \(HUDViewModel.formatMoney(reward, locale: .current)), "
                     + "and its favour rises to \(world.orders.favour.value(for: order.issuer))."
             ))
@@ -96,7 +96,7 @@ extension GameSession {
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let target = order.issuer == .crown ? "the crown" : name
             show(SessionBanner(
-                title: "Order missed: \(Self.goodName(order.good)) for \(target)",
+                title: "Order missed: \(InspectorViewModel.goodName(order.good)) for \(target)",
                 description: "The deadline passed with \(order.delivered) of \(order.quantity) delivered. "
                     + "\(name)'s favour falls by \(order.favourLoss)."
             ))
@@ -109,10 +109,6 @@ extension GameSession {
         default:
             return
         }
-    }
-
-    private static func goodName(_ good: Good) -> String {
-        GoodsCatalog.spec(for: good).displayName.lowercased()
     }
 
     /// "Steam engine" from the palette's "Steam Engine".
