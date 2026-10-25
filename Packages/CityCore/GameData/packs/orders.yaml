@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Timed requests from the crown and from rival towns (add-orders D4).
+#
+# issuer: crown | rival. A crown order delivers to a town center; a rival's by
+#   ship to its port, for a good the rival is short of.
+# seasons: the window from issue to the deadline, before difficulty scales it.
+# size: percent of the town's output of the good over the window.
+# min, max: bounds on the quantity; below min the order is not issued.
+# reward: money, as a percent of the goods' base price. A rival also pays the
+#   ordinary price for each unit at its port, so its reward is the bonus.
+# favour, penalty: favour gained on fulfilment and lost on a miss (default 2).
+items:
+  # --- The crown -----------------------------------------------------
+  - { kind: Order, id: crown-wood,    issuer: crown, good: wood,   title: Wood for the winter,
+      text: The crown stacks logs against a hard winter., seasons: 2, size: 80, min: 20, max: 100, reward: 125 }
+  - { kind: Order, id: crown-timber,  issuer: crown, good: planks, title: Timber for the fleet,
+      text: The crown is building ships and wants planks., seasons: 2, size: 90, min: 12, max: 80, reward: 125 }
+  - { kind: Order, id: crown-rations, issuer: crown, good: food,   title: Rations for the garrison,
+      text: The garrison's stores run low., seasons: 2, size: 70, min: 12, max: 60, reward: 130 }
+  - { kind: Order, id: crown-bread,   issuer: crown, good: bread,  title: Bread for the court,
+      text: The court wants fresh loaves., minAge: medieval, seasons: 2, size: 80, min: 8, max: 40, reward: 130 }
+  - { kind: Order, id: crown-iron,    issuer: crown, good: iron,   title: Iron for the arsenal,
+      text: The arsenal needs bars for its smiths., minAge: medieval, seasons: 3, size: 80, min: 6, max: 40, reward: 135 }
+  - { kind: Order, id: crown-tools,   issuer: crown, good: tools,  title: Tools for the works,
+      text: The crown's works need tools., minAge: medieval, seasons: 3, size: 80, min: 4, max: 24, reward: 135 }
+
+  # --- Rival towns: goods they buy, when short of them ---------------
+  - { kind: Order, id: rival-wood,    issuer: rival, good: wood,   title: Wood for a neighbour,
+      text: A neighbouring town is short of wood., seasons: 3, size: 70, min: 15, max: 80, reward: 40 }
+  - { kind: Order, id: rival-timber,  issuer: rival, good: planks, title: Planks for a neighbour,
+      text: A neighbouring town is short of planks., seasons: 3, size: 70, min: 10, max: 60, reward: 40 }
+  - { kind: Order, id: rival-rations, issuer: rival, good: food,   title: Food for a neighbour,
+      text: A neighbouring town is short of food., seasons: 3, size: 60, min: 10, max: 50, reward: 40 }
+  - { kind: Order, id: rival-bread,   issuer: rival, good: bread,  title: Bread for a neighbour,
+      text: A neighbouring town is short of bread., minAge: medieval, seasons: 3, size: 70, min: 8, max: 40, reward: 40 }
+  - { kind: Order, id: rival-tools,   issuer: rival, good: tools,  title: Tools for a neighbour,
+      text: A neighbouring town is short of tools., minAge: medieval, seasons: 3, size: 70, min: 4, max: 20, reward: 40 }
