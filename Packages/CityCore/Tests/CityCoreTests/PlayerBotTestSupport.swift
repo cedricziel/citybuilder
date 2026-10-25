@@ -165,14 +165,18 @@ extension World {
     /// 50 ticks, stopping early at bankruptcy; returns the final world.
     static func botGame(
         layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool,
-        firstSteps: [BuildingKind] = [], ticks: Int
+        firstSteps: [BuildingKind] = [], orders: Bool = false, ticks: Int
     ) -> World {
         var world = World.newGame(layout: layout, seed: seed, difficulty: difficulty)
         world.calendar = CalendarState(startYear: 1200, isActive: true)
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return world }
         var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket, firstSteps: firstSteps)
+        var kit = orders ? OrdersKit() : nil
         for tick in 1 ... ticks where !world.economy.gameOver {
-            if tick.isMultiple(of: 50) { bot.takeTurn(&world) }
+            if tick.isMultiple(of: 50) {
+                bot.takeTurn(&world)
+                kit?.takeTurn(&world)
+            }
             world.tick()
         }
         return world

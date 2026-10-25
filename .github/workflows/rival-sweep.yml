@@ -8,7 +8,7 @@ name: rival-sweep
 #   town on Normal, seeds 0–9 on both layouts over 36,000 ticks.
 # - Mid-game pacing (#186): years to the first merchant, 20 merchants and
 #   the Renaissance for the scripted town's mid-game kit; a measurement
-#   with no pass bar.
+#   with no pass bar. With the order kit on as well (add-orders D11).
 on:
   workflow_dispatch:
   schedule:
@@ -57,7 +57,7 @@ jobs:
           set -o pipefail
           status=0
           swift test -c release -Xswiftc -enable-testing --package-path Packages/CityCore \
-            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioTheMarketDoesNotMakeTownsWorseOff|scenarioGuidedHardStartStaysSolventAndGrows|scenarioUnguidedHardStartGoesBankrupt" 2>&1 | tee solvency-sweep.log || status=$?
+            --filter "scenarioMarketTradingTownsStaySolventAcrossSeeds|scenarioTheMarketDoesNotMakeTownsWorseOff|scenarioGuidedHardStartStaysSolventAndGrows|scenarioUnguidedHardStartGoesBankrupt|scenarioOrderKitTownsStaySolventAcrossSeeds|scenarioGuidedHardStartWithOrdersStaysSolventAndGrows|scenarioTheMarketDoesNotMakeOrderTownsWorseOff" 2>&1 | tee solvency-sweep.log || status=$?
           grep '^SOLVENCY_SWEEP' solvency-sweep.log > solvency-sweep.txt
           exit "$status"
 
@@ -66,6 +66,7 @@ jobs:
         env:
           RIVAL_SWEEP: "1"
           PACING_RETENTION: "1"
+          PACING_ORDERS: "1"
         shell: bash
         run: |
           set -o pipefail

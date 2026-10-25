@@ -191,6 +191,8 @@ struct MidGameArm {
     let difficulty: Difficulty
     let tradesAtMarket: Bool
     let order: MidGameOrder
+    /// Also accepts and fills the crown's orders (`OrdersKit`).
+    var orders = false
 }
 
 /// When a bot game first reached each mid-game milestone, in ticks.
@@ -203,6 +205,8 @@ struct MidGameMilestones {
     var merchantsAtTen: Int?
     var heldShare: Double?
     var bankruptAt: Int?
+    /// With the order kit on: what it did with the orders.
+    var orders: OrdersKit.Result?
     /// Goods the idle-good hint would have named, in first-seen order.
     var hinted: [Good] = []
 
@@ -247,9 +251,12 @@ extension World {
         var late = (turns: 0, held: 0)
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
         var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
+        var kit = arm.orders ? OrdersKit() : nil
+        defer { milestones.orders = kit.map { OrdersKit.Result($0, world) } }
         for tick in 1 ... ticks {
             if tick.isMultiple(of: 50) {
                 bot.takeTurn(&world)
+                kit?.takeTurn(&world)
                 if milestones.note(world, tick: tick, retention: retention, late: &late) { break }
             }
             world.tick()
