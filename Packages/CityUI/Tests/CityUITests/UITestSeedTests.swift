@@ -214,3 +214,25 @@ func openStatisticsFlagShowsTheSheet() {
     #expect(UITestSeed.statisticsTab(fromArguments: ["-uiTestOpenStatistics", "nonsense"]) == .goods)
     #expect(UITestSeed.statisticsTab(fromArguments: ["-uiTestOpenStatistics"]) == .goods)
 }
+
+@Test("The orders seed puts two accepted orders and two offers on the board, with favour")
+@MainActor
+func ordersSeedHasABoard() {
+    let world = UITestSeed.world(fromArguments: ["app", "-uiTestSeedOrders"])
+    #expect(world?.orders.orders.map(\.state) == [.accepted, .accepted, .offered, .offered])
+    #expect(world?.orders.favour.crown == 7)
+    #expect(world?.orders.orders.compactMap(\.issuer.rivalID) == [1, 2])
+    let board = world.map { GameSession(world: $0).ordersBoard }
+    #expect(board?.cards.count == 4 && board?.acceptedCount == 2)
+    #expect(board?.cards.first?.status == "In stores 40 of 54")
+    #expect(UITestSeed.opensOrders(fromArguments: ["app", "-uiTestOpenOrders"]))
+    #expect(!UITestSeed.opensOrders(fromArguments: ["app"]))
+}
+
+@Test("The orders seed needs no rivals to seat its offers")
+@MainActor
+func ordersSeedWorksWithoutRivals() {
+    var world = World.newGame()
+    world.seedOrdersShowcase()
+    #expect(world.orders.orders.count == 4)
+}

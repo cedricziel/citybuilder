@@ -67,12 +67,11 @@ public struct Order: Codable, Hashable, Sendable, Identifiable {
     public internal(set) var state: OrderState
     /// Units that have reached the issuer.
     public internal(set) var delivered: Int
-    public internal(set) var closedTick: UInt64?
 
     init(
         id: OrderID, template: OrderTemplate, issuer: OrderIssuer, good: Good, quantity: Int, reward: Int64,
         favourGain: Int, favourLoss: Int, issuedTick: UInt64, offerEndsTick: UInt64, deadlineTick: UInt64,
-        state: OrderState = .offered, delivered: Int = 0, closedTick: UInt64? = nil
+        state: OrderState = .offered, delivered: Int = 0
     ) {
         self.id = id
         self.template = template
@@ -87,7 +86,6 @@ public struct Order: Codable, Hashable, Sendable, Identifiable {
         self.deadlineTick = deadlineTick
         self.state = state
         self.delivered = delivered
-        self.closedTick = closedTick
     }
 
     public var remaining: Int {

@@ -172,6 +172,45 @@ public extension World {
         testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
     }
 
+    /// Test helper: puts four orders on the board for the board's screenshots,
+    /// two accepted (a crown order whose planks are mostly in the stores, and
+    /// a rival's half delivered) and two offers, with some favour. The rival
+    /// orders name the first two rivals, so an archipelago game shows them.
+    mutating func seedOrdersShowcase() {
+        let first = rivals.first?.id ?? 1
+        let second = rivals.dropFirst().first?.id ?? first
+        let season = CalendarState.ticksPerSeason
+        struct Sample {
+            let template: OrderTemplate
+            let issuer: OrderIssuer
+            let quantity: Int
+            let reward: Int64
+            let state: OrderState
+            let delivered: Int
+        }
+        let showcase = [
+            Sample(template: .crownTimber, issuer: .crown, quantity: 54, reward: 540, state: .accepted, delivered: 0),
+            Sample(template: .rivalBread, issuer: .rival(first), quantity: 24, reward: 120, state: .accepted, delivered: 8),
+            Sample(template: .crownTools, issuer: .crown, quantity: 12, reward: 486, state: .offered, delivered: 0),
+            Sample(template: .rivalTimber, issuer: .rival(second), quantity: 30, reward: 96, state: .offered, delivered: 0)
+        ]
+        for sample in showcase {
+            let template = sample.template
+            orders.orders.append(Order(
+                id: orders.nextOrderRaw, template: template, issuer: sample.issuer, good: template.good,
+                quantity: sample.quantity, reward: sample.reward, favourGain: template.favourGain,
+                favourLoss: template.favourLoss, issuedTick: tickCount, offerEndsTick: tickCount + season,
+                deadlineTick: tickCount + 3 * season, state: sample.state, delivered: sample.delivered
+            ))
+            orders.nextOrderRaw += 1
+        }
+        orders.favour.adjust(.crown, by: 7)
+        orders.favour.adjust(.rival(first), by: 3)
+        if let center = goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) {
+            stockpiles[center.id]?.deposit(.planks, amount: 38)
+        }
+    }
+
     /// Test helper: a treasury deep enough that a seeded town's upkeep never bankrupts it, so art
     /// reviews screenshot the town rather than the bankruptcy banner.
     mutating func seedTestFunds(_ amount: Int64 = 1_000_000) {

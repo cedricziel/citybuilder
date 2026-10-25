@@ -45,7 +45,6 @@ extension World {
                 fail(index, events: &events)
             case .offered where tickCount >= order.offerEndsTick:
                 orders.orders[index].state = .expired
-                orders.orders[index].closedTick = tickCount
                 events.append(.orderExpired(order: order.id))
             default:
                 break
@@ -57,7 +56,6 @@ extension World {
     private mutating func fulfil(_ index: Int, events: inout [WorldEvent]) {
         let order = orders.orders[index]
         orders.orders[index].state = .fulfilled
-        orders.orders[index].closedTick = tickCount
         economy.credit(order.reward)
         orders.favour.adjust(order.issuer, by: order.favourGain)
         orders.fulfilledCount += 1
@@ -68,7 +66,6 @@ extension World {
     private mutating func fail(_ index: Int, events: inout [WorldEvent]) {
         let order = orders.orders[index]
         orders.orders[index].state = .failed
-        orders.orders[index].closedTick = tickCount
         orders.favour.adjust(order.issuer, by: -order.favourLoss)
         orders.failedCount += 1
         events.append(.orderFailed(order: order.id))
@@ -94,7 +91,6 @@ extension World {
     mutating func applyDeclineOrder(_ id: OrderID) {
         guard let index = orderIndex(id), orders.orders[index].state == .offered else { return }
         orders.orders[index].state = .declined
-        orders.orders[index].closedTick = tickCount
     }
 
     /// Only an accepted order with nothing sent or delivered can be given up.
