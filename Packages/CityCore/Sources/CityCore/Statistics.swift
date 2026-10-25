@@ -80,6 +80,13 @@ public struct SeasonStatistics: Codable, Hashable, Sendable {
     public internal(set) var residents: [HouseTier: Int] = [:]
     public internal(set) var producers: [BuildingKind: ProducerActivity] = [:]
     public internal(set) var rivals: [RivalStatistics] = []
+    /// The player's age when the season closed.
+    public internal(set) var age: Age = .medieval
+    /// What the player's goods buffers could hold of one good when the
+    /// season closed: the sum of their stockpiles' capacities. Pooled
+    /// stores share this between goods; per-good stores limit each good
+    /// to it.
+    public internal(set) var storeCapacity = 0
 
     public init() {}
 }

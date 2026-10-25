@@ -152,7 +152,9 @@ extension World {
     private mutating func closeStatisticsSeason() {
         var record = statistics.current
         record.season = Int(tickCount / CalendarState.ticksPerSeason) - 1
+        record.age = age
         for store in goodsBuffers(of: .player) where store.state == .operational {
+            record.storeCapacity += stockpiles[store.id]?.capacity ?? 0
             for (good, amount) in stockpiles[store.id]?.contents ?? [:] where amount > 0 {
                 record.goods[good, default: GoodFlow()].stored += amount
             }

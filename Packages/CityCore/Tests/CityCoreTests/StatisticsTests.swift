@@ -269,6 +269,14 @@ func scenarioStockIsReadAtTheBoundary() {
     }
     let closed = closedSeason(&world) { $0.buildings[building]?.state = .constructing }
     #expect(closed.goods[.bread]?.stored == 80)
+    #expect(closed.storeCapacity == 200)
+}
+
+@Test("scenario: the age is read at the boundary")
+func scenarioTheAgeIsReadAtTheBoundary() {
+    var world = grassWorld()
+    #expect(closedSeason(&world).age == .medieval)
+    #expect(closedSeason(&world) { $0.age = .renaissance }.age == .renaissance)
 }
 
 // MARK: - Money, people, rivals
