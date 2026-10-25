@@ -28,7 +28,7 @@ public final class EngineCuePlayer {
     /// One-shots read whole, so a busy pool node can take the next one without a restart (#264).
     private var bufferCache: [String: AVAudioPCMBuffer] = [:]
     /// Holds back repeats of one one-shot (#264).
-    var limiter = OneShotLimiter()
+    private var limiter = OneShotLimiter()
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
     /// Music tracks playing once, by path.
@@ -72,7 +72,7 @@ public final class EngineCuePlayer {
         } else if cue.loop == true {
             playLoop(dispatched: dispatched, file: file)
         } else {
-            playOneShot(cue: cue, file: file)
+            playOneShot(dispatched, file: file)
         }
     }
 
@@ -140,12 +140,15 @@ public final class EngineCuePlayer {
         engine.nodes.stopAndDetach(player, from: engine.underlyingEngine)
     }
 
-    /// Plays a one-shot on a pooled node, unless it repeats a cue too soon or the queue is backed up.
-    /// The main thread only picks the node and routes it; the node itself is driven on `oneShots`' queue.
-    private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard !oneShots.isBackedUp else { return }
+    /// Plays a one-shot on a pooled node, unless it repeats its cue too soon or the same cue still
+    /// waits on the queue. The main thread only picks the node and routes it; the node itself is
+    /// driven on `oneShots`' queue.
+    private func playOneShot(_ dispatched: DispatchedCue, file: AVAudioFile) {
+        let cue = dispatched.cue
+        let key = "\(dispatched.event ?? "") \(cue.file)"
         let now = ProcessInfo.processInfo.systemUptime
-        guard limiter.admits(cue.file, at: now),
+        guard !oneShots.isWaiting(key),
+              limiter.admits(key, at: now),
               let buffer = loadBuffer(at: cue.file, url: file.url),
               let (player, wasFree) = nextOneShotPlayer(on: cue.bus, buffer: buffer, now: now)
         else { return }
@@ -154,7 +157,7 @@ public final class EngineCuePlayer {
             mixer.engine?.attach(player)
             mixer.engine?.connect(player, to: mixer, format: OneShotBuffer.format)
         }
-        oneShots.play(buffer, on: player, volume: cue.volume, wasFree: wasFree, run: engine.runCount)
+        oneShots.play(buffer, key: key, on: player, volume: cue.volume, wasFree: wasFree)
     }
 
     /// `file` read whole in the pool's format, cached by `path`.

@@ -4,8 +4,8 @@ import Testing
 // Spec `audio-playback`: "Identical one-shots are rate-limited".
 
 /// How many of the starts of `file` at `times` the limiter admits.
-private func admitted(_ times: [Double], file: String = "sfx/clink.caf", limiter: inout OneShotLimiter) -> Int {
-    times.count(where: { limiter.admits(file, at: $0) })
+private func admitted(_ times: [Double], key: String = "carrierArrived sfx/clink.caf", limiter: inout OneShotLimiter) -> Int {
+    times.count(where: { limiter.admits(key, at: $0) })
 }
 
 @Test("scenario: a burst in one frame plays once (limiter)")
@@ -29,9 +29,11 @@ func limiterCapsCuesPerSecond() {
     #expect(admitted([12], limiter: &limiter) == 1)
 }
 
-@Test("scenario: different files don't hold each other back")
-func limiterKeepsFilesApart() {
+@Test("scenario: different cues don't hold each other back")
+func limiterKeepsCuesApart() {
     var limiter = OneShotLimiter()
-    #expect(admitted([10], file: "sfx/clink.caf", limiter: &limiter) == 1)
-    #expect(admitted([10], file: "sfx/coin.caf", limiter: &limiter) == 1)
+    #expect(admitted([10], key: "carrierArrived sfx/clink.caf", limiter: &limiter) == 1)
+    #expect(admitted([10], key: "taxesCollected sfx/coin.caf", limiter: &limiter) == 1)
+    #expect(admitted([10], key: "rivalAgeAdvanced sfx/age-peal.caf", limiter: &limiter) == 1)
+    #expect(admitted([10], key: "ageAdvanced sfx/age-peal.caf", limiter: &limiter) == 1)
 }

@@ -21,15 +21,19 @@ private final class Rig {
 
     init(poolSize: Int) throws {
         player = try EngineCuePlayer(engine: engine, bundle: #require(blipBundle), oneShotPoolSize: poolSize)
-        // These tests drive the pool itself; the limit on repeats is tested on its own.
-        player.limiter = .unlimited
         engine.nodes.trace = { [trace] in trace.record($0, $1) }
     }
 
-    /// Plays `count` blips back to back, after checking the engine came up.
-    func play(_ count: Int) throws {
+    /// Blips played so far.
+    private var plays = 0
+
+    /// Plays `count` blips back to back, after checking the engine came up. Each blip is a cue of its
+    /// own, as if for another event, unless `event` names the one they share: these tests drive the
+    /// pool, and repeats of one cue are held back.
+    func play(_ count: Int, event: String? = nil) throws {
         for _ in 0 ..< count {
-            player.play(blip)
+            plays += 1
+            player.play(DispatchedCue(cue: blip.cue, event: event ?? "blip-\(plays)"))
             try #require(engine.isRunning, "no audio output to test against")
         }
     }
@@ -151,15 +155,15 @@ func restartDropsQueuedOneShots() throws {
 }
 
 @MainActor
-@Test("one-shots past the queue's limit are dropped")
-func oneShotsPastTheQueueLimitAreDropped() throws {
+@Test("scenario: a waiting cue holds back the same cue")
+func waitingCueHoldsBackTheSameCue() throws {
     let rig = try Rig(poolSize: 8)
     defer { rig.engine.stop() }
     let gate = rig.hold()
-    try rig.play(OneShotDriver.maxWaiting + 3)
+    try rig.play(3, event: "carrierArrived")
     gate.signal()
     rig.settle()
-    #expect(rig.trace.steps.count(where: { $0 == .start }) == OneShotDriver.maxWaiting)
+    #expect(rig.trace.steps == [.stop, .schedule, .start])
 }
 
 @MainActor

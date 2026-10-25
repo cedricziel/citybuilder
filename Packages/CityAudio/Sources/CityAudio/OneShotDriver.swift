@@ -10,30 +10,30 @@ final class OneShotDriver: @unchecked Sendable {
     /// The engine run each node was started in, read and written on the node queue only. A node keeps
     /// reporting `isPlaying` after the engine stops.
     private var startedIn: [ObjectIdentifier: Int] = [:]
-    /// One-shots handed to the queue that it hasn't handled yet.
-    private let waiting = OSAllocatedUnfairLock(initialState: 0)
-    /// A one-shot is dropped while this many wait: a start can take an I/O cycle, so a longer
-    /// line would play late and stutter (#264). Spec: `audio-playback` / One-shot starts never back up.
-    static let maxWaiting = 4
+    /// The keys of one-shots handed to the queue that it hasn't handled yet.
+    private let waiting = OSAllocatedUnfairLock(initialState: Set<String>())
 
     init(nodes: AudioNodeQueue) {
         self.nodes = nodes
     }
 
-    /// True while the queue has as many one-shots waiting as it may.
-    var isBackedUp: Bool {
-        waiting.withLock { $0 >= Self.maxWaiting }
+    /// True while a one-shot keyed `key` still waits on the queue. Another would play late, after
+    /// it, as a stutter while the queue is held up (#264). Spec: `audio-playback` / One-shot starts
+    /// never back up.
+    func isWaiting(_ key: String) -> Bool {
+        waiting.withLock { $0.contains(key) }
     }
 
     /// Plays `buffer` on `node`. A node running in this engine run gets the buffer scheduled, after
     /// its last cue if that has ended, cutting it off if not; only a node not running is stopped,
-    /// scheduled and started, unless its engine has stopped. A cue whose run has ended by its turn
-    /// is dropped.
-    func play(_ buffer: AVAudioPCMBuffer, on node: AVAudioPlayerNode, volume: Float?, wasFree: Bool, run: Int) {
+    /// scheduled and started, unless its engine has stopped. A cue whose engine run has ended by its
+    /// turn is dropped; so is one played while the engine is stopped.
+    func play(_ buffer: AVAudioPCMBuffer, key: String, on node: AVAudioPlayerNode, volume: Float?, wasFree: Bool) {
+        guard let run = nodes.liveRun else { return }
         let buffer = AudioNodeQueue.Box(buffer)
-        waiting.withLock { $0 += 1 }
+        waiting.withLock { _ = $0.insert(key) }
         nodes.run(node) { node in
-            defer { self.waiting.withLock { $0 -= 1 } }
+            defer { self.waiting.withLock { _ = $0.remove(key) } }
             guard self.nodes.liveRun == run else {
                 self.nodes.note(node, .drop)
                 return

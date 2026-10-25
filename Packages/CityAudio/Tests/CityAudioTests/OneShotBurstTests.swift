@@ -32,11 +32,11 @@ private final class Rig {
     }
 
     /// Dispatches one cue per path in one go, as a frame does, then waits for the node queue.
-    func dispatch(_ paths: [String]) throws {
+    func dispatch(_ paths: [String], event: String? = nil) throws {
         // Held, so the queue doesn't work through cues while the frame is still dispatching them.
         let gate = engine.nodes.hold()
         for path in paths {
-            player.play(DispatchedCue(cue: Bindings.Cue(file: path, bus: .sfx)))
+            player.play(DispatchedCue(cue: Bindings.Cue(file: path, bus: .sfx), event: event))
         }
         gate.signal()
         try #require(engine.isRunning, "no audio output to test against")
@@ -45,6 +45,10 @@ private final class Rig {
 
     var starts: Int {
         trace.steps.count(where: { $0 == .start })
+    }
+
+    var schedules: Int {
+        trace.steps.count(where: { $0 == .schedule })
     }
 }
 
@@ -65,4 +69,16 @@ func burstOfDifferentOneShotsRestartsEachNodeAtMostOnce() throws {
     defer { rig.engine.stop() }
     try rig.dispatch(burstFiles)
     #expect(rig.starts <= 4)
+    // Different cues are not thinned, however long the queue is held.
+    #expect(rig.schedules == burstFiles.count)
+}
+
+@MainActor
+@Test("scenario: two events sharing a file don't hold each other back")
+func eventsSharingAFileBothPlay() throws {
+    let rig = try Rig()
+    defer { rig.engine.stop() }
+    try rig.dispatch([burstFiles[0]], event: "rivalAgeAdvanced")
+    try rig.dispatch([burstFiles[0]], event: "ageAdvanced")
+    #expect(rig.schedules == 2)
 }
