@@ -94,6 +94,16 @@ func scenarioAProducerFullOfOutputReportsItStuckNotShort() {
     #expect(world.buildingIssues()[sawmill] == .outputStuck(.planks))
 }
 
+@Test("a producer full of inputs reports its output stuck")
+func aProducerFullOfInputsReportsItsOutputStuck() {
+    var world = grassWorld()
+    let sawmill = inject(.sawmill, in: &world, at: TileCoordinate(x: 1, y: 1))
+    _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 11, y: 0))
+    roads(&world, y: 3, 0 ... 14)
+    _ = world.stockpiles[sawmill]?.deposit(.wood, amount: BuildingKind.sawmill.storage ?? 0)
+    #expect(world.buildingIssues()[sawmill] == .outputStuck(.planks))
+}
+
 @Test("scenario: a producer short of inputs reports the missing goods")
 func scenarioAProducerShortOfInputsReportsTheMissingGoods() {
     var world = grassWorld()

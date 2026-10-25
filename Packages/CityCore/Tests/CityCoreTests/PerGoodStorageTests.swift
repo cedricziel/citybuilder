@@ -184,21 +184,84 @@ func scenarioAStuckProducerGetsNoMoreInputsAndNothingIsLost() {
     #expect(world.buildingIssues()[sawmill] == .outputStuck(.planks))
 }
 
-@Test("scenario: a carrier whose store filled on the way keeps its goods")
-func scenarioACarrierWhoseStoreFilledOnTheWayKeepsItsGoods() {
+@Test("scenario: a carrier whose store filled on the way goes on to one with room")
+func scenarioACarrierWhoseStoreFilledOnTheWayGoesOnToOneWithRoom() {
+    var world = roadStrip(width: 30)
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 10])
+    let near = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0))
+    let far = inject(.warehouse, in: &world, at: TileCoordinate(x: 20, y: 0))
+    world.tick()
+    world.tick()
+    #expect(world.carrierCountByProducer[bakery] == 2)
+    world.stockpiles[near]?.deposit(.bread, amount: warehouseLimit)
+    for _ in 0 ..< 3000 {
+        world.tick()
+    }
+    #expect(world.stockpiles[far]?.quantity(of: .bread) == 10)
+    #expect(world.stockpiles[bakery]?.quantity(of: .bread) == 0)
+    #expect(total(of: [.bread], in: world) == warehouseLimit + 10)
+}
+
+@Test("scenario: a carrier with no store to go to takes its goods home")
+func scenarioACarrierWithNoStoreToGoToTakesItsGoodsHome() {
     var world = roadStrip()
     let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 1])
     let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
     world.tick()
     world.stockpiles[warehouse]?.deposit(.bread, amount: warehouseLimit)
-    for _ in 0 ..< 40 {
+    for _ in 0 ..< 60 {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[bakery]?.quantity(of: .bread) == 1)
+    #expect(world.carrierCountByProducer[bakery] == 0)
+    world.stockpiles[warehouse]?.withdraw(.bread, amount: 1)
+    for _ in 0 ..< 60 {
+        world.tick()
+    }
+    #expect(world.stockpiles[warehouse]?.quantity(of: .bread) == warehouseLimit)
+}
+
+@Test("a carrier home with no room waits there until a store has room")
+func aCarrierHomeWithNoRoomWaitsThereUntilAStoreHasRoom() {
+    var world = roadStrip()
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    world.tick()
+    world.stockpiles[warehouse]?.deposit(.bread, amount: warehouseLimit)
+    world.stockpiles[bakery]?.deposit(.flour, amount: BuildingKind.bakery.storage ?? 0)
+    for _ in 0 ..< 60 {
         world.tick()
     }
     #expect(world.carriers.count == 1)
     #expect(total(of: [.bread], in: world) == warehouseLimit + 1)
     world.stockpiles[warehouse]?.withdraw(.bread, amount: 1)
-    world.tick()
-    #expect(world.carriers.isEmpty)
+    for _ in 0 ..< 60 {
+        world.tick()
+    }
     #expect(world.stockpiles[warehouse]?.quantity(of: .bread) == warehouseLimit)
     #expect(world.carrierCountByProducer[bakery] == 0)
+}
+
+@Test("a supply carrier waits at a consumer that filled until it has room")
+func aSupplyCarrierWaitsAtAConsumerThatFilledUntilItHasRoom() {
+    var world = roadStrip()
+    // Full of bread too, so the bakery's own bread has nowhere to go.
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 1, y: 0), contents: [.flour: 1, .bread: warehouseLimit])
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 14, y: 1))
+    world.tick()
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 0)
+    world.stockpiles[bakery]?.deposit(.bread, amount: BuildingKind.bakery.storage ?? 0)
+    let retrievals = { (world: World) in
+        world.carriers.values.count { if case .retrieve = $0.mission { true } else { false } }
+    }
+    for _ in 0 ..< 40 {
+        world.tick()
+    }
+    #expect(retrievals(world) == 1)
+    #expect(world.stockpiles[bakery]?.quantity(of: .flour) == 0)
+    world.stockpiles[bakery]?.withdraw(.bread, amount: 1)
+    world.tick()
+    #expect(retrievals(world) == 0)
+    #expect(world.stockpiles[bakery]?.quantity(of: .flour) == 1)
 }
