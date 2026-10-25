@@ -11,7 +11,7 @@ A pack is one YAML document: optional `defaults` (anchors only, ignored except w
 | `Culture` | `id`, `name`, `blurb`, `luxury` `{raw, good, garden, producer}`, `signature` (building), `residentNames` [string] | `tiers` `{tier: name}` (the culture's name for some or all tiers; a tier left out uses its own `name`) |
 | `Tech` | `id`, `cost` (knowledge, int > 0), `age` (age from which it can be researched) | `name` (default: id title-cased), `prerequisites` [tech], `era` (age this tech opens), `eraGate` `{tier, residents}` (required when `era` is set) |
 | `Age` | `id`, `startYear` (astronomical: −499 = 500 BC), `blurb`, `signature` (building), `rivalResidents` (residents a rival needs to enter this age) | `name` |
-| `Tier` | `id`, `name` (default display name), `capacity` (residents, int > 0), `taxPerResident` (int ≥ 0), `needs` [good] (complete list, in consumption order) | |
+| `Tier` | `id`, `name` (default display name), `capacity` (residents, int > 0), `taxPerResident` (int ≥ 0), `needs` [good] (complete list, in consumption order) | `declineGrace` (int > 0, default 1: consumption intervals a need may stay short before a house of this tier declines, on Normal; Easy adds one and Hard takes one off, never below 1) |
 
 `recipe`: `{ inputs: {good: int}, outputs: {good: int}, cycleTicks: int > 0 }`. `inputs` is optional. `outputs` must name at least one good unless the building also sets `effect: code`, in which case `outputs` may be left out.
 

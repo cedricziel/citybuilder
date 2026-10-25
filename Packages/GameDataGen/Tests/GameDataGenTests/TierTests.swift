@@ -135,3 +135,34 @@ func cultureOverridesOneTierName() throws {
     #expect(source.contains("case (.northernEuropean, .peasants): \"Peasants\""))
     #expect(source.contains("case (.northernEuropean, .merchants): \"Jarls\""))
 }
+
+// MARK: - Decline grace (openspec/changes/decline-grace)
+
+@Test("scenario: a tier states its grace in the pack")
+func tierStatesItsGrace() throws {
+    let core = Fixtures.core.replacingOccurrences(
+        of: "capacity: 8, taxPerResident: 4", with: "capacity: 8, taxPerResident: 4, declineGrace: 5"
+    )
+    let data = try Fixtures.load(Fixtures.withCore(core)).get()
+    #expect(data.tiers.map(\.declineGrace) == [1, 1, 5])
+    let source = try emitted("HouseTier+Generated.swift", from: Fixtures.withCore(core))
+    #expect(source.contains("public var declineGrace: Int {"))
+    #expect(source.contains("case .merchants: 5"))
+}
+
+@Test("scenario: a tier without a grace waits one interval")
+func tierWithoutAGraceWaitsOneInterval() throws {
+    let data = try Fixtures.load().get()
+    #expect(data.tiers.map(\.declineGrace) == [1, 1, 1])
+    let source = try emitted("HouseTier+Generated.swift", from: Fixtures.withCore(Fixtures.core))
+    #expect(source.contains("case .peasants: 1"))
+}
+
+@Test("scenario: the generator rejects a grace below 1")
+func generatorRejectsAGraceBelowOne() {
+    let core = Fixtures.core.replacingOccurrences(
+        of: "capacity: 4, taxPerResident: 1", with: "capacity: 4, taxPerResident: 1, declineGrace: 0"
+    )
+    let errors = Fixtures.errors(Fixtures.withCore(core))
+    #expect(errors.contains { $0.contains("Tier peasants") && $0.contains("`declineGrace`") && $0.contains("positive") }, "\(errors)")
+}

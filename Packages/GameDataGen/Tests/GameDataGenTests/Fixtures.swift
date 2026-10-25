@@ -189,6 +189,6 @@ enum Fixtures {
             "eraGate": "{ tier: citizens, residents: 1 }"
         ],
         "Age": ["name": "Bronze"],
-        "Tier": [:]
+        "Tier": ["declineGrace": "3"]
     ]
 }

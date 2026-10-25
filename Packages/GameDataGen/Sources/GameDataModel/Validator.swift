@@ -104,6 +104,7 @@ struct Validator {
         let report = reporter("Tier", tier.id, tier.origin)
         if tier.capacity <= 0 { report("`capacity` must be positive") }
         if tier.taxPerResident < 0 { report("`taxPerResident` must not be negative") }
+        if tier.declineGrace <= 0 { report("`declineGrace` must be positive; omit it for 1") }
         var seen = Set<String>()
         for good in tier.needs {
             if refs.goods[good] == nil { report("`needs` names unknown good `\(good)`") }
