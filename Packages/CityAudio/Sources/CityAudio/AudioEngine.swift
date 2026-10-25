@@ -20,7 +20,10 @@ public final class AudioEngine: @unchecked Sendable {
     private let engine: AVAudioEngine
     private let buses: [AudioBus: AVAudioMixerNode]
     private var environment: AVAudioEnvironmentNode?
-    private var started: Bool = false
+    private var started = false {
+        didSet { nodes.liveRun = started ? runCount : nil }
+    }
+
     private var muted: Bool = false
     private var spatialEnabled: Bool
     /// The system stops the engine when the output hardware changes (#206).
@@ -124,8 +127,8 @@ public final class AudioEngine: @unchecked Sendable {
     public func start() throws {
         guard !started else { return }
         try engine.start()
-        started = true
         runCount += 1
+        started = true
     }
 
     /// Sets the volume on `bus` to `volume` (0.0–1.0). If muted, the
