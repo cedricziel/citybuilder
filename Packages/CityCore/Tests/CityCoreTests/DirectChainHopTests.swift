@@ -92,7 +92,7 @@ func scenarioAConsumerFedDirectlyGetsNoExtraSupplyCarrier() {
     _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0), contents: [.flour: 5])
     let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 14, y: 1), contents: [.flour: 1])
     world.tick()
-    #expect(world.supplyCarrierCount(to: bakery, good: .flour) == 1)
+    #expect(world.inboundUnits(to: bakery, good: .flour).ofGood == 1)
     #expect(retrievals(to: bakery, in: world) == 0)
 }
 

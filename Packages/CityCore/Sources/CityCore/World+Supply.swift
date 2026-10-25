@@ -168,12 +168,12 @@ extension World {
     }
 
     /// Carriers on the way to `consumer`, from storage or straight from a
-    /// producer, optionally only those carrying `good`.
-    func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
+    /// producer.
+    func supplyCarrierCount(to consumer: EntityID) -> Int {
         carriers.values.count { carrier in
             switch carrier.mission {
-            case let .retrieve(carried, _, _, toConsumer), let .deliverToConsumer(carried, _, _, toConsumer):
-                toConsumer == consumer && (good == nil || carried == good)
+            case let .retrieve(_, _, _, toConsumer), let .deliverToConsumer(_, _, _, toConsumer):
+                toConsumer == consumer
             case .deliver, .deliverToConstructionSite:
                 false
             }
