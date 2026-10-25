@@ -49,9 +49,9 @@ func scenarioGuidedHardStartWithOrdersStaysSolventAndGrows(seed: UInt64) {
 /// The market control with the order kit on: over archipelago seeds 0 to
 /// 29 on Normal, by tick 4,000 (one crown order is issued at tick 2,400),
 /// towns that trade at the market go bankrupt no more often than the same
-/// towns without it. Residents are printed, not asserted: a town that
-/// keeps its planks for the crown can out-grow one that sells them, which
-/// is orders giving surplus the purpose the market lost (#268).
+/// towns without it, and keep at least 95% of its residents. The bound is
+/// looser than the plain control's: a town that keeps its planks for the
+/// crown can out-grow one that sells them (to be confirmed by the final sweep).
 @Test(
     "orders: the market does not make towns that fill orders worse off",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1")
@@ -64,6 +64,7 @@ func scenarioTheMarketDoesNotMakeOrderTownsWorseOff() async {
             + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
     )
     #expect(with.bankrupt <= without.bankrupt)
+    #expect(with.residents * 100 >= without.residents * 95)
 }
 
 private func orderControlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, residents: Int) {
@@ -81,4 +82,29 @@ private func orderControlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, res
             (total.bankrupt + (run.0 ? 1 : 0), total.residents + run.1)
         }
     }
+}
+
+/// Order health (design D11): across seeds 0 to 9 on both layouts, the kit
+/// fulfils at least half of the orders that resolve, and no town goes bankrupt.
+@Test(
+    "orders: the kit fills at least half of the orders that resolve",
+    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1")
+)
+func scenarioOrderKitFillsHalfOfWhatResolves() async {
+    let worlds = await withTaskGroup(of: World.self) { group in
+        for seed in UInt64(0) ..< 10 {
+            for layout in [WorldLayout.singleIsland, .archipelago] {
+                group.addTask {
+                    World.botGame(layout: layout, seed: seed, difficulty: .normal, tradesAtMarket: true, orders: true, ticks: 36000)
+                }
+            }
+        }
+        return await group.reduce(into: [World]()) { $0.append($1) }
+    }
+    let fulfilled = worlds.reduce(0) { $0 + $1.orders.fulfilledCount }
+    let failed = worlds.reduce(0) { $0 + $1.orders.failedCount }
+    print("SOLVENCY_SWEEP orders health fulfilled=\(fulfilled) failed=\(failed)")
+    #expect(fulfilled > 0)
+    #expect(fulfilled * 2 >= fulfilled + failed)
+    #expect(worlds.allSatisfy { !$0.economy.gameOver })
 }

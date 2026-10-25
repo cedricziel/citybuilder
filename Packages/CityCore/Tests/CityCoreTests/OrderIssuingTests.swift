@@ -18,11 +18,19 @@ func scenarioBuiltInOrderTemplatesLoad() {
     #expect(OrderTemplate.crownTimber.good == .planks)
     #expect(OrderTemplate.crownTimber.sizePercent == 90)
     for template in OrderTemplate.allCases {
-        #expect(!template.title.isEmpty && template.text.count <= 100, "\(template)")
-        #expect((1 ... 8).contains(template.seasons) && (1 ... 300).contains(template.sizePercent), "\(template)")
-        #expect(template.minUnits >= 1 && template.minUnits <= template.maxUnits, "\(template)")
-        #expect(template.rewardPercent >= 0 && template.favourGain >= 0 && template.favourLoss >= 0, "\(template)")
-        #expect(template.good.basePrice > 0 && (template.minAge ?? Age.allCases[0]) >= Age.allCases[0])
+        let titled: Bool = !template.title.isEmpty
+        let short: Bool = template.text.count <= 100
+        let window: Bool = (1 ... 8).contains(template.seasons)
+        let size: Bool = (1 ... 300).contains(template.sizePercent)
+        let bounds: Bool = template.minUnits >= 1 && template.minUnits <= template.maxUnits
+        let rewards: Bool = template.rewardPercent >= 0 && template.favourGain >= 0 && template.favourLoss >= 0
+        #expect(titled, "\(template)")
+        #expect(short, "\(template)")
+        #expect(window, "\(template)")
+        #expect(size, "\(template)")
+        #expect(bounds, "\(template)")
+        #expect(rewards, "\(template)")
+        #expect(template.good.basePrice > 0, "\(template)")
     }
     #expect(OrderTemplate.crownBread.minAge == .medieval)
     #expect(OrderTemplate.crownTimber.minAge == nil)
@@ -198,8 +206,10 @@ func scenarioSizeFollowsRecentOutput() {
     #expect(order?.quantity == 54)
     #expect(order?.reward == 540)
     #expect(order?.template == .crownTimber)
-    #expect(order?.deadlineTick == 4 * 600 + 2 * 600)
-    #expect(order?.offerEndsTick == 5 * 600)
+    let deadline: UInt64 = 3600
+    let offerEnds: UInt64 = 3000
+    #expect(order?.deadlineTick == deadline)
+    #expect(order?.offerEndsTick == offerEnds)
 }
 
 @Test("scenario: size is capped by the stores")
@@ -222,11 +232,13 @@ func scenarioDifficultyScalesTheSizeAndTheTime() {
     var hard = OrdersFixture(difficulty: .hard)
     hard.cross(season: 4, output: [.planks: 30])
     #expect(hard.orders.first?.quantity == 64)
-    #expect(hard.orders.first?.deadlineTick == 4 * 600 + 2 * 600)
+    let hardDeadline: UInt64 = 3600
+    #expect(hard.orders.first?.deadlineTick == hardDeadline)
     var easy = OrdersFixture(difficulty: .easy)
     easy.cross(season: 4, output: [.planks: 30])
     #expect(easy.orders.first?.quantity == 43)
-    #expect(easy.orders.first?.deadlineTick == 4 * 600 + 3 * 600)
+    let easyDeadline: UInt64 = 4200
+    #expect(easy.orders.first?.deadlineTick == easyDeadline)
 }
 
 @Test("scenario: too little output is not asked for")

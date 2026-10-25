@@ -263,7 +263,12 @@ func scenarioOrdersAreDeterministic() {
 @Test func issuersKnowTheirRival() {
     #expect(OrderIssuer.rival(2).rivalID == 2)
     #expect(OrderIssuer.crown.rivalID == nil)
-    #expect(OrderState.offered.isOpen && OrderState.accepted.isOpen && !OrderState.fulfilled.isOpen)
+    let offered = OrderState.offered.isOpen
+    let accepted = OrderState.accepted.isOpen
+    let fulfilled = OrderState.fulfilled.isOpen
+    #expect(offered)
+    #expect(accepted)
+    #expect(!fulfilled)
 }
 
 @Test func theShowcaseSeedPutsFourOrdersOnTheBoard() {
@@ -271,7 +276,10 @@ func scenarioOrdersAreDeterministic() {
     fixture.world.seedOrdersShowcase()
     #expect(fixture.orders.map(\.state) == [.accepted, .accepted, .offered, .offered])
     #expect(fixture.orders.map(\.issuer) == [.crown, .rival(1), .crown, .rival(1)])
-    #expect(fixture.world.orders.favour.crown == 7 && fixture.world.orders.favour.value(for: .rival(1)) == 3)
+    let crown: Int = fixture.world.orders.favour.crown
+    let rival: Int = fixture.world.orders.favour.value(for: .rival(1))
+    #expect(crown == 7)
+    #expect(rival == 3)
     #expect(fixture.stock(.planks, in: fixture.center) == 38)
     #expect(fixture.world.acceptedOrderCount == 2)
     var bare = World.fixtureWithTerrain(width: 4, height: 4, fill: .grass, seed: 1)
