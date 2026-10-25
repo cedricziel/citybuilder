@@ -114,11 +114,14 @@ func botResearchesWeavingOnDemand() throws {
     #expect(wantingWorld.research.current == .weaving)
 }
 
-@Test("the bot builds at most three weavers")
-func botCapsTheWeavers() throws {
+@Test("the bot's weavers scale with the merchant houses, one per two")
+func botScalesTheWeaversWithMerchants() throws {
     let merchants = Array(repeating: (HouseTier.merchants, UInt32(8)), count: 12)
-    let town = try WoolTown(order: .careful, houses: merchants, built: Array(repeating: .weaver, count: PlayerBot.maxWeavers))
-    #expect(town.missing() == [.sheepFarm])
+    let six = Array(repeating: BuildingKind.weaver, count: 6)
+    let short = try WoolTown(order: .careful, houses: merchants, built: Array(six.dropLast()))
+    #expect(short.missing() == [.weaver, .sheepFarm])
+    let enough = try WoolTown(order: .careful, houses: merchants, built: six)
+    #expect(enough.missing() == [.sheepFarm])
 }
 
 @Test("the bot builds no more of the wool chain while cloth piles up")

@@ -12,11 +12,6 @@ extension PlayerBot {
     /// Inhabited citizens houses the bot builds cloth for ahead of their promotion.
     static let readyHouses = 2
 
-    /// Weavers the bot builds at most. The stores are shared, so cloth beyond
-    /// what three weavers make crowds out the bread and tools merchants need,
-    /// and merchants fall back (measured in the pacing sweep, #239).
-    static let maxWeavers = 3
-
     /// Cloth in the stores at which the bot stops building the wool chain.
     static let clothSurplus = 20
 
@@ -56,13 +51,13 @@ extension PlayerBot {
     }
 
     /// The wool chain buildings the town lacks for its cloth demand: one
-    /// weaver per two houses (at most `maxWeavers`) and two sheep farms per
+    /// weaver per two houses and two sheep farms per
     /// weaver, as many as the demand wants, and none while `clothSurplus` cloth already waits
     /// in the stores. `.naive` builds the sheep farms first, `.careful` the
     /// weaver first.
     func missingWoolChainKinds(in world: World, town: Town, stock: [Good: Int]) -> [BuildingKind] {
         guard midGame != nil, stock[.cloth, default: 0] < Self.clothSurplus else { return [] }
-        let weavers = min((clothDemand(in: world, stock: stock) + 1) / 2, Self.maxWeavers)
+        let weavers = (clothDemand(in: world, stock: stock) + 1) / 2
         let wanted: [(kind: BuildingKind, count: Int)] = midGame == .careful
             ? [(.weaver, weavers), (.sheepFarm, 2 * weavers)]
             : [(.sheepFarm, 2 * weavers), (.weaver, weavers)]
