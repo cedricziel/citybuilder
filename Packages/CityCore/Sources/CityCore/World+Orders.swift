@@ -29,7 +29,7 @@ extension World {
         }
     }
 
-    var acceptedOrderCount: Int {
+    public var acceptedOrderCount: Int {
         orders.orders.count { $0.state == .accepted }
     }
 
@@ -83,28 +83,26 @@ extension World {
 
     // MARK: - Commands
 
-    mutating func applyOrderCommand(_ command: Command, events: inout [WorldEvent]) {
-        switch command {
-        case let .acceptOrder(id):
-            guard let index = orderIndex(id), orders.orders[index].state == .offered,
-                  acceptedOrderCount < OrderRules.maxAccepted
-            else { return }
-            orders.orders[index].state = .accepted
-            events.append(.orderAccepted(order: id))
-        case let .declineOrder(id):
-            guard let index = orderIndex(id), orders.orders[index].state == .offered else { return }
-            orders.orders[index].state = .declined
-            orders.orders[index].closedTick = tickCount
-        case let .abandonOrder(id):
-            guard let index = orderIndex(id), orders.orders[index].state == .accepted,
-                  orders.orders[index].delivered == 0, !orders.shipments.contains(where: { $0.order == id })
-            else { return }
-            fail(index, events: &events)
-        case let .dispatchOrder(id):
-            applyDispatch(id)
-        default:
-            return
-        }
+    mutating func applyAcceptOrder(_ id: OrderID, events: inout [WorldEvent]) {
+        guard let index = orderIndex(id), orders.orders[index].state == .offered,
+              acceptedOrderCount < OrderRules.maxAccepted
+        else { return }
+        orders.orders[index].state = .accepted
+        events.append(.orderAccepted(order: id))
+    }
+
+    mutating func applyDeclineOrder(_ id: OrderID) {
+        guard let index = orderIndex(id), orders.orders[index].state == .offered else { return }
+        orders.orders[index].state = .declined
+        orders.orders[index].closedTick = tickCount
+    }
+
+    /// Only an accepted order with nothing sent or delivered can be given up.
+    mutating func applyAbandonOrder(_ id: OrderID, events: inout [WorldEvent]) {
+        guard let index = orderIndex(id), orders.orders[index].state == .accepted,
+              orders.orders[index].delivered == 0, !orders.shipments.contains(where: { $0.order == id })
+        else { return }
+        fail(index, events: &events)
     }
 
     private func orderIndex(_ id: OrderID) -> Int? {

@@ -250,3 +250,18 @@ func scenarioOrdersAreDeterministic() {
     }
     #expect(play() == play())
 }
+
+@Test func theBoardListsAcceptedOrdersFirstThenOffersByDeadline() {
+    var fixture = OrdersFixture()
+    let late = fixture.world.testAddOrder(deadline: 900)
+    let soon = fixture.world.testAddOrder(deadline: 500)
+    let accepted = fixture.world.testAddOrder(state: .accepted, deadline: 2000)
+    fixture.world.testAddOrder(state: .fulfilled)
+    #expect(fixture.world.boardOrders.map(\.id) == [accepted, soon, late])
+}
+
+@Test func issuersKnowTheirRival() {
+    #expect(OrderIssuer.rival(2).rivalID == 2)
+    #expect(OrderIssuer.crown.rivalID == nil)
+    #expect(OrderState.offered.isOpen && OrderState.accepted.isOpen && !OrderState.fulfilled.isOpen)
+}

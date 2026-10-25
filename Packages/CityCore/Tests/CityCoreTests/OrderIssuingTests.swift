@@ -17,6 +17,15 @@ func scenarioBuiltInOrderTemplatesLoad() {
     #expect(Age.allCases.map(\.orderEvery) == [4, 4, 3, 2, 2])
     #expect(OrderTemplate.crownTimber.good == .planks)
     #expect(OrderTemplate.crownTimber.sizePercent == 90)
+    for template in OrderTemplate.allCases {
+        #expect(!template.title.isEmpty && template.text.count <= 100, "\(template)")
+        #expect((1 ... 8).contains(template.seasons) && (1 ... 300).contains(template.sizePercent), "\(template)")
+        #expect(template.minUnits >= 1 && template.minUnits <= template.maxUnits, "\(template)")
+        #expect(template.rewardPercent >= 0 && template.favourGain >= 0 && template.favourLoss >= 0, "\(template)")
+        #expect(template.good.basePrice > 0 && (template.minAge ?? Age.allCases[0]) >= Age.allCases[0])
+    }
+    #expect(OrderTemplate.crownBread.minAge == .medieval)
+    #expect(OrderTemplate.crownTimber.minAge == nil)
 }
 
 // MARK: - The crown's schedule

@@ -53,6 +53,10 @@ func scenarioFavourWithOneRivalDoesNotChangeAnothersPrices() {
     fixture.setStock([.tools: 40, .wood: 4])
     #expect(fixture.world.sellOffers(of: 1).first { $0.good == .tools }?.price == 33)
     #expect(fixture.world.buyOffers(of: 1).first { $0.good == .wood }?.price == 3)
+    let summary = fixture.world.snapshot().rivals.first { $0.id == 1 }
+    #expect(summary?.priceBonusPercent == 10)
+    #expect(summary?.sellOffers.first { $0.good == .tools }?.price == 33)
+    #expect(summary?.buyOffers.first { $0.good == .wood }?.price == 3)
     fixture.dockShip(at: fixture.rivalPort, actions: [.loadUpTo(good: .tools, qty: 10)])
     fixture.world.economy.balance = 1000
     _ = fixture.dock()
