@@ -54,9 +54,11 @@ A carrier whose destination cannot take all it carries keeps the rest. That happ
 - With none, it goes back to where the goods came from, if that still stands and has room.
 - A producer's goods continue as a delivery to storage, so the producer's carrier slot frees on final arrival. A retrieval stays a retrieval.
 - A construction delivery to a site that is gone or already built is handled the same way.
-- When no building has room, the goods are lost, as they always were.
+- Room counts per good and reserves the units already on their way (per-good storage, #269).
+- When no building has room, the goods wait with the carrier while its destination stands, and look again each tick. A supply carrier waits at its consumer; one already sent on to a store goes on again when that store fills. Goods are lost only when the destination is gone and nothing has room.
+- With both ends demolished, the owner is the owner of the island the carrier stands on.
 
-*Rejected: never losing goods.* We tried a version that takes goods back past the source's capacity, has carriers wait at a full door, and reserves buffer room for units on the way. A full town then stalls every producer instead of shedding overflow. Intermediates clog storage, food stops getting in, and the pacing sweep's bankruptcies rose from 7 to 52 of 180, with direct hops on or off. The overflow sink belongs to the economy until something like designer2's supply output cap keeps stores from filling. That change can revisit it.
+*Earlier rejected, now adopted: never losing goods.* Before per-good storage, a lossless version stalled every producer behind a full shared store: intermediates clogged storage, food stopped getting in, and the pacing sweep's bankruptcies rose from 7 to 52 of 180. Per-good storage (#269) removed the clog, so goods are no longer dropped at a full store, and pacing matches main (170/180, no bankruptcies).
 
 ### D2. Distances without a search per pair (milestone 1)
 

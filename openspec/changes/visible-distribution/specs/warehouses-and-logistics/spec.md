@@ -53,6 +53,11 @@ A carrier whose destination cannot take everything it carries, because the desti
 - **WHEN** a carrier arrives with flour at a bakery whose stockpile has no room left
 - **THEN** the carrier takes the flour to the nearest goods buffer with room
 
+#### Scenario: Goods for a site that no longer needs them go to storage
+
+- **WHEN** a carrier is on its way with wood to a construction site, and the site is finished or demolished before it arrives
+- **THEN** the carrier takes the wood to the nearest goods buffer with room, and the site's delivered materials do not change
+
 #### Scenario: Goods with no storage go back
 
 - **WHEN** a carrier's destination is demolished, its owner has no goods buffer with room, and the building the goods came from has room
