@@ -25,9 +25,7 @@ enum SignatureFixture {
         for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
             world.occupiedTiles[tile] = id
         }
-        if let capacity = World.stockpileCapacity(for: kind) {
-            world.stockpiles[id] = Stockpile(capacity: capacity)
-        }
+        world.stockpiles[id] = World.newStockpile(for: kind)
         return id
     }
 

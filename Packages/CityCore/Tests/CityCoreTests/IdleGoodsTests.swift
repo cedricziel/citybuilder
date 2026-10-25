@@ -31,7 +31,7 @@ private func add(_ kind: BuildingKind, at anchor: TileCoordinate, state: Buildin
     for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
         world.occupiedTiles[tile] = id
     }
-    world.stockpiles[id] = World.stockpileCapacity(for: kind).map { Stockpile(capacity: $0) }
+    world.stockpiles[id] = World.newStockpile(for: kind)
     return id
 }
 

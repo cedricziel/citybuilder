@@ -112,7 +112,7 @@ The candidate list is small: only consumers of the good that are short. Measured
 
 ### D6. Saves
 
-Milestone 1 moves the save version from 9 to 10, with a migration that only bumps the number, so an older build refuses a save that might hold a `deliverToConsumer` carrier instead of failing to decode it. A v9 fixture save checks the step.
+Milestone 1 moves the save version from 10 to 11 (per-good storage took 10), with a migration that only bumps the number, so an older build refuses a save that might hold a `deliverToConsumer` carrier instead of failing to decode it. A v10 fixture save checks the step.
 
 All new fields decode with `decodeIfPresent` and defaults:
 - `Carrier.vehicle` defaults to `.onFoot`.

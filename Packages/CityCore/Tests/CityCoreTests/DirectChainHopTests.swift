@@ -120,43 +120,6 @@ func aConsumerWithNoRoomLeftGetsNoDelivery() {
     ])
 }
 
-/// A charcoal burner, a smelter short of charcoal, a warehouse holding
-/// `iron`, and a stocked steam engine that also burns charcoal, so the
-/// smelter rests once the warehouse holds 40 iron.
-private struct SmelterTown {
-    let world: World
-    let burner: EntityID
-    let smelter: EntityID
-    let warehouse: EntityID
-}
-
-private func smelterTown(iron: Int) -> SmelterTown {
-    var world = roadStrip()
-    let burner = inject(.charcoalBurner, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.charcoal: 1])
-    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0), contents: [.iron: iron])
-    let smelter = inject(.smelter, in: &world, at: TileCoordinate(x: 14, y: 1))
-    _ = inject(.steamEngine, in: &world, at: TileCoordinate(x: 19, y: 1), contents: [.charcoal: 2])
-    world.tick()
-    return SmelterTown(world: world, burner: burner, smelter: smelter, warehouse: warehouse)
-}
-
-@Test("scenario: a resting producer gets no direct delivery")
-func scenarioARestingProducerGetsNoDirectDelivery() throws {
-    let town = smelterTown(iron: 40)
-    #expect(try town.world.isResting(#require(town.world.buildings[town.smelter])) == .iron)
-    #expect(missions(from: town.burner, in: town.world) == [
-        .deliver(good: .charcoal, amount: 1, fromProducer: town.burner, toWarehouse: town.warehouse)
-    ])
-}
-
-@Test("scenario: a producer below the rest level gets a direct delivery")
-func scenarioAProducerBelowTheRestLevelGetsADirectDelivery() {
-    let town = smelterTown(iron: 39)
-    #expect(missions(from: town.burner, in: town.world) == [
-        .deliverToConsumer(good: .charcoal, amount: 1, fromProducer: town.burner, toConsumer: town.smelter)
-    ])
-}
-
 @Test("scenario: construction materials still go to storage")
 func scenarioConstructionMaterialsStillGoToStorage() {
     var world = roadStrip()
@@ -335,13 +298,29 @@ func aRetrievalForADemolishedConsumerGoesBackToStorage() {
     #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
 }
 
-@Test("goods with no room anywhere are dropped as before")
-func goodsWithNoRoomAnywhereAreDroppedAsBefore() {
+@Test("goods for a full consumer with no room anywhere wait with their carrier")
+func goodsForAFullConsumerWithNoRoomAnywhereWaitWithTheirCarrier() {
     var world = roadStrip()
     let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
     let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
     world.tick()
     world.stockpiles[bakery] = Stockpile(capacity: 0)
+    world.stockpiles[windmill] = Stockpile(capacity: 0)
+    for _ in 0 ..< 40 {
+        world.tick()
+    }
+    #expect(world.carriers.count == 1)
+    #expect(flour(in: world, [windmill, bakery]) == 1)
+}
+
+@Test("goods for a demolished consumer with no room anywhere are dropped as before")
+func goodsForADemolishedConsumerWithNoRoomAnywhereAreDroppedAsBefore() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 6, y: 1), events: &events)
     world.stockpiles[windmill] = Stockpile(capacity: 0)
     for _ in 0 ..< 40 where !world.carriers.isEmpty {
         world.tick()

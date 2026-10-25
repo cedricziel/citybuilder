@@ -221,35 +221,70 @@ func scenarioV8SaveLoadsWithoutRivals() throws {
     #expect(loaded.islands.allSatisfy { loaded.owner(ofIsland: $0.id) == .player })
 }
 
-private func v9FixtureURL() -> URL {
-    URL(fileURLWithPath: #filePath)
+/// A v9 save: a new single-island game whose town center holds 55
+/// planks in its shared 40-unit store, as a v9 save could after a
+/// purchase into an emptier store.
+private func overflowingV9Payload() throws -> Data {
+    try Data(contentsOf: URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent()
-        .appendingPathComponent("Fixtures/saves/v9_single_island.json")
+        .appendingPathComponent("Fixtures/saves/v9_single_island.json"))
 }
 
-/// Encode a World as a v9 save: the current shape, written before the
+@Test("scenario: saves before per-good storage keep their stock")
+func scenarioSavesBeforePerGoodStorageKeepTheirStock() throws {
+    let data = try overflowingV9Payload()
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 9, "fixture must be a v9 save")
+    let loaded = try decodeWorld(data)
+    let center = try #require(loaded.buildings.values.first { $0.kind == .townCenter })
+    let pile = try #require(loaded.stockpiles[center.id])
+    #expect(pile.limitsEachGood)
+    #expect(pile.capacity == BuildingKind.townCenter.storagePerGood)
+    #expect(pile.quantity(of: .planks) == 55)
+    #expect(pile.room(for: .planks) == 0)
+    #expect(pile.room(for: .wood) == 34)
+}
+
+@Test("scenario: overflow drains before the store takes more")
+func aMigratedStoreTakesNoMoreOfAnOverflowingGoodUntilItDropsBelowTheLimit() throws {
+    let loaded = try decodeWorld(overflowingV9Payload())
+    let center = try #require(loaded.buildings.values.first { $0.kind == .townCenter })
+    var pile = try #require(loaded.stockpiles[center.id])
+    #expect(pile.deposit(.planks, amount: 1) == 0)
+    pile.withdraw(.planks, amount: 16)
+    #expect(pile.deposit(.planks, amount: 5) == 1)
+    #expect(pile.quantity(of: .planks) == 40)
+}
+
+private func v10FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v10_single_island.json")
+}
+
+/// Encode a World as a v10 save: the current shape, written before the
 /// `deliverToConsumer` carrier mission existed.
-private func makeV9Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+private func makeV10Payload(world: World, writtenAt: Date = Date()) throws -> Data {
     let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
     var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-    json["version"] = 9
+    json["version"] = 10
     return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
 }
 
-@Test("fixture: regenerate v9 single-island save", .enabled(if: regenerateFixtures))
-func regenerateV9SingleIslandFixture() throws {
+@Test("fixture: regenerate v10 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV10SingleIslandFixture() throws {
     try requireDeterministicHashing()
     let world = World.newGame(layout: .singleIsland, seed: 0, difficulty: .normal, rivals: false)
-    var data = try makeV9Payload(world: world, writtenAt: fixtureWrittenAt)
+    var data = try makeV10Payload(world: world, writtenAt: fixtureWrittenAt)
     data.append(0x0A)
-    try data.write(to: v9FixtureURL())
+    try data.write(to: v10FixtureURL())
 }
 
-@Test("scenario: v9 save loads as v10")
-func scenarioV9SaveLoadsAsV10() throws {
-    let data = try Data(contentsOf: v9FixtureURL())
+@Test("scenario: v10 save loads as v11")
+func scenarioV10SaveLoadsAsV11() throws {
+    let data = try Data(contentsOf: v10FixtureURL())
     let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-    #expect(parsed["version"] as? Int == 9, "fixture must be a v9 save")
+    #expect(parsed["version"] as? Int == 10, "fixture must be a v10 save")
     let loaded = try decodeWorld(data)
     #expect(loaded.layout == .singleIsland)
     #expect(!loaded.buildings.isEmpty)

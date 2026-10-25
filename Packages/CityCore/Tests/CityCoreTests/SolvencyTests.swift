@@ -24,39 +24,43 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
     }
 }
 
-/// The control: over archipelago seeds 0 to 29 on Normal, at least
-/// `controlBankruptWithout` towns go bankrupt by tick 4,000 without the
-/// market, and at most `controlBankruptWith` with it. The scan for
-/// `rest-when-stocked` measured 4 of 30 without and 0 of 30 with; the
-/// thresholds leave a margin of two and one so tuning noise does not flip
-/// the control, while still showing what the market does.
+/// The control: over archipelago seeds 0 to 29 on Normal, by tick 4,000,
+/// towns that trade at the market go bankrupt no more often, and house no
+/// fewer residents in all, than the same towns without it. It once asked
+/// for bankruptcies without the market; per-good storage ended the store
+/// clog that caused them (`per-good-storage` D5).
 private let controlSeeds = Array(UInt64(0) ..< 30)
-private let controlBankruptWithout = 2
-private let controlBankruptWith = 1
 
 @Test(
-    "scenario: without the market more towns go bankrupt",
+    "scenario: the market does not make towns worse off",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1")
 )
-func scenarioWithoutTheMarketMoreTownsGoBankrupt() async {
-    let without = await bankruptCount(tradesAtMarket: false)
-    let with = await bankruptCount(tradesAtMarket: true)
-    print("SOLVENCY_SWEEP control seeds=0-29 layout=archipelago bankrupt_without=\(without) bankrupt_with=\(with)")
-    #expect(without >= controlBankruptWithout)
-    #expect(with <= controlBankruptWith)
+func scenarioTheMarketDoesNotMakeTownsWorseOff() async {
+    let without = await controlRuns(tradesAtMarket: false)
+    let with = await controlRuns(tradesAtMarket: true)
+    print(
+        "SOLVENCY_SWEEP control seeds=0-29 layout=archipelago bankrupt_without=\(without.bankrupt) "
+            + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
+    )
+    #expect(with.bankrupt <= without.bankrupt)
+    #expect(with.residents >= without.residents)
 }
 
-private func bankruptCount(tradesAtMarket: Bool) async -> Int {
-    await withTaskGroup(of: Bool.self) { group in
+/// Bankruptcies and residents in all over the control seeds.
+private func controlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, residents: Int) {
+    await withTaskGroup(of: (Bool, Int).self) { group in
         for seed in controlSeeds {
             group.addTask {
-                World.botGame(
+                let world = World.botGame(
                     layout: .archipelago, seed: seed, difficulty: .normal,
                     tradesAtMarket: tradesAtMarket, ticks: 4000
-                ).economy.gameOver
+                )
+                return (world.economy.gameOver, world.residents(atLeast: .peasants))
             }
         }
-        return await group.reduce(0) { $0 + ($1 ? 1 : 0) }
+        return await group.reduce((bankrupt: 0, residents: 0)) { total, run in
+            (total.bankrupt + (run.0 ? 1 : 0), total.residents + run.1)
+        }
     }
 }
 

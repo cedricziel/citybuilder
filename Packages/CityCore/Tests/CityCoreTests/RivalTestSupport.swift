@@ -88,8 +88,7 @@ extension World {
 
     /// Replaces a building's stock, keeping its kind's capacity.
     mutating func testSetStock(_ stock: [Good: Int], in id: EntityID) {
-        let capacity = buildings[id].flatMap { World.stockpileCapacity(for: $0.kind) } ?? 0
-        var pile = Stockpile(capacity: capacity)
+        var pile = buildings[id].flatMap { World.newStockpile(for: $0.kind) } ?? Stockpile(capacity: 0)
         for good in Good.allCases {
             if let amount = stock[good] { pile.deposit(good, amount: amount) }
         }

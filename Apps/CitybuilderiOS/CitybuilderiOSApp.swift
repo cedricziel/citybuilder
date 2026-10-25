@@ -20,7 +20,7 @@ struct CitybuilderiOSApp: App {
         self.audio = audio
         UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
         SnapshotRendererRegistry.shared
-            .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghost, selection, area, route in
+            .factory = { [audio] provider, tapSink, dragSink, hoverSink, longPressSink, ghost, selection, inspecting, area, route in
                 AnyView(
                     IsoWorldView(
                         snapshotProvider: provider,
@@ -40,6 +40,7 @@ struct CitybuilderiOSApp: App {
                             return IsoWorldScene.GhostState(kind: state.kind, tile: state.tile, valid: state.valid)
                         },
                         selectionProvider: selection,
+                        inspectingProvider: inspecting,
                         areaOfEffectProvider: area,
                         routeOverlayProvider: {
                             route().map {

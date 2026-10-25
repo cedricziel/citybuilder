@@ -72,11 +72,11 @@ func signatureCatalogEntries() {
     #expect(gallery.cost == 180 && gallery.upkeep == 2 && gallery.materialCost == [.wood: 2, .planks: 4])
     let plant = BuildingCatalog.spec(for: .powerPlant)
     #expect(plant.cost == 400 && plant.upkeep == 6 && plant.materialCost == [.planks: 6, .iron: 4])
-    #expect(World.stockpileCapacity(for: .monument) == 16)
-    #expect(World.stockpileCapacity(for: .steamEngine) == 16)
-    #expect(World.stockpileCapacity(for: .powerPlant) == 16)
-    #expect(World.stockpileCapacity(for: .guildHall) == nil)
-    #expect(World.stockpileCapacity(for: .gallery) == nil)
+    #expect(BuildingKind.monument.storage == 16)
+    #expect(BuildingKind.steamEngine.storage == 16)
+    #expect(BuildingKind.powerPlant.storage == 16)
+    #expect(BuildingKind.guildHall.storage == nil)
+    #expect(BuildingKind.gallery.storage == nil)
 }
 
 @Test("scenario: touching footprints")

@@ -2,36 +2,55 @@ import Foundation
 
 /// Carriers whose destination could not take their goods: full, or
 /// demolished while they walked. Spec: `warehouses-and-logistics` /
-/// Carried goods go on to storage.
+/// Producers ship only where there is room, and Carried goods go on to
+/// storage.
 extension World {
-    /// `carrier` sent on with the `units` its destination did not take:
-    /// to the nearest goods buffer of its owner with room, else back to
-    /// where the goods came from when that has room. Nil when no
-    /// building has room for them, and the goods are lost as before:
-    /// a town whose stores are full drops its overflow rather than
-    /// stalling every producer behind it.
-    func redirected(_ carrier: Carrier, carrying units: Int) -> Carrier? {
-        let mission = carrier.mission
-        guard let here = carrier.currentTile ?? carrier.path.last,
-              let owner = buildings[mission.source]?.owner ?? buildings[mission.destination]?.owner,
-              let (target, path) = nearestRoom(from: here, owner: owner, avoiding: mission.destination, source: mission.source)
-        else { return nil }
-        var onward = carrier
-        onward.pathIndex = 0
-        onward.path = path
-        onward.mission = mission.redirected(to: target, amount: units)
-        return onward
+    /// `carrier` with the `units` its destination did not take, sent on.
+    ///
+    /// - A supply carrier waits at its consumer while that stands, and
+    ///   delivers once it has room.
+    /// - Otherwise the goods go on to the nearest store of their owner
+    ///   with room for them, counting what is already on its way there,
+    ///   else back to where they came from when that stands and has room.
+    /// - With nowhere to go they wait at their destination while it
+    ///   stands, looking again each tick, so nothing is lost to a full
+    ///   store. A construction site never keeps a carrier waiting.
+    ///
+    /// Nil when the destination is gone and nothing has room: the goods are
+    /// lost, as before.
+    func rerouted(_ carrier: Carrier, carrying units: Int) -> Carrier? {
+        let mission = carrier.mission.carrying(units)
+        var waiting = carrier
+        waiting.mission = mission
+        let destinationStands: Bool = switch mission {
+        case .deliverToConstructionSite: false
+        case .deliver, .retrieve, .deliverToConsumer: stockpiles[mission.destination] != nil
+        }
+        if case .retrieve = mission, destinationStands { return waiting }
+        let here = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
+        let owner = buildings[mission.source]?.owner ?? buildings[mission.destination]?.owner
+        if let owner, let (target, path) = nearestRoom(for: mission, from: here, owner: owner) {
+            var onward = carrier
+            onward.pathIndex = 0
+            onward.path = path
+            onward.mission = mission.redirected(to: target, amount: units)
+            return onward
+        }
+        return destinationStands ? waiting : nil
     }
 
-    /// The nearest operational goods buffer of `owner` with free room,
-    /// other than `avoiding`, by road from `tile`; ties go to the lower
-    /// entity ID. Falls back to `source` when it still stands and has
+    /// The nearest operational goods buffer of `owner` with room for the
+    /// mission's good beyond what is already on its way there, other than
+    /// its destination, by road from `tile`; ties go to the lower entity
+    /// ID. Falls back to the mission's source when it still stands and has
     /// room.
     private func nearestRoom(
-        from tile: TileCoordinate, owner: Owner, avoiding: EntityID, source: EntityID
+        for mission: Carrier.Mission, from tile: TileCoordinate, owner: Owner
     ) -> (EntityID, [TileCoordinate])? {
+        let inbound = InboundGoods(carriers.values)
         func pathTo(_ building: Building) -> [TileCoordinate]? {
-            guard building.id != avoiding, (stockpiles[building.id]?.freeSpace ?? 0) > 0,
+            guard building.id != mission.destination,
+                  (stockpiles[building.id]?.room(for: mission.good) ?? 0) > inbound.count(of: mission.good, to: building.id),
                   let road = anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint)
             else { return nil }
             return roadPath(from: tile, to: road)
@@ -43,9 +62,29 @@ extension World {
                 best = (buffer.id, path)
             }
         }
-        if best == nil, let origin = buildings[source], let path = pathTo(origin) {
+        if best == nil, let origin = buildings[mission.source], let path = pathTo(origin) {
             best = (origin.id, path)
         }
         return best
+    }
+}
+
+/// Units of each good on their way to each building, so a store's room
+/// for a good is not promised twice.
+final class InboundGoods {
+    private var units: [EntityID: [Good: Int]] = [:]
+
+    init(_ carriers: some Sequence<Carrier>) {
+        for carrier in carriers {
+            add(carrier.mission)
+        }
+    }
+
+    func add(_ mission: Carrier.Mission) {
+        units[mission.destination, default: [:]][mission.good, default: 0] += mission.amount
+    }
+
+    func count(of good: Good, to building: EntityID) -> Int {
+        units[building]?[good] ?? 0
     }
 }

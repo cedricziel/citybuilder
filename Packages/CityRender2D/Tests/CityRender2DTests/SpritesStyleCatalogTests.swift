@@ -119,6 +119,8 @@ private func expectedCatalogIds() -> Set<String> {
     }
     // The status badge drawn over a waiting construction site.
     ids.insert(IsoWorldScene.waitingBadgeNodeName)
+    // The building status icons, one brief for every good's icons and the issue pictograms.
+    ids.insert("status-icons")
     ids.insert("walker")
     ids.insert("animal")
     ids.insert("ship")

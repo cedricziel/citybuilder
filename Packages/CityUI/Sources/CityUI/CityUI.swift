@@ -85,6 +85,7 @@ public struct CityRootView: View {
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
+        .statisticsSheet(session: session)
         .routesSheet(session: session, isPresented: $routesPresented)
         .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
@@ -101,7 +102,7 @@ public struct CityRootView: View {
 
     var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
-            || session.isPaused || session.isWinSheetPresented
+            || session.isStatisticsPresented || session.isPaused || session.isWinSheetPresented
     }
 }
 
@@ -202,6 +203,10 @@ public final class GameSession {
     /// The first-hour guide while it shows, refreshed every tick.
     var firstStepsGuide: FirstStepsGuide?
     public var isWinSheetPresented = false
+    /// The Statistics sheet is open. Session state, never saved.
+    public var isStatisticsPresented = false
+    /// The Statistics sheet's open tab, kept between openings.
+    public var statisticsTab: StatisticsModel.Tab = .goods
 
     /// Advance the simulation one tick. Drains the per-tick event stream
     /// into the registered `audioEventConsumer` (if any) and refreshes
@@ -486,6 +491,8 @@ public final class GameSession {
             longPressSink: longPressSink,
             ghostProvider: ghostProvider,
             selectionProvider: { [weak self] in self?.inspectedTile },
+            // The tool `handleTap` uses (Inspect once the game is over), and not while authoring a route.
+            inspectingProvider: { [weak self] in self?.activeTool == .inspect && self?.routeAuthoring == nil },
             areaOfEffectProvider: { [weak self] in self?.areaOfEffect() },
             routeOverlayProvider: { [weak self] in self?.routeOverlay() }
         )

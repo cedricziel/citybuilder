@@ -41,7 +41,7 @@ When a producer sends a unit of a good and no waiting construction site needs it
 
 ### Requirement: Carried goods go on to storage
 
-A carrier whose destination cannot take everything it carries, because the destination is full or was demolished, SHALL carry the rest on to the nearest operational goods buffer of the same owner with room. With no such buffer it SHALL carry the rest back to the building the goods came from, if that building still stands and has room. When no building has room, the goods SHALL be lost, as before, so a town with full stores sheds its overflow rather than stalling. A producer's goods redirected this way SHALL keep occupying one of that producer's carrier slots until they arrive.
+A carrier whose destination cannot take everything it carries, because the destination is full or was demolished, SHALL carry the rest on to the nearest operational goods buffer of the same owner with room for that good, counting the units already on their way there. With no such buffer it SHALL carry the rest back to the building the goods came from, if that building still stands and has room. When no building has room, the goods SHALL wait with the carrier while its destination stands, looking again each tick (`per-good-storage`: nothing is lost to a full store), and SHALL be lost, as before, only when the destination is gone. A supply carrier waits at its consumer while that stands. A producer's goods redirected this way SHALL keep occupying one of that producer's carrier slots until they arrive.
 
 #### Scenario: Goods for a demolished consumer go to storage
 

@@ -59,7 +59,7 @@ extension World {
         let order = [BuildingKind.townCenter, .warehouse, .port].flatMap { kind in
             buffers.filter { $0.kind == kind }
         }
-        let space = order.reduce(0) { $0 + (stockpiles[$1.id]?.freeSpace ?? 0) }
+        let space = order.reduce(0) { $0 + (stockpiles[$1.id]?.room(for: good) ?? 0) }
         let units = min(limit, RivalMarket.buyQuantity(of: good, stock: [good: held]), space)
         guard units > 0 else { return false }
         fill(good, upTo: units, into: order)

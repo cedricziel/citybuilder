@@ -8,7 +8,7 @@
 - [x] 1.1 Spec delta (`warehouses-and-logistics` / Producers deliver to short consumers); tests-first, confirm red
 - [x] 1.2 `.deliverToConsumer` mission, destination order (D1), inbound counting in supply
 - [x] 1.3 Short-consumer search per tick (D2)
-- [x] 1.4 DeterminismFixture gains a grain chain whose producers hop, so CI's macOS-vs-Linux gate covers M1; CityCore 100 % diff coverage; save version 10
+- [x] 1.4 DeterminismFixture gains a grain chain whose producers hop, so CI's macOS-vs-Linux gate covers M1; CityCore 100 % diff coverage; save version 11 (10 went to per-good storage)
 - [x] 1.5 PlayerBot sweeps before and after (first-hour solvency, rivals, pacing)
 
 ## 2. Milestone 3: handcarts

@@ -23,6 +23,14 @@ struct TextureFilteringTests {
         #expect(TextureFiltering.mode(for: "good-coffee-cherries") == .linear)
     }
 
+    @Test("building status icons filter linearly and live in the Kit atlas")
+    func statusIconsFilterLinearly() {
+        #expect(TextureFiltering.mode(for: "status-bread-short") == .linear)
+        #expect(TextureFiltering.mode(for: "status-tea-leaves-stuck") == .linear)
+        #expect(TextureFiltering.mode(for: "status-no-road") == .linear)
+        #expect(SpriteAtlasRouting.atlasName(for: "status-no-road") == SpriteAtlasRouting.kitAtlasName)
+    }
+
     @Test("scenario: Status badges stay pixel art")
     func statusBadgesStayPixelArt() {
         let everything: Set = ["overlay-waiting-materials"]

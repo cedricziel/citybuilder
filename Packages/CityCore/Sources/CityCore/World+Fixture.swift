@@ -112,7 +112,7 @@ public extension World {
             for tile in footprint.tiles(anchor: anchor) {
                 occupiedTiles[tile] = id
             }
-            var stockpile = Stockpile(capacity: World.stockpileCapacity(for: .townCenter) ?? 0)
+            var stockpile = World.newStockpile(for: .townCenter) ?? Stockpile(capacity: 0)
             for (good, amount) in starter {
                 _ = stockpile.deposit(good, amount: amount)
             }
