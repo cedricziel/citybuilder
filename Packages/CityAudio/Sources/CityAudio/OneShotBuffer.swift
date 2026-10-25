@@ -8,13 +8,15 @@ enum OneShotBuffer {
     /// The format of every one-shot buffer and pool node.
     nonisolated(unsafe) static let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
 
-    /// The audio at `url` in `format`, or nil if it won't read or convert:
-    /// a one-shot asset must be mono or stereo.
+    /// The audio at `url` in `format`, or nil if it won't read whole or
+    /// convert: a one-shot asset must be mono or stereo.
     static func load(_ url: URL) -> AVAudioPCMBuffer? {
         guard let file = try? AVAudioFile(forReading: url),
               (1 ... 2).contains(file.processingFormat.channelCount),
               let read = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)),
-              (try? file.read(into: read)) != nil
+              (try? file.read(into: read)) != nil,
+              // A short read would play a clipped cue; the shipped-asset test names such a file.
+              AVAudioFramePosition(read.frameLength) == file.length
         else { return nil }
         return read.format == format ? read : convert(read)
     }
