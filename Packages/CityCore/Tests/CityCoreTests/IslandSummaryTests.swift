@@ -148,11 +148,11 @@ func scenarioCapacitySumsAcrossAllGoodsBuffers() throws {
     let snapshot = world.snapshot()
     let onlyIsland = try #require(world.islands.first?.id)
     let summary = snapshot.islandSummaries[onlyIsland]
-    // Warehouse capacity 200 + port capacity 200 = 400 total for any
-    // good. (Catalog values from `World.stockpileCapacity(for:)`.)
-    #expect(summary?.capacity[.wood] == 400)
-    #expect(summary?.capacity[.planks] == 400)
-    #expect(summary?.capacity[.food] == 400)
+    // Each good: the warehouse's per-good limit plus the port's.
+    let each = (BuildingKind.warehouse.storagePerGood ?? 0) + (BuildingKind.port.storagePerGood ?? 0)
+    #expect(summary?.capacity[.wood] == each)
+    #expect(summary?.capacity[.planks] == each)
+    #expect(summary?.capacity[.food] == each)
 }
 
 @Test("scenario: islandsummary carries the island name")

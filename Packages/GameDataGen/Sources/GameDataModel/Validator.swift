@@ -86,7 +86,6 @@ struct Validator {
         let report = reporter("Good", good.id, good.origin)
         if good.basePrice <= 0 { report("`basePrice` must be positive") }
         if good.market.buy < 0 || good.market.sell < 0 { report("`market` limits must not be negative") }
-        if let restAt = good.restAt, restAt <= 0 { report("`restAt` must be positive") }
         var named = Set<String>()
         for tier in good.neededBy {
             guard let declared = refs.tiers[tier] else {
@@ -155,6 +154,8 @@ struct Validator {
         if building.cost < 0 || building.upkeep < 0 { report("`cost` and `upkeep` must not be negative") }
         if building.buildTicks <= 0 { report("`buildTicks` must be positive") }
         if let storage = building.storage, storage <= 0 { report("`storage` must be positive; omit it for none") }
+        if let perGood = building.storagePerGood, perGood <= 0 { report("`storagePerGood` must be positive; omit it for none") }
+        if building.storage != nil, building.storagePerGood != nil { report("set `storage` or `storagePerGood`, not both") }
         if let ticks = building.plantTicks, ticks <= 0 { report("`plantTicks` must be positive") }
         checkCatchment(building, report)
         if let ticks = building.recipe?.cycleTicks, ticks <= 0 { report("`recipe.cycleTicks` must be positive") }

@@ -16,7 +16,7 @@ private func townAboutToGoRed() -> GameSession {
         for tile in BuildingCatalog.spec(for: .sawmill).footprint.tiles(anchor: anchor) {
             world.occupiedTiles[tile] = id
         }
-        world.stockpiles[id] = World.stockpileCapacity(for: .sawmill).map { Stockpile(capacity: $0) }
+        world.stockpiles[id] = World.newStockpile(for: .sawmill)
     }
     world.economy.balance = 1
     return GameSession(world: world)

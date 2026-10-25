@@ -11,7 +11,7 @@ The tech catalog SHALL define these techs:
 | Mining | 560 | — | mine, charcoal burner |
 | Metallurgy | 1,120 | Mining | smelter, toolsmith |
 | Seafaring | 60 | — | port, shipyard |
-| Weaving | 560 | — | sheep farm, weaver |
+| Weaving | 720 | — | sheep farm, weaver |
 
 A new game MUST start with Scholarship researched. Every building kind not listed MUST be available from the start.
 

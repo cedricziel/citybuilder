@@ -211,7 +211,7 @@ func scenarioV8SaveLoadsWithoutRivals() throws {
     #expect(parsed["version"] as? Int == 8, "fixture must be a v8 save")
     let migrated = try MigrationRegistry().migrate(payload: data, toVersion: SaveFile.currentVersion)
     let migratedJSON = try JSONSerialization.jsonObject(with: migrated) as? [String: Any] ?? [:]
-    #expect(migratedJSON["version"] as? Int == 9)
+    #expect(migratedJSON["version"] as? Int == SaveFile.currentVersion)
     let loaded = try decodeWorld(data)
     #expect(loaded.layout == .archipelago)
     #expect(loaded.rivals.isEmpty)
@@ -219,4 +219,39 @@ func scenarioV8SaveLoadsWithoutRivals() throws {
     #expect(loaded.buildings.values.allSatisfy { $0.owner == .player })
     #expect(loaded.ships.values.allSatisfy { $0.owner == .player })
     #expect(loaded.islands.allSatisfy { loaded.owner(ofIsland: $0.id) == .player })
+}
+
+/// A v9 save: a new single-island game whose town center holds 55
+/// planks in its shared 40-unit store, as a v9 save could after a
+/// purchase into an emptier store.
+private func overflowingV9Payload() throws -> Data {
+    try Data(contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v9_single_island.json"))
+}
+
+@Test("scenario: saves before per-good storage keep their stock")
+func scenarioSavesBeforePerGoodStorageKeepTheirStock() throws {
+    let data = try overflowingV9Payload()
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 9, "fixture must be a v9 save")
+    let loaded = try decodeWorld(data)
+    let center = try #require(loaded.buildings.values.first { $0.kind == .townCenter })
+    let pile = try #require(loaded.stockpiles[center.id])
+    #expect(pile.limitsEachGood)
+    #expect(pile.capacity == BuildingKind.townCenter.storagePerGood)
+    #expect(pile.quantity(of: .planks) == 55)
+    #expect(pile.room(for: .planks) == 0)
+    #expect(pile.room(for: .wood) == 34)
+}
+
+@Test("scenario: overflow drains before the store takes more")
+func aMigratedStoreTakesNoMoreOfAnOverflowingGoodUntilItDropsBelowTheLimit() throws {
+    let loaded = try decodeWorld(overflowingV9Payload())
+    let center = try #require(loaded.buildings.values.first { $0.kind == .townCenter })
+    var pile = try #require(loaded.stockpiles[center.id])
+    #expect(pile.deposit(.planks, amount: 1) == 0)
+    pile.withdraw(.planks, amount: 16)
+    #expect(pile.deposit(.planks, amount: 5) == 1)
+    #expect(pile.quantity(of: .planks) == 40)
 }

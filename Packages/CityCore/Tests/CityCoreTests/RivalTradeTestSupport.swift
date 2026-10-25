@@ -91,9 +91,7 @@ extension World {
         for tile in spec.footprint.tiles(anchor: anchor) {
             occupiedTiles[tile] = id
         }
-        if let capacity = Self.stockpileCapacity(for: kind) {
-            stockpiles[id] = Stockpile(capacity: capacity)
-        }
+        stockpiles[id] = Self.newStockpile(for: kind)
         return id
     }
 }

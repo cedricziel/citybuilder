@@ -239,7 +239,7 @@ public extension World {
             return withdrawn > 0
         case let .unloadUpTo(good, qty):
             let shipStock = ship.cargo[good] ?? 0
-            let amount = min(qty, shipStock, portStockpile.freeSpace)
+            let amount = min(qty, shipStock, portStockpile.room(for: good))
             if amount <= 0 { return false }
             let deposited = portStockpile.deposit(good, amount: amount)
             ship.cargo[good] = shipStock - deposited

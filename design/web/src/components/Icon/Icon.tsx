@@ -31,6 +31,7 @@ export type IconName =
   | "chevron.right"
   | "hammer.fill"
   | "trophy.fill"
+  | "chart.xyaxis.line"
   | "map.fill"
   | "map"
   | "ferry.fill";
@@ -214,6 +215,12 @@ const glyphs: Record<IconName, ReactElement> = {
       <path d="M7 5H3.5v1.5A3.5 3.5 0 0 0 7 10M17 5h3.5v1.5A3.5 3.5 0 0 1 17 10" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="M10.6 14.2h2.8v3.3h-2.8Z" />
       <rect x="7.5" y="17.5" width="9" height="3" rx="1" />
+    </g>
+  ),
+  "chart.xyaxis.line": (
+    <g {...stroke} strokeWidth={1.8}>
+      <path d="M3.5 3.5v17h17" />
+      <path d="m7.5 15 3.6-4.6 3 2.6 5-6.6" />
     </g>
   ),
   "map.fill": (

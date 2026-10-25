@@ -43,7 +43,7 @@ func cultureSignatureCatalogEntries() {
     for (kind, culture) in cultures {
         #expect(BuildingCatalog.spec(for: kind) == expected[kind])
         #expect(kind.culture == culture)
-        #expect(World.stockpileCapacity(for: kind) == 16)
+        #expect(kind.storage == 16)
         #expect(Tech.unlocking(kind) == nil)
         #expect(kind.fuel == FuelSpec(good: culture.luxury, amount: 1, intervalTicks: 100))
         #expect(!kind.isUnique)

@@ -28,7 +28,7 @@ Alternative: 1 wool → 1 cloth. Rejected: it makes the weaver a pass-through wi
 
 ### D2. A tech gates the chain, not an age
 
-`weaving` is a medieval tech costing 560 (the cost of milling and mining; cultivation costs 700, metallurgy 1,120). Merchants need cloth, so a town that has bread and tools must also research Weaving before its houses can become merchants. That adds one research beat to the mid-game without a new age.
+`weaving` is a medieval tech costing 720, the price of Milling and Mining (Cultivation costs 900, Metallurgy 1,440). Merchants need cloth, so a town that has bread and tools must also research Weaving before its houses can become merchants. That adds one research beat to the mid-game without a new age.
 
 Alternative: available from the start. Rejected: a cheap, early chain slows nothing; the point of the pacing work is another step before the Renaissance's 20 merchants.
 Alternative: unlocked by `milling`. Rejected: it would not add a decision, and it ties a textile chain to flour.
@@ -53,7 +53,7 @@ The change adds goods, buildings and a tech to the generated catalogs. `Good.all
 
 - [Merchants take longer, so towns pay less tax for longer] → The sweeps measure merchants at year 10, the Renaissance year and bankruptcies against `main`; the weaver's cost is tuned in D1 if they regress.
 - [The sheep farm's flock art draws ambient sheep, which the graze planner also places at farms] → The grazing planner reads the farm kinds from the catalog; the sheep farm keeps its drawn fold and gets no extra ambient sheep.
-- [Existing saves with merchant houses decline until a weaver exists] → Declared BREAKING in the proposal; the tier decline takes 120 ticks per tier, and the Weaving tech costs 560.
+- [Existing saves with merchant houses decline until a weaver exists] → Declared BREAKING in the proposal; the tier decline takes 120 ticks per tier, and the Weaving tech costs 720.
 - [A second pack format change lands in parallel (`storagePerGood`)] → The new goods and buildings use only fields both formats accept.
 
 ## Evidence
@@ -83,5 +83,5 @@ How it got here (each row is a full pacing sweep, Normal careful, merchants held
 - First bot, no caps: Renaissance 7.3, up to ten weavers, stores full of cloth, merchants held less often than on `main`.
 - Weavers capped at three, no building above 20 cloth: held again about as often; some marginal towns still went bankrupt.
 - A balance guard before building the chain: dropped, towns never reached their first merchant and went bankrupt.
-- Luxury-chain prices (sheep farm 60, weaver 120) and Weaving at 560 instead of 70, 130 and 700: bankruptcies back to `main`'s in the careful order.
+- Luxury-chain prices (sheep farm 60, weaver 120) and Weaving at Milling's price (560 then, 720 after `main` repriced the techs) instead of 70, 130 and 700: bankruptcies back to `main`'s in the careful order.
 - Start the chain for the next two inhabited citizens houses instead of full ones: first merchant about as early as without cloth.

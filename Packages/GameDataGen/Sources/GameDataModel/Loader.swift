@@ -127,7 +127,7 @@ private struct ItemReader {
         return Good(
             id: id, name: name, unit: unit, basePrice: price,
             market: market ?? MarketLimits(), neededBy: fields.strings("neededBy", required: false) ?? [],
-            restAt: fields.int("restAt", required: false), origin: fields.origin
+            origin: fields.origin
         )
     }
 
@@ -147,6 +147,7 @@ private struct ItemReader {
             upkeep: fields.int("upkeep", required: false) ?? 0,
             buildTicks: fields.int("buildTicks", required: false) ?? 30,
             storage: fields.int("storage", required: false),
+            storagePerGood: fields.int("storagePerGood", required: false),
             plantTicks: fields.int("plantTicks", required: false),
             catchmentRadius: fields.int("catchmentRadius", required: false),
             category: fields.string("category", required: false),

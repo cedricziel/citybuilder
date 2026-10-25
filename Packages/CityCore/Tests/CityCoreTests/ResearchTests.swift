@@ -35,7 +35,7 @@ func scenarioResearchCompletesWhenItsCostIsReached() {
     world.enqueue(.chooseResearch(.milling))
     world.tick()
     #expect(world.research.current == .milling)
-    world.research.knowledge += 559
+    world.research.knowledge += 719
     world.tick()
     #expect(!world.research.isResearched(.milling))
     world.research.knowledge += 1
@@ -61,12 +61,12 @@ private func millingCost(on difficulty: Difficulty) -> Int {
 
 @Test("scenario: easy research is cheaper")
 func scenarioEasyResearchIsCheaper() {
-    #expect(millingCost(on: .easy) == 448)
+    #expect(millingCost(on: .easy) == 576)
 }
 
 @Test("scenario: hard research is dearer")
 func scenarioHardResearchIsDearer() {
-    #expect(millingCost(on: .hard) == 672)
+    #expect(millingCost(on: .hard) == 864)
 }
 
 @Test("the scaled cost rounds down")

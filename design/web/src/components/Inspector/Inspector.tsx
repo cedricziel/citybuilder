@@ -8,8 +8,8 @@ export interface InspectorProps {
    * The model's lines, one per row in caption monospaced: "Kind: house",
    * "State: operational", "Residents: 6/8", "Needs: food ✓ · planks ✗" ...
    * A house below the top tier adds what the next tier wants beyond its own
-   * needs ("Next: Citizens need planks"); a producer resting on full stores
-   * reads "Resting: stores hold plenty of bread" instead of a problem.
+   * needs ("Next: Citizens need planks"); a producer whose output has
+   * nowhere to go reads "Problem: Output stuck: no room for bread".
    * Empty -> renders nothing.
    */
   lines: string[];

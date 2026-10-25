@@ -36,14 +36,14 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
     public var cost: Int {
         switch self {
         case .scholarship: 30
-        case .milling: 560
-        case .mining: 560
-        case .metallurgy: 1120
+        case .milling: 720
+        case .mining: 720
+        case .metallurgy: 1440
         case .seafaring: 60
-        case .weaving: 560
-        case .cultivation: 700
+        case .weaving: 720
+        case .cultivation: 900
         case .feudalOrder: 150
-        case .printingPress: 3500
+        case .printingPress: 4500
         case .steamPower: 400
         case .electricity: 600
         }

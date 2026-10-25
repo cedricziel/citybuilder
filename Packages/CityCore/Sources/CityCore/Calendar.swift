@@ -111,8 +111,7 @@ extension World {
             guard let buffer = goodsBuffers(of: .player).first(where: { $0.state == .operational }),
                   var stockpile = stockpiles[buffer.id]
             else { return }
-            let room = stockpile.capacity - stockpile.totalStored
-            stockpile.deposit(.food, amount: min(Self.harvestFood, max(room, 0)))
+            stockpile.deposit(.food, amount: Self.harvestFood)
             stockpiles[buffer.id] = stockpile
         case .tradeCaravan:
             economy.credit(Self.caravanPayment)
