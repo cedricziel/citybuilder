@@ -72,7 +72,7 @@ extension CityRootView {
                 standingsPresented = true
             } label: {
                 Image(systemName: "trophy.fill")
-                    .imageScale(.large)
+                    .hudIconFont()
                     .padding(8)
                     .background(.thinMaterial, in: Circle())
             }

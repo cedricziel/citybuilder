@@ -194,13 +194,13 @@ func scenarioWindowResizeRelayoutsHUD() {
 @Test("scenario: iPhone short-session defaults")
 func scenarioIPhoneShortSessionDefaults() {
     let decisions = LayoutDecisions.decisions(for: .compact)
-    #expect(decisions.defaultCameraZoom > 1.0, "iPhone zooms further in by default")
+    #expect(StartZoom.zoom(for: .phone) < StartZoom.zoom(for: .pad), "iPhone starts zoomed out to show the town and its surroundings")
     #expect(!decisions.showsAdvancedControls, "advanced controls hidden by default")
 }
 
 @Test("scenario: Inspector callout width per idiom")
 func inspectorCalloutWidthPerIdiom() {
-    #expect(InspectorCalloutLayout.width(for: .phone) == 220)
+    #expect(InspectorCalloutLayout.width(for: .phone) == 264)
     #expect(InspectorCalloutLayout.width(for: .pad) == 220)
     #expect(InspectorCalloutLayout.width(for: .mac) == 220)
     #expect(InspectorCalloutLayout.width(for: .tv) == 520)

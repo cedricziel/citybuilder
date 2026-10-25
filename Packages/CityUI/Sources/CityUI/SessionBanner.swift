@@ -106,6 +106,24 @@ extension GameSession {
         deficitHint = Self.deficitHint(upkeep: figures.upkeep, tax: figures.tax)
     }
 
+    /// The one-time hint that pinch zooms, for a new game's first screen on a touch device. A loaded
+    /// save's player knows the gesture, and the store only learns of the hint once it has shown.
+    /// Spec: `platform-shells` / Pinch-to-zoom hint.
+    public func showPinchZoomHintIfNew(using store: CoachmarkStore) {
+        guard offersPinchHint else { return }
+        offersPinchHint = false
+        guard store.shouldShowPinchZoomHint else { return }
+        showPinchZoomHint()
+        store.markPinchZoomHintShown()
+    }
+
+    func showPinchZoomHint() {
+        show(SessionBanner(
+            title: "Pinch to zoom",
+            description: "Pinch to see more of the island, or to look closer."
+        ))
+    }
+
     /// Resume, the pause control or Esc: the simulation runs again.
     public func dismissDeficitHint() {
         deficitHint = nil
@@ -134,6 +152,48 @@ extension GameSession {
         else { return }
         hintedIdleGoods.insert(idle.good)
         show(Self.idleGoodHint(idle))
+    }
+
+    /// Ticks a problem has to stand before the hint names it: placing a farm and then its road
+    /// clears "no road" before the player could read the banner.
+    static let problemHintDelayTicks: UInt64 = 100
+
+    /// The first time a player's building has stood with a given problem for
+    /// `problemHintDelayTicks`, a banner names the building and the problem, once no other banner
+    /// shows. The status icon over the building has no words; this is where they come from, and
+    /// tapping the building shows the same line in its callout. Spec: `platform-shells` /
+    /// Building-problem hint.
+    func noteBuildingProblems(in snapshot: WorldSnapshot) {
+        let problems = playerBuildingProblems(in: snapshot)
+        problemsSeen = problemsSeen.filter { problems[$0.key] == $0.value.text }
+        for (id, text) in problems where problemsSeen[id] == nil {
+            problemsSeen[id] = (text, world.tickCount)
+        }
+        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
+        guard !showing, deficitHint == nil, !isGameOver else { return }
+        let due = problemsSeen
+            .filter { world.tickCount - $0.value.since >= Self.problemHintDelayTicks && !hintedProblems.contains($0.value.text) }
+            .min { $0.key.raw < $1.key.raw }
+        guard let (id, seen) = due, let building = snapshot.buildings[id] else { return }
+        hintedProblems.insert(seen.text)
+        show(Self.problemHint(name: BuildTool.place(building.kind).displayName, problem: seen.text))
+    }
+
+    /// The problem text of each of the player's buildings that shows a status icon.
+    private func playerBuildingProblems(in snapshot: WorldSnapshot) -> [EntityID: String] {
+        var problems: [EntityID: String] = [:]
+        let isPlayers = { (id: EntityID) in snapshot.buildings[id]?.owner == .player }
+        for id in snapshot.roadDisconnectedBuildings where isPlayers(id) {
+            problems[id] = InspectorViewModel.problemText(.noRoad)
+        }
+        for (id, issue) in snapshot.buildingIssues where isPlayers(id) {
+            problems[id] = InspectorViewModel.problemText(issue)
+        }
+        return problems
+    }
+
+    static func problemHint(name: String, problem: String) -> SessionBanner {
+        SessionBanner(title: "\(name) has a problem", description: "\(problem). Tap it for details.")
     }
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
@@ -182,6 +242,7 @@ struct SessionBannerView: View {
             .padding(.vertical, 8)
             .background(Color(red: 0.93, green: 0.86, blue: 0.70), in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.42, green: 0.29, blue: 0.16), lineWidth: 2))
+            .hudChromeTypeSize()
             .padding(.horizontal, 24)
             .panelTransition(.slide(.top))
             .accessibilityElement(children: onResume == nil ? .combine : .contain)

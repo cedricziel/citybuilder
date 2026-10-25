@@ -275,7 +275,7 @@ func scenarioCaptionWarnsAboutFood() throws {
     session.selectTool(.place(.house))
     #expect(session.armedGuideWarning(idiom: .pad) == "No farm yet: residents need food")
     #expect(ToolStripText.hint(for: .place(.house), idiom: .pad, warning: session.armedGuideWarning(idiom: .pad))
-        == "Tap or drag to place house · No farm yet: residents need food")
+        == "Tap to position, then tap ✓ to place · No farm yet: residents need food")
     let fed = GameSession(world: town([.farm]))
     fed.selectTool(.place(.house))
     #expect(fed.armedGuideWarning(idiom: .pad) == nil)
@@ -305,7 +305,7 @@ func scenarioCaptionUnchangedWithoutTheGuide() {
     session.hideFirstSteps()
     session.selectTool(.place(.house))
     #expect(session.armedGuideWarning(idiom: .pad) == nil)
-    #expect(ToolStripText.hint(for: .place(.house), idiom: .pad, warning: nil) == "Tap or drag to place house")
+    #expect(ToolStripText.hint(for: .place(.house), idiom: .pad, warning: nil) == "Tap to position, then tap ✓ to place")
 }
 
 @Test("test and shot launches start with the guide dismissed unless asked")

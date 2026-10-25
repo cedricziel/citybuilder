@@ -125,3 +125,82 @@ func scenarioDemolishFromTheCallout() {
     #expect(session.world.pendingCommands == [.demolish(at: anchor)])
     #expect(session.selectedTile == nil)
 }
+
+@Test("scenario: callout keeps off a neighbouring building")
+func calloutAvoidsNeighbour() {
+    let bounds = CGRect(x: 0, y: 66, width: 402, height: 640)
+    let anchor = CGPoint(x: 200, y: 300)
+    let half = CGSize(width: 16, height: 8)
+    // A farm just below the road, where the dock layout would put the callout.
+    let farm = CGRect(x: 160, y: 330, width: 80, height: 90)
+    let plain = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock
+    )
+    #expect(plain.side == .below)
+    #expect(CGRect(origin: plain.origin, size: calloutSize).intersects(farm))
+    let placed = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [farm]
+    )
+    #expect(placed.side == .above)
+    #expect(!CGRect(origin: placed.origin, size: calloutSize).intersects(farm))
+}
+
+@Test("scenario: callout keeps its usual side when no side is clear")
+func calloutKeepsUsualSideWithoutAClearSide() {
+    let bounds = CGRect(x: 0, y: 66, width: 402, height: 640)
+    let anchor = CGPoint(x: 200, y: 300)
+    let half = CGSize(width: 16, height: 8)
+    let far = CGRect(x: 0, y: 600, width: 40, height: 40)
+    let usual = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [far]
+    )
+    #expect(usual.side == .below)
+    // Everything covered: the callout falls back to the plain placement.
+    let blanket = CGRect(x: -500, y: -500, width: 2000, height: 2000)
+    let fallback = InspectorCalloutLayout.place(
+        anchor: anchor, buildingHalfSize: half, calloutSize: calloutSize, bounds: bounds, placement: .bottomDock,
+        avoiding: [blanket]
+    )
+    #expect(fallback.side == .below)
+}
+
+/// A grass world with a farm and a run of road tiles beside it, built from real placements.
+private struct RoadBesideFarm {
+    let world: World
+    let road: TileCoordinate
+    let farm: EntityID
+}
+
+private func roadBesideFarm() throws -> RoadBesideFarm {
+    var world = World.fixtureWithTerrain(width: 20, height: 12, fill: .grass, seed: 1)
+    world.research = ResearchState(researched: [.scholarship, .feudalOrder, .cultivation])
+    world.economy.credit(1000)
+    let farmAnchor = TileCoordinate(x: 6, y: 4)
+    world.enqueue(.place(.farm, at: farmAnchor))
+    for x in 2 ... 8 {
+        world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 7)))
+    }
+    for _ in 0 ..< 5 {
+        world.tick()
+    }
+    let farm = try #require(world.occupiedTiles[farmAnchor])
+    return RoadBesideFarm(world: world, road: TileCoordinate(x: 5, y: 7), farm: farm)
+}
+
+@Test("scenario: a road's neighbours are the buildings beside it, not the road network")
+func scenarioRoadNeighboursSkipRoads() throws {
+    let scene = try roadBesideFarm()
+    #expect(try scene.world.buildings[#require(scene.world.occupiedTiles[scene.road])]?.kind == .road)
+    let neighbours = InspectorCalloutLayout.neighbours(of: scene.road, in: scene.world)
+    #expect(neighbours.map(\.id) == [scene.farm])
+    #expect(!neighbours.contains { $0.kind == .road })
+}
+
+@Test("scenario: other selections have no neighbours to avoid")
+func scenarioNonRoadSelectionHasNoNeighbours() throws {
+    let scene = try roadBesideFarm()
+    let anchor = try #require(scene.world.buildings[scene.farm]?.anchor)
+    #expect(InspectorCalloutLayout.neighbours(of: anchor, in: scene.world).isEmpty)
+}

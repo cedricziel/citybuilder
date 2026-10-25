@@ -10,13 +10,13 @@ const OnMap = ({ children, h = 90 }: { children: React.ReactNode; h?: number }) 
 
 export const House = () => (
   <OnMap>
-    <ToolStrip tool="House" art="house" cost={50} hint="Tap or drag to place house · No farm yet: residents need food" materials={[{ good: "planks", have: 18, need: 4 }]} />
+    <ToolStrip tool="House" art="house" cost={50} hint="Tap to position, then tap ✓ to place · No farm yet: residents need food" materials={[{ good: "planks", have: 18, need: 4 }]} />
   </OnMap>
 );
 
 export const Lumberjack = () => (
   <OnMap>
-    <ToolStrip tool="Lumberjack" art="lumberjack-hut" cost={80} hint="Tap or drag to place lumberjack · 18 trees in reach" />
+    <ToolStrip tool="Lumberjack" art="lumberjack-hut" cost={80} hint="Tap to position, then tap ✓ to place · 18 trees in reach" />
   </OnMap>
 );
 
