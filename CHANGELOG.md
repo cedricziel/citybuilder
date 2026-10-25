@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.2.4](https://github.com/cedricziel/citybuilder/compare/v0.2.3...v0.2.4) (2026-10-25)
+
+
+### Features
+
+* **citycore:** count producers stopped with their output stuck ([7f9c5f8](https://github.com/cedricziel/citybuilder/commit/7f9c5f8c1e16e96182e4738b95a988840689fa16))
+* **citycore:** hold each good separately in stores ([dbbfc38](https://github.com/cedricziel/citybuilder/commit/dbbfc38261ad5e637a29a6866f3803118e70b71d))
+* **citycore:** hold each good separately in stores, with output backpressure ([edb4732](https://github.com/cedricziel/citybuilder/commit/edb4732daf6e7fc3f719989a235dbaeef86f9b1c))
+* **citycore:** record a bounded season history for the statistics screen ([da50a98](https://github.com/cedricziel/citybuilder/commit/da50a982a5b03d068c4f3b2bb59dbdae448a9965))
+* **citycore:** record the store capacity and the age in each season ([53839d7](https://github.com/cedricziel/citybuilder/commit/53839d7720fac11da58e5e1a108e9e351e74b1f7))
+* **gamedata:** retune medieval research to x18 for per-good storage ([22aa20e](https://github.com/cedricziel/citybuilder/commit/22aa20e55692b8dfb084aaba60732fe406c10c97))
+* **persistence:** keep stored goods when saves move to per-good stores ([d60652a](https://github.com/cedricziel/citybuilder/commit/d60652a6b857d01e30f548a979d9e4a258002f53))
+* statistics screen with a season history of goods, money and people ([d4d9f29](https://github.com/cedricziel/citybuilder/commit/d4d9f299b22d1b09f289ec3690025b8f0fb6e103))
+* **ui:** add the Statistics sheet and its HUD button ([3604312](https://github.com/cedricziel/citybuilder/commit/3604312d401ea3545d7be3d63ee04c0525f15397))
+* **ui:** draw the store cap, move focus on Apple TV and push details on one stack ([851cd73](https://github.com/cedricziel/citybuilder/commit/851cd734c9e9a0150353fb8d861fe97097cc7cf8))
+* **ui:** turn the season history into statistics series ([c152d59](https://github.com/cedricziel/citybuilder/commit/c152d59290ecaaa50560cedee9a353e60494e13c))
+* **web:** add the Statistics sheet and its HUD button to design/web ([0323cfa](https://github.com/cedricziel/citybuilder/commit/0323cfaa24ac520518963c21303fe2f7032c4a9d))
+* **web:** draw the store cap in StatisticsPanel ([bc9c4ef](https://github.com/cedricziel/citybuilder/commit/bc9c4ef742e80ddfe950e93729ff6ed16ff6bf7d))
+
+
+### Bug Fixes
+
+* **citycore:** base a rival's surplus limit on the store cap, not its stock ([d88eff9](https://github.com/cedricziel/citybuilder/commit/d88eff9a7e1eec057ce8335f7183522e3d7c2b4a))
+* **citycore:** never destroy goods a full store or producer cannot take ([365ef31](https://github.com/cedricziel/citybuilder/commit/365ef31a9ecefbc8c22e0cc8cc63ab449adc40d0))
+* **citycore:** report output stuck before missing inputs ([a16711b](https://github.com/cedricziel/citybuilder/commit/a16711ba6baf0ca95d2f202f47cb3b9ad143fe56))
+* **citycore:** scale the rival warehouse and surplus rules to per-good stores ([43f4a55](https://github.com/cedricziel/citybuilder/commit/43f4a556a7f83b12dc2bbcb0a714bb219199ffce))
+* **citycore:** send a carrier on from a full store, or home, so it frees its slot ([622d8f0](https://github.com/cedricziel/citybuilder/commit/622d8f0e956f5850e5dbb67eff7785eb6da68512))
+* **ui:** label the statistics axis by year and fit the sheet on the Mac ([fe3e327](https://github.com/cedricziel/citybuilder/commit/fe3e327b0bcefd0ce4f8fd11e81abf534c0fa7d5))
+* **ui:** pad the statistics charts and let the balance line leave zero ([7e2badd](https://github.com/cedricziel/citybuilder/commit/7e2baddef573f904a7abcac34c99d0cf30f11c8e))
+* **ui:** read the goods list once per render and stack the money axis by season ([ecb5593](https://github.com/cedricziel/citybuilder/commit/ecb5593adcf6966ec3c3204e2288e3d611b63f22))
+* **ui:** split the statistics chart bodies into small typed pieces ([a19ab01](https://github.com/cedricziel/citybuilder/commit/a19ab01921f82cf3426f44ac4fa2f3f13236788e))
+
 ## [0.2.3](https://github.com/cedricziel/citybuilder/compare/v0.2.2...v0.2.3) (2026-10-24)
 
 
