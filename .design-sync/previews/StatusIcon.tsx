@@ -6,7 +6,6 @@ const issues: StatusIssue[] = [
   { good: "planks", state: "stuck" },
   { good: "cloth", state: "short" },
   { good: "wool", state: "stuck" },
-  "storage-full",
   "no-road",
   "no-route",
   "no-trees",

@@ -11,9 +11,9 @@ Buildings show a status icon while something is wrong.
 ## Visual identity
 
 A 24-point disc inside the goods icons' dark warm outline (`#2B1E15`), on a 28-point cell.
-Pictograms are white on a red disc (blocked) or an amber disc (waiting), with a slash when something
-is missing. A good's issue shows the goods icon on a cream disc with a pip in the lower right: a red
-"!" when the good is short, an amber pause when output is stuck or the building rests on stock.
+Pictograms are white on a red disc, with a slash when something is missing. A good's issue shows
+the goods icon on a cream disc with a pip in the lower right: a red "!" when the good is short, an
+amber pause when output is stuck or the building rests on stock. Amber appears only on that pip.
 Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Disc").
 
 ## Sprites
@@ -50,7 +50,6 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-ore-stuck`
 - `status-planks-short`
 - `status-planks-stuck`
-- `status-storage-full`
 - `status-tea-leaves-short`
 - `status-tea-leaves-stuck`
 - `status-tea-short`
