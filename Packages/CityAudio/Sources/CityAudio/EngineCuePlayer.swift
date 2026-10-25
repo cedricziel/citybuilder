@@ -146,25 +146,21 @@ public final class EngineCuePlayer {
         guard !oneShots.isBackedUp else { return }
         let now = ProcessInfo.processInfo.systemUptime
         guard limiter.admits(cue.file, at: now),
-              let buffer = loadBuffer(at: cue.file, from: file),
+              let buffer = loadBuffer(at: cue.file, url: file.url),
               let (player, wasFree) = nextOneShotPlayer(on: cue.bus, buffer: buffer, now: now)
         else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
-            mixer.engine?.connect(player, to: mixer, format: buffer.format)
+            mixer.engine?.connect(player, to: mixer, format: OneShotBuffer.format)
         }
         oneShots.play(buffer, on: player, volume: cue.volume, wasFree: wasFree, run: engine.runCount)
     }
 
-    /// `file` read whole into a buffer, cached by `path`.
-    private func loadBuffer(at path: String, from file: AVAudioFile) -> AVAudioPCMBuffer? {
+    /// `file` read whole in the pool's format, cached by `path`.
+    private func loadBuffer(at path: String, url: URL) -> AVAudioPCMBuffer? {
         if let cached = bufferCache[path] { return cached }
-        // A file of its own, so reading doesn't move the shared file's position.
-        guard let reader = try? AVAudioFile(forReading: file.url),
-              let buffer = AVAudioPCMBuffer(pcmFormat: reader.processingFormat, frameCapacity: AVAudioFrameCount(reader.length)),
-              (try? reader.read(into: buffer)) != nil
-        else { return nil }
+        guard let buffer = OneShotBuffer.load(url) else { return nil }
         bufferCache[path] = buffer
         return buffer
     }
