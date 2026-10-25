@@ -23,6 +23,7 @@ export * from "./components/CarrierSprite/CarrierSprite";
 export * from "./components/AnimalSprite/AnimalSprite";
 export * from "./components/ShipSprite/ShipSprite";
 export * from "./components/StatusPill/StatusPill";
+export * from "./components/DateChip/DateChip";
 export * from "./components/StocksTray/StocksTray";
 export * from "./components/BuildRail/BuildRail";
 export * from "./components/ToolStrip/ToolStrip";

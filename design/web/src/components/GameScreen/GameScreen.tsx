@@ -3,6 +3,7 @@ import { WorldBackdrop, defaultIsland, defaultTown, type AreaOfEffect, type Plac
 import type { HUDFrameProps } from "../HUDFrame/HUDFrame";
 import { HUDMenuButtons, type HUDMenuButtonsProps } from "../HUDButton/HUDButton";
 import { StatusPill, type GameSpeed } from "../StatusPill/StatusPill";
+import { DateChip, type Season } from "../DateChip/DateChip";
 import { StocksTray } from "../StocksTray/StocksTray";
 import { BuildRail, type BuildRailItem } from "../BuildRail/BuildRail";
 import { BuildDrawer, type BuildDrawerProps } from "../BuildDrawer/BuildDrawer";
@@ -185,6 +186,11 @@ export function GameScreen({
         </div>
         <div className="cb-game__middle">
           <div className="cb-game__center">
+            {phone && hud.date ? (
+              <span className="cb-game__date">
+                <DateChip date={hud.date} season={hud.date.split(" ")[0].toLowerCase() as Season} />
+              </span>
+            ) : null}
             {stocksOpen && hud.island ? <StocksTray island={hud.island} stocks={hud.stocks ?? []} columns={phone ? 3 : 6} /> : null}
             {banner ? <SessionBanner title={banner.title} description={banner.description} onResume={banner.onResume} /> : null}
           </div>

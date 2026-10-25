@@ -4,7 +4,7 @@ import "./StatusPill.css";
 export type GameSpeed = 1 | 2 | 3;
 
 export interface StatusPillProps {
-  /** Season and year, "Spring 1203". Hidden on a phone and when empty. */
+  /** Season and year, "Spring 1203". Hidden on a phone (its `DateChip` shows it) and when empty. */
   date?: string;
   /** Picks the symbol next to the date. Default `day`. */
   timeOfDay?: "dawn" | "day" | "dusk" | "night";
