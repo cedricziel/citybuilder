@@ -199,6 +199,20 @@ func scenarioGoodsOnTheRoadAreNotStored() {
     #expect(fixture.stock(.planks, in: fixture.warehouse) == 5)
 }
 
+@Test func aReturningShipmentFindsAnotherStoreWhenItsOwnIsFull() {
+    var fixture = OrdersFixture()
+    let id = accepted(&fixture)
+    fixture.setStock([.planks: 80], in: fixture.warehouse)
+    fixture.world.orders.shipments = [OrderShipment(
+        id: EntityID(raw: 800), order: 999, good: .planks, amount: 5,
+        path: [TileCoordinate(x: 13, y: 12)], from: fixture.warehouse, to: fixture.center
+    )]
+    fixture.world.tick()
+    #expect(fixture.stock(.planks, in: fixture.warehouse) == 80)
+    #expect(fixture.stock(.planks, in: fixture.center) == 5)
+    #expect(fixture.world.order(id)?.delivered == 0)
+}
+
 // MARK: - Rival delivery
 
 private func rivalOrder(stock: [Good: Int] = [.planks: 6], quantity: Int = 30) -> (TradeFixture, OrderID) {

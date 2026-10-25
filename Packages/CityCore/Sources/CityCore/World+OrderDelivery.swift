@@ -140,10 +140,19 @@ extension World {
             if let index = orders.orders.firstIndex(where: { $0.id == shipment.order && $0.state == .accepted }) {
                 orders.orders[index].delivered += shipment.amount
             } else {
-                stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount)
+                returnShipment(shipment)
             }
         }
         orders.shipments = moving
+    }
+
+    /// Puts a shipment whose order closed back into the store it left, or
+    /// into any other operational player store with room for it.
+    private mutating func returnShipment(_ shipment: OrderShipment) {
+        let kept = shipment.amount - (stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount) ?? 0)
+        guard kept > 0 else { return }
+        let stores = goodsBuffers(of: .player).filter { $0.state == .operational }
+        _ = fill(shipment.good, upTo: kept, into: stores)
     }
 
     // MARK: - Rival orders
