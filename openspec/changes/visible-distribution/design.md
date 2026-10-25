@@ -184,6 +184,12 @@ Rival towns use the same hubs, porters, house stock and radius as the player; th
       - Hops make chains so efficient that a good with no sink yet gluts storage. Probe of hard/single-island/careful seed 0: grain and flour hop to the mills and bakeries, bread piles up to 194 before any merchant eats it, and a full warehouse leaves no room for planks or food.
       - A prototype of designer2's supply output cap (no inputs while the owner's stores hold 40 of a producer's output) fixes the probe. With hops it reaches 20 merchants by year 8, against none without the cap.
       - So M1 should merge only together with, or after, that cap. The cap belongs in `needsSupply`, which hops already go through.
+  - *M1 result after per-good storage* (#269 replaced the cap: stores hold each good separately and producers ship only where there is room). PlayerBot sweeps, release build, main b0b42587 against this branch with hops on:
+    - Mid-game pacing: 170 of 180 arms reach a merchant on both, with no bankruptcies on either. Careful Renaissance median, Easy / Normal / Hard: 5.3 / 6.6 / 7.55 on main against 5.3 / 6.7 / 7.55.
+    - First-hour solvency with the market and the guided Hard start: 0/20 bankrupt on both. Guided residents min 104, median 110 on both.
+    - The no-market control passes on both: 0 bankrupt either way, 990 residents without the market and 992 with it.
+    - Rival viability passes: year 5 min 18 on both (median 55.5 → 56); year 15 median 56.5 → 58.
+    - Hops no longer cost pacing, and they change little else: with per-good storage, the bottleneck they hit before is gone.
 - **Performance:** D2's search is per producer with output. Porters add at most 8 carriers per hub. The carrier count stays within today's peak, since direct hops shorten trips.
 - **Visual clutter:** more figures on roads. Carts reduce the count on long hauls, and walker density limits still apply.
 
