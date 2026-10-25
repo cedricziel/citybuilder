@@ -80,3 +80,32 @@ Merchant houses SHALL consume 1 cloth per 8 residents (rounded up) each consumpt
 
 - **WHEN** the consumption interval elapses for a merchant house with 8 residents next to a buffer holding food, planks, bread, tools and 5 cloth
 - **THEN** the buffer holds 4 cloth
+
+### Requirement: Cloth binds merchants only where it can be made
+
+A player's house SHALL need cloth to advance to merchants, but SHALL be held to cloth when staying or growing as merchants only once Weaving is researched. A rival's house MUST never be held to cloth, to advance or to stay, because no rival can make or buy it. Every other need keeps binding as before. A house still consumes cloth when it can draw it.
+
+#### Scenario: Cloth is exempt from staying a merchant before Weaving
+
+- **WHEN** the binding needs of merchants are read for the player without Weaving researched, and again with it researched
+- **THEN** cloth binds advancing in both, and binds staying only with Weaving researched
+
+#### Scenario: Merchants keep their tier without cloth before Weaving
+
+- **WHEN** a merchant house with 8 residents has every need but cloth on its road network for 120 ticks and Weaving is not researched
+- **THEN** it stays merchants with 8 residents
+
+#### Scenario: Citizens still need cloth to become merchants before Weaving
+
+- **WHEN** a full citizen house has food, planks, bread, tools and the luxury in reach but no cloth for 120 ticks and Weaving is not researched
+- **THEN** it stays citizens
+
+#### Scenario: Rival houses are never held to cloth
+
+- **WHEN** the binding needs of merchants are read for a rival
+- **THEN** they include bread and tools and never cloth, whether advancing or staying
+
+#### Scenario: A rival's merchant house keeps its tier without cloth
+
+- **WHEN** a rival's merchant house has every need but cloth in reach for 300 ticks
+- **THEN** it stays merchants

@@ -15,7 +15,7 @@ extension World {
             let modifiers = houseModifiers(of: building, sources: sources)
             consumeIfDue(&pop, building: building)
             updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
-            updateGrowth(&pop, modifiers: modifiers)
+            updateGrowth(&pop, owner: building.owner, modifiers: modifiers)
             updateTier(&pop, building: building, modifiers: modifiers, reach: reach)
             populations[building.id] = pop
         }
@@ -49,9 +49,9 @@ extension World {
 
     /// Inspired houses grow twice as fast; a house above its capacity
     /// shrinks even with its needs met (spec `age-signatures`).
-    private func updateGrowth(_ pop: inout HousePopulation, modifiers: HouseModifiers) {
+    private func updateGrowth(_ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers) {
         pop.ticksAtCurrentSatisfaction &+= 1
-        let met = pop.allNeedsSatisfied(in: culture)
+        let met = bindingNeeds(of: pop.tier, for: owner, advancing: false).allSatisfy(pop.isSatisfied)
         let streak = pop.ticksAtCurrentSatisfaction
         let capacity = modifiers.capacity(of: pop.tier)
         let growthInterval = HousePopulation.growthIntervalTicks / modifiers.paceDivisor
@@ -75,10 +75,11 @@ extension World {
         let footprint = BuildingCatalog.spec(for: building.kind).footprint
         let canAdvance = pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
-                && next.needs(in: culture)
+                && bindingNeeds(of: next, for: building.owner, advancing: true)
                 .allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint, reach: reach) }
         } ?? false
-        let mustDecline = pop.tier.previous != nil && !pop.allNeedsSatisfied(in: culture)
+        let mustDecline = pop.tier.previous != nil
+            && !bindingNeeds(of: pop.tier, for: building.owner, advancing: false).allSatisfy(pop.isSatisfied)
         guard canAdvance || mustDecline else {
             pop.ticksAtTierCondition = 0
             return
@@ -92,5 +93,17 @@ extension World {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
         }
+    }
+
+    /// The needs of `tier` that hold a house of `owner` to it (spec
+    /// `population-and-needs` / Cloth binds merchants only where it can be
+    /// made). A player's house needs cloth to advance to merchants always,
+    /// but to stay or grow there only once Weaving is researched, so saves
+    /// from before the wool chain and the Guild Town scenario keep their
+    /// merchants. A rival cannot make or buy cloth, so it never binds one.
+    func bindingNeeds(of tier: HouseTier, for owner: Owner, advancing: Bool) -> [Good] {
+        let needs = tier.needs(in: culture)
+        let clothBinds = owner == .player && (advancing || research.isResearched(.weaving))
+        return clothBinds ? needs : needs.filter { $0 != .cloth }
     }
 }

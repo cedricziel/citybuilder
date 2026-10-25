@@ -13,7 +13,7 @@ A wool → cloth chain adds a third shared two-step chain and a fifth shared nee
 - One tech, `weaving` (medieval), unlocks both buildings.
 - Merchants eat cloth at the rate tools and the luxuries use: 1 per 8 residents (rounded up) each consumption interval. No code is needed for the rate.
 - The workshop sound loops reuse `fields` for the sheep farm and `mill` for the weaver. The PlayerBot (the scripted player the balance sweeps use) builds the chain on demand: it researches Weaving and builds sheep farms and a weaver once houses are close to becoming merchants, instead of a fixed number per set of houses.
-- **BREAKING (balance):** a house that was a merchant house needs cloth to stay one. Saves with merchant houses decline to citizens until a weaver supplies them. The determinism baseline moves because the good list, the merchants' needs and the tech list change.
+- Cloth is required to advance to merchants, but a merchant house is held to it only once Weaving is researched, and a rival's house never is (rivals cannot make or buy cloth). Saves from before the chain and the Guild Town scenario therefore keep their merchants. The determinism baseline moves because the good list, the merchants' needs and the tech list change.
 
 ## Capabilities
 

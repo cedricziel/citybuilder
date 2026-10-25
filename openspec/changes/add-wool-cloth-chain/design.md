@@ -45,7 +45,14 @@ The first version counted every full citizens house and had no caps. Counting th
 
 Alternative: add the wool chain to the fixed per-set list. Rejected: it hides the new need behind the same trigger as everything else, and it overbuilds in towns that never reach merchants.
 
-### D5. Determinism
+### D5. Cloth binds staying only after Weaving, and never a rival
+
+Cloth is required to advance to merchants, so merchants always come with a chain. Staying a merchant needs cloth only once the player has researched Weaving; before that, cloth is left out of the decline and growth checks. This protects saves from before the chain, the Guild Town scenario and Hard-mode tax with no migration. Rivals can neither make nor buy cloth, so their houses are never held to it, advancing or staying; otherwise they would sit at citizens for good. The rule is one helper, `World.bindingNeeds(of:for:advancing:)`, used by growth and by the tier check.
+
+Alternative: let rivals buy cloth at their market. Rejected: it adds a good to the rival market and its sale rules for no gameplay gain, since rivals never grow past the house cap anyway.
+Alternative: a save migration that researches Weaving for saves with merchants. Rejected: it hands out a tech and an unlock the player never chose.
+
+### D6. Determinism
 
 The change adds goods, buildings and a tech to the generated catalogs. `Good.allCases` order feeds caravans, supply, material cost and the rival market, so the new goods go after `tools` and before the culture goods. That shifts the order of the culture goods, which is intended and regenerates the `DeterminismFixture` baseline once, on macOS and Linux. Nothing else in the tick loop changes: no new random draws, no floating point.
 
@@ -53,7 +60,7 @@ The change adds goods, buildings and a tech to the generated catalogs. `Good.all
 
 - [Merchants take longer, so towns pay less tax for longer] → The sweeps measure merchants at year 10, the Renaissance year and bankruptcies against `main`; the weaver's cost is tuned in D1 if they regress.
 - [The sheep farm's flock art draws ambient sheep, which the graze planner also places at farms] → The grazing planner reads the farm kinds from the catalog; the sheep farm keeps its drawn fold and gets no extra ambient sheep.
-- [Existing saves with merchant houses decline until a weaver exists] → Declared BREAKING in the proposal; the tier decline takes 120 ticks per tier, and the Weaving tech costs 720.
+- [Existing saves with merchant houses would decline until a weaver exists] → Cloth is exempt from the decline check until Weaving is researched (D5), so old saves and the Guild Town scenario keep their merchants.
 - [A second pack format change lands in parallel (`storagePerGood`)] → The new goods and buildings use only fields both formats accept.
 
 ## Evidence
