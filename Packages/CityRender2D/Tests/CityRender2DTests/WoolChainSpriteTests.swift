@@ -46,5 +46,5 @@ func woolAndClothHaveTheirIcons() throws {
     }
     #expect(StatusIcons.short(.wool) == "status-wool-short")
     #expect(StatusIcons.textureName(for: .missingInputs([.wool])) == "status-wool-short")
-    #expect(StatusIcons.textureName(for: .resting(.cloth)) == "status-cloth-stuck")
+    #expect(StatusIcons.textureName(for: .outputStuck(.cloth)) == "status-cloth-stuck")
 }
