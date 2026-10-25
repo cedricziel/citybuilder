@@ -7,7 +7,8 @@ A frame can dispatch many copies of one one-shot. At triple speed one timer firi
 ## What Changes
 
 - **Identical one-shots are rate-limited.** A one-shot doesn't start when the same file started under 50 ms ago, or has already started 6 times in the last second. The cue is dropped, not deferred. A burst in one frame plays once.
-- **One-shot starts never back up.** A one-shot is dropped while 4 one-shots already wait on the node queue, so the queue never falls more than a few I/O cycles behind.
+- **A busy node is not restarted.** One-shots are cached as whole buffers. A pool node that already runs takes the next one-shot with `scheduleBuffer(_:at:options:)`, interrupting its current cue when that hasn't ended, so it never waits for an I/O cycle. Only a node's first start in an engine run calls `play()`.
+- **One-shot starts never back up.** As a backstop, a one-shot is dropped while 4 one-shots already wait on the node queue, so the queue never falls more than a few I/O cycles behind.
 - **A restart drops cues queued before it.** A one-shot queued before the engine stopped or restarted is dropped instead of played in the new run.
 - **Voice start and stop are idempotent.** Starting a voice twice, or stopping it twice, does nothing the second time, and a stopped voice never starts again.
 
@@ -21,5 +22,6 @@ A frame can dispatch many copies of one one-shot. At triple speed one timer firi
 
 ## Impact
 
-- **CityAudio:** a pure `OneShotLimiter`; `OneShotDriver` counts the one-shots waiting on the queue and drops stale ones; `AudioNodeQueue` knows the engine's current run; `PlayerVoice` tracks its phase.
+- **CityAudio:** a pure `OneShotLimiter`; `EngineCuePlayer` caches one-shots as PCM buffers; `OneShotDriver` interrupts a running node instead of restarting it, counts the one-shots waiting on the queue and drops stale ones; `AudioNodeQueue` knows the engine's current run; `PlayerVoice` tracks its phase instead of a generation counter.
+- **Memory:** the one-shots in the shipped bindings total about 37 s of mostly mono audio, under 7 MB as float buffers if every one plays.
 - **Bindings, the coordinator and ducking are unchanged.** The coordinator still dispatches one cue per event; the cue player decides whether it sounds.

@@ -26,7 +26,12 @@ The cue player SHALL NOT start a one-shot whose file started less than 50 ms ear
 
 ### Requirement: One-shot starts never back up
 
-The cue player SHALL drop a one-shot while 4 one-shots already wait on the node queue. A one-shot queued before the engine stopped or started again SHALL be dropped when its turn comes, not played in the new run.
+A pool node already running in the engine's current run SHALL take its next one-shot without being stopped and started again: after its last cue when that has ended, cutting it off when not. Only a node not running in the current run is started. The cue player SHALL drop a one-shot while 4 one-shots already wait on the node queue. A one-shot queued before the engine stopped or started again SHALL be dropped when its turn comes, not played in the new run.
+
+#### Scenario: A busy node is not restarted
+
+- **WHEN** a one-shot goes to a node that runs in the current run and still plays an earlier cue
+- **THEN** the node takes the new cue, cutting off the earlier one, without a stop or a start
 
 #### Scenario: A burst restarts each node at most once
 
