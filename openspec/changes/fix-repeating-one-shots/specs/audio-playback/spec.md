@@ -2,7 +2,7 @@
 
 ### Requirement: Identical one-shots are rate-limited
 
-The cue player SHALL NOT start a one-shot whose file started less than 50 ms earlier, or whose file has already started 6 times in the last second. A one-shot held back this way SHALL be dropped, not deferred. Each file is limited on its own. Loops, music and ambient beds MUST NOT be limited. The coordinator still dispatches one cue per event; the limit applies where the cue player starts it.
+A one-shot's cue is its file together with the binding key it was dispatched for: the event's case name, or `ui.<name>` for an interface sound. The cue player SHALL NOT start a one-shot whose cue started less than 50 ms earlier, or has already started 6 times in the last second. A one-shot held back this way SHALL be dropped, not deferred. Each cue is limited on its own, so two events bound to the same file don't hold each other back. Loops, music and ambient beds MUST NOT be limited. The coordinator still dispatches one cue per event; the limit applies where the cue player starts it.
 
 #### Scenario: A burst in one frame plays once
 
@@ -19,14 +19,14 @@ The cue player SHALL NOT start a one-shot whose file started less than 50 ms ear
 - **WHEN** the same one-shot is dispatched every 60 ms for one second
 - **THEN** 6 of them start
 
-#### Scenario: Different files don't hold each other back
+#### Scenario: Different cues don't hold each other back
 
-- **WHEN** two different one-shot files are dispatched in the same frame
+- **WHEN** two different one-shot files are dispatched in the same frame, or one file for two different events (`ageAdvanced` and `rivalAgeAdvanced` share a peal)
 - **THEN** both start
 
 ### Requirement: One-shot starts never back up
 
-A pool node already running in the engine's current run SHALL take its next one-shot without being stopped and started again: after its last cue when that has ended, cutting it off when not. Only a node not running in the current run is started. The cue player SHALL drop a one-shot while 4 one-shots already wait on the node queue. A one-shot queued before the engine stopped or started again SHALL be dropped when its turn comes, not played in the new run.
+A pool node already running in the engine's current run SHALL take its next one-shot without being stopped and started again: after its last cue when that has ended, cutting it off when not. Only a node not running in the current run is started. The cue player SHALL drop a one-shot while the same cue still waits on the node queue; different cues are never dropped for waiting. A one-shot queued before the engine stopped or started again SHALL be dropped when its turn comes, not played in the new run.
 
 #### Scenario: A busy node is not restarted
 
@@ -35,8 +35,13 @@ A pool node already running in the engine's current run SHALL take its next one-
 
 #### Scenario: A burst restarts each node at most once
 
-- **WHEN** 100 different one-shot files are dispatched in one frame to a bus of 4 nodes
-- **THEN** the node queue starts a node at most 4 times
+- **WHEN** 100 different one-shot files are dispatched in one frame to a bus of 4 nodes while the node queue is held
+- **THEN** every one of them is scheduled, and the node queue starts a node at most 4 times
+
+#### Scenario: A waiting cue holds back the same cue
+
+- **WHEN** the same cue is dispatched three times while the node queue is held
+- **THEN** it plays once
 
 #### Scenario: A restart drops cues queued before it
 
@@ -56,3 +61,17 @@ A voice (a building loop or a music track) SHALL schedule its file and start its
 
 - **WHEN** a voice is stopped twice
 - **THEN** its node is stopped and detached once
+
+### Requirement: One-shots play in one format
+
+Every one-shot asset SHALL be mono or stereo, at any sample rate. The cue player SHALL convert each one-shot, when it first loads it, to the pool's format: 44.1 kHz stereo, a mono asset playing from both channels. Every pool node is connected in that format, so cues of different source formats can share a node. A test SHALL load every one-shot in the shipped bindings and fail on one that doesn't convert.
+
+#### Scenario: Different formats share a node
+
+- **WHEN** a mono 44.1 kHz one-shot plays on a pool node and a stereo 48 kHz one-shot plays next on the same node
+- **THEN** both are scheduled on the running node, and nothing traps
+
+#### Scenario: A shipped one-shot in an unexpected format is caught
+
+- **WHEN** a one-shot in the shipped bindings has more than two channels or doesn't read
+- **THEN** the shipped-asset test fails, naming the file

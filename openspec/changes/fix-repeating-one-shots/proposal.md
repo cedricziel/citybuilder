@@ -6,9 +6,9 @@ A frame can dispatch many copies of one one-shot. At triple speed one timer firi
 
 ## What Changes
 
-- **Identical one-shots are rate-limited.** A one-shot doesn't start when the same file started under 50 ms ago, or has already started 6 times in the last second. The cue is dropped, not deferred. A burst in one frame plays once.
-- **A busy node is not restarted.** One-shots are cached as whole buffers. A pool node that already runs takes the next one-shot with `scheduleBuffer(_:at:options:)`, interrupting its current cue when that hasn't ended, so it never waits for an I/O cycle. Only a node's first start in an engine run calls `play()`.
-- **One-shot starts never back up.** As a backstop, a one-shot is dropped while 4 one-shots already wait on the node queue, so the queue never falls more than a few I/O cycles behind.
+- **Identical one-shots are rate-limited.** A cue is a file for one binding key (event or interface sound). A one-shot doesn't start when the same cue started under 50 ms ago, or has already started 6 times in the last second. The cue is dropped, not deferred. A burst in one frame plays once.
+- **A busy node is not restarted.** One-shots are cached as whole buffers, converted on load to one pool format (44.1 kHz stereo); the shipped one-shots mix mono 44.1 kHz with stereo 48 kHz, and a node connected for one format traps on a buffer of another. A pool node that already runs takes the next one-shot with `scheduleBuffer(_:at:options:)`, interrupting its current cue when that hasn't ended, so it never waits for an I/O cycle. Only a node's first start in an engine run calls `play()`.
+- **Repeats never queue up.** A one-shot is dropped while the same cue still waits on the node queue, which loop and music starts can hold up for an I/O cycle each. Different cues are never dropped for waiting.
 - **A restart drops cues queued before it.** A one-shot queued before the engine stopped or restarted is dropped instead of played in the new run.
 - **Voice start and stop are idempotent.** Starting a voice twice, or stopping it twice, does nothing the second time, and a stopped voice never starts again.
 
@@ -18,10 +18,10 @@ A frame can dispatch many copies of one one-shot. At triple speed one timer firi
 - (none)
 
 ### Modified Capabilities
-- `audio-playback`: new requirements "Identical one-shots are rate-limited", "One-shot starts never back up" and "Voice start and stop are idempotent".
+- `audio-playback`: new requirements "Identical one-shots are rate-limited", "One-shot starts never back up", "One-shots play in one format" and "Voice start and stop are idempotent".
 
 ## Impact
 
-- **CityAudio:** a pure `OneShotLimiter`; `EngineCuePlayer` caches one-shots as PCM buffers; `OneShotDriver` interrupts a running node instead of restarting it, counts the one-shots waiting on the queue and drops stale ones; `AudioNodeQueue` knows the engine's current run; `PlayerVoice` tracks its phase instead of a generation counter.
-- **Memory:** the one-shots in the shipped bindings total about 37 s of mostly mono audio, under 7 MB as float buffers if every one plays.
+- **CityAudio:** a pure `OneShotLimiter`; `EngineCuePlayer` caches one-shots as PCM buffers; `OneShotBuffer` converts one-shots to the pool format; `DispatchedCue` carries its binding key; `OneShotDriver` interrupts a running node instead of restarting it, tracks which cues wait on the queue and drops stale ones; `AudioNodeQueue` knows the engine's current run; `PlayerVoice` tracks its phase instead of a generation counter.
+- **Memory:** the one-shots in the shipped bindings total about 37 s of mostly mono audio, under 13 MB as stereo float buffers if every one plays.
 - **Bindings, the coordinator and ducking are unchanged.** The coordinator still dispatches one cue per event; the cue player decides whether it sounds.
