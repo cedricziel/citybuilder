@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.5](https://github.com/cedricziel/citybuilder/compare/v0.2.4...v0.2.5) (2026-10-25)
+
+
+### Features
+
+* **citycore:** deliver producer output straight to short consumers ([574e76c](https://github.com/cedricziel/citybuilder/commit/574e76c440fa0dd12834d4105c5ea1a220d66139))
+
+
+### Bug Fixes
+
+* **citycore:** redirect goods with both ends gone, and retrievals at a full store ([6a653e5](https://github.com/cedricziel/citybuilder/commit/6a653e596170597ee9b2d48ed6d07e3ae8afa422))
+
 ## [0.2.4](https://github.com/cedricziel/citybuilder/compare/v0.2.3...v0.2.4) (2026-10-25)
 
 
