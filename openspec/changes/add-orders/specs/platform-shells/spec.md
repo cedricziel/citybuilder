@@ -2,7 +2,7 @@
 
 ### Requirement: Order board
 
-A game with an active calendar SHALL offer an order board from the HUD, on iPhone, iPad, Mac and Apple TV. The board SHALL list the open orders, accepted first and then offers by deadline, as cards. Each card SHALL show the issuer, the title, the good and quantity, the deadline as a date, the reward and the favour at stake. An offer SHALL show Accept and Decline. An accepted crown order SHALL show how much of the good the stores hold against the quantity and a Send button, enabled only when the plan exists; an accepted rival order SHALL show the units delivered. An accepted order that has nothing sent SHALL show Abandon. Accept SHALL be disabled with 2 orders accepted. The board SHALL show the favour of the crown and of each rival with its step and its perk, and every control SHALL be disabled after the game is over. The look comes from the approved canvas.
+A game with an active calendar SHALL offer an order board from the HUD, on iPhone, iPad, Mac and Apple TV. The board SHALL list the open orders, accepted first and then offers by deadline, as cards. A card's status line SHALL read "Offer ends with <season>" for an offer, "In stores X of Q" for an accepted crown order with nothing sent (with ", too late to send" when a shipment could no longer arrive in time, and "No town center to send to" without a town center), "Delivered X of Q, Y on the road" once goods are sent, and "Delivered X of Q by ship" for a rival's. Each card SHALL show the issuer, the title, the good and quantity, the deadline as a date, the reward and the favour at stake. An offer SHALL show Accept and Decline. An accepted crown order SHALL show how much of the good the stores hold against the quantity and a Send button, enabled only when the plan exists; an accepted rival order SHALL show the units delivered. An accepted order that has nothing sent SHALL show Abandon. Accept SHALL be disabled with 2 orders accepted. The board SHALL show the favour of the crown and of each rival with its step and its perk, and every control SHALL be disabled after the game is over. The look comes from the approved canvas.
 
 #### Scenario: Board lists accepted orders first
 
@@ -27,7 +27,7 @@ A game with an active calendar SHALL offer an order board from the HUD, on iPhon
 #### Scenario: Send is enabled when the stores hold enough
 
 - **WHEN** an accepted crown order for 30 planks shows while the stores hold 29, and then 30
-- **THEN** Send is disabled and reads "29 of 30 in stores", and then Send is enabled and enqueues `dispatchOrder`
+- **THEN** Send is disabled and the card reads "In stores 29 of 30", and then Send is enabled, the card reads "In stores 30 of 30" and Send enqueues `dispatchOrder`
 
 #### Scenario: Favour readout lists perks
 
@@ -60,12 +60,17 @@ The game screen SHALL raise a banner when an order is offered, fulfilled or miss
 
 ### Requirement: Orders chip in the HUD
 
-The HUD SHALL show a chip with the count of accepted orders over the open limit and a mark when an offer waits. Tapping it SHALL open the board. The chip SHALL be hidden in games without an active calendar.
+The HUD SHALL show an orders entry with the count of accepted orders over the open limit and a mark when an offer waits. On iPad, Mac and Apple TV it SHALL be a capsule ("Orders 1/2") at the left of the menu buttons; on an iPhone it SHALL be a round button with the count as its badge, and in the More menu of a phone in portrait it SHALL be an item. Activating it SHALL open or close the board. The entry SHALL be hidden in games without an active calendar.
 
 #### Scenario: Chip counts accepted orders
 
 - **WHEN** one order is accepted and an offer waits
-- **THEN** the chip reads 1/2 and shows the offer mark
+- **THEN** the chip reads "Orders 1/2", its badge reads 1 and it shows the offer mark
+
+#### Scenario: Chip is hidden without a calendar
+
+- **WHEN** the world's calendar is inactive
+- **THEN** the HUD shows no orders entry
 
 #### Scenario: Chip opens the board
 
