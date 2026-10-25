@@ -27,6 +27,10 @@ struct StatisticsSheetView: View {
                 .padding(.horizontal)
                 content
             }
+            .navigationDestination(for: Good.self) { good in
+                ScrollView { StatisticsGoodDetailView(model: model, good: good).padding() }
+            }
+            .background { tabHotkeys }
             .navigationTitle("Statistics")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
@@ -43,6 +47,17 @@ struct StatisticsSheetView: View {
                 if fresh != model { model = fresh }
             }
         }
+    }
+
+    /// Command-1 to command-4 pick a tab, on the Mac and iPad keyboards.
+    private var tabHotkeys: some View {
+        ForEach(Array(model.tabs.enumerated()), id: \.offset) { index, tab in
+            Button(tab.title) { session.statisticsTab = tab }
+                .hotkey(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
     }
 
     private var tabBinding: Binding<StatisticsModel.Tab> {
@@ -78,6 +93,7 @@ struct StatisticsSheetView: View {
 struct StatisticsGoodsTab: View {
     let model: StatisticsModel
     @State private var selected: Good?
+    @FocusState private var focusedGood: Good?
     #if !os(macOS) && !os(tvOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isCompact: Bool {
@@ -96,16 +112,15 @@ struct StatisticsGoodsTab: View {
         if model.goods.isEmpty {
             ContentUnavailableView("Nothing made or traded yet", systemImage: "shippingbox")
         } else if isCompact {
-            NavigationStack {
-                goodsList(selectionPushes: true)
-                    .navigationDestination(for: Good.self) { StatisticsGoodDetailView(model: model, good: $0) }
-            }
+            // The sheet's own stack pushes the detail.
+            goodsList(selectionPushes: true)
         } else {
             HStack(alignment: .top, spacing: 16) {
                 goodsList(selectionPushes: false)
                     .frame(maxWidth: 340)
                 if let good = current {
                     ScrollView { StatisticsGoodDetailView(model: model, good: good).padding(.trailing) }
+                        .tvScrollFocus()
                 }
             }
             .padding(.leading)
@@ -130,10 +145,13 @@ struct StatisticsGoodsTab: View {
                         StatisticsGoodRowView(row: row, isSelected: row.good == current)
                     }
                     .buttonStyle(.plain)
+                    .focused($focusedGood, equals: row.good)
                     .accessibilityAddTraits(row.good == current ? .isSelected : [])
                 }
             }
         }
+        .tvFocusSection()
+        .tvDefaultFocus($focusedGood, current)
     }
 }
 

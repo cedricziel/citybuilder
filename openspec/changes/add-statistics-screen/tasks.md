@@ -12,7 +12,7 @@
 ## 2. The sheet
 
 - [x] 2.1 Tests-first: `StatisticsViewModel` series for each tab
-- [x] 2.2 `StatisticsSheet` (Goods, Money, People, Rivals) with Swift Charts; the HUD button; Apple TV entry and focus
+- [ ] 2.2 `StatisticsSheet` (Goods, Money, People, Rivals) with Swift Charts; the HUD button; Apple TV entry and focus. Built for all three platforms and run on the Mac; the Apple TV focus (list first, detail by a focusable section) is built and reasoned, not run: no simulator slot
 - [x] 2.3 Launch flags `-uiTestSeasons n` and `-uiTestOpenStatistics [tab]`; window shots on the Mac. Apple TV and iPhone are compiled, not run: no simulator slot
 
 ## 3. design/web

@@ -22,7 +22,7 @@ The world SHALL record, for the player, one record per finished season and one f
 
 ### Requirement: Goods flows are recorded per good
 
-For each good the season record SHALL hold the units made by the player's producers, used by houses, used by production (recipe inputs and fuel), used by construction, sold and bought, and the units in the player's goods buffers at season end. Selling and buying SHALL count the town market, rival ports and caravans.
+For each good the season record SHALL hold the units made by the player's producers, used by houses, used by production (recipe inputs and fuel), used by construction, sold and bought, and the units in the player's goods buffers at season end. The season record SHALL also hold the player's store capacity (the capacity of its goods buffers, summed) and its age at season end. Selling and buying SHALL count the town market, rival ports and caravans.
 
 #### Scenario: Made and used by production
 - **WHEN** a sawmill completes a cycle that takes 1 wood and makes 1 planks
@@ -41,8 +41,12 @@ For each good the season record SHALL hold the units made by the player's produc
 - **THEN** the season has 5 wood sold and 2 food bought
 
 #### Scenario: Stock is read at the boundary
-- **WHEN** a season closes with 80 bread in the player's stores
-- **THEN** the season's bread stock is 80
+- **WHEN** a season closes with 80 bread in the player's stores, whose capacities sum to 200
+- **THEN** the season's bread stock is 80 and its store capacity is 200
+
+#### Scenario: The age is read at the boundary
+- **WHEN** a season closes while the player is in the Renaissance
+- **THEN** the season's age is the Renaissance
 
 #### Scenario: Rivals' goods are not recorded
 - **WHEN** a rival's sawmill completes a cycle
@@ -100,10 +104,10 @@ Every 10 ticks the system SHALL classify each operational player producer as wor
 
 The game SHALL offer a Statistics sheet from a HUD menu button on iPhone, iPad, Mac and Apple TV. The sheet SHALL be read-only and SHALL have a segmented control with Goods, Money, People and Rivals, and Rivals SHALL appear only when the world has rivals. The sheet SHALL read the snapshot's history and draw its finished seasons, oldest to newest, with the season in progress left out.
 
-- **Goods** SHALL list the goods that have any number in the history, each with made and used per season and the net (made minus used) of the latest season. A good that has producers stopped now with its output stuck SHALL show how many, and the list SHALL say how many producers are stopped in all. Selecting a good SHALL show its made and used bars, its store level against the store cap, a strip of the share of the season its producers were stopped with its output stuck, and, per producer kind that makes it, the shares working, waiting, stuck and blocked in the latest season. On a compact width the list SHALL push the detail.
+- **Goods** SHALL list the goods that have any number in the history, each with made and used per season and the net (made minus used) of the latest season. A good that has producers stopped now with its output stuck SHALL show how many, and the list SHALL say how many producers are stopped in all. Selecting a good SHALL show its made and used bars, its store level against the store cap (a dashed line at the latest season's store capacity), a strip of the share of the season its producers were stopped with its output stuck, and, per producer kind that makes it, the shares working, waiting, stuck and blocked in the latest season. On a compact width the list SHALL push the detail.
 - **Money** SHALL show tax and trade income above the axis, upkeep below it and the balance line.
 - **People** SHALL show residents per tier, stacked.
-- **Rivals** SHALL show residents per town as lines, and each town's residents, age and wealth.
+- **Rivals** SHALL show residents per town as lines, and each town's residents, age and wealth, all read from the latest finished season.
 
 On Apple TV the good list SHALL take focus, the tabs SHALL be focusable above it, and Menu SHALL close the sheet.
 

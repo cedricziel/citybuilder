@@ -74,6 +74,19 @@ private func storeMarks(_ points: [StatisticsModel.Point]) -> some ChartContent 
     }
 }
 
+/// A dashed line at the store cap, labelled, when there is one.
+@ChartContentBuilder
+private func capRule(_ cap: Int) -> some ChartContent {
+    ForEach([cap].filter { $0 > 0 }, id: \.self) { (value: Int) in
+        RuleMark(y: .value("Store cap", value))
+            .foregroundStyle(StatisticsPalette.stuck)
+            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 4]))
+            .annotation(position: .top, alignment: .trailing) {
+                Text("Store cap \(value)").font(.caption2).foregroundStyle(StatisticsPalette.stuck)
+            }
+    }
+}
+
 private struct StuckPoint: Identifiable {
     let season: Int
     let share: Double
@@ -122,11 +135,15 @@ struct StatisticsGoodDetailView: View {
             .frame(height: 150)
             .accessibilityLabel("\(detail.row.name) made and used per season")
             Text("In store at season end").font(.footnote.weight(.semibold))
-            Chart { storeMarks(detail.stored) }
-                .chartXAxis { seasonAxis(model, seasons) }
-                .chartXScale(range: .plotDimension(padding: 10))
-                .frame(height: 100)
-                .accessibilityLabel("\(detail.row.name) in store at season end")
+            Chart {
+                storeMarks(detail.stored)
+                capRule(detail.storeCap)
+            }
+            .chartYScale(domain: 0 ... max(detail.storeCap, detail.stored.map(\.value).max() ?? 0, 1))
+            .chartXAxis { seasonAxis(model, seasons) }
+            .chartXScale(range: .plotDimension(padding: 10))
+            .frame(height: 100)
+            .accessibilityLabel("\(detail.row.name) in store at season end")
             stuckStrip(detail, seasons: seasons)
             producers(detail)
         }

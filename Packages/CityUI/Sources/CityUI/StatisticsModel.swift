@@ -63,6 +63,8 @@ public struct StatisticsModel: Equatable, Sendable {
         public let latestBought: Int
         public let latestStored: Int
         public let stored: [Point]
+        /// The cap the store level is drawn against: see `StatisticsModel.storeCap(of:)`.
+        public let storeCap: Int
         /// The fraction of the season (0 to 1) the good's producers
         /// were stopped with it stuck, per season.
         public let stuckShare: [Double]
@@ -95,28 +97,25 @@ public struct StatisticsModel: Equatable, Sendable {
     private let stuckNow: [Good: Int]
     private let rivalNames: [RivalID: String]
     private let rivalColours: [RivalID: String]
-    private let playerAge: Age
     private let locale: Locale
 
     public init(world: World, locale: Locale = .current) {
         self.init(
             seasons: world.statistics.seasons, calendar: world.calendar, stuckNow: world.stuckProducerCounts,
             rivals: Dictionary(uniqueKeysWithValues: world.rivals.map { ($0.id, ($0.name, $0.colour.hex)) }),
-            playerAge: world.age, locale: locale
+            locale: locale
         )
     }
 
     init(
         seasons: [SeasonStatistics], calendar: CalendarState, stuckNow: [Good: Int] = [:],
-        rivals: [RivalID: (name: String, colourHex: String)] = [:], playerAge: Age = .medieval,
-        locale: Locale = .current
+        rivals: [RivalID: (name: String, colourHex: String)] = [:], locale: Locale = .current
     ) {
         self.seasons = seasons
         self.calendar = calendar
         self.stuckNow = stuckNow
         rivalNames = rivals.mapValues(\.name)
         rivalColours = rivals.mapValues(\.colourHex)
-        self.playerAge = playerAge
         self.locale = locale
     }
 
@@ -192,9 +191,17 @@ public struct StatisticsModel: Equatable, Sendable {
         return GoodDetail(
             row: row(for: good), latestSold: latest?.goods[good]?.sold ?? 0,
             latestBought: latest?.goods[good]?.bought ?? 0, latestStored: latest?.goods[good]?.stored ?? 0,
-            stored: points { $0.goods[good]?.stored ?? 0 }, stuckShare: stuckShare,
+            stored: points { $0.goods[good]?.stored ?? 0 }, storeCap: storeCap(of: good), stuckShare: stuckShare,
             producers: makers.compactMap { share(of: $0, in: latest) }
         )
+    }
+
+    /// What the player's stores could hold of `good`. Today every store
+    /// shares one pool between goods, so the cap is the stores' total
+    /// capacity for each. Per-good storage (`per-good-storage`) makes it per
+    /// good; this is the one place to read it from.
+    public func storeCap(of _: Good) -> Int {
+        seasons.last?.storeCapacity ?? 0
     }
 
     private func share(of kind: BuildingKind, in season: SeasonStatistics?) -> ProducerShare? {
@@ -262,7 +269,7 @@ public struct StatisticsModel: Equatable, Sendable {
         guard let latest = seasons.last else { return [] }
         let you = RivalRow(
             name: "You", colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
-            age: playerAge.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
+            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
         )
         let others = latest.rivals.map { rival in
             RivalRow(

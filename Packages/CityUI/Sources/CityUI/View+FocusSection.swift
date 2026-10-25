@@ -14,6 +14,17 @@ extension View {
         #endif
     }
 
+    /// Lets the remote scroll a read-only panel: a focusable section, so a
+    /// swipe from the list lands on it and moves its content.
+    @ViewBuilder
+    func tvScrollFocus() -> some View {
+        #if os(tvOS)
+        focusable().focusSection()
+        #else
+        self
+        #endif
+    }
+
     /// Apple TV sheets size to their content, which leaves a narrow
     /// column on a 1920-point screen and truncates the title. A floor
     /// makes room for it.

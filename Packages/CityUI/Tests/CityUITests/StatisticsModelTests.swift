@@ -13,6 +13,7 @@ private func season(
 ) -> SeasonStatistics {
     var record = SeasonStatistics()
     record.season = number
+    record.storeCapacity = 200
     record.goods = goods
     record.producers = producers
     return record
@@ -88,6 +89,7 @@ func scenarioAStoppedProducerIsShown() {
     #expect(detail.latestBought == 1)
     #expect(detail.latestStored == 80)
     #expect(detail.stored.map(\.value) == [40, 80])
+    #expect(detail.storeCap == 200)
     let bakery = detail.producers.first
     #expect(bakery?.name == "Bakery")
     #expect(bakery?.stuck == 0.5)
@@ -145,13 +147,14 @@ func rivalsLinesAndStandings() {
     var first = season(0)
     first.residents = [.peasants: 6, .citizens: 2]
     first.money.balance = 1950
+    first.age = .renaissance
     first.rivals = [
         RivalStatistics(id: 2, residents: 9, age: .medieval, treasury: 840),
         RivalStatistics(id: 1, residents: 30, age: .medieval, treasury: 1120)
     ]
     let model = StatisticsModel(
         seasons: [first], calendar: calendar,
-        rivals: [1: ("Ravenmoor", "#B03A2E"), 2: ("Saltwick", "#2E6DB4")], playerAge: .renaissance,
+        rivals: [1: ("Ravenmoor", "#B03A2E"), 2: ("Saltwick", "#2E6DB4")],
         locale: Locale(identifier: "en_US")
     )
     #expect(model.residentLines.map(\.name) == ["You", "Ravenmoor", "Saltwick"])
@@ -184,4 +187,22 @@ func defaultGoodIsStoppedThenBusiest() {
     #expect(StatisticsModel(seasons: seasons, calendar: calendar).defaultGood == .bread)
     #expect(StatisticsModel(seasons: seasons, calendar: calendar, stuckNow: [.food: 1]).defaultGood == .food)
     #expect(StatisticsModel(seasons: [], calendar: calendar).defaultGood == nil)
+}
+
+@Test("scenario: the sheet does not change the world")
+@MainActor
+func scenarioTheSheetDoesNotChangeTheWorld() {
+    let session = GameSession(world: World.newGame(layout: .singleIsland, seed: 3))
+    let before = session.world
+    session.isStatisticsPresented = true
+    for tab in StatisticsModel.Tab.allCases {
+        session.statisticsTab = tab
+        let model = StatisticsModel(world: session.world)
+        _ = model.goods
+        _ = model.standings
+        _ = model.tiers
+    }
+    session.isStatisticsPresented = false
+    #expect(session.world.pendingCommands.isEmpty)
+    #expect(session.world == before)
 }
