@@ -20,7 +20,7 @@ private func inject(
     for tile in BuildingCatalog.spec(for: kind).footprint.tiles(anchor: anchor) {
         world.occupiedTiles[tile] = id
     }
-    var stockpile = Stockpile(capacity: 200)
+    var stockpile = World.newStockpile(for: kind) ?? Stockpile(capacity: 200)
     for (good, amount) in contents {
         _ = stockpile.deposit(good, amount: amount)
     }
@@ -393,4 +393,88 @@ func everyMissionReportsItsTripAndKeepsItsKindWhenItCarriesLess() {
         == .retrieve(good: .flour, amount: 1, fromWarehouse: from, toConsumer: elsewhere))
     #expect(missions[2].redirected(to: elsewhere, amount: 1)
         == .deliver(good: .flour, amount: 1, fromProducer: from, toWarehouse: elsewhere))
+}
+
+@Test("goods whose source and destination are both demolished still go to storage")
+func goodsWhoseSourceAndDestinationAreBothDemolishedStillGoToStorage() {
+    var world = roadStrip()
+    _ = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 6, y: 1))
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 6, y: 1), events: &events)
+    world.applyDemolish(anchor: TileCoordinate(x: 1, y: 1), events: &events)
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[warehouse]?.quantity(of: .flour) == 1)
+}
+
+@Test("a retrieval sent on to a store that fills goes on to the next one")
+func aRetrievalSentOnToAStoreThatFillsGoesOnToTheNextOne() {
+    var world = roadStrip(width: 30)
+    let near = inject(.warehouse, in: &world, at: TileCoordinate(x: 1, y: 0), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 10, y: 1))
+    let far = inject(.warehouse, in: &world, at: TileCoordinate(x: 22, y: 0))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 10, y: 1), events: &events)
+    // The flour turns back to the near store, which fills before it lands.
+    world.tick()
+    world.stockpiles[near]?.deposit(.flour, amount: BuildingKind.warehouse.storagePerGood ?? 0)
+    for _ in 0 ..< 80 where !world.carriers.isEmpty {
+        world.tick()
+    }
+    #expect(world.carriers.isEmpty)
+    #expect(world.stockpiles[far]?.quantity(of: .flour) == 1)
+}
+
+/// A lumberjack hut with 1 wood, a sawmill site waiting for wood, and a
+/// warehouse beyond it.
+private struct SiteTown {
+    var world: World
+    let site: EntityID
+    let warehouse: EntityID
+}
+
+private func siteTown() -> SiteTown {
+    var world = roadStrip()
+    _ = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 1])
+    let site = inject(.sawmill, in: &world, at: TileCoordinate(x: 6, y: 1))
+    world.buildings[site]?.state = .constructing
+    world.buildings[site]?.constructionState = .waitingForMaterials
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 14, y: 0))
+    world.tick()
+    return SiteTown(world: world, site: site, warehouse: warehouse)
+}
+
+@Test("scenario: goods for a site that no longer needs them go to storage")
+func scenarioGoodsForASiteThatNoLongerNeedsThemGoToStorage() {
+    let town = siteTown()
+    var built = town.world
+    let site = town.site, warehouse = town.warehouse
+    let toSite = { (world: World) in
+        world.carriers.values.contains { if case .deliverToConstructionSite = $0.mission { true } else { false } }
+    }
+    #expect(toSite(built))
+    built.buildings[site]?.state = .operational
+    for _ in 0 ..< 60 where toSite(built) {
+        built.tick()
+    }
+    // The built sawmill's materials stay as they were; the wood heads to
+    // the warehouse instead.
+    #expect(built.buildings[site]?.materialsDelivered[.wood, default: 0] == 0)
+    #expect(built.carriers.values.map(\.mission.destination) == [warehouse])
+
+    let other = siteTown()
+    var gone = other.world
+    let goneWarehouse = other.warehouse
+    var events: [WorldEvent] = []
+    gone.applyDemolish(anchor: TileCoordinate(x: 6, y: 1), events: &events)
+    for _ in 0 ..< 60 where !gone.carriers.isEmpty {
+        gone.tick()
+    }
+    #expect(gone.stockpiles[goneWarehouse]?.quantity(of: .wood) == 1)
 }

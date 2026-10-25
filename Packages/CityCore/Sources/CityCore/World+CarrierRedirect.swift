@@ -8,7 +8,8 @@ extension World {
     /// `carrier` with the `units` its destination did not take, sent on.
     ///
     /// - A supply carrier waits at its consumer while that stands, and
-    ///   delivers once it has room.
+    ///   delivers once it has room. One already sent on to a store goes
+    ///   on again when that store fills.
     /// - Otherwise the goods go on to the nearest store of their owner
     ///   with room for them, counting what is already on its way there,
     ///   else back to where they came from when that stands and has room.
@@ -26,9 +27,12 @@ extension World {
         case .deliverToConstructionSite: false
         case .deliver, .retrieve, .deliverToConsumer: stockpiles[mission.destination] != nil
         }
-        if case .retrieve = mission, destinationStands { return waiting }
+        let atConsumer = buildings[mission.destination].map { !Self.logisticsBufferKinds.contains($0.kind) } ?? false
+        if case .retrieve = mission, destinationStands, atConsumer { return waiting }
         let here = carrier.currentTile ?? carrier.path.last ?? TileCoordinate(x: 0, y: 0)
+        // With both ends demolished, the island underfoot names the owner.
         let owner = buildings[mission.source]?.owner ?? buildings[mission.destination]?.owner
+            ?? islandID(at: here).map(owner(ofIsland:))
         if let owner, let (target, path) = nearestRoom(for: mission, from: here, owner: owner) {
             var onward = carrier
             onward.pathIndex = 0
@@ -49,8 +53,8 @@ extension World {
     ) -> (EntityID, [TileCoordinate])? {
         let inbound = InboundGoods(carriers.values)
         func pathTo(_ building: Building) -> [TileCoordinate]? {
-            guard building.id != mission.destination,
-                  (stockpiles[building.id]?.room(for: mission.good) ?? 0) > inbound.count(of: mission.good, to: building.id),
+            guard building.id != mission.destination, let pile = stockpiles[building.id],
+                  pile.room(for: mission.good) > inbound.pending(of: mission.good, to: building.id, in: pile),
                   let road = anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint)
             else { return nil }
             return roadPath(from: tile, to: road)
@@ -86,5 +90,12 @@ final class InboundGoods {
 
     func count(of good: Good, to building: EntityID) -> Int {
         units[building]?[good] ?? 0
+    }
+
+    /// Units on their way to `building` that take room from `good` in
+    /// `pile`: those of `good` for a per-good store, all of them for a
+    /// shared stockpile.
+    func pending(of good: Good, to building: EntityID, in pile: Stockpile) -> Int {
+        pile.limitsEachGood ? count(of: good, to: building) : units[building]?.values.reduce(0, +) ?? 0
     }
 }
