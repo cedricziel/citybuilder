@@ -84,7 +84,7 @@ The order board SHALL be a column on the trailing edge, `OrderBoardLayout.width`
 - with the build rail (the minimap at the bottom right), it SHALL end 8 points above the minimap card, or above the tool strip row when the minimap is hidden;
 - with the dock (the minimap at the top right under the menu buttons), it SHALL begin 8 points below the minimap card and end above the dock and the tool strip;
 - it SHALL never reach the build rail or the dock, which are on the leading edge and the bottom;
-- the card list SHALL scroll inside whatever height is left, and the board SHALL be at least 160 points tall or not shown as a column (see compact widths below).
+- the card list SHALL scroll inside whatever height is left, and the board SHALL be at least 160 points tall or not shown as a column (see compact widths below). Wherever the column cannot be given its 160 points, the board SHALL show as a sheet, and the inspector SHALL NOT make room for a board that is not shown as a column.
 
 The first-steps card SHALL collapse to its capsule while the board is open. The inspector callout SHALL place itself in the area outside the board's frame, flipping to the other side of its building as it does for the minimap, so the inspector and the board stay open together in regular widths.
 

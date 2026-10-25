@@ -18,7 +18,7 @@
 ## 3. CityCore: accepting and delivering
 
 - [ ] 3.1 Tests-first: accept, decline, abandon, dispatch (plan, all-or-nothing, ETA refusal, immediate leg), shipment walk and arrival
-- [ ] 3.2 Commands `acceptOrder`, `declineOrder`, `abandonOrder`, `dispatchOrder`; `orderDispatchPlan`
+- [ ] 3.2 Commands `acceptOrder`, `declineOrder`, `abandonOrder`, `dispatchOrder`; `orderDispatch(for:)` (an `OrderDispatch` enum with the unavailable reasons)
 - [ ] 3.3 Rival delivery through the port trade (`rival-trade` delta); fulfilment, failure, favour
 - [ ] 3.4 Favour perks: research discount, rival prices
 - [ ] 3.5 `Goal.orders`; `WorldSnapshot` carries the board, the favour and the shipments (as carriers)

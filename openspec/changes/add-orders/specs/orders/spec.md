@@ -167,7 +167,7 @@ An issued order SHALL be an offer on the board. An offer not accepted by the end
 
 `dispatchOrder` on an accepted crown order with nothing sent SHALL send the whole quantity from the player's operational stores that hold the good and are road-connected to a player town center. Stores SHALL be taken nearest first (by path length to a town center, then by entity ID), each as much as it holds and the order still needs. The units SHALL leave the stores at once. A store that is a town center SHALL deliver at once. Every other store's units SHALL travel as one shipment along the roads to the nearest town center, advancing one tile a tick, and SHALL count toward the order when they arrive. The command SHALL do nothing when the stores hold fewer units than the quantity, when a leg has no road path, or when a leg would arrive after the deadline (a path of n tiles arrives n − 1 ticks after the dispatch).
 
-`orderDispatchPlan(for:)` SHALL report the same plan, or why there is none, without changing the world, for the UI.
+`orderDispatch(for:)` SHALL report the same decision without changing the world, for the UI: an `OrderDispatch` that is either `ready` with the plan (the legs: store, town center, amount and path) or `unavailable` with the reason (not dispatchable, no town center, too few units in the stores, or too late).
 
 #### Scenario: Dispatch sends the goods from the stores
 

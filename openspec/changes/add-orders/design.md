@@ -98,7 +98,7 @@ The first values for `reward`, `size` and the difficulty percents are starting p
 
 Delivery is one command, `dispatchOrder`, so the player decides when the goods leave and the stores are never raided by a timer.
 
-- **Plan:** `orderDispatchPlan(for:)` lists the operational player stores that hold the good and are road-connected to a player town center, nearest first (path length, then entity ID), and takes units from each until the quantity is met. It returns nothing, and the command does nothing, when:
+- **Plan:** `orderDispatch(for:)` returns an `OrderDispatch`: `ready` with a plan, or `unavailable` with a reason (not dispatchable, no town center, `short(available:)`, `late`). The plan lists the operational player stores that hold the good and are road-connected to a player town center, nearest first (path length, then entity ID), and takes units from each until the quantity is met. It returns nothing, and the command does nothing, when:
   - the order is not an accepted crown order that has nothing sent yet;
   - the stores together hold fewer units than the quantity;
   - a leg has no path to a town center;
