@@ -14,6 +14,7 @@ const bread = {
   made: [0, 0, 6, 10, 14, 18, 22, 28, 34, 36, 30, 22],
   used: [0, 0, 2, 4, 7, 10, 13, 16, 18, 20, 22, 22],
   stored: [0, 0, 4, 10, 17, 25, 34, 47, 63, 80, 80, 80],
+  storeCap: 80,
   stuckShare: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.55, 0.83],
   producers: [{ name: "Bakery", working: 0.17, waiting: 0.12, stuck: 0.71, blocked: 0 }],
 };

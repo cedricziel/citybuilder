@@ -38,6 +38,8 @@ export interface StatisticsGoodDetail {
   made: number[];
   used: number[];
   stored: number[];
+  /** The cap the store level is drawn against, as a dashed line. */
+  storeCap?: number;
   /** Per season, the fraction (0 to 1) its producers were stopped with it stuck. */
   stuckShare: number[];
   producers: StatisticsProducer[];
@@ -154,7 +156,7 @@ function Key({ colour, children }: { colour: string; children: ReactNode }) {
 
 function GoodsTab({ props }: { props: StatisticsPanelProps }) {
   const { goods = [], detail, selected, seasonLabels, stoppedNow = 0 } = props;
-  const maxStored = Math.max(...(detail?.stored ?? [0]), 1);
+  const maxStored = Math.max(...(detail?.stored ?? [0]), detail?.storeCap ?? 0, 1);
   const stuck = detail?.stuckShare.some((share) => share > 0);
   return (
     <div className="cb-stat__goods">
@@ -197,6 +199,14 @@ function GoodsTab({ props }: { props: StatisticsPanelProps }) {
           <div className="cb-footnote cb-semibold">In store at season end</div>
           <Chart label={`${detail.name} in store at season end`} height={80}>
             <Line values={detail.stored} colour={colours.stored} max={maxStored} height={80} />
+            {detail.storeCap ? (
+              <path
+                d={`M0 ${(80 - (detail.storeCap / maxStored) * 76 - 2).toFixed(1)}H${chartWidth}`}
+                fill="none"
+                stroke={colours.stuck}
+                strokeDasharray="5 4"
+              />
+            ) : null}
           </Chart>
           {stuck ? (
             <>
@@ -213,6 +223,7 @@ function GoodsTab({ props }: { props: StatisticsPanelProps }) {
             <Key colour={colours.made}>Made</Key>
             <Key colour={colours.used}>Used</Key>
             <Key colour={colours.stored}>In store</Key>
+            {detail.storeCap ? <Key colour={colours.stuck}>Store cap {detail.storeCap}</Key> : null}
           </div>
           {detail.producers.length > 0 ? (
             <div className="cb-stat__producers">
