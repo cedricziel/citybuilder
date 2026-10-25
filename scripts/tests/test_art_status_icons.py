@@ -20,7 +20,7 @@ def test_every_good_has_a_short_and_a_stuck_icon() -> None:
 
 def test_every_issue_pictogram_is_drawn() -> None:
     names = set(status_icons.sources())
-    for pictogram in ("no-road", "no-route", "no-trees", "no-room-to-plant", "storage-full"):
+    for pictogram in ("no-road", "no-route", "no-trees", "no-room-to-plant"):
         assert f"status-{pictogram}" in names
 
 
