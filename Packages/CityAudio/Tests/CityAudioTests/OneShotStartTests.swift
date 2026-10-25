@@ -24,17 +24,23 @@ private final class Rig {
         engine.nodes.trace = { [trace] in trace.record($0, $1) }
     }
 
-    /// Plays `count` blips back to back, after checking the engine came up.
-    func play(_ count: Int) throws {
+    /// Blips played so far.
+    private var plays = 0
+
+    /// Plays `count` blips back to back, after checking the engine came up. Each blip is a cue of its
+    /// own, as if for another event, unless `event` names the one they share: these tests drive the
+    /// pool, and repeats of one cue are held back.
+    func play(_ count: Int, event: String? = nil) throws {
         for _ in 0 ..< count {
-            player.play(blip)
+            plays += 1
+            player.play(DispatchedCue(cue: blip.cue, event: event ?? "blip-\(plays)"))
             try #require(engine.isRunning, "no audio output to test against")
         }
     }
 
     /// Waits until the driver has handled every cue so far.
     func settle() {
-        engine.nodes.queue.sync {}
+        engine.nodes.settle()
     }
 
     /// Holds the driver's queue for `seconds`, as a slow start would.
@@ -44,9 +50,7 @@ private final class Rig {
 
     /// Holds the driver's queue until the returned gate is signalled.
     func hold() -> DispatchSemaphore {
-        let gate = DispatchSemaphore(value: 0)
-        engine.nodes.queue.async { gate.wait() }
-        return gate
+        engine.nodes.hold()
     }
 }
 
@@ -106,7 +110,7 @@ func cueBehindAQueuedStartKeepsIt() throws {
 }
 
 @MainActor
-@Test("an engine stop while a start waits skips it, and the node starts again later")
+@Test("an engine stop while a one-shot waits drops it, and the node starts again later")
 func engineStopWhileAStartWaits() throws {
     let rig = try Rig(poolSize: 1)
     defer { rig.engine.stop() }
@@ -116,7 +120,7 @@ func engineStopWhileAStartWaits() throws {
     rig.engine.stop()
     gate.signal()
     rig.settle()
-    #expect(rig.trace.steps == [.stop, .schedule, .skipStart])
+    #expect(rig.trace.steps == [.drop])
     try rig.play(1)
     rig.settle()
     #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
@@ -135,4 +139,42 @@ func configurationChangeRestartsPoolNodes() throws {
     try rig.play(1)
     rig.settle()
     #expect(rig.trace.steps.suffix(3) == [.stop, .schedule, .start])
+}
+
+@MainActor
+@Test("scenario: a restart drops cues queued before it")
+func restartDropsQueuedOneShots() throws {
+    let rig = try Rig(poolSize: 1)
+    defer { rig.engine.stop() }
+    let gate = rig.hold()
+    try rig.play(2)
+    changeConfiguration(of: rig.engine)
+    gate.signal()
+    rig.settle()
+    #expect(rig.trace.steps == [.drop, .drop])
+}
+
+@MainActor
+@Test("scenario: a waiting cue holds back the same cue")
+func waitingCueHoldsBackTheSameCue() throws {
+    let rig = try Rig(poolSize: 8)
+    defer { rig.engine.stop() }
+    let gate = rig.hold()
+    try rig.play(3, event: "carrierArrived")
+    gate.signal()
+    rig.settle()
+    #expect(rig.trace.steps == [.stop, .schedule, .start])
+}
+
+@MainActor
+@Test("scenario: a busy node takes the next one-shot without a restart")
+func busyRunningNodeIsNotRestarted() throws {
+    let rig = try Rig(poolSize: 1)
+    defer { rig.engine.stop() }
+    try rig.play(1)
+    rig.settle()
+    // The blip is still playing: the next one cuts it off on the running node.
+    try rig.play(1)
+    rig.settle()
+    #expect(rig.trace.steps == [.stop, .schedule, .start, .schedule])
 }

@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import os
 
 /// The one serial queue every call on the engine's player nodes runs on: one-shots, loops and music
 /// alike. A node is then driven from one thread, `AVAudioPlayerNode.play()`, which waits for the
@@ -7,12 +8,20 @@ import Foundation
 /// were made, so a queued `play()` never comes after the node's detach (#191, #201).
 final class AudioNodeQueue: @unchecked Sendable {
     enum Step: Equatable, Sendable {
-        case stop, schedule, start, skipStart, volume, detach
+        case stop, schedule, start, skipStart, volume, detach, drop
     }
 
     let queue = DispatchQueue(label: "citybuilder.audio.nodes", qos: .userInteractive)
     /// Each step taken on a node, on `queue`, for tests.
     var trace: (@Sendable (ObjectIdentifier, Step) -> Void)?
+    private let currentRun = OSAllocatedUnfairLock<Int?>(initialState: nil)
+
+    /// The engine's run while it runs, nil while it is stopped. Set on the engine's thread, read on
+    /// the queue, so a call queued under one run can tell the engine has stopped or started again.
+    var liveRun: Int? {
+        get { currentRun.withLock { $0 } }
+        set { currentRun.withLock { $0 = newValue } }
+    }
 
     func note(_ node: AVAudioNode, _ step: Step) {
         trace?(ObjectIdentifier(node), step)

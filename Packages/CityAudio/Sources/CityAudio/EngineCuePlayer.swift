@@ -25,6 +25,10 @@ public final class EngineCuePlayer {
     private var poolSlots: [AudioBus: [OneShotPool.Slot]] = [:]
     /// Drives the pool nodes, off the main thread (#191).
     let oneShots: OneShotDriver
+    /// One-shots read whole, so a busy pool node can take the next one without a restart (#264).
+    private var bufferCache: [String: AVAudioPCMBuffer] = [:]
+    /// Holds back repeats of one one-shot (#264).
+    private var limiter = OneShotLimiter()
     /// Loops without an entity (music, the ambient bed), keyed by path.
     private var loopPlayers: [String: AVAudioPlayerNode] = [:]
     /// Music tracks playing once, by path.
@@ -68,7 +72,7 @@ public final class EngineCuePlayer {
         } else if cue.loop == true {
             playLoop(dispatched: dispatched, file: file)
         } else {
-            playOneShot(cue: cue, file: file)
+            playOneShot(dispatched, file: file)
         }
     }
 
@@ -136,16 +140,32 @@ public final class EngineCuePlayer {
         engine.nodes.stopAndDetach(player, from: engine.underlyingEngine)
     }
 
-    /// Plays a one-shot on a pooled node. The main thread only picks the node and routes it; the
-    /// node itself is driven on `oneShots`' queue.
-    private func playOneShot(cue: Bindings.Cue, file: AVAudioFile) {
-        guard let (player, wasFree) = nextOneShotPlayer(on: cue.bus, file: file) else { return }
+    /// Plays a one-shot on a pooled node, unless it repeats its cue too soon or the same cue still
+    /// waits on the queue. The main thread only picks the node and routes it; the node itself is
+    /// driven on `oneShots`' queue.
+    private func playOneShot(_ dispatched: DispatchedCue, file: AVAudioFile) {
+        let cue = dispatched.cue
+        let key = "\(dispatched.event ?? "") \(cue.file)"
+        let now = ProcessInfo.processInfo.systemUptime
+        guard !oneShots.isWaiting(key),
+              limiter.admits(key, at: now),
+              let buffer = loadBuffer(at: cue.file, url: file.url),
+              let (player, wasFree) = nextOneShotPlayer(on: cue.bus, buffer: buffer, now: now)
+        else { return }
         let mixer = engine.bus(cue.bus)
         if player.engine !== mixer.engine {
             mixer.engine?.attach(player)
-            mixer.engine?.connect(player, to: mixer, format: file.processingFormat)
+            mixer.engine?.connect(player, to: mixer, format: OneShotBuffer.format)
         }
-        oneShots.play(file, on: player, volume: cue.volume, wasFree: wasFree, run: engine.runCount)
+        oneShots.play(buffer, key: key, on: player, volume: cue.volume, wasFree: wasFree)
+    }
+
+    /// `file` read whole in the pool's format, cached by `path`.
+    private func loadBuffer(at path: String, url: URL) -> AVAudioPCMBuffer? {
+        if let cached = bufferCache[path] { return cached }
+        guard let buffer = OneShotBuffer.load(url) else { return nil }
+        bufferCache[path] = buffer
+        return buffer
     }
 
     private func playLoop(dispatched: DispatchedCue, file: AVAudioFile) {
@@ -256,12 +276,13 @@ public final class EngineCuePlayer {
     }
 
     /// The pooled node for the next one-shot on `bus`, and whether its last cue had ended.
-    private func nextOneShotPlayer(on bus: AudioBus, file: AVAudioFile) -> (AVAudioPlayerNode, Bool)? {
+    private func nextOneShotPlayer(
+        on bus: AudioBus, buffer: AVAudioPCMBuffer, now: TimeInterval
+    ) -> (AVAudioPlayerNode, Bool)? {
         guard let nodes = oneShotPool[bus], !nodes.isEmpty, var slots = poolSlots[bus] else { return nil }
-        let now = ProcessInfo.processInfo.systemUptime
         let index = OneShotPool.pick(slots, now: now, from: nextPoolIndex[bus] ?? 0)
         let wasFree = slots[index].endsAt <= now
-        let seconds = Double(file.length) / file.processingFormat.sampleRate
+        let seconds = Double(buffer.frameLength) / buffer.format.sampleRate
         slots[index] = OneShotPool.Slot(endsAt: now + seconds, isLong: seconds > OneShotPool.longSeconds)
         poolSlots[bus] = slots
         nextPoolIndex[bus] = (index + 1) % nodes.count

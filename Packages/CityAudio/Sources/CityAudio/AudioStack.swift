@@ -173,7 +173,7 @@ public final class AudioStack {
     /// `audio-playback` / Interface sounds are bound by name.
     public func playInterfaceSound(_ name: String) {
         guard let cue = Self.interfaceCue(name, in: bindings) else { return }
-        player.play(DispatchedCue(cue: cue))
+        player.play(DispatchedCue(cue: cue, event: "ui.\(name)"))
     }
 
     nonisolated static func interfaceCue(_ name: String, in bindings: Bindings) -> Bindings.Cue? {

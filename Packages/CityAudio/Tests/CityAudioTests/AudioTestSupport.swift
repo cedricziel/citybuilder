@@ -52,3 +52,17 @@ final class NodeTrace: @unchecked Sendable {
         lock.withLock { entries.contains(where: \.onMain) }
     }
 }
+
+extension AudioNodeQueue {
+    /// Holds the queue until the returned gate is signalled.
+    func hold() -> DispatchSemaphore {
+        let gate = DispatchSemaphore(value: 0)
+        queue.async { gate.wait() }
+        return gate
+    }
+
+    /// Waits until the queue has handled every call so far.
+    func settle() {
+        queue.sync {}
+    }
+}
