@@ -198,6 +198,11 @@ public final class GameSession {
     var isFirstStepsDismissed = false
     /// Goods the idle-good hint has named this session.
     var hintedIdleGoods: Set<Good> = []
+    /// Problems the building-problem hint has named this session, by their text.
+    var hintedProblems: Set<String> = []
+    /// What each building with a status icon is waiting on and since which tick, so a problem that
+    /// the next tap would fix stays unnamed.
+    var problemsSeen: [EntityID: (text: String, since: UInt64)] = [:]
     /// First steps met so far this session; a met step stays met.
     var firstStepsMet: Set<FirstStepsGuide.Step> = []
     /// The first-hour guide while it shows, refreshed every tick.
@@ -220,6 +225,7 @@ public final class GameSession {
         refreshFirstSteps()
         noteIdleGoods()
         let snapshot = world.snapshot()
+        noteBuildingProblems(in: snapshot)
         hud.apply(snapshot)
         routeList.snapshot = snapshot
         routeAuthoring?.snapshot = snapshot
@@ -450,14 +456,6 @@ public final class GameSession {
         case .demolish:
             enqueue(.demolish(at: tile))
         }
-    }
-
-    /// Cost of the currently-armed building (0 if no place tool armed).
-    public var armedToolCost: Int64 {
-        if case let .place(kind) = selectedTool {
-            return BuildingCatalog.spec(for: kind).cost
-        }
-        return 0
     }
 
     @MainActor

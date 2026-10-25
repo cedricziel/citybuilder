@@ -36,6 +36,9 @@ public final class NewGameDialogViewModel {
     /// Spec: `platform-shells` / New Game offers rival towns.
     public var rivalTowns = true
 
+    /// The camera's zoom when the game starts; a phone starts further out.
+    private let startZoom: Double
+
     /// The "Rival towns" toggle shows for a sandbox archipelago only.
     public var showsRivalToggle: Bool {
         mode == .sandbox && layout == .archipelago
@@ -50,8 +53,10 @@ public final class NewGameDialogViewModel {
         layout: WorldLayout = .singleIsland,
         seedMode: SeedMode = .default,
         culture: Culture = .northernEuropean,
-        age: Age = .medieval
+        age: Age = .medieval,
+        startZoom: Double? = nil
     ) {
+        self.startZoom = startZoom ?? StartZoom.zoom(for: HUDMetrics.idiom)
         self.layout = layout
         self.seedMode = seedMode
         self.culture = culture
@@ -76,14 +81,16 @@ public final class NewGameDialogViewModel {
     /// validation fails (custom seed with non-numeric text).
     public func commit() -> World? {
         guard let seed = resolvedSeed else { return nil }
-        switch mode {
+        var world = switch mode {
         case .sandbox:
-            return World.newGame(
+            World.newGame(
                 layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty, rivals: rivalTowns
             )
         case .scenario:
-            return World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario)
+            World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario)
         }
+        world.camera.setZoom(startZoom)
+        return world
     }
 
     /// Reset selection to defaults — invoked when the dialog is

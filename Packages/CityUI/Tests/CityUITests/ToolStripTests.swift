@@ -18,7 +18,7 @@ func scenarioToolStripChipsWithoutHover() throws {
 
 @Test("scenario: tool strip hint")
 func scenarioToolStripHint() {
-    #expect(ToolStripText.hint(for: .place(.house), idiom: .phone) == "Tap or drag to place house")
+    #expect(ToolStripText.hint(for: .place(.house), idiom: .phone) == "Tap to position, then tap ✓ to place")
     #expect(ToolStripText.hint(for: .demolish, idiom: .mac) == "Click a building to demolish")
     #expect(ToolStripText.hint(for: .place(.house), idiom: .mac) == "Click or drag to place house")
 }
@@ -34,4 +34,9 @@ func appleTVToolStripHintsForPaintingAndDemolish() {
     #expect(ToolStripText.hint(for: .place(.road), idiom: .tv, paintingRoad: true) == "Click to stop painting road")
     #expect(ToolStripText.hint(for: .demolish, idiom: .tv) == "Click a building to demolish")
     #expect(ToolStripText.hint(for: .place(.road), idiom: .pad) == "Tap or drag to place road")
+}
+
+@Test("scenario: a road hint keeps tap or drag on touch")
+func roadHintKeepsTapOrDragOnPhone() {
+    #expect(ToolStripText.hint(for: .place(.road), idiom: .phone) == "Tap or drag to place road")
 }

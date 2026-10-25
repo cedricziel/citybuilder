@@ -20,7 +20,7 @@ public struct LayoutDecisions: Equatable, Sendable {
         switch sizeClass {
         case .compact:
             return LayoutDecisions(
-                defaultCameraZoom: 1.5,
+                defaultCameraZoom: StartZoom.phone,
                 showsAdvancedControls: false,
                 showsMenuBar: false
             )

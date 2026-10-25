@@ -25,6 +25,9 @@ public enum ToolStripText {
         case (.demolish, _): "\(press) a building to demolish"
         case (.place(.road), .tv): paintingRoad ? "Click to stop painting road" : "Click to start painting road"
         case (.place, .tv): "Move, then click to place \(name). Back to cancel."
+        case (.place(.road), _): "\(press) or drag to place \(name)"
+        // Touch positions a building first: a tap shows the nudge arrows, and the check places it.
+        case (.place, .phone), (.place, .pad): "Tap to position, then tap ✓ to place"
         case (.place, _): "\(press) or drag to place \(name)"
         }
         guard case let .place(kind) = tool, let noun = inReachNoun(kind), let inReach else { return base }
@@ -56,6 +59,14 @@ public enum ToolStripText {
 
 /// Spec: `platform-shells` / Tool strip.
 public extension GameSession {
+    /// Cost of the currently-armed building (0 if no place tool armed).
+    var armedToolCost: Int64 {
+        if case let .place(kind) = selectedTool {
+            return BuildingCatalog.spec(for: kind).cost
+        }
+        return 0
+    }
+
     /// The tool strip's material chips: the hovered tile's when there is
     /// one, otherwise the camera-center tile's, so touch players see them
     /// before the first tap. Nil when the armed tool needs no materials.
@@ -135,6 +146,7 @@ struct ToolStripView: View {
             .padding(.leading, 10)
             .padding([.trailing, .vertical], 6)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .hudChromeTypeSize()
         }
     }
 

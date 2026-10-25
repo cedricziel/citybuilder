@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/add-touch-first-placement/specs/rendering-2_5d
@@ -45,4 +46,38 @@ func theCoachMarkFlagLivesUnderItsDocumentedUserDefaultsKey() throws {
     #expect(store.shouldShowTouchPlacementHint)
     store.dismissTouchPlacementHint()
     #expect(defaults.bool(forKey: CoachmarkStore.touchPlacementKey))
+}
+
+// platform-shells / Pinch-to-zoom hint.
+
+@Test("scenario: pinch hint is offered once")
+func pinchHintIsOfferedOnce() {
+    let flags = MemoryFlags()
+    let store = CoachmarkStore(flags: flags)
+    #expect(store.takePinchZoomHint())
+    #expect(flags.values[CoachmarkStore.pinchZoomKey] == true)
+    #expect(!store.takePinchZoomHint())
+    // A later launch reads the same flag.
+    #expect(!CoachmarkStore(flags: flags).takePinchZoomHint())
+}
+
+@Test("the pinch hint and the placement coach mark are independent")
+func pinchHintIsIndependentOfThePlacementCoachMark() {
+    let flags = MemoryFlags()
+    let store = CoachmarkStore(flags: flags)
+    #expect(store.takePinchZoomHint())
+    #expect(store.shouldShowTouchPlacementHint)
+}
+
+@MainActor
+@Test("scenario: pinch hint shows as a banner that expires")
+func pinchHintShowsAsABanner() {
+    let session = GameSession(world: World.newGame())
+    session.hideFirstSteps()
+    session.showPinchZoomHint()
+    #expect(session.banner?.title == "Pinch to zoom")
+    for _ in 0 ..< Int(GameSession.bannerTicks) {
+        session.step()
+    }
+    #expect(session.banner == nil)
 }

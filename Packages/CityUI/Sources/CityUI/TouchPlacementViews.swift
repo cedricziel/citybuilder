@@ -73,6 +73,12 @@ private struct TouchPlacementDialogs: ViewModifier {
                     menuButton(item, tile: request.tile)
                 }
             }
+            .onAppear {
+                // Only a game that has not started: a loaded save's player knows the gesture.
+                if session.world.tickCount == 0, coachmarks.takePinchZoomHint() {
+                    session.showPinchZoomHint()
+                }
+            }
             .overlay(alignment: .bottom) {
                 if hintVisible, session.pendingPlacement == nil {
                     CoachmarkView {
@@ -105,11 +111,16 @@ private struct CoachmarkView: View {
             Image(systemName: "hand.tap")
             Text("Long-press a tile to build")
                 .font(.callout)
-            Button("Got it", action: dismiss)
-                .buttonStyle(.borderedProminent)
+                .hudOneLine(minimumScale: 0.6)
+            Button(action: dismiss) {
+                Text("Got it").hudOneLine()
+            }
+            .buttonStyle(.borderedProminent)
         }
+        .hudChromeTypeSize()
         .padding(12)
         .background(.thinMaterial, in: Capsule())
+        .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
 }
