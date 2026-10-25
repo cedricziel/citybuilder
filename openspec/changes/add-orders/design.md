@@ -157,7 +157,9 @@ The tables, before and after, go in the PR.
 
 ### D13. UI is gated on the canvas
 
-The board, the notifications and the HUD chip are a new panel and a HUD change, so they need a Claude Design canvas first (CLAUDE.md). The sim and the bot are built while it is reviewed. The canvas compares the current HUD with three options (a drawer board, a ledger sheet, a card strip) and recommends one. Order carriers are drawn with the existing carrier figures first; the canvas may ask for a sealed-satchel or banner variant, which would be an art task of its own.
+The board, the notifications and the HUD chip are a new panel and a HUD change, so they need a Claude Design canvas first (CLAUDE.md). The sim and the bot were built while it was reviewed. The canvas compared the current HUD with three options (a side board, a ledger sheet, a notice strip). **Option A was approved: a chip in the HUD and a glass board on the trailing edge, with parchment banners for notifications.**
+
+**Layout (condition of the approval).** The trailing edge is shared with the minimap, the first-steps card and the inspector callout, so the board's frame is computed beside theirs (`OrderBoardLayout`, in the style of `MinimapLayout`) and never overlaps the minimap, the build rail or dock, or the tool strip. The first-steps card collapses while the board is open. In regular widths the callout places itself outside the board's frame and both stay open. In a compact width one replaces the other, and on a phone in portrait the board is a sheet. The canvas's "Built" artboard shows this layout with before and after shots once it is built. Order carriers are drawn with the existing carrier figures first; the canvas may ask for a sealed-satchel or banner variant, which would be an art task of its own.
 
 ### D14. Campaign goal
 

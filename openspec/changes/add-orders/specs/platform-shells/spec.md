@@ -71,3 +71,46 @@ The HUD SHALL show a chip with the count of accepted orders over the open limit 
 
 - **WHEN** the player taps the chip
 - **THEN** the board opens
+
+### Requirement: Order board layout
+
+The order board SHALL be a column on the trailing edge, `OrderBoardLayout.width` points wide (340 on iPad and Mac, 300 on a phone in landscape, 520 on Apple TV), and SHALL sit between the menu buttons and the free space below them. Its frame SHALL be computed from the same inputs as the minimap card, the first-steps card and the build controls, and SHALL never overlap any of them:
+
+- with the build rail (the minimap at the bottom right), it SHALL end 8 points above the minimap card, or above the tool strip row when the minimap is hidden;
+- with the dock (the minimap at the top right under the menu buttons), it SHALL begin 8 points below the minimap card and end above the dock and the tool strip;
+- it SHALL never reach the build rail or the dock, which are on the leading edge and the bottom;
+- the card list SHALL scroll inside whatever height is left, and the board SHALL be at least 160 points tall or not shown as a column (see compact widths below).
+
+The first-steps card SHALL collapse to its capsule while the board is open. The inspector callout SHALL place itself in the area outside the board's frame, flipping to the other side of its building as it does for the minimap, so the inspector and the board stay open together in regular widths.
+
+In a compact width (the phone, or a window where the callout, the board and the rail cannot fit together) one SHALL replace the other: opening the board SHALL close the inspector callout and clear the selection, and selecting a building SHALL close the board. On a phone in portrait the board SHALL be a sheet. On Apple TV the board SHALL be a focus column that takes focus when it opens and returns it to the map when it closes.
+
+#### Scenario: Board stays clear of the minimap and the build rail
+
+- **WHEN** the board frame is computed for every size class (phone landscape, iPad landscape and portrait, Mac window, Apple TV), with the minimap shown and hidden, in both the rail and dock layouts
+- **THEN** it overlaps neither the minimap card, nor the build rail or dock, nor the tool strip row, nor the menu buttons, and lies inside the safe area
+
+#### Scenario: Minimap at the top right pushes the board down
+
+- **WHEN** the layout is the dock and the minimap is shown
+- **THEN** the board starts 8 points below the minimap card
+
+#### Scenario: Opening the board collapses the first-steps card
+
+- **WHEN** the first-steps card is expanded and the board opens
+- **THEN** the card shows as its capsule until the board closes
+
+#### Scenario: Inspector and board coexist in regular widths
+
+- **WHEN** the board is open on an iPad in landscape and the player selects a building
+- **THEN** the inspector callout appears outside the board's frame, on the other side of the building if needed, and the board stays open
+
+#### Scenario: One replaces the other in a compact width
+
+- **WHEN** the board is open on a phone in landscape and the player selects a building, and then opens the board with a building selected
+- **THEN** the first selection closes the board, and the second closes the callout and clears the selection
+
+#### Scenario: Board is a sheet on a phone in portrait
+
+- **WHEN** the board is opened on a phone in portrait
+- **THEN** it shows as a sheet over the game and has no column frame

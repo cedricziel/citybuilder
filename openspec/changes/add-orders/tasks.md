@@ -1,7 +1,7 @@
 ## 0. Design
 
 - [ ] 0.1 Proposal, design and spec deltas; `openspec validate add-orders --strict`
-- [ ] 0.2 Claude Design canvas for the order board, the notifications and the HUD chip: the current HUD as the "before", 2–3 options, a recommendation; the orchestrator signs off before any UI code
+- [x] 0.2 Claude Design canvas: option A approved (chip and side board, parchment banners), on condition that the board layout is specified and never covers the minimap or build rail
 
 ## 1. Game data
 
@@ -37,10 +37,10 @@
 ## 6. UI (after the canvas is approved)
 
 - [ ] 6.1 Tests-first: the `platform-shells` scenarios as failing CityUI tests
-- [ ] 6.2 Order board (iOS, macOS, tvOS), favour readout
+- [ ] 6.2 Order board (iOS, macOS, tvOS), favour readout, `OrderBoardLayout` (never overlaps the minimap, rail, dock or tool strip; the inspector coexists or is replaced by size class)
 - [ ] 6.3 Notifications and the HUD orders chip; audio binding for the order events
 - [ ] 6.4 `design/web`: `OrdersPanel`, the HUD chip and previews; `npm run typecheck` and `npm run build`
-- [ ] 6.5 Before and after shots for the PR
+- [ ] 6.5 Before and after shots, and the canvas "Built" artboard with the board layout at each size class
 
 ## 7. Wrap-up
 
