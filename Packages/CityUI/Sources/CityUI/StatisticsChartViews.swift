@@ -7,6 +7,10 @@ private enum StatisticsPalette {
     static let used = Color.orange
     static let stuck = Color.red
     static let stored = Color.gray
+    static let flowNames: [String] = ["Made", "Used"]
+    static let flowColours: [Color] = [made, used]
+    static let moneyNames: [String] = ["Tax", "Trade", "Upkeep", "Bought"]
+    static let moneyColours: [Color] = [.green, .blue, .orange, .purple]
 }
 
 /// Season numbers as x axis marks, labelled from the calendar.
@@ -16,6 +20,74 @@ private func seasonAxis(_ model: StatisticsModel, _ seasons: [Int]) -> some Axis
         AxisValueLabel(centered: true) {
             if let season = value.as(Int.self) { Text(model.axisLabel(ofSeason: season)).font(.caption2) }
         }
+    }
+}
+
+/// One bar per season, dodged beside the other flow's.
+@ChartContentBuilder
+private func flowBars(_ points: [StatisticsModel.Point], name: String) -> some ChartContent {
+    ForEach(points) { (point: StatisticsModel.Point) in
+        BarMark(x: .value("Season", point.season), y: .value("Units", point.value), width: .fixed(7))
+            .position(by: .value("Flow", name))
+            .foregroundStyle(by: .value("Flow", name))
+    }
+}
+
+/// One bar per season and series, stacked, coloured by the series' name.
+@ChartContentBuilder
+private func moneyBars(_ allSeries: [StatisticsModel.Series]) -> some ChartContent {
+    ForEach(allSeries) { (series: StatisticsModel.Series) in
+        ForEach(series.points) { (point: StatisticsModel.Point) in
+            BarMark(x: .value("Season", point.season), y: .value("Money", point.value), width: .fixed(14))
+                .foregroundStyle(by: .value("Kind", series.name))
+        }
+    }
+}
+
+@ChartContentBuilder
+private func tierAreas(_ allSeries: [StatisticsModel.Series]) -> some ChartContent {
+    ForEach(allSeries) { (series: StatisticsModel.Series) in
+        ForEach(series.points) { (point: StatisticsModel.Point) in
+            AreaMark(x: .value("Season", point.season), y: .value("Residents", point.value))
+                .foregroundStyle(by: .value("Tier", series.name))
+        }
+    }
+}
+
+@ChartContentBuilder
+private func townLines(_ allSeries: [StatisticsModel.Series]) -> some ChartContent {
+    ForEach(allSeries) { (series: StatisticsModel.Series) in
+        ForEach(series.points) { (point: StatisticsModel.Point) in
+            LineMark(x: .value("Season", point.season), y: .value("Residents", point.value))
+                .foregroundStyle(by: .value("Town", series.name))
+        }
+    }
+}
+
+@ChartContentBuilder
+private func storeMarks(_ points: [StatisticsModel.Point]) -> some ChartContent {
+    ForEach(points) { (point: StatisticsModel.Point) in
+        AreaMark(x: .value("Season", point.season), y: .value("Units", point.value))
+            .foregroundStyle(StatisticsPalette.stored.opacity(0.2))
+        LineMark(x: .value("Season", point.season), y: .value("Units", point.value))
+            .foregroundStyle(StatisticsPalette.stored)
+    }
+}
+
+private struct StuckPoint: Identifiable {
+    let season: Int
+    let share: Double
+
+    var id: Int {
+        season
+    }
+}
+
+@ChartContentBuilder
+private func stuckBars(_ points: [StuckPoint]) -> some ChartContent {
+    ForEach(points) { (point: StuckPoint) in
+        BarMark(x: .value("Season", point.season), y: .value("Share", point.share), width: .fixed(14))
+            .foregroundStyle(StatisticsPalette.stuck)
     }
 }
 
@@ -41,33 +113,20 @@ struct StatisticsGoodDetailView: View {
             }
             Text("Made and used per season").font(.footnote.weight(.semibold))
             Chart {
-                ForEach(detail.row.made) { point in
-                    BarMark(x: .value("Season", point.season), y: .value("Units", point.value), width: .fixed(7))
-                        .position(by: .value("Flow", "Made"))
-                        .foregroundStyle(by: .value("Flow", "Made"))
-                }
-                ForEach(detail.row.used) { point in
-                    BarMark(x: .value("Season", point.season), y: .value("Units", point.value), width: .fixed(7))
-                        .position(by: .value("Flow", "Used"))
-                        .foregroundStyle(by: .value("Flow", "Used"))
-                }
+                flowBars(detail.row.made, name: "Made")
+                flowBars(detail.row.used, name: "Used")
             }
-            .chartForegroundStyleScale(["Made": StatisticsPalette.made, "Used": StatisticsPalette.used])
+            .chartForegroundStyleScale(domain: StatisticsPalette.flowNames, range: StatisticsPalette.flowColours)
             .chartXAxis { seasonAxis(model, seasons) }
             .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 150)
             .accessibilityLabel("\(detail.row.name) made and used per season")
             Text("In store at season end").font(.footnote.weight(.semibold))
-            Chart(detail.stored) { point in
-                AreaMark(x: .value("Season", point.season), y: .value("Units", point.value))
-                    .foregroundStyle(StatisticsPalette.stored.opacity(0.2))
-                LineMark(x: .value("Season", point.season), y: .value("Units", point.value))
-                    .foregroundStyle(StatisticsPalette.stored)
-            }
-            .chartXAxis { seasonAxis(model, seasons) }
-            .chartXScale(range: .plotDimension(padding: 10))
-            .frame(height: 100)
-            .accessibilityLabel("\(detail.row.name) in store at season end")
+            Chart { storeMarks(detail.stored) }
+                .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
+                .frame(height: 100)
+                .accessibilityLabel("\(detail.row.name) in store at season end")
             stuckStrip(detail, seasons: seasons)
             producers(detail)
         }
@@ -85,16 +144,13 @@ struct StatisticsGoodDetailView: View {
     private func stuckStrip(_ detail: StatisticsModel.GoodDetail, seasons: [Int]) -> some View {
         if detail.stuckShare.contains(where: { $0 > 0 }) {
             Text("Stopped: output stuck").font(.footnote.weight(.semibold)).foregroundStyle(StatisticsPalette.stuck)
-            Chart(Array(zip(seasons, detail.stuckShare)), id: \.0) { season, share in
-                BarMark(x: .value("Season", season), y: .value("Share", share), width: .fixed(14))
-                    .foregroundStyle(StatisticsPalette.stuck)
-            }
-            .chartYScale(domain: 0 ... 1)
-            .chartYAxis(.hidden)
-            .chartXAxis { seasonAxis(model, seasons) }
-            .chartXScale(range: .plotDimension(padding: 10))
-            .frame(height: 50)
-            .accessibilityLabel("Share of each season the \(detail.row.name) producers were stopped, output stuck")
+            Chart { stuckBars(Array(zip(seasons, detail.stuckShare)).map(StuckPoint.init)) }
+                .chartYScale(domain: 0 ... 1)
+                .chartYAxis(.hidden)
+                .chartXAxis { seasonAxis(model, seasons) }
+                .chartXScale(range: .plotDimension(padding: 10))
+                .frame(height: 50)
+                .accessibilityLabel("Share of each season the \(detail.row.name) producers were stopped, output stuck")
         }
     }
 
@@ -115,16 +171,21 @@ struct StatisticsGoodDetailView: View {
                         .clipShape(Capsule())
                     }
                     .frame(height: 12)
-                    Text(
-                        "Working \(percent(share.working)), waiting \(percent(share.waiting)), "
-                            + "stuck \(percent(share.stuck)), blocked \(percent(share.blocked))"
-                    )
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    Text(caption(for: share))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
             }
         }
+    }
+
+    private func caption(for share: StatisticsModel.ProducerShare) -> String {
+        let working = "Working \(percent(share.working))"
+        let waiting = "waiting \(percent(share.waiting))"
+        let stuck = "stuck \(percent(share.stuck))"
+        let blocked = "blocked \(percent(share.blocked))"
+        return [working, waiting, stuck, blocked].joined(separator: ", ")
     }
 
     private func percent(_ share: Double) -> String {
@@ -136,25 +197,17 @@ struct StatisticsMoneyTab: View {
     let model: StatisticsModel
 
     var body: some View {
-        let seasons = model.balance.map(\.season)
+        let seasons: [Int] = model.balance.map(\.season)
+        let allSeries: [StatisticsModel.Series] = model.income + model.spending
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Income and upkeep per season").font(.footnote.weight(.semibold))
-                Chart {
-                    ForEach(model.income + model.spending) { series in
-                        ForEach(series.points) { point in
-                            BarMark(x: .value("Season", point.season), y: .value("Money", point.value), width: .fixed(14))
-                                .foregroundStyle(by: .value("Kind", series.name))
-                        }
-                    }
-                }
-                .chartForegroundStyleScale([
-                    "Tax": Color.green, "Trade": Color.blue, "Upkeep": Color.orange, "Bought": Color.purple
-                ])
-                .chartXAxis { seasonAxis(model, seasons) }
-                .chartXScale(range: .plotDimension(padding: 10))
-                .frame(height: 200)
-                .accessibilityLabel("Tax and trade income above zero, upkeep and purchases below, per season")
+                Chart { moneyBars(allSeries) }
+                    .chartForegroundStyleScale(domain: StatisticsPalette.moneyNames, range: StatisticsPalette.moneyColours)
+                    .chartXAxis { seasonAxis(model, seasons) }
+                    .chartXScale(range: .plotDimension(padding: 10))
+                    .frame(height: 200)
+                    .accessibilityLabel("Tax and trade income above zero, upkeep and purchases below, per season")
                 Text("Balance at season end").font(.footnote.weight(.semibold))
                 Chart(model.balance) { point in
                     LineMark(x: .value("Season", point.season), y: .value("Balance", point.value))
@@ -178,18 +231,11 @@ struct StatisticsPeopleTab: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Residents by tier, season end").font(.footnote.weight(.semibold))
-                Chart {
-                    ForEach(model.tiers) { series in
-                        ForEach(series.points) { point in
-                            AreaMark(x: .value("Season", point.season), y: .value("Residents", point.value))
-                                .foregroundStyle(by: .value("Tier", series.name))
-                        }
-                    }
-                }
-                .chartXAxis { seasonAxis(model, seasons) }
-                .chartXScale(range: .plotDimension(padding: 10))
-                .frame(height: 260)
-                .accessibilityLabel("Residents by house tier at the end of each season")
+                Chart { tierAreas(model.tiers) }
+                    .chartXAxis { seasonAxis(model, seasons) }
+                    .chartXScale(range: .plotDimension(padding: 10))
+                    .frame(height: 260)
+                    .accessibilityLabel("Residents by house tier at the end of each season")
             }
             .padding()
         }
@@ -201,25 +247,17 @@ struct StatisticsRivalsTab: View {
 
     var body: some View {
         let seasons = model.balance.map(\.season)
-        let lines = model.residentLines
+        let lines: [StatisticsModel.Series] = model.residentLines
+        let lineColours: [Color] = model.residentLineColours.map { Color(hex: $0) }
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Residents by town, season end").font(.footnote.weight(.semibold))
-                Chart {
-                    ForEach(lines) { series in
-                        ForEach(series.points) { point in
-                            LineMark(x: .value("Season", point.season), y: .value("Residents", point.value))
-                                .foregroundStyle(by: .value("Town", series.name))
-                        }
-                    }
-                }
-                .chartForegroundStyleScale(
-                    domain: lines.map(\.name), range: model.residentLineColours.map { Color(hex: $0) }
-                )
-                .chartXAxis { seasonAxis(model, seasons) }
-                .chartXScale(range: .plotDimension(padding: 10))
-                .frame(height: 220)
-                .accessibilityLabel("Residents of your town and each rival at the end of each season")
+                Chart { townLines(lines) }
+                    .chartForegroundStyleScale(domain: lines.map(\.name), range: lineColours)
+                    .chartXAxis { seasonAxis(model, seasons) }
+                    .chartXScale(range: .plotDimension(padding: 10))
+                    .frame(height: 220)
+                    .accessibilityLabel("Residents of your town and each rival at the end of each season")
                 ForEach(model.standings) { row in
                     HStack(spacing: 10) {
                         Circle().fill(Color(hex: row.colourHex)).frame(width: 12, height: 12)

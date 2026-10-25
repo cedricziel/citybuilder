@@ -88,8 +88,8 @@ struct StatisticsGoodsTab: View {
     #endif
 
     private var current: Good? {
-        selected.flatMap { good in model.goods.contains { $0.good == good } ? good : nil }
-            ?? model.defaultGood
+        if let selected, model.goods.contains(where: { $0.good == selected }) { return selected }
+        return model.defaultGood
     }
 
     var body: some View {
@@ -141,6 +141,14 @@ struct StatisticsGoodRowView: View {
     let row: StatisticsModel.GoodRow
     let isSelected: Bool
 
+    private var spokenLabel: String {
+        var label = "\(row.name), net \(row.net)"
+        if row.stoppedNow > 0 {
+            label += ", \(row.stoppedNow) producers stopped, output stuck"
+        }
+        return label
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             GoodIconLoader.image(for: row.good)
@@ -161,9 +169,7 @@ struct StatisticsGoodRowView: View {
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            "\(row.name), net \(row.net)" + (row.stoppedNow > 0 ? ", \(row.stoppedNow) producers stopped, output stuck" : "")
-        )
+        .accessibilityLabel(spokenLabel)
     }
 }
 
