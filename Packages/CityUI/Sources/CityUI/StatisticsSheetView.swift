@@ -103,20 +103,23 @@ struct StatisticsGoodsTab: View {
     private let isCompact = false
     #endif
 
-    private var current: Good? {
-        if let selected, model.goods.contains(where: { $0.good == selected }) { return selected }
+    /// The selected good, if it is still listed, else the one to open on.
+    private func resolveCurrent(in goods: [StatisticsModel.GoodRow]) -> Good? {
+        if let selected, goods.contains(where: { $0.good == selected }) { return selected }
         return model.defaultGood
     }
 
     var body: some View {
-        if model.goods.isEmpty {
+        let goods = model.goods
+        let current = resolveCurrent(in: goods)
+        if goods.isEmpty {
             ContentUnavailableView("Nothing made or traded yet", systemImage: "shippingbox")
         } else if isCompact {
             // The sheet's own stack pushes the detail.
-            goodsList(selectionPushes: true)
+            goodsList(goods, current: current, selectionPushes: true)
         } else {
             HStack(alignment: .top, spacing: 16) {
-                goodsList(selectionPushes: false)
+                goodsList(goods, current: current, selectionPushes: false)
                     .frame(maxWidth: 340)
                 if let good = current {
                     ScrollView { StatisticsGoodDetailView(model: model, good: good).padding(.trailing) }
@@ -127,7 +130,7 @@ struct StatisticsGoodsTab: View {
         }
     }
 
-    private func goodsList(selectionPushes: Bool) -> some View {
+    private func goodsList(_ goods: [StatisticsModel.GoodRow], current: Good?, selectionPushes: Bool) -> some View {
         List {
             if model.stoppedProducersNow > 0 {
                 Label(
@@ -137,7 +140,7 @@ struct StatisticsGoodsTab: View {
                 .foregroundStyle(.red)
                 .font(.footnote.weight(.semibold))
             }
-            ForEach(model.goods) { row in
+            ForEach(goods) { row in
                 if selectionPushes {
                     NavigationLink(value: row.good) { StatisticsGoodRowView(row: row, isSelected: false) }
                 } else {

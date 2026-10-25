@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Sheet } from "../Sheet/Sheet";
 import { SegmentedPicker } from "../SegmentedPicker/SegmentedPicker";
 import { GoodIcon, type Good } from "../GoodIcon/GoodIcon";
@@ -48,8 +48,9 @@ export interface StatisticsGoodDetail {
 export type StatisticsTab = "Goods" | "Money" | "People" | "Rivals";
 
 export interface StatisticsPanelProps {
-  /** The open tab. Default Goods. `Rivals` is offered only when `standings` has rivals. */
+  /** The open tab. Default Goods. `Rivals` is offered only when `standings` has rivals. The panel keeps its own tab once the viewer picks one; a new `tab` value moves it. */
   tab?: StatisticsTab;
+  onTabChange?: (tab: StatisticsTab) => void;
   /** The x axis: the year at the start of a year, "" between. One per season. */
   seasonLabels: string[];
   /** Goods tab: producers stopped now, across all goods. */
@@ -261,8 +262,12 @@ const spendingColours = [palette[1], "var(--cb-secondary-label)"];
 function MoneyTab({ props }: { props: StatisticsPanelProps }) {
   const { income = [], spending = [], balance = [], seasonLabels } = props;
   const all = [...income, ...spending];
-  const top = Math.max(...income.flatMap((s) => s.values), 1);
-  const bottom = Math.max(...spending.flatMap((s) => s.values.map((v) => -v)), 1);
+  // Bars stack, so the axis fits the tallest season's total, not the largest single value.
+  const seasonCount = Math.max(balance.length, 1);
+  const stackTotal = (group: StatisticsSeries[], season: number) => group.reduce((sum, s) => sum + Math.abs(s.values[season] ?? 0), 0);
+  const seasons = Array.from({ length: seasonCount }, (_, season) => season);
+  const top = Math.max(...seasons.map((season) => stackTotal(income, season)), 1);
+  const bottom = Math.max(...seasons.map((season) => stackTotal(spending, season)), 1);
   const height = 140;
   const slot = chartWidth / Math.max(balance.length, 1);
   const zero = (top / (top + bottom)) * height;
@@ -379,16 +384,26 @@ function RivalsTab({ props }: { props: StatisticsPanelProps }) {
  * go; the detail shows made against used, the store level and that strip.
  */
 export function StatisticsPanel(props: StatisticsPanelProps) {
-  const { tab = "Goods", standings, width, height, onDone } = props;
+  const { tab = "Goods", onTabChange, standings, width, height, onDone } = props;
+  const [current, setCurrent] = useState<StatisticsTab>(tab);
+  useEffect(() => setCurrent(tab), [tab]);
   const tabs: StatisticsTab[] = standings && standings.length > 1 ? ["Goods", "Money", "People", "Rivals"] : ["Goods", "Money", "People"];
   return (
     <Sheet title="Statistics" width={width} height={height} onDone={onDone}>
       <div className="cb-stat">
-        <SegmentedPicker options={tabs} selected={tab} label="Statistics view" />
-        {tab === "Goods" ? <GoodsTab props={props} /> : null}
-        {tab === "Money" ? <MoneyTab props={props} /> : null}
-        {tab === "People" ? <PeopleTab props={props} /> : null}
-        {tab === "Rivals" ? <RivalsTab props={props} /> : null}
+        <SegmentedPicker
+          options={tabs}
+          selected={current}
+          label="Statistics view"
+          onChange={(option) => {
+            setCurrent(option as StatisticsTab);
+            onTabChange?.(option as StatisticsTab);
+          }}
+        />
+        {current === "Goods" ? <GoodsTab props={props} /> : null}
+        {current === "Money" ? <MoneyTab props={props} /> : null}
+        {current === "People" ? <PeopleTab props={props} /> : null}
+        {current === "Rivals" ? <RivalsTab props={props} /> : null}
       </div>
     </Sheet>
   );
