@@ -1,6 +1,6 @@
 ---
 name: playtester-optimizer
-description: Use to stress Citybuilder's economy as a min-maxer: hunts the best production ratios and exploits, probes storage caps and backpressure, and notices numbers that do not add up. Plays on an iPad in landscape.
+description: "Use to stress Citybuilder's economy as a min-maxer: hunts the best production ratios and exploits, probes storage caps and backpressure, and notices numbers that do not add up. Plays on an iPad in landscape."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

@@ -1,6 +1,6 @@
 ---
 name: playtester-trader
-description: Use to test Citybuilder's ships, routes, market and rivals (and orders, once they exist) as a player who wants to make money by trading. Plays on an iPhone in landscape.
+description: "Use to test Citybuilder's ships, routes, market and rivals (and orders, once they exist) as a player who wants to make money by trading. Plays on an iPhone in landscape."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

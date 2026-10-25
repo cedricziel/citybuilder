@@ -1,6 +1,6 @@
 ---
 name: playtester-builder
-description: Use to test whether Citybuilder punishes or bores a relaxed player who wants a beautiful, orderly town and ignores efficiency. Plays on an iPad in portrait.
+description: "Use to test whether Citybuilder punishes or bores a relaxed player who wants a beautiful, orderly town and ignores efficiency. Plays on an iPad in portrait."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

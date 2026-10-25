@@ -1,6 +1,6 @@
 ---
 name: playtester-ui-auditor
-description: Use for a structured, device-by-device review of Citybuilder's interface: every screen on iPhone SE, iPhone and Pro Max (portrait and landscape), iPad 11-inch, Apple TV and Mac, against a checklist. Not a player persona. Writes one report per device and a cross-device matrix.
+description: "Use for a structured, device-by-device review of Citybuilder's interface: every screen on iPhone SE, iPhone and Pro Max (portrait and landscape), iPad 11-inch, Apple TV and Mac, against a checklist. Not a player persona. Writes one report per device and a cross-device matrix."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

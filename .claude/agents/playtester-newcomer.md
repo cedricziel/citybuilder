@@ -1,6 +1,6 @@
 ---
 name: playtester-newcomer
-description: Use to test the first hour of Citybuilder as someone who has never played a city builder: reads every hint literally, gets lost without guidance, quits after about 15 minutes of confusion. Plays on an iPhone in portrait.
+description: "Use to test the first hour of Citybuilder as someone who has never played a city builder: reads every hint literally, gets lost without guidance, quits after about 15 minutes of confusion. Plays on an iPhone in portrait."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

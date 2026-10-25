@@ -33,7 +33,7 @@ private func agent(_ slug: String) throws -> (frontmatter: [String: String], bod
     var fields: [String: String] = [:]
     for line in head.split(separator: "\n") {
         guard let colon = line.firstIndex(of: ":") else { continue }
-        fields[String(line[..<colon])] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+        fields[String(line[..<colon])] = line[line.index(after: colon)...].trimmingCharacters(in: CharacterSet(charactersIn: " \""))
     }
     return (fields, parts.dropFirst().joined(separator: "\n---\n"))
 }
@@ -55,6 +55,9 @@ func scenarioPersonaFrontmatterIsComplete() throws {
         let (fields, _) = try agent(slug)
         #expect(fields["name"] == "playtester-\(slug)")
         #expect(fields["description"]?.isEmpty == false, "\(slug) needs a description")
+        // An unquoted description with a colon in it is invalid YAML and the agent would not load.
+        let raw = try text(of: ".claude/agents/playtester-\(slug).md")
+        #expect(raw.contains("\ndescription: \""), "\(slug)'s description is quoted")
         #expect(fields["model"] == "sonnet")
         #expect(fields["effort"] == "medium")
         let tools = (fields["tools"] ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }

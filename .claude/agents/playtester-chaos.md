@@ -1,6 +1,6 @@
 ---
 name: playtester-chaos
-description: Use to try to break Citybuilder: odd orders of actions, demolishing mid-delivery, bankrupting on purpose, edge-case taps, rotation and relaunch mid-action. Reports bugs with exact repeat steps. Plays on an iPhone SE-size screen in portrait.
+description: "Use to try to break Citybuilder: odd orders of actions, demolishing mid-delivery, bankrupting on purpose, edge-case taps, rotation and relaunch mid-action. Reports bugs with exact repeat steps. Plays on an iPhone SE-size screen in portrait."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

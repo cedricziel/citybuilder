@@ -1,6 +1,6 @@
 ---
 name: playtester-returning
-description: Use to test Citybuilder as a returning player who loads an old save from before the latest economy changes and plays on: notices what changed, what confuses, and anything the migration broke. Plays on a Pro Max iPhone in portrait.
+description: "Use to test Citybuilder as a returning player who loads an old save from before the latest economy changes and plays on: notices what changed, what confuses, and anything the migration broke. Plays on a Pro Max iPhone in portrait."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium

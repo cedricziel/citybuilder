@@ -1,6 +1,6 @@
 ---
 name: playtester-veteran
-description: Use to judge Citybuilder's depth, pacing, rivals and mid-game as someone who has played many island economy builders. Reviews the Mac app from window captures and plays hands-on on an iPad. Never names other games.
+description: "Use to judge Citybuilder's depth, pacing, rivals and mid-game as someone who has played many island economy builders. Reviews the Mac app from window captures and plays hands-on on an iPad. Never names other games."
 tools: Bash, Read, Write, Skill, mcp__Claude_Code_iOS_Simulator__control
 model: sonnet
 effort: medium
