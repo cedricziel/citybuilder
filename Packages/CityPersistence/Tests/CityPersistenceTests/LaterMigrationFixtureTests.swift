@@ -255,3 +255,37 @@ func aMigratedStoreTakesNoMoreOfAnOverflowingGoodUntilItDropsBelowTheLimit() thr
     #expect(pile.deposit(.planks, amount: 5) == 1)
     #expect(pile.quantity(of: .planks) == 40)
 }
+
+private func v10FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v10_single_island.json")
+}
+
+/// Encode a World as a v10 save: the current shape, written before the
+/// `deliverToConsumer` carrier mission existed.
+private func makeV10Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 10
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v10 single-island save", .enabled(if: regenerateFixtures))
+func regenerateV10SingleIslandFixture() throws {
+    try requireDeterministicHashing()
+    let world = World.newGame(layout: .singleIsland, seed: 0, difficulty: .normal, rivals: false)
+    var data = try makeV10Payload(world: world, writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v10FixtureURL())
+}
+
+@Test("scenario: v10 save loads as v11")
+func scenarioV10SaveLoadsAsV11() throws {
+    let data = try Data(contentsOf: v10FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 10, "fixture must be a v10 save")
+    let loaded = try decodeWorld(data)
+    #expect(loaded.layout == .singleIsland)
+    #expect(!loaded.buildings.isEmpty)
+}

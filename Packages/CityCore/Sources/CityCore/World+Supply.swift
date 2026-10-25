@@ -66,12 +66,8 @@ extension World {
     /// Dispatch buffer→producer carriers for producers short of inputs.
     /// Producers and goods are visited in a fixed order so replays stay
     /// identical.
-    mutating func spawnSupplyCarriers(events: inout [WorldEvent]) {
-        let consumers = buildings.values
-            .filter { $0.state == .operational }
-            .map { ($0, Self.suppliedGoods(of: $0)) }
-            .filter { !$0.1.isEmpty }
-            .sorted { $0.0.id.raw < $1.0.id.raw }
+    /// `consumers` come from `operationalConsumers()`.
+    mutating func spawnSupplyCarriers(consumers: [(Building, [Good: Int])], events: inout [WorldEvent]) {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {
@@ -88,6 +84,16 @@ extension World {
                 }
             }
         }
+    }
+
+    /// Operational buildings with goods to be supplied, in entity order,
+    /// with those goods and amounts.
+    func operationalConsumers() -> [(Building, [Good: Int])] {
+        buildings.values
+            .filter { $0.state == .operational }
+            .map { ($0, Self.suppliedGoods(of: $0)) }
+            .filter { !$0.1.isEmpty }
+            .sorted { $0.0.id.raw < $1.0.id.raw }
     }
 
     /// Goods supply carriers bring to `building`, with the amount used at
@@ -129,10 +135,16 @@ extension World {
         events.append(.carrierDeparted(carrier: carrierID, from: path[0], good: good))
     }
 
+    /// Carriers on the way to `consumer`, from storage or straight from a
+    /// producer, optionally only those carrying `good`.
     func supplyCarrierCount(to consumer: EntityID, good: Good? = nil) -> Int {
         carriers.values.count { carrier in
-            guard case let .retrieve(carried, _, _, toConsumer) = carrier.mission else { return false }
-            return toConsumer == consumer && (good == nil || carried == good)
+            switch carrier.mission {
+            case let .retrieve(carried, _, _, toConsumer), let .deliverToConsumer(carried, _, _, toConsumer):
+                toConsumer == consumer && (good == nil || carried == good)
+            case .deliver, .deliverToConstructionSite:
+                false
+            }
         }
     }
 

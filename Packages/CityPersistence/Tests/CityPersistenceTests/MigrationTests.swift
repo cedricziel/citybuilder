@@ -423,3 +423,13 @@ struct CountingMigration: Migration {
         return try wrapped.migrate(payload)
     }
 }
+
+@Test("scenario: v10 save moves to v11 unchanged")
+func scenarioV10SaveMovesToV11Unchanged() throws {
+    let world: [String: Any] = ["carriers": [Any](), "seed": 7]
+    let v10 = try JSONSerialization.data(withJSONObject: ["version": 10, "world": world], options: [.sortedKeys])
+    let migrated = try MigrationRegistry().migrate(payload: v10, toVersion: 11)
+    let parsed = try #require(try JSONSerialization.jsonObject(with: migrated) as? [String: Any])
+    #expect(parsed["version"] as? Int == 11)
+    #expect(parsed["world"] as? NSDictionary == world as NSDictionary)
+}

@@ -36,10 +36,7 @@ private let warehouseLimit = BuildingKind.warehouse.storagePerGood ?? 0
 
 private func carriers(from producer: EntityID, in world: World) -> [Carrier.Mission] {
     world.carriers.values.sorted { $0.id.raw < $1.id.raw }.map(\.mission).filter { mission in
-        switch mission {
-        case let .deliver(_, _, from, _), let .deliverToConstructionSite(_, _, from, _): from == producer
-        case .retrieve: false
-        }
+        if case .retrieve = mission { false } else { mission.source == producer }
     }
 }
 
@@ -160,11 +157,7 @@ func scenarioPortRespectsBufferCapacityOnLandSideDeposit() {
 private func total(of goods: [Good], in world: World) -> Int {
     let stored = world.stockpiles.values.reduce(0) { sum, pile in sum + goods.reduce(0) { $0 + pile.quantity(of: $1) } }
     let carried = world.carriers.values.reduce(0) { sum, carrier in
-        switch carrier.mission {
-        case let .deliver(good, amount, _, _), let .retrieve(good, amount, _, _),
-             let .deliverToConstructionSite(good, amount, _, _):
-            goods.contains(good) ? sum + amount : sum
-        }
+        goods.contains(carrier.mission.good) ? sum + carrier.mission.amount : sum
     }
     return stored + carried
 }
