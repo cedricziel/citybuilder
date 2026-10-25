@@ -65,11 +65,15 @@ public struct CityRootView: View {
                 hudLayer(layout: layout, hudWidth: proxy.size.width - layout.margin * 2, worldViewSize: CGSize(
                     width: proxy.size.width + insets.leading + insets.trailing,
                     height: proxy.size.height + insets.top + insets.bottom
-                ))
-                .padding(layout.margin)
-                #if os(tvOS)
-                .modifier(TVHUDCommands(root: self))
-                #endif
+                ), insets: insets)
+                    .padding(layout.margin)
+                    .onChange(of: layout, initial: true) {
+                        session.ordersReplaceInspector = OrderBoardLayout.replacesInspector(layout: layout)
+                    }
+                    .ordersSheet(session: session, layout: layout)
+                    #if os(tvOS)
+                    .modifier(TVHUDCommands(root: self))
+                    #endif
             }
             touchPlacementHUD
                 .zIndex(1)
@@ -205,6 +209,12 @@ public final class GameSession {
     public var isWinSheetPresented = false
     /// The Statistics sheet is open. Session state, never saved.
     public var isStatisticsPresented = false
+    /// The order board is open. Session state, never saved.
+    public var isOrdersPresented = false
+    /// Where the board and the inspector callout cannot share the screen
+    /// (a compact width), opening one closes the other. The root view sets
+    /// it from the layout. Spec: `platform-shells` / Order board layout.
+    public var ordersReplaceInspector = false
     /// The Statistics sheet's open tab, kept between openings.
     public var statisticsTab: StatisticsModel.Tab = .goods
 
@@ -317,48 +327,6 @@ public final class GameSession {
     public var lastPanY: CGFloat = 0
     public var lastMagnification: CGFloat = 1.0
 
-    /// Iso projection constants. Kept here (rather than imported from
-    /// CityRender2D) so CityUI does not depend on the renderer package.
-    private static let tileWidth: Double = 64
-    private static let tileHeight: Double = 32
-
-    /// Translate a screen-space pan delta (pixels) into a tile-space
-    /// camera delta and apply it.
-    ///
-    /// Derived from first principles:
-    /// - SwiftUI DragGesture.translation: y is DOWN-positive
-    /// - SpriteKit scene (and IsoMath): y is UP-positive
-    /// - For the world to follow the finger, the camera must move OPPOSITE
-    ///   the finger by the same screen amount. In scene-y-up coords:
-    ///       camera_dx_scene = -dxScreen
-    ///       camera_dy_scene = +dyScreen   (sign flip because of y-down → y-up)
-    /// - Inverting the iso projection (screen.x = (col-row)·halfW,
-    ///   scene.y = -(col+row)·halfH):
-    ///       dCol - dRow =  camera_dx_scene / halfW = -dxScreen / halfW
-    ///       dCol + dRow = -camera_dy_scene / halfH = -dyScreen / halfH
-    ///   →   dCol = -(dxScreen/tileWidth + dyScreen/tileHeight) / zoom
-    ///       dRow =  (dxScreen/tileWidth - dyScreen/tileHeight) / zoom
-    ///
-    /// Concrete check: drag up by 32 px (dyScreen = -32) yields dCol = +1,
-    /// dRow = +1, so the camera's (col, row) both increase, scene-y
-    /// decreases, camera moves DOWN in scene, content shifts UP — which is
-    /// "drag up → scroll down" in scroll-bar parlance.
-    public func handlePanDelta(deltaX: CGFloat, deltaY: CGFloat) {
-        cameraGlide = nil
-        let zoom = max(world.camera.zoom, 0.0001)
-        let dxOverW = Double(deltaX) / Self.tileWidth
-        let dyOverH = Double(deltaY) / Self.tileHeight
-        let dCol = -(dxOverW + dyOverH) / zoom
-        let dRow = (dxOverW - dyOverH) / zoom
-        world.camera.pan(deltaX: dCol, deltaY: dRow)
-        cameraDidMove()
-    }
-
-    /// Apply a pinch factor (relative to last reading) to the zoom.
-    public func handlePinch(factor: CGFloat) {
-        world.camera.multiplyZoom(by: Double(factor))
-    }
-
     /// Tap at a tile coordinate. Behavior depends on the armed tool:
     /// - .inspect (default): select the tile for the inspector.
     /// - .place(kind): enqueue a `.place` command. Tool stays armed so
@@ -388,7 +356,11 @@ public final class GameSession {
         }
     }
 
-    public var selectedTile: TileCoordinate?
+    public var selectedTile: TileCoordinate? {
+        didSet {
+            if selectedTile != nil, ordersReplaceInspector { isOrdersPresented = false }
+        }
+    }
 
     /// The building the player is positioning before committing it.
     /// Transient: never saved. Spec: `rendering-2_5d` / Placement HUD.

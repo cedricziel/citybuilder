@@ -72,8 +72,11 @@ public enum InspectorCalloutLayout {
     /// its capsule's band) while it shows. Spec: `platform-shells` /
     /// Minimap layout, First-hour guide.
     public static func freeArea(
-        size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false
+        size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false,
+        showsOrdersBoard: Bool = false, collapsesFirstSteps: Bool = false
     ) -> CGRect {
+        // The open board collapses the first-steps card (`Order board layout`).
+        let layout = showsOrdersBoard || collapsesFirstSteps ? layout.withFirstStepsCollapsed : layout
         let margin = layout.margin
         var top = topBarBottom(topInset: insets.top, layout: layout)
         let left = insets.leading + margin + layout.railInset
@@ -96,6 +99,9 @@ public enum InspectorCalloutLayout {
             } else {
                 right = min(right, size.width - insets.trailing - margin - FirstStepsCardView.width - MinimapLayout.gap)
             }
+        }
+        if showsOrdersBoard {
+            right = min(right, size.width - insets.trailing - margin - OrderBoardLayout.width(for: layout.idiom) - MinimapLayout.gap)
         }
         return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
     }
@@ -152,7 +158,8 @@ struct InspectorCalloutView<Actions: View>: View {
             let (anchor, half) = projection(viewSize: proxy.size)
             let bounds = InspectorCalloutLayout.freeArea(
                 size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
-                showsFirstSteps: session.firstStepsGuide != nil
+                showsFirstSteps: session.firstStepsGuide != nil,
+                showsOrdersBoard: session.isOrdersPresented && OrderBoardLayout.presentation(for: layout) == .column
             )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,

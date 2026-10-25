@@ -6,14 +6,23 @@ import SwiftUI
 /// Split out of `CityRootView` to keep the main file under SwiftLint's
 /// 500-line ceiling. Spec: `platform-shells` / Adaptive HUD per idiom.
 extension CityRootView {
-    func hudLayer(layout: HUDLayout, hudWidth: CGFloat, worldViewSize: CGSize) -> some View {
+    func hudLayer(layout hudLayout: HUDLayout, hudWidth: CGFloat, worldViewSize: CGSize, insets: EdgeInsets) -> some View {
+        // The open board takes the right column, so the first-steps card
+        // shows as its capsule (`Order board layout`).
+        let boardFrame = session.isOrdersPresented
+            ? OrderBoardLayout.frame(
+                in: worldViewSize, insets: insets, layout: hudLayout, showsMinimap: showsCornerMinimap,
+                showsFirstSteps: session.firstStepsGuide != nil
+            )
+            : nil
+        let layout = boardFrame == nil ? hudLayout : hudLayout.withFirstStepsCollapsed
         let railInset = layout.railInset
         let firstStepsGuide = session.firstStepsGuide
         return ZStack {
             VStack(spacing: 8) {
                 // The section includes the inset, so its frame spans the
                 // rail too and Up from the rail reaches the top bar.
-                topBar(layout: layout)
+                topBar(layout: hudLayout)
                     .padding(.leading, railInset)
                     .tvFocusSection()
                 HStack(alignment: .top, spacing: 8) {
@@ -35,17 +44,7 @@ extension CityRootView {
                     }
                     .frame(maxWidth: .infinity)
                     .panelAnimation(value: session.banner)
-                    VStack(alignment: .trailing, spacing: 8) {
-                        if MinimapLayout.corner(for: layout) == .topTrailing {
-                            minimap(layout: layout, worldViewSize: worldViewSize)
-                        }
-                        if let guide = firstStepsGuide {
-                            FirstStepsCardView(guide: guide, layout: layout) { session.hideFirstSteps() }
-                                .panelTransition(.fade)
-                        }
-                    }
-                    .tvFocusSection()
-                    .panelAnimation(value: firstStepsGuide == nil)
+                    rightColumn(layout: layout, worldViewSize: worldViewSize, boardFrame: boardFrame)
                 }
                 .padding(.leading, railInset)
             }
@@ -64,6 +63,28 @@ extension CityRootView {
         .panelAnimation(value: session.routeAuthoring != nil)
     }
 
+    /// The trailing column under the top bar: the minimap in the dock
+    /// layout, the first-steps card and the order board.
+    private func rightColumn(layout: HUDLayout, worldViewSize: CGSize, boardFrame: CGRect?) -> some View {
+        let guide = session.firstStepsGuide
+        return VStack(alignment: .trailing, spacing: 8) {
+            if MinimapLayout.corner(for: layout) == .topTrailing {
+                minimap(layout: layout, worldViewSize: worldViewSize)
+            }
+            if let guide {
+                FirstStepsCardView(guide: guide, layout: layout) { session.hideFirstSteps() }
+                    .panelTransition(.fade)
+            }
+            if let boardFrame {
+                OrdersBoardColumn(session: session, frame: boardFrame, isTV: layout.idiom == .tv)
+                    .panelTransition(.slide(.trailing))
+            }
+        }
+        .tvFocusSection()
+        .panelAnimation(value: guide == nil)
+        .panelAnimation(value: boardFrame != nil)
+    }
+
     @ViewBuilder
     private func topBar(layout: HUDLayout) -> some View {
         let pill = StatusPillView(hud: session.hud, session: session, layout: layout) { session.togglePause() }
@@ -78,7 +99,7 @@ extension CityRootView {
             HStack(alignment: .top, spacing: 8) {
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
                 pill
-                menuButtons.frame(maxWidth: .infinity, alignment: .trailing)
+                menuButtons(layout: layout).frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }

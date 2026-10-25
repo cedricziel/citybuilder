@@ -35,6 +35,8 @@ public struct HUDLayout: Equatable, Sendable {
     public var isCompactWidth = false
     /// Shorter than 500 points, such as an iPhone in landscape.
     public var isCompactHeight = false
+    /// The order board is open, so the first-steps card shows as its capsule.
+    public var forcesFirstStepsCollapsed = false
 
     public static func make(size: CGSize, idiom: HUDIdiom) -> HUDLayout {
         HUDLayout(
@@ -46,7 +48,14 @@ public struct HUDLayout: Equatable, Sendable {
     /// The first-hour guide shows as its one-line capsule. Spec:
     /// `platform-shells` / First-hour guide.
     public var collapsesFirstSteps: Bool {
-        isCompactWidth || isCompactHeight
+        isCompactWidth || isCompactHeight || forcesFirstStepsCollapsed
+    }
+
+    /// The same layout with the first-steps card collapsed.
+    public var withFirstStepsCollapsed: HUDLayout {
+        var layout = self
+        layout.forcesFirstStepsCollapsed = true
+        return layout
     }
 
     public var isPhone: Bool {
