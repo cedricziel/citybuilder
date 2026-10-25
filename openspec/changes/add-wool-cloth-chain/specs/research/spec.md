@@ -7,9 +7,9 @@ The tech catalog SHALL define these techs:
 | Tech | Cost | Requires | Unlocks |
 |---|---|---|---|
 | Scholarship | 30 | — | library |
-| Milling | 560 | — | windmill |
-| Mining | 560 | — | mine, charcoal burner |
-| Metallurgy | 1,120 | Mining | smelter, toolsmith |
+| Milling | 720 | — | windmill |
+| Mining | 720 | — | mine, charcoal burner |
+| Metallurgy | 1,440 | Mining | smelter, toolsmith |
 | Seafaring | 60 | — | port, shipyard |
 | Weaving | 720 | — | sheep farm, weaver |
 

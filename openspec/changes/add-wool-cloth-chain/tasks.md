@@ -3,7 +3,7 @@
 - [x] 1.1 Tests-first: translate the `goods-and-production`, `population-and-needs` and `research` scenarios into failing swift-testing tests in CityCoreTests; confirm red
 - [x] 1.2 Implement to green: the goods, buildings and `weaving` tech in the core pack, then `make gamedata` (design D1–D3)
 - [x] 1.3 Update the tests whose merchant fixtures lack cloth
-- [x] 1.4 Regenerate the `DeterminismFixture` baseline in its own commit that says why (design D5), checked on macOS and Linux
+- [ ] 1.4 Regenerate the `DeterminismFixture` baseline in its own commit that says why (design D6), checked on macOS and Linux (the Linux comparison runs in CI)
 
 ## 2. Art wiring
 

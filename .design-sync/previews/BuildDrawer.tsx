@@ -29,7 +29,7 @@ export const Craft = () => (
         { label: "Windmill", art: "windmill", cost: 110, needs: "Milling" },
         { label: "Charcoal", art: "charcoal-burner", cost: 70, needs: "Mining" },
         { label: "Smelter", art: "smelter", cost: 150, needs: "Metallurgy" },
-        { label: "Weaver", art: "weaver", cost: 130, needs: "Weaving" },
+        { label: "Weaver", art: "weaver", cost: 120, needs: "Weaving" },
       ]}
     />
   </OnMap>
