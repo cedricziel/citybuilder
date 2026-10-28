@@ -35,8 +35,8 @@ public enum HouseTier: UInt8, CaseIterable, Codable, Sendable {
 
     public var declineGrace: Int {
         switch self {
-        case .peasants: 3
-        case .citizens: 3
+        case .peasants: 1
+        case .citizens: 1
         case .merchants: 3
         }
     }

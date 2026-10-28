@@ -36,8 +36,8 @@ items:
   # declineGrace: consumption intervals (100 ticks) a need may stay short
   # before a house of the tier loses residents or drops a tier, on Normal;
   # Easy adds one, Hard takes one off (decline-grace D3).
-  - { kind: Tier, id: peasants,  name: Peasants,  capacity: 4, taxPerResident: 1, needs: [food], declineGrace: 3 }
-  - { kind: Tier, id: citizens,  name: Citizens,  capacity: 6, taxPerResident: 2, needs: [food, planks], declineGrace: 3 }
+  - { kind: Tier, id: peasants,  name: Peasants,  capacity: 4, taxPerResident: 1, needs: [food], declineGrace: 1 }
+  - { kind: Tier, id: citizens,  name: Citizens,  capacity: 6, taxPerResident: 2, needs: [food, planks], declineGrace: 1 }
   - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [food, planks, bread, tools], declineGrace: 3 }
 
   # --- Buildings -----------------------------------------------------

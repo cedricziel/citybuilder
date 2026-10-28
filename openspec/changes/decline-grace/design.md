@@ -42,6 +42,10 @@ Alternative: a `Difficulty` item kind in the packs. Rejected: it is a new genera
 
 Alternative: one global N. Rejected: peasants have one need and merchants six, and the sweeps may want different values.
 
+### D3a. Peasants and citizens wait one interval
+
+A grace of 3 on every tier made the careful bot win the Guild Town at 16,430 ticks instead of 12,130 (the scenario has a 7-year, 16,800-tick limit in its test). Setting the grace one tier at a time pinned it on the peasants (16,430 with only the peasants' grace at 3; 13,030 for the citizens'; 12,130, unchanged, for the merchants'). The cause is the shared stock: houses draw in id order, so when food is scarce each house is short in rotation, one or two intervals in three, and never three in a row. With a grace the houses never shrink, the town keeps more peasants than its farms feed (165 against 90 residents at 13,200 ticks), and they eat the food the citizens need to advance. A shrinking shortage is what matches residents to food in the first place. So the peasants, whose single need is food, keep a grace of 1, and so do the citizens; the merchants, who have five or six needs and are the ones the issue is about, get the longer grace. The sweeps choose the merchants' value.
+
 ### D4. The warning is a building issue
 
 `BuildingIssue` gets `.runningShort(Good, intervals: Int, grace: Int)`, so the inspector needs no more than the issue. `World.buildingIssues()` reports it for a player house with residents whose binding needs include one with a count of 1 or more: the one with the largest count, ties in the tier's need order. The issue is declining once `intervals` has reached `grace`. It comes after the house's road checks, so a missing road still wins.
