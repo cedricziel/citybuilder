@@ -147,7 +147,12 @@ Orders must not bankrupt towns or shorten the climb. With the PlayerBot's `Order
 - **Pacing:** the mid-game pacing sweep keeps the median Renaissance between 6 and 8 years on Normal, and the share of arms that reach a merchant does not fall.
 - **Order health:** at least half of the orders the kit accepts are fulfilled, so orders are achievable; fewer than all, so they are demanding.
 
-The tables, before and after, go in the PR.
+**Measured** (release, `RIVAL_SWEEP=1`, on main with wool → cloth, direct hops and per-good storage, 2026-10-28):
+
+- **Pacing, Normal, 10 seeds per layout and bot order, 20 years.** The arms that ignore orders equal a fresh main run in every row. With the kit on, the median Renaissance moves from 7.0 to 6.9 years (archipelago, careful), 7.15 to 6.8 (single island, careful) and by 0.1 or less in the other rows; paired by seed the median delta is 0.0 years over 54 pairs. One archipelago careful seed that reached a merchant without orders did not with them. No bankruptcies.
+- **Order health.** The kit accepted 357 orders in the pacing games and fulfilled 270 of the 355 that resolved (76%). Over 36,000 ticks on both layouts it fulfilled 76 and failed 18 (81%).
+- **First hour and solvency.** No bankruptcies with the kit on in the market-trading sweep (20 games) or in the guided Hard start (20 games, 104–135 residents with orders and 104–135 without).
+- **Market control with the kit on** (archipelago seeds 0–29, 4,000 ticks): no bankruptcies either way; residents 976 without the market and 992 with it, so the 95% bound holds.
 
 ### D12. Saves and determinism
 

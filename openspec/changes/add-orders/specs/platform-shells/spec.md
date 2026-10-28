@@ -9,6 +9,11 @@ A game with an active calendar SHALL offer an order board from the HUD, on iPhon
 - **WHEN** the board holds one accepted order and two offers
 - **THEN** the accepted order is the first card, and the offers follow by deadline
 
+#### Scenario: Offers appear in deadline order
+
+- **WHEN** the board holds three offers with deadlines in Autumn, Spring and Summer
+- **THEN** the cards list the Spring offer, then the Summer offer, then the Autumn offer
+
 #### Scenario: A card shows what the order needs
 
 - **WHEN** a crown offer for 54 planks with a $540 reward and a deadline in Spring 1203 is shown

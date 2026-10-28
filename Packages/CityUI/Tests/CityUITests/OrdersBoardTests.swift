@@ -62,6 +62,16 @@ func scenarioBoardListsAcceptedOrdersFirst() {
 }
 
 @MainActor
+@Test("scenario: offers appear in deadline order")
+func scenarioOffersAppearInDeadlineOrder() {
+    let season = CalendarState.ticksPerSeason
+    let session = boardSession([
+        order(1, deadline: 3 * season), order(2, deadline: 1 * season), order(3, deadline: 2 * season)
+    ])
+    #expect(session.ordersBoard.cards.map(\.id) == [2, 3, 1])
+}
+
+@MainActor
 @Test("scenario: a card shows what the order needs")
 func scenarioACardShowsWhatTheOrderNeeds() throws {
     let session = boardSession([order(1)])
