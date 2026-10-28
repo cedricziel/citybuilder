@@ -72,6 +72,11 @@
   min-width: 0;
 }
 
+/* The phone's date chip sits at the left edge of the centre column, level with the first-steps capsule. */
+.cb-game__date {
+  align-self: flex-start;
+}
+
 .cb-game__right {
   display: flex;
   flex-direction: column;

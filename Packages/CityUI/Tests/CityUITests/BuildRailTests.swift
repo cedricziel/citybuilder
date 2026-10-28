@@ -96,3 +96,10 @@ func scenarioArmingClearsTheSelection() {
     session.selectTool(.place(.road))
     #expect(session.selectedTile == nil)
 }
+
+@Test("scenario: a drawer on a short screen leaves room for the status pill")
+func drawerShortensOnAShortScreen() {
+    #expect(BuildDrawerView.tilesHeight(availableHeight: .infinity) == 280)
+    #expect(BuildDrawerView.tilesHeight(availableHeight: 300) == 236)
+    #expect(BuildDrawerView.tilesHeight(availableHeight: 100) == 96)
+}

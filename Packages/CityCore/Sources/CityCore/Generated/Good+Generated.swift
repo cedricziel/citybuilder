@@ -15,6 +15,8 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case charcoal
     case iron
     case tools
+    case wool
+    case cloth
     case hops
     case beer
     case grapes
@@ -36,6 +38,8 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .charcoal: 5
         case .iron: 14
         case .tools: 30
+        case .wool: 3
+        case .cloth: 14
         case .hops: 3
         case .beer: 16
         case .grapes: 3
@@ -59,6 +63,8 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .charcoal: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .iron: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .tools: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .wool: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .cloth: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .hops: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .beer: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .grapes: MarketTerms(buyLimit: 0, sellLimit: 20)
@@ -91,6 +97,8 @@ public enum GoodsCatalog {
         case .charcoal: GoodSpec(good: .charcoal, displayName: "Charcoal", stackUnit: "baskets")
         case .iron: GoodSpec(good: .iron, displayName: "Iron", stackUnit: "bars")
         case .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets")
+        case .wool: GoodSpec(good: .wool, displayName: "Wool", stackUnit: "fleeces")
+        case .cloth: GoodSpec(good: .cloth, displayName: "Cloth", stackUnit: "bolts")
         case .hops: GoodSpec(good: .hops, displayName: "Hops", stackUnit: "bales")
         case .beer: GoodSpec(good: .beer, displayName: "Beer", stackUnit: "casks")
         case .grapes: GoodSpec(good: .grapes, displayName: "Grapes", stackUnit: "baskets")

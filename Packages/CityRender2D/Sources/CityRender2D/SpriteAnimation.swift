@@ -94,6 +94,8 @@ public enum SpriteAnimation {
         case .farm: Entry(frameCount: 2, timePerFrame: 0.50, loop: .forever)
         case .bakery: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         case .windmill: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
+        // The spinning wheel turns an eighth of a turn a frame.
+        case .weaver: Entry(frameCount: 4, timePerFrame: 0.25, loop: .forever)
         // Cargo comes ashore: lifted, swung onto the quay, set down, swung back (#120).
         case .port: Entry(frameCount: 6, timePerFrame: 0.45, loop: .forever)
         // The hull is planked in four stages, held once finished, then launched off an empty

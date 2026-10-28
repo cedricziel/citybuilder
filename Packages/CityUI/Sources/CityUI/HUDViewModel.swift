@@ -20,6 +20,8 @@ public final class HUDViewModel {
     public var dateText: String = ""
     /// SF Symbol for the time of day. Spec: `platform-shells` (city life).
     public var timeOfDaySymbol: String = "sun.max.fill"
+    /// SF Symbol for the season, next to the date on a phone.
+    public var seasonSymbol: String = "camera.macro"
 
     /// Whether the status pill's stocks tray is open. Spec:
     /// `platform-shells` / Status pill and stocks tray.
@@ -46,6 +48,7 @@ public final class HUDViewModel {
         population = snapshot.totalPopulation
         dateText = snapshot.date.displayText
         timeOfDaySymbol = Self.symbol(for: TimeOfDay(tick: snapshot.tickCount).phase)
+        seasonSymbol = Self.symbol(for: snapshot.date.season)
         currentIsland = resolveIsland(in: snapshot) ?? currentIsland.flatMap {
             // Sticky over water: keep showing the previous island, but
             // refresh its aggregates so any new deposits land in the
@@ -138,6 +141,15 @@ public struct HUDGoodChip: Hashable, Sendable {
 }
 
 extension HUDViewModel {
+    static func symbol(for season: Season) -> String {
+        switch season {
+        case .spring: "camera.macro"
+        case .summer: "sun.max.fill"
+        case .autumn: "leaf.fill"
+        case .winter: "snowflake"
+        }
+    }
+
     static func symbol(for phase: TimeOfDay.Phase) -> String {
         switch phase {
         case .night: "moon.stars.fill"

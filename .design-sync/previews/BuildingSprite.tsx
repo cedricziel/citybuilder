@@ -23,7 +23,7 @@ const Row = ({ list, night }: { list: BuildingArt[]; night?: boolean }) => (
 export const Housing = () => <Row list={["house", "house-tier2", "house-tier3"]} />;
 
 export const Production = () => (
-  <Row list={["lumberjack-hut", "forester", "sawmill", "farm", "grain-farm", "windmill", "quern-house", "bakery", "mine", "charcoal-burner", "smelter", "toolsmith"]} />
+  <Row list={["lumberjack-hut", "forester", "sawmill", "farm", "grain-farm", "windmill", "quern-house", "bakery", "mine", "charcoal-burner", "smelter", "toolsmith", "sheep-farm", "weaver"]} />
 );
 
 export const Culture = () => (
@@ -38,6 +38,6 @@ export const Industry = () => <Row list={["steam-engine", "power-plant"]} />;
 
 export const Night = () => (
   <div className="cb-theme-dark" style={{ background: "#1b2440", padding: 16, borderRadius: 8 }}>
-    <Row list={["house", "house-tier2", "house-tier3", "bakery", "windmill", "toolsmith"]} night />
+    <Row list={["house", "house-tier2", "house-tier3", "bakery", "windmill", "toolsmith", "weaver"]} night />
   </div>
 );

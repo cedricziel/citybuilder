@@ -16,6 +16,8 @@ export const goods: Good[] = [
   "charcoal",
   "iron",
   "tools",
+  "wool",
+  "cloth",
   "hops",
   "beer",
   "grapes",

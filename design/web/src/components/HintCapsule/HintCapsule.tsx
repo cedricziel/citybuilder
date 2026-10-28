@@ -3,7 +3,7 @@ import { Glass } from "../Glass/Glass";
 import "./HintCapsule.css";
 
 export interface HintCapsuleProps {
-  /** One short line, e.g. "Tap or drag to place house — $120". */
+  /** One short line, e.g. "Click or drag to place house — $120". */
   children: ReactNode;
 }
 

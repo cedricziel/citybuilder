@@ -34,7 +34,7 @@ extension CityRootView {
             showsMinimap.toggle()
         } label: {
             Image(systemName: showsMinimap ? "map.fill" : "map")
-                .imageScale(.large)
+                .hudIconFont()
                 .padding(8)
                 .background(.thinMaterial, in: Circle())
         }
@@ -68,7 +68,7 @@ extension CityRootView {
             }
         } label: {
             Image(systemName: "ellipsis.circle")
-                .imageScale(.large)
+                .hudIconFont()
                 .padding(8)
                 .background(.thinMaterial, in: Circle())
         }
@@ -81,7 +81,7 @@ extension CityRootView {
             researchPresented = true
         } label: {
             Image(systemName: "book.fill")
-                .imageScale(.large)
+                .hudIconFont()
                 .padding(8)
                 .background(.thinMaterial, in: Circle())
         }
@@ -96,7 +96,7 @@ extension CityRootView {
             settingsPresented = true
         } label: {
             Image(systemName: "gearshape.fill")
-                .imageScale(.large)
+                .hudIconFont()
                 .padding(8)
                 .background(.thinMaterial, in: Circle())
         }

@@ -106,3 +106,44 @@ func fadeOutFinishesForAReleasedVoice() async throws {
     #expect(node.engine == nil)
     #expect(rig.trace.steps.suffix(2) == [.stop, .detach])
 }
+
+/// A looping voice on its own node, attached to the music bus, not started.
+@MainActor
+private func loopingVoice(_ rig: Rig) throws -> (PlayerVoice, AVAudioPlayerNode) {
+    let file = try AVAudioFile(forReading: #require(tuneBundle?.url(forResource: "tune", withExtension: "wav")))
+    let node = AVAudioPlayerNode()
+    rig.engine.underlyingEngine.attach(node)
+    rig.engine.underlyingEngine.connect(node, to: rig.engine.bus(.music), format: file.processingFormat)
+    try rig.engine.start()
+    return (PlayerVoice(node: node, file: file, engine: rig.engine, volume: 1), node)
+}
+
+@MainActor
+@Test("scenario: a second start does nothing")
+func secondVoiceStartDoesNothing() async throws {
+    let rig = try Rig()
+    defer { rig.engine.stop() }
+    let (voice, _) = try loopingVoice(rig)
+    voice.start(fade: 0)
+    voice.start(fade: 0)
+    try await rig.settle(0.05)
+    #expect(rig.trace.steps.count(where: { $0 == .schedule }) == 2)
+    #expect(rig.trace.steps.count(where: { $0 == .start }) == 1)
+}
+
+@MainActor
+@Test("scenario: a second stop does nothing")
+func secondVoiceStopDoesNothing() async throws {
+    let rig = try Rig()
+    defer { rig.engine.stop() }
+    let (voice, node) = try loopingVoice(rig)
+    voice.start(fade: 0)
+    voice.stop(fade: 0)
+    voice.stop(fade: 0)
+    voice.start(fade: 0)
+    try await rig.settle { node.engine == nil }
+    try await rig.settle(0.05)
+    #expect(rig.trace.steps.count(where: { $0 == .stop }) == 1)
+    #expect(rig.trace.steps.count(where: { $0 == .detach }) == 1)
+    #expect(rig.trace.steps.last == .detach)
+}

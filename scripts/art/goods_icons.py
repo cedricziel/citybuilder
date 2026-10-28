@@ -45,6 +45,7 @@ def coffee_bean(x: float, y: float, angle: float) -> list[Shape]:
 
 GRAPES = [(7.5, 8.5), (12, 8), (16.5, 8.5), (9.8, 12.5), (14.2, 12.5), (12, 16.5), (7.8, 12.8), (16.2, 12.6), (12, 20.3)]
 CHERRIES = [(7, 12, 3.4), (12.5, 14, 3.6), (8, 18.5, 3.3), (15.5, 19.5, 3)]
+FLEECE = [(7, 11, 4.2), (12, 9, 4.6), (17, 11, 4.2), (5.5, 15.5, 3.8), (11, 15, 4.6), (16.5, 15.5, 4.2), (9, 19, 3.6), (14.5, 19, 3.6)]
 
 GLYPHS: dict[str, list[Shape]] = {
     "wood": log(2.5, 12.5, 17, 7.5) + log(5, 5, 16.5, 7.5),
@@ -162,6 +163,19 @@ GLYPHS: dict[str, list[Shape]] = {
         *[shape("circle", "light", cx=x, cy=y, r=0.9) for x, y in [(5.9, 10.9), (11.3, 12.8), (7, 17.3)]],
     ],
     "coffee": coffee_bean(8, 9, -30) + coffee_bean(16, 10, 25) + coffee_bean(11.5, 17, 10),
+    "wool": [  # a fleece tied round the middle
+        *[shape("circle", "main", cx=x, cy=y, r=r) for x, y, r in FLEECE],
+        *[shape("circle", "light", cx=x - 1.2, cy=y - 1.4, r=round(r * 0.45, 2)) for x, y, r in FLEECE[:3]],
+        shape("path", "dark", "stroke", d="M4 13.5c5 2 11 2 16 0", stroke_width=1.3, stroke_linecap="round"),
+        shape("circle", "dark", cx=19.5, cy=19.5, r=1.6),
+    ],
+    "cloth": [  # two folded bolts, madder on woad
+        shape("rect", "accent2", x=3, y=13.5, width=18, height=6.5, rx=1.6),
+        shape("rect", "main", x=4, y=6, width=17, height=7, rx=1.6),
+        shape("path", "dark", d="M4 11h17v2H4z"),
+        shape("path", "light", "stroke", d="M7 8.2h9", stroke_width=1, stroke_linecap="round"),
+        shape("path", "accent", "stroke", d="M6 16.2h11", stroke_width=1, stroke_linecap="round"),
+    ],
 }
 
 # main, dark, light, accent (defaults to dark), accent2 (defaults to main)
@@ -184,6 +198,8 @@ PALETTES: dict[str, tuple[str, str, str, str | None, str | None]] = {
     "tea": ("#f3efe6", "#c9c1b2", "#ffffff", "#3f7ab0", None),
     "coffee-cherries": ("#c8352b", "#8e2019", "#f08a7a", "#6a4a2a", "#4f8a3a"),
     "coffee": ("#6e4426", "#3d2412", "#a77a52", None, None),
+    "wool": ("#ece4cf", "#9a7a50", "#ffffff", None, None),
+    "cloth": ("#b5473a", "#7f2a22", "#e08a76", "#9cb4d8", "#3f5f8f"),
 }
 
 

@@ -3,21 +3,67 @@ import Foundation
 
 /// The PlayerBot's opt-in mid-game kit (#186): research toward the tools,
 /// bread and luxury chains and the Renaissance, then one building of
-/// each chain per 12 houses.
+/// each chain per 12 houses. The wool chain is the exception: it is built
+/// on demand, from the houses that want cloth (#239).
 extension PlayerBot {
     /// Houses before the kit starts building.
     static let midGameHouses = 6
 
+    /// Inhabited citizens houses the bot builds cloth for ahead of their promotion.
+    static let readyHouses = 2
+
+    /// Cloth in the stores at which the bot stops building the wool chain.
+    static let clothSurplus = 20
+
     /// Research in this order, each once it can be chosen.
-    static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .printingPress]
+    static let midGameResearch: [Tech] = [.milling, .mining, .metallurgy, .cultivation, .weaving, .printingPress]
 
     /// Starts the next tech of `midGameResearch` while nothing is being
-    /// researched.
-    func chooseResearch(in world: inout World) {
-        guard world.research.current == nil,
-              let tech = Self.midGameResearch.first(where: { world.canChooseResearch($0) })
+    /// researched; Weaving waits until a house wants cloth.
+    func chooseResearch(in world: inout World, stock: [Good: Int]) {
+        guard world.research.current == nil else { return }
+        let wantsCloth = clothDemand(in: world, stock: stock) > 0
+        guard let tech = Self.midGameResearch.first(where: {
+            world.canChooseResearch($0) && ($0 != .weaving || wantsCloth)
+        })
         else { return }
         world.enqueue(.chooseResearch(tech))
+    }
+
+    /// Houses that want cloth (#239): merchant houses, and the next
+    /// `readyHouses` inhabited citizens houses once bread and tools are in
+    /// the stores, so the cloth is there when they fill up and lack only
+    /// it to become merchants. Counting every citizens house would build
+    /// weavers for houses that are not about to move up.
+    func clothDemand(in world: World, stock: [Good: Int]) -> Int {
+        let chainsRun = stock[.bread, default: 0] > 0 && stock[.tools, default: 0] > 0
+        var merchants = 0
+        var ready = 0
+        for building in world.buildings.values where building.owner == .player && building.kind == .house {
+            guard let house = world.populations[building.id] else { continue }
+            if house.tier == .merchants {
+                merchants += 1
+            } else if chainsRun, house.tier == .citizens, house.population > 0 {
+                ready += 1
+            }
+        }
+        return merchants + min(ready, Self.readyHouses)
+    }
+
+    /// The wool chain buildings the town lacks for its cloth demand: one
+    /// weaver per two houses and two sheep farms per
+    /// weaver, as many as the demand wants, and none while `clothSurplus` cloth already waits
+    /// in the stores. `.naive` builds the sheep farms first, `.careful` the
+    /// weaver first.
+    func missingWoolChainKinds(in world: World, town: Town, stock: [Good: Int]) -> [BuildingKind] {
+        guard midGame != nil, stock[.cloth, default: 0] < Self.clothSurplus else { return [] }
+        let weavers = (clothDemand(in: world, stock: stock) + 1) / 2
+        let wanted: [(kind: BuildingKind, count: Int)] = midGame == .careful
+            ? [(.weaver, weavers), (.sheepFarm, 2 * weavers)]
+            : [(.sheepFarm, 2 * weavers), (.weaver, weavers)]
+        return wanted.compactMap { kind, count in
+            town.counts[kind, default: 0] < count && world.research.isAvailable(kind) ? kind : nil
+        }
     }
 
     /// The chain buildings the town lacks, in build order, each unlocked,
@@ -170,9 +216,9 @@ extension PlayerBot {
         ]
     }
 
-    /// Raw goods the careful kit sells above `keepOnSale` units.
+    /// Raw goods, and the cloth, the careful kit sells above `keepOnSale` units.
     static func rawSurplus(_ culture: Culture) -> [Good] {
-        [.grain, .ore, .charcoal, culture.luxuryChain.raw]
+        [.grain, .ore, .charcoal, .wool, .cloth, culture.luxuryChain.raw]
     }
 }
 

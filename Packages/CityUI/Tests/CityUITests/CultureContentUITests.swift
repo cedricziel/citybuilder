@@ -40,5 +40,5 @@ func inspectorListsTheCultureLuxuryAmongMerchantsNeeds() throws {
     pop.setSatisfied(.tea, true)
     let snapshot = withHousePopulations(world.snapshot(), [house: pop], culture: .eastAsian)
     let lines = InspectorViewModel.make(from: snapshot, tile: anchor, buildings: snapshot.buildings).bullets
-    #expect(lines.contains("Needs: food ✓ · planks ✓ · bread ✗ · tools ✗ · tea ✓"))
+    #expect(lines.contains("Needs: food ✓ · planks ✓ · bread ✗ · tools ✗ · cloth ✗ · tea ✓"))
 }

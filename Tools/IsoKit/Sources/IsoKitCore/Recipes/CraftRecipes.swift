@@ -37,6 +37,12 @@ extension Recipes {
         Recipe(id: "building-brewery", cell: SpriteCell(footprint: 2, heightPx: 144), operationalFrames: 2) { kit, _ in brewery(kit) },
         Recipe(id: "building-winery", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in winery(kit) },
         Recipe(id: "building-roastery", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in roastery(kit) },
+        Recipe(
+            id: "building-weaver",
+            cell: SpriteCell(footprint: 2, heightPx: 128),
+            operationalFrames: 4,
+            moving: MovingPart(name: "wheel", build: weaverWheel)
+        ) { kit, _ in weaver(kit) },
         Recipe(id: "building-steam-engine", cell: SpriteCell(footprint: 2, heightPx: 128), operationalFrames: 2) { kit, _ in
             steamEngine(kit)
         },

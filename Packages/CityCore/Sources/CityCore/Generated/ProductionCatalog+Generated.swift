@@ -22,6 +22,8 @@ public enum ProductionCatalog {
         case .charcoalBurner: ProductionRecipe(inputs: [.wood: 2], outputs: [.charcoal: 1], cycleTicks: 40)
         case .smelter: ProductionRecipe(inputs: [.charcoal: 1, .ore: 1], outputs: [.iron: 1], cycleTicks: 50)
         case .toolsmith: ProductionRecipe(inputs: [.iron: 1, .planks: 1], outputs: [.tools: 1], cycleTicks: 60)
+        case .sheepFarm: ProductionRecipe(inputs: [:], outputs: [.wool: 1], cycleTicks: 40)
+        case .weaver: ProductionRecipe(inputs: [.wool: 2], outputs: [.cloth: 1], cycleTicks: 50)
         case .library: nil
         case .townCenter: nil
         case .port: nil

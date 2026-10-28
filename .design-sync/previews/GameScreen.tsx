@@ -26,7 +26,7 @@ export const PlacingHouse = () => (
       tool: "House",
       art: "house",
       cost: 50,
-      hint: "Tap or drag to place house",
+      hint: "Tap to position, then tap ✓ to place",
       materials: [{ good: "planks", have: 18, need: 4 }],
     }}
     placing={{ art: "house", valid: true }}
@@ -43,7 +43,7 @@ export const PlacingLumberjack = () => (
   <GameScreen
     width={W}
     height={H}
-    tool={{ tool: "Lumberjack", art: "lumberjack-hut", cost: 80, hint: "Tap or drag to place lumberjack · 3 trees in reach" }}
+    tool={{ tool: "Lumberjack", art: "lumberjack-hut", cost: 80, hint: "Tap to position, then tap ✓ to place · 3 trees in reach" }}
     placing={{ art: "lumberjack-hut", valid: true, count: { text: "3 trees in reach", tone: "low" }, area: { tiles: catchment } }}
   />
 );
@@ -78,6 +78,16 @@ export const MacRejection = () => (
 
 export const PortraitDock = () => (
   <GameScreen width={430} height={H + 60} device="phone" drawer={{ category: "Gather", tiles: gatherDrawerTiles }} />
+);
+
+export const PhoneDateChip = () => (
+  <GameScreen
+    width={430}
+    height={H + 60}
+    device="phone"
+    hud={{ date: "Autumn 1203", money: "$1,250", population: "84", island: "Greenhold" }}
+    firstSteps={{ collapsed: true, ledger: { tax: 0, upkeep: 0 } }}
+  />
 );
 
 export const Rivals = () => (
