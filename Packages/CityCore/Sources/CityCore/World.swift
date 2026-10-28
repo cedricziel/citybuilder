@@ -101,6 +101,9 @@ public struct World: Codable, Sendable, Equatable {
     /// decode an empty history (see the `KeyedDecodingContainer` overload
     /// in `Statistics.swift`).
     public internal(set) var statistics: StatisticsHistory = .init()
+    /// Timed requests from the crown and rivals, with favour. Spec: `orders`.
+    /// Saves without it decode an empty state (see `Orders.swift`).
+    public internal(set) var orders: OrdersState = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -241,6 +244,7 @@ public struct World: Codable, Sendable, Equatable {
         runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
+        runOrderSystem(events: &events)
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)

@@ -37,6 +37,14 @@ public enum UITestSeed {
         return world
     }
 
+    /// `-uiTestSeedOrders`: a new archipelago game with four orders on the board, two accepted and
+    /// two offered, and some favour. Shots of the order board start from it (`-uiTestOpenOrders`).
+    public static func ordersWorld() -> World {
+        var world = World.newGame(layout: .archipelago, seed: 0)
+        world.seedOrdersShowcase()
+        return world
+    }
+
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
@@ -94,6 +102,7 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
         if arguments.contains("-uiTestSeedPort") { return portWorld() }
         if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
+        if arguments.contains("-uiTestSeedOrders") { return ordersWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
@@ -131,6 +140,11 @@ public enum UITestSeed {
     /// `-uiTestOpenStocks`: the started game opens with the stocks tray shown, for shots of the goods icons.
     public static func opensStocks(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestOpenStocks")
+    }
+
+    /// `-uiTestOpenOrders`: the started game opens with the order board shown.
+    public static func opensOrders(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestOpenOrders")
     }
 
     /// `-uiTestOpenStatistics`: the started game opens with the Statistics sheet shown, on the tab named after it.

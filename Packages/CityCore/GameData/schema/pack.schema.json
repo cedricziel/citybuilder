@@ -64,7 +64,7 @@
       "type": "object",
       "required": ["kind", "id"],
       "properties": {
-        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier"] }
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order"] }
       },
       "allOf": [
         {
@@ -202,7 +202,31 @@
               "startYear": { "description": "Astronomical year: -499 is 500 BC.", "type": "integer" },
               "blurb": { "type": "string" },
               "signature": { "$ref": "#/$defs/id" },
-              "rivalResidents": { "description": "Residents a rival needs to enter this age.", "$ref": "#/$defs/nonNegative" }
+              "rivalResidents": { "description": "Residents a rival needs to enter this age.", "$ref": "#/$defs/nonNegative" },
+              "orderEvery": { "description": "Seasons between crown orders in this age. Defaults to 4.", "type": "integer", "minimum": 1, "maximum": 12 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Order" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "issuer", "good", "title", "text", "seasons", "size", "min", "max", "reward"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "issuer": { "description": "Who asks: the crown, or a rival town short of the good.", "enum": ["crown", "rival"] },
+              "good": { "$ref": "#/$defs/id" },
+              "title": { "description": "The card heading.", "type": "string", "minLength": 1 },
+              "text": { "description": "One line of flavour.", "type": "string", "maxLength": 100 },
+              "minAge": { "description": "The first age the order appears in. Defaults to the first age.", "$ref": "#/$defs/id" },
+              "seasons": { "description": "Seasons from issue to the deadline, before difficulty scales it.", "type": "integer", "minimum": 1, "maximum": 8 },
+              "size": { "description": "Percent of the town's recent output over the window that the order asks for.", "type": "integer", "minimum": 1, "maximum": 300 },
+              "min": { "description": "Fewest units it asks for; below this the order is not issued.", "$ref": "#/$defs/positive" },
+              "max": { "description": "Most units it asks for.", "$ref": "#/$defs/positive" },
+              "reward": { "description": "Money paid, as a percent of the goods' base price.", "type": "integer", "minimum": 0, "maximum": 500 },
+              "favour": { "description": "Favour gained on fulfilment. Defaults to 2.", "$ref": "#/$defs/nonNegative" },
+              "penalty": { "description": "Favour lost on a miss. Defaults to 2.", "$ref": "#/$defs/nonNegative" }
             }
           }
         },

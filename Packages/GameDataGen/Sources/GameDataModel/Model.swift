@@ -7,6 +7,7 @@ public struct GameData: Equatable, Sendable {
     public var techs: [Tech] = []
     public var ages: [Age] = []
     public var tiers: [Tier] = []
+    public var orders: [OrderTemplate] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -153,6 +154,27 @@ public struct Age: Equatable, Sendable {
     public var blurb: String
     public var signature: String
     public var rivalResidents: Int
+    /// Seasons between crown orders in this age.
+    public var orderEvery: Int
+    public var origin: Origin
+}
+
+/// A timed request an issuer can make (`add-orders` D4).
+public struct OrderTemplate: Equatable, Sendable {
+    public var id: String
+    /// `crown` or `rival`.
+    public var issuer: String
+    public var good: String
+    public var title: String
+    public var text: String
+    public var minAge: String?
+    public var seasons: Int
+    public var size: Int
+    public var min: Int
+    public var max: Int
+    public var reward: Int
+    public var favour: Int
+    public var penalty: Int
     public var origin: Origin
 }
 

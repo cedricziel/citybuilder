@@ -7,12 +7,13 @@ import SwiftUI
 extension CityRootView {
     /// The menu buttons in one row at the top right: goals, research,
     /// standings, statistics and routes when they apply, then settings.
-    var menuButtons: some View {
+    func menuButtons(layout: HUDLayout) -> some View {
         HStack(spacing: 6) {
             #if os(tvOS)
             TVZoomButtons(session: session)
             TVMapButton(session: session, remote: tvRemote)
             #endif
+            ordersChip(layout: layout)
             goalsButton
             researchButton
             standingsButton
@@ -50,6 +51,9 @@ extension CityRootView {
         Menu {
             if !session.world.goals.isEmpty {
                 Button("Goals", systemImage: "flag.checkered") { goalsPresented = true }
+            }
+            if let chip = session.ordersChip {
+                Button(chip.label, systemImage: "scroll.fill") { session.toggleOrdersBoard() }
             }
             Button("Research", systemImage: "book.fill") { researchPresented = true }
                 .disabled(!session.isResearchAvailable)

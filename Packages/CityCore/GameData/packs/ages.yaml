@@ -4,15 +4,16 @@ items:
   # --- Ages (order is the age order) ----------------------------------
   # startYear is astronomical: 0 is 1 BC, so -499 is 500 BC.
   # rivalResidents: residents a rival needs to enter the age (add-rival-towns D8).
-  - { kind: Age, id: antiquity,   startYear: -499, signature: monument,     rivalResidents: 0,
+  # orderEvery: seasons between crown orders in the age; 4 when left out (add-orders D3).
+  - { kind: Age, id: antiquity,   startYear: -499, signature: monument,     rivalResidents: 0, orderEvery: 4,
       blurb: "Stone towns, hand mills and the first libraries." }
-  - { kind: Age, id: medieval,    startYear: 1200, signature: guild-hall,   rivalResidents: 24,
+  - { kind: Age, id: medieval,    startYear: 1200, signature: guild-hall,   rivalResidents: 24, orderEvery: 4,
       blurb: "Timber and tile, windmills and guilds." }
-  - { kind: Age, id: renaissance, startYear: 1450, signature: gallery,      rivalResidents: 60,
+  - { kind: Age, id: renaissance, startYear: 1450, signature: gallery,      rivalResidents: 60, orderEvery: 3,
       blurb: "Printing, trade and tall stuccoed fronts." }
-  - { kind: Age, id: industrial,  startYear: 1780, signature: steam-engine, rivalResidents: 108,
+  - { kind: Age, id: industrial,  startYear: 1780, signature: steam-engine, rivalResidents: 108, orderEvery: 2,
       blurb: "Steam, brick and smoking chimneys." }
-  - { kind: Age, id: modern,      startYear: 1910, signature: power-plant,  rivalResidents: 150,
+  - { kind: Age, id: modern,      startYear: 1910, signature: power-plant,  rivalResidents: 150, orderEvery: 2,
       blurb: "Electricity and concrete." }
 
   # --- Era techs: each opens the next age -----------------------------
