@@ -16,7 +16,7 @@ The game data SHALL hold a catalog of seasonal events as `Event` items, one each
 
 ### Requirement: One seasonal event a year, decided from the seed and the year
 
-On the first tick of each year, with the calendar active and events enabled, the world SHALL decide from its seed and the year alone whether a seasonal event happens that year, which one, and its onset season. The chance and the weights SHALL come from the difficulty, and only events whose `minAge` the player's age has reached SHALL be drawn. No event SHALL be decided before the difficulty's first event year. The decision MUST NOT consume the world's random generator, and MUST use a derivation distinct from the history events'. At most one seasonal event SHALL be warned or under way at a time.
+On the first tick of each year, with the calendar active and events enabled, the world SHALL decide from its seed and the year alone whether a seasonal event happens that year, which one, and its onset season. The chance and the weights SHALL come from the difficulty, and only events whose `minAge` the player's age has reached SHALL be drawn. No event SHALL be decided before the difficulty's first event year. The decision MUST NOT consume the world's random generator, and MUST use a derivation distinct from the history events'. The decision (year, event and onset season, or none) SHALL be stored in the world state when it is made, and the warning and onset SHALL use the stored decision, so a later age change or a save and load never redraws it. Every hazard SHALL end no later than the last tick of winter of its year, and a festival request no later than the end of its window, so a year's event never overlaps the next year's decision. The festival's reward running into the next year SHALL NOT block or defer the next year's event. If an event of an earlier year is still warned or under way at a decision (a save edited by hand), the new year's event SHALL be skipped, not deferred; the same holds for a scheduled event.
 
 #### Scenario: Same seed, same events
 
@@ -27,6 +27,16 @@ On the first tick of each year, with the calendar active and events enabled, the
 
 - **WHEN** a new Normal game runs from spring 1200 to the end of winter 1201
 - **THEN** no seasonal event is warned or started
+
+#### Scenario: The decision survives an age change and a reload
+
+- **WHEN** the event decided for 1203 is a blight in autumn, the player reaches the next age in spring 1203, and the game is saved and loaded before summer
+- **THEN** the blight is still warned at the start of summer 1203
+
+#### Scenario: A festival reward does not block the next year
+
+- **WHEN** a festival held in summer 1202 still runs in spring 1203 and the event decided for 1203 is a fire in summer
+- **THEN** the fire is warned at the start of spring 1203
 
 #### Scenario: The world RNG is untouched
 
@@ -40,7 +50,12 @@ On the first tick of each year, with the calendar active and events enabled, the
 
 ### Requirement: Hazards are warned a season ahead
 
-A fire, blight or fever SHALL be warned on the first tick of the season before its onset season, by emitting `seasonalEventWarned` with the event and its onset season. At the warning, the world SHALL check that the event has targets: at least 6 flammable player buildings for fire, at least one operational player crop field for blight, and at least 6 player houses with residents for fever. Without targets, it SHALL NOT warn, and that year SHALL have no seasonal event. A warned hazard SHALL always begin on the first tick of its onset season and emit `seasonalEventStarted`. When it ends it SHALL emit `seasonalEventEnded` with its toll.
+A fire, blight or fever SHALL be warned on the first tick of the season before its onset season, by emitting `seasonalEventWarned` with the event and its onset season. At the warning, the world SHALL check that the event has targets: at least 6 flammable player buildings, at least one of them an operational player house or producer, for fire, at least one operational player crop field for blight, and at least 6 player houses with residents for fever. Without targets, it SHALL NOT warn, and that year SHALL have no seasonal event. A warned hazard SHALL always begin on the first tick of its onset season and emit `seasonalEventStarted`. When it ends it SHALL emit `seasonalEventEnded` with its toll.
+
+#### Scenario: Only stores, no fire
+
+- **WHEN** the event decided for a year is a fire and the player's 6 flammable buildings are 4 warehouses and 2 granaries
+- **THEN** no warning is emitted, and no seasonal event happens that year
 
 #### Scenario: A summer fire is warned in spring
 
@@ -54,7 +69,7 @@ A fire, blight or fever SHALL be warned on the first tick of the season before i
 
 ### Requirement: Fire starts, spreads and burns down
 
-At a fire's onset, one operational player house or producer SHALL catch fire at a tick derived from the seed and the year in the first half of the onset season, chosen among the candidates in entity-ID order with a derived generator. On Hard, a second one SHALL catch fire in the second half. A burning building SHALL stop producing, collecting tax, growing and taking or giving deliveries. When a fire has burnt for the difficulty's spread time, every flammable building whose footprint touches its own (a gap of 1) and that is not already burning or in ruins SHALL catch fire, in entity-ID order. A building that burns for 300 ticks SHALL become ruins of the same footprint: its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building. Flammable buildings SHALL be houses, producers, warehouses, granaries, libraries, fire watches, physicians and herb gardens.
+A fire event SHALL have one ignition at a tick derived from the seed and the year in the first half of the onset season, and on Hard a second at a derived tick in its second half. At each ignition tick the candidates SHALL be recomputed: the operational player houses and producers that are not burning, in ruins or already burnt in this event, in entity-ID order, of which one is chosen with a generator derived from the seed, the year and the ignition's index. When there is no candidate, that ignition SHALL be skipped and nothing else changes. A building SHALL catch fire at most once per fire event: once doused or burnt down it can't catch fire again until the event ends. A burning building SHALL stop producing, collecting tax, growing and taking or giving deliveries. When a fire has burnt for the difficulty's spread time, every flammable building whose footprint touches its own (a gap of 1) and that is not already burning, in ruins or doused in this event SHALL catch fire, in entity-ID order. A building that burns for 300 ticks SHALL become ruins of the same footprint: its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building. Flammable buildings SHALL be houses, producers, warehouses, granaries, libraries, fire watches, physicians and herb gardens. The fire event SHALL end when no building is burning and no ignition is left, or at the latest on the last tick of the season after its onset, when every fire still burning goes out without becoming ruins (the rains). If no ignition found a candidate, the end banner SHALL say no fire broke out.
 
 #### Scenario: Fire spreads to a touching house
 
@@ -66,6 +81,16 @@ At a fire's onset, one operational player house or producer SHALL catch fire at 
 - **WHEN** a house burns with no fire watch in reach and the nearest building is across a one-tile road
 - **THEN** that building never catches fire from it
 
+#### Scenario: Doused buildings don't catch again
+
+- **WHEN** two touching houses burn on Normal and a watch douses the first one 160 ticks after its ignition, after it has spread to the second
+- **THEN** the second house's fire never re-ignites the first one in this event
+
+#### Scenario: The target burnt before Hard's second ignition
+
+- **WHEN** Hard's second ignition comes and every house and producer of the player is burning, in ruins or already burnt in this event
+- **THEN** the second ignition is skipped and the event ends when the first fire is out
+
 #### Scenario: An unanswered fire leaves ruins
 
 - **WHEN** a house with 4 residents and 3 food in its stock burns for 300 ticks
@@ -73,12 +98,17 @@ At a fire's onset, one operational player house or producer SHALL catch fire at 
 
 ### Requirement: A fire watch puts out fires in reach
 
-A building that catches fire within 8 tiles (footprint gap) of an operational, road-connected player fire watch SHALL be answered by the nearest idle fire watch, by road path length and then entity ID. Its watchman SHALL walk the road path at one tile a tick and douse the fire for 30 ticks. The fire SHALL be out when he has doused it, and the building SHALL resume with its stock and residents. A fire watch SHALL answer one fire at a time, and further fires in its reach SHALL wait in order of ignition tick, then entity ID. A fire that reaches its spread time or its burn-down time before it is out SHALL spread or burn down as if unanswered.
+A burning building within 8 tiles (footprint gap) of an operational, road-connected player fire watch SHALL be answered, whether the watch was operational when the fire started or became operational or connected while it burns, by the nearest idle fire watch, by road path length and then entity ID. Its watchman SHALL walk the road path at one tile a tick and douse the fire for 30 ticks. The fire SHALL be out when he has doused it, and the building SHALL resume with its stock and residents. A fire watch SHALL answer one fire at a time, and further fires in its reach SHALL wait in order of ignition tick, then entity ID. A fire that reaches its spread time or its burn-down time before it is out SHALL spread or burn down as if unanswered.
 
 #### Scenario: A watch saves a house
 
 - **WHEN** a house 10 road tiles from an idle fire watch catches fire on Normal
 - **THEN** the fire is out 40 ticks after the ignition, nothing has spread, and the house is operational with its residents
+
+#### Scenario: A watch finished during the fire
+
+- **WHEN** a house has been burning for 60 ticks on Normal and a fire watch 5 road tiles away completes construction
+- **THEN** its watchman sets out on that tick, and the fire is out 35 ticks later, before it spreads
 
 #### Scenario: Out of reach
 
@@ -134,7 +164,7 @@ When a festival is decided, on the first tick of its season, the world SHALL iss
 
 ### Requirement: Banner text
 
-The seasonal event banners SHALL use this text, with `{season}` the onset season in lower case, `{date}` the end of the event as the HUD shows a date, and `{building}` the burning building's palette name in lower case:
+The seasonal event banners SHALL use this text, with `{season}` the onset season in lower case, `{date}` the end of the event's effect as the HUD shows a date (for a festival held, the end of its four seasons), `{deadline}` a festival request's delivery deadline, the end of its window, in the same format, and `{building}` the burning building's palette name in lower case:
 
 | Event | Banner | Title | Text |
 |---|---|---|---|
@@ -142,15 +172,16 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | fire | each ignition | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
 | fire | end, losses | The fires are out | {count} buildings burnt down. Clear the ruins with Demolish. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
+| fire | end, no fire broke out | The dry spell is over | No fire broke out. |
 | blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield half. Fill a granary, or buy food at the market. |
 | blight | onset | Blight in the fields | Fields in the marked area yield half until {date}. |
 | blight | end | The blight has passed | The fields yield in full again. |
 | fever | warning | Fever in the harbour towns | Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe. |
 | fever | onset | Fever in the town | Houses in the marked district can't advance, and some residents leave, until {date}. |
 | fever | end | The fever has passed | {count} residents left the town. |
-| festival | request | The town wants a festival | Deliver {bread} bread and {luxury} {luxuryGood} by {date}. Houses near the market then advance faster and pay more tax for a year. |
+| festival | request | The town wants a festival | Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year. |
 | festival | held | Festival! | Houses near the market advance faster and pay {bonus}% more tax until {date}. |
-| festival | missed | The festival was called off | Nothing was lost. |
+| festival | missed | The festival was called off | Goods already delivered stay with the town. There is no other penalty. |
 
 The text SHALL live in the event items of the pack, so a change of wording edits data, not Swift.
 
@@ -159,6 +190,11 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 - **WHEN** a fire in summer is warned
 - **THEN** the banner title is "Dry summer ahead" and its text is "Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames."
 
+#### Scenario: Festival request names its deadline
+
+- **WHEN** a festival asking for 12 bread and 8 wine is requested in spring 1204 on Normal
+- **THEN** the request text reads "Deliver 12 bread and 8 wine by End of Spring 1204. Houses near the market then advance faster and pay more tax for a year."
+
 #### Scenario: Fever end text
 
 - **WHEN** a fever ends after 7 residents left
@@ -166,7 +202,7 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 
 ### Requirement: Chapters schedule events
 
-A chapter SHALL be able to schedule seasonal events by year, onset season and event, and to turn off the random draw with `randomEvents: false`. A scheduled event SHALL replace that year's draw. It SHALL ignore the chance, the weights, the first event year and the minimum target counts, needing one target only, and SHALL be warned like any other event.
+A chapter SHALL be able to schedule seasonal events by year, onset season and event, and to turn off the random draw with `randomEvents: false`. A scheduled event SHALL replace that year's draw. It SHALL ignore the chance, the weights, the first event year and the minimum target counts, needing one target only, and SHALL be warned like any other event. The pack validator SHALL reject a chapter that schedules two events in one year, or a hazard in spring.
 
 #### Scenario: A scheduled fire
 

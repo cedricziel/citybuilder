@@ -42,7 +42,7 @@ At the start of each year from the first event year (D10), the world decides fro
 
 Hazards (fire, blight, fever) strike in summer, autumn or winter, never in spring, so the warning lands at the start of the season before: the spring decision itself for a summer onset, summer for autumn, autumn for winter. The festival is a request, not a hazard. Its request appears at the start of its season (spring or summer) and the request is its notice.
 
-The decision is a pure function, `seasonalEvent(forYear:)`, so it is never saved. What is saved is the warned event (D11). At the warning, the world checks that the event has targets (D3–D6). Without them, there is no warning and no event that year, so a warning is always followed by its event.
+The decision is a pure function, `seasonalEvent(forYear:)`, but its result is stored when it is made: the draw depends on the player's age at the start of the year, so a save made after an age-up must not redraw it (D11). Every hazard ends by the end of winter (a fire at the latest at the end of the season after its onset, when the rains put out what still burns), so a year's event never overlaps the next decision. The festival's reward may run into the next year; it doesn't block that year's event. An event still open at a decision (only a hand-edited save) makes the new year's event skip, never defer, scheduled or not. At the warning, the world checks that the event has targets (D3–D6). Without them, there is no warning and no event that year, so a warning is always followed by its event.
 
 *Alternative:* decide every season. That allows two events in a year and makes "a season ahead" harder to read.
 
@@ -67,6 +67,7 @@ Mechanics stay in Swift, like `effect: code` on buildings. The tuning numbers th
 - **Targets.** Ignition picks among operational player houses and producers, sorted by entity ID, with the event's derived RNG. *Flammable* buildings are houses, producers, warehouses, granaries, libraries, fire watches, physicians and herb gardens. Town centers, ports, shipyards, roads, monuments and signature buildings are not flammable. The town needs at least 6 flammable buildings for a fire to be warned.
 - **When.** The first fire starts at a derived tick in the first half of the onset season. On Hard a second one starts in the second half.
 - **Burning.** A burning building stops: no production, no tax, no growth, no deliveries in or out. It shows flames and a red flame status icon.
+- **Each building burns at most once per event.** A doused or burnt building can't catch again until the event ends, so two neighbours can't keep re-igniting each other. The candidates are recomputed at each ignition tick; an ignition without a candidate is skipped. The warning needs at least one house or producer among the 6 flammable buildings.
 - **Spread.** When a fire has burnt for `spreadTicks` (Easy 200, Normal 150, Hard 100), it ignites every flammable building whose footprint touches its own (gap 1, edges and corners), in entity-ID order. Each new fire has its own timers. A road tile between two buildings makes the gap 2, so **roads are firebreaks**. Spread is deterministic and needs no RNG.
 - **Burning down.** After 300 ticks the building becomes **ruins** of the same footprint. Its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building.
 - **Fire watch.** It covers flammable buildings within 8 tiles (gap) that are road-connected to it. When a covered building ignites, the nearest idle watch (by road path length, then entity ID) sends its watchman. He walks the road path at one tile a tick and douses the fire for 30 ticks. The fire is out at arrival + 30. A watch handles one fire at a time; others queue in order of ignition tick, then entity ID. Within 8 tiles the path is rarely over 20 tiles, so a watch is in time before the spread (150 ticks on Normal), even with two fires in a row. A doused building keeps its stock and resumes. No ruins.
@@ -134,6 +135,7 @@ These are the first values. Task 7.3 tunes them against D12. The warning is alwa
 
 - `World.seasonalEvents: SeasonalEventsState`, an optional key:
   - `enabled`: true for a new game;
+  - `plan`: this year's stored decision (year, event, onset season, or none);
   - `warned`: the warned event (id, onset tick, area anchor and radius, or nil);
   - `active`: fires (entity, ignition tick, responding watch, arrival tick), the blight (anchor, end tick), the fever (anchor, end tick, next leave tick);
   - `festivalUntil`: a tick;
@@ -182,7 +184,7 @@ The final choice is the owner's. Art and `design/web` components follow the appr
 ## Risks / Trade-offs
 
 - **[Risk]** A fire in year 3 bankrupts a Hard start. → Ignition comes a season after the warning, a watch costs $60, and the forced first-hour variant is a gate (D12, bar 1).
-- **[Risk]** Fire wipes out a dense town that has no watch. → That is the intended lesson, but it is capped: each fire spreads once, to touching buildings, and 300 ticks gives a player who reacts late time to build a watch. A watch placed during a fire still answers fires that are burning.
+- **[Risk]** Fire wipes out a dense town that has no watch. → That is the intended lesson, but it is capped: each fire spreads once, to touching buildings, and 300 ticks gives a player who reacts late time to build a watch. A watch finished during a fire answers the fires already burning in its reach.
 - **[Risk]** "Drawn last" changes which store a draw empties, and that could change carrier traffic for towns without granaries. → No: the order only differs when a granary exists. Determinism tests cover a town without one.
 - **[Risk]** The festival depends on two unfinished changes (#238 M2, #277). → It is its own task group (6) and ships last. The catalog's weights skip an ineligible festival, so the other three events can ship first.
 - **[Risk]** Fever interacts with the decline grace (#274). → Residents who leave with fever are not a shortage and don't touch the short-interval count. A house below capacity can't advance anyway, so fever blocking advancement only matters for full houses.
