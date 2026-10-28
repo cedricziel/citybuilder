@@ -82,11 +82,11 @@ struct FavourPillsView: View {
     let rows: [OrdersBoardModel.FavourRow]
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
             ForEach(rows) { row in
                 HStack(spacing: 5) {
                     Circle().fill(Color(hex: row.colourHex)).frame(width: 9, height: 9)
-                    Text(row.name.replacingOccurrences(of: "The ", with: "")).font(.caption)
+                    Text(row.name.replacingOccurrences(of: "The ", with: "")).font(.caption).lineLimit(1)
                     Text("\(row.value)").font(.system(.caption, design: .monospaced)).fontWeight(.semibold)
                 }
                 .padding(.horizontal, 9)
