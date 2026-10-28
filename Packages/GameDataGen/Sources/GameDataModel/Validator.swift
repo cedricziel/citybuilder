@@ -13,12 +13,14 @@ struct Validator {
             ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin),
             tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin)
         )
+        _ = unique(data.orders, kind: "Order", id: \.id, origin: \.origin)
         data.goods.forEach { check($0, refs) }
         data.tiers.forEach { check($0, refs) }
         data.buildings.forEach { check($0, refs) }
         data.cultures.forEach { check($0, refs) }
         data.techs.forEach { check($0, refs) }
         data.ages.forEach { check($0, refs) }
+        data.orders.forEach { check($0, refs) }
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
         checkConsumers()
@@ -243,6 +245,24 @@ struct Validator {
         let report = reporter("Age", age.id, age.origin)
         if refs.buildings[age.signature] == nil { report("`signature` names unknown building `\(age.signature)`") }
         if age.rivalResidents < 0 { report("`rivalResidents` must not be negative") }
+        if !(1 ... 12).contains(age.orderEvery) { report("`orderEvery` must be from 1 to 12 seasons") }
+    }
+
+    private func check(_ order: OrderTemplate, _ refs: References) {
+        let report = reporter("Order", order.id, order.origin)
+        if !ItemSchema.orderIssuers.contains(order.issuer) {
+            report("`issuer` must be one of \(ItemSchema.orderIssuers.sorted().joined(separator: ", ")), not `\(order.issuer)`")
+        }
+        if refs.goods[order.good] == nil { report("`good` names unknown good `\(order.good)`") }
+        if let age = order.minAge, refs.ages[age] == nil { report("`minAge` names unknown age `\(age)`") }
+        if order.title.isEmpty { report("`title` must not be empty") }
+        if order.text.count > 100 { report("`text` is \(order.text.count) characters; the limit is 100") }
+        if !(1 ... 8).contains(order.seasons) { report("`seasons` must be from 1 to 8") }
+        if !(1 ... 300).contains(order.size) { report("`size` must be from 1 to 300 percent") }
+        if order.min < 1 { report("`min` must be at least 1") }
+        if order.min > order.max { report("`min` must not be above `max`") }
+        if !(0 ... 500).contains(order.reward) { report("`reward` must be from 0 to 500 percent") }
+        if order.favour < 0 || order.penalty < 0 { report("`favour` and `penalty` must not be negative") }
     }
 
     // MARK: - Consumers

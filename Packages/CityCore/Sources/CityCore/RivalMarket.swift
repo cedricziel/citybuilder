@@ -20,6 +20,15 @@ public extension Good {
         direction == .bought ? rivalSellPrice : rivalBuyPrice
     }
 
+    /// The same, improved by `bonusPercent` of favour: the rival sells for
+    /// that much less and buys for that much more, rounded down and at
+    /// least $1. Spec: `rival-trade` / Favour improves a rival's prices.
+    func rivalPrice(_ direction: TradeDirection, bonusPercent: Int) -> Int64 {
+        let base = rivalPrice(direction)
+        let percent = Int64(direction == .bought ? 100 - bonusPercent : 100 + bonusPercent)
+        return max(1, base * percent / 100)
+    }
+
     /// The unit price at the town market, from the player's side: 150%
     /// of base to buy and 50% to sell, rounded down, at least $1. The
     /// worst channel both ways. Spec: `town-market` / Market prices
@@ -65,18 +74,20 @@ public enum RivalMarket {
     }
 
     /// Every good above the reserve, in catalog order.
-    public static func sellOffers(stock: [Good: Int]) -> [RivalOffer] {
+    public static func sellOffers(stock: [Good: Int], bonusPercent: Int = 0) -> [RivalOffer] {
         Good.allCases.compactMap { good in
             let quantity = sellQuantity(of: good, stock: stock)
-            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalSellPrice) : nil
+            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalPrice(.bought, bonusPercent: bonusPercent)) :
+                nil
         }
     }
 
     /// Every bought good below the target, in catalog order.
-    public static func buyOffers(stock: [Good: Int]) -> [RivalOffer] {
+    public static func buyOffers(stock: [Good: Int], bonusPercent: Int = 0) -> [RivalOffer] {
         Good.allCases.compactMap { good in
             let quantity = buyQuantity(of: good, stock: stock)
-            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalBuyPrice) : nil
+            return quantity > 0 ? RivalOffer(good: good, quantity: quantity, price: good.rivalPrice(.sold, bonusPercent: bonusPercent)) :
+                nil
         }
     }
 }
@@ -98,10 +109,10 @@ public extension World {
     }
 
     func sellOffers(of id: RivalID) -> [RivalOffer] {
-        RivalMarket.sellOffers(stock: rivalStock(id))
+        RivalMarket.sellOffers(stock: rivalStock(id), bonusPercent: rivalPriceBonusPercent(id))
     }
 
     func buyOffers(of id: RivalID) -> [RivalOffer] {
-        RivalMarket.buyOffers(stock: rivalStock(id))
+        RivalMarket.buyOffers(stock: rivalStock(id), bonusPercent: rivalPriceBonusPercent(id))
     }
 }

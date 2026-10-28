@@ -60,6 +60,16 @@ public enum Age: String, CaseIterable, Codable, Hashable, Sendable {
         case .modern: 150
         }
     }
+
+    public var orderEvery: Int {
+        switch self {
+        case .antiquity: 4
+        case .medieval: 4
+        case .renaissance: 3
+        case .industrial: 2
+        case .modern: 2
+        }
+    }
 }
 
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

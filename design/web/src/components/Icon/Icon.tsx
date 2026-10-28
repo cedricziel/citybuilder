@@ -37,7 +37,8 @@ export type IconName =
   | "chart.xyaxis.line"
   | "map.fill"
   | "map"
-  | "ferry.fill";
+  | "ferry.fill"
+  | "scroll.fill";
 
 export interface IconProps {
   /** The SF Symbol name as written in the Swift code, e.g. `"flag.checkered"`. */
@@ -88,6 +89,16 @@ const glyphs: Record<IconName, ReactElement> = {
     <g fill="currentColor">
       <path d="M11.2 6.3C9 4.6 6 4.1 2.6 4.6c-.4.1-.6.4-.6.8v12.9c0 .5.4.8.9.7 3-.5 5.7 0 8.3 1.6Z" />
       <path d="M12.8 6.3c2.2-1.7 5.2-2.2 8.6-1.7.4.1.6.4.6.8v12.9c0 .5-.4.8-.9.7-3-.5-5.7 0-8.3 1.6Z" />
+    </g>
+  ),
+  "scroll.fill": (
+    <g>
+      <path
+        fill="currentColor"
+        d="M7.5 4.5h10a2.5 2.5 0 0 1 2.5 2.5v1.5h-3V7a.5.5 0 0 0-.5-.5H8.2A2.5 2.5 0 0 1 7.5 4.5Z"
+      />
+      <path fill="currentColor" d="M5.5 6.5c1.4 0 2.5 1.1 2.5 2.5v9.5a1 1 0 0 0 2 0V17h8.5a1.5 1.5 0 0 1 1.5 1.5A2.5 2.5 0 0 1 17.5 21H8a3 3 0 0 1-3-3V9c0-.8-.7-1.5-1.5-1.5Z" />
+      <path d="M11 10.5h5.5M11 13.5h5.5" {...stroke} strokeWidth={1.6} stroke="var(--cb-bg-elevated, #fff)" />
     </g>
   ),
   "flag.checkered": (

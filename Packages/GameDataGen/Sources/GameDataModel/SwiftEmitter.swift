@@ -32,7 +32,8 @@ public enum SwiftEmitter {
             ("Tech+Generated.swift", types.tech),
             ("Age+Generated.swift", types.age),
             ("HouseTier+Generated.swift", types.houseTier),
-            ("Logistics+Generated.swift", types.logistics + types.vehicle)
+            ("Logistics+Generated.swift", types.logistics + types.vehicle),
+            ("OrderTemplate+Generated.swift", types.orderTemplate)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -173,7 +174,26 @@ private struct Types {
             property("startYear", "Int", all.map { ($0.id, "\($0.startYear)") }),
             property("blurb", "String", all.map { ($0.id, literal($0.blurb)) }),
             property("signature", "BuildingKind", all.map { ($0.id, ".\(caseName($0.signature))") }),
-            property("rivalResidents", "Int", all.map { ($0.id, "\($0.rivalResidents)") })
+            property("rivalResidents", "Int", all.map { ($0.id, "\($0.rivalResidents)") }),
+            property("orderEvery", "Int", all.map { ($0.id, "\($0.orderEvery)") })
+        ])
+    }
+
+    var orderTemplate: String {
+        let all = data.orders
+        return enumDecl("OrderTemplate", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
+            property("issuer", "OrderIssuerKind", all.map { ($0.id, ".\(caseName($0.issuer))") }),
+            property("good", "Good", all.map { ($0.id, ".\(caseName($0.good))") }),
+            property("title", "String", all.map { ($0.id, literal($0.title)) }),
+            property("text", "String", all.map { ($0.id, literal($0.text)) }),
+            property("minAge", "Age?", all.map { ($0.id, optionalCase($0.minAge)) }),
+            property("seasons", "Int", all.map { ($0.id, "\($0.seasons)") }),
+            property("sizePercent", "Int", all.map { ($0.id, "\($0.size)") }),
+            property("minUnits", "Int", all.map { ($0.id, "\($0.min)") }),
+            property("maxUnits", "Int", all.map { ($0.id, "\($0.max)") }),
+            property("rewardPercent", "Int", all.map { ($0.id, "\($0.reward)") }),
+            property("favourGain", "Int", all.map { ($0.id, "\($0.favour)") }),
+            property("favourLoss", "Int", all.map { ($0.id, "\($0.penalty)") })
         ])
     }
 

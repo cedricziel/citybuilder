@@ -10,3 +10,4 @@ packs:
   - cultures/east-asian
   - cultures/middle-eastern
   - ages                          # ages, era techs, age signature buildings
+  - orders                        # timed requests from the crown and rival towns

@@ -18,7 +18,7 @@ private func shipped() throws -> (Manifest, Bindings) {
 private let soundedEvents = [
     "buildingDemolished", "placementRejected", "bankruptcyWarning", "bankruptcyResolved", "seasonChanged",
     "historyEvent", "ageAdvanced", "rivalAgeAdvanced", "scenarioWon", "monumentCompleted", "fuelRanOut",
-    "commissionStarted", "marketTraded", "tradeCompleted", "caravanSold"
+    "commissionStarted", "marketTraded", "tradeCompleted", "caravanSold", "orderFulfilled"
 ]
 
 @Test("scenario: every listed event has a sound")
@@ -41,6 +41,7 @@ func tradesPickAmongCoinSounds() throws {
     #expect(market.count >= 3)
     #expect(Set((bindings.bindings["tradeCompleted"] ?? []).map(\.file)) == market)
     #expect(Set((bindings.bindings["caravanSold"] ?? []).map(\.file)) == market)
+    #expect(Set((bindings.bindings["orderFulfilled"] ?? []).map(\.file)) == market)
 }
 
 @Test("scenario: a rival's new age sounds farther away")

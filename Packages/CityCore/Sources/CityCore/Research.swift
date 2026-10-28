@@ -58,7 +58,7 @@ public extension World {
     /// `tech`'s cost on this world's difficulty, rounded down. Spec:
     /// `research` / Research cost scales with difficulty.
     func researchCost(of tech: Tech) -> Int {
-        tech.cost * difficulty.researchCostPercent / 100
+        tech.cost * difficulty.researchCostPercent / 100 * (100 - crownResearchDiscountPercent) / 100
     }
 }
 

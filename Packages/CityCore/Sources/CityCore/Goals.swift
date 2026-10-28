@@ -10,6 +10,9 @@ public enum Goal: Hashable, Codable, Sendable {
     /// More residents than every rival town. Spec: `rival-towns` /
     /// Outgrow every rival.
     case outgrowRivals
+    /// At least this many orders fulfilled. Spec: `difficulty-and-goals` /
+    /// Orders goal.
+    case orders(Int)
 }
 
 public struct GoalState: Hashable, Codable, Sendable {
@@ -93,6 +96,7 @@ extension World {
         case let .age(target): (age >= target ? 1 : 0, 1)
         case let .stock(good, count): (storedQuantity(of: good), count)
         case .outgrowRivals: (population(of: .player), (rivals.map { population(of: $0.owner) }.max() ?? 0) + 1)
+        case let .orders(count): (orders.fulfilledCount, count)
         }
     }
 

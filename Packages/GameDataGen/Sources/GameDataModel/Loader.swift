@@ -115,6 +115,7 @@ private struct ItemReader {
         case "Tier": tier(id).map { data.tiers.append($0) }
         case "Logistics": logistics(id).map { data.logistics.append($0) }
         case "Vehicle": vehicle(id).map { data.vehicles.append($0) }
+        case "Order": order(id).map { data.orders.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }
@@ -255,7 +256,22 @@ private struct ItemReader {
         guard let year, let blurb, let signature, let rival else { return nil }
         return Age(
             id: id, name: fields.string("name", required: false), startYear: year, blurb: blurb,
-            signature: signature, rivalResidents: rival, origin: fields.origin
+            signature: signature, rivalResidents: rival, orderEvery: fields.int("orderEvery", required: false) ?? 4,
+            origin: fields.origin
+        )
+    }
+
+    private func order(_ id: String) -> OrderTemplate? {
+        let issuer = fields.string("issuer"), good = fields.string("good")
+        let title = fields.string("title"), text = fields.string("text")
+        let seasons = fields.int("seasons"), size = fields.int("size")
+        let min = fields.int("min"), max = fields.int("max"), reward = fields.int("reward")
+        guard let issuer, let good, let title, let text, let seasons, let size, let min, let max, let reward else { return nil }
+        return OrderTemplate(
+            id: id, issuer: issuer, good: good, title: title, text: text,
+            minAge: fields.string("minAge", required: false), seasons: seasons, size: size, min: min, max: max, reward: reward,
+            favour: fields.int("favour", required: false) ?? 2, penalty: fields.int("penalty", required: false) ?? 2,
+            origin: fields.origin
         )
     }
 }

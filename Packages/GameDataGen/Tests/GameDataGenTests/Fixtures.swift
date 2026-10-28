@@ -173,7 +173,11 @@ enum Fixtures {
         "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"],
         "Tier": ["id": "nobles", "name": "Nobles", "capacity": "10", "taxPerResident": "8", "needs": "[wood]"],
         "Logistics": ["id": "carts", "haulDistance": "8", "haulMinLoad": "2", "haulMaxWait": "50"],
-        "Vehicle": ["id": "barrow", "age": "antiquity", "capacity": "3"]
+        "Vehicle": ["id": "barrow", "age": "antiquity", "capacity": "3"],
+        "Order": [
+            "id": "crown-wood", "issuer": "crown", "good": "wood", "title": "Wood", "text": "Wood for the winter.",
+            "seasons": "2", "size": "80", "min": "10", "max": "50", "reward": "120"
+        ]
     ]
 
     /// Every optional field of each kind, as raw YAML values.
@@ -192,7 +196,8 @@ enum Fixtures {
             "name": "Salting", "prerequisites": "[scholarship]", "era": "medieval",
             "eraGate": "{ tier: citizens, residents: 1 }"
         ],
-        "Age": ["name": "Bronze"],
-        "Tier": [:]
+        "Age": ["name": "Bronze", "orderEvery": "3"],
+        "Tier": [:],
+        "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"]
     ]
 }

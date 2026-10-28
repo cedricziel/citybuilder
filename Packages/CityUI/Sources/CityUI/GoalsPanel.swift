@@ -30,6 +30,8 @@ public struct GoalsPanelModel: Equatable {
             return "\(GoodsCatalog.spec(for: good).displayName) \(progress.current)/\(progress.target)"
         case .outgrowRivals:
             return "Outgrow every rival \(progress.current)/\(progress.target)"
+        case .orders:
+            return "Fulfil orders \(progress.current)/\(progress.target)"
         }
     }
 }
