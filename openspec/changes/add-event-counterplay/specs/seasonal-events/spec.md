@@ -202,7 +202,7 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 
 ### Requirement: Chapters schedule events
 
-A chapter SHALL be able to schedule seasonal events by year, onset season and event, and to turn off the random draw with `randomEvents: false`. A scheduled event SHALL replace that year's draw. It SHALL ignore the chance, the weights, the first event year and the minimum target counts, needing one target only, and SHALL be warned like any other event. The pack validator SHALL reject a chapter that schedules two events in one year, or a hazard in spring.
+A chapter SHALL be able to schedule seasonal events by year, onset season and event, and to turn off the random draw with `randomEvents: false`. A chapter's schedule SHALL run whatever the New Game events toggle says. A scheduled event SHALL replace that year's draw. It SHALL ignore the chance, the weights, the first event year and the minimum target counts, needing one target only, and SHALL be warned like any other event. The pack validator SHALL reject a chapter that schedules two events in one year, or a hazard in spring.
 
 #### Scenario: A scheduled fire
 

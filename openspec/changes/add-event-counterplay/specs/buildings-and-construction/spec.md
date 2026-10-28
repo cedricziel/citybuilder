@@ -2,11 +2,11 @@
 
 ### Requirement: Fire watch
 
-The catalog SHALL include a fire watch: town category, footprint 2×2, cost $60, 2 wood and 2 planks, upkeep 1, build time 20 ticks, no tech. It SHALL answer fires within 8 tiles of its footprint (`seasonal-events`).
+The catalog SHALL include a fire watch: town category, footprint 1×1, cost $60, 2 wood and 2 planks, upkeep 1, build time 20 ticks, no tech. It SHALL answer fires within 8 tiles of its footprint (`seasonal-events`).
 
 #### Scenario: Placing a fire watch
 
-- **WHEN** the player places a fire watch on open, road-adjacent grass with $60, 2 wood and 2 planks on the island
+- **WHEN** the player places a fire watch on one open, road-adjacent grass tile with $60, 2 wood and 2 planks on the island
 - **THEN** the placement is allowed and a construction site appears
 
 ### Requirement: Granary

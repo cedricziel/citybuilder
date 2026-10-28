@@ -70,7 +70,7 @@ Mechanics stay in Swift, like `effect: code` on buildings. The tuning numbers th
 - **Each building burns at most once per event.** A doused or burnt building can't catch again until the event ends, so two neighbours can't keep re-igniting each other. The candidates are recomputed at each ignition tick; an ignition without a candidate is skipped. The warning needs at least one house or producer among the 6 flammable buildings.
 - **Spread.** When a fire has burnt for `spreadTicks` (Easy 200, Normal 150, Hard 100), it ignites every flammable building whose footprint touches its own (gap 1, edges and corners), in entity-ID order. Each new fire has its own timers. A road tile between two buildings makes the gap 2, so **roads are firebreaks**. Spread is deterministic and needs no RNG.
 - **Burning down.** After 300 ticks the building becomes **ruins** of the same footprint. Its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building.
-- **Fire watch.** It covers flammable buildings within 8 tiles (gap) that are road-connected to it. When a covered building ignites, the nearest idle watch (by road path length, then entity ID) sends its watchman. He walks the road path at one tile a tick and douses the fire for 30 ticks. The fire is out at arrival + 30. A watch handles one fire at a time; others queue in order of ignition tick, then entity ID. Within 8 tiles the path is rarely over 20 tiles, so a watch is in time before the spread (150 ticks on Normal), even with two fires in a row. A doused building keeps its stock and resumes. No ruins.
+- **Fire watch.** A 1×1 tower. It covers flammable buildings within 8 tiles (gap) that are road-connected to it. When a covered building ignites, the nearest idle watch (by road path length, then entity ID) sends its watchman. He walks the road path at one tile a tick and douses the fire for 30 ticks. The fire is out at arrival + 30. A watch handles one fire at a time; others queue in order of ignition tick, then entity ID. Within 8 tiles the path is rarely over 20 tiles, so a watch is in time before the spread (150 ticks on Normal), even with two fires in a row. A doused building keeps its stock and resumes. No ruins.
 - **Why touching footprints and roads.** The issue asks that "spacing and roads matter". Houses are built side by side along roads, so a block of touching houses is the risk and a road is the natural break. A wider spread radius would burn whole towns, and a narrower one would never spread.
 
 *Alternatives:* a random spread chance per tick (unreadable, and a fire would behave differently on a replay); a fire watch that prevents ignition in its radius (no visible response, and no reason to space the town).
@@ -190,10 +190,12 @@ The final choice is the owner's. Art and `design/web` components follow the appr
 - **[Risk]** Fever interacts with the decline grace (#274). → Residents who leave with fever are not a shortage and don't touch the short-interval count. A house below capacity can't advance anyway, so fever blocking advancement only matters for full houses.
 - **[Trade-off]** Events touch only the player. Rival towns don't burn. That keeps the rival sweep stable, at the cost of realism.
 
-## Open Questions
+## Decisions on the open questions
 
-- The fire watch footprint: a 2×2 plot (spec) or a 1×1 tower (canvas option C)?
-- Should the physician burn herbs all year, for a small passive bonus such as slower decline, instead of only while warned?
-- Should the New Game dialog offer "Events: on/off" for calm sandbox games?
-- Clearing ruins: is 25% of the building's cost right, and should it return any wood?
-- Should a missed festival cost something (crown favour), or stay free?
+Decided by the orchestrator on 2026-10-28. The owner can override any of them on the canvas.
+
+1. **Fire watch footprint: a 1×1 tower.** It is cheap, fits into dense towns, and matches the rendered tower (canvas option A's tower on option C's plot). Its ruins are 1×1 too.
+2. **Physician:** burns herbs only while a fever is warned or under way (D7). Herbs matter, without a constant drain.
+3. **Events toggle:** New Game offers "Seasonal events: On/Off", default On. Its value is `SeasonalEventsState.enabled`. A campaign chapter that schedules events ignores the toggle and always runs its schedule. Its random draw follows `randomEvents`.
+4. **Ruins clearing:** 25% of the burnt building's cost (D5), with no wood back.
+5. **Missed festival:** no favour cost and no other penalty (D8). A festival is an opportunity, not an obligation.
