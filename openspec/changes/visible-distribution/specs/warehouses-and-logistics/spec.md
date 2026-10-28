@@ -65,7 +65,7 @@ A carrier whose destination cannot take everything it carries, because the desti
 
 ### Requirement: Handcarts carry long and bulk hauls
 
-A carrier SHALL travel with its owner's vehicle when its road path is at least the haul distance of 12 road tiles and at least the haul minimum load of 3 units is ready for the same destination. The owner's vehicle is the one whose age began most recently by the owner's age: a handcart from the medieval age on, carrying up to 4. Before the first vehicle's age, every haul SHALL go on foot. Ready means the source holds the units and the destination can take them: a goods buffer has room for that good beyond the units already on their way to it, and a consumer is short of them by at least that many and has room for them. A producer's direct delivery to a short consumer is a haul too: on a long road it SHALL go by vehicle when enough is ready, and otherwise on foot with 1 unit, without waiting for a load. A vehicle SHALL carry as many ready units as fit, up to its capacity. On a long haul to storage, a producer SHALL prefer the nearest goods buffer with room for at least the minimum load over a nearer one with room for less. A producer whose haul to storage is that long SHALL wait until a vehicle load is ready rather than send single units on foot, but for no more than the haul's maximum wait of 200 ticks; then it SHALL send what is ready by vehicle. Every other haul SHALL go on foot with 1 unit. The haul distance, minimum load and maximum wait, and each vehicle's age and capacity, SHALL come from the game data. A vehicle SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
+A carrier SHALL travel with its owner's vehicle when its road path is at least the haul distance of 12 road tiles and at least the haul minimum load of 3 units is ready for the same destination. The owner's vehicle is the one whose age began most recently by the owner's age: a handcart from the medieval age on, carrying up to 4. Before the first vehicle's age, every haul SHALL go on foot. Ready means the source holds the units and the destination can take them: a goods buffer has room for that good beyond the units already on their way to it, and a consumer is short of them by at least that many and has room for them. A producer's direct delivery to a short consumer is a haul too: on a long road it SHALL go by vehicle when enough is ready, and otherwise on foot with 1 unit, without waiting for a load. A vehicle SHALL carry as many ready units as fit, up to its capacity. On a long haul to storage, a producer SHALL prefer the nearest goods buffer with room for at least the minimum load over a nearer one with room for less. A producer whose haul to storage is that long SHALL wait until a vehicle load is ready, unless houses need the good or a building of the same owner is short of it, since batching is for bulk nobody is waiting on; such a good SHALL go at once with what is ready rather than send single units on foot, but for no more than the haul's maximum wait of 200 ticks; then it SHALL send what is ready by vehicle. Every other haul SHALL go on foot with 1 unit. The haul distance, minimum load and maximum wait, and each vehicle's age and capacity, SHALL come from the game data. A vehicle SHALL move one road tile per tick, like a walker, and SHALL take one of its producer's carrier slots. Inbound supply SHALL count the units carriers bring, not the carriers. A carrier from a save without a vehicle SHALL load on foot.
 
 #### Scenario: A long haul with enough ready goes by handcart
 
@@ -86,6 +86,16 @@ A carrier SHALL travel with its owner's vehicle when its road path is at least t
 
 - **WHEN** a lumberjack hut holds 2 wood and its nearest goods buffer with room lies 15 road tiles away
 - **THEN** no carrier leaves until a third wood is ready, and then one handcart leaves with 3
+
+#### Scenario: A long haul of a good a consumer is short of does not wait
+
+- **WHEN** a lumberjack hut holds 2 wood, its nearest goods buffer with room lies 15 road tiles away, and a sawmill of the same owner holds no wood
+- **THEN** one handcart leaves at once with the 2 wood
+
+#### Scenario: Goods houses need never wait for a load
+
+- **WHEN** a bakery holds 1 bread and its nearest goods buffer with room lies 15 road tiles away
+- **THEN** the bread leaves at once
 
 #### Scenario: Goods that wait too long for a cart load go anyway
 

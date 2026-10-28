@@ -125,7 +125,13 @@ Carts make hauls cheaper, like M1's hops, so the run is re-measured on top of pe
 - A long haul to storage still waits for a cart load. "Ready" now reads the store's room for that good minus the units already on their way there, so a cart is never promised room twice.
 - A producer's direct hop to a short consumer is a haul too. On a long road it goes by cart when at least the minimum load is ready and the consumer is short of at least that much. Otherwise it walks one unit without waiting, since a short consumer should not wait for a load.
 - Inbound supply and room counts are in units, not carriers, because a cart brings several.
-- *M3 result on main 574e76c4:* pending the sweep slot. The PR body carries the numbers.
+- *M3 first sweep (7a35a1e1) against main bfdce48d:* no bankruptcies on either, and merchant reach slightly better (7 arms without a merchant by year 10, against 10). But retention fell: 119 of 180 arms held 20+ merchants at year 10, against 154, and the share of turns in years 8–10 with 20+ merchants fell from about 0.85 to about 0.70.
+- *Cause, from single-arm probes:* the wait for a cart load. On the four arms that lost most (held share 0.30–0.48):
+  - No wait gave 1.00, 1.00, 0.74 and 1.00.
+  - Carts off gave 1.00 on all four.
+  - Exempting only house goods gave 0.46, 1.00, 1.00 and 1.00.
+  - Also exempting goods a consumer of the owner is short of gave 0.71, 1.00, 1.00 and 1.00.
+- *Fix:* batching is for bulk nobody waits on. A long haul to storage waits for a load only when houses don't need the good and no building of the owner is short of it. The PR body carries the re-run sweep.
 
 *Campaign need (Hard Ground 3, "The Long Road", `add-campaigns`):* the chapter pushes the mine 16 tiles out on the archipelago home island, starts in the Medieval age with Mining done and Seafaring closed, and teaches long hauls by road with handcarts.
 - That needs carts from the Medieval age on: `handcart`'s `Vehicle` item starts there.
