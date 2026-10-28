@@ -26,7 +26,7 @@
 ## 4. Saves and determinism
 
 - [x] 4.1 Decode a save without orders; round-trip test; fixture from the previous version
-- [ ] 4.2 `DeterminismFixture` output: the empty `orders` key, equal on macOS and Linux; favour keys written as strings
+- [x] 4.2 `DeterminismFixture` output: the empty `orders` key, equal on macOS and Linux; favour keys written as strings
 
 ## 5. PlayerBot and sweeps
 
