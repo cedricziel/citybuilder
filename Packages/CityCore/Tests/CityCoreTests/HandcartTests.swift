@@ -314,3 +314,25 @@ func aRivalsHaulsFollowTheRivalsOwnAge() throws {
     #expect(try rivalHaul(in: .antiquity) == nil)
     #expect(try rivalHaul(in: .medieval) == .handcart)
 }
+
+@Test("scenario: a long haul of a good a consumer is short of does not wait")
+func scenarioALongHaulOfAGoodAConsumerIsShortOfDoesNotWait() throws {
+    var world = roadStrip()
+    let hut = inject(.lumberjackHut, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.wood: 2])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
+    _ = inject(.sawmill, in: &world, at: TileCoordinate(x: 22, y: 1))
+    world.tick()
+    let (mission, vehicle) = try #require(departures(in: world).first { $0.0.source == hut })
+    #expect(mission == .deliver(good: .wood, amount: 2, fromProducer: hut, toWarehouse: warehouse))
+    #expect(vehicle == .handcart)
+}
+
+@Test("scenario: goods houses need never wait for a load")
+func scenarioGoodsHousesNeedNeverWaitForALoad() throws {
+    var world = roadStrip()
+    let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.bread: 1])
+    let warehouse = inject(.warehouse, in: &world, at: TileCoordinate(x: 16, y: 0))
+    world.tick()
+    let (mission, _) = try #require(departures(in: world).first)
+    #expect(mission == .deliver(good: .bread, amount: 1, fromProducer: bakery, toWarehouse: warehouse))
+}
