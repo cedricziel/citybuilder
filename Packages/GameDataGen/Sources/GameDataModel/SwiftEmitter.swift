@@ -209,7 +209,8 @@ private struct Types {
             property("weights", "[Difficulty: Int]", all.map { event in
                 (event.id, "[" + ItemSchema.difficulties.map { ".\($0): \(event.weights[$0] ?? 0)" }.joined(separator: ", ") + "]")
             }),
-            property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) })
+            property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) }),
+            property("isEnabled", "Bool", all.map { ($0.id, "\($0.enabled)") })
         ])
     }
 

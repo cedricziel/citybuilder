@@ -54,6 +54,15 @@ public enum SeasonalEvent: String, CaseIterable, Codable, Sendable {
         case .festival: [.request: SeasonalBanner(title: "The town wants a festival", text: "Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year."), .held: SeasonalBanner(title: "Festival!", text: "Houses near the market advance faster and pay {bonus}% more tax until {date}."), .missed: SeasonalBanner(title: "The festival was called off", text: "Goods already delivered stay with the town. There is no other penalty.")]
         }
     }
+
+    public var isEnabled: Bool {
+        switch self {
+        case .fire: true
+        case .blight: false
+        case .fever: false
+        case .festival: false
+        }
+    }
 }
 
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

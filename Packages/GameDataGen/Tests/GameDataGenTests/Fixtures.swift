@@ -199,6 +199,6 @@ enum Fixtures {
         "Age": ["name": "Bronze", "orderEvery": "3"],
         "Tier": [:],
         "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
-        "Event": ["minAge": "medieval"]
+        "Event": ["minAge": "medieval", "enabled": "false"]
     ]
 }

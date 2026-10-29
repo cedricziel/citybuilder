@@ -2,12 +2,22 @@
 
 ### Requirement: Seasonal events are game data
 
-The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring.
+The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring. An event item MAY set `enabled: false`; such an event SHALL NOT be drawn, warned or started, scheduled or not.
 
 #### Scenario: The catalog has four events
 
 - **WHEN** the generated event catalog is read
 - **THEN** it holds fire, blight, fever and festival, with fire and blight striking in summer or autumn, fever in autumn or winter, and the festival requested in spring or summer
+
+#### Scenario: only enabled events are drawn
+
+- **WHEN** blight, fever and the festival are `enabled: false` in the pack and the events of many years are decided on Hard
+- **THEN** every event drawn is a fire
+
+#### Scenario: a disabled event is never warned, even scheduled
+
+- **WHEN** a chapter schedules a blight in autumn 1201 and blight is `enabled: false`
+- **THEN** no seasonal event is warned or started in 1201
 
 #### Scenario: A spring hazard is rejected
 

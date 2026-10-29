@@ -25,15 +25,17 @@ extension World {
     /// scheduled event, else a draw by the difficulty's chance and the
     /// events' weights among those the player's age allows.
     public func seasonalEvent(forYear year: Int) -> SeasonalEventOnset? {
+        // An event switched off in the pack is neither drawn nor scheduled
+        // (`add-event-counterplay` D14).
         if let scheduled = seasonalEvents.schedule.first(where: { $0.year == year }) {
-            return SeasonalEventOnset(event: scheduled.event, season: scheduled.onset)
+            return scheduled.event.isEnabled ? SeasonalEventOnset(event: scheduled.event, season: scheduled.onset) : nil
         }
         guard seasonalEvents.enabled, seasonalEvents.randomEvents,
               year - calendar.startYear + 1 >= difficulty.firstSeasonalEventYear
         else { return nil }
         var rng = seasonalEventRNG(.decision, year: year)
         guard rng.next() % 100 < difficulty.seasonalEventChancePercent else { return nil }
-        let pool = SeasonalEvent.allCases.filter { $0.minAge <= age }.flatMap { event in
+        let pool = SeasonalEvent.allCases.filter { $0.isEnabled && $0.minAge <= age }.flatMap { event in
             Array(repeating: event, count: event.weights[difficulty] ?? 0)
         }
         guard !pool.isEmpty else { return nil }
