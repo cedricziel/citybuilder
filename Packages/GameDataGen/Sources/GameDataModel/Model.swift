@@ -219,6 +219,10 @@ public struct Tier: Equatable, Sendable {
     /// The tier's needs: as written while validating, then with every
     /// `neededBy` merged in.
     public var needs: [String]
+    /// Consumption intervals a need may stay short before a house of this
+    /// tier declines (design D3 of `decline-grace`); 1 when a pack says
+    /// nothing.
+    public var declineGrace: Int
     public var origin: Origin
 }
 

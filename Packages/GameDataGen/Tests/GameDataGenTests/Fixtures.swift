@@ -203,7 +203,7 @@ enum Fixtures {
             "eraGate": "{ tier: citizens, residents: 1 }"
         ],
         "Age": ["name": "Bronze", "orderEvery": "3"],
-        "Tier": [:],
+        "Tier": ["declineGrace": "3"],
         "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
         "Event": ["minAge": "medieval", "enabled": "false"],
         "Campaign": ["opensAfter": "the-guild-charter"],

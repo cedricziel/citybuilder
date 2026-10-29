@@ -5,15 +5,15 @@ import Testing
 // Scenarios from population-and-needs: Houses consume food and planks,
 // and the tier requirements from openspec/changes/add-population-tiers.
 
-private struct Fixture {
+struct HouseFixture {
     var world: World
     let house: EntityID
     let center: EntityID
 }
 
-private func houseNextToTownCenter(
+func houseNextToTownCenter(
     food: Int, planks: Int, bread: Int = 0, tools: Int = 0, cloth: Int = 0, beer: Int = 0, residents: UInt32, tier: HouseTier = .citizens
-) throws -> Fixture {
+) throws -> HouseFixture {
     var world = World.fixtureWithTerrain(width: 12, height: 8, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
     let center = EntityID(raw: world.nextEntityRaw)
@@ -53,7 +53,7 @@ private func houseNextToTownCenter(
     pop.tier = tier
     pop.population = residents
     world.populations[house] = pop
-    return Fixture(world: world, house: house, center: center)
+    return HouseFixture(world: world, house: house, center: center)
 }
 
 private func advanceToNextConsumption(_ world: inout World) {
@@ -165,15 +165,6 @@ func scenarioCitizensWithBreadBecomeMerchants() throws {
     #expect(pop.tier.capacity == 8)
 }
 
-@Test("scenario: merchants without bread decline to citizens")
-func scenarioMerchantsWithoutBreadDeclineToCitizens() throws {
-    var fixture = try houseNextToTownCenter(food: 20, planks: 10, tools: 5, cloth: 5, residents: 8, tier: .merchants)
-    run(&fixture.world, ticks: 121)
-    let pop = try #require(fixture.world.populations[fixture.house])
-    #expect(pop.tier == .citizens)
-    #expect(pop.population <= 6)
-}
-
 @Test("scenario: merchant residents pay four times the peasant rate")
 func scenarioMerchantResidentsPayFourTimesThePeasantRate() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 6, bread: 6, tools: 5, cloth: 5, residents: 8, tier: .merchants)
@@ -231,17 +222,6 @@ func scenarioCitizensCannotBecomeMerchantsWithoutCloth() throws {
     var fixture = try houseNextToTownCenter(food: 20, planks: 10, bread: 8, tools: 5, residents: 6, tier: .citizens)
     run(&fixture.world, ticks: 121)
     #expect(fixture.world.populations[fixture.house]?.tier == .citizens)
-}
-
-@Test("scenario: merchants without cloth decline to citizens")
-func scenarioMerchantsWithoutClothDeclineToCitizens() throws {
-    var fixture = try houseNextToTownCenter(
-        food: 10, planks: 6, bread: 6, tools: 5, beer: 5, residents: 8, tier: .merchants
-    )
-    run(&fixture.world, ticks: 121)
-    let pop = try #require(fixture.world.populations[fixture.house])
-    #expect(pop.tier == .citizens)
-    #expect(pop.population <= 6)
 }
 
 @Test("scenario: merchants keep their tier without cloth before weaving")
