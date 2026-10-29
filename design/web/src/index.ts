@@ -51,6 +51,7 @@ export * from "./components/ScenarioWon/ScenarioWon";
 export * from "./components/PauseMenu/PauseMenu";
 export * from "./components/TitleScreen/TitleScreen";
 export * from "./components/NewGameDialog/NewGameDialog";
+export * from "./components/ChapterSelect/ChapterSelect";
 export * from "./components/TileMenu/TileMenu";
 export * from "./components/WorldBackdrop/WorldBackdrop";
 export * from "./components/GameScreen/GameScreen";
