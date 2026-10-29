@@ -170,10 +170,11 @@ extension GameSession {
         ))
     }
 
-    /// The event chip's tap: the warning of the event warned or under way,
-    /// again. Spec: `platform-shells` / Seasonal events show banners and a chip.
+    /// The event chip's tap: the warning of the event warned or under way
+    /// again, or that a fire burns. Spec: `platform-shells` / Seasonal events
+    /// show banners and a chip.
     public func replaySeasonalWarning() {
-        guard let banner = world.currentSeasonalEvent.flatMap(Self.warningBanner) else { return }
+        guard let banner = seasonalChipBanner() else { return }
         show(banner)
     }
 

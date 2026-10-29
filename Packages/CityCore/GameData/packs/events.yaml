@@ -10,7 +10,8 @@
 #   mechanic ships (design D14); defaults to true.
 # weight: the draw weight per difficulty.
 # banners: title and text per moment. CityUI fills {season}, {building},
-#   {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood} and {bonus}.
+#   {buildings} and {residents} (the toll with its noun), {date}, {deadline},
+#   {bread}, {luxury}, {luxuryGood} and {bonus}.
 defaults:
   hazard-weight: &hazard-weight { easy: 1, normal: 1, hard: 2 }
 
@@ -29,7 +30,7 @@ items:
         text: "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
       end:
         title: The fires are out
-        text: "{count} buildings burnt down. Clear the ruins with Demolish."
+        text: "{buildings} burnt down. Clear the ruins with Demolish."
       endNoLoss:
         title: The fires are out
         text: Nothing was lost.
@@ -70,7 +71,7 @@ items:
         text: "Houses in the marked district can't advance, and some residents leave, until {date}."
       end:
         title: The fever has passed
-        text: "{count} residents left the town."
+        text: "{residents} left the town."
 
   - kind: Event
     id: festival

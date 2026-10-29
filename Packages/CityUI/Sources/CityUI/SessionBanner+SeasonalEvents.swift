@@ -21,7 +21,11 @@ extension GameSession {
             case (.fire, _, 0): .endNoLoss
             default: .end
             }
-            return Self.banner(event, moment, ["count": "\(toll.count)"])
+            let values = [
+                "count": "\(toll.count)", "buildings": Self.counted(toll.count, "building"),
+                "residents": Self.counted(toll.count, "resident")
+            ]
+            return Self.banner(event, moment, values)
         case let .demolitionRejected(id, .notEnoughMoney):
             guard let building = world.buildings[id] else { return nil }
             let what = building.kind == .ruins ? "these ruins" : "this burning building"
@@ -32,6 +36,20 @@ extension GameSession {
         default:
             return nil
         }
+    }
+
+    /// "1 building", "3 buildings".
+    static func counted(_ count: Int, _ noun: String) -> String {
+        "\(count) \(noun)\(count == 1 ? "" : "s")"
+    }
+
+    /// What the event chip shows again: while a fire burns, that it burns,
+    /// else the warning.
+    func seasonalChipBanner() -> SessionBanner? {
+        if let fire = world.seasonalEvents.fire?.fires.first, let kind = world.buildings[fire.building]?.kind {
+            return Self.banner(.fire, .ignition, ["building": BuildTool.place(kind).displayName.lowercased()])
+        }
+        return world.currentSeasonalEvent.flatMap(Self.warningBanner)
     }
 
     /// The warning of `onset`, as first shown and as the chip shows it again.

@@ -245,7 +245,7 @@
                 }
               },
               "banners": {
-                "description": "Banner title and text by moment. Placeholders: {season}, {building}, {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood}, {bonus}.",
+                "description": "Banner title and text by moment. Placeholders: {season}, {building}, {buildings}, {residents}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood}, {bonus}.",
                 "type": "object",
                 "propertyNames": { "enum": ["warning", "onset", "ignition", "end", "endNoLoss", "endNoFire", "request", "held", "missed"] },
                 "patternProperties": {
