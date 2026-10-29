@@ -78,3 +78,11 @@ func heldKindsAreNotInThePalette() {
     #expect(!offered.contains(.ruins))
     #expect(offered.contains(.fireWatch))
 }
+
+@Test("the fire seed shows burning houses, ruins, a fire watch and a granary")
+func fireSeedShowsTheEventArt() {
+    let world = UITestSeed.fireWorld()
+    let kinds = world.buildings.values.map(\.kind)
+    #expect(world.buildings.values.count { $0.state == .burning } == 2)
+    #expect(kinds.contains(.ruins) && kinds.contains(.fireWatch) && kinds.contains(.granary))
+}

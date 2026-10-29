@@ -46,6 +46,14 @@ public enum UITestSeed {
         return world
     }
 
+    /// `-uiTestSeedFire`: the seeded town with six houses, a fire watch and a granary, two houses
+    /// burning (the watch's watchman on his way to one) and one burnt to ruins, for the event art's shots.
+    public static func fireWorld() -> World {
+        var world = townWorld(houses: 6, showcase: [.fireWatch, .granary])
+        world.seedFireShowcase()
+        return world
+    }
+
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
@@ -104,6 +112,7 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedPort") { return portWorld() }
         if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
         if arguments.contains("-uiTestSeedOrders") { return ordersWorld() }
+        if arguments.contains("-uiTestSeedFire") { return fireWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
