@@ -6,9 +6,12 @@
 # seasons: the possible onset seasons. A hazard never strikes in spring, so
 #   its warning comes the season before, in the same year.
 # minAge: the first age the event can happen in; defaults to the first age.
+# enabled: false keeps an event out of every draw and schedule until its
+#   mechanic ships (design D14); defaults to true.
 # weight: the draw weight per difficulty.
 # banners: title and text per moment. CityUI fills {season}, {building},
-#   {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood} and {bonus}.
+#   {buildings} and {residents} (the toll with its noun), {date}, {deadline},
+#   {bread}, {luxury}, {luxuryGood} and {bonus}.
 defaults:
   hazard-weight: &hazard-weight { easy: 1, normal: 1, hard: 2 }
 
@@ -21,13 +24,13 @@ items:
     banners:
       warning:
         title: "Dry {season} ahead"
-        text: Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames.
+        text: Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames.
       ignition:
         title: Fire!
         text: "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
       end:
         title: The fires are out
-        text: "{count} buildings burnt down. Clear the ruins with Demolish."
+        text: "{buildings} burnt down. Clear the ruins with Demolish."
       endNoLoss:
         title: The fires are out
         text: Nothing was lost.
@@ -38,6 +41,7 @@ items:
   - kind: Event
     id: blight
     effect: blight
+    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [summer, autumn]
     weight: *hazard-weight
     banners:
@@ -54,6 +58,7 @@ items:
   - kind: Event
     id: fever
     effect: fever
+    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [autumn, winter]
     minAge: medieval
     weight: *hazard-weight
@@ -66,11 +71,12 @@ items:
         text: "Houses in the marked district can't advance, and some residents leave, until {date}."
       end:
         title: The fever has passed
-        text: "{count} residents left the town."
+        text: "{residents} left the town."
 
   - kind: Event
     id: festival
     effect: festival
+    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [spring, summer]
     weight: { easy: 3, normal: 1, hard: 1 }
     banners:

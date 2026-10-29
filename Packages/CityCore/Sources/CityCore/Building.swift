@@ -151,6 +151,8 @@ public struct Building: Hashable, Codable, Sendable {
     public internal(set) var owner: Owner
     /// For ruins, the kind that burnt down; nil for every other building.
     public let ruinOf: BuildingKind?
+    /// For ruins, the tick the building burnt down.
+    public let burntAtTick: UInt64?
 
     public init(
         id: EntityID,
@@ -169,7 +171,8 @@ public struct Building: Hashable, Codable, Sendable {
         exportGood: Good? = nil,
         lastCaravan: CaravanSale? = nil,
         owner: Owner = .player,
-        ruinOf: BuildingKind? = nil
+        ruinOf: BuildingKind? = nil,
+        burntAtTick: UInt64? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -188,6 +191,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.lastCaravan = lastCaravan
         self.owner = owner
         self.ruinOf = ruinOf
+        self.burntAtTick = burntAtTick
     }
 }
 
@@ -229,6 +233,7 @@ public extension Building {
         self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
         self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
         self.ruinOf = try container.decodeIfPresent(BuildingKind.self, forKey: .ruinOf)
+        self.burntAtTick = try container.decodeIfPresent(UInt64.self, forKey: .burntAtTick)
     }
 }
 

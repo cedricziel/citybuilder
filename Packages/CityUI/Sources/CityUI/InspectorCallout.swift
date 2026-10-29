@@ -354,9 +354,9 @@ struct InspectorCalloutView<Actions: View>: View {
             Spacer(minLength: 0)
             actions()
             if viewModel.rival == nil {
-                Button("Demolish", role: .destructive, action: session.demolishSelection)
+                Button(viewModel.demolish?.title ?? "Demolish", role: .destructive, action: session.demolishSelection)
                     .foregroundStyle(.red)
-                    .disabled(session.isGameOver)
+                    .disabled(session.isGameOver || viewModel.demolish?.isEnabled == false)
             }
         }
         .font(.caption.weight(.semibold))

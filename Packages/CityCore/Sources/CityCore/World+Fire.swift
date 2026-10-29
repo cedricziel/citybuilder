@@ -104,7 +104,8 @@ extension World {
     mutating func burnDown(_ id: EntityID) {
         guard let building = buildings[id] else { return }
         buildings[id] = Building(
-            id: building.id, kind: .ruins, anchor: building.anchor, state: .operational, owner: building.owner, ruinOf: building.kind
+            id: building.id, kind: .ruins, anchor: building.anchor, state: .operational, owner: building.owner,
+            ruinOf: building.kind, burntAtTick: tickCount
         )
         stockpiles[id] = nil
         populations[id] = nil
@@ -144,6 +145,13 @@ extension World {
         seasonalEvents.fire = state
     }
 
+    /// Whether `watch` would answer a fire in `target`: within its reach,
+    /// with a road path between them.
+    func fireWatchCovers(_ watch: Building, _ target: Building) -> Bool {
+        guard let goal = anyAdjacentRoad(anchor: target.anchor, footprint: target.footprint) else { return false }
+        return watchmanPath(from: watch, to: target, goal: goal) != nil
+    }
+
     /// The road path from a watch to a burning building within its reach.
     private func watchmanPath(from watch: Building, to target: Building, goal: TileCoordinate) -> [TileCoordinate]? {
         guard Self.footprintDistance(watch, target) <= Self.fireWatchReach,
@@ -168,7 +176,7 @@ extension World {
     /// treasury can't pay. Other buildings come down for free.
     mutating func payToClear(_ building: Building, events: inout [WorldEvent]) -> Bool {
         guard building.kind == .ruins || building.state == .burning else { return true }
-        guard charge(Self.clearingFee(of: building.ruinOf ?? building.kind), to: .player) else {
+        guard charge(Self.clearingFee(for: building), to: .player) else {
             events.append(.demolitionRejected(building: building.id, reason: .notEnoughMoney))
             return false
         }
@@ -178,10 +186,16 @@ extension World {
         return true
     }
 
+    /// What clearing these ruins, or pulling this burning building down,
+    /// costs: the fee of the kind that burnt or burns.
+    public static func clearingFee(for building: Building) -> Int64 {
+        clearingFee(of: building.ruinOf ?? building.kind)
+    }
+
     /// What clearing ruins costs: a quarter of the burnt kind's price,
     /// rounded up to $5, at least $10. Spec: `buildings-and-construction`
     /// / Ruins block their plot until cleared.
-    static func clearingFee(of kind: BuildingKind) -> Int64 {
+    public static func clearingFee(of kind: BuildingKind) -> Int64 {
         max(10, (BuildingCatalog.spec(for: kind).cost + 19) / 20 * 5)
     }
 }

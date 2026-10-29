@@ -92,6 +92,11 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// The order board, favour and the shipments on the road. Spec:
     /// `platform-shells` / Order board.
     public let orders: OrdersState
+    /// The seasonal event warned or under way, with its onset season.
+    /// Spec: `platform-shells` / Seasonal events show banners and a chip.
+    public let seasonalEvent: SeasonalEventOnset?
+    /// Turns any tick into a date, such as when ruins burnt down.
+    public let calendar: CalendarState
     /// Fire watchmen walking to a fire or dousing it. Spec: `rendering-2_5d` /
     /// Seasonal events are drawn on the map.
     public let watchmen: [WatchmanWalker]
@@ -124,6 +129,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         market: [MarketQuote] = [],
         statistics: StatisticsHistory = StatisticsHistory(),
         orders: OrdersState = OrdersState(),
+        seasonalEvent: SeasonalEventOnset? = nil,
+        calendar: CalendarState = .inactive,
         watchmen: [WatchmanWalker] = []
     ) {
         self.tickCount = tickCount
@@ -153,6 +160,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.market = market
         self.statistics = statistics
         self.orders = orders
+        self.seasonalEvent = seasonalEvent
+        self.calendar = calendar
         self.watchmen = watchmen
     }
 
@@ -254,6 +263,8 @@ public extension World {
             market: marketQuotes,
             statistics: statistics,
             orders: orders,
+            seasonalEvent: currentSeasonalEvent,
+            calendar: calendar,
             watchmen: watchmenAtWork
         )
     }
