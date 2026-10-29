@@ -10,6 +10,10 @@ const issues: StatusIssue[] = [
   "no-route",
   "no-trees",
   "no-room-to-plant",
+  "burning",
+  "ruins",
+  "blight",
+  "fever",
 ];
 
 export const AllStates = () => (
