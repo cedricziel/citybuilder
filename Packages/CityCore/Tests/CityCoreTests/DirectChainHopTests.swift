@@ -270,6 +270,22 @@ func goodsWithNoStorageLeftGoBackToWhereTheyCameFrom() {
     #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 1)
 }
 
+@Test("goods never go back to a source that is burning")
+func goodsNeverGoBackToASourceThatIsBurning() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 12, y: 1))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 12, y: 1), events: &events)
+    world.buildings[windmill]?.state = .burning
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        #expect(world.carriers.values.allSatisfy { $0.mission.destination != windmill })
+        world.tick()
+    }
+    #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 0)
+}
+
 @Test("a delivery to a demolished warehouse goes to the next one")
 func aDeliveryToADemolishedWarehouseGoesToTheNextOne() {
     var world = roadStrip(width: 30)

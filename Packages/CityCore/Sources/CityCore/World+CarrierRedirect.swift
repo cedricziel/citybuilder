@@ -12,7 +12,8 @@ extension World {
     ///   on again when that store fills.
     /// - Otherwise the goods go on to the nearest store of their owner
     ///   with room for them, counting what is already on its way there,
-    ///   else back to where they came from when that stands and has room.
+    ///   else back to where they came from when that stands, is not burning
+    ///   and has room.
     /// - With nowhere to go they wait at their destination while it
     ///   stands, looking again each tick, so nothing is lost to a full
     ///   store. A construction site never keeps a carrier waiting.
@@ -47,8 +48,8 @@ extension World {
     /// mission's destination, by road from `tile`, with room for the whole
     /// load beyond what is already on its way there; failing that, the
     /// nearest with room for any of it. Ties go to the lower entity ID.
-    /// Falls back to the mission's source when it still stands and has
-    /// room.
+    /// Falls back to the mission's source when it still stands, is not
+    /// burning and has room.
     private func nearestRoom(
         for mission: Carrier.Mission, from tile: TileCoordinate, owner: Owner
     ) -> (EntityID, [TileCoordinate])? {
@@ -64,7 +65,7 @@ extension World {
         // its goods across several stores; then any store with room.
         let buffers = goodsBuffers(of: owner).filter { $0.state == .operational }
         return nearest(among: buffers, room: mission.amount) ?? nearest(among: buffers, room: 1)
-            ?? buildings[mission.source].flatMap { nearest(among: [$0], room: 1) }
+            ?? buildings[mission.source].flatMap { $0.state == .burning ? nil : nearest(among: [$0], room: 1) }
     }
 }
 
