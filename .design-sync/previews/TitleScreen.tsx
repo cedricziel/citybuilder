@@ -17,3 +17,9 @@ export const MacDark = () => (
     <TitleScreen continueSave="Stonehaven — Winter 498 BC" showQuit />
   </CityProvider>
 );
+
+export const WithCampaigns = () => (
+  <div style={{ width: 800, height: 580 }}>
+    <TitleScreen continueSave="The Guild Charter — Spring 1205" showCampaigns />
+  </div>
+);

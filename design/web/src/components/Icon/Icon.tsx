@@ -12,6 +12,7 @@ export type IconName =
   | "checkmark"
   | "checkmark.circle.fill"
   | "circle"
+  | "hourglass"
   | "xmark"
   | "hand.tap"
   | "ellipsis.circle"
@@ -129,6 +130,12 @@ const glyphs: Record<IconName, ReactElement> = {
     </g>
   ),
   circle: <circle cx="12" cy="12" r="9.5" {...stroke} strokeWidth={1.6} />,
+  hourglass: (
+    <g {...stroke} strokeWidth={1.8}>
+      <path d="M6 3h12M6 21h12" />
+      <path d="M7.5 3v2.5c0 2.2 1.8 4 4.5 6.5 2.7-2.5 4.5-4.3 4.5-6.5V3M7.5 21v-2.5c0-2.2 1.8-4 4.5-6.5 2.7 2.5 4.5 4.3 4.5 6.5V21" />
+    </g>
+  ),
   xmark: (
     <g {...stroke} strokeWidth={2.8}>
       <path d="M6 6l12 12M18 6 6 18" />

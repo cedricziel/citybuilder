@@ -118,7 +118,8 @@ extension GameSession {
     /// over, the guide is gone (design D2).
     func refreshFirstSteps() {
         var guide: FirstStepsGuide?
-        if !isFirstStepsDismissed, !isGameOver {
+        // A chapter's goals panel guides instead (`add-campaigns` D9).
+        if !isFirstStepsDismissed, !isGameOver, world.chapterRules.chapterID == nil {
             let (tax, upkeep) = world.playerTaxAndUpkeep
             let ledger = FirstStepsLedger(tax: tax, upkeep: upkeep)
             firstStepsMet.formUnion(FirstStepsGuide.steps(metIn: world, ledger: ledger))

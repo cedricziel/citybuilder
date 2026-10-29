@@ -88,6 +88,16 @@ public final class TitleScreenViewModel {
     public private(set) var mostRecentSave: SaveSummary?
     public var presentingNewGameDialog: Bool = false
     public var presentingSettings: Bool = false
+    /// Chapter select while it shows. Spec: `platform-shells` / Campaigns
+    /// on the title screen.
+    public private(set) var chapterSelect: ChapterSelectModel?
+    /// The player's campaign progress, from the app shell's store.
+    public let campaignProgress: CampaignProgressModel
+    /// Saves a game before a card leaves it. A failed save keeps the game
+    /// open, as the Mac's Quit does.
+    public var saveGame: (@MainActor (GameSession) throws -> Void)?
+    /// The culture the player last picked for a chapter that leaves it open.
+    private var pickedCulture: Culture?
     /// Set once the player has committed a world. Apps watch this to
     /// transition from the title screen to `CityRootView`.
     public private(set) var committedSession: GameSession?
@@ -124,8 +134,10 @@ public final class TitleScreenViewModel {
     public init(
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
-        cloudSync: TitleScreenCloudSync? = nil
+        cloudSync: TitleScreenCloudSync? = nil,
+        campaignProgress: CampaignProgressModel = CampaignProgressModel()
     ) {
+        self.campaignProgress = campaignProgress
         self.saveStore = saveStore
         self.sessionFactory = sessionFactory
         self.cloudSync = cloudSync
@@ -195,6 +207,53 @@ public final class TitleScreenViewModel {
         presentingNewGameDialog = true
     }
 
+    public func campaignsRequested() {
+        UISounds.play(.tap)
+        guard !isPreparingCloudSaves else { return }
+        loadFailure = nil
+        chapterSelect = ChapterSelectModel(progress: campaignProgress)
+    }
+
+    public func dismissCampaigns() {
+        chapterSelect = nil
+    }
+
+    /// Starts `chapter` on `world` and shows its intro card. `pickedCulture`
+    /// is the player's pick, kept for later chapters that leave it open.
+    public func startChapter(_ chapter: Chapter, world: World, pickedCulture: Culture? = nil) {
+        if let pickedCulture { self.pickedCulture = pickedCulture }
+        chapterSelect = nil
+        commit(world: world, isNewGame: true)
+        committedSession?.chapter = chapter
+        committedSession?.showChapterIntro()
+    }
+
+    /// A card's action: the next chapter or a retry at the same difficulty
+    /// and culture, or chapter select.
+    func perform(_ action: ChapterAction, from session: GameSession) {
+        switch action {
+        case let .start(chapter):
+            restart(chapter, like: session.world, culture: pickedCulture ?? session.world.culture)
+        case .retry:
+            if let chapter = session.currentChapter { restart(chapter, like: session.world, culture: session.world.culture) }
+        case .backToChapters:
+            do {
+                try saveGame?(session)
+            } catch {
+                session.noteSaveFailure(error)
+                return
+            }
+            returnToTitle()
+            campaignsRequested()
+        }
+    }
+
+    /// `culture` applies only when the chapter leaves the culture open.
+    private func restart(_ chapter: Chapter, like world: World, culture: Culture) {
+        let difficulty = chapter.difficulty(preferring: world.difficulty)
+        startChapter(chapter, world: World.newGame(chapter: chapter, difficulty: difficulty, culture: culture))
+    }
+
     public func settingsRequested() {
         UISounds.play(.tap)
         presentingSettings = true
@@ -223,6 +282,15 @@ public final class TitleScreenViewModel {
         committedSession?.end()
         let session = sessionFactory(world)
         session.offersPinchHint = isNewGame
+        session.campaignProgress = campaignProgress
+        session.onChapterAction = { [weak self, weak session] action in
+            guard let self, let session else { return }
+            perform(action, from: session)
+        }
+        // A chapter save from before its first tick still owes the intro.
+        if world.chapterRules.chapterID != nil, world.tickCount == 0 {
+            session.showChapterIntro()
+        }
         presentingNewGameDialog = false
         committedSession = session
     }
