@@ -37,15 +37,19 @@ public enum TextureFiltering {
         "building-house-east-asian", "building-house-tier2-east-asian", "building-house-tier3-east-asian",
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
-        "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern"
-    ]).union(houseAgeLooks).union(figureStems).union(goodsIcons).union(statusIcons)
+        "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern",
+        "building-fire-watch", "building-granary", "effect-fire"
+    ]).union(houseAgeLooks).union(figureStems).union(goodsIcons).union(statusIcons).union(ruins)
+
+    /// The ruins, one per footprint that can burn.
+    static let ruins = SpriteAtlas.ruinSides.map { SpriteAtlas.ruinsName(footprint: Footprint(width: $0, height: $0)) }
 
     /// One icon per good (`good-tea-leaves`), drawn as SVG.
     static let goodsIcons: [String] = Good.allCases.map { "good-\($0.rawValue)" }
 
-    /// The building status icons: a pictogram per issue, and per good a "short" and a "stuck" icon
+    /// The building status icons: a pictogram per issue and seasonal-event hazard, and per good a "short" and a "stuck" icon
     /// (`status-no-road`, `status-bread-short`), drawn as SVG.
-    static let statusIcons: [String] = ["no-road", "no-route", "no-trees", "no-room-to-plant"]
+    static let statusIcons: [String] = ["no-road", "no-route", "no-trees", "no-room-to-plant", "burning", "ruins", "blight", "fever"]
         .map { "status-\($0)" } + Good.allCases.flatMap { ["status-\($0.rawValue)-short", "status-\($0.rawValue)-stuck"] }
 
     /// The age looks of the three house tiers in every culture (`building-house-tier2-modern-east-asian`).

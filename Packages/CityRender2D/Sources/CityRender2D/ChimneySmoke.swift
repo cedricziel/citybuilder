@@ -7,6 +7,8 @@ public enum SmokeStyle: Hashable, Sendable {
     /// Dark and dense: the smelter and the charcoal burner.
     case heavySmoke
     case steam
+    /// A burning building's dark, dense column (`add-event-counterplay`).
+    case fireSmoke
 }
 
 /// A building whose chimney shows smoke or steam this tick.
@@ -19,6 +21,11 @@ public struct SmokeSource: Hashable, Sendable {
     /// Workshops come before houses when the budget is tight.
     var isWorkshop: Bool {
         kind != .house
+    }
+
+    /// A fire's column comes before any chimney.
+    var isFire: Bool {
+        style == .fireSmoke
     }
 }
 
@@ -34,11 +41,14 @@ public enum ChimneyPlanner {
         }
     }
 
-    /// Inhabited houses, and player workshops with a fire that have no
-    /// issue, in no particular order. Rival workshops stay cold: building
-    /// issues are worked out for the player's buildings only.
+    /// Burning buildings, inhabited houses, and player workshops with a fire
+    /// that have no issue, in no particular order. Rival workshops stay
+    /// cold: building issues are worked out for the player's buildings only.
     public static func sources(in snapshot: WorldSnapshot) -> [SmokeSource] {
         snapshot.buildings.values.compactMap { building -> SmokeSource? in
+            if building.state == .burning {
+                return SmokeSource(id: building.id, anchor: building.anchor, kind: building.kind, style: .fireSmoke)
+            }
             guard building.state == .operational, let style = style(for: building.kind) else { return nil }
             let lit = building.kind == .house
                 ? (snapshot.housePopulations[building.id]?.population ?? 0) > 0
@@ -56,8 +66,8 @@ public enum ChimneyPlanner {
         min(maxEmitters, max(8, Int(24 * zoom)))
     }
 
-    /// The visible sources that fit the budget: workshops first, then
-    /// the nearest to the camera centre.
+    /// The visible sources that fit the budget: fires first, then
+    /// workshops, then the nearest to the camera centre.
     public static func select(
         _ sources: [SmokeSource],
         xRange: ClosedRange<Int>,
@@ -66,6 +76,7 @@ public enum ChimneyPlanner {
     ) -> [SmokeSource] {
         typealias Ranked = (source: SmokeSource, distance: Double)
         func before(_ lhs: Ranked, _ rhs: Ranked) -> Bool {
+            if lhs.source.isFire != rhs.source.isFire { return lhs.source.isFire }
             if lhs.source.isWorkshop != rhs.source.isWorkshop { return lhs.source.isWorkshop }
             return lhs.distance != rhs.distance ? lhs.distance < rhs.distance : lhs.source.id.raw < rhs.source.id.raw
         }

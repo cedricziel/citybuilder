@@ -18,6 +18,10 @@ public enum SpriteAnimation {
         case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
+        /// A fire watch's watchman with his bucket; shares the walker's cycle (`add-event-counterplay`).
+        case watchman(SpriteAtlas.WalkerFacing)
+        /// The flames on a burning building (`effect-fire`).
+        case fire
 
         /// An animal walking, grazing or pecking (realistic-walkers).
         case animal(SpriteAtlas.AnimalAction, SpriteAtlas.WalkerFacing)
@@ -25,12 +29,16 @@ public enum SpriteAnimation {
         /// Every resident look and carrier load in every facing (realistic-walkers).
         public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
+                + [.watchman(facing)]
         }
 
         /// Every animal action in every facing.
         public static let animals: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.AnimalAction.allCases.map { AnimationKey.animal($0, facing) }
         }
+
+        /// The effects drawn over buildings.
+        public static let effects: [AnimationKey] = [.fire]
 
         /// People and animals: every figure sprite family the kit renders.
         public static let figures = people + animals
@@ -62,17 +70,17 @@ public enum SpriteAnimation {
     public static func entry(for key: AnimationKey) -> Entry? {
         switch key {
         case let .terrain(kind):
-            switch kind {
-            case .water: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
-            case .beach: Entry(frameCount: 2, timePerFrame: 0.45, loop: .forever)
-            case .grass: Entry(frameCount: 2, timePerFrame: 0.60, loop: .forever)
-            case .forest, .mountain: nil
-            }
+            terrainEntry(for: kind)
         case let .buildingOperational(kind, _):
             operationalEntry(for: kind)
+        case .buildingConstructing(.ruins, _):
+            // Fire leaves ruins; nobody builds them.
+            nil
         case .buildingConstructing:
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
-        case .walker, .carrier:
+        case .fire:
+            Entry(frameCount: 3, timePerFrame: 0.14, loop: .forever)
+        case .walker, .carrier, .watchman:
             // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
             Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
         case let .animal(action, _):
@@ -81,6 +89,15 @@ public enum SpriteAnimation {
             case .sheepGraze, .cowGraze: Entry(frameCount: 4, timePerFrame: 0.3, loop: .forever)
             case .hen: Entry(frameCount: 4, timePerFrame: 0.15, loop: .forever)
             }
+        }
+    }
+
+    private static func terrainEntry(for kind: TerrainType) -> Entry? {
+        switch kind {
+        case .water: Entry(frameCount: 4, timePerFrame: 0.20, loop: .forever)
+        case .beach: Entry(frameCount: 2, timePerFrame: 0.45, loop: .forever)
+        case .grass: Entry(frameCount: 2, timePerFrame: 0.60, loop: .forever)
+        case .forest, .mountain: nil
         }
     }
 
@@ -98,7 +115,7 @@ public enum SpriteAnimation {
         // The hull is planked in four stages, held once finished, then launched off an empty
         // slipway for a beat before the next keel (#120).
         case .shipyard: Entry(frameCount: 5, timePerFrame: 2.5, loop: .forever, frameDurations: [2.5, 2.5, 2.5, 4.0, 1.25])
-        case .house, .warehouse, .road: nil
+        case .house, .warehouse, .road, .granary, .fireWatch, .ruins: nil
         default: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         }
     }
@@ -124,6 +141,10 @@ public enum SpriteAnimation {
             "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
         case let .animal(action, facing):
             "\(action.stem)-\(facing.rawValue)-\(frame)"
+        case let .watchman(facing):
+            "walker-watchman-\(facing.rawValue)-\(frame)"
+        case .fire:
+            "effect-fire-\(frame)"
         }
     }
 

@@ -46,10 +46,12 @@ public enum Recipes {
         Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
             forester(kit)
         }
-    ] + gather + craft + civic + shore + culture + ages).map(CellFit.roomForShadow) + walkers + animals
+    ] + gather + craft + civic + shore + culture + ages + events).map(CellFit.roomForShadow) + walkers + animals + [fire]
 
-    /// Recipes that get night lights: every house look and the workshops.
-    public static let lit: Set<String> = Set((all.filter { $0.entry.hasPrefix("building-house") } + craft).map(\.id))
+    /// Recipes that get night lights: every house look, the workshops and the fire watch's lantern.
+    public static let lit: Set<String> = Set(
+        (all.filter { $0.entry.hasPrefix("building-house") } + craft).map(\.id) + ["building-fire-watch"]
+    )
 
     /// The peasant house stages itself: 0 frame, 1 walls, 2 walls and roof boards, 3 thatched and furnished.
     static func peasantStage(_ stage: Stage) -> Int {

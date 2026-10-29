@@ -91,18 +91,25 @@ extension World {
         guard let state = seasonalEvents.fire else { return }
         for fire in state.fires where tickCount == fire.ignitionTick + Self.burnDownTicks {
             guard let building = buildings[fire.building] else { continue }
-            buildings[fire.building] = Building(
-                id: building.id, kind: .ruins, anchor: building.anchor, state: .operational,
-                owner: building.owner, ruinOf: building.kind
-            )
-            stockpiles[fire.building] = nil
-            populations[fire.building] = nil
-            productions[fire.building] = nil
+            burnDown(fire.building)
             seasonalEvents.fire?.fires.removeAll { $0.building == fire.building }
             seasonalEvents.fire?.lost += 1
             seasonalEvents.counters.buildingsLostToFire += 1
             events.append(.buildingBurntDown(building: fire.building, kind: building.kind))
         }
+    }
+
+    /// Leaves ruins of the building's kind, on its footprint and for its owner; its stock, residents and
+    /// production are gone.
+    mutating func burnDown(_ id: EntityID) {
+        guard let building = buildings[id] else { return }
+        buildings[id] = Building(
+            id: building.id, kind: .ruins, anchor: building.anchor, state: .operational, owner: building.owner,
+            ruinOf: building.kind, burntAtTick: tickCount
+        )
+        stockpiles[id] = nil
+        populations[id] = nil
+        productions[id] = nil
     }
 
     /// The fire is out: the building resumes with its stock and residents.
@@ -138,6 +145,13 @@ extension World {
         seasonalEvents.fire = state
     }
 
+    /// Whether `watch` would answer a fire in `target`: within its reach,
+    /// with a road path between them.
+    func fireWatchCovers(_ watch: Building, _ target: Building) -> Bool {
+        guard let goal = anyAdjacentRoad(anchor: target.anchor, footprint: target.footprint) else { return false }
+        return watchmanPath(from: watch, to: target, goal: goal) != nil
+    }
+
     /// The road path from a watch to a burning building within its reach.
     private func watchmanPath(from watch: Building, to target: Building, goal: TileCoordinate) -> [TileCoordinate]? {
         guard Self.footprintDistance(watch, target) <= Self.fireWatchReach,
@@ -146,13 +160,13 @@ extension World {
         return roadPath(from: start, to: goal)
     }
 
-    /// The watchmen on their way, as walkers for the renderer.
-    var watchmenOnTheRoad: [Carrier] {
+    /// The watchmen on their way to a fire or dousing it, for the renderer.
+    var watchmenAtWork: [WatchmanWalker] {
         (seasonalEvents.fire?.fires ?? []).compactMap { fire in
-            guard let man = fire.watchman, tickCount < man.arrivalTick else { return nil }
-            return Carrier(
-                id: man.watch, path: man.path, pathIndex: Int(tickCount - man.departureTick),
-                mission: .deliver(good: .wood, amount: 0, fromProducer: man.watch, toWarehouse: fire.building)
+            guard let man = fire.watchman, tickCount < man.outTick, !man.path.isEmpty else { return nil }
+            let walked = Int(min(tickCount - man.departureTick, UInt64(man.path.count - 1)))
+            return WatchmanWalker(
+                watch: man.watch, fire: fire.building, path: man.path, pathIndex: walked, isDousing: tickCount >= man.arrivalTick
             )
         }
     }
@@ -162,7 +176,7 @@ extension World {
     /// treasury can't pay. Other buildings come down for free.
     mutating func payToClear(_ building: Building, events: inout [WorldEvent]) -> Bool {
         guard building.kind == .ruins || building.state == .burning else { return true }
-        guard charge(Self.clearingFee(of: building.ruinOf ?? building.kind), to: .player) else {
+        guard charge(Self.clearingFee(for: building), to: .player) else {
             events.append(.demolitionRejected(building: building.id, reason: .notEnoughMoney))
             return false
         }
@@ -172,10 +186,16 @@ extension World {
         return true
     }
 
+    /// What clearing these ruins, or pulling this burning building down,
+    /// costs: the fee of the kind that burnt or burns.
+    public static func clearingFee(for building: Building) -> Int64 {
+        clearingFee(of: building.ruinOf ?? building.kind)
+    }
+
     /// What clearing ruins costs: a quarter of the burnt kind's price,
     /// rounded up to $5, at least $10. Spec: `buildings-and-construction`
     /// / Ruins block their plot until cleared.
-    static func clearingFee(of kind: BuildingKind) -> Int64 {
+    public static func clearingFee(of kind: BuildingKind) -> Int64 {
         max(10, (BuildingCatalog.spec(for: kind).cost + 19) / 20 * 5)
     }
 }

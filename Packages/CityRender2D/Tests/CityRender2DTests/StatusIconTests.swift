@@ -328,3 +328,26 @@ func theIconSitsOnTheOpaqueTop() throws {
     let image = try #require(context.makeImage())
     #expect(abs(StatusIcons.measureContentTop(image) - 0.6) < 0.001)
 }
+
+// add-event-counterplay (rendering-2_5d / Event status icons).
+
+@Test("every seasonal hazard maps to a drawn icon")
+func everyHazardMapsToADrawnIcon() {
+    let names = StatusIcons.Hazard.allCases.map(StatusIcons.textureName(for:))
+    #expect(names == ["status-burning", "status-ruins", "status-blight", "status-fever"])
+    #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))
+}
+
+@Test("scenario: a burning building shows the flame, ruins the clear-me icon, over any issue")
+func burningAndRuinsShowTheirIcons() {
+    let burning = Building(id: buildingID, kind: .house, anchor: anchor, state: .burning)
+    let ruins = Building(id: EntityID(raw: 2), kind: .ruins, anchor: TileCoordinate(x: 1, y: 1), state: .operational, ruinOf: .house)
+    let rival = Building(
+        id: EntityID(raw: 3), kind: .ruins, anchor: TileCoordinate(x: 8, y: 8), state: .operational, owner: .rival(1)
+    )
+    let snapshot = meadow([burning, ruins, rival], roadless: [buildingID, EntityID(raw: 2)])
+    let icons = StatusIcons.icons(in: snapshot)
+    #expect(icons[buildingID] == "status-burning")
+    #expect(icons[EntityID(raw: 2)] == "status-ruins")
+    #expect(icons[EntityID(raw: 3)] == nil)
+}

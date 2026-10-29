@@ -242,6 +242,9 @@ public extension World {
             let amount = min(qty, shipStock, portStockpile.room(for: good))
             if amount <= 0 { return false }
             let deposited = portStockpile.deposit(good, amount: amount)
+            if let port = buildings[portID] {
+                recordLanding(good, deposited, ship: ship, port: port)
+            }
             ship.cargo[good] = shipStock - deposited
             if ship.cargo[good] == 0 { ship.cargo.removeValue(forKey: good) }
             return deposited > 0

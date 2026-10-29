@@ -36,6 +36,10 @@ public final class NewGameDialogViewModel {
     /// Spec: `platform-shells` / New Game offers rival towns.
     public var rivalTowns = true
 
+    /// Spec: `platform-shells` / New Game offers seasonal events. On by
+    /// default; old saves and a world built without it have them off.
+    public var seasonalEvents = true
+
     /// The camera's zoom when the game starts; a phone starts further out.
     private let startZoom: Double
 
@@ -84,10 +88,11 @@ public final class NewGameDialogViewModel {
         var world = switch mode {
         case .sandbox:
             World.newGame(
-                layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty, rivals: rivalTowns
+                layout: layout, seed: seed, culture: culture, age: age, difficulty: difficulty, rivals: rivalTowns,
+                seasonalEvents: seasonalEvents
             )
         case .scenario:
-            World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario)
+            World.newGame(layout: layout, seed: seed, culture: culture, scenario: scenario, seasonalEvents: seasonalEvents)
         }
         world.camera.setZoom(startZoom)
         return world
@@ -104,6 +109,7 @@ public final class NewGameDialogViewModel {
         difficulty = .normal
         scenario = .firstHarvest
         rivalTowns = true
+        seasonalEvents = true
     }
 
     private func applyRequiredLayout() {

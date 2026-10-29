@@ -289,3 +289,48 @@ func scenarioV10SaveLoadsAsV11() throws {
     #expect(loaded.layout == .singleIsland)
     #expect(!loaded.buildings.isEmpty)
 }
+
+private func v11FixtureURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Fixtures/saves/v11_first_harvest.json")
+}
+
+/// Encode a World as a v11 save: the current shape without lose
+/// conditions, goal counters, or bonus and holding goals.
+private func makeV11Payload(world: World, writtenAt: Date = Date()) throws -> Data {
+    let data = try JSONEncoder().encode(SaveFile(world: world, writtenAt: writtenAt))
+    var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    json["version"] = 11
+    var inner = json["world"] as? [String: Any] ?? [:]
+    for key in ["loseConditions", "scenarioLoss", "goalCounters"] {
+        inner.removeValue(forKey: key)
+    }
+    let goals = inner["goals"] as? [[String: Any]] ?? []
+    inner["goals"] = goals.map { $0.filter { !["isBonus", "holdsForSeason", "heldSince"].contains($0.key) } }
+    json["world"] = inner
+    return try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
+}
+
+@Test("fixture: regenerate v11 first-harvest save", .enabled(if: regenerateFixtures))
+func regenerateV11FirstHarvestFixture() throws {
+    try requireDeterministicHashing()
+    let world = World.newGame(layout: .singleIsland, seed: 0, culture: .northernEuropean, scenario: .firstHarvest)
+    var data = try makeV11Payload(world: world, writtenAt: fixtureWrittenAt)
+    data.append(0x0A)
+    try data.write(to: v11FixtureURL())
+}
+
+@Test("scenario: v11 scenario save loads with plain goals and no lose conditions")
+func scenarioV11ScenarioSaveLoadsWithPlainGoals() throws {
+    let data = try Data(contentsOf: v11FixtureURL())
+    let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    #expect(parsed["version"] as? Int == 11, "fixture must be a v11 save")
+    let loaded = try decodeWorld(data)
+    let goals = loaded.goals.map(\.goal)
+    #expect(goals == Scenario.firstHarvest.goals)
+    #expect(loaded.goals.allSatisfy { !$0.isBonus && !$0.holdsForSeason && $0.heldSince == nil })
+    #expect(loaded.loseConditions.isEmpty)
+    #expect(loaded.scenarioLoss == nil)
+    #expect(loaded.goalCounters == GoalCounters())
+}

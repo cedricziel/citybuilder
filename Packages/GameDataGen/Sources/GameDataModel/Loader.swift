@@ -287,7 +287,7 @@ private struct ItemReader {
         guard let effect, let seasons, let weight, let banners else { return nil }
         return SeasonalEvent(
             id: id, effect: effect, seasons: seasons, minAge: fields.string("minAge", required: false),
-            weights: weight, banners: banners, origin: fields.origin
+            weights: weight, banners: banners, enabled: fields.bool("enabled", required: false) ?? true, origin: fields.origin
         )
     }
 }

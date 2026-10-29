@@ -115,3 +115,13 @@ func cropFlagIsEmitted() throws {
     let errors = Fixtures.errors(Fixtures.withExtraPack(bad))
     #expect(errors.contains { $0.contains("duplicated key") && $0.contains("easy") }, "\(errors)")
 }
+
+@Test("scenario: an event can be switched off in data")
+func eventEnabledFlag() throws {
+    let off = events.replacingOccurrences(of: "    effect: festival\n", with: "    effect: festival\n    enabled: false\n")
+    let data = try Fixtures.load(Fixtures.withExtraPack(off)).get()
+    #expect(data.events.map(\.enabled) == [true, false])
+    let source = try emitted("SeasonalEvent+Generated.swift", from: Fixtures.withExtraPack(off))
+    #expect(source.contains("public var isEnabled: Bool {"))
+    #expect(source.contains("case .festival: false"))
+}

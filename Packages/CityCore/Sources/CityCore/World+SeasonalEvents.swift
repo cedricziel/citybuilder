@@ -25,8 +25,10 @@ extension World {
     /// scheduled event, else a draw by the difficulty's chance and the
     /// events' weights among those the player's age allows.
     public func seasonalEvent(forYear year: Int) -> SeasonalEventOnset? {
+        // An event switched off in the pack is neither drawn nor scheduled
+        // (`add-event-counterplay` D14).
         if let scheduled = seasonalEvents.schedule.first(where: { $0.year == year }) {
-            return SeasonalEventOnset(event: scheduled.event, season: scheduled.onset)
+            return scheduled.event.isEnabled ? SeasonalEventOnset(event: scheduled.event, season: scheduled.onset) : nil
         }
         guard seasonalEvents.enabled, seasonalEvents.randomEvents,
               year - calendar.startYear + 1 >= difficulty.firstSeasonalEventYear
@@ -37,8 +39,18 @@ extension World {
             Array(repeating: event, count: event.weights[difficulty] ?? 0)
         }
         guard !pool.isEmpty else { return nil }
+        // Drawn from every event, then a disabled pick is a quiet year, so
+        // fire keeps its D10 rate and its years when the others switch on.
         let event = pool[Int(rng.next() % UInt64(pool.count))]
+        guard event.isEnabled else { return nil }
         return SeasonalEventOnset(event: event, season: event.seasons[Int(rng.next() % UInt64(event.seasons.count))])
+    }
+
+    /// The event warned or under way, with its onset season.
+    public var currentSeasonalEvent: SeasonalEventOnset? {
+        seasonalEvents.warned ?? seasonalEvents.active.map {
+            SeasonalEventOnset(event: $0.event, season: calendar.date(atTick: $0.startTick).season)
+        }
     }
 
     mutating func runSeasonalEventSystem(events: inout [WorldEvent]) {

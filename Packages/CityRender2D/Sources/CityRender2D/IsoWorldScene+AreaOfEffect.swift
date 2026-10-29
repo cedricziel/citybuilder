@@ -32,6 +32,16 @@ extension IsoWorldScene {
     }
     """)
 
+    /// Gold for what a building works, teal for what it serves (a fire watch's reach), amber for
+    /// what an event threatens (`add-event-counterplay`).
+    static func areaColour(_ style: AreaOfEffect.Style) -> SKColor {
+        switch style {
+        case .reach: ringColour
+        case .serves: SKColor(red: 0.36, green: 0.82, blue: 0.78, alpha: 0.85)
+        case .threat: SKColor(red: 0.96, green: 0.62, blue: 0.16, alpha: 0.85)
+        }
+    }
+
     func reconcileAreaOfEffect(with snapshot: WorldSnapshot) {
         if areaLayer.parent == nil {
             areaLayer.zPosition = Self.areaLayerZ
@@ -61,10 +71,11 @@ extension IsoWorldScene {
         under.lineWidth = 4
         under.lineJoin = .round
         areaLayer.addChild(under)
+        let colour = Self.areaColour(area.style)
         let ring = SKShapeNode(path: outline)
         ring.name = Self.areaOutlineNodeName
-        ring.strokeColor = Self.ringColour
-        ring.fillColor = Self.ringColour.withAlphaComponent(0.06)
+        ring.strokeColor = colour
+        ring.fillColor = colour.withAlphaComponent(0.06)
         ring.lineWidth = 2
         ring.lineJoin = .round
         areaLayer.addChild(ring)
@@ -74,7 +85,7 @@ extension IsoWorldScene {
         let fill = SKShapeNode(path: Self.outlinePath(around: Set(open)))
         fill.name = Self.areaTargetFillNodeName
         fill.strokeColor = .clear
-        fill.fillColor = Self.ringColour.withAlphaComponent(0.16)
+        fill.fillColor = colour.withAlphaComponent(0.16)
         areaLayer.addChild(fill)
     }
 

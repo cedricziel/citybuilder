@@ -137,9 +137,8 @@ extension World {
     /// already seeded there (design D2).
     mutating func seedRivals() {
         let map = tileToIslandMap()
-        let center = TileCoordinate(x: mapWidth / 2, y: mapHeight / 2)
         let bySize = islands.sorted { ($0.tileCount, -Int($0.id)) > ($1.tileCount, -Int($1.id)) }
-        guard let home = map[center] ?? bySize.first?.id else { return }
+        guard let home = homeIslandID(in: map) else { return }
         let rivalCultures = Culture.allCases.filter { $0 != culture }
         let seats = bySize.filter { $0.id != home }.prefix(difficulty.rivalCount)
         for (offset, island) in seats.enumerated() {

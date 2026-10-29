@@ -32,7 +32,7 @@ public enum ItemSchema {
             optional: ["minAge", "favour", "penalty"]
         ),
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: ["declineGrace"]),
-        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge"])
+        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"])
     ]
 
     /// The mechanics a seasonal event can have, each written in Swift.

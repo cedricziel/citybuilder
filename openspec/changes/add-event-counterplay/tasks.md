@@ -1,7 +1,7 @@
 ## 0. Design
 
 - [x] 0.1 Proposal, design and spec deltas; `openspec validate add-event-counterplay --strict`
-- [ ] 0.2 Claude Design canvas approved for fire, ruins, fire watch, granary, physician, warning banner and festival notice (https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5); the owner's answers to the open questions in design.md
+- [x] 0.2 Claude Design canvas approved for fire, ruins, fire watch, granary, physician, warning banner and festival notice (https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5); the owner's answers to the open questions in design.md. Approved 2026-10-29 with the recommended options; events ship in two steps (design D14)
 
 Sections 1–4 can start before #238 M2: they don't touch house supply or the marketplace. Sections 5–6 wait for M2, and section 6 also waits for orders (#277). The art in section 8 waits for 0.2.
 
@@ -16,14 +16,14 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 - [x] 2.1 Tests first: the `seasonal-events` scenarios for the decision, the first year, the minAge, the target checks, warning → onset → end, chapter scheduling, and the RNG left alone; confirm they fail
 - [x] 2.2 `SeasonalEventsState`, `seasonalEvent(forYear:)`, the derived generators and their salts, `Difficulty` knobs (D10), `runSeasonalEventSystem` after the calendar and before orders
 - [x] 2.3 The `WorldEvent` cases; the events `enabled` flag; events stay off while the calendar is inactive
-- [ ] 2.4 CityUI: the New Game "Seasonal events" toggle, default On, passed to `newGame(..., seasonalEvents:)` (hidden for chapters with a schedule; old saves and a `newGame` without it stay off); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
+- [x] 2.4 CityUI: the New Game "Seasonal events" toggle, default On, passed to `newGame(..., seasonalEvents:)` (hidden for chapters with a schedule; old saves and a `newGame` without it stay off); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (the chip is option B of the approved canvas; the chapter hiding waits for `add-campaigns`, which has no chapters yet)
 
 ## 3. CityCore: fire, fire watch and ruins (can start before M2)
 
 - [x] 3.1 Tests first: ignition, spread to touching footprints, roads as firebreaks, burn-down to ruins (stock, residents, carriers), the watchman's response, the queue, Hard's second fire
 - [x] 3.2 Fire state, the burning stop (production, tax, growth, deliveries), spread, burn-down and the `ruins` kind with `ruinOf`
 - [x] 3.3 The fire watch: coverage, nearest idle watch, the watchman's walk on the road path, dousing; the watchman in the snapshot as a walker. Follow-up: a building touching two road networks paths from one adjacent road only (`anyAdjacentRoad`), so a watch on the other network can miss it; pathing should try every adjacent road
-- [ ] 3.4 Clearing ruins through Demolish with its fee; `notEnoughMoney`; the ruins inspector (done in CityCore: the fee, `demolitionRejected(notEnoughMoney)` and `ruinsCleared`; the inspector is CityUI and comes with 2.4)
+- [x] 3.4 Clearing ruins through Demolish with its fee; `notEnoughMoney`; the ruins inspector (done in CityCore: the fee, `demolitionRejected(notEnoughMoney)` and `ruinsCleared`; the inspector reads "Ruins of a house", "Burnt down in Summer 1202" and "Clear ruins — $15"; a burning building's demolish reads "Pull down — $<fee>")
 
 ## 4. Rats and the granary's storage (can start before M2)
 
@@ -46,15 +46,15 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 - [ ] 7.1 Decode a save without the new keys; round-trip with a burning house, a watchman on the road, a warned blight and ruins; fixture from the previous version
 - [ ] 7.2 Regenerate `DeterminismFixture` in its own commit; macOS and Linux agree; events off is equal to main
-- [ ] 7.3 PlayerBot `EventsKit`; the forced-hazard first-hour variant; the before-and-after sweeps of design D12. Tune D10 until the bars hold and write the measured table into design D12
+- [ ] 7.3 PlayerBot `EventsKit`; the forced-hazard first-hour variant; the before-and-after sweeps of design D12 (code done for fire season: `EventsKit` builds fire watches, `BotEvents` drives drawn and forced events, and `EventsKitTests` holds the `GUIDE_SWEEP events` and `FIRE_SWEEP` runs behind `RIVAL_SWEEP=1`. Step 1 bars 1 and 2 pass with D10 unchanged; the table is in design D12. Bars 3–6 and the blight, fever and festival answers wait for step 2). Tune D10 until the bars hold and write the measured table into design D12
 - [ ] 7.4 Seasonal events in the weekly `rival-sweep` workflow and the `GUIDE_SWEEP`, `PACING_SWEEP` and `SOLVENCY_SWEEP` lines
 
 ## 8. Art, rendering and statistics (after 0.2)
 
-- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D); the granary stays out of the palette until 5.2 ("drawn last") lands: if its art comes first, move it from `PendingArt` to a palette-only hold rather than shipping it: give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
-- [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
+- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me) (done: everything but the physician and herb garden, which come with step 2; ruins at 1×1, 2×2 and 3×3; `PendingArt` is gone, and the granary waits in `BuildPalette.held` until 5.2 lands)
+- [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127) (done: `WorldSnapshot.watchmen` and the bucket walk cycle, flames, glow and smoke on burning buildings, ruins at their footprint, the flame and clear-me icons, a fire watch's reach in teal and the amber style; still to come: blight and fever areas and icons with section 5, the festival crowd with section 6)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
-- [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge
+- [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge (done: `FireEffect`, the fire watch, granary and ruins previews, the watchman and the event icons; the event chip and festival card come with 2.4 and 6.2)
 
 ## 9. Campaign hooks
 

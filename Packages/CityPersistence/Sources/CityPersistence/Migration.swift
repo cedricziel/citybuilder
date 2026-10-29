@@ -31,7 +31,8 @@ public struct MigrationRegistry: Sendable {
         MigrationV7ToV8(),
         MigrationV8ToV9(),
         MigrationV9ToV10(),
-        MigrationV10ToV11()
+        MigrationV10ToV11(),
+        MigrationV11ToV12()
     ]
 
     /// Runs the chain on a raw save payload. Returns the migrated
@@ -384,6 +385,31 @@ public struct MigrationV10ToV11: Migration {
     public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
         var root = payload
         root["version"] = 11
+        return root
+    }
+}
+
+/// Migration #11: v11 → v12. v12 goals can be bonus or holding goals and
+/// worlds carry lose conditions and goal counters (`add-campaigns`). A
+/// v11 goal is a plain goal; a v11 world has no lose conditions and
+/// counts from zero. Spec: `difficulty-and-goals` / More goal kinds.
+public struct MigrationV11ToV12: Migration {
+    public let fromVersion = 11
+    public let toVersion = 12
+
+    public init() {}
+
+    public func migrate(_ payload: [String: Any]) throws -> [String: Any] {
+        var root = payload
+        root["version"] = 12
+        guard var world = root["world"] as? [String: Any] else { return root }
+        let goals = world["goals"] as? [[String: Any]] ?? []
+        world["goals"] = goals.map { goal in
+            goal.merging(["isBonus": false, "holdsForSeason": false]) { old, _ in old }
+        }
+        world["loseConditions"] = [Any]()
+        world["goalCounters"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(GoalCounters()))
+        root["world"] = world
         return root
     }
 }
