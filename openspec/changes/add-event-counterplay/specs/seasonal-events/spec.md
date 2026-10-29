@@ -2,7 +2,7 @@
 
 ### Requirement: Seasonal events are game data
 
-The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring. An event item MAY set `enabled: false`; such an event SHALL NOT be drawn, warned or started, scheduled or not.
+The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring. An event item MAY set `enabled: false`; a year whose draw picks such an event SHALL have no seasonal event, and such an event SHALL NOT be warned or started, scheduled or not.
 
 #### Scenario: The catalog has four events
 
@@ -12,7 +12,7 @@ The game data SHALL hold a catalog of seasonal events as `Event` items, one each
 #### Scenario: only enabled events are drawn
 
 - **WHEN** blight, fever and the festival are `enabled: false` in the pack and the events of many years are decided on Hard
-- **THEN** every event drawn is a fire
+- **THEN** every event drawn is a fire, and fire comes in the share of years D10's chance and weights give it
 
 #### Scenario: a disabled event is never warned, even scheduled
 
@@ -184,13 +184,13 @@ When a festival is decided, on the first tick of its season, the world SHALL iss
 
 ### Requirement: Banner text
 
-The seasonal event banners SHALL use this text, with `{season}` the onset season in lower case, `{date}` the end of the event's effect as the HUD shows a date (for a festival held, the end of its four seasons), `{deadline}` a festival request's delivery deadline, the end of its window, in the same format, and `{building}` the burning building's palette name in lower case:
+The seasonal event banners SHALL use this text, with `{season}` the onset season in lower case, `{date}` the end of the event's effect as the HUD shows a date (for a festival held, the end of its four seasons), `{deadline}` a festival request's delivery deadline, the end of its window, in the same format, and `{building}` the burning building's palette name in lower case, and `{buildings}` and `{residents}` the toll with its noun, singular for one ("1 building", "7 residents"):
 
 | Event | Banner | Title | Text |
 |---|---|---|---|
 | fire | warning | Dry {season} ahead | Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames. |
 | fire | each ignition | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
-| fire | end, losses | The fires are out | {count} buildings burnt down. Clear the ruins with Demolish. |
+| fire | end, losses | The fires are out | {buildings} burnt down. Clear the ruins with Demolish. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
 | fire | end, no fire broke out | The dry spell is over | No fire broke out. |
 | blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield half. Fill a granary, or buy food at the market. |
@@ -198,7 +198,7 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | blight | end | The blight has passed | The fields yield in full again. |
 | fever | warning | Fever in the harbour towns | Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe. |
 | fever | onset | Fever in the town | Houses in the marked district can't advance, and some residents leave, until {date}. |
-| fever | end | The fever has passed | {count} residents left the town. |
+| fever | end | The fever has passed | {residents} left the town. |
 | festival | request | The town wants a festival | Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year. |
 | festival | held | Festival! | Houses near the market advance faster and pay {bonus}% more tax until {date}. |
 | festival | missed | The festival was called off | Goods already delivered stay with the town. There is no other penalty. |

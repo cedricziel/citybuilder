@@ -35,11 +35,14 @@ extension World {
         else { return nil }
         var rng = seasonalEventRNG(.decision, year: year)
         guard rng.next() % 100 < difficulty.seasonalEventChancePercent else { return nil }
-        let pool = SeasonalEvent.allCases.filter { $0.isEnabled && $0.minAge <= age }.flatMap { event in
+        let pool = SeasonalEvent.allCases.filter { $0.minAge <= age }.flatMap { event in
             Array(repeating: event, count: event.weights[difficulty] ?? 0)
         }
         guard !pool.isEmpty else { return nil }
+        // Drawn from every event, then a disabled pick is a quiet year, so
+        // fire keeps its D10 rate and its years when the others switch on.
         let event = pool[Int(rng.next() % UInt64(pool.count))]
+        guard event.isEnabled else { return nil }
         return SeasonalEventOnset(event: event, season: event.seasons[Int(rng.next() % UInt64(event.seasons.count))])
     }
 

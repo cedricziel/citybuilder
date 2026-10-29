@@ -366,3 +366,22 @@ func snapshotNamesTheCurrentEvent() {
     _ = runSeasons(&world, untilTick: firstTick(of: .summer, 1201))
     #expect(world.snapshot().seasonalEvent == warned)
 }
+
+@Test("scenario: a disabled pick is a quiet year, so fire keeps its rate")
+func disabledPickIsAQuietYear() {
+    // Normal, Medieval: half the years have an event, a quarter of those a fire.
+    let draws = (UInt64(0) ..< 40).flatMap { seed in
+        (1202 ..< 1302).map { eventsWorld(seed: seed, size: 1).seasonalEvent(forYear: $0)?.event }
+    }
+    let fires = draws.count { $0 == .fire }
+    let others = draws.count { $0 != nil && $0 != .fire }
+    #expect(others == 0)
+    #expect((400 ... 600).contains(fires), "\(fires) fires in 4000 years")
+}
+
+@Test("scenario: seed 42's fire years on Normal")
+func seed42FireYears() {
+    // Pinned: switching blight, fever or the festival on must not move these.
+    let years = (1202 ..< 1262).filter { eventsWorld(seed: 42, size: 1).seasonalEvent(forYear: $0)?.event == .fire }
+    #expect(years == [1203, 1211, 1232, 1238, 1251, 1252])
+}

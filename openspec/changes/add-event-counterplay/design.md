@@ -188,7 +188,7 @@ The owner approved the canvas on 2026-10-29 (task 0.2), with the recommended opt
 1. **Fire season** (next release): fire, the fire watch, ruins, the granary, the New Game toggle, the banners, the event chip and the ruins inspector. Only fire is drawn and warned.
 2. **Blight, fever and the festival** (after #238 M2, and #277 for the festival): sections 5 and 6.
 
-Each event item in the pack carries `enabled`. Only enabled events enter the random draw, and only they are warned or started, scheduled or not. Step 1 ships with `enabled: false` on blight, fever and festival. Step 2 turns each on in data when its section lands, with no code change to the draw.
+Each event item in the pack carries `enabled`. The yearly draw still picks from every event by D10's chance and weights; a pick that is disabled makes a quiet year. Fire therefore keeps its D10 rate (about 6%, 12.5% and 19% of years on Easy, Normal and Hard in the Medieval age) instead of taking the whole chance, and a seed's fire years stay the same when step 2 switches the others on. A disabled event is never warned or started, scheduled or not. Step 1 ships with `enabled: false` on blight, fever and festival. Step 2 turns each on in data when its section lands, with no code change to the draw.
 
 ## Risks / Trade-offs
 
