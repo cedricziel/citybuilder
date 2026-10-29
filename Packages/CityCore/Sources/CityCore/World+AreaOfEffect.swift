@@ -14,11 +14,19 @@ public struct AreaOfEffect: Equatable, Sendable {
     /// The number the count capsule shows: the targets for a catchment; for a site search, the tiles
     /// of the required terrain under the plot, or nil where the plot is no valid site.
     public let count: Int?
+    public let style: Style
 
-    public init(tiles: Set<TileCoordinate>, targets: [TileCoordinate], count: Int?) {
+    /// How the area reads: what a building works (gold), what it serves (teal), or what an event
+    /// threatens (amber, `add-event-counterplay`).
+    public enum Style: Sendable {
+        case reach, serves, threat
+    }
+
+    public init(tiles: Set<TileCoordinate>, targets: [TileCoordinate], count: Int?, style: Style = .reach) {
         self.tiles = tiles
         self.targets = targets
         self.count = count
+        self.style = style
     }
 }
 
@@ -32,10 +40,28 @@ public extension World {
         if let radius = kind.catchmentRadius {
             return catchmentArea(of: kind, at: anchor, radius: radius, owner: owner)
         }
+        if kind == .fireWatch {
+            return fireWatchArea(at: anchor, owner: owner)
+        }
         if placing, let requirement = BuildingCatalog.spec(for: kind).requiredTerrain {
             return siteArea(of: kind, near: anchor, requirement: requirement, owner: owner)
         }
         return nil
+    }
+
+    /// A fire watch's reach, eight tiles from its footprint, and the flammable buildings of its owner
+    /// in it, whose tiles it tints. Spec: `seasonal-events` / A fire watch puts out fires in reach.
+    private func fireWatchArea(at anchor: TileCoordinate, owner: Owner) -> AreaOfEffect {
+        let reach = Self.fireWatchReach
+        let watch = Building(id: EntityID(raw: 0), kind: .fireWatch, anchor: anchor, owner: owner)
+        let columns = max(0, anchor.x - reach) ... min(mapWidth - 1, anchor.x + reach)
+        let rows = max(0, anchor.y - reach) ... min(mapHeight - 1, anchor.y + reach)
+        let tiles = Set(rows.flatMap { y in columns.map { TileCoordinate(x: $0, y: y) } })
+        let covered = buildings.values.filter { building in
+            building.owner == owner && Self.isFlammable(building.kind) && Self.footprintDistance(watch, building) <= reach
+        }
+        let targets = covered.flatMap { $0.footprint.tiles(anchor: $0.anchor) }.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        return AreaOfEffect(tiles: tiles, targets: targets, count: nil, style: .serves)
     }
 
     private func catchmentArea(of kind: BuildingKind, at anchor: TileCoordinate, radius: Int, owner: Owner) -> AreaOfEffect {
