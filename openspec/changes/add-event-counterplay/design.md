@@ -165,7 +165,15 @@ Bars, all on the release build in the weekly `rival-sweep` workflow:
 5. **Rivals:** the rival viability sweep keeps its bars. Rivals have no events.
 6. **Coverage:** across the pacing sweep, each of the four events fires at least 5 times, and the kit completes at least one festival.
 
-The measured table goes into this section when task 7.3 runs.
+**Measured, step 1 (fire season), 2026-10-29.** These are release builds at 078538b6 with D10 unchanged. Only fire is enabled, so bar 1's forced variant runs fire alone: 2 onsets × 2 layouts × 10 seeds = 40 runs instead of 60. Bars 3–6 wait for step 2 and the mid-game sweeps.
+
+| Sweep | Runs | Bankrupt | Residents (min / mean) | Buildings lost to fire | Bar |
+|---|---|---|---|---|---|
+| `GUIDE_SWEEP events`: guided Hard start, drawn events, events kit | 20 | 0 | 66 / 107 | 1 in all (archipelago seed 7) | 1: solvent, ≥ 25 residents. Pass |
+| `FIRE_SWEEP`: forced fire, summer or autumn 1202, with the kit | 40 | 0 | 66 / 99.9 | 0 | 1: 0 bankrupt, ≥ 20 residents. Pass |
+| `FIRE_SWEEP`: the same fires without the kit | 40 | — | — | 370 in all, mean 9.25 a run, max 22 | 2: with the kit ≤ half of without (0 ≤ 185). Pass |
+
+With no fire watch, a Hard fire in 1202 burns down about nine buildings, and up to 22 in a dense town. The kit's one watch per cluster saves all of them.
 
 ### D13. What players see (canvas)
 
