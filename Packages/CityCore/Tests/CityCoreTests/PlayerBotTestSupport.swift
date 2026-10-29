@@ -43,7 +43,10 @@ struct PlayerBot {
             _ = place(next, in: &world, plan: &plan, stock: stock)
             return
         }
-        let kinds = town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
+        // Like a rival, the bot builds a marketplace once its next house
+        // would fall outside every hub's reach.
+        let kinds = (plan.needsMarketplace() ? [.marketplace] : [])
+            + town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
         for kind in kinds where !town.waiting || kind == .lumberjackHut {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
         }
