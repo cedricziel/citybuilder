@@ -37,7 +37,8 @@ public extension World {
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
         rivals: Bool = true,
-        seasonalEvents: Bool = false
+        seasonalEvents: Bool = false,
+        directives: [TerrainDirective] = []
     ) -> World {
         let (terrain, width, height) = switch layout {
         case .singleIsland:
@@ -47,7 +48,7 @@ public extension World {
         }
         var world = generate(
             layout: layout, seed: seed, width: width, height: height, terrain: terrain,
-            culture: culture, age: age, difficulty: difficulty, rivals: rivals
+            culture: culture, age: age, difficulty: difficulty, rivals: rivals, directives: directives
         )
         world.seasonalEvents.enabled = seasonalEvents
         return world
@@ -65,7 +66,8 @@ public extension World {
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
-        rivals: Bool = true
+        rivals: Bool = true,
+        directives: [TerrainDirective] = []
     ) -> World {
         var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
         world.layout = layout
@@ -78,7 +80,8 @@ public extension World {
         )
         world.difficulty = difficulty
         world.economy.balance = difficulty.startingBalance
-        world.seedTownCenters()
+        let groves = world.seedTownCenters()
+        world.applyTerrainDirectives(directives, groves: groves)
         world.research = initialResearch(for: age)
         world.calendar = CalendarState(startYear: age.startYear, isActive: true)
         world.culture = culture
@@ -96,7 +99,10 @@ public extension World {
     /// beside it, with the difficulty's starter inventory. Run once at
     /// world-gen, before rivals are seated, so every island gets the
     /// same rule. Spec: `world-terrain` / Fair start sites, Starter grove.
-    internal mutating func seedTownCenters() {
+    /// Returns each town center's starter grove tiles.
+    @discardableResult
+    internal mutating func seedTownCenters() -> [EntityID: [TileCoordinate]] {
+        var groves: [EntityID: [TileCoordinate]] = [:]
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
         let starter = difficulty.starterStock
         let tileToIsland = tileToIslandMap()
@@ -120,9 +126,10 @@ public extension World {
                 _ = stockpile.deposit(good, amount: amount)
             }
             stockpiles[id] = stockpile
-            plantStarterGrove(besideTownCenterAt: anchor, island: island.id, tileToIsland: tileToIsland)
+            groves[id] = plantStarterGrove(besideTownCenterAt: anchor, island: island.id, tileToIsland: tileToIsland)
             raiseStarterMineSite(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland)
         }
+        return groves
     }
 
     /// Ring each player town center with free road so the first

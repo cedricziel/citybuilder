@@ -42,11 +42,4 @@ extension World {
         guard let home = homeIslandID(in: map), islandFor(building: port, tileToIsland: map) == home else { return }
         goalCounters.landedAtHome[good, default: 0] += amount
     }
-
-    /// The island under the map's centre tile, else the largest: where the
-    /// player's home town center stands.
-    func homeIslandID(in map: [TileCoordinate: IslandID]) -> IslandID? {
-        map[TileCoordinate(x: mapWidth / 2, y: mapHeight / 2)]
-            ?? islands.max { ($0.tileCount, -Int($0.id)) < ($1.tileCount, -Int($1.id)) }?.id
-    }
 }
