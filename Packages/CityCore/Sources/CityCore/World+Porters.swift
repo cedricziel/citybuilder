@@ -29,11 +29,6 @@ public struct Porter: Hashable, Codable, Sendable {
     var hasArrived: Bool {
         pathIndex >= path.count - 1
     }
-
-    /// Units of `good` in the basket.
-    func units(of good: Good) -> Int {
-        basket.first { $0.good == good }?.units ?? 0
-    }
 }
 
 extension KeyedDecodingContainer {
@@ -51,7 +46,7 @@ struct HubService {
     /// The houses each hub serves, in entity order.
     var housesOf: [EntityID: [EntityID]] = [:]
     /// The operational hubs, in entity order.
-    var hubs: [Building] = []
+    let hubs: [Building]
 }
 
 extension World {
