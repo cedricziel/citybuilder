@@ -126,13 +126,6 @@ func chipReplaysTheWarning() {
     #expect(session.banner?.title == "Dry autumn ahead")
 }
 
-@Test("scenario: the chip doesn't crowd a 300-point HUD")
-func chipFitsANarrowHUD() {
-    #expect(EventChipLayout.showsText(hudWidth: 300) == false)
-    #expect(EventChipLayout.showsText(hudWidth: 390))
-    #expect(EventChipLayout.maxWidth(hudWidth: 300) <= 150)
-}
-
 @MainActor
 @Test("scenario: Inspecting burnt house ruins")
 func inspectingBurntHouseRuins() {
@@ -167,4 +160,60 @@ func burningBuildingDemolishNamesItsCost() {
     let model = InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
     #expect(model.demolish?.title == "Pull down — $30")
     #expect(model.keyLines.contains("Burning"))
+}
+
+@MainActor
+@Test("scenario: one building burnt down")
+func oneBuildingBurntDown() {
+    let session = eventsSession()
+    session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 1, fires: 1))])
+    #expect(session.banner?.description == "1 building burnt down. Clear the ruins with Demolish.")
+}
+
+@MainActor
+@Test("scenario: the chip says a fire is burning")
+func chipReplayWhileBurning() {
+    let session = eventsSession { world in
+        let id = EntityID(raw: world.nextEntityRaw)
+        world.nextEntityRaw += 1
+        world.buildings[id] = Building(id: id, kind: .sawmill, anchor: TileCoordinate(x: 2, y: 2), state: .burning)
+        world.seasonalEvents.active = ActiveSeasonalEvent(event: .fire, startTick: 0, lastTick: 1199)
+        var fire = FireEventState(ignitionTicks: [])
+        fire.fires = [Fire(building: id, ignitionTick: 0)]
+        world.seasonalEvents.fire = fire
+    }
+    session.replaySeasonalWarning()
+    #expect(session.banner?.title == "Fire!")
+    #expect(session.banner?.description.hasPrefix("A sawmill is burning.") == true)
+}
+
+@MainActor
+@Test("scenario: the tile menu prices clearing ruins")
+func tileMenuPricesRuins() {
+    var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw += 1
+    let anchor = TileCoordinate(x: 2, y: 2)
+    world.buildings[id] = Building(id: id, kind: .ruins, anchor: anchor, state: .operational, ruinOf: .house)
+    world.occupiedTiles[anchor] = id
+    let session = GameSession(world: world)
+    let items = session.tileMenuViewModel(for: anchor).items
+    #expect(items.contains(.demolishPaid("Clear ruins — $15")))
+    #expect(TileMenuItem.demolishPaid("Clear ruins — $15").title == "Clear ruins — $15")
+}
+
+@Test("scenario: the chip never truncates on a 300-point phone with the first steps")
+func chipOnANarrowPhoneWithFirstSteps() {
+    let phone = HUDLayout.make(size: CGSize(width: 320, height: 568), idiom: .phone)
+    #expect(!EventChipLayout.showsText(layout: phone, hudWidth: 300, showsFirstSteps: true))
+    #expect(EventChipLayout.showsText(layout: phone, hudWidth: 300, showsFirstSteps: false))
+    #expect(EventChipLayout.showsText(layout: phone, hudWidth: 390, showsFirstSteps: true))
+}
+
+@Test("scenario: on Apple TV the chip is tall enough to focus")
+func chipOnAppleTV() {
+    let tv = HUDLayout.make(size: CGSize(width: 1920, height: 1080), idiom: .tv)
+    let phone = HUDLayout.make(size: CGSize(width: 402, height: 874), idiom: .phone)
+    #expect(EventChipLayout.height(layout: tv) == tv.controlHeight)
+    #expect(EventChipLayout.height(layout: phone) == DateChipLayout.height)
 }

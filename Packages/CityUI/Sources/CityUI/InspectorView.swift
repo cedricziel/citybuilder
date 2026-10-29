@@ -86,16 +86,21 @@ public struct InspectorViewModel: Sendable {
         }
         let issue = snapshot.buildingIssues[entityID]
         let problem = issue.map(problemText)
+        let footprint = building.footprint
+        let basics = [
+            "Kind: \(building.kind.rawValue)",
+            "Anchor: (\(building.anchor.x), \(building.anchor.y))",
+            "Footprint: \(footprint.width)×\(footprint.height)",
+            "State: \(building.state.rawValue)",
+            "Build: \(buildProgress)",
+            "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
+        ]
+        let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID])
+        let signature = signatureLines(for: building, in: snapshot)
+        let problemLines = problem.map { ["Problem: \($0)"] } ?? []
+        let bullets: [String] = fireLines(for: building, in: snapshot) + basics + reach + signature + houseLines + problemLines
         return InspectorViewModel(
-            bullets: fireLines(for: building, in: snapshot) + [
-                "Kind: \(building.kind.rawValue)",
-                "Anchor: (\(building.anchor.x), \(building.anchor.y))",
-                "Footprint: \(spec.footprint.width)×\(spec.footprint.height)",
-                "State: \(building.state.rawValue)",
-                "Build: \(buildProgress)",
-                "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-            ] + inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + signatureLines(for: building, in: snapshot) +
-                houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
+            bullets: bullets,
             title: title(of: building),
             tier: tier,
             residentsFill: residentsFill,

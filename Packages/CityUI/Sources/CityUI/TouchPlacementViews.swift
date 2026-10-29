@@ -90,7 +90,7 @@ private struct TouchPlacementDialogs: ViewModifier {
         case let .build(kind, enabled, _):
             Button(item.title) { session.applyMenuChoice(.build(kind), at: tile) }
                 .disabled(!enabled)
-        case .demolish:
+        case .demolish, .demolishPaid:
             Button(item.title, role: .destructive) { session.applyMenuChoice(.demolish, at: tile) }
         case .dismiss:
             Button(item.title, role: .cancel) { session.applyMenuChoice(.dismiss, at: tile) }

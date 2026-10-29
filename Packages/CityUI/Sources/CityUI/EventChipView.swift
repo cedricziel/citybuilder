@@ -33,26 +33,36 @@ public struct EventChip: Equatable, Sendable {
     }
 }
 
-/// Where the chip fits: under the date, never wider than half a narrow HUD,
-/// and only the glyph and the season when the HUD is phone-narrow.
+/// Where the chip fits: in the HUD's left column, beside the first-steps
+/// card when it shows. Where the column is too narrow for the words, only
+/// the glyph shows, so the text never truncates.
 enum EventChipLayout {
-    /// Below this HUD width the chip drops its words but the season.
-    static let fullTextWidth: CGFloat = 340
+    /// The chip's widest text, "Fire risk · Summer", with its glyph.
+    static let fullTextWidth: CGFloat = 160
 
-    static func showsText(hudWidth: CGFloat) -> Bool {
-        hudWidth >= fullTextWidth
+    /// The width the chip has: the HUD less the first-steps card and its gap.
+    static func room(hudWidth: CGFloat, showsFirstSteps: Bool) -> CGFloat {
+        showsFirstSteps ? hudWidth - DateChipLayout.firstStepsWidth - DateChipLayout.gap : hudWidth
     }
 
-    static func maxWidth(hudWidth: CGFloat) -> CGFloat {
-        hudWidth / 2
+    static func showsText(layout: HUDLayout, hudWidth: CGFloat, showsFirstSteps: Bool) -> Bool {
+        !layout.isPhone || room(hudWidth: hudWidth, showsFirstSteps: showsFirstSteps) >= fullTextWidth
+    }
+
+    /// As tall as the date chip, and on Apple TV tall enough for its focus highlight.
+    static func height(layout: HUDLayout) -> CGFloat {
+        layout.focusableHeight(DateChipLayout.height)
     }
 }
 
 /// The amber glass chip of the approved canvas (Warning, option B). Tapping
-/// it shows the warning again.
+/// it shows the warning again; on Apple TV it is a focusable plain button,
+/// which lifts when focused like the other HUD buttons.
 struct EventChipView: View {
     let chip: EventChip?
+    let layout: HUDLayout
     let hudWidth: CGFloat
+    let showsFirstSteps: Bool
     let onTap: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
@@ -66,18 +76,19 @@ struct EventChipView: View {
                         .frame(width: 18, height: 18)
                         .background(Color(red: 0.91, green: 0.51, blue: 0.05), in: Circle())
                         .accessibilityHidden(true)
-                    Text(EventChipLayout.showsText(hudWidth: hudWidth) ? chip.text : chip.season.displayName)
-                        .font(.caption.weight(.semibold))
-                        .hudOneLine()
+                    if EventChipLayout.showsText(layout: layout, hudWidth: hudWidth, showsFirstSteps: showsFirstSteps) {
+                        Text(chip.text)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
                 }
                 .foregroundStyle(amber)
                 .padding(.leading, 4)
                 .padding(.trailing, 10)
-                .frame(height: DateChipLayout.height)
+                .frame(height: EventChipLayout.height(layout: layout))
                 .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
-                // Narrower than this, the text truncates rather than the capsule growing.
-                .frame(maxWidth: EventChipLayout.maxWidth(hudWidth: hudWidth), alignment: .leading)
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
