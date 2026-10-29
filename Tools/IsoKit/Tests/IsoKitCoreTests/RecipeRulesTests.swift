@@ -64,6 +64,21 @@ struct RecipeRulesTests {
         ])
     }
 
+    /// A self-lit flame casts no shadow, so its cell needs no room for one.
+    @Test("scenario: geometry that casts no shadow needs no room for one")
+    func shadowlessGeometryNeedsNoShadowRoom() {
+        func tower(castsShadow: Bool) -> Recipe {
+            Recipe(
+                id: "effect-test-tower", cell: SpriteCell(footprint: 1, heightPx: 160, widthPx: 32), constructionFrames: 0,
+                operationalFrames: 1, moving: MovingPart(name: "tower") { kit, _ in
+                    kit.block(SCNVector3(3.6, 0, 3.6), SCNVector3(3.8, 12, 3.8), .flame(.orange)).castsShadow = castsShadow
+                }, plot: nil, unit: true
+            ) { _, _ in }
+        }
+        #expect(CellFit.problems(in: tower(castsShadow: true)).contains { $0.contains("shadow") })
+        #expect(!CellFit.problems(in: tower(castsShadow: false)).contains { $0.contains("shadow") })
+    }
+
     @Test("every shipped recipe passes the rules at every stage and moving-part frame")
     func shippedRecipesPassTheRules() {
         #expect(Recipes.all.flatMap(RecipeRules.problems).isEmpty)
