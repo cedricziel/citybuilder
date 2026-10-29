@@ -25,10 +25,11 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
 }
 
 /// The control: over archipelago seeds 0 to 29 on Normal, by tick 4,000,
-/// towns that trade at the market go bankrupt no more often, and house no
-/// fewer residents in all, than the same towns without it. It once asked
-/// for bankruptcies without the market; per-good storage ended the store
-/// clog that caused them (`per-good-storage` D5).
+/// towns that trade at the market go bankrupt no more often, and house at
+/// least 95% as many residents in all, as the same towns without it. It
+/// once asked for bankruptcies without the market; per-good storage ended
+/// the store clog that caused them (`per-good-storage` D5), and with
+/// handcarts market-less towns grow slightly faster (#268).
 private let controlSeeds = Array(UInt64(0) ..< 30)
 
 @Test(
@@ -43,7 +44,8 @@ func scenarioTheMarketDoesNotMakeTownsWorseOff() async {
             + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
     )
     #expect(with.bankrupt <= without.bankrupt)
-    #expect(with.residents >= without.residents)
+    // Within 5%: a town without the market may out-grow one with it (#268).
+    #expect(with.residents * 100 >= without.residents * 95)
 }
 
 /// Bankruptcies and residents in all over the control seeds.

@@ -144,11 +144,7 @@ extension IsoWorldScene {
     /// sprite's bottom diamond aligns with the actual iso footprint.
     /// See the design doc for the offset derivation.
     public func makeBuildingNode(for spec: SpriteSpec) -> SKNode {
-        guard case let .building(
-            kind, state, footprint, constructionFrameIndex, orientation,
-            isWaitingForMaterials, houseTier, look, roadLink
-        ) = spec.kind
-        else {
+        guard case let .building(kind, state, footprint, frameIndex, orientation, waiting, houseTier, look, roadLink) = spec.kind else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
         }
         let coord = spec.coord
@@ -184,13 +180,13 @@ extension IsoWorldScene {
                 kind: kind,
                 orientation: orientation,
                 state: state,
-                constructionFrame: constructionFrameIndex
+                constructionFrame: frameIndex
             )
         } else {
             texture = textureForBuilding(
                 kind: kind,
                 state: state,
-                constructionFrameIndex: constructionFrameIndex,
+                constructionFrameIndex: frameIndex,
                 coord: coord
             ) ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         }
@@ -204,7 +200,7 @@ extension IsoWorldScene {
         if signature == nil {
             armAnimation(on: node, kind: kind, state: state, animationBase: animationBase)
         }
-        if isWaitingForMaterials, state == .constructing {
+        if waiting, state == .constructing {
             node.addChild(makeWaitingBadgeNode())
         }
         return node

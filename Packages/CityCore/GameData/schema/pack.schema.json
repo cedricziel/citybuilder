@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pack.schema.json",
   "title": "Game data pack",
-  "description": "One feature's goods, buildings, cultures, techs, ages and house tiers. References may point into any pack.",
+  "description": "One feature's goods, buildings, cultures, techs, ages, house tiers, logistics and vehicles. References may point into any pack.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -97,7 +97,7 @@
       "type": "object",
       "required": ["kind", "id"],
       "properties": {
-        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order", "Event", "Campaign", "Chapter"] }
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order", "Event", "Campaign", "Chapter", "Logistics", "Vehicle"] }
       },
       "allOf": [
         {
@@ -329,6 +329,33 @@
               "taxPerResident": { "$ref": "#/$defs/nonNegative" },
               "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true },
               "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "type": "integer", "minimum": 1, "maximum": 254 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Logistics" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "haulDistance", "haulMinLoad", "haulMaxWait"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "haulDistance": { "description": "Road tiles a haul must cover before it takes a vehicle.", "$ref": "#/$defs/positive" },
+              "haulMinLoad": { "description": "Units that must be ready for one destination before a vehicle goes.", "$ref": "#/$defs/positive" },
+              "haulMaxWait": { "description": "Ticks a producer's output waits for a vehicle load before it goes anyway.", "$ref": "#/$defs/positive" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Vehicle" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "age", "capacity"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "age": { "description": "The first age that uses it, until a later age's vehicle replaces it.", "$ref": "#/$defs/id" },
+              "capacity": { "description": "Units it carries at most.", "$ref": "#/$defs/positive" }
             }
           }
         },

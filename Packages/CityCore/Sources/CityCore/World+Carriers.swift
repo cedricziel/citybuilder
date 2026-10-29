@@ -138,18 +138,20 @@ extension World {
             let producerId = building.id
             guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
             let inFlight = carrierCountByProducer[producerId, default: 0]
-            guard inFlight < CarrierConfig.perProducerCap else { continue }
-            guard let producerStock = stockpiles[producerId] else { continue }
+            guard inFlight < CarrierConfig.perProducerCap, let producerStock = stockpiles[producerId] else { continue }
             let footprint = building.footprint
             guard let road = anyAdjacentRoad(anchor: building.anchor, footprint: footprint)
             else { continue }
 
             for (good, _) in recipe.outputs where producerStock.quantity(of: good) >= 1 {
-                guard let (mission, path) = destination(of: good, from: building, road: road, among: candidates)
+                guard let haul = destination(of: good, from: building, road: road, among: candidates)
                 else { continue }
-                candidates.inbound.add(mission)
+                candidates.inbound.add(haul.mission)
                 spawnCarrier(
-                    CarrierSpawn(producerId: producerId, road: road, good: good, mission: mission, path: path),
+                    CarrierSpawn(
+                        producerId: producerId, road: road, good: good, mission: haul.mission, path: haul.path,
+                        vehicle: haul.vehicle
+                    ),
                     events: &events
                 )
                 break
@@ -167,6 +169,21 @@ extension World {
         let inbound: InboundGoods
     }
 
+    /// A short consumer a producer can reach: its road path and the
+    /// amount its recipe or fuel uses at a time.
+    private struct ShortConsumer {
+        let id: EntityID
+        let path: [TileCoordinate]
+        let amount: Int
+    }
+
+    /// Where a producer's goods go, along which road, and how.
+    private struct Haul {
+        let mission: Carrier.Mission
+        let path: [TileCoordinate]
+        var vehicle: Vehicle?
+    }
+
     /// Road component labels, worked out the first time a tick asks,
     /// so a consumer on another road network is skipped without a
     /// failed path search.
@@ -179,33 +196,39 @@ extension World {
         }
     }
 
-    /// Where one unit of `good` from `producer` goes, and the road path
-    /// there: a waiting construction site first, then a short consumer,
-    /// then the nearest goods buffer with room.
-    private func destination(
+    /// Where `good` from `producer` goes, the road path there, and how: a
+    /// waiting construction site first, then a short consumer, then the
+    /// nearest goods buffer with room. A long hop or haul takes the owner's
+    /// vehicle when enough is ready; a long haul to storage waits for a load
+    /// (`storageHaul`).
+    private mutating func destination(
         of good: Good,
         from producer: Building,
         road: TileCoordinate,
         among candidates: DestinationCandidates
-    ) -> (Carrier.Mission, [TileCoordinate])? {
+    ) -> Haul? {
         let islandID = islandFor(building: producer, tileToIsland: candidates.tileToIsland)
         if let (siteId, path) = findWaitingSiteOnIsland(
             fromRoad: road, good: good, islandID: islandID,
             tileToIsland: candidates.tileToIsland, among: candidates.waitingSites
         ) {
-            return (.deliverToConstructionSite(good: good, amount: 1, fromProducer: producer.id, toBuilding: siteId), path)
+            let mission = Carrier.Mission.deliverToConstructionSite(good: good, amount: 1, fromProducer: producer.id, toBuilding: siteId)
+            return Haul(mission: mission, path: path)
         }
-        if !goesThroughStorage(good, for: producer.owner), let (consumerId, path) = nearestShortConsumer(
+        let held = stockpiles[producer.id]?.quantity(of: good) ?? 0
+        if !goesThroughStorage(good, for: producer.owner), let consumer = nearestShortConsumer(
             of: good, from: producer, road: road, among: candidates
         ) {
-            return (.deliverToConsumer(good: good, amount: 1, fromProducer: producer.id, toConsumer: consumerId), path)
+            let short = shortfall(of: good, at: consumer.id, amount: consumer.amount)
+            let haul = CarrierConfig.haul(
+                ready: min(held, short), along: consumer.path, vehicle: CarrierConfig.vehicle(in: age(of: producer.owner))
+            )
+            let mission = Carrier.Mission.deliverToConsumer(
+                good: good, amount: haul.amount, fromProducer: producer.id, toConsumer: consumer.id
+            )
+            return Haul(mission: mission, path: consumer.path, vehicle: haul.vehicle)
         }
-        if let (bufferId, path) = findRoadConnectedBuffer(
-            fromRoad: road, good: good, among: candidates.buffers, inbound: candidates.inbound.count(of:to:)
-        ) {
-            return (.deliver(good: good, amount: 1, fromProducer: producer.id, toWarehouse: bufferId), path)
-        }
-        return nil
+        return storageHaul(of: good, held: held, from: producer, road: road, among: candidates)
     }
 
     /// Goods any building costs as a construction material.
@@ -248,9 +271,9 @@ extension World {
         from producer: Building,
         road: TileCoordinate,
         among candidates: DestinationCandidates
-    ) -> (EntityID, [TileCoordinate])? {
+    ) -> ShortConsumer? {
         let component = candidates.components.labels[road]
-        var best: (EntityID, [TileCoordinate])?
+        var best: ShortConsumer?
         for consumer in candidates.consumers[good] ?? [] {
             let building = consumer.building
             guard building.id != producer.id, building.owner == producer.owner,
@@ -262,11 +285,72 @@ extension World {
                   candidates.components.labels[consumerRoad] == component,
                   let path = PathFinder.path(from: road, to: consumerRoad, in: roadGraph)
             else { continue }
-            if best.map({ path.count < $0.1.count }) ?? true {
-                best = (building.id, path)
+            if best.map({ path.count < $0.path.count }) ?? true {
+                best = ShortConsumer(id: building.id, path: path, amount: consumer.amount)
             }
         }
         return best
+    }
+
+    /// The goods buffer `producer` sends `held` units of `good` to, the path, and the haul. When the
+    /// owner's age has a vehicle, a long haul waits for a vehicle load, up to `haulMaxWait` ticks,
+    /// and counts the wait on the producer; then it returns nil. With too little ready and every
+    /// buffer far away, it skips the path search.
+    private mutating func storageHaul(
+        of good: Good, held: Int, from producer: Building, road: TileCoordinate, among candidates: DestinationCandidates
+    ) -> Haul? {
+        let buffers = candidates.buffers
+        let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
+        // Batching is for bulk nobody is waiting on: a good houses need, or
+        // one a building of the owner is short of, never waits for a load.
+        let awaited = HouseTier.allNeeds(in: culture(of: producer.owner)).contains(good)
+            || candidates.consumers[good]?.contains {
+                $0.building.owner == producer.owner && needsSupply($0.building.id, good: good, amount: $0.amount)
+            } ?? false
+        let waits = vehicle != nil && !awaited && producer.haulWaitTicks < UInt32(CarrierConfig.haulMaxWait)
+        func wait() -> Haul? {
+            buildings[producer.id]?.haulWaitTicks += 1
+            return nil
+        }
+        if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
+            return wait()
+        }
+        let inbound = candidates.inbound.count(of:to:)
+        guard var (warehouseId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers, inbound: inbound)
+        else { return nil }
+        func room(at store: EntityID) -> Int {
+            let pile = stockpiles[store] ?? Stockpile(capacity: 0)
+            return pile.room(for: good) - candidates.inbound.pending(of: good, to: store, in: pile)
+        }
+        // A long haul prefers the nearest store that takes a cart load over
+        // a nearer one with room for only a unit or two.
+        let minLoad = CarrierConfig.haulMinLoad
+        if vehicle != nil, CarrierConfig.isLong(path), room(at: warehouseId) < minLoad, let roomier = findRoadConnectedBuffer(
+            fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:), room: minLoad
+        ) {
+            (warehouseId, path) = roomier
+        }
+        let ready = min(held, room(at: warehouseId))
+        func deliver(_ amount: Int) -> Carrier.Mission {
+            .deliver(good: good, amount: amount, fromProducer: producer.id, toWarehouse: warehouseId)
+        }
+        guard let vehicle, CarrierConfig.isLong(path) else {
+            return Haul(mission: deliver(1), path: path)
+        }
+        if ready < CarrierConfig.haulMinLoad, waits {
+            return wait()
+        }
+        return Haul(mission: deliver(min(ready, vehicle.capacity)), path: path, vehicle: vehicle)
+    }
+
+    /// True when every buffer's road lies at least the cart distance from
+    /// `road` along the grid, so any road path to it is a long haul.
+    private func allFar(from road: TileCoordinate, among buffers: [Building]) -> Bool {
+        buffers.allSatisfy { buffer in
+            anyAdjacentRoad(anchor: buffer.anchor, footprint: buffer.footprint).map {
+                abs($0.x - road.x) + abs($0.y - road.y) >= CarrierConfig.haulDistance
+            } ?? true
+        }
     }
 
     /// Bundle of spawn arguments, packed so `spawnCarrier` stays
@@ -277,17 +361,19 @@ extension World {
         let good: Good
         let mission: Carrier.Mission
         let path: [TileCoordinate]
+        var vehicle: Vehicle?
     }
 
     private mutating func spawnCarrier(
         _ spawn: CarrierSpawn,
         events: inout [WorldEvent]
     ) {
-        stockpiles[spawn.producerId]?.withdraw(spawn.good, amount: 1)
+        stockpiles[spawn.producerId]?.withdraw(spawn.good, amount: spawn.mission.amount)
         let carrierId = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
-        carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission)
+        carriers[carrierId] = Carrier(id: carrierId, path: spawn.path, mission: spawn.mission, vehicle: spawn.vehicle)
         carrierCountByProducer[spawn.producerId, default: 0] += 1
+        buildings[spawn.producerId]?.haulWaitTicks = 0
         events.append(.carrierDeparted(
             carrier: carrierId, from: spawn.road, good: spawn.good
         ))
@@ -318,9 +404,8 @@ extension World {
                 if !onIsland { continue }
             }
             let footprint = site.footprint
-            guard let siteRoad = anyAdjacentRoad(anchor: site.anchor, footprint: footprint)
-            else { continue }
-            guard let path = PathFinder.path(from: start, to: siteRoad, in: roadGraph)
+            guard let siteRoad = anyAdjacentRoad(anchor: site.anchor, footprint: footprint),
+                  let path = PathFinder.path(from: start, to: siteRoad, in: roadGraph)
             else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)
@@ -366,23 +451,21 @@ extension World {
     /// reachable. Equal-length paths resolve to the lowest entity ID.
     /// `buffers` are the operational goods buffers in entity order, when
     /// the caller has already listed them. A buffer qualifies only with
-    /// room for `good` beyond the units `inbound` says are on their way.
+    /// room for at least `needed` units of `good` beyond those `inbound`
+    /// says are on their way.
     func findRoadConnectedBuffer(
         fromRoad start: TileCoordinate,
         good: Good,
         among buffers: [Building]? = nil,
-        inbound: (Good, EntityID) -> Int = { _, _ in 0 }
+        inbound: (Good, EntityID) -> Int = { _, _ in 0 },
+        room needed: Int = 1
     ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
             let id = building.id
-            guard let bufferRoad = anyAdjacentRoad(
-                anchor: building.anchor,
-                footprint: building.footprint
-            )
-            else { continue }
-            guard let stock = stockpiles[id], stock.room(for: good) > inbound(good, id) else { continue }
-            guard let path = roadPath(from: start, to: bufferRoad)
+            guard let bufferRoad = anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint),
+                  let stock = stockpiles[id], stock.room(for: good) - inbound(good, id) >= needed,
+                  let path = roadPath(from: start, to: bufferRoad)
             else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)

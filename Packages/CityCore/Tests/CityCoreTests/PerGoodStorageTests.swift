@@ -26,6 +26,9 @@ private func inject(
 private func roadStrip(width: Int = 24) -> World {
     var world = World.fixtureWithTerrain(width: width, height: 6, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
+    // Before the first vehicle's age, so every haul walks one unit; the
+    // handcart rules have their own tests.
+    world.age = .antiquity
     for x in 0 ..< width {
         world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
     }

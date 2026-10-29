@@ -42,8 +42,9 @@ public extension World {
     /// invoke it directly.
     @discardableResult
     mutating func emitShip(fromShipyard shipyardID: EntityID) -> EntityID? {
-        guard let shipyard = buildings[shipyardID], shipyard.kind == .shipyard else { return nil }
-        guard let waterTile = shipyard.seaFaceTiles.first else { return nil }
+        guard let shipyard = buildings[shipyardID], shipyard.kind == .shipyard,
+              let waterTile = shipyard.seaFaceTiles.first
+        else { return nil }
         let id = EntityID(raw: nextEntityRaw)
         nextEntityRaw &+= 1
         ships[id] = Ship(

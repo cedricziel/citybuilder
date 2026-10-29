@@ -110,6 +110,35 @@ The candidate list is small: only consumers of the good that are short. Measured
 
 *Why this rule:* it is decided entirely from integer state the source already has, so it stays deterministic. It also means a cart never leaves half-empty on a short trip.
 
+*Waiting for a load (found in milestone 3):* a producer ships each unit as soon as it is ready, so its stock never reaches 3, and carts never appeared on producer hauls. On a haul of 12 tiles or more, a producer now waits for a cart load before it sends anything to storage. Supply to a consumer never waits; it uses a cart only when the consumer is short of 3 or more, which needs a recipe that takes 2 at a time. So that a producer that stops producing, such as a lumberjack whose forest is gone, does not strand its last units, the wait ends after `haulMaxWait` ticks (200, in the `Logistics` data). Then whatever is ready goes by handcart. The wait counts on the producer (`Building.haulWaitTicks`, 0 in old saves) and resets whenever it sends a carrier.
+
+*M3 result before the output cap,* PlayerBot sweeps on main 4f3e8a0c against the handcart branch alone, release build:
+- First-hour solvency: 0/20 bankrupt on both.
+- Guided Hard start: 0/20 bankrupt on both; residents min/median 29/52.5 → 37/58.5.
+- Rivals: year 5 min 15 on both; year 15 median 57.5 → 59.
+- The no-market control seed 2 stays solvent, as under M1.
+- Pacing: 101 of 180 arms reach a merchant against 121, bankruptcies 9 against 11.
+
+Carts make hauls cheaper, like M1's hops, so the run is re-measured on top of per-good storage (#269) and M1 (#232) before merge.
+
+*On top of per-good storage and M1:*
+- A long haul to storage still waits for a cart load. "Ready" now reads the store's room for that good minus the units already on their way there, so a cart is never promised room twice.
+- A producer's direct hop to a short consumer is a haul too. On a long road it goes by cart when at least the minimum load is ready and the consumer is short of at least that much. Otherwise it walks one unit without waiting, since a short consumer should not wait for a load.
+- Inbound supply and room counts are in units, not carriers, because a cart brings several.
+- *M3 first sweep (7a35a1e1) against main bfdce48d:* no bankruptcies on either, and merchant reach slightly better (7 arms without a merchant by year 10, against 10). But retention fell: 119 of 180 arms held 20+ merchants at year 10, against 154, and the share of turns in years 8–10 with 20+ merchants fell from about 0.85 to about 0.70.
+- *Cause, from single-arm probes:* the wait for a cart load. On the four arms that lost most (held share 0.30–0.48):
+  - No wait gave 1.00, 1.00, 0.74 and 1.00.
+  - Carts off gave 1.00 on all four.
+  - Exempting only house goods gave 0.46, 1.00, 1.00 and 1.00.
+  - Also exempting goods a consumer of the owner is short of gave 0.71, 1.00, 1.00 and 1.00.
+- *Fix:* batching is for bulk nobody waits on. A long haul to storage waits for a load only when houses don't need the good and no building of the owner is short of it. The PR body carries the re-run sweep.
+
+*Campaign need (Hard Ground 3, "The Long Road", `add-campaigns`):* the chapter pushes the mine 16 tiles out on the archipelago home island, starts in the Medieval age with Mining done and Seafaring closed, and teaches long hauls by road with handcarts.
+- That needs carts from the Medieval age on: `handcart`'s `Vehicle` item starts there.
+- The town-to-mine road must reach the 12-tile haul distance: a mine 16 tiles out does on any real road.
+- Ore and iron must go through a warehouse near the mine: iron is a construction material, so it always goes through storage, and the 200-tick wait covers a slow mine.
+- No campaign-specific code is needed. #236's later vehicles (mule cart, wagon, truck) add `Vehicle` items with an age, a capacity and a speed, without a save migration, since carriers store the vehicle id.
+
 *Rejected:* carts every time a building has 4 units. That would turn every short hop into a cart, and the town would lose its walking carriers.
 
 ### D6. Saves
@@ -144,7 +173,9 @@ The canvas proposes the looks: https://claude.ai/artifact/2pupecCf6JAYUSkfi5LsWp
 The distribution numbers are starting values, so they go in the game-data packs, not in Swift constants. designer2 tunes them in the pacing sweeps without a code change.
 
 - **Hubs:** a hub building's pack item gets a `hub` mapping: `radius` (18), `housesPerPorter` (4), `maxPorters` (8), `basketUnits` (10) and `reserveConsumptions` (2). The town center and the marketplace each carry one, so the marketplace can be tuned apart from the town center.
-- **Carts:** one `Logistics` item in `core.yaml` holds `cartDistance` (12), `cartMinLoad` (3) and `cartCapacity` (4).
+- **Hauls and vehicles:** one `Logistics` item in `core.yaml` holds `haulDistance` (12), `haulMinLoad` (3) and `haulMaxWait` (200 ticks). Each `Vehicle` item names the first age that uses it and its `capacity`: `handcart` from the medieval age, carrying 4. The generator emits a `Vehicle` enum.
+  - A carrier's `vehicle` is that enum, nil on foot, and is resolved per owner's age: the latest vehicle whose age has begun.
+  - So #236 (mule cart in the Renaissance, horse wagon in the Industrial age, motor truck in the Modern age, faster vehicles) adds `Vehicle` items, art and a `speed` field, without a save migration: saves store the vehicle id.
 - **House stock:** the same item holds `houseStockConsumptions` (2) and `houseStockMinimum` (2).
 - The schema validates them, `make gamedata` generates the Swift catalog, and `gamedata-check` keeps the two in sync.
 

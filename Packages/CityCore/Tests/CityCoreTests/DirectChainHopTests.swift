@@ -33,6 +33,9 @@ private func inject(
 private func roadStrip(width: Int = 24) -> World {
     var world = World.fixtureWithTerrain(width: width, height: 6, fill: .grass, seed: 1)
     world.testMaterialCredits = [:]
+    // Before the first vehicle's age, so every haul walks one unit; the
+    // handcart rules have their own tests.
+    world.age = .antiquity
     for x in 0 ..< width {
         world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
     }
@@ -89,7 +92,7 @@ func scenarioAConsumerFedDirectlyGetsNoExtraSupplyCarrier() {
     _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 6, y: 0), contents: [.flour: 5])
     let bakery = inject(.bakery, in: &world, at: TileCoordinate(x: 14, y: 1), contents: [.flour: 1])
     world.tick()
-    #expect(world.supplyCarrierCount(to: bakery, good: .flour) == 1)
+    #expect(world.inboundUnits(to: bakery, good: .flour).ofGood == 1)
     #expect(retrievals(to: bakery, in: world) == 0)
 }
 
@@ -265,6 +268,22 @@ func goodsWithNoStorageLeftGoBackToWhereTheyCameFrom() {
     }
     #expect(world.carriers.isEmpty)
     #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 1)
+}
+
+@Test("goods never go back to a source that is burning")
+func goodsNeverGoBackToASourceThatIsBurning() {
+    var world = roadStrip()
+    let windmill = inject(.windmill, in: &world, at: TileCoordinate(x: 1, y: 1), contents: [.flour: 1])
+    _ = inject(.bakery, in: &world, at: TileCoordinate(x: 12, y: 1))
+    world.tick()
+    var events: [WorldEvent] = []
+    world.applyDemolish(anchor: TileCoordinate(x: 12, y: 1), events: &events)
+    world.buildings[windmill]?.state = .burning
+    for _ in 0 ..< 60 where !world.carriers.isEmpty {
+        #expect(world.carriers.values.allSatisfy { $0.mission.destination != windmill })
+        world.tick()
+    }
+    #expect(world.stockpiles[windmill]?.quantity(of: .flour) == 0)
 }
 
 @Test("a delivery to a demolished warehouse goes to the next one")

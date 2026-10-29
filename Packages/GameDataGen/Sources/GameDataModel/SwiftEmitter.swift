@@ -34,6 +34,7 @@ public enum SwiftEmitter {
             ("HouseTier+Generated.swift", types.houseTier),
             ("OrderTemplate+Generated.swift", types.orderTemplate),
             ("SeasonalEvent+Generated.swift", types.seasonalEvent),
+            ("Logistics+Generated.swift", types.logistics + types.vehicle),
             ("Campaign+Generated.swift", ChapterEmitter(data: data, access: types.access).catalog)
         ]
         guard let namespace else {
@@ -239,6 +240,33 @@ private struct Types {
             property("taxPerResident", "Int64", all.map { ($0.id, "\($0.taxPerResident)") }),
             property("declineGrace", "Int", all.map { ($0.id, "\($0.declineGrace)") }),
             property("displayName", "String", all.map { ($0.id, literal($0.name)) })
+        ])
+    }
+
+    /// The distribution tunables as constants.
+    var logistics: String {
+        guard let values = data.logistics.first else { return "" }
+        return """
+
+        \(access)enum LogisticsCatalog {
+            /// Road tiles a haul must cover before it takes a vehicle.
+            \(access)static let haulDistance = \(values.haulDistance)
+            /// Units that must be ready for one destination before a vehicle goes.
+            \(access)static let haulMinLoad = \(values.haulMinLoad)
+            /// Ticks a producer's output waits for a vehicle load before it goes anyway.
+            \(access)static let haulMaxWait = \(values.haulMaxWait)
+        }
+
+        """
+    }
+
+    /// The vehicles, in load order, with their first age and capacity.
+    var vehicle: String {
+        let all = data.vehicles
+        guard !all.isEmpty else { return "" }
+        return enumDecl("Vehicle", "String, CaseIterable, Codable, Hashable, Sendable", all.map(\.id), [
+            property("age", "Age", all.map { ($0.id, ".\(caseName($0.age))") }),
+            property("capacity", "Int", all.map { ($0.id, "\($0.capacity)") })
         ])
     }
 
