@@ -1,7 +1,7 @@
 ## 0. Gate
 
 - [ ] 0.1 Confirm visible-distribution M2 (#238) and the wool → cloth chain (#239) have merged. Rerun the baseline in design.md on the new main and update the chapter targets before starting M1.
-- [ ] 0.2 Claude Design canvas for the chapter select screen and the intro, ending and lost cards: today's New Game dialog and win sheet as the "before", 2–3 options, a recommendation, and the owner's go-ahead.
+- [x] 0.2 Claude Design canvas for the chapter select screen and the intro, ending and lost cards: today's New Game dialog and win sheet as the "before", 2–3 options, a recommendation, and the owner's go-ahead. Canvas: https://claude.ai/artifact/7RVf4CiyHoJpgyBgEa1Q35. Approved: chapter select C (split view) and cards B (sheet with a map header); see design D13.
 
 ## 1. M1 — Goals and lose conditions
 

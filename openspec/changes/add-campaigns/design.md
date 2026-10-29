@@ -262,6 +262,15 @@ Every chapter needs the campaign core (M1): pack kinds, the chapter setup, the n
 
 The other new mechanics are part of the core milestones: terrain directives, the trade-earnings and landed-by-ship counters, chapter build lists, the rival race and the rivals' earliest year per age. Chronicle 5 and 6 also depend on merchants holding, which #239 and per-good storage are expected to bring.
 
+### D13. Chapter select and cards follow the approved canvas
+
+The canvas is https://claude.ai/artifact/7RVf4CiyHoJpgyBgEa1Q35. It shows today's New Game dialog and win sheet as the "before", and three options each for chapter select and for the cards.
+
+- **Chapter select: option C, a split view.** Campaigns and their chapters are listed on the left. The chosen chapter is on the right, with a render of its map, its intro line, its goals and bonus goals, its start and its limits, the difficulty picker, the culture picker when the chapter leaves the culture open, and Start. On iPhone the split view collapses to the list (option A), and choosing a chapter pushes its detail.
+- **Cards: option B, a sheet with a map header.** The intro and ending cards are the existing sheet with a render of the chapter's map at the top. They match the goals panel and the win sheet they replace, they work on iPhone, and they hold a goal list and 320 characters of text. The lost card is the same sheet, small, with Retry, Keep building and Back to chapters. The parchment surface stays for in-world banners.
+
+*Alternatives:* a road of chapters drawn on the map (select B) needs a hand-placed path per campaign and hides each locked chapter's key behind a tap. Parchment cards (cards A) would spend the in-world surface on long menu text. Glass cards over the live map (cards C) make 320 characters hard to read over busy art.
+
 ## Baseline measurements
 
 The first values in D9 come from a scratch sweep on main at 3936db41. It is not committed. The PlayerBot played guided, with the market, for 10 years: the careful mid-game kit for Medieval starts, and no mid-game kit for Antiquity starts. Seeds 0–3, single island and archipelago; the Easy archipelago arms are left out of the table. Each cell shows residents / merchants, the age, and stored bread / tools.
