@@ -27,9 +27,9 @@ public extension World {
         guard let islandID = tileToIsland[anchor] else { return [:] }
         var totals: [Good: Int] = [:]
         for (id, building) in buildings where Self.givesMaterials(building) {
-            guard buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland)
+            guard buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland),
+                  let stockpile = stockpiles[id]
             else { continue }
-            guard let stockpile = stockpiles[id] else { continue }
             for (good, amount) in stockpile.contents where amount > 0 {
                 totals[good, default: 0] += amount
             }
@@ -89,8 +89,7 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID]
     ) -> Bool {
         for (_, building) in buildings where building.state == .operational {
-            guard let recipe = ProductionCatalog.recipe(for: building.kind) else { continue }
-            guard recipe.outputs[good] ?? 0 > 0 else { continue }
+            guard let recipe = ProductionCatalog.recipe(for: building.kind), recipe.outputs[good] ?? 0 > 0 else { continue }
             if buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland) {
                 return true
             }

@@ -278,9 +278,10 @@ public extension World {
         var stockpileByIsland: [IslandID: [Good: Int]] = [:]
         var capacityByIsland: [IslandID: [Good: Int]] = [:]
         for (id, building) in buildings {
-            guard Self.placementBufferKinds.contains(building.kind) else { continue }
-            guard let islandID = islandID(forBuilding: building, tileToIsland: tileToIsland)
-            else { continue }
+            guard Self.placementBufferKinds.contains(building.kind), let islandID = islandID(
+                forBuilding: building,
+                tileToIsland: tileToIsland
+            ) else { continue }
             if let stockpile = stockpiles[id] {
                 for (good, amount) in stockpile.contents where amount > 0 {
                     stockpileByIsland[islandID, default: [:]][good, default: 0] += amount

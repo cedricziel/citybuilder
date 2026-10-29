@@ -147,8 +147,7 @@ extension IsoWorldScene {
         guard case let .building(
             kind, state, footprint, constructionFrameIndex, orientation,
             isWaitingForMaterials, houseTier, look, roadLink
-        ) = spec.kind
-        else {
+        ) = spec.kind else {
             preconditionFailure("makeBuildingNode called with non-building spec kind")
         }
         let coord = spec.coord
