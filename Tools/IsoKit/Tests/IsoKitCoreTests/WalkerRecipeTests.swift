@@ -11,7 +11,7 @@ struct WalkerRecipeTests {
         })
     }
 
-    @Test("the walker brief holds residents and carriers: 4 facings x 8 gait frames each")
+    @Test("the walker brief holds residents, the watchman and carriers: 4 facings x 8 gait frames each")
     func walkerNames() {
         let people = Recipes.all.filter { $0.entry == "walker" }
         let walkers = people.filter { $0.id.hasPrefix("walker-") }
@@ -21,7 +21,7 @@ struct WalkerRecipeTests {
         let walkerNames = Set(walkers.flatMap(\.spriteNames))
         let carrierNames = Set(carriers.flatMap(\.spriteNames))
         #expect(allUnits)
-        #expect(walkerNames == Self.names(["walker", "walker-woman"]))
+        #expect(walkerNames == Self.names(["walker", "walker-woman", "walker-watchman"]))
         #expect(carrierNames == Self.names(["carrier-sack", "carrier-crate", "carrier-barrel", "carrier-logs"]))
     }
 
