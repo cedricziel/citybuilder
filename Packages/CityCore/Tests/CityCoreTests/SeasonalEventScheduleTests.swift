@@ -297,3 +297,14 @@ func eventsNeedAnActiveCalendar() {
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvents.plan == nil)
 }
+
+@Test("scenario: a chapter's event in its first year")
+func scheduledEventInTheFirstYear() {
+    var world = eventsWorld(seed: 9)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1200, event: .fire, onset: .summer)]
+    addOperational(.house, at: TileCoordinate(x: 0, y: 0), residents: 2, in: &world)
+    let first = world.tick().events
+    #expect(first.seasonalEvents == [.seasonalEventWarned(event: .fire, onset: .summer)])
+    let summer = runSeasons(&world, untilTick: firstTick(of: .summer, 1200))
+    #expect(summer.seasonalEvents == [.seasonalEventStarted(event: .fire)])
+}

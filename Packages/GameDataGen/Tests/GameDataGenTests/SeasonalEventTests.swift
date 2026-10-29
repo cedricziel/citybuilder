@@ -109,3 +109,9 @@ func cropFlagIsEmitted() throws {
     let errors = Fixtures.errors(Fixtures.withCore(core))
     #expect(errors.contains { $0.contains("Building house") && $0.contains("`crop`") }, "\(errors)")
 }
+
+@Test func repeatedWeightKeyIsReportedNotFatal() {
+    let bad = events.replacingOccurrences(of: "{ easy: 1, normal: 1, hard: 2 }", with: "{ easy: 1, easy: 2, normal: 1, hard: 2 }")
+    let errors = Fixtures.errors(Fixtures.withExtraPack(bad))
+    #expect(errors.contains { $0.contains("duplicated key") && $0.contains("easy") }, "\(errors)")
+}
