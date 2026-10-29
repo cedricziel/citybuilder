@@ -198,7 +198,6 @@ func scenarioEveryBuildingAndUnitEntryIsRenderedByIsoKit() throws {
         // Roads are drawn by the road generator, an SVG source.
         let units = ["walker", "animal", "ship", "effect-fire"]
         guard id.hasPrefix("building-") && id != "building-road" || units.contains(id) else { return false }
-        if pendingCatalogIds.contains(id) { return false }
         return try catalogSource(of: String(contentsOf: url, encoding: .utf8)) != "isokit"
     }
     #expect(wrong.isEmpty, "\(wrong.map(\.lastPathComponent))")
@@ -213,24 +212,6 @@ func scenarioTerrainAndGoodsAreSVG() throws {
             #expect(source == "svg", "\(id) is \(source)")
         }
     }
-}
-
-/// The briefs of the kinds still waiting for their art (`PendingArt`).
-private let pendingCatalogIds = Set(PendingArt.buildingKinds.map { "building-\($0.rawValue)" })
-
-@Test("pending art is pending in the catalog and has no sprites yet")
-func pendingArtHasNoSpritesYet() throws {
-    let kit = worktreeRoot().appendingPathComponent("Resources/Kit.atlas")
-    let committed = (try? FileManager.default.contentsOfDirectory(atPath: kit.path)) ?? []
-    for id in pendingCatalogIds.sorted() {
-        let url = worktreeRoot().appendingPathComponent("Resources/Sprites.style/catalog/\(id).md")
-        let source = try catalogSource(of: String(contentsOf: url, encoding: .utf8))
-        #expect(source == "pending", "\(id) is \(source): drop it from PendingArt")
-        let drawn = committed.filter { $0.hasPrefix(id + ".") || $0.hasPrefix(id + "@") || $0.hasPrefix(id + "-") }
-        #expect(drawn.isEmpty, "\(id) has sprites \(drawn): drop it from PendingArt")
-    }
-    let pending = try catalogFiles().filter { try catalogSource(of: String(contentsOf: $0, encoding: .utf8)) == "pending" }
-    #expect(Set(pending.map { $0.deletingPathExtension().lastPathComponent }) == pendingCatalogIds)
 }
 
 /// `source = "<value>"` from the front matter, or "" for image-API briefs.

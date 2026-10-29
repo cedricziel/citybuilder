@@ -3,11 +3,16 @@ import CityRender2D
 import Foundation
 
 /// The kinds the player may place. World-gen seeds the town center for
-/// free and fire leaves ruins, so neither is offered, and kinds still
-/// waiting for their art are hidden until it lands.
+/// free and fire leaves ruins, so neither is offered, and held kinds wait
+/// for their mechanics.
 public enum BuildPalette {
+    /// Drawn, but not offered yet: the granary waits for "drawn last"
+    /// (`add-event-counterplay` task 5.2), without which it is only a
+    /// smaller warehouse. Empty this set when 5.2 lands.
+    public static let held: Set<BuildingKind> = [.granary]
+
     public static let kinds = BuildingKind.allCases.filter {
-        $0 != .townCenter && $0 != .ruins && !PendingArt.buildingKinds.contains($0)
+        $0 != .townCenter && $0 != .ruins && !held.contains($0)
     }
 
     /// Palette kinds minus hidden ones (obsolete or other-culture buildings).
