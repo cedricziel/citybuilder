@@ -27,6 +27,27 @@ extension Validator {
         for chapter in data.chapters where owner[chapter.id] == nil {
             reporter("Chapter", chapter.id, chapter.origin)("no campaign lists this chapter")
         }
+        checkOpeningCycles(owner: owner)
+    }
+
+    /// A campaign that opens after one of its own chapters, or after a
+    /// campaign that waits on it, never opens.
+    private func checkOpeningCycles(owner: [String: String]) {
+        // A repeated campaign id is reported elsewhere; the first one counts here.
+        let waitsOn = Dictionary(data.campaigns.map { ($0.id, $0.opensAfter.flatMap { owner[$0] }) }) { first, _ in first }
+        for campaign in data.campaigns {
+            var seen: Set<String> = []
+            var next = waitsOn[campaign.id] ?? nil
+            while let current = next, seen.insert(current).inserted {
+                if current == campaign.id {
+                    reporter("Campaign", campaign.id, campaign.origin)(
+                        "never opens: `opensAfter` leads back to this campaign's own chapters"
+                    )
+                    break
+                }
+                next = waitsOn[current] ?? nil
+            }
+        }
     }
 
     func check(_ chapter: ChapterData, _ refs: References) {

@@ -236,3 +236,28 @@ func theEmitterWritesTheCampaignCatalog() throws {
     #expect(empty.contains("static let campaigns: [Campaign] = []"))
     #expect(empty.contains("static let chapters: [Chapter] = []"))
 }
+
+/// The YAML parser rejects a repeated key before any reader sees it, so
+/// the readers' `Dictionary(uniqueKeysWithValues:)` never meets one.
+@Test("a repeated key in a chapter mapping is an error, not a crash")
+func aRepeatedKeyInAChapterMappingIsAnError() {
+    let overrides = errors(
+        replacing: "overrides: { hard: { money: 600 } }",
+        with: "overrides: { hard: { money: 600 }, hard: { money: 500 } }"
+    )
+    #expect(overrides.contains { $0.contains("duplicated key(s): 'hard'") }, "\(overrides)")
+    let years = errors(replacing: "rivalAgeYears: { medieval: 1207 }", with: "rivalAgeYears: { medieval: 1207, medieval: 1208 }")
+    #expect(years.contains { $0.contains("duplicated key(s): 'medieval'") }, "\(years)")
+}
+
+@Test("a campaign that opens after its own chapter, or in a cycle, is rejected")
+func aCampaignThatCanNeverOpenIsRejected() {
+    let own = errors(replacing: "opensAfter: the-crossing", with: "opensAfter: two-shores")
+    #expect(own.contains { $0.contains("Campaign sea") && $0.contains("never open") }, "\(own)")
+    let cycle = errors(
+        replacing: "title: The Long Chronicle, chapters: [first-fires, the-crossing] }",
+        with: "title: The Long Chronicle, chapters: [first-fires, the-crossing], opensAfter: two-shores }"
+    )
+    #expect(cycle.contains { $0.contains("Campaign chronicle") && $0.contains("never open") }, "\(cycle)")
+    #expect(cycle.contains { $0.contains("Campaign sea") && $0.contains("never open") }, "\(cycle)")
+}
