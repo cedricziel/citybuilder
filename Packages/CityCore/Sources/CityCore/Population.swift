@@ -42,6 +42,9 @@ public struct HousePopulation: Hashable, Sendable {
     /// Ticks between consumption. Spec: `population-and-needs` / Houses
     /// consume food and planks.
     public static let consumptionIntervalTicks: UInt64 = 100
+    /// Draws of each next-tier need a house must find in reach to advance.
+    /// Spec: `population-and-needs` / Advancing needs stock for two draws.
+    static let advanceDraws = 2
 
     public var capacity: UInt32 {
         tier.capacity

@@ -121,6 +121,18 @@ extension World {
         return SupplyReach(buffers: buffers, roadComponents: components)
     }
 
+    /// The road network of a building at `anchor`, nil without an adjacent road.
+    func roadComponent(fromAnchor anchor: TileCoordinate, footprint: Footprint, reach: SupplyReach) -> Int? {
+        anyAdjacentRoad(anchor: anchor, footprint: footprint).flatMap { reach.roadComponents[$0] }
+    }
+
+    /// Units of `good` the operational buffers on road network `component` hold in all.
+    func stock(of good: Good, onNetwork component: Int, reach: SupplyReach) -> Int {
+        reach.buffers.reduce(0) { sum, buffer in
+            buffer.component == component ? sum + (stockpiles[buffer.id]?.quantity(of: good) ?? 0) : sum
+        }
+    }
+
     /// True if any operational buffer holding `good` is road-connected
     /// (any path) from `anchor`. M4 simplified: we just check
     /// road-connected warehouses, not a full path-finding query.

@@ -10,6 +10,7 @@ extension World {
             .sorted { $0.id.raw < $1.id.raw }
         let reach = supplyReach()
         let tracked = HouseTier.allNeeds(in: culture)
+        var advancing = AdvancePass(reach: reach)
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
@@ -17,7 +18,7 @@ extension World {
             updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
             let pastGrace = isPastGrace(pop, owner: building.owner)
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
-            updateTier(&pop, building: building, modifiers: modifiers, reach: reach, pastGrace: pastGrace)
+            updateTier(&pop, building: building, modifiers: modifiers, pastGrace: pastGrace, pass: &advancing)
             populations[building.id] = pop
         }
     }
@@ -91,14 +92,23 @@ extension World {
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
     private func updateTier(
-        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach, pastGrace: Bool
+        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, pastGrace: Bool, pass: inout AdvancePass
     ) {
-        let footprint = building.footprint
-        let canAdvance = pop.tier.next.map { next in
-            pop.population >= modifiers.capacity(of: pop.tier)
-                && bindingNeeds(of: next, for: building.owner, advancing: true)
-                .allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint, reach: reach) }
-        } ?? false
+        let network = roadComponent(fromAnchor: building.anchor, footprint: building.footprint, reach: pass.reach)
+        let held = Set(pop.tier.needs(in: culture))
+        let needs = pop.tier.next.map { bindingNeeds(of: $0, for: building.owner, advancing: true) } ?? []
+        // The needs the next tier adds must cover two draws; those the house already eats need one unit.
+        let added = Dictionary(uniqueKeysWithValues: needs.filter { !held.contains($0) }.map { good in
+            (good, HousePopulation.advanceDraws * HousePopulation.amount(of: good, residents: pop.population))
+        })
+        let canAdvance = pop.tier.next != nil && pop.population >= modifiers.capacity(of: pop.tier)
+            && network.map { network in
+                needs.allSatisfy { good in
+                    let inStock = stock(of: good, onNetwork: network, reach: pass.reach)
+                    guard let units = added[good] else { return inStock > 0 }
+                    return inStock - pass.claimed(good, on: network) >= units
+                }
+            } ?? false
         let mustDecline = pop.tier.previous != nil && pastGrace
         guard canAdvance || mustDecline else {
             pop.ticksAtTierCondition = 0
@@ -107,8 +117,9 @@ extension World {
         pop.ticksAtTierCondition &+= 1
         guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / modifiers.paceDivisor else { return }
         pop.ticksAtTierCondition = 0
-        if canAdvance, let next = pop.tier.next {
+        if canAdvance, let next = pop.tier.next, let network {
             pop.tier = next
+            pass.claim(added, on: network)
         } else if let previous = pop.tier.previous {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
@@ -126,5 +137,29 @@ extension World {
         let needs = tier.needs(in: culture)
         let clothBinds = owner == .player && (advancing || research.isResearched(.weaving))
         return clothBinds ? needs : needs.filter { $0 != .cloth }
+    }
+}
+
+/// One tick's population pass: the buffers' reach, and what houses that moved
+/// up a tier this tick claimed of each good on each road network, so a later
+/// house on the same network cannot advance on the same units (spec
+/// `population-and-needs` / Advancing needs stock for two draws). Claims move
+/// no goods and end with the pass.
+struct AdvancePass {
+    let reach: World.SupplyReach
+    private var claims: [Int: [Good: Int]] = [:]
+
+    init(reach: World.SupplyReach) {
+        self.reach = reach
+    }
+
+    func claimed(_ good: Good, on network: Int) -> Int {
+        claims[network]?[good] ?? 0
+    }
+
+    mutating func claim(_ units: [Good: Int], on network: Int) {
+        for (good, amount) in units {
+            claims[network, default: [:]][good, default: 0] += amount
+        }
     }
 }
