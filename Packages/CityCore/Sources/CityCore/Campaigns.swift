@@ -30,14 +30,17 @@ public struct ChapterStart: Hashable, Sendable {
     }
 }
 
-/// A difficulty's replacement for the scaled money or stock.
+/// A difficulty's replacement for the scaled money or stock, or for the
+/// chapter's rival age years.
 public struct ChapterStartOverride: Hashable, Sendable {
     public let money: Int64?
     public let stock: [Good: Int]?
+    public let rivalAgeYears: [Age: Int]?
 
-    public init(money: Int64? = nil, stock: [Good: Int]? = nil) {
+    public init(money: Int64? = nil, stock: [Good: Int]? = nil, rivalAgeYears: [Age: Int]? = nil) {
         self.money = money
         self.stock = stock
+        self.rivalAgeYears = rivalAgeYears
     }
 }
 

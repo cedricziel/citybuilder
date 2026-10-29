@@ -49,7 +49,8 @@ struct ChapterReader {
             deadline: lose?.int("deadline", required: false),
             race: lose?.mapping("rivalRace", required: false).map(readRace),
             collapse: lose?.int("collapse", required: false),
-            rivalAgeYears: yearsByAge(), difficulties: fields.strings("difficulties", required: false) ?? ItemSchema.difficulties,
+            rivalAgeYears: yearsByAge(fields) ?? [:],
+            difficulties: fields.strings("difficulties", required: false) ?? ItemSchema.difficulties,
             reward: reward, firstSteps: sweep?.bool("firstSteps", required: false) ?? true,
             order: sweep?.string("order", required: false), market: sweep?.bool("market", required: false) ?? true,
             kits: sweep?.strings("kits", required: false) ?? [],
@@ -112,14 +113,17 @@ struct ChapterReader {
         guard let overrides = fields.mapping("overrides", required: false) else { return [:] }
         return Dictionary(uniqueKeysWithValues: overrides.keys.compactMap { key in
             overrides.mapping(key).map { start in
-                start.finish(allowed: ["money", "stock"])
-                return (key, ChapterStartData(money: start.int("money", required: false), stock: start.amounts("stock", required: false)))
+                start.finish(allowed: ["money", "stock", "rivalAgeYears"])
+                return (key, ChapterStartData(
+                    money: start.int("money", required: false), stock: start.amounts("stock", required: false),
+                    rivalAgeYears: yearsByAge(start)
+                ))
             }
         })
     }
 
-    private func yearsByAge() -> [String: Int] {
-        guard let years = fields.mapping("rivalAgeYears", required: false) else { return [:] }
+    private func yearsByAge(_ fields: Fields) -> [String: Int]? {
+        guard let years = fields.mapping("rivalAgeYears", required: false) else { return nil }
         return Dictionary(uniqueKeysWithValues: years.keys.compactMap { key in years.int(key).map { (key, $0) } })
     }
 

@@ -54,7 +54,7 @@ struct ChapterEmitter {
         guard !overrides.isEmpty else { return "[:]" }
         return "[" + overrides.sorted { $0.key < $1.key }.map { difficulty, start in
             ".\(difficulty): ChapterStartOverride(money: \(start.money.map(String.init) ?? "nil"), "
-                + "stock: \(start.stock.map(amounts) ?? "nil"))"
+                + "stock: \(start.stock.map(amounts) ?? "nil"), rivalAgeYears: \(start.rivalAgeYears.map(years) ?? "nil"))"
         }.joined(separator: ", ") + "]"
     }
 

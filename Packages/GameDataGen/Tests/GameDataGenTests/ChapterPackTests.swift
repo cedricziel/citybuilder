@@ -180,7 +180,7 @@ func malformedChapterFieldsAreRejected() {
         (("{ residents: 24 }", "{ residents: 24, age: medieval }"), "exactly one of"),
         (("{ residents: 24 }", "{ tier: citizens }"), "exactly one of"),
         (("{ pushMineOut: 16 }", "{ pushMineOut: 16, noMountains: home }"), "exactly one of"),
-        (("{ pushMineOut: 16 }", "{ pushMineOut: 0 }"), "positive radius"),
+        (("{ pushMineOut: 16 }", "{ pushMineOut: 0 }"), "at least 8"),
         (("keep: 15", "keep: 150"), "percent"),
         (("{ noMountains: 2 }", "{ noMountains: 0 }"), "a rank from 1"),
         (("reward: { banner: Hearth }", "reward: { banner: Hearth, decor: Stone }"), "exactly one of"),
@@ -217,7 +217,7 @@ func theEmitterWritesTheCampaignCatalog() throws {
     let expected = [
         "Campaign(id: \"sea\", title: \"The Merchant Sea\", chapters: [\"two-shores\"], opensAfter: \"the-crossing\")",
         "start: ChapterStart(money: 1000, stock: [.planks: 5, .wood: 6])",
-        "overrides: [.hard: ChapterStartOverride(money: 600, stock: nil)]",
+        "overrides: [.hard: ChapterStartOverride(money: 600, stock: nil, rivalAgeYears: nil)]",
         "GoalState(goal: .buildings(.house, 3), isBonus: false, holdsForSeason: false)",
         "GoalState(goal: .population(20, atLeast: .citizens), isBonus: true, holdsForSeason: true)",
         "directives: [.thinForest(.home, keepPercent: 15), .pushMineOut(radius: 16), .noMountains(.other(rank: 2)), .raiseMineSite(.home)]",
@@ -262,8 +262,75 @@ func aCampaignThatCanNeverOpenIsRejected() {
     #expect(cycle.contains { $0.contains("Campaign sea") && $0.contains("never open") }, "\(cycle)")
 }
 
-@Test("a chapter that schedules a disabled event is rejected")
+@Test("scenario: A chapter that schedules a disabled event is rejected")
 func aChapterThatSchedulesADisabledEventIsRejected() {
     let found = errors(replacing: "    effect: fire\n", with: "    effect: fire\n    enabled: false\n")
     #expect(found.contains { $0.contains("Chapter the-crossing") && $0.contains("`fire`") && $0.contains("disabled") }, "\(found)")
+}
+
+@Test("rivals are capped at the three rival cultures")
+func rivalsAreCappedAtThree() {
+    let found = errors(replacing: "rivals: 1\n    money: 1500\n    directives", with: "rivals: 4\n    money: 1500\n    directives")
+    #expect(found.contains { $0.contains("Chapter the-crossing") && $0.contains("from 0 to 3") }, "\(found)")
+}
+
+@Test("scheduled events fall between the start year and the deadline")
+func scheduledEventsFallBetweenStartAndDeadline() {
+    for year in [1199, 1206] {
+        let found = errors(replacing: "year: 1202, season: summer", with: "year: \(year), season: summer")
+        #expect(found.contains { $0.contains("Chapter the-crossing") && $0.contains("\(year)") && $0.contains("between") }, "\(found)")
+    }
+    #expect(errors(replacing: "year: 1202, season: summer", with: "year: 1205, season: summer").isEmpty)
+}
+
+@Test("closed techs must not be researched at the start")
+func closedTechsMustNotBeResearchedAtTheStart() {
+    let researched = errors(replacing: "researched: [seafaring]", with: "researched: [seafaring]\n    closedTechs: [seafaring]")
+    #expect(
+        researched.contains { $0.contains("Chapter the-crossing") && $0.contains("`seafaring`") && $0.contains("closed") },
+        "\(researched)"
+    )
+    let granted = errors(
+        replacing: "researched: [seafaring]",
+        with: "researched: [seafaring]\n    closedTechs: [feudal-order, scholarship]"
+    )
+    #expect(granted.contains { $0.contains("`feudal-order`") && $0.contains("closed") }, "\(granted)")
+    #expect(granted.contains { $0.contains("`scholarship`") && $0.contains("closed") }, "\(granted)")
+}
+
+@Test("rival age years need rivals")
+func rivalAgeYearsNeedRivals() {
+    let found = errors(replacing: "closedBuildings: [port]", with: "closedBuildings: [port]\n    rivalAgeYears: { medieval: 1207 }")
+        + errors(replacing: "overrides: { hard: { money: 600 } }", with: "overrides: { hard: { rivalAgeYears: { medieval: 1207 } } }")
+    #expect(found.count { $0.contains("Chapter first-fires") && $0.contains("rivalAgeYears") && $0.contains("rivals") } == 2, "\(found)")
+}
+
+@Test("a campaign cannot open after a coming-later chapter")
+func aCampaignCannotOpenAfterAComingLaterChapter() {
+    let found = errors(replacing: "randomEvents: false", with: "randomEvents: false\n    comingLater: true")
+    #expect(found.contains { $0.contains("Campaign sea") && $0.contains("coming later") }, "\(found)")
+}
+
+@Test("pushing the mine out needs a radius of at least 8")
+func pushingTheMineOutNeedsARadiusOfEight() {
+    let found = errors(replacing: "{ pushMineOut: 16 }", with: "{ pushMineOut: 7 }")
+    #expect(found.contains { $0.contains("`pushMineOut`") && $0.contains("at least 8") }, "\(found)")
+    #expect(errors(replacing: "{ pushMineOut: 16 }", with: "{ pushMineOut: 8 }").isEmpty)
+}
+
+@Test("a difficulty can override the rival age years")
+func aDifficultyCanOverrideTheRivalAgeYears() throws {
+    let pack = chapterPack.replacingOccurrences(
+        of: "rivalAgeYears: { medieval: 1207 }",
+        with: "rivalAgeYears: { medieval: 1207 }\n    overrides: { hard: { rivalAgeYears: { medieval: 1205 } }, easy: { money: 2000 } }"
+    )
+    let data = try Fixtures.load(Fixtures.withExtraPack(pack)).get()
+    let source = try #require(SwiftEmitter.emit(data)["Campaign+Generated.swift"])
+    #expect(source.contains(".hard: ChapterStartOverride(money: nil, stock: nil, rivalAgeYears: [.medieval: 1205])"))
+    #expect(source.contains(".easy: ChapterStartOverride(money: 2000, stock: nil, rivalAgeYears: nil)"))
+    let unknown = errors(
+        replacing: "rivalAgeYears: { medieval: 1207 }",
+        with: "rivalAgeYears: { medieval: 1207 }\n    overrides: { hard: { rivalAgeYears: { stone: 1205 } } }"
+    )
+    #expect(unknown.contains { $0.contains("stone") }, "\(unknown)")
 }
