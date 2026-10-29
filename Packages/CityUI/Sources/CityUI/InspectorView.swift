@@ -68,6 +68,7 @@ public struct InspectorViewModel: Sendable {
         }
         let rival = building.owner.rivalID.flatMap(snapshot.rival)
         let culture = snapshot.culture(for: building.owner)
+        let issue = snapshot.buildingIssues[entityID]
         var houseLines: [String] = []
         var tier: String?
         var residentsFill: Double?
@@ -82,9 +83,8 @@ public struct InspectorViewModel: Sendable {
                 "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
             ] + Self.nextTierLine(after: pop.tier, in: culture) + houseNotes(modifiers)
-                + residentLines(house: entityID, population: pop, culture: culture)
+                + residentLines(house: entityID, population: pop, culture: culture) + shortageLine(issue)
         }
-        let issue = snapshot.buildingIssues[entityID]
         let problem = issue.map(problemText)
         let footprint = building.footprint
         let basics = [
@@ -125,7 +125,17 @@ public struct InspectorViewModel: Sendable {
         case let .missingInputs(goods):
             "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
         case let .outputStuck(good): "Output stuck: no room for \(GoodsCatalog.spec(for: good).displayName.lowercased())"
+        case let .runningShort(good, _, _):
+            "Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): residents "
+                + (issue.isDeclining ? "are leaving" : "will leave")
         }
+    }
+
+    /// How long a house has been short of a need out of the intervals it may wait. Spec:
+    /// `platform-shells` / The inspector warns of a house about to decline.
+    static func shortageLine(_ issue: BuildingIssue?) -> [String] {
+        guard case let .runningShort(good, intervals, grace)? = issue else { return [] }
+        return ["Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): \(min(intervals, grace)) of \(grace) intervals"]
     }
 }
 

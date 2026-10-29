@@ -237,6 +237,7 @@ private struct Types {
             property("capacity", "UInt32", all.map { ($0.id, "\($0.capacity)") }),
             property("needs", "[Good]", all.map { ($0.id, caseList($0.needs)) }),
             property("taxPerResident", "Int64", all.map { ($0.id, "\($0.taxPerResident)") }),
+            property("declineGrace", "Int", all.map { ($0.id, "\($0.declineGrace)") }),
             property("displayName", "String", all.map { ($0.id, literal($0.name)) })
         ])
     }

@@ -37,6 +37,7 @@ enum StatusIcons {
         case .noRoomToPlant: "status-no-room-to-plant"
         case let .missingInputs(goods): goods.first.map(short)
         case let .outputStuck(good): stuck(good)
+        case let .runningShort(good, _, _): short(good)
         }
     }
 

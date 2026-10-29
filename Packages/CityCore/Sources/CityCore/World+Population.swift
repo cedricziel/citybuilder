@@ -15,8 +15,9 @@ extension World {
             let modifiers = houseModifiers(of: building, sources: sources)
             consumeIfDue(&pop, building: building)
             updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
-            updateGrowth(&pop, owner: building.owner, modifiers: modifiers)
-            updateTier(&pop, building: building, modifiers: modifiers, reach: reach)
+            let pastGrace = isPastGrace(pop, owner: building.owner)
+            updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
+            updateTier(&pop, building: building, modifiers: modifiers, reach: reach, pastGrace: pastGrace)
             populations[building.id] = pop
         }
     }
@@ -32,8 +33,28 @@ extension World {
             let amount = HousePopulation.amount(of: good, residents: pop.population)
             let drawn = consume(good, amount: amount, by: building)
             recordHouseUse(of: good, drawn: drawn, by: building)
-            pop.setShort(good, drawn < amount)
+            pop.recordConsumption(of: good, short: drawn < amount)
         }
+        // Only a need that binds the house counts, so cloth holds no run
+        // before Weaving that would cut the grace short once it binds.
+        pop.keepShortIntervals(for: bindingNeeds(of: pop.tier, for: building.owner, advancing: false))
+    }
+
+    /// Consumption intervals in a row a need of `tier` may stay short
+    /// before a house declines. Spec: `population-and-needs` / Houses
+    /// decline only after a grace period.
+    func declineGrace(of tier: HouseTier) -> Int {
+        difficulty.declineGraceIntervals(base: tier.declineGrace)
+    }
+
+    /// A house declines only once a need that binds it has been short for
+    /// its grace. An empty house eats nothing and has no run to count, so
+    /// it falls as soon as a need is unmet and can start again.
+    private func isPastGrace(_ pop: HousePopulation, owner: Owner) -> Bool {
+        let binding = bindingNeeds(of: pop.tier, for: owner, advancing: false)
+        guard pop.population > 0 else { return !binding.allSatisfy(pop.isSatisfied) }
+        let grace = declineGrace(of: pop.tier)
+        return binding.contains { pop.shortIntervals(of: $0) >= grace }
     }
 
     /// A need is met while a buffer on the house's road network holds
@@ -49,7 +70,7 @@ extension World {
 
     /// Inspired houses grow twice as fast; a house above its capacity
     /// shrinks even with its needs met (spec `age-signatures`).
-    private func updateGrowth(_ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers) {
+    private func updateGrowth(_ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers, pastGrace: Bool) {
         pop.ticksAtCurrentSatisfaction &+= 1
         let met = bindingNeeds(of: pop.tier, for: owner, advancing: false).allSatisfy(pop.isSatisfied)
         let streak = pop.ticksAtCurrentSatisfaction
@@ -57,7 +78,7 @@ extension World {
         let growthInterval = HousePopulation.growthIntervalTicks / modifiers.paceDivisor
         let canGrow = met && streak >= growthInterval && pop.population < capacity
         let mustShrink = streak >= HousePopulation.declineIntervalTicks
-            && (pop.population > capacity || (!met && pop.population > 0))
+            && (pop.population > capacity || (pastGrace && pop.population > 0))
         if canGrow {
             pop.population &+= 1
             pop.ticksAtCurrentSatisfaction = 0
@@ -70,7 +91,7 @@ extension World {
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
     private func updateTier(
-        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach
+        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach, pastGrace: Bool
     ) {
         let footprint = building.footprint
         let canAdvance = pop.tier.next.map { next in
@@ -78,8 +99,7 @@ extension World {
                 && bindingNeeds(of: next, for: building.owner, advancing: true)
                 .allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint, reach: reach) }
         } ?? false
-        let mustDecline = pop.tier.previous != nil
-            && !bindingNeeds(of: pop.tier, for: building.owner, advancing: false).allSatisfy(pop.isSatisfied)
+        let mustDecline = pop.tier.previous != nil && pastGrace
         guard canAdvance || mustDecline else {
             pop.ticksAtTierCondition = 0
             return
@@ -93,6 +113,7 @@ extension World {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
         }
+        pop.keepShortages(for: pop.tier.needs(in: culture))
     }
 
     /// The needs of `tier` that hold a house of `owner` to it (spec
