@@ -62,12 +62,16 @@ On a rival's turn (every 80 ticks on Easy, 50 on Normal, 30 on Hard, on ticks wh
 
 ### Requirement: Rival build order
 
-A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step. The threshold rules, in order:
+A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step.
 
-- food below 4 with fewer farms than houses → farm;
+Before the threshold rules, a rival whose town center has fewer than 4 units of room, with no warehouse built or under construction and no site waiting for materials, SHALL build a warehouse if it can carry the step out. It SHALL take this step at the building cap too.
+
+The threshold rules, in order:
+
+- food below 4 and farms × 2 < houses × 3 → farm;
 - no operational or constructing sawmill, at least one lumberjack hut and fewer than 4 planks in stock → sawmill;
 - once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill;
-- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut;
+- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut, unless the rival has a forester and already at least 2 + houses / 2 lumberjack huts, counting every hut;
 - once the opening is complete and the rival has at least 4 houses, fewer foresters than lumberjack huts, counting every hut → forester.
 
 Huts with fewer than 4 forest tiles left in their catchment SHALL not count as huts in these rules.
@@ -81,7 +85,7 @@ A step SHALL be issued only when:
 
 Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut, forester and first sawmill SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
 
-House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. No step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
+House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. Lumberjack hut steps SHALL be skipped while the rival has a forester and at least 2 + houses / 2 lumberjack huts, counting every hut. Warehouse steps SHALL be skipped once the rival has a warehouse built or under construction. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
 
 #### Scenario: Opening step
 
@@ -97,6 +101,11 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 - **WHEN** a rival past its opening with 5 houses, 4 farms and 2 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm
+
+#### Scenario: Three farms for every two houses
+
+- **WHEN** a rival past its opening with 4 houses, 5 farms and 2 food in stock takes a turn while its script points at a house
+- **THEN** it places a farm, while with 6 farms it does not
 
 #### Scenario: Waiting for money
 
@@ -132,6 +141,31 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 - **WHEN** a Normal rival with 24 houses reaches a house step
 - **THEN** it skips the step and takes the next one
+
+#### Scenario: Replanting towns keep their huts
+
+- **WHEN** a rival past its opening with 4 houses, a forester, 2 wood and 4 lumberjack huts whose forest is cut takes a turn
+- **THEN** it does not place a lumberjack hut, while without the forester it does
+
+#### Scenario: A full town center gets a warehouse
+
+- **WHEN** a rival past its opening with no warehouse, 2 units of room in its town center, 6 food and enough money takes a turn
+- **THEN** it places a warehouse, while with room for 12 more units it does not
+
+#### Scenario: The building cap does not stop a first warehouse
+
+- **WHEN** a Normal rival at the building cap, with no warehouse, 2 units of room in its town center and enough money takes a turn
+- **THEN** it places a warehouse, while a rival that already has a warehouse issues no commands
+
+#### Scenario: Script hut steps stop at the hut limit
+
+- **WHEN** a rival with 8 houses, 6 foresters and 6 lumberjack huts takes a turn while its script points at a lumberjack hut
+- **THEN** it skips the step and places the house that follows, while with 5 huts it places the hut
+
+#### Scenario: One warehouse per town
+
+- **WHEN** a rival that already has a warehouse takes a turn while its script points at the opening's warehouse
+- **THEN** it skips the step and places the house that follows
 
 #### Scenario: Building cap ignores foresters and roads
 
@@ -248,13 +282,14 @@ The game SHALL offer a fourth built-in scenario, Island Rivalry: Medieval, Norma
 
 ### Requirement: Rival market trades
 
-A rival SHALL trade at its own town center's market in three cases.
+A rival SHALL trade at its own town center's market in four cases.
 
 1. **Unblock.** When a step it takes (a threshold rule or a script step) lacks only wood or planks that its own huts and sawmill cannot supply, and the treasury covers the purchase, the step and $50, the rival SHALL buy the shortfall in the same batch, ahead of the step's roads and building, so no carrier takes the goods first. A step that its huts or sawmill can still supply SHALL be placed without a purchase and SHALL wait for their delivery, because the market charges 150%. A rival at the building cap, or on a house step at the house cap, takes no step and so buys nothing for one.
 2. **Pay debts or clear the store.** On its turn, before the threshold rules, while the treasury is below $150, or its town center has fewer than 4 units of room and food is below 4, the rival SHALL sell every unit above 12 of planks, then wood, then food, one good per turn. The trade takes the turn.
-3. **Feed.** On its turn, before the threshold rules, while food is below 4, one of the rival's houses is short of food and the treasury is at least $300, the rival SHALL buy up to 5 food. The trade takes the turn.
+3. **Sell surplus.** On its turn, before the threshold rules, while its goods buffers together have fewer than 40 units of room, the rival SHALL sell every unit above 60 of planks, then wood, one good per turn. The trade takes the turn.
+4. **Feed.** On its turn, before the threshold rules, while food is below 4, one of the rival's houses is short of food and the treasury is at least $300, the rival SHALL buy up to 5 food. The trade takes the turn.
 
-Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
+Rival trades SHALL use the player's market prices. They SHALL count against seasonal limits kept per rival, which reset when the season changes and persist in saves. They SHALL be applied at the next tick boundary through the command queue. Bought goods SHALL go into the rival's town center, and sold goods SHALL come from the rival's goods buffers. The units a sale keeps or sells SHALL be counted in the rival's own operational goods buffers, not in the player's stores on the same island. A rival SHALL NOT buy more than its town center has room for, so a full town center never costs it its turn. A rival trade SHALL NOT change the player's balance, stock or market counts, and SHALL NOT emit `marketTraded`.
 
 #### Scenario: Rival buys the planks it is missing
 
@@ -270,6 +305,16 @@ Rival trades SHALL use the player's market prices. They SHALL count against seas
 
 - **WHEN** a rival with $5,000 and a town center holding 38 planks and 2 food takes a turn
 - **THEN** it sells 20 planks, the seasonal limit
+
+#### Scenario: Rival sells surplus planks from crowded stores
+
+- **WHEN** a rival with $5,000, 10 food and 90 planks, whose town center and warehouse together have 30 units of room, takes a turn
+- **THEN** it sells 20 planks, the seasonal limit, while with 50 units of room it sells none
+
+#### Scenario: Rival sales count only its own stores
+
+- **WHEN** a rival with $5,000, crowded stores holding 70 of its own planks, and a player warehouse on its island holding 100 planks takes a turn
+- **THEN** it sells 10 planks
 
 #### Scenario: Rival buys food for short houses
 
