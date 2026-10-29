@@ -1,7 +1,8 @@
 import SceneKit
 
 /// The rules every recipe obeys at every stage and in every moving-part frame (design D3): no lights
-/// of its own, no glowing material, and only materials from the shared finish set. `isokit check` and the tests both run them.
+/// of its own, no glowing material, only materials from the shared finish set, and the self-lit flame
+/// in effects only. `isokit check` and the tests both run them.
 public enum RecipeRules {
     /// Every node tree a recipe can produce: each stage, and each moving-part frame.
     static func builds(of recipe: Recipe) -> [(label: String, root: SCNNode)] {
@@ -24,6 +25,9 @@ public enum RecipeRules {
                     problems.append("\(recipe.id) \(label): adds a light")
                 }
                 for material in node.geometry?.materials ?? [] {
+                    if Finish.isFlame(material), !recipe.id.hasPrefix("effect-") {
+                        problems.append("\(recipe.id) \(label): material \(Finish.flameName) is self-lit outside an effect")
+                    }
                     if !Finish.isShared(material) {
                         problems.append("\(recipe.id) \(label): material \(material.name ?? "unnamed") is outside the finish set")
                     }

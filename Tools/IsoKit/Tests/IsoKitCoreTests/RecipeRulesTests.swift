@@ -50,6 +50,20 @@ struct RecipeRulesTests {
         #expect(RecipeRules.problems(in: lamp).contains { $0.contains("glows") })
     }
 
+    /// Flames light themselves, so a fire reads at night; only an effect may burn, never a building.
+    @Test("scenario: Only effects may use the self-lit flame finish")
+    func onlyEffectsBurn() {
+        func recipe(_ id: String) -> Recipe {
+            Recipe(id: id, cell: SpriteCell(footprint: 1, heightPx: 64), constructionFrames: 0) { kit, _ in
+                kit.block(SCNVector3(1, 0, 1), SCNVector3(3, 2, 3), .flame(.orange))
+            }
+        }
+        #expect(RecipeRules.problems(in: recipe("effect-test-fire")).isEmpty)
+        #expect(RecipeRules.problems(in: recipe("building-test-fire")) == [
+            "building-test-fire finished: material finish:flame is self-lit outside an effect"
+        ])
+    }
+
     @Test("every shipped recipe passes the rules at every stage and moving-part frame")
     func shippedRecipesPassTheRules() {
         #expect(Recipes.all.flatMap(RecipeRules.problems).isEmpty)
