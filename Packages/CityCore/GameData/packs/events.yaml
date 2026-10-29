@@ -28,9 +28,12 @@ items:
       ignition:
         title: Fire!
         text: "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
+      ignitionCovered:
+        title: Fire!
+        text: "A {building} is burning. A fire watch in reach sends its watchman to put it out."
       end:
         title: The fires are out
-        text: "{buildings} burnt down. Clear the ruins with Demolish."
+        text: "{buildings} burnt down. Select the ruins and choose Clear ruins."
       endNoLoss:
         title: The fires are out
         text: Nothing was lost.

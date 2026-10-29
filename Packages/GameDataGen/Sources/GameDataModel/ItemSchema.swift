@@ -44,7 +44,9 @@ public enum ItemSchema {
     /// Difficulties in the order the `weight` mapping lists them.
     public static let difficulties = ["easy", "normal", "hard"]
     /// The banners an event can show, in the order they are emitted.
-    public static let eventBanners = ["warning", "onset", "ignition", "end", "endNoLoss", "endNoFire", "request", "held", "missed"]
+    public static let eventBanners = [
+        "warning", "onset", "ignition", "ignitionCovered", "end", "endNoLoss", "endNoFire", "request", "held", "missed"
+    ]
     public static let orderIssuers: Set<String> = ["crown", "rival"]
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]
     public static let terrainTypes: Set<String> = ["grass", "forest", "beach", "water", "mountain"]

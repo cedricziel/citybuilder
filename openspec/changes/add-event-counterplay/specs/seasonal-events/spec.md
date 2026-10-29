@@ -189,8 +189,9 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | Event | Banner | Title | Text |
 |---|---|---|---|
 | fire | warning | Dry {season} ahead | Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames. |
-| fire | each ignition | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
-| fire | end, losses | The fires are out | {buildings} burnt down. Clear the ruins with Demolish. |
+| fire | each ignition, no fire watch would answer it | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
+| fire | each ignition, a fire watch would answer it | Fire! | A {building} is burning. A fire watch in reach sends its watchman to put it out. |
+| fire | end, losses | The fires are out | {buildings} burnt down. Select the ruins and choose Clear ruins. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
 | fire | end, no fire broke out | The dry spell is over | No fire broke out. |
 | blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield half. Fill a granary, or buy food at the market. |

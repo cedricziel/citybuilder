@@ -14,7 +14,7 @@ public enum SeasonalEffect: String, Codable, Sendable {
 
 /// The moments a seasonal event shows a banner.
 public enum SeasonalBannerKind: String, Codable, Sendable {
-    case warning, onset, ignition, end, endNoLoss, endNoFire, request, held, missed
+    case warning, onset, ignition, ignitionCovered, end, endNoLoss, endNoFire, request, held, missed
 }
 
 /// A banner's title and text, with placeholders CityUI fills.
