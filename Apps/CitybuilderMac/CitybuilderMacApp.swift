@@ -15,6 +15,7 @@ struct CitybuilderMacApp: App {
     /// fullscreen by default + remembers user-driven transitions.
     private let fullscreenTracker: MacFullscreenTracker
     private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
+    private let campaignProgress = CampaignProgressStore.make()
     /// Stable slot used by Continue + pause-menu Save. Spec
     /// `add-title-screen-and-new-game` design D6.
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
@@ -118,6 +119,7 @@ struct CitybuilderMacApp: App {
                         onQuit: { MacAppTerminator.terminate() }
                     )
                 },
+                campaignProgress: campaignProgress,
                 titleSettings: { TitleSettingsSheet(audio: audio) }
             )
             .frame(minWidth: 900, minHeight: 600)

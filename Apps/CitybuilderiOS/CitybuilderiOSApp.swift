@@ -9,6 +9,7 @@ import SwiftUI
 struct CitybuilderiOSApp: App {
     private let audio: AudioStack
     private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
+    private let campaignProgress = CampaignProgressStore.make()
     /// Stable slot used by Continue + pause-menu Save. The title-screen
     /// flow reads this UUID when the player taps Continue; the in-game
     /// Save Game button writes to it. Spec
@@ -115,6 +116,7 @@ struct CitybuilderiOSApp: App {
                         }
                     )
                 },
+                campaignProgress: campaignProgress,
                 inGameSettings: { AudioSettingsSheet(audio: audio) },
                 titleSettings: { AudioSettingsSheet(audio: audio) }
             )

@@ -28,7 +28,8 @@ extension GameSession {
     /// events show a banner, Age changes show a banner, Game-over banner
     /// and tools.
     public var banner: SessionBanner? {
-        if isGameOver { return Self.gameOverBanner }
+        // A chapter's lost card says it instead; one card, not two.
+        if isGameOver { return chapterCard == nil ? Self.gameOverBanner : nil }
         if let deficitHint { return deficitHint }
         guard let state = bannerState, world.tickCount < state.hidesAtTick else { return nil }
         return state.banner
@@ -53,9 +54,8 @@ extension GameSession {
                 cancelPendingPlacement()
                 tileMenuRequest = nil
                 routeAuthoring = nil
-            case .scenarioWon:
-                show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
-                isWinSheetPresented = true
+            case .scenarioWon, .scenarioLost:
+                noteScenarioEnd(event)
             case let .fuelRanOut(_, kind):
                 let fuel = kind.fuel.map(InspectorViewModel.fuelName) ?? "fuel"
                 show(SessionBanner(
@@ -386,6 +386,23 @@ struct SessionBannerView: View {
             .padding(.horizontal, 24)
             .panelTransition(.slide(.top))
             .accessibilityElement(children: onResume == nil ? .combine : .contain)
+        }
+    }
+}
+
+extension GameSession {
+    /// A win shows the ending card in a chapter, else the win sheet; a
+    /// loss shows the lost card in a chapter.
+    func noteScenarioEnd(_ event: WorldEvent) {
+        switch event {
+        case .scenarioWon:
+            guard !noteChapterWin() else { return }
+            show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
+            isWinSheetPresented = true
+        case let .scenarioLost(reason):
+            noteChapterLoss(reason)
+        default:
+            break
         }
     }
 }

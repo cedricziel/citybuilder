@@ -17,10 +17,13 @@ public struct TitleScreenHost: View {
     public init(
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
-        pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil }
+        pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
+        campaignProgress: CampaignProgressModel = CampaignProgressModel()
     ) {
         _viewModel = State(
-            initialValue: TitleScreenViewModel(saveStore: saveStore, sessionFactory: sessionFactory)
+            initialValue: TitleScreenViewModel(
+                saveStore: saveStore, sessionFactory: sessionFactory, campaignProgress: campaignProgress
+            )
         )
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = nil
@@ -33,10 +36,13 @@ public struct TitleScreenHost: View {
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
         pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
+        campaignProgress: CampaignProgressModel = CampaignProgressModel(),
         @ViewBuilder titleSettings: @escaping () -> some View
     ) {
         _viewModel = State(
-            initialValue: TitleScreenViewModel(saveStore: saveStore, sessionFactory: sessionFactory)
+            initialValue: TitleScreenViewModel(
+                saveStore: saveStore, sessionFactory: sessionFactory, campaignProgress: campaignProgress
+            )
         )
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = nil
@@ -50,6 +56,7 @@ public struct TitleScreenHost: View {
         sessionFactory: @escaping GameSessionFactory,
         pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
         cloudSync: TitleScreenCloudSync? = nil,
+        campaignProgress: CampaignProgressModel = CampaignProgressModel(),
         @ViewBuilder inGameSettings: @escaping () -> some View,
         @ViewBuilder titleSettings: @escaping () -> some View
     ) {
@@ -57,7 +64,8 @@ public struct TitleScreenHost: View {
             initialValue: TitleScreenViewModel(
                 saveStore: saveStore,
                 sessionFactory: sessionFactory,
-                cloudSync: cloudSync
+                cloudSync: cloudSync,
+                campaignProgress: campaignProgress
             )
         )
         self.pauseMenuFactory = pauseMenuFactory

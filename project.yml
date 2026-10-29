@@ -42,6 +42,7 @@ targets:
     platform: iOS
     sources:
       - path: Apps/CitybuilderiOS
+      - path: Apps/Shared
       - path: Resources/Kit.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas
@@ -113,6 +114,7 @@ targets:
     platform: macOS
     sources:
       - path: Apps/CitybuilderMac
+      - path: Apps/Shared
       - path: Resources/Kit.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas
@@ -169,6 +171,7 @@ targets:
     platform: tvOS
     sources:
       - path: Apps/CitybuilderTV
+      - path: Apps/Shared
       - path: Resources/Kit.atlas
         buildPhase: resources
       - path: Resources/Icons.atlas

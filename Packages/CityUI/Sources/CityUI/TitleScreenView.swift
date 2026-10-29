@@ -38,7 +38,9 @@ public struct TitleScreenView: View {
 
     public var body: some View {
         ZStack {
-            TitleBackdrop(active: !viewModel.presentingNewGameDialog && !viewModel.presentingSettings)
+            TitleBackdrop(
+                active: !viewModel.presentingNewGameDialog && !viewModel.presentingSettings && viewModel.chapterSelect == nil
+            )
             scrim
             menu
                 // The menu sits on a dark scrim in either appearance.
@@ -47,7 +49,7 @@ public struct TitleScreenView: View {
         .onAppear { entered = true }
         #if os(tvOS)
         // tvOS sheets are translucent; hide the title behind them.
-        .opacity(viewModel.presentingNewGameDialog || viewModel.presentingSettings ? 0 : 1)
+        .opacity(viewModel.presentingNewGameDialog || viewModel.presentingSettings || viewModel.chapterSelect != nil ? 0 : 1)
         #endif
         // Continue and New Game are disabled while iCloud is checked.
         .tvDefaultFocus($focusedButton, primaryButton, enabled: !viewModel.isPreparingCloudSaves)
@@ -89,6 +91,19 @@ public struct TitleScreenView: View {
         } message: {
             Text((viewModel.saveConflictFailure.map { $0 + "\n\n" } ?? "")
                 + "Load the newer save from iCloud, or keep the save on this device and replace the iCloud copy.")
+        }
+        .sheet(isPresented: Binding(
+            get: { viewModel.chapterSelect != nil },
+            set: { if !$0 { viewModel.dismissCampaigns() } }
+        )) {
+            if let model = viewModel.chapterSelect {
+                ChapterSelectView(
+                    model: model,
+                    onStart: { chapter, world in viewModel.startChapter(chapter, world: world) },
+                    onClose: { viewModel.dismissCampaigns() }
+                )
+                .frame(minWidth: 720, minHeight: 520)
+            }
         }
         .sheet(isPresented: $viewModel.presentingSettings) {
             if let content = settingsContent {
@@ -157,12 +172,20 @@ public struct TitleScreenView: View {
                 .accessibilityIdentifier("title.newGame")
                 .menuEntrance(2, entered: entered)
 
+                Button("Campaigns") {
+                    viewModel.campaignsRequested()
+                }
+                .titleMenuButtonStyle()
+                .disabled(viewModel.isPreparingCloudSaves)
+                .accessibilityIdentifier("title.campaigns")
+                .menuEntrance(3, entered: entered)
+
                 Button("Settings") {
                     viewModel.settingsRequested()
                 }
                 .titleMenuButtonStyle()
                 .accessibilityIdentifier("title.settings")
-                .menuEntrance(3, entered: entered)
+                .menuEntrance(4, entered: entered)
 
                 #if os(macOS)
                 Button("Quit") {
@@ -170,7 +193,7 @@ public struct TitleScreenView: View {
                 }
                 .titleMenuButtonStyle()
                 .accessibilityIdentifier("title.quit")
-                .menuEntrance(4, entered: entered)
+                .menuEntrance(5, entered: entered)
                 #endif
             }
             .padding(.bottom, 40)

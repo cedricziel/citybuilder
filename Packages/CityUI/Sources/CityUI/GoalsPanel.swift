@@ -1,8 +1,9 @@
 import CityCore
 import SwiftUI
 
-/// Rows for the scenario goals panel. Spec: `platform-shells` / Goals
-/// panel and win sheet.
+/// Rows for the scenario goals panel: goals, bonus goals, and in a chapter
+/// the time left and any rival race. Spec: `platform-shells` / Goals panel
+/// and win sheet, Goals panel shows bonus goals and limits.
 public struct GoalsPanelModel: Equatable {
     public struct Row: Equatable, Identifiable {
         public let id: Int
@@ -10,42 +11,97 @@ public struct GoalsPanelModel: Equatable {
         public let isMet: Bool
     }
 
+    /// A rival race: the player's standing beside the leading rival's.
+    public struct Race: Equatable {
+        public let title: String
+        public let player: String
+        public let rival: String
+    }
+
     public let rows: [Row]
+    public let bonusRows: [Row]
+    /// "1 year, 2 seasons left" before the deadline.
+    public let deadline: String?
+    public let race: Race?
 
     public init(world: World) {
-        rows = world.goals.enumerated().map { index, state in
-            Row(id: index, text: Self.text(for: state.goal, in: world), isMet: state.isMet)
+        let rows = world.goals.enumerated().map { index, state in
+            (state.isBonus, Row(id: index, text: Self.text(for: state, in: world), isMet: state.isMet))
         }
+        self.rows = rows.filter { !$0.0 }.map(\.1)
+        bonusRows = rows.filter(\.0).map(\.1)
+        let lose = world.loseConditions.map(\.condition)
+        deadline = lose.lazy.compactMap { condition -> Int? in
+            if case let .deadline(year) = condition { return year }
+            return nil
+        }.first.map { ChapterText.timeLeft(until: $0, from: world.date) }
+        race = world.loseConditions.lazy.compactMap { Self.race($0, in: world) }.first
+    }
+
+    static func text(for state: GoalState, in world: World) -> String {
+        let text = text(for: state.goal, in: world)
+        guard state.holdsForSeason, !state.isMet else { return text }
+        return text + (state.heldSince == nil ? " · hold a season" : " · holding")
     }
 
     static func text(for goal: Goal, in world: World) -> String {
         let progress = world.progress(toward: goal)
+        let count = "\(progress.current)/\(progress.target)"
+        let amount = "\(ChapterText.money(progress.current))/\(ChapterText.money(progress.target))"
         switch goal {
         case let .population(_, tier):
             let label = tier == .peasants ? "Residents" : tier.displayName(in: world.culture)
-            return "\(label) \(progress.current)/\(progress.target)"
+            return "\(label) \(count)"
         case let .age(age):
             return "Reach the \(age.displayName) age"
         case let .stock(good, _):
-            return "\(GoodsCatalog.spec(for: good).displayName) \(progress.current)/\(progress.target)"
+            return "\(GoodsCatalog.spec(for: good).displayName) \(count)"
         case .outgrowRivals:
-            return "Outgrow every rival \(progress.current)/\(progress.target)"
+            return "Outgrow every rival \(count)"
         case .orders:
-            return "Fulfil orders \(progress.current)/\(progress.target)"
+            return "Orders fulfilled \(count)"
         case let .buildings(kind, _):
-            return "\(kind.displayName) \(progress.current)/\(progress.target)"
+            return "\(kind.displayName) \(count)"
         case .signatureProjects:
-            return "Signature projects \(progress.current)/\(progress.target)"
+            return "Signature projects \(count)"
         case let .research(tech):
             return "Research \(tech.displayName)"
         case .treasury:
-            return "Treasury $\(progress.current)/$\(progress.target)"
+            return "Treasury \(amount)"
         case .netIncome:
-            return "Net income last season $\(progress.current)/$\(progress.target)"
+            return "Net income last season \(amount)"
         case .tradeEarnings:
-            return "Trade earnings $\(progress.current)/$\(progress.target)"
+            return "Earned from trade \(amount)"
         case let .landedByShip(good, _):
-            return "\(GoodsCatalog.spec(for: good).displayName) landed at home \(progress.current)/\(progress.target)"
+            return "\(GoodsCatalog.spec(for: good).displayName) landed at home \(count)"
+        }
+    }
+
+    /// The race while it can still be lost: the player's standing and the
+    /// leading rival's, measured the same way.
+    static func race(_ state: LoseConditionState, in world: World) -> Race? {
+        guard case let .rivalRace(target) = state.condition, !state.settled else { return nil }
+        switch target {
+        case let .age(age):
+            let need = age.rivalResidents
+            let standing = { (rival: RivalTown) in rival.age >= age ? need : min(world.population(of: rival.owner), need) }
+            guard let leader = world.rivals.max(by: { (standing($0), -Int($0.id)) < (standing($1), -Int($1.id)) }) else {
+                return nil
+            }
+            return Race(
+                title: "First to the \(age.displayName)",
+                player: "You: \(world.age.displayName)",
+                rival: "\(leader.name) \(standing(leader))/\(need)"
+            )
+        case let .population(count, tier):
+            let standing = { (owner: Owner) in world.residents(of: owner, atLeast: tier) }
+            guard let leader = world.rivals.max(by: { (standing($0.owner), -Int($0.id)) < (standing($1.owner), -Int($1.id)) })
+            else { return nil }
+            return Race(
+                title: "First to \(count) residents",
+                player: "You \(standing(.player))/\(count)",
+                rival: "\(leader.name) \(standing(leader.owner))/\(count)"
+            )
         }
     }
 }
@@ -54,11 +110,30 @@ struct GoalsPanelView: View {
     let model: GoalsPanelModel
     let done: () -> Void
 
+    private func goalRow(_ row: GoalsPanelModel.Row) -> some View {
+        Label(row.text, systemImage: row.isMet ? "checkmark.circle.fill" : "circle")
+            .foregroundStyle(row.isMet ? .green : .primary)
+    }
+
     var body: some View {
         NavigationStack {
-            List(model.rows) { row in
-                Label(row.text, systemImage: row.isMet ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(row.isMet ? .green : .primary)
+            List {
+                Section {
+                    ForEach(model.rows) { row in goalRow(row) }
+                    if let deadline = model.deadline {
+                        Label(deadline, systemImage: "hourglass").foregroundStyle(.secondary)
+                    }
+                }
+                if !model.bonusRows.isEmpty {
+                    Section("Bonus · one laurel each") {
+                        ForEach(model.bonusRows) { row in goalRow(row) }
+                    }
+                }
+                if let race = model.race {
+                    Section(race.title) {
+                        LabeledContent(race.player, value: race.rival)
+                    }
+                }
             }
             .navigationTitle("Goals")
             .toolbar {
