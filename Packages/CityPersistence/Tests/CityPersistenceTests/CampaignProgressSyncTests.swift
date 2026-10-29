@@ -59,3 +59,32 @@ func scenarioDeletingASaveKeepsProgress() async throws {
     let reloaded = CampaignProgressSync(store: InMemoryCloudKeyValueStore(available: false), defaults: defaults)
     #expect(reloaded.progress.won["c1"] != nil)
 }
+
+@Test("an external change merges the cloud copy and reports it")
+func anExternalChangeMergesTheCloudCopy() async {
+    let store = InMemoryCloudKeyValueStore(available: true)
+    let phone = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
+    let tablet = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
+    let center = NotificationCenter()
+    let name = Notification.Name("test.campaign.change")
+    let (stream, continuation) = AsyncStream.makeStream(of: CampaignProgress.self)
+    let token = phone.observeExternalChanges(center: center, name: name) { continuation.yield($0) }
+    await tablet.recordWin(of: chapter("c1"), difficulty: .hard, laurels: 1)
+    center.post(name: name, object: nil)
+    var iterator = stream.makeAsyncIterator()
+    let merged = await iterator.next()
+    #expect(merged?.won["c1"] == ChapterRecord(difficulty: .hard, laurels: 1))
+    center.removeObserver(token)
+    #expect(CampaignProgressSync.externalChangeNotification == NSUbiquitousKeyValueStore.didChangeExternallyNotification)
+}
+
+@Test("the iCloud store holds data and ignores other values")
+func theICloudStoreHoldsData() async {
+    let store = UbiquitousKeyValueStore(store: NSUbiquitousKeyValueStore())
+    let key = "test.campaign.\(UUID().uuidString)"
+    await store.set(Data("x".utf8), forKey: key)
+    await store.set(3, forKey: key + ".int")
+    #expect(await store.value(forKey: key + ".int") == nil)
+    _ = await store.synchronize()
+    #expect(await store.isAvailable())
+}

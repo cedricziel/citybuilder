@@ -49,6 +49,32 @@ public final class CampaignProgressSync: @unchecked Sendable {
         save(progress.merged(with: remote))
     }
 
+    /// Pulls and merges whenever `center` posts `name`, which defaults to
+    /// iCloud's external-change notification, then hands the merged copy
+    /// to `onChange`. Keep the returned token as long as the observation
+    /// should last.
+    public func observeExternalChanges(
+        center: NotificationCenter = .default,
+        name: Notification.Name = CampaignProgressSync.externalChangeNotification,
+        onChange: @escaping @Sendable (CampaignProgress) async -> Void
+    ) -> any NSObjectProtocol {
+        center.addObserver(forName: name, object: nil, queue: nil) { [self] _ in
+            Task {
+                await pullCloudToLocal()
+                await onChange(progress)
+            }
+        }
+    }
+
+    /// iCloud's notice that the key-value store changed on another device.
+    public static var externalChangeNotification: Notification.Name {
+        #if canImport(Foundation) && !os(Linux)
+        NSUbiquitousKeyValueStore.didChangeExternallyNotification
+        #else
+        Notification.Name("CampaignProgressSync.externalChange")
+        #endif
+    }
+
     private func save(_ progress: CampaignProgress) {
         defaults.set(Self.encode(progress), forKey: Self.key)
     }
