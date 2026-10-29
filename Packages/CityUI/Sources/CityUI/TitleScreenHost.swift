@@ -17,11 +17,13 @@ public struct TitleScreenHost: View {
     public init(
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
-        pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil }
+        pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
+        campaignProgress: CampaignProgressModel = CampaignProgressModel()
     ) {
-        _viewModel = State(
-            initialValue: TitleScreenViewModel(saveStore: saveStore, sessionFactory: sessionFactory)
-        )
+        _viewModel = State(initialValue: Self.makeViewModel(
+            saveStore: saveStore, sessionFactory: sessionFactory, pauseMenuFactory: pauseMenuFactory,
+            cloudSync: nil, campaignProgress: campaignProgress
+        ))
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = nil
         self.titleSettingsContent = nil
@@ -33,11 +35,13 @@ public struct TitleScreenHost: View {
         saveStore: SaveStoreFacade,
         sessionFactory: @escaping GameSessionFactory,
         pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
+        campaignProgress: CampaignProgressModel = CampaignProgressModel(),
         @ViewBuilder titleSettings: @escaping () -> some View
     ) {
-        _viewModel = State(
-            initialValue: TitleScreenViewModel(saveStore: saveStore, sessionFactory: sessionFactory)
-        )
+        _viewModel = State(initialValue: Self.makeViewModel(
+            saveStore: saveStore, sessionFactory: sessionFactory, pauseMenuFactory: pauseMenuFactory,
+            cloudSync: nil, campaignProgress: campaignProgress
+        ))
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = nil
         self.titleSettingsContent = { AnyView(titleSettings()) }
@@ -50,19 +54,33 @@ public struct TitleScreenHost: View {
         sessionFactory: @escaping GameSessionFactory,
         pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig? = { _ in nil },
         cloudSync: TitleScreenCloudSync? = nil,
+        campaignProgress: CampaignProgressModel = CampaignProgressModel(),
         @ViewBuilder inGameSettings: @escaping () -> some View,
         @ViewBuilder titleSettings: @escaping () -> some View
     ) {
-        _viewModel = State(
-            initialValue: TitleScreenViewModel(
-                saveStore: saveStore,
-                sessionFactory: sessionFactory,
-                cloudSync: cloudSync
-            )
-        )
+        _viewModel = State(initialValue: Self.makeViewModel(
+            saveStore: saveStore, sessionFactory: sessionFactory, pauseMenuFactory: pauseMenuFactory,
+            cloudSync: cloudSync, campaignProgress: campaignProgress
+        ))
         self.pauseMenuFactory = pauseMenuFactory
         self.inGameSettingsContent = { AnyView(inGameSettings()) }
         self.titleSettingsContent = { AnyView(titleSettings()) }
+    }
+
+    /// The view-model, saving through the pause menu's Save Game when a
+    /// chapter card leaves a game.
+    private static func makeViewModel(
+        saveStore: SaveStoreFacade,
+        sessionFactory: @escaping GameSessionFactory,
+        pauseMenuFactory: @escaping @MainActor (GameSession) -> PauseMenuConfig?,
+        cloudSync: TitleScreenCloudSync?,
+        campaignProgress: CampaignProgressModel
+    ) -> TitleScreenViewModel {
+        let viewModel = TitleScreenViewModel(
+            saveStore: saveStore, sessionFactory: sessionFactory, cloudSync: cloudSync, campaignProgress: campaignProgress
+        )
+        viewModel.saveGame = { session in try pauseMenuFactory(session)?.onSaveGame() }
+        return viewModel
     }
 
     public var body: some View {

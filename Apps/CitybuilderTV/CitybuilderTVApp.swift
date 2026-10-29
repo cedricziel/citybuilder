@@ -10,6 +10,7 @@ struct CitybuilderTVApp: App {
     private let audio: AudioStack
     private let saveStore: SaveStore
     private let saveSync: TVSaveSync
+    private let campaignProgress = CampaignProgressStore.make()
     @Environment(\.scenePhase) private var scenePhase
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
@@ -134,6 +135,7 @@ struct CitybuilderTVApp: App {
                         }
                     }
                 ),
+                campaignProgress: campaignProgress,
                 inGameSettings: { SettingsSheet(audio: audio) },
                 titleSettings: { SettingsSheet(audio: audio) }
             )

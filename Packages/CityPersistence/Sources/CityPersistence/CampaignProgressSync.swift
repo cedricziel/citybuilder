@@ -3,8 +3,10 @@ import Foundation
 
 /// Keeps campaign progress in UserDefaults, apart from world saves, and
 /// merges it through the iCloud key-value store (`add-campaigns` D8).
-/// Spec: `campaigns` / Campaign progress is a profile record.
-public final class CampaignProgressSync: @unchecked Sendable {
+/// Spec: `campaigns` / Campaign progress is a profile record. An actor, so
+/// a win and a pull from another device never read and write the record
+/// at once.
+public actor CampaignProgressSync {
     public static let key = "campaign.progress"
 
     private let store: CloudKeyValueStore
@@ -47,6 +49,32 @@ public final class CampaignProgressSync: @unchecked Sendable {
         let stored = await store.value(forKey: Self.key) as? Data
         guard let remote = Self.decode(stored) else { return }
         save(progress.merged(with: remote))
+    }
+
+    /// Pulls and merges whenever `center` posts `name`, which defaults to
+    /// iCloud's external-change notification, then hands the merged copy
+    /// to `onChange`. Keep the returned token as long as the observation
+    /// should last.
+    public nonisolated func observeExternalChanges(
+        center: NotificationCenter = .default,
+        name: Notification.Name = CampaignProgressSync.externalChangeNotification,
+        onChange: @escaping @Sendable (CampaignProgress) async -> Void
+    ) -> any NSObjectProtocol {
+        center.addObserver(forName: name, object: nil, queue: nil) { [self] _ in
+            Task {
+                await pullCloudToLocal()
+                await onChange(progress)
+            }
+        }
+    }
+
+    /// iCloud's notice that the key-value store changed on another device.
+    public nonisolated static var externalChangeNotification: Notification.Name {
+        #if canImport(Foundation) && !os(Linux)
+        NSUbiquitousKeyValueStore.didChangeExternallyNotification
+        #else
+        Notification.Name("CampaignProgressSync.externalChange")
+        #endif
     }
 
     private func save(_ progress: CampaignProgress) {

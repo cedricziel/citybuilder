@@ -58,8 +58,9 @@ func campaignGoalRowText() {
         .netIncome(100), .tradeEarnings(300), .landedByShip(.ore, 30), .orders(2)
     ].map { GoalsPanelModel.text(for: $0, in: world) }
     let expected = [
-        "Windmill 0/2", "Signature projects 0/1", "Research Metallurgy", "Treasury $1500/$1200",
-        "Net income last season $0/$100", "Trade earnings $0/$300", "Ore landed at home 0/30", "Fulfil orders 0/2"
+        "Windmill 0/2", "Signature projects 0/1", "Research Metallurgy",
+        "Treasury \(HUDViewModel.formatMoney(1500, locale: .current))/\(HUDViewModel.formatMoney(1200, locale: .current))",
+        "Net income last season $0/$100", "Earned from trade $0/$300", "Ore landed at home 0/30", "Orders fulfilled 0/2"
     ]
     #expect(texts == expected)
 }
