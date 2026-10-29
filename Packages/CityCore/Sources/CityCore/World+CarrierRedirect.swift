@@ -55,7 +55,7 @@ extension World {
         func pathTo(_ building: Building) -> [TileCoordinate]? {
             guard building.id != mission.destination, let pile = stockpiles[building.id],
                   pile.room(for: mission.good) > inbound.pending(of: mission.good, to: building.id, in: pile),
-                  let road = anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint)
+                  let road = anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint)
             else { return nil }
             return roadPath(from: tile, to: road)
         }

@@ -130,7 +130,7 @@ public enum SnapshotReconciler {
                 kind: .building(
                     kind: building.kind,
                     state: building.state,
-                    footprint: spec.footprint,
+                    footprint: building.footprint,
                     constructionFrameIndex: frameIndex,
                     orientation: orientation,
                     isWaitingForMaterials: isWaiting,

@@ -345,3 +345,16 @@ func burningStoreGivesNoMaterials() {
     _ = run(&world, ticks: 1)
     #expect(world.stockpiles[store]?.quantity(of: .planks) == 10)
 }
+
+@Test("scenario: ruins keep the burnt footprint")
+func ruinsKeepTheBurntFootprint() throws {
+    var world = fireWorld()
+    let house = addOperational(.house, at: TileCoordinate(x: 0, y: 0), in: &world)
+    road([TileCoordinate(x: 1, y: 2)], in: &world)
+    _ = light(house, in: &world)
+    _ = run(&world, ticks: 300)
+    let ruins = try #require(world.buildings[house])
+    #expect(ruins.kind == .ruins)
+    #expect(world.isRoadConnected(ruins))
+    #expect(ruins.bounds == TileBoundingBox(minX: 0, minY: 0, maxX: 1, maxY: 1))
+}

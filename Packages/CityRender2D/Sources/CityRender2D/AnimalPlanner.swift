@@ -128,7 +128,7 @@ public enum AnimalPlanner {
 
     /// Free grass within `herdReach` of the farm's footprint, in reading order.
     static func pasture(around farm: Building, isFreeGrass: (TileCoordinate) -> Bool) -> [TileCoordinate] {
-        let footprint = BuildingCatalog.spec(for: farm.kind).footprint
+        let footprint = farm.footprint
         return ((farm.anchor.y - herdReach) ..< (farm.anchor.y + footprint.height + herdReach)).flatMap { row in
             ((farm.anchor.x - herdReach) ..< (farm.anchor.x + footprint.width + herdReach)).map { TileCoordinate(x: $0, y: row) }
         }
@@ -139,7 +139,7 @@ public enum AnimalPlanner {
     /// there and never on the house's own plot, whose log piles, barrels
     /// and garden beds are part of the house sprite.
     static func frontage(of house: Building, isYard: (TileCoordinate) -> Bool) -> [TileCoordinate] {
-        let footprint = BuildingCatalog.spec(for: house.kind).footprint
+        let footprint = house.footprint
         let right = (0 ..< footprint.height).map { TileCoordinate(x: house.anchor.x + footprint.width, y: house.anchor.y + $0) }
         let front = (0 ..< footprint.width).map { TileCoordinate(x: house.anchor.x + $0, y: house.anchor.y + footprint.height) }
         return (right + front).filter(isYard)
@@ -251,7 +251,7 @@ public enum AnimalPlanner {
     }
 
     static func hen(_ house: Building, slot: Int, yard: [TileCoordinate], roam: Roam) -> Animal {
-        let footprint = BuildingCatalog.spec(for: house.kind).footprint
+        let footprint = house.footprint
         let base = UInt64(house.id.raw) &* 0xD6E8_FEB8_6659_FD93 ^ UInt64(slot) &* 0x2545_F491_4F6C_DD1D
         let period = henVisit.lowerBound + base % (henVisit.upperBound - henVisit.lowerBound + 1)
         // In the half of the yard tile next to the house.

@@ -59,12 +59,12 @@ extension World {
                 sources.append(Source(store: store, center: store.id, path: []))
                 continue
             }
-            guard let road = anyAdjacentRoad(anchor: store.anchor, footprint: BuildingCatalog.spec(for: store.kind).footprint),
+            guard let road = anyAdjacentRoad(anchor: store.anchor, footprint: store.footprint),
                   let component = labels[road]
             else { continue }
             var best: (center: EntityID, path: [TileCoordinate])?
             for center in centers {
-                guard let centerRoad = anyAdjacentRoad(anchor: center.anchor, footprint: BuildingCatalog.spec(for: center.kind).footprint),
+                guard let centerRoad = anyAdjacentRoad(anchor: center.anchor, footprint: center.footprint),
                       labels[centerRoad] == component, let path = roadPath(from: road, to: centerRoad)
                 else { continue }
                 if best == nil || path.count < best!.path.count { best = (center.id, path) }

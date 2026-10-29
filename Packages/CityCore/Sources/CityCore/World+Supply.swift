@@ -73,7 +73,7 @@ extension World {
         for (consumer, needs) in consumers {
             guard let consumerRoad = anyAdjacentRoad(
                 anchor: consumer.anchor,
-                footprint: BuildingCatalog.spec(for: consumer.kind).footprint
+                footprint: consumer.footprint
             )
             else { continue }
             for good in Good.allCases {
@@ -160,7 +160,7 @@ extension World {
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   let bufferRoad = anyAdjacentRoad(
                       anchor: buffer.anchor,
-                      footprint: BuildingCatalog.spec(for: buffer.kind).footprint
+                      footprint: buffer.footprint
                   ),
                   let path = roadPath(from: bufferRoad, to: road)
             else { continue }
@@ -175,10 +175,10 @@ extension World {
     /// on `building`'s road network, lowest entity ID first. Returns the
     /// amount actually withdrawn.
     mutating func consume(_ good: Good, amount: Int, by building: Building) -> Int {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         var remaining = amount
         for buffer in goodsBuffers() where remaining > 0 && buffer.state == .operational {
-            let bufferFootprint = BuildingCatalog.spec(for: buffer.kind).footprint
+            let bufferFootprint = buffer.footprint
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   sharesRoadNetwork(building.anchor, footprint, with: buffer.anchor, bufferFootprint)
             else { continue }

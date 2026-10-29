@@ -267,7 +267,7 @@ public extension World {
         Set(buildings.values.lazy.filter { building in
             building.kind != .road && building.kind != .ruins && !roadGraph.isAnchorRoadConnected(
                 building.anchor,
-                footprint: BuildingCatalog.spec(for: building.kind).footprint
+                footprint: building.footprint
             )
         }.map(\.id))
     }

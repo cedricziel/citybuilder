@@ -188,7 +188,7 @@ extension World {
         islandID: IslandID,
         tileToIsland: [TileCoordinate: IslandID]
     ) -> Bool {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         for tile in footprint.tiles(anchor: building.anchor) where tileToIsland[tile] == islandID {
             return true
         }

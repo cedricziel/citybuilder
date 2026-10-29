@@ -111,6 +111,6 @@ public extension World {
     /// Whether a road touches the building's footprint. Spec:
     /// `platform-shells` / First-hour guide.
     func isRoadConnected(_ building: Building) -> Bool {
-        anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint) != nil
+        anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint) != nil
     }
 }
