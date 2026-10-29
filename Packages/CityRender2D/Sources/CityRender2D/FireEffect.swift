@@ -49,7 +49,10 @@ enum FireEffect {
         holder.name = nodeName
         holder.zPosition = 0.001
         holder.addChild(flames(at: ridge, scale: scale))
-        holder.addChild(flames(at: window, scale: scale * windowFlameScale))
+        // A house or workshop burns out of a window too; a tower's lookout has none at that height.
+        if max(footprint.width, footprint.height) > 1 {
+            holder.addChild(flames(at: window, scale: scale * windowFlameScale))
+        }
         sprite.addChild(holder)
         sprite.addChild(glow)
         setMotion(of: sprite, reduceMotion: reduceMotion)

@@ -128,3 +128,14 @@ func burningBuildingSmokes() {
     )
     #expect(chosen.first?.style == .fireSmoke)
 }
+
+@MainActor
+@Test("a burning fire watch has no window to burn out of")
+func fireWatchHasNoWindowFlame() throws {
+    let spec = SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
+        kind: .fireWatch, state: .burning, footprint: Footprint(width: 1, height: 1),
+        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
+    ))
+    let tower = try #require(IsoWorldScene().makeBuildingNode(for: spec) as? SKSpriteNode)
+    #expect(tower.childNode(withName: FireEffect.nodeName)?.children.count == 1)
+}
