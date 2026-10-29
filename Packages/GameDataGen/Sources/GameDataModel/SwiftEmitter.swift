@@ -33,7 +33,8 @@ public enum SwiftEmitter {
             ("Age+Generated.swift", types.age),
             ("HouseTier+Generated.swift", types.houseTier),
             ("OrderTemplate+Generated.swift", types.orderTemplate),
-            ("SeasonalEvent+Generated.swift", types.seasonalEvent)
+            ("SeasonalEvent+Generated.swift", types.seasonalEvent),
+            ("Campaign+Generated.swift", ChapterEmitter(data: data, access: types.access).catalog)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -78,7 +79,21 @@ private func titleCased(_ id: String) -> String {
     id.split(separator: "-").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " ")
 }
 
-private func literal(_ text: String) -> String {
+/// `[.planks: 1, .wood: 4]`, sorted by good id.
+func amounts(_ amounts: GoodAmounts) -> String {
+    guard !amounts.isEmpty else { return "[:]" }
+    return "[" + amounts.sorted { $0.good < $1.good }.map { ".\(caseName($0.good)): \($0.amount)" }.joined(separator: ", ") + "]"
+}
+
+func optionalCase(_ id: String?) -> String {
+    id.map { ".\(caseName($0))" } ?? "nil"
+}
+
+func caseList(_ ids: [String]) -> String {
+    "[" + ids.map { ".\(caseName($0))" }.joined(separator: ", ") + "]"
+}
+
+func literal(_ text: String) -> String {
     String(reflecting: text)
 }
 
@@ -249,26 +264,12 @@ private struct Types {
             + "garden: .\(caseName(chain.garden)), producer: .\(caseName(chain.producer)))"
     }
 
-    /// `[.planks: 1, .wood: 4]`, sorted by good id.
-    private func amounts(_ amounts: GoodAmounts) -> String {
-        guard !amounts.isEmpty else { return "[:]" }
-        return "[" + amounts.sorted { $0.good < $1.good }.map { ".\(caseName($0.good)): \($0.amount)" }.joined(separator: ", ") + "]"
-    }
-
     /// `[.warning: SeasonalBanner(title: …, text: …)]`, in `ItemSchema.eventBanners` order.
     private func banners(_ banners: [SeasonalEvent.Banner]) -> String {
         let ordered = ItemSchema.eventBanners.compactMap { key in banners.first { $0.key == key } }
         guard !ordered.isEmpty else { return "[:]" }
         return "[" + ordered.map { ".\($0.key): SeasonalBanner(title: \(literal($0.title)), text: \(literal($0.text)))" }
             .joined(separator: ", ") + "]"
-    }
-
-    private func optionalCase(_ id: String?) -> String {
-        id.map { ".\(caseName($0))" } ?? "nil"
-    }
-
-    private func caseList(_ ids: [String]) -> String {
-        "[" + ids.map { ".\(caseName($0))" }.joined(separator: ", ") + "]"
     }
 
     // MARK: - Declarations

@@ -177,6 +177,12 @@ enum Fixtures {
         "Event": [
             "id": "fire", "effect": "fire", "seasons": "[summer]", "weight": "{ easy: 1, normal: 1, hard: 2 }",
             "banners": "{ warning: { title: Dry, text: Fire risk. } }"
+        ],
+        "Campaign": ["id": "chronicle", "title": "Chronicle", "chapters": "[first-fires]"],
+        "Chapter": [
+            "id": "first-fires", "title": "First Fires", "intro": "Smoke rises.", "ending": "A village.",
+            "layout": "single-island", "seed": "101", "age": "antiquity", "money": "1000",
+            "goals": "[{ residents: 24 }]", "reward": "{ banner: Hearth }"
         ]
     ]
 
@@ -199,6 +205,15 @@ enum Fixtures {
         "Age": ["name": "Bronze", "orderEvery": "3"],
         "Tier": [:],
         "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
-        "Event": ["minAge": "medieval"]
+        "Event": ["minAge": "medieval"],
+        "Campaign": ["opensAfter": "first-fires"],
+        "Chapter": [
+            "culture": "northern-european", "rivals": "0", "stock": "{ wood: 6 }", "overrides": "{ easy: { money: 2000 } }",
+            "directives": "[{ noMountains: home }]", "closedBuildings": "[port]", "closedTechs": "[seafaring]",
+            "researched": "[cultivation]", "bonus": "[{ stock: wood, count: 5 }]", "lose": "{ deadline: -496 }",
+            "rivalAgeYears": "{ medieval: 1207 }", "difficulties": "[easy, normal]",
+            "sweep": "{ firstSteps: true, order: careful, market: false, kits: [signature] }", "comingLater": "false",
+            "events": "[]", "randomEvents": "false"
+        ]
     ]
 }

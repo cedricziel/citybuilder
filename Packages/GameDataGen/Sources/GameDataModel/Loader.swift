@@ -115,6 +115,8 @@ private struct ItemReader {
         case "Tier": tier(id).map { data.tiers.append($0) }
         case "Order": order(id).map { data.orders.append($0) }
         case "Event": event(id).map { data.events.append($0) }
+        case "Campaign": ChapterReader(fields: fields).campaign(id).map { data.campaigns.append($0) }
+        case "Chapter": ChapterReader(fields: fields).chapter(id).map { data.chapters.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }

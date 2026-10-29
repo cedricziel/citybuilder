@@ -11,10 +11,12 @@ struct Validator {
             cultures: unique(data.cultures, kind: "Culture", id: \.id, origin: \.origin),
             techs: unique(data.techs, kind: "Tech", id: \.id, origin: \.origin),
             ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin),
-            tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin)
+            tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin),
+            events: unique(data.events, kind: "Event", id: \.id, origin: \.origin)
         )
         _ = unique(data.orders, kind: "Order", id: \.id, origin: \.origin)
-        _ = unique(data.events, kind: "Event", id: \.id, origin: \.origin)
+        _ = unique(data.campaigns, kind: "Campaign", id: \.id, origin: \.origin)
+        let chapters = unique(data.chapters, kind: "Chapter", id: \.id, origin: \.origin)
         data.goods.forEach { check($0, refs) }
         data.tiers.forEach { check($0, refs) }
         data.buildings.forEach { check($0, refs) }
@@ -23,6 +25,8 @@ struct Validator {
         data.ages.forEach { check($0, refs) }
         data.orders.forEach { check($0, refs) }
         data.events.forEach { check($0, refs) }
+        checkCampaigns(chapters)
+        data.chapters.forEach { check($0, refs) }
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
         checkConsumers()
@@ -31,20 +35,21 @@ struct Validator {
         }
     }
 
-    private struct References {
+    struct References {
         let goods: [String: Good]
         let buildings: [String: Building]
         let cultures: [String: Culture]
         let techs: [String: Tech]
         let ages: [String: Age]
         let tiers: [String: Tier]
+        let events: [String: SeasonalEvent]
 
         var tierList: String {
             tiers.keys.sorted().joined(separator: ", ")
         }
     }
 
-    private func reporter(_ kind: String, _ id: String, _ origin: Origin) -> (String) -> Void {
+    func reporter(_ kind: String, _ id: String, _ origin: Origin) -> (String) -> Void {
         { log.error($0, at: origin, item: "\(kind) \(id)") }
     }
 
@@ -203,7 +208,7 @@ struct Validator {
         }
     }
 
-    private func checkGoods(_ amounts: GoodAmounts, field: String, _ refs: References, _ report: (String) -> Void) {
+    func checkGoods(_ amounts: GoodAmounts, field: String, _ refs: References, _ report: (String) -> Void) {
         for entry in amounts {
             if refs.goods[entry.good] == nil { report("`\(field)` names unknown good `\(entry.good)`") }
             if entry.amount <= 0 { report("`\(field).\(entry.good)` must be positive") }

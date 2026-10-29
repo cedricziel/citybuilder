@@ -9,6 +9,8 @@ public struct GameData: Equatable, Sendable {
     public var tiers: [Tier] = []
     public var orders: [OrderTemplate] = []
     public var events: [SeasonalEvent] = []
+    public var campaigns: [CampaignData] = []
+    public var chapters: [ChapterData] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -215,4 +217,102 @@ public struct Tier: Equatable, Sendable {
     /// `neededBy` merged in.
     public var needs: [String]
     public var origin: Origin
+}
+
+/// An ordered list of chapters (`add-campaigns` D1).
+public struct CampaignData: Equatable, Sendable {
+    public var id: String
+    public var title: String
+    public var chapters: [String]
+    /// The chapter whose win opens this campaign.
+    public var opensAfter: String?
+    public var origin: Origin
+}
+
+/// One goal of a chapter: a kind such as `residents` or `stock`, what it
+/// names (an age, good, building or tech) and how many.
+public struct ChapterGoal: Equatable, Sendable {
+    public var kind: String
+    public var subject: String?
+    public var amount: Int?
+    public var tier: String?
+    public var hold: Bool
+}
+
+/// A chapter's terrain directive: `thinForest`, `pushMineOut`,
+/// `noMountains` or `raiseMineSite`.
+public struct ChapterDirective: Equatable, Sendable {
+    public var kind: String
+    /// `home`, or the rank of another island from 1.
+    public var island: String?
+    public var amount: Int?
+}
+
+/// A chapter's Normal money and stock.
+public struct ChapterStart: Equatable, Sendable {
+    public var money: Int
+    public var stock: GoodAmounts
+}
+
+/// A difficulty's override of a chapter's money or stock.
+public struct ChapterStartData: Equatable, Sendable {
+    public var money: Int?
+    public var stock: GoodAmounts?
+}
+
+/// A seasonal event a chapter puts in a year.
+public struct ChapterEvent: Equatable, Sendable {
+    public var year: Int
+    public var season: String
+    public var event: String
+}
+
+/// A chapter's race: an age, or residents of a tier.
+public struct ChapterRace: Equatable, Sendable {
+    public var age: String?
+    public var residents: Int?
+    public var tier: String?
+}
+
+/// One chapter (`add-campaigns` D1, D9).
+public struct ChapterData: Equatable, Sendable {
+    public var id: String
+    public var title: String
+    public var intro: String
+    public var ending: String
+    public var layout: String
+    public var seed: Int
+    public var age: String
+    public var culture: String?
+    public var rivals: Int
+    public var start: ChapterStart
+    /// Per difficulty id.
+    public var overrides: [String: ChapterStartData]
+    public var directives: [ChapterDirective]
+    public var closedBuildings: [String]
+    public var closedTechs: [String]
+    public var researched: [String]
+    public var goals: [ChapterGoal]
+    public var bonus: [ChapterGoal]
+    public var deadline: Int?
+    public var race: ChapterRace?
+    public var collapse: Int?
+    /// Earliest year per age id.
+    public var rivalAgeYears: [String: Int]
+    public var difficulties: [String]
+    public var reward: ChapterReward
+    public var firstSteps: Bool
+    public var order: String?
+    public var market: Bool
+    public var kits: [String]
+    public var comingLater: Bool
+    public var events: [ChapterEvent]
+    public var randomEvents: Bool
+    public var origin: Origin
+}
+
+/// `banner`, `decor` or `mapPreset`, and its name.
+public struct ChapterReward: Equatable, Sendable {
+    public var kind: String
+    public var name: String
 }

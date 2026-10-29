@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Campaigns and their chapters (add-campaigns D1, D9). Chapters arrive
+# with M4, once their targets are tuned against the economy rework.
+items: []
