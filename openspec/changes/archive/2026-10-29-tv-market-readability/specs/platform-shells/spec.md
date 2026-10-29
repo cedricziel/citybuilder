@@ -32,6 +32,10 @@ Selecting a player town center SHALL show a market section in the inspector's de
 - **WHEN** the player has bought 10 wood this season
 - **THEN** both wood Buy buttons are disabled
 
+#### Scenario: Buy enabled while a warehouse has room
+- **WHEN** the player's town center is full and a warehouse on its island has room
+- **THEN** the wood Buy buttons are enabled
+
 #### Scenario: Sell disabled without stock
 - **WHEN** the player's island holds no iron
 - **THEN** both iron Sell buttons are disabled
