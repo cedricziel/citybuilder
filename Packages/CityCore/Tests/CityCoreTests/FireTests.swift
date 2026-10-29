@@ -419,3 +419,18 @@ func burningBuildingsPayUpkeep() {
     #expect(world.playerTaxAndUpkeep.upkeep == before)
     #expect(before > 0)
 }
+
+@Test("the fire showcase sets houses alight, leaves one in ruins and sends the watchman")
+func fireShowcaseSeed() {
+    var world = eventsWorld(size: 24)
+    let houses = (0 ..< 4).map { addOperational(.house, at: TileCoordinate(x: 2 + 3 * $0, y: 2), residents: 2, in: &world) }
+    road((2 ... 14).map { TileCoordinate(x: $0, y: 4) } + [TileCoordinate(x: 14, y: 3)], in: &world)
+    let watch = addOperational(.fireWatch, at: TileCoordinate(x: 14, y: 2), in: &world)
+    world.seedFireShowcase()
+    #expect(houses.prefix(2).allSatisfy { world.buildings[$0]?.state == .burning })
+    #expect(world.buildings[houses[2]]?.kind == .ruins && world.buildings[houses[2]]?.ruinOf == .house)
+    #expect(world.populations[houses[2]] == nil)
+    #expect(world.buildings[houses[3]]?.state == .operational)
+    #expect(world.seasonalEvents.active?.event == .fire)
+    #expect(world.snapshot().watchmen.map(\.watch) == [watch])
+}

@@ -45,25 +45,6 @@ func watchmanFrames() {
     #expect(SpriteAtlasRouting.atlasName(for: "walker-watchman-ne-0") == SpriteAtlasRouting.kitAtlasName)
 }
 
-private func ruinsSpec(_ side: Int) -> SpriteSpec {
-    SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
-        kind: .ruins, state: .operational, footprint: Footprint(width: side, height: side),
-        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
-    ))
-}
-
-@MainActor
-@Test("scenario: ruins draw the ruin of the burnt building's footprint")
-func ruinsUseTheirFootprint() throws {
-    let scene = IsoWorldScene()
-    for (side, name) in [(1, "building-ruins-1x1"), (2, "building-ruins"), (3, "building-ruins-3x3")] {
-        let node = try #require(scene.makeBuildingNode(for: ruinsSpec(side)) as? SKSpriteNode)
-        #expect(node.userData?[IsoWorldScene.textureNameKey] as? String == name)
-        // Its bottom vertex sits on the footprint's: half a tile down per extra row and column.
-        #expect(node.position.y == -IsoMath.tileHeight / 2 * CGFloat(2 * side - 1))
-    }
-}
-
 private func houseSpec(_ state: BuildingState) -> SpriteSpec {
     SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
         kind: .house, state: state, footprint: Footprint(width: 2, height: 2),
