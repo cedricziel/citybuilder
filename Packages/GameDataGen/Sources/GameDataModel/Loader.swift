@@ -235,8 +235,12 @@ private struct ItemReader {
     private func tier(_ id: String) -> Tier? {
         let name = fields.string("name"), capacity = fields.int("capacity")
         let tax = fields.int("taxPerResident"), needs = fields.strings("needs")
+        let grace = fields.int("declineGrace", required: false)
         guard let name, let capacity, let tax, let needs else { return nil }
-        return Tier(id: id, name: name, capacity: capacity, taxPerResident: tax, needs: needs, origin: fields.origin)
+        return Tier(
+            id: id, name: name, capacity: capacity, taxPerResident: tax, needs: needs,
+            declineGrace: grace ?? 1, origin: fields.origin
+        )
     }
 
     private func age(_ id: String) -> Age? {

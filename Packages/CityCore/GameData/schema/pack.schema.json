@@ -294,7 +294,8 @@
               "name": { "description": "Default display name; a culture's tiers map can override it.", "type": "string" },
               "capacity": { "description": "Residents a house of this tier holds.", "$ref": "#/$defs/positive" },
               "taxPerResident": { "$ref": "#/$defs/nonNegative" },
-              "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true }
+              "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true },
+              "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "type": "integer", "minimum": 1, "maximum": 254 }
             }
           }
         }
