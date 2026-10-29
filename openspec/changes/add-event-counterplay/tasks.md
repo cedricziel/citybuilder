@@ -51,7 +51,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 8. Art, rendering and statistics (after 0.2)
 
-- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D); the granary stays out of the palette until 5.2 ("drawn last") lands: if its art comes first, move it from `PendingArt` to a palette-only hold rather than shipping it: give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
+- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me) (done: everything but the physician and herb garden, which come with step 2; ruins at 1×1, 2×2 and 3×3; `PendingArt` is gone, and the granary waits in `BuildPalette.held` until 5.2 lands)
 - [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
 - [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge
