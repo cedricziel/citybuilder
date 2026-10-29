@@ -18,6 +18,13 @@
   align-items: flex-end;
 }
 
+/* A row of flames, centred on its point; the sprite's foot is lowered onto it by the row's middle. */
+.cb-fire__flames {
+  position: absolute;
+  transform: translateX(-50%);
+  line-height: 0;
+}
+
 .cb-fire__glow {
   position: absolute;
   left: 50%;
@@ -39,7 +46,7 @@
 
 .cb-fire__smoke i {
   position: absolute;
-  left: -9px;
+  left: calc(-9px * var(--cb-fire-scale, 1));
   bottom: 0;
   width: calc(18px * var(--cb-fire-scale, 1));
   height: calc(18px * var(--cb-fire-scale, 1));

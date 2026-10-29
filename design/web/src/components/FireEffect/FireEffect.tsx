@@ -7,11 +7,17 @@ import "./FireEffect.css";
 /** How far the soot darkens a burning building, as the game's colour blend toward black. */
 export const fireSoot = 0.35;
 
-/** The flames' scale for a footprint, as the game's `FireEffect.scale(for:)`: 0.75 (1×1) to 1.35 (3×3). */
+/** The flames' scale for a footprint, as the game's `FireEffect.scale(for:)`: 0.6 (1×1) to 1.1 (3×3). */
 export function fireScale(building: BuildingArt): number {
   const [w, h] = buildingFootprint(building);
-  return 0.45 + 0.3 * Math.max(w, h);
+  return 0.35 + 0.25 * Math.max(w, h);
 }
+
+/** The middle of the flame row in its 80×80 pt cell, from the cell's bottom, in points (`effect-fire` brief). */
+const flameFoot = 14;
+/** The window flame's size beside the roof's, and where it licks out, as fractions of the sprite's width
+ * (from its centre) and of its opaque height, as the game's `FireEffect`. */
+const windowFlame = { scale: 0.32, x: -0.16, y: 0.36 };
 
 /** The height of the image's topmost opaque row, as a fraction from its bottom (1 until measured). */
 function useContentTop(src: string): number {
@@ -52,17 +58,27 @@ export interface FireEffectProps {
   style?: CSSProperties;
 }
 
+/** One row of flames whose middle stands on the point `bottom` pt up and `left` along the sprite. */
+function Flames({ animate, scale, bottom, left }: { animate: boolean; scale: number; bottom: string; left: string }) {
+  return (
+    <span className="cb-fire__flames" style={{ bottom, left, marginBottom: -flameFoot * scale }}>
+      <AnimatedSprite cycle="effect-fire" timePerFrame={0.14} animate={animate} scale={scale} alt="" />
+    </span>
+  );
+}
+
 /**
- * A building on fire, as the game draws it: the building darkened with soot, a cluster of self-lit
- * flame tongues on its roof (`effect-fire`) over a warm glow, and a dark smoke column leaning with
- * the wind. A fire watch's watchman puts it out; left alone it burns down to ruins.
+ * A building on fire, as the game draws it: the building darkened with soot, a row of self-lit flame
+ * tongues along its roof (`effect-fire`) and, on a house or workshop, a small one out of a window, a warm glow, and a dark
+ * smoke column leaning with the wind. A fire watch's watchman puts it out; left alone it burns down to
+ * ruins.
  */
 export function FireEffect({ building, animate = true, night = false, scale = 1, style }: FireEffectProps) {
   const src = buildingSprites[building];
   const top = useContentTop(src);
   const flames = fireScale(building);
-  // The cluster's base sits 14 pt under the sprite's opaque top, as in the game.
-  const roof = `calc(${top * 100}% - ${14 * flames}px)`;
+  // The row's middle sits on the ridge, 22 pt under the sprite's opaque top, as in the game.
+  const roof = `calc(${top * 100}% - ${22 * flames}px)`;
   return (
     <span
       className={animate ? "cb-fire" : "cb-fire cb-fire--still"}
@@ -78,9 +94,17 @@ export function FireEffect({ building, animate = true, night = false, scale = 1,
           <i />
           <i />
         </span>
-        <span className="cb-fire__glow" style={{ width: 90 * flames, height: 70 * flames, bottom: -23 * flames }} />
-        <AnimatedSprite cycle="effect-fire" timePerFrame={0.14} animate={animate} scale={flames} alt="" style={{ marginBottom: -8 }} />
+        <span className="cb-fire__glow" style={{ width: 100 * flames, height: 80 * flames, bottom: -30 * flames }} />
       </span>
+      <Flames animate={animate} scale={flames} bottom={roof} left="50%" />
+      {buildingFootprint(building)[0] > 1 ? (
+        <Flames
+          animate={animate}
+          scale={flames * windowFlame.scale}
+          bottom={`${top * windowFlame.y * 100}%`}
+          left={`${50 + windowFlame.x * 100}%`}
+        />
+      ) : null}
     </span>
   );
 }
