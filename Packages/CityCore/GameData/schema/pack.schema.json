@@ -294,7 +294,7 @@
               "capacity": { "description": "Residents a house of this tier holds.", "$ref": "#/$defs/positive" },
               "taxPerResident": { "$ref": "#/$defs/nonNegative" },
               "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true },
-              "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "$ref": "#/$defs/positive" }
+              "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "type": "integer", "minimum": 1, "maximum": 254 }
             }
           }
         }

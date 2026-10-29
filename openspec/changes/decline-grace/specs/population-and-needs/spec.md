@@ -80,3 +80,7 @@ A house SHALL count, for each need that binds it, the consumption intervals in a
 #### Scenario: The generator rejects a grace below 1
 - **WHEN** a pack declares a tier with `declineGrace: 0`
 - **THEN** the generator exits with a failure that names the pack, the tier and the field
+
+#### Scenario: The generator rejects a grace above 254
+- **WHEN** a pack declares a tier with `declineGrace: 255`
+- **THEN** the generator exits with a failure that names the pack, the tier and the field, because a house counts its short intervals up to 255 and Easy adds one

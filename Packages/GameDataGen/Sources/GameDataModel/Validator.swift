@@ -108,7 +108,8 @@ struct Validator {
         let report = reporter("Tier", tier.id, tier.origin)
         if tier.capacity <= 0 { report("`capacity` must be positive") }
         if tier.taxPerResident < 0 { report("`taxPerResident` must not be negative") }
-        if tier.declineGrace <= 0 { report("`declineGrace` must be positive; omit it for 1") }
+        // A house counts its short intervals in a UInt8 that saturates at 255, and Easy adds one.
+        if !(1 ... 254).contains(tier.declineGrace) { report("`declineGrace` must be between 1 and 254; omit it for 1") }
         var seen = Set<String>()
         for good in tier.needs {
             if refs.goods[good] == nil { report("`needs` names unknown good `\(good)`") }

@@ -164,5 +164,17 @@ func generatorRejectsAGraceBelowOne() {
         of: "capacity: 4, taxPerResident: 1", with: "capacity: 4, taxPerResident: 1, declineGrace: 0"
     )
     let errors = Fixtures.errors(Fixtures.withCore(core))
-    #expect(errors.contains { $0.contains("Tier peasants") && $0.contains("`declineGrace`") && $0.contains("positive") }, "\(errors)")
+    #expect(
+        errors.contains { $0.contains("Tier peasants") && $0.contains("`declineGrace`") && $0.contains("between 1 and 254") },
+        "\(errors)"
+    )
+}
+
+@Test("scenario: the generator rejects a grace above 254")
+func generatorRejectsAGraceAbove254() {
+    let core = Fixtures.core.replacingOccurrences(
+        of: "capacity: 4, taxPerResident: 1", with: "capacity: 4, taxPerResident: 1, declineGrace: 255"
+    )
+    let errors = Fixtures.errors(Fixtures.withCore(core))
+    #expect(errors.contains { $0.contains("Tier peasants") && $0.contains("`declineGrace`") && $0.contains("254") }, "\(errors)")
 }
