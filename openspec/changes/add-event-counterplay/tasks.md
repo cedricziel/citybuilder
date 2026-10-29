@@ -22,7 +22,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 - [x] 3.1 Tests first: ignition, spread to touching footprints, roads as firebreaks, burn-down to ruins (stock, residents, carriers), the watchman's response, the queue, Hard's second fire
 - [x] 3.2 Fire state, the burning stop (production, tax, growth, deliveries), spread, burn-down and the `ruins` kind with `ruinOf`
-- [x] 3.3 The fire watch: coverage, nearest idle watch, the watchman's walk on the road path, dousing; the watchman in the snapshot as a walker
+- [x] 3.3 The fire watch: coverage, nearest idle watch, the watchman's walk on the road path, dousing; the watchman in the snapshot as a walker. Follow-up: a building touching two road networks paths from one adjacent road only (`anyAdjacentRoad`), so a watch on the other network can miss it; pathing should try every adjacent road
 - [ ] 3.4 Clearing ruins through Demolish with its fee; `notEnoughMoney`; the ruins inspector (done in CityCore: the fee, `demolitionRejected(notEnoughMoney)` and `ruinsCleared`; the inspector is CityUI and comes with 2.4)
 
 ## 4. Rats and the granary's storage (can start before M2)
@@ -52,7 +52,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 ## 8. Art, rendering and statistics (after 0.2)
 
 - [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D); the granary stays out of the palette until 5.2 ("drawn last") lands: if its art comes first, move it from `PendingArt` to a palette-only hold rather than shipping it: give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
-- [ ] 8.2 CityRender2D: effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
+- [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
 - [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge
 

@@ -56,7 +56,8 @@ extension World {
     /// Upkeep of every owner's operational buildings, unscaled.
     private func upkeepByOwner(sources: [Building]) -> [Owner: Int64] {
         var totals: [Owner: Int64] = [:]
-        for building in buildings.values where building.state == .operational {
+        // A burning building still costs its upkeep.
+        for building in buildings.values where building.state == .operational || building.state == .burning {
             totals[building.owner, default: 0] += upkeep(of: building, sources: sources)
         }
         return totals

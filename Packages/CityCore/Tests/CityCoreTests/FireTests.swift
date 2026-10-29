@@ -373,3 +373,40 @@ func fireOutOnItsSpreadTickDoesNotSpread() {
     #expect(events.contains(.fireExtinguished(building: first)))
     #expect(world.buildings[second]?.state == .operational)
 }
+
+@Test("scenario: Demolishing a burning building as a firebreak")
+func demolishingABurningBuilding() {
+    var world = fireWorld()
+    let house = addOperational(.house, at: TileCoordinate(x: 0, y: 0), residents: 4, in: &world)
+    _ = light(house, in: &world)
+    world.economy.balance = 100
+    world.enqueue(.demolish(at: TileCoordinate(x: 0, y: 0)))
+    let events = run(&world, ticks: 1)
+    #expect(events.contains(.buildingDemolished(building: house, kind: .house, anchor: TileCoordinate(x: 0, y: 0))))
+    #expect(world.economy.balance == 85)
+    #expect(world.buildings[house] == nil)
+    let burning = world.seasonalEvents.fire?.fires ?? []
+    #expect(burning.isEmpty)
+}
+
+@Test("scenario: a burning building the treasury can't pay to pull down")
+func demolishingABurningBuildingWithoutMoney() {
+    var world = fireWorld()
+    let house = addOperational(.house, at: TileCoordinate(x: 0, y: 0), in: &world)
+    _ = light(house, in: &world)
+    world.economy.balance = 5
+    world.enqueue(.demolish(at: TileCoordinate(x: 0, y: 0)))
+    let events = run(&world, ticks: 1)
+    #expect(events.contains(.demolitionRejected(building: house, reason: .notEnoughMoney)))
+    #expect(world.buildings[house]?.state == .burning)
+}
+
+@Test("scenario: Burning buildings still pay upkeep")
+func burningBuildingsPayUpkeep() {
+    var world = fireWorld()
+    let sawmill = addOperational(.sawmill, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let before = world.playerTaxAndUpkeep.upkeep
+    _ = light(sawmill, in: &world)
+    #expect(world.playerTaxAndUpkeep.upkeep == before)
+    #expect(before > 0)
+}

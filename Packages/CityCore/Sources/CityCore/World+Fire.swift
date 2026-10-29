@@ -157,6 +157,21 @@ extension World {
         }
     }
 
+    /// Clearing ruins, or pulling a burning building down as a firebreak,
+    /// costs the clearing fee; false, with the rejection reported, when the
+    /// treasury can't pay. Other buildings come down for free.
+    mutating func payToClear(_ building: Building, events: inout [WorldEvent]) -> Bool {
+        guard building.kind == .ruins || building.state == .burning else { return true }
+        guard charge(Self.clearingFee(of: building.ruinOf ?? building.kind), to: .player) else {
+            events.append(.demolitionRejected(building: building.id, reason: .notEnoughMoney))
+            return false
+        }
+        if building.kind == .ruins {
+            events.append(.ruinsCleared(building: building.id))
+        }
+        return true
+    }
+
     /// What clearing ruins costs: a quarter of the burnt kind's price,
     /// rounded up to $5, at least $10. Spec: `buildings-and-construction`
     /// / Ruins block their plot until cleared.

@@ -325,13 +325,7 @@ public struct World: Codable, Sendable, Equatable {
         else { return }
         // Anchor lookup uses the literal tile — but multi-tile buildings
         // resolve via the building's recorded anchor.
-        if building.kind == .ruins {
-            guard charge(Self.clearingFee(of: building.ruinOf ?? .ruins), to: .player) else {
-                events.append(.demolitionRejected(building: id, reason: .notEnoughMoney))
-                return
-            }
-            events.append(.ruinsCleared(building: id))
-        }
+        guard payToClear(building, events: &events) else { return }
         for tile in building.footprint.tiles(anchor: building.anchor) {
             occupiedTiles.removeValue(forKey: tile)
         }
