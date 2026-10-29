@@ -2,7 +2,7 @@ import { Icon, type IconName } from "@citybuilder/ui";
 
 const names: IconName[] = [
   "pause.fill", "play.fill", "gearshape.fill", "gear", "book.fill", "flag.checkered", "lock.fill",
-  "checkmark", "checkmark.circle.fill", "circle", "xmark", "hand.tap", "ellipsis.circle", "laurel.leading",
+  "checkmark", "checkmark.circle.fill", "circle", "hourglass", "xmark", "hand.tap", "ellipsis.circle", "laurel.leading",
   "house", "power", "tray.and.arrow.down", "hammer.fill", "chevron.down", "chevron.right",
 ];
 const time: IconName[] = ["sunrise.fill", "sun.max.fill", "sunset.fill", "moon.stars.fill"];
