@@ -4,7 +4,7 @@ import Testing
 @testable import CityRender2D
 
 // add-event-counterplay task 8.2 (rendering-2_5d / Seasonal events are drawn on the map): the watchman
-// is a walker with a bucket, never a carrier.
+// is a walker with a bucket, never a carrier; ruins, flames and status icons follow the burnt building.
 
 private func snapshot(tick: UInt64, watchmen: [WatchmanWalker]) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 10, height: 10, fill: .grass, seed: 1).snapshot()
@@ -43,4 +43,23 @@ func watchmanWalksThenStands() throws {
 func watchmanFrames() {
     #expect(SpriteAnimation.assetName(for: .watchman(.ne), frame: 0) == "walker-watchman-ne-0")
     #expect(SpriteAtlasRouting.atlasName(for: "walker-watchman-ne-0") == SpriteAtlasRouting.kitAtlasName)
+}
+
+private func ruinsSpec(_ side: Int) -> SpriteSpec {
+    SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
+        kind: .ruins, state: .operational, footprint: Footprint(width: side, height: side),
+        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
+    ))
+}
+
+@MainActor
+@Test("scenario: ruins draw the ruin of the burnt building's footprint")
+func ruinsUseTheirFootprint() throws {
+    let scene = IsoWorldScene()
+    for (side, name) in [(1, "building-ruins-1x1"), (2, "building-ruins"), (3, "building-ruins-3x3")] {
+        let node = try #require(scene.makeBuildingNode(for: ruinsSpec(side)) as? SKSpriteNode)
+        #expect(node.userData?[IsoWorldScene.textureNameKey] as? String == name)
+        // Its bottom vertex sits on the footprint's: half a tile down per extra row and column.
+        #expect(node.position.y == -IsoMath.tileHeight / 2 * CGFloat(2 * side - 1))
+    }
 }
