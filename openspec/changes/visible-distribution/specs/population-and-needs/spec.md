@@ -60,8 +60,8 @@ Every 100 ticks, each operational house with population SHALL consume its needs 
 
 #### Scenario: Houses leave the stores alone
 
-- **WHEN** the consumption interval elapses for a peasant house with 4 residents holding 2 food, next to a town center holding 10 food
-- **THEN** the house holds no food and the town center still holds 10
+- **WHEN** the consumption interval elapses for a peasant house with 4 residents holding 2 food, sharing a road with a warehouse holding 10 food
+- **THEN** the house holds no food and the warehouse still holds 10
 
 #### Scenario: Unmet consumption reports the need as unmet
 

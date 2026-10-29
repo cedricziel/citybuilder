@@ -97,7 +97,8 @@ The candidate list is small: only consumers of the good that are short. Measured
   - **How many:** each hub keeps porters = 1 + one per 4 houses it serves, up to 8. These are starting values from game data (D9).
   - **Choosing a trip:** an idle porter picks the served house with the lowest stock ratio across its needs. The stock ratio is (stock + inbound) ÷ capacity, taking the lowest over the house's needs the hub holds. Ties go to the shorter path, then the lower house ID.
   - **The trip:** the porter carries one mixed basket: for each need the hub holds, enough to fill the house up to one consumption, at most 10 units in all (game data, D9). It walks there, deposits them into the house stock, and walks back empty.
-  - **On the map:** a porter is a carrier whose mission is `.porter(goods:fromHub:toHouse:returning:)`. Its return trip is visible too: a porter with an empty basket.
+  - **On the map:** a porter is its own entity (`World.porters`, a `Porter` with hub, house, path, basket and a returning flag), not a carrier mission. Its return trip is visible too: a porter with an empty basket. The snapshot lists porters beside the carriers.
+  - *Why not a `Carrier.Mission` case:* a basket holds several goods, and every carrier path (redirects on a full destination, inbound counts, producer slots, cart loads) assumes one good. Keeping porters apart leaves all of that untouched, and an older build loading a newer save drops the porters and the house stock instead of failing, so the save version stays at 12.
 - **Where the stock lives:** house stock sits in `HousePopulation`, so the inspector can show it. The snapshot carries it.
 
 *Why per-house stock:* without it, satisfaction would flip with every delivery and every meal, and growth timers would reset. Two consumptions of stock give a porter about 200 ticks to come back.
