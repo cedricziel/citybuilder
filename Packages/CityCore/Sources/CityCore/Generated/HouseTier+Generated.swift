@@ -33,6 +33,14 @@ public enum HouseTier: UInt8, CaseIterable, Codable, Sendable {
         }
     }
 
+    public var declineGrace: Int {
+        switch self {
+        case .peasants: 1
+        case .citizens: 1
+        case .merchants: 3
+        }
+    }
+
     public var displayName: String {
         switch self {
         case .peasants: "Peasants"

@@ -24,3 +24,15 @@ func withCatchments(_ base: WorldSnapshot, _ counts: [EntityID: Int]) -> WorldSn
         date: base.date, culture: base.culture, age: base.age
     )
 }
+
+/// `base` with its building issues replaced by `issues`.
+func withBuildingIssues(_ base: WorldSnapshot, _ issues: [EntityID: BuildingIssue]) -> WorldSnapshot {
+    WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: base.mapWidth, mapHeight: base.mapHeight,
+        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: base.carriers,
+        ships: base.ships, routes: base.routes, economy: base.economy, totalPopulation: base.totalPopulation, camera: base.camera,
+        islandSummaries: base.islandSummaries, roadDisconnectedBuildings: base.roadDisconnectedBuildings,
+        buildingIssues: issues, catchments: base.catchments, housePopulations: base.housePopulations,
+        date: base.date, culture: base.culture, age: base.age
+    )
+}
