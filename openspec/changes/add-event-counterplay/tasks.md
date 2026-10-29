@@ -7,15 +7,15 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 1. Game data (can start before M2)
 
-- [ ] 1.1 Tests first: the `Event` kind (effect, seasons, minAge, weights, banner text), its validation (unknown effect or age, no seasons, spring hazard), the `crop` flag, `events` and `randomEvents` on chapters
-- [ ] 1.2 `GameDataGen`: model, loader, validator, emitter, JSON schema, `FORMAT.md`; regenerate with `make gamedata`
-- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items
+- [x] 1.1 Tests first: the `Event` kind (effect, seasons, minAge, weights, banner text), its validation (unknown effect or age, no seasons, spring hazard), the `crop` flag, `events` and `randomEvents` on chapters (chapters wait for `add-campaigns`: the pack has no Chapter kind yet; `SeasonalEventsState.schedule` and `randomEvents` are ready for it)
+- [x] 1.2 `GameDataGen`: model, loader, validator, emitter, JSON schema, `FORMAT.md`; regenerate with `make gamedata`
+- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items (done: the pack and the crop flags; the fire watch, ruins and granary come with sections 3 and 4; herbs, physician and herb garden with section 5)
 
 ## 2. CityCore: schedule and warnings (can start before M2)
 
-- [ ] 2.1 Tests first: the `seasonal-events` scenarios for the decision, the first year, the minAge, the target checks, warning → onset → end, chapter scheduling, and the RNG left alone; confirm they fail
-- [ ] 2.2 `SeasonalEventsState`, `seasonalEvent(forYear:)`, the derived generators and their salts, `Difficulty` knobs (D10), `runSeasonalEventSystem` after the calendar and before orders
-- [ ] 2.3 The `WorldEvent` cases; the events `enabled` flag; events stay off while the calendar is inactive
+- [x] 2.1 Tests first: the `seasonal-events` scenarios for the decision, the first year, the minAge, the target checks, warning → onset → end, chapter scheduling, and the RNG left alone; confirm they fail
+- [x] 2.2 `SeasonalEventsState`, `seasonalEvent(forYear:)`, the derived generators and their salts, `Difficulty` knobs (D10), `runSeasonalEventSystem` after the calendar and before orders
+- [x] 2.3 The `WorldEvent` cases; the events `enabled` flag; events stay off while the calendar is inactive
 - [ ] 2.4 CityUI: the New Game "Seasonal events" toggle (hidden for chapters with a schedule); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
 
 ## 3. CityCore: fire, fire watch and ruins (can start before M2)
