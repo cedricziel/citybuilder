@@ -131,3 +131,39 @@ func chipFitsANarrowHUD() {
     #expect(EventChipLayout.showsText(hudWidth: 390))
     #expect(EventChipLayout.maxWidth(hudWidth: 300) <= 150)
 }
+
+@MainActor
+@Test("scenario: Inspecting burnt house ruins")
+func inspectingBurntHouseRuins() throws {
+    var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw += 1
+    let anchor = TileCoordinate(x: 2, y: 2)
+    // Burnt down in summer 1202, two years and a season after the start.
+    let burnt = 2 * CalendarState.ticksPerYear + CalendarState.ticksPerSeason + 120
+    world.buildings[id] = Building(id: id, kind: .ruins, anchor: anchor, state: .operational, ruinOf: .house, burntAtTick: burnt)
+    world.occupiedTiles[anchor] = id
+    world.tickCount = 3 * CalendarState.ticksPerYear
+    world.economy.balance = 100
+    let model = InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
+    #expect(model.title == "Ruins of a house")
+    #expect(model.keyLines.contains("Burnt down in Summer 1202"))
+    #expect(model.demolish == DemolishButton(title: "Clear ruins — $15", isEnabled: true))
+    world.economy.balance = 10
+    let poor = InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
+    #expect(poor.demolish?.isEnabled == false)
+}
+
+@MainActor
+@Test("scenario: a burning building's demolish names its cost")
+func burningBuildingDemolishNamesItsCost() {
+    var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw += 1
+    let anchor = TileCoordinate(x: 2, y: 2)
+    world.buildings[id] = Building(id: id, kind: .sawmill, anchor: anchor, state: .burning)
+    world.occupiedTiles[anchor] = id
+    let model = InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
+    #expect(model.demolish?.title == "Pull down — $30")
+    #expect(model.keyLines.contains("Burning"))
+}

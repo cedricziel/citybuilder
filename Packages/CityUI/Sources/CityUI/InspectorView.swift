@@ -24,6 +24,8 @@ public struct InspectorViewModel: Sendable {
     public let routeStartPort: EntityID?
     /// What stops the building working, nil when nothing does.
     public let problem: String?
+    /// Demolish when it costs money (ruins, a burning building), nil when free.
+    public let demolish: DemolishButton?
 
     public init(
         bullets: [String],
@@ -35,7 +37,8 @@ public struct InspectorViewModel: Sendable {
         rival: RivalSummary? = nil,
         market: RivalMarketSection? = nil,
         routeStartPort: EntityID? = nil,
-        problem: String? = nil
+        problem: String? = nil,
+        demolish: DemolishButton? = nil
     ) {
         self.bullets = bullets
         self.title = title
@@ -47,6 +50,7 @@ public struct InspectorViewModel: Sendable {
         self.market = market
         self.routeStartPort = routeStartPort
         self.problem = problem
+        self.demolish = demolish
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -83,7 +87,7 @@ public struct InspectorViewModel: Sendable {
         let issue = snapshot.buildingIssues[entityID]
         let problem = issue.map(problemText)
         return InspectorViewModel(
-            bullets: [
+            bullets: fireLines(for: building, in: snapshot) + [
                 "Kind: \(building.kind.rawValue)",
                 "Anchor: (\(building.anchor.x), \(building.anchor.y))",
                 "Footprint: \(spec.footprint.width)×\(spec.footprint.height)",
@@ -92,7 +96,7 @@ public struct InspectorViewModel: Sendable {
                 "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
             ] + inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + signatureLines(for: building, in: snapshot) +
                 houseLines + (problem.map { ["Problem: \($0)"] } ?? []),
-            title: BuildTool.place(building.kind).displayName,
+            title: title(of: building),
             tier: tier,
             residentsFill: residentsFill,
             // A rival's building is read-only.
@@ -101,7 +105,8 @@ public struct InspectorViewModel: Sendable {
             rival: rival,
             market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
             routeStartPort: building.kind == .port ? entityID : nil,
-            problem: problem
+            problem: problem,
+            demolish: rival == nil ? demolishButton(for: building, balance: snapshot.economy.balance) : nil
         )
     }
 
@@ -218,13 +223,14 @@ extension InspectorViewModel {
     /// a house, otherwise state and road. Spec: `platform-shells` /
     /// Inspector callout.
     public var keyLines: [String] {
-        let head = tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:", "Next:"]
+        let head = (tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:", "Next:"]) + Self.fireMarkers
         return (head + ["Problem:"]).compactMap { marker in
             bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
         }
     }
 
     private static let inReachMarker = " in reach: "
+    private static let fireMarkers = ["Burning", "Burnt down in "]
 
     /// What the next tier wants beyond this one's needs, below the top
     /// tier. Spec: `platform-shells` / Inspector callout.
