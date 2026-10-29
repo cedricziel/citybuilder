@@ -94,7 +94,7 @@ extension World {
     private func updateTier(
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, pastGrace: Bool, pass: inout AdvancePass
     ) {
-        let network = roadComponent(fromAnchor: building.anchor, footprint: building.footprint, reach: pass.reach)
+        let source = advancementSource(for: building, reach: pass.reach)
         let held = Set(pop.tier.needs(in: culture))
         let needs = pop.tier.next.map { bindingNeeds(of: $0, for: building.owner, advancing: true) } ?? []
         // The needs the next tier adds must cover two draws; those the house already eats need one unit.
@@ -102,11 +102,11 @@ extension World {
             (good, HousePopulation.advanceDraws * HousePopulation.amount(of: good, residents: pop.population))
         })
         let canAdvance = pop.tier.next != nil && pop.population >= modifiers.capacity(of: pop.tier)
-            && network.map { network in
+            && source.map { source in
                 needs.allSatisfy { good in
-                    let inStock = stock(of: good, onNetwork: network, reach: pass.reach)
+                    let inStock = advancementStock(of: good, at: source, reach: pass.reach)
                     guard let units = added[good] else { return inStock > 0 }
-                    return inStock - pass.claimed(good, on: network) >= units
+                    return inStock - pass.claimed(good, at: source) >= units
                 }
             } ?? false
         let mustDecline = pop.tier.previous != nil && pastGrace
@@ -117,14 +117,28 @@ extension World {
         pop.ticksAtTierCondition &+= 1
         guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / modifiers.paceDivisor else { return }
         pop.ticksAtTierCondition = 0
-        if canAdvance, let next = pop.tier.next, let network {
+        if canAdvance, let next = pop.tier.next, let source {
             pop.tier = next
-            pass.claim(added, on: network)
+            pass.claim(added, at: source)
         } else if let previous = pop.tier.previous {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
         }
         pop.keepShortages(for: pop.tier.needs(in: culture))
+    }
+
+    /// Where `house` finds the stock it advances on: the road network it is on, nil without a road.
+    /// This and `advancementStock` are the one place that source lives; the claims are keyed by it.
+    func advancementSource(for house: Building, reach: SupplyReach) -> Int? {
+        anyAdjacentRoad(anchor: house.anchor, footprint: house.footprint).flatMap { reach.roadComponents[$0] }
+    }
+
+    /// Units of `good` at `source` before this tick's claims: what the operational buffers on that
+    /// road network hold in all.
+    func advancementStock(of good: Good, at source: Int, reach: SupplyReach) -> Int {
+        reach.buffers.reduce(0) { sum, buffer in
+            buffer.component == source ? sum + (stockpiles[buffer.id]?.quantity(of: good) ?? 0) : sum
+        }
     }
 
     /// The needs of `tier` that hold a house of `owner` to it (spec
@@ -141,10 +155,10 @@ extension World {
 }
 
 /// One tick's population pass: the buffers' reach, and what houses that moved
-/// up a tier this tick claimed of each good on each road network, so a later
-/// house on the same network cannot advance on the same units (spec
-/// `population-and-needs` / Advancing needs stock for two draws). Claims move
-/// no goods and end with the pass.
+/// up a tier this tick claimed of each good at each advancement source, so a
+/// later house drawing on the same source cannot advance on the same units
+/// (spec `population-and-needs` / Advancing needs stock for two draws). Claims
+/// move no goods and end with the pass.
 struct AdvancePass {
     let reach: World.SupplyReach
     private var claims: [Int: [Good: Int]] = [:]
@@ -153,13 +167,13 @@ struct AdvancePass {
         self.reach = reach
     }
 
-    func claimed(_ good: Good, on network: Int) -> Int {
-        claims[network]?[good] ?? 0
+    func claimed(_ good: Good, at source: Int) -> Int {
+        claims[source]?[good] ?? 0
     }
 
-    mutating func claim(_ units: [Good: Int], on network: Int) {
+    mutating func claim(_ units: [Good: Int], at source: Int) {
         for (good, amount) in units {
-            claims[network, default: [:]][good, default: 0] += amount
+            claims[source, default: [:]][good, default: 0] += amount
         }
     }
 }
