@@ -64,3 +64,50 @@ items:
     footprint: [3, 3]
     cost: 500
     materials: { planks: 8, iron: 8 }
+
+  # A placeholder campaign: one chapter that uses every chapter field.
+  - { kind: Campaign, id: andean-terraces, title: The Andean Terraces, chapters: [high-valley] }
+
+  - kind: Chapter
+    id: high-valley
+    title: The High Valley
+    intro: Terraces climb the slopes above a cold river.
+    ending: Cocoa and stone, and a temple on the ridge.
+    layout: archipelago
+    seed: 7
+    age: medieval
+    culture: andean
+    rivals: 1
+    money: 1200
+    stock: { wood: 8, planks: 6 }
+    overrides: { hard: { stock: { wood: 4 } } }
+    directives:
+      - { thinForest: { island: home, keep: 20 } }
+      - { noMountains: 1 }
+      - { raiseMineSite: 1 }
+      - { pushMineOut: 12 }
+    closedBuildings: [salt-works]
+    closedTechs: [seafaring]
+    researched: [cultivation]
+    goals:
+      - { residents: 40, tier: citizens }
+      - { stock: chocolate, count: 10 }
+      - { buildings: terrace-temple, count: 1 }
+      - { research: mining }
+      - { age: space }
+      - { landed: cocoa-beans, count: 20 }
+    bonus:
+      - { treasury: 2000, hold: true }
+      - { netIncome: 100 }
+      - { tradeEarnings: 300 }
+      - { orders: 1 }
+      - { signatureProjects: 1 }
+      - { outgrowRivals: true }
+    lose: { deadline: 1210, rivalRace: { residents: 80 }, collapse: 30 }
+    rivalAgeYears: { renaissance: 1208 }
+    difficulties: [normal, hard]
+    reward: { decor: Terrace stone }
+    sweep: { firstSteps: false, order: careful, market: true, kits: [signature] }
+    comingLater: true
+    events: [{ year: 1203, season: summer, event: fire }]
+    randomEvents: false

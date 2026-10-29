@@ -60,11 +60,44 @@
         }
       }
     },
+    "island": { "description": "home, or the rank of another island by size from 1.", "oneOf": [{ "const": "home" }, { "$ref": "#/$defs/positive" }] },
+    "chapterStart": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "money": { "$ref": "#/$defs/nonNegative" },
+        "stock": { "$ref": "#/$defs/amounts" },
+        "rivalAgeYears": { "description": "The earliest year a rival may enter each age on this difficulty.", "type": "object", "propertyNames": { "$ref": "#/$defs/id" }, "additionalProperties": { "type": "integer" } }
+      }
+    },
+    "chapterGoal": {
+      "description": "Exactly one goal kind. residents takes an optional tier (default the first tier); stock, buildings and landed take a count. hold: true needs the condition for a whole season.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "residents": { "$ref": "#/$defs/positive" },
+        "tier": { "$ref": "#/$defs/tier" },
+        "age": { "$ref": "#/$defs/id" },
+        "stock": { "$ref": "#/$defs/id" },
+        "buildings": { "$ref": "#/$defs/id" },
+        "landed": { "description": "Units unloaded by player ships at a home-island port.", "$ref": "#/$defs/id" },
+        "count": { "$ref": "#/$defs/positive" },
+        "research": { "$ref": "#/$defs/id" },
+        "treasury": { "$ref": "#/$defs/positive" },
+        "netIncome": { "description": "Tax minus upkeep over the last season.", "type": "integer" },
+        "tradeEarnings": { "$ref": "#/$defs/positive" },
+        "orders": { "$ref": "#/$defs/positive" },
+        "signatureProjects": { "$ref": "#/$defs/positive" },
+        "outgrowRivals": { "const": true },
+        "hold": { "type": "boolean" }
+      }
+    },
     "item": {
       "type": "object",
       "required": ["kind", "id"],
       "properties": {
-        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order", "Event"] }
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order", "Event", "Campaign", "Chapter"] }
       },
       "allOf": [
         {
@@ -296,6 +329,130 @@
               "taxPerResident": { "$ref": "#/$defs/nonNegative" },
               "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true },
               "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "type": "integer", "minimum": 1, "maximum": 254 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Campaign" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "title", "chapters"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "title": { "type": "string", "minLength": 1 },
+              "chapters": { "description": "Chapter ids in play order.", "$ref": "#/$defs/ids", "minItems": 1 },
+              "opensAfter": { "description": "The chapter whose win opens this campaign. Omit for one open from the start.", "$ref": "#/$defs/id" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Chapter" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "title", "intro", "ending", "layout", "seed", "age", "money", "goals", "reward"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "title": { "type": "string", "minLength": 1 },
+              "intro": { "description": "The intro card text.", "type": "string", "minLength": 1, "maxLength": 320 },
+              "ending": { "description": "The ending card text.", "type": "string", "minLength": 1, "maxLength": 320 },
+              "layout": { "enum": ["single-island", "archipelago"] },
+              "seed": { "$ref": "#/$defs/nonNegative" },
+              "age": { "$ref": "#/$defs/id" },
+              "culture": { "description": "A fixed culture. Omit to let the player choose.", "$ref": "#/$defs/id" },
+              "rivals": { "description": "Rival towns on the archipelago; there are three rival cultures.", "type": "integer", "minimum": 0, "maximum": 3 },
+              "money": { "description": "Normal starting money: Easy ×1.5 and Hard ×0.7, rounded to $50.", "$ref": "#/$defs/nonNegative" },
+              "stock": { "description": "Normal starting stock per town center: Easy ×1.5 and Hard ×0.5, rounded up.", "$ref": "#/$defs/amounts" },
+              "overrides": {
+                "description": "Money, stock or rival age years for one difficulty, in place of the chapter's.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "easy": { "$ref": "#/$defs/chapterStart" },
+                  "normal": { "$ref": "#/$defs/chapterStart" },
+                  "hard": { "$ref": "#/$defs/chapterStart" }
+                }
+              },
+              "directives": {
+                "description": "Terrain changes after generation, in order.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "properties": {
+                    "thinForest": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["island", "keep"],
+                      "properties": { "island": { "$ref": "#/$defs/island" }, "keep": { "type": "integer", "minimum": 0, "maximum": 100 } }
+                    },
+                    "pushMineOut": { "description": "Radius around the home town center, beyond its start area.", "type": "integer", "minimum": 8 },
+                    "noMountains": { "$ref": "#/$defs/island" },
+                    "raiseMineSite": { "$ref": "#/$defs/island" }
+                  }
+                }
+              },
+              "closedBuildings": { "$ref": "#/$defs/ids" },
+              "closedTechs": { "$ref": "#/$defs/ids" },
+              "researched": { "description": "Techs done at the start, besides the age's own.", "$ref": "#/$defs/ids" },
+              "goals": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/chapterGoal" } },
+              "bonus": { "description": "Bonus goals: each one met on a win is a laurel.", "type": "array", "items": { "$ref": "#/$defs/chapterGoal" } },
+              "lose": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "deadline": { "description": "The year whose first tick loses the chapter. Easy adds a third of the span.", "type": "integer" },
+                  "rivalRace": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": { "age": { "$ref": "#/$defs/id" }, "residents": { "$ref": "#/$defs/positive" }, "tier": { "$ref": "#/$defs/tier" } }
+                  },
+                  "collapse": { "description": "A residents floor, armed once reached.", "$ref": "#/$defs/positive" }
+                }
+              },
+              "rivalAgeYears": {
+                "description": "The earliest year a rival may enter each age.",
+                "type": "object",
+                "propertyNames": { "$ref": "#/$defs/id" },
+                "additionalProperties": { "type": "integer" }
+              },
+              "difficulties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["easy", "normal", "hard"] } },
+              "reward": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "maxProperties": 1,
+                "properties": { "banner": { "type": "string" }, "decor": { "type": "string" }, "mapPreset": { "type": "string" } }
+              },
+              "sweep": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "firstSteps": { "type": "boolean" },
+                  "order": { "enum": ["careful", "naive"] },
+                  "market": { "type": "boolean" },
+                  "kits": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "comingLater": { "description": "Shown but never opened.", "type": "boolean" },
+              "events": {
+                "description": "Seasonal events by year: at most one a year, no hazard in spring.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["year", "season", "event"],
+                  "properties": {
+                    "year": { "type": "integer" },
+                    "season": { "enum": ["spring", "summer", "autumn", "winter"] },
+                    "event": { "$ref": "#/$defs/id" }
+                  }
+                }
+              },
+              "randomEvents": { "description": "False turns off the random draw. Defaults to true.", "type": "boolean" }
             }
           }
         }

@@ -32,7 +32,15 @@ public enum ItemSchema {
             optional: ["minAge", "favour", "penalty"]
         ),
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: ["declineGrace"]),
-        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"])
+        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"]),
+        "Campaign": Fields(required: ["id", "title", "chapters"], optional: ["opensAfter"]),
+        "Chapter": Fields(
+            required: ["id", "title", "intro", "ending", "layout", "seed", "age", "money", "goals", "reward"],
+            optional: [
+                "culture", "rivals", "stock", "overrides", "directives", "closedBuildings", "closedTechs", "researched",
+                "bonus", "lose", "rivalAgeYears", "difficulties", "sweep", "comingLater", "events", "randomEvents"
+            ]
+        )
     ]
 
     /// The mechanics a seasonal event can have, each written in Swift.
