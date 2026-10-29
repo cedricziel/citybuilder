@@ -241,6 +241,24 @@ public extension World {
         return world
     }
 
+    /// Test helper: a fire event under way for the event art's shots. The first `burning` player
+    /// houses catch fire (a fire watch in reach sends its watchman), and the next `ruined` burn down
+    /// to ruins at once. With `nextIgnitionIn`, one more house catches fire that many ticks later.
+    mutating func seedFireShowcase(burning: Int = 2, ruined: Int = 1, nextIgnitionIn: UInt64? = nil) {
+        seasonalEvents.enabled = true
+        seasonalEvents.active = ActiveSeasonalEvent(event: .fire, startTick: tickCount, lastTick: tickCount + CalendarState.ticksPerSeason)
+        seasonalEvents.fire = FireEventState(ignitionTicks: nextIgnitionIn.map { [tickCount + $0] } ?? [])
+        let houses = buildings.values.filter { $0.kind == .house && $0.owner == .player }.sorted { $0.id.raw < $1.id.raw }
+        var events: [WorldEvent] = []
+        for house in houses.prefix(burning) {
+            ignite(house.id, events: &events)
+        }
+        for house in houses.dropFirst(burning).prefix(ruined) {
+            burnDown(house.id)
+        }
+        dispatchWatchmen()
+    }
+
     /// Test helper: a treasury deep enough that a seeded town's upkeep never bankrupts it, so art
     /// reviews screenshot the town rather than the bankruptcy banner.
     mutating func seedTestFunds(_ amount: Int64 = 1_000_000) {

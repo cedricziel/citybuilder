@@ -114,3 +114,27 @@ func offMapAnchorHasNoArea() {
         #expect(world.areaOfEffect(of: .mine, at: anchor, placing: true) == nil)
     }
 }
+
+// add-event-counterplay / rendering-2_5d: the reach of a fire watch in the teal "serves" style.
+
+@Test("scenario: placing a fire watch shows the buildings it covers, in the serves style")
+func fireWatchServesItsReach() throws {
+    var world = eventsWorld(size: 24)
+    let near = addOperational(.house, at: TileCoordinate(x: 12, y: 4), residents: 2, in: &world)
+    _ = addOperational(.house, at: TileCoordinate(x: 20, y: 20), residents: 2, in: &world)
+    _ = addOperational(.townCenter, at: TileCoordinate(x: 2, y: 8), in: &world)
+    let area = try #require(world.areaOfEffect(of: .fireWatch, at: TileCoordinate(x: 4, y: 4), placing: true))
+    #expect(area.style == .serves)
+    // Eight tiles from its one-tile footprint, clipped to the map.
+    #expect(area.tiles == tiles(x: 0 ... 12, y: 0 ... 12))
+    // Only the flammable house in reach is covered: the far house is out of it, and a town center can't burn.
+    let house = try #require(world.buildings[near])
+    #expect(area.targets == house.footprint.tiles(anchor: house.anchor).sorted { ($0.y, $0.x) < ($1.y, $1.x) })
+    #expect(area.count == nil)
+}
+
+@Test("a hut's catchment keeps the plain reach style")
+func catchmentsKeepTheReachStyle() throws {
+    let area = try #require(world().areaOfEffect(of: .lumberjackHut, at: TileCoordinate(x: 4, y: 4), placing: true))
+    #expect(area.style == .reach)
+}

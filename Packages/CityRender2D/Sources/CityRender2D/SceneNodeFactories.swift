@@ -199,6 +199,7 @@ extension IsoWorldScene {
             node.userData = [Self.textureNameKey: textureName]
         }
         applyLook(look, to: node)
+        if state == .burning { FireEffect.dress(node, footprint: footprint, reduceMotion: reduceMotion) }
         addPennant(for: look, kind: kind, to: node)
         if signature == nil {
             armAnimation(on: node, kind: kind, state: state, animationBase: animationBase)

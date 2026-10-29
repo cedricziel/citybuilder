@@ -78,3 +78,19 @@ func heldKindsAreNotInThePalette() {
     #expect(!offered.contains(.ruins))
     #expect(offered.contains(.fireWatch))
 }
+
+@Test("the fire seed shows burning houses, ruins, a fire watch and a granary")
+func fireSeedShowsTheEventArt() {
+    let world = UITestSeed.fireWorld()
+    let kinds = world.buildings.values.map(\.kind)
+    #expect(world.buildings.values.count { $0.state == .burning } == 2)
+    #expect(kinds.contains(.ruins) && kinds.contains(.fireWatch) && kinds.contains(.granary))
+    // A road joins the watch to the town, so its watchman walks to a fire, and again to the third.
+    #expect(!world.snapshot().watchmen.isEmpty)
+    var later = world
+    for _ in 0 ..< UITestSeed.fireSeedSecondCall + 2 {
+        _ = later.tick()
+    }
+    #expect(later.buildings.values.count { $0.state == .burning } >= 2)
+    #expect(later.snapshot().watchmen.contains { !$0.isDousing })
+}
