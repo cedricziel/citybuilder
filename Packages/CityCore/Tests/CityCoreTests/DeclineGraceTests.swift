@@ -6,12 +6,14 @@ import Testing
 // Houses decline only after a grace period, and rendering-2_5d /
 // A house running short shows the short icon before it declines.
 
-/// Fills the town center with every merchant need except what `missing`
-/// names, so the house draws everything else in full.
+/// Fills the town center, and the house's own stock, with every merchant
+/// need except what `missing` names, so the house draws everything else in
+/// full and porters have nothing of the missing goods to bring.
 func restock(_ fixture: inout HouseFixture, missing: Set<Good>) {
     var stock = Stockpile(capacity: 400)
     for good in [Good.food, .planks, .bread, .tools, .cloth, .beer] where !missing.contains(good) {
         _ = stock.deposit(good, amount: 40)
+        fixture.world.populations[fixture.house]?.addStock(good, amount: 40)
     }
     fixture.world.stockpiles[fixture.center] = stock
 }

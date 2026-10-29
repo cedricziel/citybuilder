@@ -17,7 +17,8 @@ private struct Street {
     init(tier: HouseTier, residents: UInt32, goods: [Good]? = nil) {
         world = Fixture.grass()
         let goods = goods ?? HouseTier.merchants.needs(in: world.culture)
-        warehouse = Fixture.inject(.warehouse, at: TileCoordinate(x: 0, y: 1), in: &world)
+        // A town center, so porters keep the house stocked.
+        warehouse = Fixture.inject(.townCenter, at: TileCoordinate(x: 0, y: 1), in: &world)
         for good in goods {
             world.stockpiles[warehouse]?.deposit(good, amount: 30)
         }
@@ -28,6 +29,9 @@ private struct Street {
         var pop = HousePopulation()
         pop.tier = tier
         pop.population = residents
+        for good in goods {
+            pop.addStock(good, amount: 30)
+        }
         world.populations[house] = pop
     }
 

@@ -76,6 +76,27 @@ public struct RoadGraph: Codable, Sendable, Equatable {
         return labels
     }
 
+    /// Road distance from `start` to every road tile at most `limit` tiles
+    /// away, by breadth-first search.
+    func distances(from start: TileCoordinate, upTo limit: Int) -> [TileCoordinate: Int] {
+        var distances = [start: 0]
+        var frontier = [start]
+        var next: [TileCoordinate] = []
+        var distance = 0
+        while !frontier.isEmpty, distance < limit {
+            distance += 1
+            for tile in frontier {
+                for neighbor in adjacency[tile] ?? [] where distances[neighbor] == nil {
+                    distances[neighbor] = distance
+                    next.append(neighbor)
+                }
+            }
+            swap(&frontier, &next)
+            next.removeAll(keepingCapacity: true)
+        }
+        return distances
+    }
+
     private func neighbors(of coord: TileCoordinate) -> [TileCoordinate] {
         [
             TileCoordinate(x: coord.x + 1, y: coord.y),

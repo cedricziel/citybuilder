@@ -47,6 +47,9 @@ public struct World: Codable, Sendable, Equatable {
     public internal(set) var populations: [EntityID: HousePopulation] = [:]
     /// In-flight carriers keyed by ID.
     public internal(set) var carriers: [EntityID: Carrier] = [:]
+    /// Market porters out, in entity order. Saves without them decode none
+    /// (see the `KeyedDecodingContainer` overload in `World+Porters.swift`).
+    public internal(set) var porters: [Porter] = []
     /// Counter for carrier in-flight count per producer.
     public internal(set) var carrierCountByProducer: [EntityID: Int] = [:]
     /// Sea entities. Continuous-position, integrated each tick by the
@@ -249,9 +252,12 @@ public struct World: Codable, Sendable, Equatable {
         let signatureSources = activeSignatureSources()
         runProductionSystem(signatureSources: signatureSources, events: &events)
         runForestrySystem(events: &events)
-        runCarrierSystem(events: &events)
+        // Hubs serve houses by road, and buildings and roads hold still
+        // until the next tick's commands, so carriers and houses share one.
+        let service = hubService()
+        runCarrierSystem(service: service, events: &events)
         runShipSystem(events: &events)
-        runPopulationSystem(signatureSources: signatureSources)
+        runPopulationSystem(signatureSources: signatureSources, service: service)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runSeasonalEventSystem(events: &events)

@@ -74,7 +74,8 @@ func scenarioCalloutNamesWhatStopsABuilding() throws {
 
 @Test("scenario: problem text for every building issue")
 func scenarioProblemTextForEveryBuildingIssue() {
-    #expect(InspectorViewModel.problemText(.noRouteToStorage) == "Its road doesn't reach a warehouse or the town center")
+    #expect(InspectorViewModel.problemText(.noRouteToStorage) == "Its road doesn't reach a warehouse, marketplace or the town center")
+    #expect(InspectorViewModel.problemText(.noMarketInReach) == "No market in reach: build a marketplace near it")
     #expect(InspectorViewModel.problemText(.noTreesInReach) == "No forest within 2 tiles: build a forester beside it")
     #expect(InspectorViewModel.problemText(.noRoomToPlant) == "No open grass within 2 tiles to plant")
     #expect(InspectorViewModel.problemText(.missingInputs([.wood, .grain])) == "Waiting for wood, grain")

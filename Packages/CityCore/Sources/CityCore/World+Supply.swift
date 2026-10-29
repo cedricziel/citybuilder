@@ -91,6 +91,41 @@ extension World {
         }
     }
 
+    /// Hubs short of a good their houses need pull it from the nearest other
+    /// store of their owner on their road, one carrier per good at a time.
+    /// Short means below the hub's reserve: its reserve consumptions of what
+    /// its served houses eat. Spec: `warehouses-and-logistics` / Market
+    /// hubs gather house goods.
+    mutating func spawnRestockCarriers(service: HubService, events: inout [WorldEvent]) {
+        for hub in service.hubs {
+            guard let spec = hub.kind.hub, let hubRoad = anyAdjacentRoad(anchor: hub.anchor, footprint: hub.footprint)
+            else { continue }
+            let stores = goodsBuffers(of: hub.owner).filter { $0.state == .operational && $0.kind.hub == nil }
+            let vehicle = CarrierConfig.vehicle(in: age(of: hub.owner))
+            for (good, eaten) in consumption(of: service.housesOf[hub.id] ?? []) {
+                let short = shortfall(of: good, at: hub.id, below: spec.reserveConsumptions * eaten)
+                guard short > 0, inboundUnits(to: hub.id, good: good).ofGood == 0,
+                      let (store, path) = nearestBuffer(holding: good, toRoad: hubRoad, among: stores)
+                else { continue }
+                let held = stockpiles[store]?.quantity(of: good) ?? 0
+                let haul = CarrierConfig.haul(ready: min(held, short), along: path, vehicle: vehicle)
+                dispatchSupply(good, from: store, to: hub.id, along: path, haul: haul, events: &events)
+            }
+        }
+    }
+
+    /// What `houses` eat of each good per interval, in `Good` order.
+    private func consumption(of houses: [EntityID]) -> [(Good, Int)] {
+        var eaten: [Good: Int] = [:]
+        for house in houses {
+            guard let pop = populations[house] else { continue }
+            for good in pop.tier.needs(in: culture) {
+                eaten[good, default: 0] += pop.nextConsumption(of: good)
+            }
+        }
+        return Good.allCases.compactMap { good in eaten[good].map { (good, $0) } }
+    }
+
     /// Operational buildings with goods to be supplied, in entity order,
     /// with those goods and amounts.
     func operationalConsumers() -> [(Building, [Good: Int])] {
@@ -122,9 +157,15 @@ extension World {
     /// `amount`, counting units on their way, and no more than its room
     /// beyond what is already on its way to it.
     func shortfall(of good: Good, at consumer: EntityID, amount: Int) -> Int {
-        let pile = stockpiles[consumer]
-        let inbound = inboundUnits(to: consumer, good: good)
-        let short = amount * 2 - (pile?.quantity(of: good) ?? 0) - inbound.ofGood
+        shortfall(of: good, at: consumer, below: amount * 2)
+    }
+
+    /// Units of `good` that would bring `building` up to `target`, counting
+    /// units on their way, and no more than its room beyond those.
+    func shortfall(of good: Good, at building: EntityID, below target: Int) -> Int {
+        let pile = stockpiles[building]
+        let inbound = inboundUnits(to: building, good: good)
+        let short = target - (pile?.quantity(of: good) ?? 0) - inbound.ofGood
         return min(short, (pile?.room(for: good) ?? 0) - inbound.all)
     }
 
@@ -197,22 +238,6 @@ extension World {
             }
         }
         return best
-    }
-
-    /// Withdraw up to `amount` of `good` from operational goods buffers
-    /// on `building`'s road network, lowest entity ID first. Returns the
-    /// amount actually withdrawn.
-    mutating func consume(_ good: Good, amount: Int, by building: Building) -> Int {
-        let footprint = building.footprint
-        var remaining = amount
-        for buffer in goodsBuffers() where remaining > 0 && buffer.state == .operational {
-            let bufferFootprint = buffer.footprint
-            guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
-                  sharesRoadNetwork(building.anchor, footprint, with: buffer.anchor, bufferFootprint)
-            else { continue }
-            remaining -= stockpiles[buffer.id]?.withdraw(good, amount: remaining) ?? 0
-        }
-        return amount - remaining
     }
 
     /// Takes up to `amount` of `good` from `buffers`, in the given order.

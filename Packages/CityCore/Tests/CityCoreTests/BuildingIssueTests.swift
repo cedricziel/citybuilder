@@ -117,10 +117,11 @@ func scenarioAProducerShortOfInputsReportsTheMissingGoods() {
 func scenarioAHouseOffTheStorageNetworkReportsNoRouteToStorage() {
     var world = grassWorld()
     let house = inject(.house, in: &world, at: TileCoordinate(x: 1, y: 1))
-    _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 11, y: 0))
+    _ = inject(.townCenter, in: &world, at: TileCoordinate(x: 11, y: 0))
     roads(&world, y: 3, 0 ... 5)
     roads(&world, y: 3, 8 ... 14)
-    #expect(world.buildingIssues()[house] == .noRouteToStorage)
+    // A house's issue is no market in reach (visible-distribution D10).
+    #expect(world.buildingIssues()[house] == .noMarketInReach)
 }
 
 @Test("scenario: the snapshot carries building issues")
