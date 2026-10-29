@@ -33,6 +33,13 @@
 - [x] 3.6 Refactor under a green bar.
 - [x] 3.7 Verify `make test-scenarios` is clean for `platform-shells`.
 
+### Notes from the M3 review
+
+- Card button styles: the secondary buttons are all `.bordered`; the canvas shows Keep building as borderless on the ending card.
+- The deadline lost card could name the unmet goal's progress, e.g. "(14 of 20)".
+- The age race readout shows "You: Medieval"; a residents-towards-the-gate figure would match the rival's.
+- tvOS: check that Close in chapter select is reachable by focus (playtest).
+
 ## 4. M4 — Eleven chapters that need nothing new
 
 - [ ] 4.1 PlayerBot kits: signature, sea and trade (design D10), each with its own test.
