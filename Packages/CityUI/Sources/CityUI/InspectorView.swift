@@ -91,14 +91,15 @@ public struct InspectorViewModel: Sendable {
             "Kind: \(building.kind.rawValue)",
             "Anchor: (\(building.anchor.x), \(building.anchor.y))",
             "Footprint: \(footprint.width)×\(footprint.height)",
-            "State: \(building.state.rawValue)",
+            "State: \(building.kind == .ruins ? "ruins" : building.state.rawValue)",
             "Build: \(buildProgress)",
             "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
         ]
         let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID])
         let signature = signatureLines(for: building, in: snapshot)
         let problemLines = problem.map { ["Problem: \($0)"] } ?? []
-        let bullets: [String] = fireLines(for: building, in: snapshot) + basics + reach + signature + houseLines + problemLines
+        let fire = fireLines(for: building, in: snapshot) + fireWatchLines(for: building, in: snapshot)
+        let bullets: [String] = fire + basics + reach + signature + houseLines + problemLines
         return InspectorViewModel(
             bullets: bullets,
             title: title(of: building),
@@ -235,7 +236,7 @@ extension InspectorViewModel {
     }
 
     private static let inReachMarker = " in reach: "
-    private static let fireMarkers = ["Burning", "Burnt down in "]
+    private static let fireMarkers = ["Burning", "Burnt down in ", "Covers ", "Watchman: "]
 
     /// What the next tier wants beyond this one's needs, below the top
     /// tier. Spec: `platform-shells` / Inspector callout.

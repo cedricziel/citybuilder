@@ -18,6 +18,7 @@ extension CityRootView {
         let layout = boardFrame == nil ? hudLayout : hudLayout.withFirstStepsCollapsed
         let railInset = layout.railInset
         let firstStepsGuide = session.firstStepsGuide
+        let bannerFitsColumn = bannerFitsColumn(layout: layout, hudWidth: hudWidth)
         return ZStack {
             VStack(spacing: 8) {
                 // The section includes the inset, so its frame spans the
@@ -42,11 +43,9 @@ extension CityRootView {
                                 showsFirstSteps: firstStepsGuide != nil
                             )
                         )
-                        SessionBannerView(
-                            banner: session.banner,
-                            onResume: session.deficitHint == nil || session.isGameOver ? nil : { session.dismissDeficitHint() }
-                        )
-                        .padding(.top, 4)
+                        if bannerFitsColumn {
+                            sessionBanner.padding(.top, 4)
+                        }
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity)
@@ -56,6 +55,9 @@ extension CityRootView {
                     rightColumn(layout: layout, worldViewSize: worldViewSize, boardFrame: boardFrame)
                 }
                 .padding(.leading, railInset)
+            }
+            if !bannerFitsColumn {
+                wideBanner(layout: layout)
             }
             if let authoring = session.routeAuthoring {
                 VStack {
@@ -70,6 +72,32 @@ extension CityRootView {
             }
         }
         .panelAnimation(value: session.routeAuthoring != nil)
+    }
+
+    /// Whether the left column is wide enough for a session banner.
+    private func bannerFitsColumn(layout: HUDLayout, hudWidth: CGFloat) -> Bool {
+        SessionBannerLayout.fitsColumn(width: MinimapLayout.trayColumnWidth(
+            hudWidth: hudWidth, layout: layout, showsMinimap: showsCornerMinimap, showsFirstSteps: session.firstStepsGuide != nil
+        ))
+    }
+
+    /// A column too narrow for a banner (a small phone with the first steps
+    /// open) would squeeze it over the inspector: it spans the HUD above the
+    /// build controls instead.
+    private func wideBanner(layout: HUDLayout) -> some View {
+        VStack {
+            Spacer()
+            sessionBanner
+                .padding(.bottom, SessionBannerLayout.bottomInset(layout: layout))
+        }
+        .panelAnimation(value: session.banner)
+    }
+
+    private var sessionBanner: some View {
+        SessionBannerView(
+            banner: session.banner,
+            onResume: session.deficitHint == nil || session.isGameOver ? nil : { session.dismissDeficitHint() }
+        )
     }
 
     /// The trailing column under the top bar: the minimap in the dock

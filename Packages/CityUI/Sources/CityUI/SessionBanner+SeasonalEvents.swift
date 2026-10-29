@@ -13,8 +13,9 @@ extension GameSession {
         case let .seasonalEventStarted(event):
             let end = world.seasonalEvents.active.map { Self.endDate(of: $0.lastTick, in: world) } ?? ""
             return Self.banner(event, .onset, ["date": end])
-        case let .buildingCaughtFire(_, kind):
-            return Self.banner(.fire, .ignition, ["building": BuildTool.place(kind).displayName.lowercased()])
+        case let .buildingCaughtFire(id, kind):
+            let moment: SeasonalBannerKind = isAnswered(id) ? .ignitionCovered : .ignition
+            return Self.banner(.fire, moment, ["building": BuildTool.place(kind).displayName.lowercased()])
         case let .seasonalEventEnded(event, toll):
             let moment: SeasonalBannerKind = switch (event.effect, toll.fires, toll.count) {
             case (.fire, 0, _): .endNoFire
@@ -35,6 +36,15 @@ extension GameSession {
             )
         default:
             return nil
+        }
+    }
+
+    /// A player fire watch would answer a fire in `id`.
+    private func isAnswered(_ id: EntityID) -> Bool {
+        guard let target = world.buildings[id] else { return false }
+        return world.buildings.values.contains { watch in
+            watch.kind == .fireWatch && watch.owner == target.owner && watch.state == .operational
+                && world.fireWatchCovers(watch, target)
         }
     }
 

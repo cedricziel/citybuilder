@@ -9,6 +9,9 @@ public struct SessionBanner: Equatable, Sendable {
 
 extension GameSession {
     static let bannerTicks: UInt64 = 60
+    /// Ticks between one banner hiding and the next showing, so the two
+    /// never draw at once while one slides out and the other in.
+    static let bannerGapTicks: UInt64 = 5
     static let gameOverBanner = SessionBanner(
         title: "Bankrupt",
         description: "The treasury stayed in the red too long and the town is lost. "
@@ -31,6 +34,7 @@ extension GameSession {
 
     func noteBannerEvents(in events: [WorldEvent]) {
         defer { noteDeficitHint(in: events) }
+        showNextBanner()
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -65,7 +69,7 @@ extension GameSession {
                 show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
             default:
                 if let seasonal = seasonalEventBanner(for: event) {
-                    show(seasonal)
+                    show(seasonal, isUrgent: event.isIgnition)
                 } else {
                     noteOrderEvent(event)
                 }
@@ -197,8 +201,7 @@ extension GameSession {
     /// waits until that step is met or the card is hidden. Spec:
     /// `platform-shells` / Idle-good hint.
     func noteIdleGoods() {
-        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
-        guard !showing, deficitHint == nil, !isGameOver else { return }
+        guard !isBannerBusy, deficitHint == nil, !isGameOver else { return }
         let asked = firstStepsGuide?.openStepKinds ?? []
         guard let idle = world.idleGoods(of: .player).first(where: {
             !hintedIdleGoods.contains($0.good) && asked.isDisjoint(with: $0.users)
@@ -223,8 +226,7 @@ extension GameSession {
         for (id, text) in problems where problemsSeen[id] == nil {
             problemsSeen[id] = (text, world.tickCount)
         }
-        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
-        guard !showing, deficitHint == nil, !isGameOver else { return }
+        guard !isBannerBusy, deficitHint == nil, !isGameOver else { return }
         let due = problemsSeen
             .filter { world.tickCount - $0.value.since >= Self.problemHintDelayTicks && !hintedProblems.contains($0.value.text) }
             .min { $0.key.raw < $1.key.raw }
@@ -262,8 +264,56 @@ extension GameSession {
         )
     }
 
-    private func show(_ banner: SessionBanner) {
-        bannerState = (banner, world.tickCount + Self.bannerTicks)
+    /// A banner shows, or waits while one shows: one at a time, each once.
+    /// An urgent one ("Fire!") goes ahead of the others, and a newer urgent
+    /// one with the same title takes the place of the one waiting.
+    private func show(_ banner: SessionBanner, isUrgent: Bool = false) {
+        guard bannerState?.banner != banner || !isBannerShowing, !bannerQueue.contains(where: { $0.banner == banner }) else { return }
+        if isUrgent {
+            bannerQueue.removeAll { $0.isUrgent && $0.banner.title == banner.title }
+        }
+        let place = isUrgent ? bannerQueue.firstIndex { !$0.isUrgent } ?? bannerQueue.endIndex : bannerQueue.endIndex
+        bannerQueue.insert((banner, isUrgent), at: place)
+        showNextBanner()
+    }
+
+    /// The next waiting banner, once the one before has hidden and the gap passed.
+    private func showNextBanner() {
+        let free = bannerState.map { world.tickCount >= $0.hidesAtTick + Self.bannerGapTicks } ?? true
+        guard free, !bannerQueue.isEmpty else { return }
+        bannerState = (bannerQueue.removeFirst().banner, world.tickCount + Self.bannerTicks)
+    }
+
+    private var isBannerShowing: Bool {
+        bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
+    }
+
+    /// A banner shows or waits, so a hint should hold back.
+    private var isBannerBusy: Bool {
+        isBannerShowing || !bannerQueue.isEmpty
+    }
+}
+
+private extension WorldEvent {
+    var isIgnition: Bool {
+        if case .buildingCaughtFire = self { true } else { false }
+    }
+}
+
+/// Where the session banner goes. Spec: `platform-shells` / Session banners.
+enum SessionBannerLayout {
+    /// Narrower than this, the banner's text wraps line by line and it
+    /// leaves the HUD's left column.
+    static let minWidth: CGFloat = 240
+
+    static func fitsColumn(width: CGFloat) -> Bool {
+        width >= minWidth
+    }
+
+    /// Off the column, the banner sits this far up from the bottom, above
+    /// the dock when there is one.
+    static func bottomInset(layout: HUDLayout) -> CGFloat {
+        layout.placement == .bottomDock ? 90 : 16
     }
 }
 

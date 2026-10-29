@@ -28,6 +28,25 @@ extension InspectorViewModel {
         return ["Burnt down in \(snapshot.calendar.date(atTick: tick).displayText)"]
     }
 
+    /// What a fire watch covers and where its watchman is. Spec:
+    /// `platform-shells` / Fire watch inspector.
+    static func fireWatchLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {
+        guard building.kind == .fireWatch, building.state == .operational else { return [] }
+        let covers = snapshot.fireWatchCover[building.id] ?? 0
+        let walker = snapshot.watchmen.first { $0.watch == building.id }
+        let hasRoad = !snapshot.roadDisconnectedBuildings.contains(building.id)
+        return [
+            "Covers \(covers) building\(covers == 1 ? "" : "s") within \(World.fireWatchReach) tiles by road",
+            watchmanLine(walker, hasRoad: hasRoad)
+        ]
+    }
+
+    static func watchmanLine(_ walker: WatchmanWalker?, hasRoad: Bool) -> String {
+        guard hasRoad else { return "Watchman: can't leave: no road" }
+        guard let walker else { return "Watchman: at the watch" }
+        return walker.isDousing ? "Watchman: dousing a fire" : "Watchman: walking to a fire"
+    }
+
     /// "Ruins of a house" for ruins, the palette name otherwise.
     static func title(of building: Building) -> String {
         guard let kind = building.ruinOf else { return BuildTool.place(building.kind).displayName }
