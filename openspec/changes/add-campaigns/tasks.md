@@ -1,16 +1,16 @@
 ## 0. Gate
 
-- [ ] 0.1 Confirm visible-distribution M2 (#238) and the wool → cloth chain (#239) have merged. Rerun the baseline in design.md on the new main and update the chapter targets before starting M1.
+- [ ] 0.1 Confirm visible-distribution M2 (#238) and the wool → cloth chain (#239) have merged. Rerun the baseline in design.md on the new main and update the chapter targets before starting M1. Open: the gate is about the chapter targets, which wait for #238 M2. The M1 mechanics (section 1) went ahead without it; the rerun belongs before chapters are tuned in M4.
 - [x] 0.2 Claude Design canvas for the chapter select screen and the intro, ending and lost cards: today's New Game dialog and win sheet as the "before", 2–3 options, a recommendation, and the owner's go-ahead. Canvas: https://claude.ai/artifact/7RVf4CiyHoJpgyBgEa1Q35. Approved: chapter select C (split view) and cards B (sheet with a map header); see design D13.
 
 ## 1. M1 — Goals and lose conditions
 
-- [ ] 1.1 Tests-first: translate every scenario of `difficulty-and-goals` in this change into failing tests in CityCoreTests, and confirm they fail.
-- [ ] 1.2 Implement to green: the new goal kinds, the trade-earnings and landed-by-ship counters, holding goals and bonus goals.
-- [ ] 1.3 Implement to green: lose conditions (deadline, rival race, collapse) and `scenarioLost`, plus bankruptcy as a loss.
-- [ ] 1.4 Bump the save version, write the migration that fills the defaults, and add a fixture from the previous version.
-- [ ] 1.5 Refactor under a green bar.
-- [ ] 1.6 Verify `make test-scenarios` is clean for `difficulty-and-goals`.
+- [x] 1.1 Tests-first: translate every scenario of `difficulty-and-goals` in this change into failing tests in CityCoreTests, and confirm they fail.
+- [x] 1.2 Implement to green: the new goal kinds, the trade-earnings and landed-by-ship counters, holding goals and bonus goals.
+- [x] 1.3 Implement to green: lose conditions (deadline, rival race, collapse) and `scenarioLost`, plus bankruptcy as a loss.
+- [x] 1.4 Bump the save version, write the migration that fills the defaults, and add a fixture from the previous version. Save version 12; fixture `v11_first_harvest.json`.
+- [x] 1.5 Refactor under a green bar.
+- [x] 1.6 Verify `make test-scenarios` is clean for `difficulty-and-goals`.
 
 ## 2. M2 — Chapters as data, setup and terrain directives
 
