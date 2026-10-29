@@ -12,7 +12,8 @@ extension World {
     ///   on again when that store fills.
     /// - Otherwise the goods go on to the nearest store of their owner
     ///   with room for them, counting what is already on its way there,
-    ///   else back to where they came from when that stands and has room.
+    ///   else back to where they came from when that stands, is not burning
+    ///   and has room.
     /// - With nowhere to go they wait at their destination while it
     ///   stands, looking again each tick, so nothing is lost to a full
     ///   store. A construction site never keeps a carrier waiting.
@@ -43,33 +44,28 @@ extension World {
         return destinationStands ? waiting : nil
     }
 
-    /// The nearest operational goods buffer of `owner` with room for the
-    /// mission's good beyond what is already on its way there, other than
-    /// its destination, by road from `tile`; ties go to the lower entity
-    /// ID. Falls back to the mission's source when it still stands and has
-    /// room.
+    /// The nearest operational goods buffer of `owner`, other than the
+    /// mission's destination, by road from `tile`, with room for the whole
+    /// load beyond what is already on its way there; failing that, the
+    /// nearest with room for any of it. Ties go to the lower entity ID.
+    /// Falls back to the mission's source when it still stands, is not
+    /// burning and has room.
     private func nearestRoom(
         for mission: Carrier.Mission, from tile: TileCoordinate, owner: Owner
     ) -> (EntityID, [TileCoordinate])? {
         let inbound = InboundGoods(carriers.values)
-        func pathTo(_ building: Building) -> [TileCoordinate]? {
-            guard building.id != mission.destination, let pile = stockpiles[building.id],
-                  pile.room(for: mission.good) > inbound.pending(of: mission.good, to: building.id, in: pile),
-                  let road = anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint)
-            else { return nil }
-            return roadPath(from: tile, to: road)
+        func nearest(among buildings: [Building], room needed: Int) -> (EntityID, [TileCoordinate])? {
+            findRoadConnectedBuffer(
+                fromRoad: tile, good: mission.good, among: buildings.filter { $0.id != mission.destination },
+                inbound: { good, id in self.stockpiles[id].map { inbound.pending(of: good, to: id, in: $0) } ?? 0 },
+                room: needed
+            )
         }
-        var best: (EntityID, [TileCoordinate])?
-        for buffer in goodsBuffers(of: owner) where buffer.state == .operational {
-            guard let path = pathTo(buffer) else { continue }
-            if best.map({ path.count < $0.1.count }) ?? true {
-                best = (buffer.id, path)
-            }
-        }
-        if best == nil, let origin = buildings[mission.source], let path = pathTo(origin) {
-            best = (origin.id, path)
-        }
-        return best
+        // A store that takes the whole load first, so a cart does not trail
+        // its goods across several stores; then any store with room.
+        let buffers = goodsBuffers(of: owner).filter { $0.state == .operational }
+        return nearest(among: buffers, room: mission.amount) ?? nearest(among: buffers, room: 1)
+            ?? buildings[mission.source].flatMap { $0.state == .burning ? nil : nearest(among: [$0], room: 1) }
     }
 }
 

@@ -31,7 +31,7 @@ enum Cloth {
 
 /// What a figure carries.
 enum Load {
-    case none, basket, sack, crate, barrel, logs
+    case none, basket, sack, crate, barrel, logs, push
     /// A leather fire bucket swinging from the right hand.
     case bucket
 }
@@ -158,6 +158,9 @@ extension Builder {
         case (.sack, true), (.crate, true), (.barrel, true), (.logs, true):
             // Right elbow out in front, the hand up on the shouldered load.
             return (top + SCNVector3(0.18, -0.10, 0.08), top + SCNVector3(0.08, 0.28, 0.02))
+        case (.push, _):
+            // Both hands forward at the hips, on the cart's handles.
+            return (top + SCNVector3(0.16, -0.24, side * 0.03), top + SCNVector3(0.42, -0.44, side * 0.04))
         case (.bucket, true):
             // Right arm hanging straight, a little out from the body, carrying the bucket's weight.
             return (top + SCNVector3(0.03, -0.31, 0.06), top + SCNVector3(0.05, -0.60, 0.09))
@@ -192,7 +195,7 @@ extension Builder {
     private func carry(_ fig: Figure, shoulder: SCNVector3, headTop: CGFloat) {
         let right = shoulder + SCNVector3(-0.02, 0.12, 0.17)
         switch fig.load {
-        case .none:
+        case .none, .push:
             break
         case .bucket:
             let hand = shoulder + SCNVector3(0.05, -0.60, 0.30)

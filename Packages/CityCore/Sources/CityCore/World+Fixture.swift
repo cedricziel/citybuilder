@@ -250,6 +250,26 @@ public extension World {
         return world
     }
 
+    /// Four grain farms and a warehouse at one end of a long road and a
+    /// windmill at the other, placed by command. Ticked, storage sends the
+    /// windmill its grain by handcart, so the determinism gate covers carts.
+    static func haulFixture() -> World {
+        var world = fixtureWithTerrain(width: 40, height: 6, fill: .grass, seed: 0xCA27)
+        world.seedTestFunds()
+        for x in 0 ..< 40 {
+            world.enqueue(.place(.road, at: TileCoordinate(x: x, y: 3)))
+        }
+        let haul: [(BuildingKind, TileCoordinate)] = [
+            (.grainFarm, TileCoordinate(x: 0, y: 1)), (.grainFarm, TileCoordinate(x: 3, y: 1)),
+            (.grainFarm, TileCoordinate(x: 0, y: 4)), (.grainFarm, TileCoordinate(x: 3, y: 4)),
+            (.warehouse, TileCoordinate(x: 6, y: 0)), (.windmill, TileCoordinate(x: 36, y: 1))
+        ]
+        for (kind, anchor) in haul {
+            world.enqueue(.place(kind, at: anchor))
+        }
+        return world
+    }
+
     /// Test helper: a fire event under way for the event art's shots. The first `burning` player
     /// houses catch fire (a fire watch in reach sends its watchman), and the next `ruined` burn down
     /// to ruins at once. With `nextIgnitionIn`, one more house catches fire that many ticks later.

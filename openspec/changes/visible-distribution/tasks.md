@@ -13,11 +13,11 @@
 
 ## 2. Milestone 3: handcarts
 
-- [ ] 2.1 Spec deltas (`warehouses-and-logistics` / Handcarts; `rendering-2_5d`); tests-first
-- [ ] 2.2 `Logistics` game-data item with the cart values (D9)
-- [ ] 2.3 `Carrier.vehicle` and the cart rule (D5); defaults for old saves
-- [ ] 2.4 Handcart figure in IsoKit from the approved canvas, `.push` pose agreed with the art agent; rendering
-- [ ] 2.5 Sweeps, determinism baseline, coverage
+- [x] 2.1 Spec deltas (`warehouses-and-logistics` / Handcarts; `rendering-2_5d`); tests-first
+- [x] 2.2 `Logistics` game-data item with the cart values (D9)
+- [x] 2.3 `Carrier.vehicle` and the cart rule (D5); defaults for old saves
+- [x] 2.4 Handcart figure in IsoKit from the approved canvas, `.push` pose agreed with the art agent; rendering
+- [ ] 2.5 Sweeps, determinism baseline, coverage (fixture haul and coverage done; the sweeps are re-run once the supply output cap and M1 are on main)
 
 ## 3. Milestone 2: the market as hub (2a and 2b together)
 

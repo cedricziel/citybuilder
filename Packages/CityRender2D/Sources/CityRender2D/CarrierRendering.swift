@@ -52,6 +52,7 @@ enum RoadFigure: Equatable {
 struct CarrierLook: Equatable {
     let figure: RoadFigure
     let facing: SpriteAtlas.WalkerFacing
+    var vehicle: Vehicle?
 }
 
 /// One figure on the road this tick: a carrier, or a watchman, who stands still while he douses.
@@ -119,7 +120,9 @@ extension IsoWorldScene {
         snapshot.carriers.map { carrier in
             RoadWalker(
                 id: carrier.id,
-                look: CarrierLook(figure: .carrier(CarrierLoad.family(of: carrier.good)), facing: facing(of: carrier)),
+                look: CarrierLook(
+                    figure: .carrier(CarrierLoad.family(of: carrier.good)), facing: facing(of: carrier), vehicle: carrier.vehicle
+                ),
                 target: position(of: carrier.currentTile),
                 moving: true
             )
@@ -137,6 +140,12 @@ extension IsoWorldScene {
 
     /// The figure's own frames, or the walker's while its art is missing, each with its own key.
     private static func animate(_ node: SKSpriteNode, look: CarrierLook, moving: Bool = true) {
+        if let vehicle = look.vehicle, let frames = SpriteAtlas.frames(for: .vehicle(vehicle, look.facing)) {
+            node.anchorPoint = SpriteAtlas.vehicleAnchor(vehicle)
+            node.playWalkCycle(.vehicle(vehicle, look.facing), frames: frames, moving: moving)
+            return
+        }
+        node.anchorPoint = SpriteAtlas.walkerAnchor
         let own: SpriteAnimation.AnimationKey = switch look.figure {
         case let .carrier(load): .carrier(load, look.facing)
         case .watchman: .watchman(look.facing)

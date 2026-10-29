@@ -40,7 +40,9 @@ public enum ItemSchema {
                 "culture", "rivals", "stock", "overrides", "directives", "closedBuildings", "closedTechs", "researched",
                 "bonus", "lose", "rivalAgeYears", "difficulties", "sweep", "comingLater", "events", "randomEvents"
             ]
-        )
+        ),
+        "Logistics": Fields(required: ["id", "haulDistance", "haulMinLoad", "haulMaxWait"], optional: []),
+        "Vehicle": Fields(required: ["id", "age", "capacity"], optional: [])
     ]
 
     /// The mechanics a seasonal event can have, each written in Swift.

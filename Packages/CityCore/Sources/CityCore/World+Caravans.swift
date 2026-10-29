@@ -58,10 +58,10 @@ extension World {
     private func exportWanted(_ id: EntityID, good: Good) -> Int? {
         guard let stock = stockpiles[id] else { return nil }
         let inFlight = supplyCarrierCount(to: id)
-        let goodInFlight = supplyCarrierCount(to: id, good: good)
+        let inbound = inboundUnits(to: id, good: good)
         return min(
-            Self.exportStockCap - stock.quantity(of: good) - goodInFlight,
-            stock.freeSpace - inFlight,
+            Self.exportStockCap - stock.quantity(of: good) - inbound.ofGood,
+            stock.freeSpace - inbound.all,
             CarrierConfig.perProducerCap - inFlight
         )
     }

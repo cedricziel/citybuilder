@@ -29,12 +29,17 @@ public struct Carrier: Hashable, Codable, Sendable {
     public var path: [TileCoordinate]
     public var pathIndex: Int
     public var mission: Mission
+    /// The vehicle on a long or bulk haul, nil on foot. Which one depends on
+    /// the owner's age (#236). Spec: `warehouses-and-logistics` / Handcarts
+    /// carry long and bulk hauls.
+    public var vehicle: Vehicle?
 
-    public init(id: EntityID, path: [TileCoordinate], pathIndex: Int = 0, mission: Mission) {
+    public init(id: EntityID, path: [TileCoordinate], pathIndex: Int = 0, mission: Mission, vehicle: Vehicle? = nil) {
         self.id = id
         self.path = path
         self.pathIndex = pathIndex
         self.mission = mission
+        self.vehicle = vehicle
     }
 
     public var currentTile: TileCoordinate? {
@@ -108,4 +113,29 @@ public extension Carrier.Mission {
 public enum CarrierConfig {
     /// Max in-flight carriers per producer building.
     public static let perProducerCap = 2
+    /// Road tiles a haul must cover before it takes a vehicle (game data).
+    public static let haulDistance = LogisticsCatalog.haulDistance
+    /// Units that must be ready for one destination before a vehicle goes (game data).
+    public static let haulMinLoad = LogisticsCatalog.haulMinLoad
+    /// Ticks a producer's output waits for a vehicle load before it goes anyway (game data).
+    public static let haulMaxWait = LogisticsCatalog.haulMaxWait
+
+    /// The vehicle carriers use in `age`: the latest one whose age has
+    /// begun, nil while carriers still walk everything (#236).
+    static func vehicle(in age: Age) -> Vehicle? {
+        Vehicle.allCases.filter { $0.age <= age }.max { $0.age < $1.age }
+    }
+
+    /// What one haul along `path` takes when `ready` units could go and
+    /// `vehicle` is the owner's: the vehicle with up to its capacity on a
+    /// long haul with enough ready, else one unit on foot.
+    static func haul(ready: Int, along path: [TileCoordinate], vehicle: Vehicle?) -> (amount: Int, vehicle: Vehicle?) {
+        guard let vehicle, isLong(path), ready >= haulMinLoad else { return (1, nil) }
+        return (min(ready, vehicle.capacity), vehicle)
+    }
+
+    /// True for a haul long enough to take a vehicle.
+    static func isLong(_ path: [TileCoordinate]) -> Bool {
+        path.count - 1 >= haulDistance
+    }
 }

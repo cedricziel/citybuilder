@@ -18,6 +18,8 @@ public enum SpriteAnimation {
         case walker(SpriteAtlas.WalkerFacing, SpriteAtlas.WalkerLook = .worker)
         /// A carrier holding a load; shares the walker's cycle.
         case carrier(CarrierLoad, SpriteAtlas.WalkerFacing)
+        /// A carrier with a vehicle (a handcart, later the age's wagon); shares the walker's cycle.
+        case vehicle(Vehicle, SpriteAtlas.WalkerFacing)
         /// A fire watch's watchman with his bucket; shares the walker's cycle (`add-event-counterplay`).
         case watchman(SpriteAtlas.WalkerFacing)
         /// The flames on a burning building (`effect-fire`).
@@ -29,6 +31,7 @@ public enum SpriteAnimation {
         /// Every resident look and carrier load in every facing (realistic-walkers).
         public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
+                + Vehicle.allCases.map { .vehicle($0, facing) }
                 + [.watchman(facing)]
         }
 
@@ -80,7 +83,7 @@ public enum SpriteAnimation {
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
         case .fire:
             Entry(frameCount: 3, timePerFrame: 0.14, loop: .forever)
-        case .walker, .carrier, .watchman:
+        case .walker, .carrier, .vehicle, .watchman:
             // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
             Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
         case let .animal(action, _):
@@ -139,6 +142,8 @@ public enum SpriteAnimation {
             "\(look.stem)-\(facing.rawValue)-\(frame)"
         case let .carrier(load, facing):
             "carrier-\(load.rawValue)-\(facing.rawValue)-\(frame)"
+        case let .vehicle(vehicle, facing):
+            "\(vehicle.rawValue)-\(facing.rawValue)-\(frame)"
         case let .animal(action, facing):
             "\(action.stem)-\(facing.rawValue)-\(frame)"
         case let .watchman(facing):

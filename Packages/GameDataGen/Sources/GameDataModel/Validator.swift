@@ -33,6 +33,7 @@ struct Validator {
         if data.tiers.isEmpty {
             log.error("no house tiers: declare at least one `Tier` item in a pack", at: Origin(file: "index.yaml"))
         }
+        checkLogistics()
     }
 
     struct References {
@@ -343,6 +344,42 @@ struct Validator {
         }
         for tech in data.techs {
             visit(tech.id, path: [])
+        }
+    }
+}
+
+extension Validator {
+    /// Exactly one `Logistics` item with positive values, and vehicles that
+    /// each start in a known age of their own and hold the minimum load.
+    func checkLogistics() {
+        guard let first = data.logistics.first else {
+            log.error("no logistics: declare one `Logistics` item in a pack", at: Origin(file: "index.yaml"))
+            return
+        }
+        for extra in data.logistics.dropFirst() {
+            log.error("a second `Logistics` item, first declared at \(first.origin)", at: extra.origin, item: "Logistics \(extra.id)")
+        }
+        let values = [("haulDistance", first.haulDistance), ("haulMinLoad", first.haulMinLoad), ("haulMaxWait", first.haulMaxWait)]
+        for (field, value) in values where value < 1 {
+            log.error("`\(field)` must be at least 1", at: first.origin, item: "Logistics \(first.id)")
+        }
+        if data.vehicles.isEmpty {
+            log.error(
+                "no vehicles: declare at least one `Vehicle` item, the first age's carrier",
+                at: first.origin,
+                item: "Logistics \(first.id)"
+            )
+        }
+        let ages = Set(data.ages.map(\.id))
+        var byAge: [String: Vehicle] = [:]
+        for vehicle in data.vehicles {
+            let report = { (message: String) in log.error(message, at: vehicle.origin, item: "Vehicle \(vehicle.id)") }
+            if !ages.contains(vehicle.age) { report("unknown age `\(vehicle.age)`") }
+            if let earlier = byAge[vehicle.age] {
+                report("age `\(vehicle.age)` already has vehicle `\(earlier.id)`")
+            }
+            byAge[vehicle.age] = byAge[vehicle.age] ?? vehicle
+            if vehicle.capacity < first.haulMinLoad { report("`capacity` must hold the `haulMinLoad` of \(first.haulMinLoad)") }
         }
     }
 }
