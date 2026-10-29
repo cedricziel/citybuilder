@@ -38,7 +38,7 @@ private func breadAndStone(_ id: String, title: String, intro: String, ending: S
 
 @MainActor
 @Test("chapter screens render offscreen", .enabled(if: snapshotDirectory != nil))
-func chapterScreensRenderOffscreen() throws {
+func chapterScreensRenderOffscreen() async throws {
     let directory = try #require(snapshotDirectory)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let chapters = [
@@ -85,7 +85,7 @@ func chapterScreensRenderOffscreen() throws {
     }
     let select = ChapterSelectModel(progress: progress, culture: .mediterranean)
     let chapter = try #require(select.selected)
-    let detail = ChapterDetailView(model: select, chapter: chapter, mapImage: select.mapImage(for: chapter)) { _ in }
+    let detail = await ChapterDetailView(model: select, chapter: chapter, mapImage: select.loadMapImage(for: chapter)) { _ in }
     try write(
         detail.frame(maxHeight: .infinity, alignment: .top),
         size: CGSize(width: 720, height: 900),

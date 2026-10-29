@@ -169,3 +169,79 @@ func aHoldingGoalSaysItMustHold() {
     world.goals = [GoalState(goal: .population(20, atLeast: .peasants), holdsForSeason: true)]
     #expect(GoalsPanelModel(world: world).rows.first?.text == "Residents 0/20 · hold a season")
 }
+
+private final class WinCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var wins: [String] = []
+    func add(_ id: String) {
+        lock.lock(); wins.append(id); lock.unlock()
+    }
+
+    var all: [String] {
+        lock.lock(); defer { lock.unlock() }; return wins
+    }
+}
+
+@MainActor
+@Test("a chapter win is recorded exactly once")
+func aChapterWinIsRecordedOnce() async throws {
+    let counter = WinCounter()
+    let base = testProgress(won: ["c1"])
+    let progress = CampaignProgressModel(
+        progress: base.progress, campaigns: base.campaigns, chapters: base.chapters
+    ) { chapter, _, _ in counter.add(chapter.id) }
+    let (_, session) = try chapterSession(progress: progress)
+    session.dismissChapterCard()
+    session.noteBannerEvents(in: [.scenarioWon])
+    for _ in 0 ..< 20 where counter.all.isEmpty {
+        try await Task.sleep(for: .milliseconds(10))
+    }
+    #expect(counter.all == ["c2"])
+}
+
+@MainActor
+@Test("back to chapters saves first and opens chapter select")
+func backToChaptersSavesFirst() throws {
+    let (title, session) = try chapterSession()
+    var saved: [UUID] = []
+    title.saveGame = { saved.append($0.instanceID) }
+    let id = session.instanceID
+    session.perform(.backToChapters)
+    #expect(saved == [id])
+    #expect(title.committedSession == nil && title.chapterSelect != nil)
+}
+
+@MainActor
+@Test("next keeps the player's culture pick for a chapter that leaves it open")
+func nextKeepsThePlayersCulturePick() throws {
+    let progress = testProgress(won: ["c1", "c2", "c3"])
+    let title = TitleScreenViewModel(saveStore: EmptySaves(), sessionFactory: { GameSession(world: $0) }, campaignProgress: progress)
+    let fixed = try #require(progress.chapter("g1"))
+    let select = ChapterSelectModel(progress: progress, culture: .eastAsian)
+    select.select("c3")
+    let open = try #require(progress.chapter("c3"))
+    try title.startChapter(open, world: #require(select.makeWorld()), pickedCulture: .eastAsian)
+    title.committedSession?.perform(.start(fixed))
+    #expect(title.committedSession?.world.culture == .northernEuropean)
+    title.committedSession?.perform(.start(open))
+    #expect(title.committedSession?.world.culture == .eastAsian)
+}
+
+@MainActor
+@Test("a chapter save that hasn't started shows its intro again on load")
+func aChapterSaveThatHasntStartedShowsItsIntro() throws {
+    let progress = testProgress(won: ["c1"])
+    let title = TitleScreenViewModel(saveStore: EmptySaves(), sessionFactory: { GameSession(world: $0) }, campaignProgress: progress)
+    let chapter = try #require(progress.chapter("c2"))
+    var world = World.newGame(chapter: chapter, difficulty: .normal, culture: .mediterranean)
+    title.commit(world: world)
+    #expect(title.committedSession?.chapterCard == .intro)
+    world.tick()
+    title.commit(world: world)
+    #expect(title.committedSession?.chapterCard == nil)
+}
+
+@Test("fire watches plural")
+func fireWatchesPlural() {
+    #expect(ChapterText.goal(.buildings(.fireWatch, 2), culture: nil) == "Own 2 fire watches")
+}

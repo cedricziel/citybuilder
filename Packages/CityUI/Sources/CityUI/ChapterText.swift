@@ -116,6 +116,7 @@ public enum ChapterText {
     /// "bakeries", "windmills"; a noun already ending in s stays.
     static func plural(_ noun: String) -> String {
         if noun.hasSuffix("s") { return noun }
+        if ["ch", "sh", "x", "z"].contains(where: noun.hasSuffix) { return noun + "es" }
         if noun.hasSuffix("y"), let before = noun.dropLast().last, !"aeiou".contains(before) {
             return noun.dropLast() + "ies"
         }

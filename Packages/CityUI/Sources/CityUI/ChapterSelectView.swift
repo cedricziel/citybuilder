@@ -32,7 +32,7 @@ struct ChapterSelectView: View {
                 detail
             }
             .task(id: model.selectedID) {
-                mapImage = model.selected.flatMap(model.mapImage)
+                if let chapter = model.selected { mapImage = await model.loadMapImage(for: chapter) }
             }
         }
     }

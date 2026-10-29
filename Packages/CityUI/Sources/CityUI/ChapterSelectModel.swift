@@ -113,15 +113,20 @@ public final class ChapterSelectModel {
         return World.newGame(chapter: chapter, difficulty: difficulty, culture: culture)
     }
 
-    /// The chosen chapter's map, drawn like the minimap, made once per
-    /// chapter.
-    public func mapImage(for chapter: Chapter) -> CGImage? {
+    /// The chosen chapter's map, drawn like the minimap: made off the main
+    /// actor once per chapter, then cached for the app's lifetime.
+    public func loadMapImage(for chapter: Chapter) async -> CGImage? {
         if let image = Self.mapImages[chapter.id] { return image }
-        // Rivals and culture don't change the terrain.
-        let world = World.newGame(mapPreset: chapter, difficulty: .normal, culture: culture, rivals: false, seasonalEvents: false)
-        let image = MinimapTerrainRaster(terrain: world.terrainGrid, mapWidth: world.mapWidth, mapHeight: world.mapHeight).makeImage()
-        Self.mapImages[chapter.id] = image
-        return image
+        let made = await Task.detached(priority: .userInitiated) {
+            // Rivals and culture don't change the terrain.
+            let world = World.newGame(
+                mapPreset: chapter, difficulty: .normal, culture: .northernEuropean, rivals: false, seasonalEvents: false
+            )
+            let raster = MinimapTerrainRaster(terrain: world.terrainGrid, mapWidth: world.mapWidth, mapHeight: world.mapHeight)
+            return MapImage(image: raster.makeImage())
+        }.value
+        Self.mapImages[chapter.id] = Self.mapImages[chapter.id] ?? made.image
+        return Self.mapImages[chapter.id]
     }
 
     private func clampDifficulty() {
@@ -145,4 +150,9 @@ extension Chapter {
         if difficulties.contains(difficulty) { return difficulty }
         return difficulties.contains(.normal) ? .normal : difficulties.first ?? .normal
     }
+}
+
+/// A finished image handed back from the background task.
+private struct MapImage: @unchecked Sendable {
+    let image: CGImage?
 }

@@ -96,9 +96,6 @@ func choosingAChapterStartsItsWorld() throws {
     let world = try #require(model.makeWorld())
     #expect(world.difficulty == .hard && world.culture == .eastAsian)
     #expect(world.chapterRules.chapterID == "c1")
-    let chapter = try #require(model.selected)
-    #expect(model.mapImage(for: chapter) != nil)
-    #expect(model.mapImage(for: chapter) === model.mapImage(for: chapter))
     model.select("c2")
     #expect(model.blockedReason == "Coming later")
 }
@@ -212,4 +209,15 @@ func buildingGoalsUseTheRightPluralAndArticle() {
     }
     #expect(ChapterText.withArticle("observatory") == "an observatory")
     #expect(ChapterText.withArticle("mine") == "a mine")
+}
+
+@MainActor
+@Test("the chapter map is made off the main actor and cached")
+func theChapterMapIsMadeOffTheMainActorAndCached() async throws {
+    let model = ChapterSelectModel(progress: testProgress())
+    let chapter = try #require(model.selected)
+    let first = await model.loadMapImage(for: chapter)
+    let second = await model.loadMapImage(for: chapter)
+    #expect(first != nil)
+    #expect(first === second)
 }

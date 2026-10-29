@@ -120,9 +120,6 @@ struct GoalsPanelView: View {
             List {
                 Section {
                     ForEach(model.rows) { row in goalRow(row) }
-                    if let deadline = model.deadline {
-                        Label(deadline, systemImage: "hourglass").foregroundStyle(.secondary)
-                    }
                 }
                 if !model.bonusRows.isEmpty {
                     Section("Bonus · one laurel each") {
@@ -132,6 +129,11 @@ struct GoalsPanelView: View {
                 if let race = model.race {
                     Section(race.title) {
                         LabeledContent(race.player, value: race.rival)
+                    }
+                }
+                if let deadline = model.deadline {
+                    Section {
+                        Label(deadline, systemImage: "hourglass").foregroundStyle(.secondary)
                     }
                 }
             }

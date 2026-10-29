@@ -99,7 +99,9 @@ public struct TitleScreenView: View {
             if let model = viewModel.chapterSelect {
                 ChapterSelectView(
                     model: model,
-                    onStart: { chapter, world in viewModel.startChapter(chapter, world: world) },
+                    onStart: { chapter, world in
+                        viewModel.startChapter(chapter, world: world, pickedCulture: chapter.culture == nil ? model.culture : nil)
+                    },
                     onClose: { viewModel.dismissCampaigns() }
                 )
                 #if os(macOS)
