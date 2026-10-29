@@ -1,5 +1,5 @@
 ---
-source = "pending"
+source = "isokit"
 ---
 ## Function
 
@@ -8,15 +8,21 @@ other good. Rats in the granary leave it alone.
 
 ## Visual identity
 
-Not drawn yet: the renderer shows the missing-sprite placeholder until the
-event-counterplay canvas is approved (task 8.1 of `add-event-counterplay`).
-The recommended look is a timber store raised on staddle stones.
+Rendered by IsoKit in the shared light rig. A weatherboarded timber store
+raised on staddle stones under a steep thatch, steps up to the door, grain
+sacks and a crate in front. No window light: it is a store. Design canvas:
+https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (Granary, option A).
 
 ## Sprites
 
-- `building-granary` — canonical operational base (to be drawn)
+- `building-granary` — canonical operational base
+- `building-granary-constructing-0` — staddle stones
+- `building-granary-constructing-1` — floor and walls going up
+- `building-granary-constructing-2` — roof going on, scaffolding visible
 
 ## Recipe
 
-- Recipe: `building-granary` (IsoKit, to be written)
-- Cell: 2×2 footprint
+- Recipe: `building-granary` (IsoKit)
+- Cell: 2×2 footprint, 144 pt tall
+- Construction stages: 3
+- Operational frames: 0

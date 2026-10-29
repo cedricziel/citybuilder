@@ -50,6 +50,20 @@ func outgrowGoalRowText() {
     #expect(rows.last?.text == "Residents 0/80")
 }
 
+@Test("campaign goal rows read their progress")
+func campaignGoalRowText() {
+    let world = World.newGame(layout: .singleIsland, seed: 0, culture: .northernEuropean, scenario: .firstHarvest)
+    let texts = [
+        Goal.buildings(.windmill, 2), .signatureProjects(1), .research(.metallurgy), .treasury(1200),
+        .netIncome(100), .tradeEarnings(300), .landedByShip(.ore, 30), .orders(2)
+    ].map { GoalsPanelModel.text(for: $0, in: world) }
+    let expected = [
+        "Windmill 0/2", "Signature projects 0/1", "Research Metallurgy", "Treasury $1500/$1200",
+        "Net income last season $0/$100", "Trade earnings $0/$300", "Ore landed at home 0/30", "Fulfil orders 0/2"
+    ]
+    #expect(texts == expected)
+}
+
 @MainActor
 @Test("scenario: win sheet appears")
 func scenarioWinSheetAppears() {

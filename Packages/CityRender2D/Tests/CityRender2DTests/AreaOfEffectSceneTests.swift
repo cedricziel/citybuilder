@@ -136,3 +136,25 @@ func mineSiteRockIsBrightened() throws {
     #expect(try #require(scene.objectNode(at: rock)).shader === IsoWorldScene.areaObjectShader)
     #expect(scene.areaLayer.childNode(withName: IsoWorldScene.areaTargetFillNodeName) == nil)
 }
+
+// add-event-counterplay: a fire watch's reach in the teal "serves" style, a warned hazard's area in
+// the amber "threat" style, each in at most three nodes.
+
+@MainActor
+@Test("scenario: each area style draws its own colour")
+func areaStylesDrawTheirColours() throws {
+    var colours: [AreaOfEffect.Style: SKColor] = [:]
+    for style in [AreaOfEffect.Style.reach, .serves, .threat] {
+        let scene = scene(trees: [])
+        scene.areaOfEffectProvider = {
+            AreaOfEffect(tiles: tiles(x: 2 ... 7, y: 2 ... 7), targets: [TileCoordinate(x: 3, y: 3)], count: nil, style: style)
+        }
+        scene.reconcileAreaOfEffect(with: snapshot())
+        #expect(scene.areaLayer.children.count <= 3)
+        let ring = try #require(scene.areaLayer.childNode(withName: IsoWorldScene.areaOutlineNodeName) as? SKShapeNode)
+        colours[style] = ring.strokeColor
+    }
+    #expect(colours[.reach] == IsoWorldScene.ringColour)
+    #expect(colours[.serves] == IsoWorldScene.areaColour(.serves))
+    #expect(Set(colours.values.map(\.description)).count == 3)
+}

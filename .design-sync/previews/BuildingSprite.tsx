@@ -36,8 +36,11 @@ export const Waterfront = () => <Row list={["port-n", "port-e", "shipyard-n", "s
 
 export const Industry = () => <Row list={["steam-engine", "power-plant"]} />;
 
+/** Seasonal events: the fire watch, the granary, and the ruins a fire leaves on each footprint. */
+export const Events = () => <Row list={["fire-watch", "granary", "ruins-1x1", "ruins", "ruins-3x3"]} />;
+
 export const Night = () => (
   <div className="cb-theme-dark" style={{ background: "#1b2440", padding: 16, borderRadius: 8 }}>
-    <Row list={["house", "house-tier2", "house-tier3", "bakery", "windmill", "toolsmith", "weaver"]} night />
+    <Row list={["house", "house-tier2", "house-tier3", "bakery", "windmill", "toolsmith", "weaver", "fire-watch"]} night />
   </div>
 );

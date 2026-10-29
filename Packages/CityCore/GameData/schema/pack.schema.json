@@ -232,6 +232,7 @@
                 "items": { "enum": ["spring", "summer", "autumn", "winter"] }
               },
               "minAge": { "description": "The first age the event can happen in. Defaults to the first age.", "$ref": "#/$defs/id" },
+              "enabled": { "description": "False keeps the event out of every draw and schedule until its mechanic ships. Defaults to true.", "type": "boolean" },
               "weight": {
                 "description": "Draw weight per difficulty.",
                 "type": "object",
@@ -244,7 +245,7 @@
                 }
               },
               "banners": {
-                "description": "Banner title and text by moment. Placeholders: {season}, {building}, {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood}, {bonus}.",
+                "description": "Banner title and text by moment. Placeholders: {season}, {building}, {buildings}, {residents}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood}, {bonus}.",
                 "type": "object",
                 "propertyNames": { "enum": ["warning", "onset", "ignition", "end", "endNoLoss", "endNoFire", "request", "held", "missed"] },
                 "patternProperties": {
@@ -293,7 +294,8 @@
               "name": { "description": "Default display name; a culture's tiers map can override it.", "type": "string" },
               "capacity": { "description": "Residents a house of this tier holds.", "$ref": "#/$defs/positive" },
               "taxPerResident": { "$ref": "#/$defs/nonNegative" },
-              "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true }
+              "needs": { "description": "Goods this tier needs, in consumption order.", "$ref": "#/$defs/ids", "uniqueItems": true },
+              "declineGrace": { "description": "Consumption intervals a need may stay short before a house of this tier declines, on Normal. Defaults to 1.", "type": "integer", "minimum": 1, "maximum": 254 }
             }
           }
         },

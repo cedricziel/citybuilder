@@ -117,6 +117,8 @@ final class AmbientLayerNode: SKNode {
                 (birthRate, lifetime, speed, scale, alpha, white) = (4.5, 3.6, 10, 0.4, 0.62, 0.38)
             case .steam:
                 (birthRate, lifetime, speed, scale, alpha, white) = (4, 1.8, 12, 0.3, 0.55, 0.97)
+            case .fireSmoke:
+                (birthRate, lifetime, speed, scale, alpha, white) = (7, 4.2, 15, 0.55, 0.7, 0.24)
             }
         }
     }
@@ -165,6 +167,11 @@ extension IsoWorldScene {
         let chosen = ChimneyPlanner.select(smokeSources, xRange: xRange, yRange: yRange, camera: snapshot.camera)
         let placed = chosen.compactMap { source -> (SmokeSource, CGPoint)? in
             guard let node = buildingNodes[source.anchor] else { return nil }
+            if source.isFire {
+                // From the flames on the roof, not a chimney.
+                let roof = node.size.height * StatusIcons.contentTop(of: node.texture)
+                return (source, CGPoint(x: node.position.x, y: node.position.y + roof))
+            }
             let stem = (node.userData?[Self.textureNameKey] as? String).map(TextureFiltering.stem(of:))
                 ?? "building-\(source.kind.rawValue)"
             let offset = ChimneyAnchors.offset(stem: stem, spriteSize: node.size)

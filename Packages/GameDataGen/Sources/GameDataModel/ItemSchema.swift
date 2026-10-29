@@ -31,8 +31,8 @@ public enum ItemSchema {
             required: ["id", "issuer", "good", "title", "text", "seasons", "size", "min", "max", "reward"],
             optional: ["minAge", "favour", "penalty"]
         ),
-        "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: []),
-        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge"]),
+        "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: ["declineGrace"]),
+        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"]),
         "Logistics": Fields(required: ["id", "haulDistance", "haulMinLoad", "haulMaxWait"], optional: []),
         "Vehicle": Fields(required: ["id", "age", "capacity"], optional: [])
     ]

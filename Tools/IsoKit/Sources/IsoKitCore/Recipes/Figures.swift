@@ -24,11 +24,16 @@ enum Cloth {
     static let deal = NSColor(red: 0.50, green: 0.42, blue: 0.31, alpha: 1)
     static let loaf = NSColor(red: 0.55, green: 0.40, blue: 0.26, alpha: 1)
     static let wicker = NSColor(red: 0.46, green: 0.37, blue: 0.26, alpha: 1)
+    /// The fire watch's livery: a deep madder, darker than the worker's so the two never mix up.
+    static let watch = NSColor(red: 0.50, green: 0.20, blue: 0.16, alpha: 1)
+    static let bucket = NSColor(red: 0.40, green: 0.24, blue: 0.13, alpha: 1)
 }
 
 /// What a figure carries.
 enum Load {
     case none, basket, sack, crate, barrel, logs, push
+    /// A leather fire bucket swinging from the right hand.
+    case bucket
 }
 
 enum Headwear {
@@ -156,6 +161,9 @@ extension Builder {
         case (.push, _):
             // Both hands forward at the hips, on the cart's handles.
             return (top + SCNVector3(0.16, -0.24, side * 0.03), top + SCNVector3(0.42, -0.44, side * 0.04))
+        case (.bucket, true):
+            // Right arm hanging straight, a little out from the body, carrying the bucket's weight.
+            return (top + SCNVector3(0.03, -0.31, 0.06), top + SCNVector3(0.05, -0.60, 0.09))
         case (.basket, false):
             // Left elbow out to the side, the hand up steadying the basket on the head.
             return (top + SCNVector3(0.10, 0.04, -0.14), top + SCNVector3(0.06, 0.36, 0.04))
@@ -189,6 +197,15 @@ extension Builder {
         switch fig.load {
         case .none, .push:
             break
+        case .bucket:
+            let hand = shoulder + SCNVector3(0.05, -0.60, 0.30)
+            add(
+                SCNCone(topRadius: 0.15, bottomRadius: 0.11, height: 0.26),
+                Finish.paint(Cloth.bucket).material(),
+                at: hand + SCNVector3(0, -0.2, 0)
+            )
+            limb(hand + SCNVector3(0, -0.07, -0.12), hand + SCNVector3(0, 0.02, 0), radius: 0.012, Cloth.leather)
+            limb(hand + SCNVector3(0, -0.07, 0.12), hand + SCNVector3(0, 0.02, 0), radius: 0.012, Cloth.leather)
         case .basket:
             let base = SCNVector3(0.02, headTop + 0.02, 0)
             add(

@@ -79,6 +79,9 @@ public enum WorldEvent: Sendable {
     case ageAdvanced(Age)
     /// Every scenario goal is met. Spec: `difficulty-and-goals`.
     case scenarioWon
+    /// A lose condition fired, or the game went bankrupt. Spec:
+    /// `difficulty-and-goals` / Lose conditions.
+    case scenarioLost(LossReason)
 
     // MARK: Age signatures
 
@@ -208,6 +211,8 @@ extension WorldEvent: Equatable {
             return lEvent == rEvent
         case let (.ageAdvanced(lAge), .ageAdvanced(rAge)):
             return lAge == rAge
+        case let (.scenarioLost(lReason), .scenarioLost(rReason)):
+            return lReason == rReason
         case let (.constructionStarted(lBuilding), .constructionStarted(rBuilding)),
              let (.monumentCompleted(lBuilding), .monumentCompleted(rBuilding)),
              let (.commissionStarted(lBuilding), .commissionStarted(rBuilding)),
@@ -298,6 +303,7 @@ public extension WorldEvent {
              .historyEvent,
              .ageAdvanced,
              .scenarioWon,
+             .scenarioLost,
              .rivalAgeAdvanced,
              .tradeCompleted,
              .marketTraded,
@@ -347,6 +353,7 @@ public extension WorldEvent {
              .historyEvent,
              .ageAdvanced,
              .scenarioWon,
+             .scenarioLost,
              .monumentCompleted,
              .commissionStarted,
              .commissionEnded,
@@ -419,6 +426,7 @@ public extension WorldEvent {
         case .buildingBurntDown: return 41
         case .ruinsCleared: return 42
         case .demolitionRejected: return 43
+        case .scenarioLost: return 44
         }
     }
 }

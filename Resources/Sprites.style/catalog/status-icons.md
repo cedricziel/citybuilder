@@ -5,7 +5,8 @@ source = "svg"
 
 The status icon that floats over a building while something is wrong: a missing input, a house
 short of a need, output that has nowhere to go, no road, no route to storage, no trees, no room to
-plant. One icon per building at most, and none while the building works. Spec: `rendering-2_5d` /
+plant, and the seasonal events' burning building, ruins to clear, blighted field and fevered house
+(`add-event-counterplay`). One icon per building at most, and none while the building works. Spec: `rendering-2_5d` /
 Buildings show a status icon while something is wrong.
 
 ## Visual identity
@@ -13,15 +14,20 @@ Buildings show a status icon while something is wrong.
 A 24-point disc inside the goods icons' dark warm outline (`#2B1E15`), on a 28-point cell.
 Pictograms are white on a red disc, with a slash when something is missing. A good's issue shows
 the goods icon on a cream disc with a pip in the lower right: a red "!" when the good is short, an
-amber pause when output is stuck or the building rests on stock. Amber appears only on that pip.
+amber pause when output is stuck or the building rests on stock. The blight (a withered leaf, amber
+pip) and the fever (a thermometer, red pip) share that cream disc; the flame and the ruins are white
+pictograms on red without a slash. Amber appears only on a pip.
+Design canvas for the event icons: https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (Fire board).
 Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Disc").
 
 ## Sprites
 
 - `status-beer-short`
 - `status-beer-stuck`
+- `status-blight`
 - `status-bread-short`
 - `status-bread-stuck`
+- `status-burning`
 - `status-charcoal-short`
 - `status-charcoal-stuck`
 - `status-cloth-short`
@@ -30,6 +36,7 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-coffee-cherries-stuck`
 - `status-coffee-short`
 - `status-coffee-stuck`
+- `status-fever`
 - `status-flour-short`
 - `status-flour-stuck`
 - `status-food-short`
@@ -50,6 +57,7 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-ore-stuck`
 - `status-planks-short`
 - `status-planks-stuck`
+- `status-ruins`
 - `status-tea-leaves-short`
 - `status-tea-leaves-stuck`
 - `status-tea-short`

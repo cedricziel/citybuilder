@@ -159,6 +159,9 @@ public enum Finish {
     /// Window panes: dark glass, and the blue glass bands of modern houses. Day sprites never glow;
     /// window light comes only from the night-lights masks.
     case paint(NSColor), glass, glazing
+    /// A self-lit flame for effects (`effect-fire`): unshaded, so a fire glows at night as by day.
+    /// `RecipeRules` keeps it out of buildings.
+    case flame(NSColor)
 
     var roughness: CGFloat {
         switch self {
@@ -187,7 +190,7 @@ public enum Finish {
         case .rock: Tex.rock
         case .wheat: Tex.wheat
         case .brick: Tex.brick
-        case let .paint(colour): colour
+        case let .paint(colour), let .flame(colour): colour
         case .glass: NSColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1)
         case .glazing: NSColor(red: 0.34, green: 0.50, blue: 0.62, alpha: 1)
         }
@@ -196,6 +199,12 @@ public enum Finish {
     /// Roofs on an SCNBox slab: box faces map u down the slope, so rotate 90 deg to run courses along the ridge.
     func material(repeatU: CGFloat = 1, repeatV: CGFloat = 1, rotated: Bool = false) -> SCNMaterial {
         let material = SCNMaterial()
+        if case .flame = self {
+            material.name = Self.flameName
+            material.lightingModel = .constant
+            material.diffuse.contents = contents
+            return material
+        }
         material.name = Self.namePrefix + "\(self)"
         material.lightingModel = .physicallyBased
         material.diffuse.contents = contents
@@ -209,6 +218,12 @@ public enum Finish {
     }
 
     static let namePrefix = "finish:"
+    static let flameName = namePrefix + "flame"
+
+    /// True for the self-lit flame finish.
+    static func isFlame(_ material: SCNMaterial) -> Bool {
+        material.name == flameName && material.lightingModel == .constant
+    }
 
     /// True for the window-pane finishes, which glow in a recipe's night lights.
     static func isPane(_ material: SCNMaterial) -> Bool {
@@ -217,6 +232,6 @@ public enum Finish {
 
     /// True when `material` came from the shared finish set (recipes may not define their own).
     static func isShared(_ material: SCNMaterial) -> Bool {
-        material.name?.hasPrefix(namePrefix) == true && material.lightingModel == .physicallyBased
+        material.name?.hasPrefix(namePrefix) == true && material.lightingModel == .physicallyBased || isFlame(material)
     }
 }

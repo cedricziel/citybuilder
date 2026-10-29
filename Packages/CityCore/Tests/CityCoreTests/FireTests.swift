@@ -141,10 +141,19 @@ func watchmanIsAWalker() throws {
     let (watch, house) = watchAndHouse(in: &world)
     _ = light(house, in: &world)
     _ = run(&world, ticks: 4)
-    let walker = try #require(world.snapshot().carriers.first { $0.id == watch })
-    #expect(walker.currentTile == TileCoordinate(x: 4, y: 4))
+    // He is his own walker, never a carrier the renderer could read as a delivery.
+    #expect(world.snapshot().carriers.isEmpty)
+    let walking = try #require(world.snapshot().watchmen.first)
+    #expect(walking.watch == watch && walking.fire == house)
+    #expect(walking.currentTile == TileCoordinate(x: 4, y: 4))
+    #expect(!walking.isDousing)
+    // On arrival he stands at the fire's road tile and douses it until it is out.
     _ = run(&world, ticks: 10)
-    #expect(!world.snapshot().carriers.contains { $0.id == watch })
+    let dousing = try #require(world.snapshot().watchmen.first)
+    #expect(dousing.currentTile == TileCoordinate(x: 8, y: 3))
+    #expect(dousing.isDousing)
+    _ = run(&world, ticks: 26)
+    #expect(world.snapshot().watchmen.isEmpty)
 }
 
 @Test("scenario: A watch finished during the fire")
@@ -409,4 +418,55 @@ func burningBuildingsPayUpkeep() {
     _ = light(sawmill, in: &world)
     #expect(world.playerTaxAndUpkeep.upkeep == before)
     #expect(before > 0)
+}
+
+@Test("scenario: ruins remember when they burnt")
+func ruinsRememberWhenTheyBurnt() {
+    var world = fireWorld()
+    let house = addOperational(.house, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let ignition = light(house, in: &world)
+    _ = run(&world, ticks: 300)
+    #expect(world.buildings[house]?.burntAtTick == ignition + 300)
+}
+
+@Test("the fire showcase sets houses alight, leaves one in ruins and sends the watchman")
+func fireShowcaseSeed() {
+    var world = eventsWorld(size: 24)
+    let houses = (0 ..< 4).map { addOperational(.house, at: TileCoordinate(x: 2 + 3 * $0, y: 2), residents: 2, in: &world) }
+    road((2 ... 14).map { TileCoordinate(x: $0, y: 4) } + [TileCoordinate(x: 14, y: 3)], in: &world)
+    let watch = addOperational(.fireWatch, at: TileCoordinate(x: 14, y: 2), in: &world)
+    world.seedFireShowcase()
+    #expect(houses.prefix(2).allSatisfy { world.buildings[$0]?.state == .burning })
+    #expect(world.buildings[houses[2]]?.kind == .ruins && world.buildings[houses[2]]?.ruinOf == .house)
+    #expect(world.populations[houses[2]] == nil)
+    #expect(world.buildings[houses[3]]?.state == .operational)
+    #expect(world.seasonalEvents.active?.event == .fire)
+    #expect(world.snapshot().watchmen.map(\.watch) == [watch])
+    #expect(world.seasonalEvents.fire?.ignitionTicks.isEmpty == true)
+}
+
+@Test("the fire showcase can set one more house alight later, and the fires run their course")
+func fireShowcaseLaterIgnition() {
+    var world = eventsWorld(size: 24)
+    world.seasonalEvents.enabled = false
+    let houses = (0 ..< 3).map { addOperational(.house, at: TileCoordinate(x: 2 + 3 * $0, y: 2), residents: 2, in: &world) }
+    world.seedFireShowcase(burning: 1, ruined: 0, nextIgnitionIn: 5)
+    #expect(world.seasonalEvents.enabled)
+    _ = runEvents(&world, untilTick: world.tickCount + 5)
+    #expect(houses.count { world.buildings[$0]?.state == .burning } == 2)
+}
+
+@Test("burning down leaves ruins of the kind, keeps the owner and clears stock, residents and production")
+func burnDownLeavesRuins() throws {
+    var world = fireWorld()
+    let sawmill = addOperational(.sawmill, at: TileCoordinate(x: 4, y: 4), in: &world)
+    let house = addOperational(.house, at: TileCoordinate(x: 8, y: 4), residents: 3, in: &world)
+    _ = world.stockpiles[sawmill]?.deposit(.wood, amount: 3)
+    world.burnDown(sawmill)
+    world.burnDown(house)
+    let ruin = try #require(world.buildings[sawmill])
+    #expect(ruin.kind == .ruins && ruin.ruinOf == .sawmill && ruin.owner == .player && ruin.state == .operational)
+    #expect(ruin.footprint == BuildingCatalog.spec(for: .sawmill).footprint)
+    #expect(world.stockpiles[sawmill] == nil && world.productions[sawmill] == nil)
+    #expect(world.populations[house] == nil)
 }

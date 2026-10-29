@@ -33,6 +33,7 @@ private let eventSamples: [WorldEvent] = [
     .historyEvent(.tradeCaravan),
     .ageAdvanced(.renaissance),
     .scenarioWon,
+    .scenarioLost(.deadline),
     .fuelRanOut(building: EntityID(raw: 1), kind: .steamEngine),
     .monumentCompleted(building: EntityID(raw: 1)),
     .commissionStarted(building: EntityID(raw: 1)),
@@ -61,7 +62,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
     // Construct one event of every case. Exhaustiveness is enforced by the
     // case-less switch below: removing a case breaks the construction;
     // adding a case without updating the test makes the compiler warn.
-    #expect(eventSamples.count == 44)
+    #expect(eventSamples.count == 45)
     for event in eventSamples {
         switch event {
         case .buildingPlaced,
@@ -87,6 +88,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .historyEvent,
              .ageAdvanced,
              .scenarioWon,
+             .scenarioLost,
              .fuelRanOut,
              .monumentCompleted,
              .commissionStarted,

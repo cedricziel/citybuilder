@@ -33,9 +33,12 @@ items:
   # needs: the tier's complete list, in consumption order. Another pack
   # adds a need with `neededBy` on its good. Merchants also want their
   # culture's luxury, which stays in code.
-  - { kind: Tier, id: peasants,  name: Peasants,  capacity: 4, taxPerResident: 1, needs: [food] }
-  - { kind: Tier, id: citizens,  name: Citizens,  capacity: 6, taxPerResident: 2, needs: [food, planks] }
-  - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [food, planks, bread, tools] }
+  # declineGrace: consumption intervals (100 ticks) a need may stay short
+  # before a house of the tier loses residents or drops a tier, on Normal;
+  # Easy adds one, Hard takes one off (decline-grace D3).
+  - { kind: Tier, id: peasants,  name: Peasants,  capacity: 4, taxPerResident: 1, needs: [food], declineGrace: 1 }
+  - { kind: Tier, id: citizens,  name: Citizens,  capacity: 6, taxPerResident: 2, needs: [food, planks], declineGrace: 1 }
+  - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [food, planks, bread, tools], declineGrace: 3 }
 
   # How goods travel. Spec: warehouses-and-logistics / Handcarts carry
   # long and bulk hauls (visible-distribution design D9). A haul this long

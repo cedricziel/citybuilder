@@ -38,3 +38,10 @@ def test_the_brief_lists_every_icon_and_is_drawn_as_svg() -> None:
     assert 'source = "svg"' in text
     assert svg_sprites.sprite_names(text, brief.stem) == sorted(status_icons.sources())
     assert set(status_icons.sources()) <= svg_sprites.drawable_names()
+
+
+def test_seasonal_event_icons_are_drawn() -> None:
+    """add-event-counterplay: a burning building, ruins to clear, a blighted field, a fevered house."""
+    names = set(status_icons.sources())
+    for icon in ("burning", "ruins", "blight", "fever"):
+        assert f"status-{icon}" in names

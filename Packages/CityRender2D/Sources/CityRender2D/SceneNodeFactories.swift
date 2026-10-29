@@ -167,6 +167,10 @@ extension IsoWorldScene {
             let name = "building-house-tier\(houseTier.rawValue)"
             textureName = name
             texture = textureOrPlaceholder(named: name)
+        } else if kind == .ruins {
+            // A ruin keeps the burnt building's footprint, and its sprite fits it.
+            textureName = SpriteAtlas.ruinsName(footprint: footprint)
+            texture = textureOrPlaceholder(named: SpriteAtlas.ruinsName(footprint: footprint))
         } else if let roadLink, hasSprite(roadLink.assetName) {
             // Spec: `rendering-2_5d` / Roads join their neighbours.
             textureName = roadLink.assetName
@@ -191,6 +195,7 @@ extension IsoWorldScene {
             node.userData = [Self.textureNameKey: textureName]
         }
         applyLook(look, to: node)
+        if state == .burning { FireEffect.dress(node, footprint: footprint, reduceMotion: reduceMotion) }
         addPennant(for: look, kind: kind, to: node)
         if signature == nil {
             armAnimation(on: node, kind: kind, state: state, animationBase: animationBase)

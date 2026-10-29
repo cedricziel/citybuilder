@@ -92,6 +92,14 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// The order board, favour and the shipments on the road. Spec:
     /// `platform-shells` / Order board.
     public let orders: OrdersState
+    /// The seasonal event warned or under way, with its onset season.
+    /// Spec: `platform-shells` / Seasonal events show banners and a chip.
+    public let seasonalEvent: SeasonalEventOnset?
+    /// Turns any tick into a date, such as when ruins burnt down.
+    public let calendar: CalendarState
+    /// Fire watchmen walking to a fire or dousing it. Spec: `rendering-2_5d` /
+    /// Seasonal events are drawn on the map.
+    public let watchmen: [WatchmanWalker]
 
     public init(
         tickCount: UInt64,
@@ -120,7 +128,10 @@ public struct WorldSnapshot: Hashable, Sendable {
         rivals: [RivalSummary] = [],
         market: [MarketQuote] = [],
         statistics: StatisticsHistory = StatisticsHistory(),
-        orders: OrdersState = OrdersState()
+        orders: OrdersState = OrdersState(),
+        seasonalEvent: SeasonalEventOnset? = nil,
+        calendar: CalendarState = .inactive,
+        watchmen: [WatchmanWalker] = []
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -149,6 +160,9 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.market = market
         self.statistics = statistics
         self.orders = orders
+        self.seasonalEvent = seasonalEvent
+        self.calendar = calendar
+        self.watchmen = watchmen
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -229,7 +243,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier) + watchmenOnTheRoad,
+            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier),
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,
@@ -248,7 +262,10 @@ public extension World {
             rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id), priceBonusPercent: rivalPriceBonusPercent($0.id)) },
             market: marketQuotes,
             statistics: statistics,
-            orders: orders
+            orders: orders,
+            seasonalEvent: currentSeasonalEvent,
+            calendar: calendar,
+            watchmen: watchmenAtWork
         )
     }
 

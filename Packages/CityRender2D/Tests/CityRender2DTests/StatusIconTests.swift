@@ -289,16 +289,28 @@ func anEmptyMissingInputsIssueKeepsTheOtherIcon() {
     #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-no-road")
 }
 
+@Test("scenario: a running-short issue shows the good's short icon")
+func scenarioARunningShortIssueShowsTheGoodsShortIcon() {
+    let house = Building(id: buildingID, kind: .house, anchor: anchor, state: .operational, ticksSincePlacement: 0)
+    // The house's shortGoods name bread first; the issue names the need nearest to decline.
+    let snapshot = meadow(
+        [house], issues: [buildingID: .runningShort(.tools, intervals: 1, grace: 3)],
+        households: [buildingID: household(short: [.bread, .tools], tier: .merchants)]
+    )
+    #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-tools-short")
+}
+
 @Test("every issue maps to a drawn icon")
 func everyIssueMapsToADrawnIcon() {
     let issues: [BuildingIssue] = [
         .noRoad, .noRouteToStorage, .noTreesInReach, .noRoomToPlant,
-        .outputStuck(.planks), .missingInputs([.wood, .iron])
+        .outputStuck(.planks), .missingInputs([.wood, .iron]),
+        .runningShort(.tools, intervals: 1, grace: 3), .runningShort(.cloth, intervals: 3, grace: 3)
     ]
     let names = issues.compactMap(StatusIcons.textureName(for:))
     #expect(names == [
         "status-no-road", "status-no-route", "status-no-trees", "status-no-room-to-plant",
-        "status-planks-stuck", "status-wood-short"
+        "status-planks-stuck", "status-wood-short", "status-tools-short", "status-cloth-short"
     ])
     #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))
 }
@@ -315,4 +327,27 @@ func theIconSitsOnTheOpaqueTop() throws {
     context.fill(CGRect(x: 0, y: 0, width: width, height: 6))
     let image = try #require(context.makeImage())
     #expect(abs(StatusIcons.measureContentTop(image) - 0.6) < 0.001)
+}
+
+// add-event-counterplay (rendering-2_5d / Event status icons).
+
+@Test("every seasonal hazard maps to a drawn icon")
+func everyHazardMapsToADrawnIcon() {
+    let names = StatusIcons.Hazard.allCases.map(StatusIcons.textureName(for:))
+    #expect(names == ["status-burning", "status-ruins", "status-blight", "status-fever"])
+    #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))
+}
+
+@Test("scenario: a burning building shows the flame, ruins the clear-me icon, over any issue")
+func burningAndRuinsShowTheirIcons() {
+    let burning = Building(id: buildingID, kind: .house, anchor: anchor, state: .burning)
+    let ruins = Building(id: EntityID(raw: 2), kind: .ruins, anchor: TileCoordinate(x: 1, y: 1), state: .operational, ruinOf: .house)
+    let rival = Building(
+        id: EntityID(raw: 3), kind: .ruins, anchor: TileCoordinate(x: 8, y: 8), state: .operational, owner: .rival(1)
+    )
+    let snapshot = meadow([burning, ruins, rival], roadless: [buildingID, EntityID(raw: 2)])
+    let icons = StatusIcons.icons(in: snapshot)
+    #expect(icons[buildingID] == "status-burning")
+    #expect(icons[EntityID(raw: 2)] == "status-ruins")
+    #expect(icons[EntityID(raw: 3)] == nil)
 }
