@@ -141,11 +141,9 @@ A producer whose output is a good a house tier of its owner's culture needs SHAL
 - **WHEN** a town center holds 4 food and serves one peasant house with 4 residents, and a warehouse on its road holds 10 food
 - **THEN** no carrier takes food from the warehouse to the town center
 
-## MODIFIED Requirements
+### Requirement: Buildings and houses report what stops them
 
-### Requirement: Buildings report why they are idle
-
-The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; for a house, no market in reach: no operational hub of the player serves it; for a producer, its road does not reach a road beside an operational warehouse, port, town center or marketplace; for a producer, inputs short of its recipe: resting (naming the first good it rests on) while it rests on the stores on its island, otherwise listing the short goods; for a producer, a store with no room for a cycle's output. A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result.
+The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; for a house, no market in reach: no operational hub of the player serves it (see `population-and-needs` / Town center supplies house needs); for a producer, its road does not reach a road beside an operational warehouse, port, town center or marketplace; for a producer whose own stockpile has no room for a cycle's output, output stuck, naming the good it makes that it holds most of (the first in catalog order on a tie), since inputs could not help it; for a producer, inputs short of its recipe (listing the short goods). A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result. A house with no market in reach SHALL show the same issue marker on the map as a building whose road reaches no store, and the inspector SHALL name the issue as "No market in reach", with the hint to build a marketplace near it.
 
 #### Scenario: A producer without a road reports no road
 - **WHEN** a farm has no road beside it
@@ -163,20 +161,24 @@ The world SHALL report, for each operational player house, producer and forester
 - **WHEN** a road-connected lumberjack hut has no forest within its catchment
 - **THEN** its issue is no trees in reach
 
-#### Scenario: A producer with a full store reports storage full
+#### Scenario: A producer with a full store reports its output stuck
 - **WHEN** a connected farm's store holds 16 food
-- **THEN** its issue is storage full
+- **THEN** its issue is output stuck, naming food
 
 #### Scenario: A producer short of inputs reports the missing goods
 - **WHEN** a connected sawmill holds no wood
 - **THEN** its issue is missing inputs: wood
 
-#### Scenario: A house off the storage network reports no route to storage
-- **WHEN** a house's road and every hub's road are not connected
-- **THEN** the house's issue is no market in reach, which replaces no route to storage for houses
+#### Scenario: A producer full of output reports it stuck, not short
+- **WHEN** a connected sawmill holds 16 planks and no wood
+- **THEN** its issue is output stuck, naming planks
 
 #### Scenario: A house out of every hub's reach reports no market in reach
 - **WHEN** a house's road path to the player's town center is 25 road tiles, and the player has no marketplace
+- **THEN** the house's issue is no market in reach
+
+#### Scenario: A house off every hub's road network reports no market in reach
+- **WHEN** a house's road and every hub's road are not connected
 - **THEN** the house's issue is no market in reach
 
 #### Scenario: A house without a road reports only no road
@@ -186,6 +188,10 @@ The world SHALL report, for each operational player house, producer and forester
 #### Scenario: A marketplace clears no market in reach
 - **WHEN** the player builds a marketplace 5 road tiles from a house that reported no market in reach, and it finishes
 - **THEN** the house no longer reports no market in reach
+
+#### Scenario: The inspector names no market in reach
+- **WHEN** the player inspects a house with no market in reach
+- **THEN** the inspector reads "No market in reach: build a marketplace near it", and the map shows the no-route marker over the house
 
 #### Scenario: The snapshot carries building issues
 - **WHEN** a farm without a road is in the world
@@ -199,6 +205,10 @@ The world SHALL report, for each operational player house, producer and forester
 - **WHEN** an operational forester has no road beside it and open grass in its catchment
 - **THEN** it has no issue
 
-#### Scenario: A resting producer reports resting
-- **WHEN** a connected sawmill holds no wood and the player's stores hold 40 planks
-- **THEN** its issue is resting, naming planks
+## REMOVED Requirements
+
+### Requirement: Buildings report what stops them
+
+**Reason**: Houses no longer need a road to a store; they need a market hub that serves them. "Buildings and houses report what stops them" replaces this requirement with the no-market-in-reach step for houses, and drops the scenario of a house off the storage network.
+
+**Migration**: None. The issue a house reports changes from no route to storage to no market in reach.
