@@ -50,15 +50,16 @@ public extension World {
     }
 
     /// A fire watch's reach, eight tiles from its footprint, and the flammable buildings of its owner
-    /// in it, whose tiles it tints. Spec: `seasonal-events` / A fire watch puts out fires in reach.
+    /// it would answer there (`fireWatchCovers`), whose tiles it tints. Spec: `seasonal-events` / A fire watch puts out fires in reach.
     private func fireWatchArea(at anchor: TileCoordinate, owner: Owner) -> AreaOfEffect {
         let reach = Self.fireWatchReach
         let watch = Building(id: EntityID(raw: 0), kind: .fireWatch, anchor: anchor, owner: owner)
         let columns = max(0, anchor.x - reach) ... min(mapWidth - 1, anchor.x + reach)
         let rows = max(0, anchor.y - reach) ... min(mapHeight - 1, anchor.y + reach)
         let tiles = Set(rows.flatMap { y in columns.map { TileCoordinate(x: $0, y: y) } })
+        // The buildings the watch would answer: in reach and joined to it by road.
         let covered = buildings.values.filter { building in
-            building.owner == owner && Self.isFlammable(building.kind) && Self.footprintDistance(watch, building) <= reach
+            building.owner == owner && Self.isFlammable(building.kind) && fireWatchCovers(watch, building)
         }
         let targets = covered.flatMap { $0.footprint.tiles(anchor: $0.anchor) }.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
         return AreaOfEffect(tiles: tiles, targets: targets, count: nil, style: .serves)

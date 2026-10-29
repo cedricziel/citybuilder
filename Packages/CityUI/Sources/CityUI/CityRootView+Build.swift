@@ -30,6 +30,10 @@ extension CityRootView {
                         DateChipView(
                             hud: session.hud, layout: layout, hudWidth: hudWidth, showsFirstSteps: firstStepsGuide != nil
                         )
+                        EventChipView(
+                            chip: session.hud.eventChip, layout: layout, hudWidth: hudWidth,
+                            showsFirstSteps: firstStepsGuide != nil
+                        ) { session.replaySeasonalWarning() }
                         StocksTrayView(
                             hud: session.hud,
                             layout: layout,
@@ -46,6 +50,8 @@ extension CityRootView {
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity)
+                    // The event chip is the column's one control: Left and Right reach it.
+                    .tvFocusSection()
                     .panelAnimation(value: session.banner)
                     rightColumn(layout: layout, worldViewSize: worldViewSize, boardFrame: boardFrame)
                 }

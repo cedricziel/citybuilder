@@ -198,6 +198,9 @@ public struct SeasonalEvent: Equatable, Sendable {
     public var weights: [String: Int]
     /// Banners in written order.
     public var banners: [Banner]
+    /// False keeps the event out of every draw and schedule until its
+    /// mechanic ships (`add-event-counterplay` D14).
+    public var enabled: Bool
     public var origin: Origin
 
     public struct Banner: Equatable, Sendable {

@@ -205,8 +205,8 @@ enum Fixtures {
         "Age": ["name": "Bronze", "orderEvery": "3"],
         "Tier": [:],
         "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
-        "Event": ["minAge": "medieval"],
-        "Campaign": ["opensAfter": "first-fires"],
+        "Event": ["minAge": "medieval", "enabled": "false"],
+        "Campaign": ["opensAfter": "the-guild-charter"],
         "Chapter": [
             "culture": "northern-european", "rivals": "0", "stock": "{ wood: 6 }", "overrides": "{ easy: { money: 2000 } }",
             "directives": "[{ noMountains: home }]", "closedBuildings": "[port]", "closedTechs": "[seafaring]",

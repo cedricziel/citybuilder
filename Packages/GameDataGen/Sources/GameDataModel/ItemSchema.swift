@@ -32,7 +32,7 @@ public enum ItemSchema {
             optional: ["minAge", "favour", "penalty"]
         ),
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: []),
-        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge"]),
+        "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"]),
         "Campaign": Fields(required: ["id", "title", "chapters"], optional: ["opensAfter"]),
         "Chapter": Fields(
             required: ["id", "title", "intro", "ending", "layout", "seed", "age", "money", "goals", "reward"],

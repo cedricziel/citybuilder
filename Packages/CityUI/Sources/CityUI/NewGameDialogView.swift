@@ -188,6 +188,12 @@ public struct NewGameDialogView: View {
                 Toggle("Rival towns", isOn: $viewModel.rivalTowns)
                     .accessibilityIdentifier("newGame.rivalTowns")
             }
+            // A campaign chapter that schedules events will hide this and run its schedule.
+            Toggle("Seasonal events", isOn: $viewModel.seasonalEvents)
+                .accessibilityIdentifier("newGame.seasonalEvents")
+            Text("Dry seasons bring fires, each warned a season ahead.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 

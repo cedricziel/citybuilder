@@ -166,20 +166,42 @@ extension World {
     /// 50 ticks, stopping early at bankruptcy; returns the final world.
     static func botGame(
         layout: WorldLayout, seed: UInt64, difficulty: Difficulty, tradesAtMarket: Bool,
-        firstSteps: [BuildingKind] = [], orders: Bool = false, ticks: Int
+        firstSteps: [BuildingKind] = [], orders: Bool = false, events: BotEvents = .off, ticks: Int
     ) -> World {
-        var world = World.newGame(layout: layout, seed: seed, difficulty: difficulty)
+        var world = World.newGame(layout: layout, seed: seed, difficulty: difficulty, seasonalEvents: events.isOn)
         world.calendar = CalendarState(startYear: 1200, isActive: true)
+        world.seasonalEvents.schedule = events.schedule
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return world }
         var bot = PlayerBot(center: center, tradesAtMarket: tradesAtMarket, firstSteps: firstSteps)
         var kit = orders ? OrdersKit() : nil
+        var eventsKit = events.answers ? EventsKit() : nil
         for tick in 1 ... ticks where !world.economy.gameOver {
             if tick.isMultiple(of: 50) {
+                eventsKit?.takeTurn(&world)
                 bot.takeTurn(&world)
                 kit?.takeTurn(&world)
             }
             world.tick()
         }
         return world
+    }
+}
+
+/// Seasonal events in a bot game: off, drawn, or with a forced schedule,
+/// and whether the events kit answers them (`add-event-counterplay` D12).
+struct BotEvents {
+    var isOn = false
+    var schedule: [ScheduledSeasonalEvent] = []
+    var answers = false
+
+    static let off = BotEvents()
+
+    static func drawn(answered: Bool) -> BotEvents {
+        BotEvents(isOn: true, answers: answered)
+    }
+
+    /// The forced first-hour variant: one `event` in `onset` 1202.
+    static func forced(_ event: SeasonalEvent, _ onset: Season, answered: Bool) -> BotEvents {
+        BotEvents(isOn: true, schedule: [ScheduledSeasonalEvent(year: 1202, event: event, onset: onset)], answers: answered)
     }
 }

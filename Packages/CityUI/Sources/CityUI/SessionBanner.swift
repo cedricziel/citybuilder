@@ -64,7 +64,11 @@ extension GameSession {
                 guard let name = world.rival(id)?.name else { continue }
                 show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
             default:
-                noteOrderEvent(event)
+                if let seasonal = seasonalEventBanner(for: event) {
+                    show(seasonal)
+                } else {
+                    noteOrderEvent(event)
+                }
             }
         }
     }
@@ -164,6 +168,14 @@ extension GameSession {
             title: "Pinch to zoom",
             description: "Pinch to see more of the island, or to look closer."
         ))
+    }
+
+    /// The event chip's tap: the warning of the event warned or under way
+    /// again, or that a fire burns. Spec: `platform-shells` / Seasonal events
+    /// show banners and a chip.
+    public func replaySeasonalWarning() {
+        guard let banner = seasonalChipBanner() else { return }
+        show(banner)
     }
 
     /// Resume, the pause control or Esc: the simulation runs again.

@@ -23,6 +23,9 @@ public enum TileMenuItem: Hashable, Sendable {
     /// `reason` says why a disabled entry is disabled.
     case build(BuildingKind, enabled: Bool, reason: String?)
     case demolish
+    /// Demolish that costs money, titled with the fee: clearing ruins, or
+    /// pulling down a burning building.
+    case demolishPaid(String)
     case dismiss
 }
 
@@ -37,6 +40,7 @@ extension TileMenuItem {
             }
             return reason.map { "\(name) — \($0)" } ?? name
         case .demolish: return "Demolish"
+        case let .demolishPaid(title): return title
         case .dismiss: return "Cancel"
         }
     }
@@ -61,8 +65,9 @@ public struct TileMenuViewModel: Equatable, Sendable {
             Self.buildItem(kind, at: tile, world: world, money: money)
         }
         // The player can't demolish a rival's building (design D3).
-        if let id = world.occupiedTiles[tile], world.owner(of: id) == .player {
-            items.append(.demolish)
+        if let id = world.occupiedTiles[tile], world.owner(of: id) == .player, let building = world.buildings[id] {
+            let paid = InspectorViewModel.demolishButton(for: building, balance: money)
+            items.append(paid.map { .demolishPaid($0.title) } ?? .demolish)
         }
         items.append(.dismiss)
         self.items = items

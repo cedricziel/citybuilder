@@ -118,9 +118,10 @@ func onlyStoresNoFire() throws {
 
 @Test("scenario: No targets, no warning")
 func noTargetsNoWarning() throws {
-    let blight = SeasonalEventOnset(event: .blight, season: .autumn)
-    let seed = try #require(seedDrawing(blight, in: 1202))
-    var world = townWorld(seed: seed)
+    // A town of only a farm and a warehouse has nothing a fire can start in.
+    let seed = try #require(summerFireSeed)
+    var world = eventsWorld(seed: seed)
+    addOperational(.warehouse, at: TileCoordinate(x: 0, y: 0), in: &world)
     let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1202))
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvents.plan == SeasonalEventPlan(year: 1202, onset: nil))
@@ -138,22 +139,6 @@ func scheduledFire() {
     #expect(events.seasonalEvents == [.seasonalEventWarned(event: .fire, onset: .summer)])
     let otherYears = (1200 ... 1300).filter { $0 != 1202 }.compactMap { world.seasonalEvent(forYear: $0) }
     #expect(otherYears.isEmpty)
-}
-
-@Test func blightEndsOnTheLastTickOfItsSeason() {
-    var world = eventsWorld(seed: 2)
-    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .blight, onset: .autumn)]
-    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
-    let warned = runSeasons(&world, untilTick: firstTick(of: .summer, 1201))
-    #expect(warned.seasonalEvents == [.seasonalEventWarned(event: .blight, onset: .autumn)])
-    let started = runSeasons(&world, untilTick: firstTick(of: .autumn, 1201))
-    #expect(started.seasonalEvents == [.seasonalEventStarted(event: .blight)])
-    let lastTick = firstTick(of: .winter, 1201) - 1
-    let during = runSeasons(&world, untilTick: lastTick - 1)
-    #expect(during.seasonalEvents.isEmpty)
-    let ended = runSeasons(&world, untilTick: lastTick)
-    #expect(ended.seasonalEvents == [.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: 0))])
-    #expect(!world.seasonalEvents.isBusy)
 }
 
 @Test func fireLastsAtMostIntoTheNextSeason() {
@@ -199,26 +184,23 @@ func noMarketplaceNoFestival() {
 
 @Test("scenario: The decision survives an age change and a reload")
 func decisionSurvivesAgeChangeAndReload() throws {
-    let blight = SeasonalEventOnset(event: .blight, season: .autumn)
-    // A draw that changes with the age, so a redraw would be seen.
-    let setup = { (seed: UInt64) -> World in
-        var world = eventsWorld(seed: seed, age: .antiquity)
-        addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
-        return world
-    }
+    let fire = SeasonalEventOnset(event: .fire, season: .autumn)
+    // Only fire is drawn for now (design D14), so a change the draw sees
+    // stands in for the age: the difficulty's chance.
     let seed = try #require((0 ..< 3000 as Range<UInt64>).first { seed in
-        let earlier = eventsWorld(seed: seed, age: .antiquity, size: 1)
-        let later = eventsWorld(seed: seed, age: .medieval, size: 1)
-        return earlier.seasonalEvent(forYear: 1203) == blight && later.seasonalEvent(forYear: 1203) != blight
+        let earlier = eventsWorld(seed: seed, size: 1)
+        let later = eventsWorld(seed: seed, difficulty: .easy, size: 1)
+        return earlier.seasonalEvent(forYear: 1203) == fire && later.seasonalEvent(forYear: 1203) != fire
     })
-    var world = setup(seed)
+    var world = townWorld(seed: seed)
     _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1203))
-    world.age = .medieval
+    world.difficulty = .easy
+    world.age = .renaissance
     let saved = try JSONEncoder().encode(world)
     var loaded = try JSONDecoder().decode(World.self, from: saved)
     #expect(loaded == world)
     let events = runSeasons(&loaded, untilTick: firstTick(of: .summer, 1203))
-    #expect(events.seasonalEvents == [.seasonalEventWarned(event: .blight, onset: .autumn)])
+    #expect(events.seasonalEvents == [.seasonalEventWarned(event: .fire, onset: .autumn)])
 }
 
 @Test("scenario: Events off changes nothing")
@@ -328,4 +310,78 @@ func scheduledEventOutsideItsSeasonsIsDropped() throws {
 /// Decodes a `SeasonalEventsState` through a keyed container, as `World` does.
 private struct WorldStateBox: Decodable {
     let state: SeasonalEventsState
+}
+
+@Test("scenario: only enabled events are drawn")
+func onlyEnabledEventsAreDrawn() {
+    let draws = (UInt64(0) ..< 300).flatMap { seed in
+        (1202 ... 1210).compactMap { eventsWorld(seed: seed, difficulty: .hard, size: 1).seasonalEvent(forYear: $0)?.event }
+    }
+    let disabled = draws.filter { !$0.isEnabled }
+    #expect(!draws.isEmpty)
+    #expect(disabled.isEmpty)
+}
+
+@Test("scenario: a disabled event is never warned, even scheduled")
+func disabledScheduledEventIsNeverWarned() {
+    var world = eventsWorld(seed: 2)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .blight, onset: .autumn)]
+    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1201))
+    #expect(events.seasonalEvents.isEmpty)
+    #expect(world.seasonalEvent(forYear: 1201) == nil)
+}
+
+@Test func blightAndFestivalTargets() {
+    var world = eventsWorld(seed: 2)
+    #expect(!world.hasSeasonalEventTargets(.blight, scheduled: true))
+    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
+    #expect(world.hasSeasonalEventTargets(.blight, scheduled: true))
+    #expect(!world.hasSeasonalEventTargets(.festival, scheduled: true))
+}
+
+@Test("scenario: Events off")
+func eventsOffKeepsHistoryEvents() {
+    var world = World.newGame(layout: .singleIsland, seed: 3, difficulty: .hard, rivals: false, seasonalEvents: false)
+    let events = runSeasons(&world, untilTick: firstTick(of: .spring, 1210))
+    let history = events.filter { if case .historyEvent = $0 { true } else { false } }
+    #expect(events.seasonalEvents.isEmpty)
+    #expect(!history.isEmpty)
+}
+
+@Test func scenarioGamesTakeTheToggle() {
+    let world = World.newGame(layout: .singleIsland, seed: 1, culture: .northernEuropean, scenario: .firstHarvest, seasonalEvents: true)
+    #expect(world.seasonalEvents.enabled)
+}
+
+@Test("scenario: the snapshot names the event warned or under way")
+func snapshotNamesTheCurrentEvent() {
+    var world = eventsWorld(seed: 9)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .fire, onset: .summer)]
+    addOperational(.house, at: TileCoordinate(x: 0, y: 0), residents: 2, in: &world)
+    #expect(world.snapshot().seasonalEvent == nil)
+    _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1201))
+    let warned = SeasonalEventOnset(event: .fire, season: .summer)
+    #expect(world.snapshot().seasonalEvent == warned)
+    _ = runSeasons(&world, untilTick: firstTick(of: .summer, 1201))
+    #expect(world.snapshot().seasonalEvent == warned)
+}
+
+@Test("scenario: a disabled pick is a quiet year, so fire keeps its rate")
+func disabledPickIsAQuietYear() {
+    // Normal, Medieval: half the years have an event, a quarter of those a fire.
+    let draws = (UInt64(0) ..< 40).flatMap { seed in
+        (1202 ..< 1302).map { eventsWorld(seed: seed, size: 1).seasonalEvent(forYear: $0)?.event }
+    }
+    let fires = draws.count { $0 == .fire }
+    let others = draws.count { $0 != nil && $0 != .fire }
+    #expect(others == 0)
+    #expect((400 ... 600).contains(fires), "\(fires) fires in 4000 years")
+}
+
+@Test("scenario: seed 42's fire years on Normal")
+func seed42FireYears() {
+    // Pinned: switching blight, fever or the festival on must not move these.
+    let years = (1202 ..< 1262).filter { eventsWorld(seed: 42, size: 1).seasonalEvent(forYear: $0)?.event == .fire }
+    #expect(years == [1203, 1211, 1232, 1238, 1251, 1252])
 }
