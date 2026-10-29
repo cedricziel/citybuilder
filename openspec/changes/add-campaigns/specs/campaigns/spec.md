@@ -45,6 +45,8 @@ Starting a chapter at a difficulty SHALL create a new world with these propertie
 - its goals, bonus goals and lose conditions;
 - for each age, the earliest year a rival may enter it, when the chapter sets one. A rival SHALL then need both its age's residents and that year.
 
+A chapter SHALL NOT show the New Game "Seasonal events" toggle. Its seasonal events SHALL be on when it schedules events or leaves the random draw on (`randomEvents`), and off otherwise.
+
 On Easy, each deadline SHALL fall a third of the chapter's span later, rounded up to a whole year. The difficulty SHALL still set upkeep, bankruptcy grace, research cost scaling and history-event odds. Two worlds started from the same chapter at the same difficulty SHALL be equal.
 
 #### Scenario: Chronicle chapter 1 setup
@@ -79,12 +81,12 @@ On Easy, each deadline SHALL fall a third of the chapter's span later, rounded u
 
 ### Requirement: Chapter build lists
 
-A chapter SHALL be able to close buildings that research would otherwise open, and SHALL be able to close techs. A closed building SHALL be rejected on placement as a locked building is, and a closed tech SHALL NOT be offered for research. Buildings and techs the chapter does not close SHALL follow the normal research rules.
+A chapter SHALL be able to close buildings that research would otherwise open, and SHALL be able to close techs. A closed building SHALL be rejected on placement as closed, and the build palette SHALL show it as unavailable with the reason "Not in this chapter". A closed tech SHALL NOT be offered for research, and SHALL NOT be researched at the start even when the start age would grant it. Buildings and techs the chapter does not close SHALL follow the normal research rules.
 
 #### Scenario: A closed building cannot be placed
 
 - **WHEN** a chapter closes the port and the player places a port on the shore
-- **THEN** the placement is rejected as locked
+- **THEN** the placement is rejected as closed, and the palette shows the port as unavailable with "Not in this chapter"
 
 #### Scenario: A closed tech is not offered
 

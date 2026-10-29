@@ -470,3 +470,17 @@ func burnDownLeavesRuins() throws {
     #expect(world.stockpiles[sawmill] == nil && world.productions[sawmill] == nil)
     #expect(world.populations[house] == nil)
 }
+
+@Test("scenario: the snapshot counts what each fire watch covers")
+func snapshotCountsFireWatchCover() {
+    var world = fireWorld()
+    let (watch, _) = watchAndHouse(in: &world)
+    // In reach, but on no road the watch could walk.
+    addOperational(.house, at: TileCoordinate(x: 4, y: 0), in: &world)
+    let lonely = addOperational(.fireWatch, at: TileCoordinate(x: 20, y: 20), in: &world)
+    let snapshot = world.snapshot()
+    #expect(snapshot.fireWatchCover[watch] == 1)
+    #expect(snapshot.fireWatchCover[lonely] == 0)
+    #expect(snapshot.isSeasonalEventUnderWay)
+    #expect(fireWorld().snapshot().fireWatchCover.isEmpty)
+}

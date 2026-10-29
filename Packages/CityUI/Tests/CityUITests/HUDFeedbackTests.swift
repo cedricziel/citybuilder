@@ -169,3 +169,22 @@ func paletteMarksLockedBuildings() {
     #expect(session.isLocked(.mine))
     #expect(!session.isLocked(.house))
 }
+
+@Test("a closed building reads as not in this chapter")
+func aClosedBuildingReadsAsNotInThisChapter() {
+    #expect(PlacementRejectionText.message(for: .closed) == "Not in this chapter")
+}
+
+@MainActor
+@Test("a chapter-closed building is locked in the palette")
+func aChapterClosedBuildingIsLockedInThePalette() {
+    let chapter = Chapter(
+        id: "closed", title: "Closed", intro: "A test.", ending: "Done.", layout: .singleIsland, seed: 1, age: .medieval,
+        start: ChapterStart(money: 1000, stock: [:]), closedBuildings: [.farm],
+        goals: [GoalState(goal: .age(.renaissance))], reward: .banner("Test")
+    )
+    let session = GameSession(world: World.newGame(chapter: chapter, difficulty: .normal, culture: .northernEuropean))
+    #expect(session.isLocked(.farm))
+    #expect(session.drawerCaption(for: .farm) == "Not in this chapter")
+    #expect(!session.isLocked(.house))
+}

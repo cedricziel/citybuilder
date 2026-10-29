@@ -13,8 +13,9 @@ extension GameSession {
         case let .seasonalEventStarted(event):
             let end = world.seasonalEvents.active.map { Self.endDate(of: $0.lastTick, in: world) } ?? ""
             return Self.banner(event, .onset, ["date": end])
-        case let .buildingCaughtFire(_, kind):
-            return Self.banner(.fire, .ignition, ["building": BuildTool.place(kind).displayName.lowercased()])
+        case let .buildingCaughtFire(id, kind):
+            let moment: SeasonalBannerKind = isAnswered(id) ? .ignitionCovered : .ignition
+            return Self.banner(.fire, moment, ["building": BuildTool.place(kind).displayName.lowercased()])
         case let .seasonalEventEnded(event, toll):
             let moment: SeasonalBannerKind = switch (event.effect, toll.fires, toll.count) {
             case (.fire, 0, _): .endNoFire
@@ -38,6 +39,15 @@ extension GameSession {
         }
     }
 
+    /// A player fire watch would answer a fire in `id`.
+    private func isAnswered(_ id: EntityID) -> Bool {
+        guard let target = world.buildings[id] else { return false }
+        return world.buildings.values.contains { watch in
+            watch.kind == .fireWatch && watch.owner == target.owner && watch.state == .operational
+                && world.fireWatchCovers(watch, target)
+        }
+    }
+
     /// "1 building", "3 buildings".
     static func counted(_ count: Int, _ noun: String) -> String {
         "\(count) \(noun)\(count == 1 ? "" : "s")"
@@ -46,8 +56,9 @@ extension GameSession {
     /// What the event chip shows again: while a fire burns, that it burns,
     /// else the warning.
     func seasonalChipBanner() -> SessionBanner? {
+        // The same banner as the ignition's, covered or not, so it matches the one on screen.
         if let fire = world.seasonalEvents.fire?.fires.first, let kind = world.buildings[fire.building]?.kind {
-            return Self.banner(.fire, .ignition, ["building": BuildTool.place(kind).displayName.lowercased()])
+            return seasonalEventBanner(for: .buildingCaughtFire(building: fire.building, kind: kind))
         }
         return world.currentSeasonalEvent.flatMap(Self.warningBanner)
     }

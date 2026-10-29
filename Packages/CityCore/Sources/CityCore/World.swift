@@ -90,6 +90,9 @@ public struct World: Codable, Sendable, Equatable {
     public internal(set) var loseConditions: [LoseConditionState] = []
     public internal(set) var scenarioLoss: LossReason?
     public internal(set) var goalCounters = GoalCounters()
+    /// Spec: `campaigns` / Chapter setup. Saves without it decode no
+    /// chapter (see `ChapterSetup.swift`).
+    public internal(set) var chapterRules = ChapterRules()
 
     /// Spec: `rival-towns`. Sorted by ID; empty outside archipelago games.
     public internal(set) var rivals: [RivalTown] = []

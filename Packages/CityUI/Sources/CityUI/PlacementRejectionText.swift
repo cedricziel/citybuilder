@@ -4,6 +4,7 @@ import Foundation
 /// Player-facing text for a rejected placement. Spec: `platform-shells`
 /// / Placement rejection feedback.
 public enum PlacementRejectionText {
+    // swiftlint:disable:next cyclomatic_complexity
     public static func message(for rejection: PlacementRejection) -> String {
         switch rejection {
         case .outOfBounds: "Outside the map"
@@ -17,6 +18,7 @@ public enum PlacementRejectionText {
         case let .wrongCulture(culture): "Only \(culture.displayName) towns build this"
         case let .alreadyBuilt(kind): "Only one \(BuildTool.place(kind).displayName.lowercased()) per city"
         case .foreignIsland: "Another town's island"
+        case .closed: "Not in this chapter"
         case let .insufficientMaterials(shortfall):
             "Needs " + Good.allCases.compactMap { good in
                 shortfall[good].map { "\($0) more \(GoodsCatalog.spec(for: good).displayName.lowercased())" }

@@ -33,6 +33,14 @@ public enum ItemSchema {
         ),
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: ["declineGrace"]),
         "Event": Fields(required: ["id", "effect", "seasons", "weight", "banners"], optional: ["minAge", "enabled"]),
+        "Campaign": Fields(required: ["id", "title", "chapters"], optional: ["opensAfter"]),
+        "Chapter": Fields(
+            required: ["id", "title", "intro", "ending", "layout", "seed", "age", "money", "goals", "reward"],
+            optional: [
+                "culture", "rivals", "stock", "overrides", "directives", "closedBuildings", "closedTechs", "researched",
+                "bonus", "lose", "rivalAgeYears", "difficulties", "sweep", "comingLater", "events", "randomEvents"
+            ]
+        ),
         "Logistics": Fields(required: ["id", "haulDistance", "haulMinLoad", "haulMaxWait"], optional: []),
         "Vehicle": Fields(required: ["id", "age", "capacity"], optional: [])
     ]
@@ -46,7 +54,9 @@ public enum ItemSchema {
     /// Difficulties in the order the `weight` mapping lists them.
     public static let difficulties = ["easy", "normal", "hard"]
     /// The banners an event can show, in the order they are emitted.
-    public static let eventBanners = ["warning", "onset", "ignition", "end", "endNoLoss", "endNoFire", "request", "held", "missed"]
+    public static let eventBanners = [
+        "warning", "onset", "ignition", "ignitionCovered", "end", "endNoLoss", "endNoFire", "request", "held", "missed"
+    ]
     public static let orderIssuers: Set<String> = ["crown", "rival"]
     public static let buildingCategories: Set<String> = ["town", "gather", "craft"]
     public static let terrainTypes: Set<String> = ["grass", "forest", "beach", "water", "mountain"]

@@ -85,7 +85,7 @@ extension World {
     }
 
     /// The start area's columns and rows, clipped to the map.
-    private func startBounds(ofTownCenterAt anchor: TileCoordinate) -> (ClosedRange<Int>, ClosedRange<Int>) {
+    func startBounds(ofTownCenterAt anchor: TileCoordinate) -> (ClosedRange<Int>, ClosedRange<Int>) {
         let reach = Self.startAreaReach
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
         return (
@@ -155,16 +155,32 @@ extension World {
     /// Plants the starter grove nearest the town center at `anchor`:
     /// forest with a 2×2 grass clearing in the middle (design D3).
     /// Plants nothing when no square qualifies.
+    @discardableResult
     mutating func plantStarterGrove(
         besideTownCenterAt anchor: TileCoordinate,
         island: IslandID,
         tileToIsland: [TileCoordinate: IslandID]
-    ) {
+    ) -> [TileCoordinate] {
+        guard let corner = starterGroveCorner(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland) else { return [] }
+        let grove = Footprint(width: Self.groveSide, height: Self.groveSide).tiles(anchor: corner)
+        for tile in grove {
+            let clearing = (2 ... 3).contains(tile.x - corner.x) && (2 ... 3).contains(tile.y - corner.y)
+            terrainGrid[tile.y * mapWidth + tile.x] = clearing ? .grass : .forest
+        }
+        return grove
+    }
+
+    /// The corner of the starter grove beside the town center at `anchor`:
+    /// the nearest square of grass or forest on its island, clear of
+    /// buildings and the road ring. Planting the grove keeps it so.
+    func starterGroveCorner(
+        besideTownCenterAt anchor: TileCoordinate, island: IslandID, tileToIsland: [TileCoordinate: IslandID]
+    ) -> TileCoordinate? {
         let grove = Footprint(width: Self.groveSide, height: Self.groveSide)
         let target = TileCoordinate(x: anchor.x - 2, y: anchor.y - 2)
         let reach = Self.groveSearchReach
         let ring = Set(Self.ringSquare(of: anchor))
-        let corner = Self.candidates(
+        return Self.candidates(
             around: target, xs: target.x - reach ... target.x + reach, ys: target.y - reach ... target.y + reach
         ).first { corner in
             grove.tiles(anchor: corner).allSatisfy { tile in
@@ -172,11 +188,6 @@ extension World {
                 return (kind == .grass || kind == .forest) && tileToIsland[tile] == island
                     && occupiedTiles[tile] == nil && !ring.contains(tile)
             }
-        }
-        guard let corner else { return }
-        for tile in grove.tiles(anchor: corner) {
-            let clearing = (2 ... 3).contains(tile.x - corner.x) && (2 ... 3).contains(tile.y - corner.y)
-            terrainGrid[tile.y * mapWidth + tile.x] = clearing ? .grass : .forest
         }
     }
 
@@ -197,10 +208,7 @@ extension World {
     ) {
         var probe = self
         probe.research.markResearched(.mining)
-        let bounds = island.bounds
-        let islandTiles = (bounds.minY ... bounds.maxY).flatMap { y in
-            (bounds.minX ... bounds.maxX).map { TileCoordinate(x: $0, y: y) }
-        }.filter { tileToIsland[$0] == island.id }
+        let islandTiles = islandTiles(of: island, tileToIsland: tileToIsland)
         let ring = Set(Self.ringSquare(of: anchor))
         let footprint = BuildingCatalog.spec(for: .mine).footprint
         func isMineSite(_ corner: TileCoordinate) -> Bool {
@@ -257,7 +265,7 @@ extension World {
     /// once it is mountain. A 3×3 keeps a rock crag in its middle, where a
     /// 2×2 would be all edge and draw as scree. Returns false when none
     /// fits. `probe` is this world with Mining researched.
-    private mutating func raiseNearMineOutcrop(
+    mutating func raiseNearMineOutcrop(
         among islandTiles: [TileCoordinate],
         raisable: (TileCoordinate) -> Bool,
         roads: [TileCoordinate: Int],
@@ -326,13 +334,34 @@ extension World {
             + xs.flatMap { x in [TileCoordinate(x: x, y: ys.upperBound), TileCoordinate(x: x, y: ys.lowerBound - 1)] }
     }
 
+    /// The island of the player's home town center: the island under the
+    /// map's centre tile, else the largest, ties by lower ID.
+    func homeIslandID(in map: [TileCoordinate: IslandID]) -> IslandID? {
+        map[TileCoordinate(x: mapWidth / 2, y: mapHeight / 2)]
+            ?? islands.max { ($0.tileCount, -Int($0.id)) < ($1.tileCount, -Int($1.id)) }?.id
+    }
+
+    /// Islands other than home, largest first, ties by lower ID: rank 1 is
+    /// the first.
+    func otherIslandsBySize(home: IslandID?) -> [Island] {
+        islands.filter { $0.id != home }.sorted { ($0.tileCount, -Int($0.id)) > ($1.tileCount, -Int($1.id)) }
+    }
+
+    /// The tiles of `island`.
+    func islandTiles(of island: Island, tileToIsland: [TileCoordinate: IslandID]) -> [TileCoordinate] {
+        let bounds = island.bounds
+        return (bounds.minY ... bounds.maxY).flatMap { y in
+            (bounds.minX ... bounds.maxX).map { TileCoordinate(x: $0, y: y) }
+        }.filter { tileToIsland[$0] == island.id }
+    }
+
     /// Points the camera at the middle of the player's home town center:
     /// the one on the island under the map's centre tile, else the
     /// lowest-ID one. Spec: `world-terrain` / New game camera starts on
     /// the home town center.
     mutating func centerCameraOnHomeTownCenter() {
         let tileToIsland = tileToIslandMap()
-        let home = tileToIsland[TileCoordinate(x: mapWidth / 2, y: mapHeight / 2)]
+        let home = homeIslandID(in: tileToIsland)
         let centers = buildings.values
             .filter { $0.kind == .townCenter && $0.owner == .player }
             .sorted { $0.id.raw < $1.id.raw }

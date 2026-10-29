@@ -2,7 +2,7 @@
 
 ### Requirement: Seasonal events are game data
 
-The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring. An event item MAY set `enabled: false`; a year whose draw picks such an event SHALL have no seasonal event, and such an event SHALL NOT be warned or started, scheduled or not.
+The game data SHALL hold a catalog of seasonal events as `Event` items, one each for fire, blight, fever and festival. Each item SHALL name its mechanic (`effect`), its possible onset seasons, its earliest age (`minAge`), a weight per difficulty, and the title and text of its banners. The pack validator SHALL reject an event with an unknown effect, an unknown age, no seasons, or a hazard (fire, blight or fever) whose seasons include spring. An event item MAY set `enabled: false`; a year whose draw picks such an event SHALL have no seasonal event. The pack validator SHALL reject a chapter that schedules such an event, naming the event. As a defence for saves and hand-edited data, the world SHALL NOT warn or start a disabled event even when it is scheduled.
 
 #### Scenario: The catalog has four events
 
@@ -14,9 +14,14 @@ The game data SHALL hold a catalog of seasonal events as `Event` items, one each
 - **WHEN** blight, fever and the festival are `enabled: false` in the pack and the events of many years are decided on Hard
 - **THEN** every event drawn is a fire, and fire comes in the share of years D10's chance and weights give it
 
+#### Scenario: A chapter that schedules a disabled event is rejected
+
+- **WHEN** a pack's chapter schedules a blight and blight is `enabled: false`
+- **THEN** pack validation fails, names the chapter and the event, and says the event is disabled
+
 #### Scenario: a disabled event is never warned, even scheduled
 
-- **WHEN** a chapter schedules a blight in autumn 1201 and blight is `enabled: false`
+- **WHEN** a world's schedule holds a blight in autumn 1201 and blight is `enabled: false`, as in a save written before the event was disabled
 - **THEN** no seasonal event is warned or started in 1201
 
 #### Scenario: A spring hazard is rejected
@@ -189,8 +194,9 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | Event | Banner | Title | Text |
 |---|---|---|---|
 | fire | warning | Dry {season} ahead | Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames. |
-| fire | each ignition | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
-| fire | end, losses | The fires are out | {buildings} burnt down. Clear the ruins with Demolish. |
+| fire | each ignition, no fire watch would answer it | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
+| fire | each ignition, a fire watch would answer it | Fire! | A {building} is burning. A fire watch in reach sends its watchman to put it out. |
+| fire | end, losses | The fires are out | {buildings} burnt down. Select the ruins and choose Clear ruins. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
 | fire | end, no fire broke out | The dry spell is over | No fire broke out. |
 | blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield half. Fill a granary, or buy food at the market. |

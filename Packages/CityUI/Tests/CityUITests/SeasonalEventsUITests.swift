@@ -58,9 +58,11 @@ func ignitionBannerNamesTheBuilding() throws {
 func fireEndBanners() {
     let session = eventsSession()
     session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 2, fires: 3))])
-    #expect(session.banner?.description == "2 buildings burnt down. Clear the ruins with Demolish.")
+    #expect(session.banner?.description == "2 buildings burnt down. Select the ruins and choose Clear ruins.")
+    showNextBanner(session)
     session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 0, fires: 1))])
     #expect(session.banner?.description == "Nothing was lost.")
+    showNextBanner(session)
     session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 0, fires: 0))])
     #expect(session.banner?.title == "The dry spell is over")
 }
@@ -167,7 +169,7 @@ func burningBuildingDemolishNamesItsCost() {
 func oneBuildingBurntDown() {
     let session = eventsSession()
     session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 1, fires: 1))])
-    #expect(session.banner?.description == "1 building burnt down. Clear the ruins with Demolish.")
+    #expect(session.banner?.description == "1 building burnt down. Select the ruins and choose Clear ruins.")
 }
 
 @MainActor

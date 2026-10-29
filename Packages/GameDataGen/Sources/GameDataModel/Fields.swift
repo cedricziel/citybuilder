@@ -112,6 +112,34 @@ final class Fields {
         }
     }
 
+    /// A list of mappings, each read strictly.
+    func mappings(_ key: String, required: Bool = true) -> [Fields]? {
+        list(key, required: required).map { $0.compactMap { Fields($0, file: origin.file, item: item, log: log) } }
+    }
+
+    /// The one key of `kinds` this mapping holds, after reporting keys
+    /// outside `kinds` and `extra`. Reports and returns nil when it holds
+    /// none or several.
+    func oneOf(_ kinds: Set<String>, extra: Set<String> = [], what: String) -> String? {
+        finish(allowed: kinds.union(extra))
+        let found = keys.filter(kinds.contains)
+        guard found.count == 1 else {
+            error("\(what) needs exactly one of \(kinds.sorted().joined(separator: ", "))")
+            return nil
+        }
+        return found[0]
+    }
+
+    /// A plain scalar's text, whatever YAML reads it as: `home` or `2`.
+    func scalar(_ key: String) -> String? {
+        guard let node = present(key, required: true) else { return nil }
+        guard case let .scalar(scalar) = node else {
+            error("`\(key)` must be a single value", key)
+            return nil
+        }
+        return scalar.string
+    }
+
     func finish(allowed: Set<String>) {
         for key in keys where !allowed.contains(key) {
             error("unknown field `\(key)`", key)

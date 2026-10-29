@@ -113,11 +113,20 @@ private struct ItemReader {
         case "Culture": culture(id).map { data.cultures.append($0) }
         case "Tech": tech(id).map { data.techs.append($0) }
         case "Tier": tier(id).map { data.tiers.append($0) }
+        case "Age": age(id).map { data.ages.append($0) }
+        default: read(feature: kind, id: id, into: &data)
+        }
+    }
+
+    /// The kinds a feature pack adds beside the core catalog.
+    private func read(feature kind: String, id: String, into data: inout GameData) {
+        switch kind {
         case "Logistics": logistics(id).map { data.logistics.append($0) }
         case "Vehicle": vehicle(id).map { data.vehicles.append($0) }
         case "Order": order(id).map { data.orders.append($0) }
         case "Event": event(id).map { data.events.append($0) }
-        default: age(id).map { data.ages.append($0) }
+        case "Campaign": ChapterReader(fields: fields).campaign(id).map { data.campaigns.append($0) }
+        default: ChapterReader(fields: fields).chapter(id).map { data.chapters.append($0) }
         }
     }
 

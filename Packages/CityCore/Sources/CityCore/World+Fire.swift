@@ -5,7 +5,7 @@ import Foundation
 /// spreads and burns down; A fire watch puts out fires in reach.
 extension World {
     static let burnDownTicks: UInt64 = 300
-    static let fireWatchReach = 8
+    public static let fireWatchReach = 8
 
     /// One ignition in the first half of the onset season, and on Hard a
     /// second in its second half, from the seed and the year.
@@ -147,9 +147,32 @@ extension World {
 
     /// Whether `watch` would answer a fire in `target`: within its reach,
     /// with a road path between them.
-    func fireWatchCovers(_ watch: Building, _ target: Building) -> Bool {
+    public func fireWatchCovers(_ watch: Building, _ target: Building) -> Bool {
         guard let goal = anyAdjacentRoad(anchor: target.anchor, footprint: target.footprint) else { return false }
         return watchmanPath(from: watch, to: target, goal: goal) != nil
+    }
+
+    /// How many of its owner's flammable buildings each fire watch would
+    /// answer: in reach and on the same road network. One component labelling
+    /// serves every watch, so the snapshot can carry it each frame.
+    func fireWatchCoverCounts() -> [EntityID: Int] {
+        let watches = buildings.values.filter { $0.kind == .fireWatch }
+        guard !watches.isEmpty else { return [:] }
+        let components = roadGraph.componentLabels()
+        func network(_ building: Building) -> Int? {
+            anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint).flatMap { components[$0] }
+        }
+        let flammable = buildings.values.filter { Self.isFlammable($0.kind) }
+        var counts: [EntityID: Int] = [:]
+        for watch in watches {
+            let home = network(watch)
+            counts[watch.id] = home == nil ? 0 : flammable.count { building in
+                building.id != watch.id && building.owner == watch.owner
+                    && Self.footprintDistance(watch, building) <= Self.fireWatchReach
+                    && network(building) == home
+            }
+        }
+        return counts
     }
 
     /// The road path from a watch to a burning building within its reach.

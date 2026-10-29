@@ -137,15 +137,14 @@ extension World {
         return nil
     }
 
-    /// Seats `difficulty.rivalCount` rivals on the islands other than the
-    /// home island, largest first, and hands each the town center
-    /// already seeded there (design D2).
-    mutating func seedRivals() {
+    /// Seats `count` rivals, by default `difficulty.rivalCount`, on the
+    /// islands other than the home island, largest first, and hands each
+    /// the town center already seeded there (design D2).
+    mutating func seedRivals(count: Int? = nil) {
         let map = tileToIslandMap()
-        let bySize = islands.sorted { ($0.tileCount, -Int($0.id)) > ($1.tileCount, -Int($1.id)) }
         guard let home = homeIslandID(in: map) else { return }
         let rivalCultures = Culture.allCases.filter { $0 != culture }
-        let seats = bySize.filter { $0.id != home }.prefix(difficulty.rivalCount)
+        let seats = otherIslandsBySize(home: home).prefix(count ?? difficulty.rivalCount)
         for (offset, island) in seats.enumerated() {
             let id = RivalID(offset + 1)
             guard let townCenter = townCenter(onIsland: island.id, tileToIsland: map), offset < rivalCultures.count else { continue }

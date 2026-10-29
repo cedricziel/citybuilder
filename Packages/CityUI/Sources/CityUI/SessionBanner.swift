@@ -9,6 +9,11 @@ public struct SessionBanner: Equatable, Sendable {
 
 extension GameSession {
     static let bannerTicks: UInt64 = 60
+    /// Ticks between one banner hiding and the next showing, so the two
+    /// never draw at once while one slides out and the other in.
+    static let bannerGapTicks: UInt64 = 5
+    /// Banners waiting at most; past it the oldest that isn't urgent goes.
+    static let bannerQueueLimit = 8
     static let gameOverBanner = SessionBanner(
         title: "Bankrupt",
         description: "The treasury stayed in the red too long and the town is lost. "
@@ -30,7 +35,13 @@ extension GameSession {
     }
 
     func noteBannerEvents(in events: [WorldEvent]) {
-        defer { noteDeficitHint(in: events) }
+        // The tick's banners queue first, so a Fire! among them wins a free slot.
+        isQueueingTickBanners = true
+        defer {
+            isQueueingTickBanners = false
+            showNextBanner()
+            noteDeficitHint(in: events)
+        }
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -65,7 +76,7 @@ extension GameSession {
                 show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
             default:
                 if let seasonal = seasonalEventBanner(for: event) {
-                    show(seasonal)
+                    show(seasonal, isUrgent: event.isIgnition)
                 } else {
                     noteOrderEvent(event)
                 }
@@ -81,7 +92,7 @@ extension GameSession {
             guard let order = world.order(id) else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let verb = order.issuer == .crown ? "orders" : "wants"
-            show(SessionBanner(
+            show(expiringAt: order.offerEndsTick, SessionBanner(
                 title: "\(name) \(verb) \(order.quantity) \(InspectorViewModel.goodName(order.good))",
                 description: "\(order.template.title), \(OrdersBoardModel.deadlineText(order, in: world)). "
                     + "Pays \(HUDViewModel.formatMoney(order.reward, locale: .current)) and \(order.favourGain) favour. "
@@ -175,7 +186,13 @@ extension GameSession {
     /// show banners and a chip.
     public func replaySeasonalWarning() {
         guard let banner = seasonalChipBanner() else { return }
-        show(banner)
+        // The player asked: it takes the slot at once, paused or not, and the
+        // banner it interrupts comes back next.
+        bannerQueue.removeAll { $0.banner == banner }
+        if let shown = bannerState?.banner, isBannerShowing, shown != banner {
+            bannerQueue.insert(QueuedBanner(banner: shown, isUrgent: false, expiresAtTick: nil), at: 0)
+        }
+        bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
 
     /// Resume, the pause control or Esc: the simulation runs again.
@@ -197,8 +214,7 @@ extension GameSession {
     /// waits until that step is met or the card is hidden. Spec:
     /// `platform-shells` / Idle-good hint.
     func noteIdleGoods() {
-        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
-        guard !showing, deficitHint == nil, !isGameOver else { return }
+        guard !isBannerBusy, deficitHint == nil, !isGameOver else { return }
         let asked = firstStepsGuide?.openStepKinds ?? []
         guard let idle = world.idleGoods(of: .player).first(where: {
             !hintedIdleGoods.contains($0.good) && asked.isDisjoint(with: $0.users)
@@ -223,8 +239,7 @@ extension GameSession {
         for (id, text) in problems where problemsSeen[id] == nil {
             problemsSeen[id] = (text, world.tickCount)
         }
-        let showing = bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
-        guard !showing, deficitHint == nil, !isGameOver else { return }
+        guard !isBannerBusy, deficitHint == nil, !isGameOver else { return }
         let due = problemsSeen
             .filter { world.tickCount - $0.value.since >= Self.problemHintDelayTicks && !hintedProblems.contains($0.value.text) }
             .min { $0.key.raw < $1.key.raw }
@@ -262,8 +277,79 @@ extension GameSession {
         )
     }
 
-    private func show(_ banner: SessionBanner) {
-        bannerState = (banner, world.tickCount + Self.bannerTicks)
+    /// A banner shows, or waits while one shows: one at a time, each once.
+    /// An urgent one ("Fire!") goes ahead of the others, and a newer urgent
+    /// one with the same title takes the place of the one waiting.
+    /// A banner that goes stale at `expiringAt` (an order offer that lapses)
+    /// is dropped if it is still waiting then.
+    private func show(expiringAt expiry: UInt64? = nil, _ banner: SessionBanner, isUrgent: Bool = false) {
+        guard bannerState?.banner != banner || !isBannerShowing, !bannerQueue.contains(where: { $0.banner == banner }) else { return }
+        if isUrgent {
+            bannerQueue.removeAll { $0.isUrgent && $0.banner.title == banner.title }
+        }
+        let place = isUrgent ? bannerQueue.firstIndex { !$0.isUrgent } ?? bannerQueue.endIndex : bannerQueue.endIndex
+        bannerQueue.insert(QueuedBanner(banner: banner, isUrgent: isUrgent, expiresAtTick: expiry), at: place)
+        if bannerQueue.count > Self.bannerQueueLimit, let oldest = bannerQueue.firstIndex(where: { !$0.isUrgent }) {
+            bannerQueue.remove(at: oldest)
+        }
+        if !isQueueingTickBanners {
+            showNextBanner()
+        }
+    }
+
+    /// The next waiting banner, once the one before has hidden and the gap passed.
+    private func showNextBanner() {
+        let free = bannerState.map { world.tickCount >= $0.hidesAtTick + Self.bannerGapTicks } ?? true
+        bannerQueue.removeAll { $0.expiresAtTick.map { world.tickCount >= $0 } ?? false }
+        guard free, !bannerQueue.isEmpty else { return }
+        bannerState = (bannerQueue.removeFirst().banner, world.tickCount + Self.bannerTicks)
+    }
+
+    private var isBannerShowing: Bool {
+        bannerState.map { world.tickCount < $0.hidesAtTick } ?? false
+    }
+
+    /// A banner shows or waits, so a hint should hold back.
+    private var isBannerBusy: Bool {
+        isBannerShowing || !bannerQueue.isEmpty
+    }
+}
+
+private extension WorldEvent {
+    var isIgnition: Bool {
+        if case .buildingCaughtFire = self { true } else { false }
+    }
+}
+
+/// A banner waiting for the slot.
+struct QueuedBanner {
+    let banner: SessionBanner
+    /// "Fire!" goes ahead of the others.
+    let isUrgent: Bool
+    /// The tick it goes stale at, such as an order offer's end; nil for never.
+    let expiresAtTick: UInt64?
+}
+
+/// Where the session banner goes. Spec: `platform-shells` / Session banners.
+enum SessionBannerLayout {
+    /// Narrower than this, the banner's text wraps line by line and it
+    /// leaves the HUD's left column.
+    static let minWidth: CGFloat = 240
+
+    static func fitsColumn(width: CGFloat) -> Bool {
+        width >= minWidth
+    }
+
+    /// Off the column, the banner sits this far above the bottom: over the
+    /// build controls as measured, the open dock drawer and tool strip with them.
+    static func bottomInset(controlsHeight: CGFloat) -> CGFloat {
+        controlsHeight + 8
+    }
+
+    /// With a left rail an open drawer stands full height beside it, under
+    /// where a wide banner would go, so the banner waits while it is open.
+    static func showsWide(placement: HUDDock, drawerOpen: Bool) -> Bool {
+        placement == .bottomDock || !drawerOpen
     }
 }
 

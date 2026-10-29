@@ -99,8 +99,10 @@ func scenarioOutOfCharcoalBanner() {
     let session = GameSession(world: grass())
     session.noteBannerEvents(in: [.fuelRanOut(building: EntityID(raw: 3), kind: .steamEngine)])
     #expect(session.banner?.title == "Steam engine is out of charcoal")
+    showNextBanner(session)
     session.noteBannerEvents(in: [.monumentCompleted(building: EntityID(raw: 2))])
     #expect(session.banner?.title == "The monument is complete")
+    showNextBanner(session)
     session.noteBannerEvents(in: [.commissionEnded(building: EntityID(raw: 4))])
     #expect(session.banner?.title == "The gallery's commission has ended")
 }
