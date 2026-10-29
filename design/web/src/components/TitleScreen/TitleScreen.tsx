@@ -7,15 +7,18 @@ export interface TitleScreenProps {
   continueSave?: string;
   /** Show Quit (macOS only). Default false. */
   showQuit?: boolean;
+  /** Show "Campaigns" under "New Game…". Default false. */
+  showCampaigns?: boolean;
   style?: CSSProperties;
   onContinue?: () => void;
   onNewGame?: () => void;
+  onCampaigns?: () => void;
   onSettings?: () => void;
   onQuit?: () => void;
 }
 
 /** The launch screen: serif "Citybuilder" wordmark over a column of 280px buttons. Fills its parent. */
-export function TitleScreen({ continueSave, showQuit, style, onContinue, onNewGame, onSettings, onQuit }: TitleScreenProps) {
+export function TitleScreen({ continueSave, showQuit, showCampaigns, style, onContinue, onNewGame, onCampaigns, onSettings, onQuit }: TitleScreenProps) {
   return (
     <div className="cb-title-screen" style={style}>
       <h1 className="cb-title-screen__wordmark">Citybuilder</h1>
@@ -29,6 +32,11 @@ export function TitleScreen({ continueSave, showQuit, style, onContinue, onNewGa
         <Button variant="bordered" fullWidth onClick={onNewGame}>
           New Game…
         </Button>
+        {showCampaigns ? (
+          <Button variant="bordered" fullWidth onClick={onCampaigns}>
+            Campaigns
+          </Button>
+        ) : null}
         <Button variant="bordered" fullWidth onClick={onSettings}>
           Settings
         </Button>
