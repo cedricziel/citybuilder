@@ -116,15 +116,18 @@ struct ResearchPanelView: View {
 }
 
 public extension GameSession {
-    /// True while `kind` waits on research. Spec: `platform-shells` /
-    /// Locked palette entries.
+    /// True while `kind` waits on research or the chapter closes it.
+    /// Spec: `platform-shells` / Locked palette entries.
     func isLocked(_ kind: BuildingKind) -> Bool {
-        !world.research.isAvailable(kind)
+        !world.research.isAvailable(kind) || world.chapterRules.closedBuildings.contains(kind)
     }
 
-    /// A drawer tile's caption: its cost, or the tech it waits on. Spec:
+    /// A drawer tile's caption: its cost, or why it is locked. Spec:
     /// `platform-shells` / Locked palette entries.
     func drawerCaption(for kind: BuildingKind) -> String {
+        if world.chapterRules.closedBuildings.contains(kind) {
+            return PlacementRejectionText.message(for: .closed)
+        }
         if isLocked(kind), let tech = Tech.unlocking(kind) {
             return "Needs \(tech.displayName)"
         }

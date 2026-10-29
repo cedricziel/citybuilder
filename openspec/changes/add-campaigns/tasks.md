@@ -14,14 +14,14 @@
 
 ## 2. M2 — Chapters as data, setup and terrain directives
 
-- [ ] 2.1 Tests-first: translate the `campaigns` scenarios for data, setup, build lists and progression, and the `world-terrain` scenarios, into failing tests, and confirm they fail.
-- [ ] 2.2 Implement to green: the `Campaign` and `Chapter` pack kinds, the schema, `GameDataGen` output, and load validation.
-- [ ] 2.3 Implement to green: terrain directives in world generation.
-- [ ] 2.4 Implement to green: `ChapterSetup`, covering rival count, money and stock scaling (design D3), pre-researched techs and build lists.
-- [ ] 2.5 Implement to green: the `CampaignProgress` record with merge and key-value sync in CityPersistence.
-- [ ] 2.6 Add one chapter start with directives to `DeterminismFixture`.
-- [ ] 2.7 Refactor under a green bar.
-- [ ] 2.8 Verify `make test-scenarios` is clean for `campaigns` and `world-terrain`.
+- [x] 2.1 Tests-first: translate the `campaigns` scenarios for data, setup, build lists and progression, and the `world-terrain` scenarios, into failing tests, and confirm they fail.
+- [x] 2.2 Implement to green: the `Campaign` and `Chapter` pack kinds, the schema, `GameDataGen` output, and load validation.
+- [x] 2.3 Implement to green: terrain directives in world generation.
+- [x] 2.4 Implement to green: `ChapterSetup`, covering rival count, money and stock scaling (design D3), pre-researched techs and build lists.
+- [x] 2.5 Implement to green: the `CampaignProgress` record with merge and key-value sync in CityPersistence. The record and its status logic (`CampaignProgress`) live in CityCore so CityUI can read them without CityPersistence; `CampaignProgressSync` in CityPersistence keeps the local copy and the key-value merge.
+- [x] 2.6 Add one chapter start with directives to `DeterminismFixture`.
+- [x] 2.7 Refactor under a green bar.
+- [x] 2.8 Verify `make test-scenarios` is clean for `campaigns` and `world-terrain`. Four `campaigns` scenarios stay open on purpose: "Built-in campaigns load" waits for the M4 chapters (the committed pack is empty until then), "Sandbox options stay open" is a New Game dialog check for M3, and the two sweep scenarios belong to M4.
 
 ## 3. M3 — UI
 

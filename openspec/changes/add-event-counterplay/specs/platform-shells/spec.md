@@ -23,7 +23,7 @@ Session banners SHALL show one at a time: a banner that arrives while another sh
 
 ### Requirement: New Game offers seasonal events
 
-The New Game dialog SHALL offer "Seasonal events" with the choices On and Off, default On, for sandbox games and the standalone scenarios. Off SHALL start the world with seasonal events disabled. A campaign chapter that schedules events SHALL hide the option and run its schedule.
+The New Game dialog SHALL offer "Seasonal events" with the choices On and Off, default On, for sandbox games and the standalone scenarios. Off SHALL start the world with seasonal events disabled. A campaign chapter SHALL never show the option: it runs its schedule, and its random draw follows the chapter's `randomEvents`. A sandbox started on a chapter's map preset SHALL show the option and follow it.
 
 #### Scenario: Events off
 
