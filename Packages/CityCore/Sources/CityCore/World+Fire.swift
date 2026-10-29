@@ -175,7 +175,7 @@ extension World {
     /// What clearing ruins costs: a quarter of the burnt kind's price,
     /// rounded up to $5, at least $10. Spec: `buildings-and-construction`
     /// / Ruins block their plot until cleared.
-    static func clearingFee(of kind: BuildingKind) -> Int64 {
+    public static func clearingFee(of kind: BuildingKind) -> Int64 {
         max(10, (BuildingCatalog.spec(for: kind).cost + 19) / 20 * 5)
     }
 }

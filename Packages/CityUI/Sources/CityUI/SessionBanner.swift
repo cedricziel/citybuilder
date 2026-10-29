@@ -64,7 +64,11 @@ extension GameSession {
                 guard let name = world.rival(id)?.name else { continue }
                 show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
             default:
-                noteOrderEvent(event)
+                if let seasonal = seasonalEventBanner(for: event) {
+                    show(seasonal)
+                } else {
+                    noteOrderEvent(event)
+                }
             }
         }
     }
