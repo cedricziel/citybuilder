@@ -155,6 +155,8 @@ func scenarioCountsOfNeedsTheTierDoesNotHaveAreDropped() throws {
     let house = try pop(fixture)
     #expect(house.tier == .citizens)
     #expect(house.shortIntervals(of: .tools) == 0)
+    #expect(!house.isShort(.tools), "citizens do not eat tools, so no draw would ever clear the flag")
+    #expect(house.isShort(.food))
     #expect(foodBefore >= grace(fixture))
     #expect(house.shortIntervals(of: .food) == foodBefore)
 }

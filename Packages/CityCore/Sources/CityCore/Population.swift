@@ -91,10 +91,16 @@ public struct HousePopulation: Hashable, Sendable {
         shortIntervals[good] = short ? min(shortIntervals[good, default: 0], .max - 1) + 1 : nil
     }
 
-    /// Forgets the runs of goods `needs` does not list, such as those of a
-    /// tier the house has left.
+    /// Forgets the runs of goods `needs` does not list.
     mutating func keepShortIntervals(for needs: [Good]) {
         shortIntervals = shortIntervals.filter { needs.contains($0.key) }
+    }
+
+    /// Forgets the runs and short flags of goods a tier the house has
+    /// left needed; no later draw would clear them.
+    mutating func keepShortages(for needs: [Good]) {
+        keepShortIntervals(for: needs)
+        shortGoods = shortGoods.filter { needs.contains($0) }
     }
 
     /// An empty house eats nothing, so nothing is short.

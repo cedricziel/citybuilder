@@ -39,7 +39,7 @@ A house at full capacity whose next tier's needs are all met for 120 consecutive
 
 ### Requirement: Houses decline only after a grace period
 
-A house SHALL count, for each need that binds it, the consumption intervals in a row in which it drew less of that good than it needed. A need that does not bind it (cloth before Weaving, for example) MUST hold no count. A need that is drawn in full at a consumption MUST reset its count. A house is past its grace when any need that binds it has a count of at least the tier's decline grace (`HouseTier.declineGrace`, scaled by difficulty). Until then the house MUST keep its residents and its tier, and it MUST NOT grow while a binding need is unmet. A house with no residents has nothing to count: it is past its grace as soon as a binding need is unmet. A tier change MUST drop the counts of goods the new tier does not need.
+A house SHALL count, for each need that binds it, the consumption intervals in a row in which it drew less of that good than it needed. A need that does not bind it (cloth before Weaving, for example) MUST hold no count. A need that is drawn in full at a consumption MUST reset its count. A house is past its grace when any need that binds it has a count of at least the tier's decline grace (`HouseTier.declineGrace`, scaled by difficulty). Until then the house MUST keep its residents and its tier, and it MUST NOT grow while a binding need is unmet. A house with no residents has nothing to count: it is past its grace as soon as a binding need is unmet. A tier change MUST drop the counts and short flags of goods the new tier does not need.
 
 #### Scenario: A short need does not decline a house within its grace
 - **WHEN** a merchant house with 8 residents is short of tools for one consumption interval fewer than its grace, with its other needs available
@@ -66,8 +66,8 @@ A house SHALL count, for each need that binds it, the consumption intervals in a
 - **THEN** it becomes citizens
 
 #### Scenario: Counts of needs the tier does not have are dropped
-- **WHEN** a merchant house short of tools drops to citizens
-- **THEN** its count for tools is gone and its count for food is unchanged
+- **WHEN** a merchant house short of tools and food drops to citizens
+- **THEN** its count and short flag for tools are gone and its count and short flag for food are unchanged
 
 #### Scenario: A tier states its grace in the pack
 - **WHEN** the core pack's tiers are read

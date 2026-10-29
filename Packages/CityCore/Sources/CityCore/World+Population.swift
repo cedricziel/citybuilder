@@ -113,7 +113,7 @@ extension World {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
         }
-        pop.keepShortIntervals(for: pop.tier.needs(in: culture))
+        pop.keepShortages(for: pop.tier.needs(in: culture))
     }
 
     /// The needs of `tier` that hold a house of `owner` to it (spec
