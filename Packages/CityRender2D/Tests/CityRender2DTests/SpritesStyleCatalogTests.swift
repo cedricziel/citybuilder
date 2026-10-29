@@ -122,6 +122,8 @@ private func expectedCatalogIds() -> Set<String> {
     // The building status icons, one brief for every good's icons and the issue pictograms.
     ids.insert("status-icons")
     ids.insert("walker")
+    // The flames on a burning building (`add-event-counterplay`).
+    ids.insert("effect-fire")
     ids.insert("animal")
     ids.insert("ship")
     for good in Good.allCases {
@@ -194,7 +196,8 @@ func scenarioEveryBuildingAndUnitEntryIsRenderedByIsoKit() throws {
     let wrong = try catalogFiles().filter { url in
         let id = url.deletingPathExtension().lastPathComponent
         // Roads are drawn by the road generator, an SVG source.
-        guard id.hasPrefix("building-") && id != "building-road" || ["walker", "animal", "ship"].contains(id) else { return false }
+        let units = ["walker", "animal", "ship", "effect-fire"]
+        guard id.hasPrefix("building-") && id != "building-road" || units.contains(id) else { return false }
         if pendingCatalogIds.contains(id) { return false }
         return try catalogSource(of: String(contentsOf: url, encoding: .utf8)) != "isokit"
     }

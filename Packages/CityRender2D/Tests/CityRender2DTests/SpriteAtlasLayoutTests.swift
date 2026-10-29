@@ -239,11 +239,12 @@ func nightLightsAreCommitted() throws {
     }
     #expect(unlit.isEmpty, "house looks without all their night lights: \(unlit.sorted())")
     let lights = files.filter { $0.range(of: #"-lights-\d+\.png$"#, options: .regularExpression) != nil }
-    // The workshops with a window you can see. The smelter, steam engine and sawmill show none,
-    // so they get no lights rather than a mask that never glows.
+    // The workshops with a window you can see, and the fire watch's lantern. The smelter, steam engine
+    // and sawmill show none, so they get no lights rather than a mask that never glows.
     let workshops = Set(lights.map { String($0[..<$0.range(of: "-lights-")!.lowerBound]) }.filter { !$0.hasPrefix("building-house") })
     #expect(workshops == [
-        "building-bakery", "building-brewery", "building-charcoal-burner", "building-power-plant", "building-quern-house",
+        "building-bakery", "building-brewery", "building-charcoal-burner", "building-fire-watch", "building-power-plant",
+        "building-quern-house",
         "building-roastery", "building-toolsmith", "building-weaver", "building-windmill", "building-winery"
     ])
     for dark in ["building-smelter", "building-steam-engine", "building-sawmill"] {
