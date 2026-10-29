@@ -237,3 +237,34 @@ func queueIsCapped() {
     #expect(session.bannerQueue.count == GameSession.bannerQueueLimit)
     #expect(session.bannerQueue.first?.isUrgent == true)
 }
+
+// MARK: - CodeRabbit on #309
+
+@MainActor
+@Test("scenario: a Fire! in the same tick wins the free slot")
+func fireWinsTheSameTick() {
+    let session = session()
+    session.noteBannerEvents(in: [.ageAdvanced(.renaissance), .buildingCaughtFire(building: EntityID(raw: 900), kind: .farm)])
+    #expect(session.banner?.title == "Fire!")
+}
+
+@MainActor
+@Test("scenario: the banner a chip tap interrupts comes back next")
+func chipTapRequeuesTheInterrupted() {
+    let session = session { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .autumn)
+    }
+    session.noteBannerEvents(in: [.ageAdvanced(.renaissance)])
+    session.replaySeasonalWarning()
+    #expect(session.banner?.title == "Dry autumn ahead")
+    showNextBanner(session)
+    #expect(session.banner?.title == "The Renaissance age begins")
+}
+
+@Test("scenario: the wide banner clears the build controls and an open side drawer")
+func wideBannerClearsTheControls() {
+    #expect(SessionBannerLayout.bottomInset(controlsHeight: 180) == 188)
+    #expect(SessionBannerLayout.showsWide(placement: .bottomDock, drawerOpen: true))
+    #expect(!SessionBannerLayout.showsWide(placement: .leftRail, drawerOpen: true))
+    #expect(SessionBannerLayout.showsWide(placement: .leftRail, drawerOpen: false))
+}

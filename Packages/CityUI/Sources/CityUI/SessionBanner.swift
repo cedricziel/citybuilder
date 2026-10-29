@@ -35,8 +35,13 @@ extension GameSession {
     }
 
     func noteBannerEvents(in events: [WorldEvent]) {
-        defer { noteDeficitHint(in: events) }
-        showNextBanner()
+        // The tick's banners queue first, so a Fire! among them wins a free slot.
+        isQueueingTickBanners = true
+        defer {
+            isQueueingTickBanners = false
+            showNextBanner()
+            noteDeficitHint(in: events)
+        }
         for event in events {
             switch event {
             case let .historyEvent(history):
@@ -181,8 +186,12 @@ extension GameSession {
     /// show banners and a chip.
     public func replaySeasonalWarning() {
         guard let banner = seasonalChipBanner() else { return }
-        // The player asked: it takes the slot at once, paused or not.
+        // The player asked: it takes the slot at once, paused or not, and the
+        // banner it interrupts comes back next.
         bannerQueue.removeAll { $0.banner == banner }
+        if let shown = bannerState?.banner, isBannerShowing, shown != banner {
+            bannerQueue.insert(QueuedBanner(banner: shown, isUrgent: false, expiresAtTick: nil), at: 0)
+        }
         bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
 
@@ -283,7 +292,9 @@ extension GameSession {
         if bannerQueue.count > Self.bannerQueueLimit, let oldest = bannerQueue.firstIndex(where: { !$0.isUrgent }) {
             bannerQueue.remove(at: oldest)
         }
-        showNextBanner()
+        if !isQueueingTickBanners {
+            showNextBanner()
+        }
     }
 
     /// The next waiting banner, once the one before has hidden and the gap passed.
@@ -329,10 +340,16 @@ enum SessionBannerLayout {
         width >= minWidth
     }
 
-    /// Off the column, the banner sits this far up from the bottom, above
-    /// the dock when there is one.
-    static func bottomInset(layout: HUDLayout) -> CGFloat {
-        layout.placement == .bottomDock ? 90 : 16
+    /// Off the column, the banner sits this far above the bottom: over the
+    /// build controls as measured, the open dock drawer and tool strip with them.
+    static func bottomInset(controlsHeight: CGFloat) -> CGFloat {
+        controlsHeight + 8
+    }
+
+    /// With a left rail an open drawer stands full height beside it, under
+    /// where a wide banner would go, so the banner waits while it is open.
+    static func showsWide(placement: HUDDock, drawerOpen: Bool) -> Bool {
+        placement == .bottomDock || !drawerOpen
     }
 }
 

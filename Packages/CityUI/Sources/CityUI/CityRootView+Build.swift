@@ -56,9 +56,7 @@ extension CityRootView {
                 }
                 .padding(.leading, railInset)
             }
-            if !bannerFitsColumn {
-                wideBanner(layout: layout)
-            }
+            if !bannerFitsColumn, showsWideBanner(layout: layout) { wideBanner }
             if let authoring = session.routeAuthoring {
                 VStack {
                     Spacer()
@@ -72,6 +70,7 @@ extension CityRootView {
             }
         }
         .panelAnimation(value: session.routeAuthoring != nil)
+        .onPreferenceChange(BottomControlsHeightKey.self) { bottomControlsHeight = $0 }
     }
 
     /// Whether the left column is wide enough for a session banner.
@@ -86,11 +85,15 @@ extension CityRootView {
     /// `SessionBannerLayout.minWidth` it would squeeze a banner over the
     /// inspector, so the banner spans the HUD above the build controls
     /// instead, as on an iPhone SE with the first-steps card open.
-    private func wideBanner(layout: HUDLayout) -> some View {
+    private func showsWideBanner(layout: HUDLayout) -> Bool {
+        SessionBannerLayout.showsWide(placement: layout.placement, drawerOpen: buildRail.openDrawer != nil)
+    }
+
+    private var wideBanner: some View {
         VStack {
             Spacer()
             sessionBanner
-                .padding(.bottom, SessionBannerLayout.bottomInset(layout: layout))
+                .padding(.bottom, SessionBannerLayout.bottomInset(controlsHeight: bottomControlsHeight))
         }
         .panelAnimation(value: session.banner)
     }
@@ -185,15 +188,19 @@ extension CityRootView {
                     bottomStack(layout: layout).frame(maxWidth: .infinity)
                     minimap(layout: layout, worldViewSize: worldViewSize)
                 }
+                .measuringBottomControls()
             }
             .padding(.leading, railInset)
         case .bottomDock:
             VStack(spacing: 8) {
                 Spacer()
-                BuildDrawerView(session: session, rail: $buildRail, layout: layout)
-                bottomStack(layout: layout)
-                BuildRailView(session: session, rail: $buildRail, layout: layout)
-                    .tvFocusSection()
+                VStack(spacing: 8) {
+                    BuildDrawerView(session: session, rail: $buildRail, layout: layout)
+                    bottomStack(layout: layout)
+                    BuildRailView(session: session, rail: $buildRail, layout: layout)
+                        .tvFocusSection()
+                }
+                .measuringBottomControls()
             }
         }
     }
@@ -246,5 +253,23 @@ extension CityRootView {
                 .panelTransition(.rise)
             }
         }
+    }
+}
+
+/// The height of the controls along the bottom edge, which a full-width
+/// session banner sits above.
+struct BottomControlsHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+extension View {
+    func measuringBottomControls() -> some View {
+        background(GeometryReader { proxy in
+            Color.clear.preference(key: BottomControlsHeightKey.self, value: proxy.size.height)
+        })
     }
 }
