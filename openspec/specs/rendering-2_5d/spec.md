@@ -991,3 +991,31 @@ When a carrier's tile changes, its node SHALL move to the new tile's position ov
 #### Scenario: Carrier sprite falls back to the walker
 - **WHEN** the atlas has no `carrier-sack-se-0`
 - **THEN** a carrier with a sack facing south-east uses the walker's south-east frames
+
+### Requirement: Chimneys smoke
+
+The scene SHALL show smoke rising from the chimney of every operational house with residents, and of every operational player bakery, smelter, toolsmith and charcoal burner that has no building issue. An operational player brewery with no issue SHALL show steam. Rival workshops SHALL stay cold, because building issues are known only for the player's buildings. Empty houses and buildings with an issue SHALL show neither. Which buildings smoke SHALL be a pure function of the snapshot, and smoke SHALL never change simulation state.
+
+#### Scenario: Inhabited house smokes
+- **WHEN** a snapshot holds an operational house with 4 residents and an operational house with none
+- **THEN** only the first house has a smoke source
+
+#### Scenario: Idle workshop is cold
+- **WHEN** a snapshot holds two operational bakeries, one with missing flour
+- **THEN** only the bakery without an issue has a smoke source
+
+#### Scenario: Brewery steams
+- **WHEN** a snapshot holds an operational brewery with no issue
+- **THEN** its source has the steam style
+
+### Requirement: Ambient effects stay in budget
+
+The scene SHALL draw ambient effects only for buildings in the visible tile range, and SHALL show at most `clamp(Int(24 × zoom), 8, 40)` smoke emitters. Working buildings come first, then those nearest the camera centre. Emitters SHALL be pooled and reused. With Reduce Motion on, ambient emitters SHALL emit at half the birth rate and half the speed.
+
+#### Scenario: Smoke budget follows zoom
+- **WHEN** 60 inhabited houses and 2 working bakeries are visible at zoom 0.5
+- **THEN** the scene shows 12 smoke emitters, and both bakeries are among them
+
+#### Scenario: Reduce Motion slows smoke
+- **WHEN** Reduce Motion is on
+- **THEN** a house's smoke emitter has half the birth rate and half the speed it has with Reduce Motion off
