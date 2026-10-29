@@ -42,7 +42,7 @@ extension World {
             .sorted { $0.id.raw < $1.id.raw }
         for exporter in exporters {
             guard let good = exporter.exportGood, var wanted = exportWanted(exporter.id, good: good),
-                  let road = anyAdjacentRoad(anchor: exporter.anchor, footprint: BuildingCatalog.spec(for: exporter.kind).footprint)
+                  let road = anyAdjacentRoad(anchor: exporter.anchor, footprint: exporter.footprint)
             else { continue }
             var surplus = islandStock(of: good, around: exporter, tileToIsland: tileToIsland) - Self.exportReserve
             while wanted > 0, surplus > 0, let (bufferID, path) = nearestBuffer(holding: good, toRoad: road) {

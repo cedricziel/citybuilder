@@ -115,7 +115,7 @@ extension World {
     func supplyReach() -> SupplyReach {
         let components = roadGraph.componentLabels()
         let buffers = goodsBuffers().filter { $0.state == .operational }.map { buffer in
-            let road = anyAdjacentRoad(anchor: buffer.anchor, footprint: BuildingCatalog.spec(for: buffer.kind).footprint)
+            let road = anyAdjacentRoad(anchor: buffer.anchor, footprint: buffer.footprint)
             return (buffer.id, road.flatMap { components[$0] })
         }
         return SupplyReach(buffers: buffers, roadComponents: components)

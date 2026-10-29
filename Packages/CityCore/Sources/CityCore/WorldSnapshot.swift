@@ -229,7 +229,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: orders.shipments.isEmpty ? Array(carriers.values) : Array(carriers.values) + orders.shipments.map(\.asCarrier),
+            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier) + watchmenOnTheRoad,
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,
@@ -265,9 +265,9 @@ public extension World {
 
     private func roadDisconnectedBuildings() -> Set<EntityID> {
         Set(buildings.values.lazy.filter { building in
-            building.kind != .road && !roadGraph.isAnchorRoadConnected(
+            building.kind != .road && building.kind != .ruins && !roadGraph.isAnchorRoadConnected(
                 building.anchor,
-                footprint: BuildingCatalog.spec(for: building.kind).footprint
+                footprint: building.footprint
             )
         }.map(\.id))
     }

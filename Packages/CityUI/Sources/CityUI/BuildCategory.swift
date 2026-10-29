@@ -3,10 +3,12 @@ import CityRender2D
 import Foundation
 
 /// The kinds the player may place. World-gen seeds the town center for
-/// free, so it is not offered, and kinds still waiting for their art are
-/// hidden until it lands.
+/// free and fire leaves ruins, so neither is offered, and kinds still
+/// waiting for their art are hidden until it lands.
 public enum BuildPalette {
-    public static let kinds = BuildingKind.allCases.filter { $0 != .townCenter && !PendingArt.buildingKinds.contains($0) }
+    public static let kinds = BuildingKind.allCases.filter {
+        $0 != .townCenter && $0 != .ruins && !PendingArt.buildingKinds.contains($0)
+    }
 
     /// Palette kinds minus hidden ones (obsolete or other-culture buildings).
     /// Spec: `platform-shells` / Palette hides obsolete buildings.

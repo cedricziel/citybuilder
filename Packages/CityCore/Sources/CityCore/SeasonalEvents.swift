@@ -27,6 +27,8 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     public internal(set) var warned: SeasonalEventOnset?
     /// The event under way.
     public internal(set) var active: ActiveSeasonalEvent?
+    /// The fires of a fire event under way.
+    public internal(set) var fire: FireEventState?
     public internal(set) var counters = SeasonalEventCounters()
 
     public init() {}
@@ -94,9 +96,53 @@ public struct ActiveSeasonalEvent: Codable, Hashable, Sendable {
 public struct SeasonalEventToll: Hashable, Sendable {
     /// Buildings burnt down, or residents who left with fever.
     public let count: Int
+    /// Fires that broke out; a fire event without any ends "no fire broke out".
+    public let fires: Int
 
-    public init(count: Int) {
+    public init(count: Int, fires: Int = 0) {
         self.count = count
+        self.fires = fires
+    }
+}
+
+/// A fire event's ignitions and the buildings burning. Spec:
+/// `seasonal-events` / Fire starts, spreads and burns down.
+public struct FireEventState: Codable, Hashable, Sendable {
+    /// Ticks of the ignitions still to come, earliest first.
+    public internal(set) var ignitionTicks: [UInt64]
+    /// Ignitions so far, found a candidate or not: the next one's index.
+    public internal(set) var ignitions = 0
+    /// Burning buildings, in the order they caught fire.
+    public internal(set) var fires: [Fire] = []
+    /// Every building that caught fire in this event, in that order; none
+    /// catches twice.
+    public internal(set) var caught: [EntityID] = []
+    public internal(set) var lost = 0
+}
+
+/// A burning building and the watchman sent to it, if any.
+public struct Fire: Codable, Hashable, Sendable {
+    public let building: EntityID
+    public let ignitionTick: UInt64
+    public internal(set) var watchman: Watchman?
+}
+
+/// A fire watch's watchman: he walks `path` one tile a tick from
+/// `departureTick` and douses the fire for 30 ticks once there.
+public struct Watchman: Codable, Hashable, Sendable {
+    public static let douseTicks: UInt64 = 30
+
+    public let watch: EntityID
+    public let path: [TileCoordinate]
+    public let departureTick: UInt64
+
+    public var arrivalTick: UInt64 {
+        departureTick + UInt64(path.count)
+    }
+
+    /// The tick the fire is out.
+    public var outTick: UInt64 {
+        arrivalTick + Self.douseTicks
     }
 }
 

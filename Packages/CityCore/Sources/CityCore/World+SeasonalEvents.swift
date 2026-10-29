@@ -43,6 +43,9 @@ extension World {
 
     mutating func runSeasonalEventSystem(events: inout [WorldEvent]) {
         guard calendar.isActive, seasonalEvents.enabled || !seasonalEvents.schedule.isEmpty else { return }
+        if seasonalEvents.fire != nil {
+            runFireSystem(events: &events)
+        }
         if let active = seasonalEvents.active, tickCount >= active.lastTick {
             endSeasonalEvent(events: &events)
         }
@@ -93,13 +96,24 @@ extension World {
         seasonalEvents.active = ActiveSeasonalEvent(
             event: onset.event, startTick: tickCount, lastTick: tickCount + seasons * CalendarState.ticksPerSeason - 1
         )
+        if onset.event.effect == .fire {
+            seasonalEvents.fire = FireEventState(ignitionTicks: fireIgnitionTicks())
+        }
         events.append(.seasonalEventStarted(event: onset.event))
     }
 
-    private mutating func endSeasonalEvent(events: inout [WorldEvent]) {
+    /// Ends the event under way. Fires still burning go out without
+    /// becoming ruins: the rains.
+    mutating func endSeasonalEvent(events: inout [WorldEvent]) {
         guard let active = seasonalEvents.active else { return }
+        for fire in seasonalEvents.fire?.fires ?? [] {
+            extinguish(fire.building, events: &events)
+        }
+        let fire = seasonalEvents.fire
         seasonalEvents.active = nil
-        events.append(.seasonalEventEnded(event: active.event, toll: SeasonalEventToll(count: 0)))
+        seasonalEvents.fire = nil
+        let toll = SeasonalEventToll(count: fire?.lost ?? 0, fires: fire?.caught.count ?? 0)
+        events.append(.seasonalEventEnded(event: active.event, toll: toll))
     }
 
     /// Whether the town has what the event strikes. A chapter's event needs
@@ -132,6 +146,6 @@ extension World {
     /// What a fire can burn: what can ignite, and the town's wooden stores
     /// and halls.
     static func isFlammable(_ kind: BuildingKind) -> Bool {
-        canIgnite(kind) || [.warehouse, .granary, .library].contains(kind)
+        canIgnite(kind) || [.warehouse, .granary, .library, .fireWatch].contains(kind)
     }
 }

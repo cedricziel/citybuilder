@@ -74,6 +74,27 @@ items:
     accepts: [food, grain, flour, bread]
     materials: { wood: 4, planks: 4 }
 
+  # Sends its watchman to put out fires within 8 tiles.
+  # Spec: seasonal-events / A fire watch puts out fires in reach
+  - kind: Building
+    id: fire-watch
+    effect: code
+    category: town
+    footprint: [1, 1]
+    cost: 60
+    upkeep: 1
+    buildTicks: 20
+    materials: { wood: 2, planks: 2 }
+
+  # What a fire leaves: the burnt kind's footprint, cleared with Demolish.
+  # Never in the palette. Spec: buildings-and-construction / Ruins
+  - kind: Building
+    id: ruins
+    effect: code
+    footprint: [1, 1]
+    cost: 0
+    buildTicks: 1
+
   - kind: Building
     id: road
     effect: code

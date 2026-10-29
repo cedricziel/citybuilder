@@ -10,7 +10,7 @@ public extension World {
     /// buildings it's the full footprint.
     func isRoadConnected(building: Building) -> Bool {
         let connectivityTiles = building.landFaceTiles.isEmpty
-            ? BuildingCatalog.spec(for: building.kind).footprint.tiles(anchor: building.anchor)
+            ? building.footprint.tiles(anchor: building.anchor)
             : building.landFaceTiles
         for tile in connectivityTiles {
             for neighbor in orthogonalNeighbors(of: tile) where roadGraph.roadTiles.contains(neighbor) {

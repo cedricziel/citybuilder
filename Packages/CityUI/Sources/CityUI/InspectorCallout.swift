@@ -244,7 +244,7 @@ struct InspectorCalloutView<Actions: View>: View {
 
     private func projection(of building: Building, viewSize: CGSize) -> (CGPoint, CGSize) {
         let camera = session.world.camera
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         let first = PlacementHUDLayout.viewPoint(forTile: building.anchor, camera: camera, viewSize: viewSize)
         let last = PlacementHUDLayout.viewPoint(
             forTile: TileCoordinate(x: building.anchor.x + footprint.width - 1, y: building.anchor.y + footprint.height - 1),

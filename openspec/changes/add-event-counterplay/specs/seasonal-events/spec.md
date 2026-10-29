@@ -69,7 +69,7 @@ A fire, blight or fever SHALL be warned on the first tick of the season before i
 
 ### Requirement: Fire starts, spreads and burns down
 
-A fire event SHALL have one ignition at a tick derived from the seed and the year in the first half of the onset season, and on Hard a second at a derived tick in its second half. At each ignition tick the candidates SHALL be recomputed: the operational player houses and producers that are not burning, in ruins or already burnt in this event, in entity-ID order, of which one is chosen with a generator derived from the seed, the year and the ignition's index. When there is no candidate, that ignition SHALL be skipped and nothing else changes. A building SHALL catch fire at most once per fire event: once doused or burnt down it can't catch fire again until the event ends. A burning building SHALL stop producing, collecting tax, growing and taking or giving deliveries. When a fire has burnt for the difficulty's spread time, every flammable building whose footprint touches its own (a gap of 1) and that is not already burning, in ruins or doused in this event SHALL catch fire, in entity-ID order. A building that burns for 300 ticks SHALL become ruins of the same footprint: its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building. Flammable buildings SHALL be houses, producers, warehouses, granaries, libraries, fire watches, physicians and herb gardens. The fire event SHALL end when no building is burning and no ignition is left, or at the latest on the last tick of the season after its onset, when every fire still burning goes out without becoming ruins (the rains). If no ignition found a candidate, the end banner SHALL say no fire broke out.
+A fire event SHALL have one ignition at a tick derived from the seed and the year in the first half of the onset season, and on Hard a second at a derived tick in its second half. At each ignition tick the candidates SHALL be recomputed: the operational player houses and producers that are not burning, in ruins or already burnt in this event, in entity-ID order, of which one is chosen with a generator derived from the seed, the year and the ignition's index. When there is no candidate, that ignition SHALL be skipped and nothing else changes. A building SHALL catch fire at most once per fire event: once doused or burnt down it can't catch fire again until the event ends. A burning building SHALL stop producing, collecting tax, growing and taking or giving goods (deliveries, building materials and returning shipments), and SHALL still pay its upkeep. The player MAY demolish a burning building as a firebreak: it costs the ruins-clearing fee of its kind, leaves nothing behind and is refused with `notEnoughMoney` when the treasury cannot pay. When a fire has burnt for the difficulty's spread time, every flammable building whose footprint touches its own (a gap of 1) and that is not already burning, in ruins or doused in this event SHALL catch fire, in entity-ID order. A building that burns for 300 ticks SHALL become ruins of the same footprint: its stock is lost, its residents leave, and carriers bound for it are redirected as for a demolished building. Flammable buildings SHALL be houses, producers, warehouses, granaries, libraries, fire watches, physicians and herb gardens. The fire event SHALL end when no building is burning and no ignition is left, or at the latest on the last tick of the season after its onset, when every fire still burning goes out without becoming ruins (the rains). If no ignition found a candidate, the end banner SHALL say no fire broke out.
 
 #### Scenario: Fire spreads to a touching house
 
@@ -91,6 +91,16 @@ A fire event SHALL have one ignition at a tick derived from the seed and the yea
 - **WHEN** Hard's second ignition comes and every house and producer of the player is burning, in ruins or already burnt in this event
 - **THEN** the second ignition is skipped and the event ends when the first fire is out
 
+#### Scenario: Demolishing a burning building as a firebreak
+
+- **WHEN** the player demolishes a burning house with $100 in the treasury
+- **THEN** the treasury holds $85, the tiles are free and no ruins are left
+
+#### Scenario: Burning buildings still pay upkeep
+
+- **WHEN** a sawmill is burning at an upkeep collection
+- **THEN** its upkeep is paid as if it were operational
+
 #### Scenario: An unanswered fire leaves ruins
 
 - **WHEN** a house with 4 residents and 3 food in its stock burns for 300 ticks
@@ -98,7 +108,7 @@ A fire event SHALL have one ignition at a tick derived from the seed and the yea
 
 ### Requirement: A fire watch puts out fires in reach
 
-A burning building within 8 tiles (footprint gap) of an operational, road-connected player fire watch SHALL be answered, whether the watch was operational when the fire started or became operational or connected while it burns, by the nearest idle fire watch, by road path length and then entity ID. Its watchman SHALL walk the road path at one tile a tick and douse the fire for 30 ticks. The fire SHALL be out when he has doused it, and the building SHALL resume with its stock and residents. A fire watch SHALL answer one fire at a time, and further fires in its reach SHALL wait in order of ignition tick, then entity ID. A fire that reaches its spread time or its burn-down time before it is out SHALL spread or burn down as if unanswered.
+A burning building within 8 tiles (footprint gap) of an operational, road-connected player fire watch SHALL be answered, whether the watch was operational when the fire started or became operational or connected while it burns, by the nearest idle fire watch, by road path length and then entity ID. Its watchman SHALL walk the road path at one tile a tick and douse the fire for 30 ticks. The fire SHALL be out when he has doused it, and the building SHALL resume with its stock and residents. A fire watch SHALL answer one fire at a time, and further fires in its reach SHALL wait in order of ignition tick, then entity ID. A fire that reaches its spread time or its burn-down time before it is out SHALL spread or burn down as if unanswered; one that is out on that very tick SHALL do neither.
 
 #### Scenario: A watch saves a house
 

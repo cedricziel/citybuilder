@@ -325,8 +325,8 @@ public struct World: Codable, Sendable, Equatable {
         else { return }
         // Anchor lookup uses the literal tile — but multi-tile buildings
         // resolve via the building's recorded anchor.
-        let spec = BuildingCatalog.spec(for: building.kind)
-        for tile in spec.footprint.tiles(anchor: building.anchor) {
+        guard payToClear(building, events: &events) else { return }
+        for tile in building.footprint.tiles(anchor: building.anchor) {
             occupiedTiles.removeValue(forKey: tile)
         }
         buildings.removeValue(forKey: id)
