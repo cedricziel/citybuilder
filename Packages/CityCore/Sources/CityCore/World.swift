@@ -86,6 +86,10 @@ public struct World: Codable, Sendable, Equatable {
     public internal(set) var difficulty: Difficulty = .normal
     public internal(set) var goals: [GoalState] = []
     public internal(set) var scenarioWon: Bool = false
+    /// Spec: `difficulty-and-goals` / Lose conditions.
+    public internal(set) var loseConditions: [LoseConditionState] = []
+    public internal(set) var scenarioLoss: LossReason?
+    public internal(set) var goalCounters = GoalCounters()
 
     /// Spec: `rival-towns`. Sorted by ID; empty outside archipelago games.
     public internal(set) var rivals: [RivalTown] = []
@@ -252,6 +256,7 @@ public struct World: Codable, Sendable, Equatable {
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)
+        runScenarioRecords(events: &events)
         runStatisticsSystem(events: events)
 
         let endNanos = currentMonotonicNanoseconds()

@@ -64,11 +64,14 @@ extension World {
     }
 
     /// Seats rival 1 without an island, for fixture worlds.
-    mutating func testSeatRival() {
-        rivals = [RivalTown(
-            id: 1, name: "Ravenshore", islandID: 99, culture: .mediterranean, colour: .crimson,
-            age: age, treasury: 0, townCenterID: EntityID(raw: 9999), ai: RivalAIState()
-        )]
+    /// Seats rival `id` in `age` (default: the world's), replacing any
+    /// rival with that ID.
+    mutating func testSeatRival(_ id: RivalID = 1, age: Age? = nil) {
+        rivals.removeAll { $0.id == id }
+        rivals.append(RivalTown(
+            id: id, name: "Ravenshore", islandID: 98 + IslandID(id), culture: .mediterranean, colour: .crimson,
+            age: age ?? self.age, treasury: 0, townCenterID: EntityID(raw: 9998 + UInt32(id)), ai: RivalAIState()
+        ))
     }
 
     mutating func testRun(ticks: Int) -> [WorldEvent] {
