@@ -253,8 +253,7 @@ public extension World {
             ignite(house.id, events: &events)
         }
         for house in houses.dropFirst(burning).prefix(ruined) {
-            buildings[house.id] = Building(id: house.id, kind: .ruins, anchor: house.anchor, state: .operational, ruinOf: .house)
-            populations[house.id] = nil
+            burnDown(house.id)
         }
         dispatchWatchmen()
     }

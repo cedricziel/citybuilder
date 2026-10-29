@@ -91,18 +91,24 @@ extension World {
         guard let state = seasonalEvents.fire else { return }
         for fire in state.fires where tickCount == fire.ignitionTick + Self.burnDownTicks {
             guard let building = buildings[fire.building] else { continue }
-            buildings[fire.building] = Building(
-                id: building.id, kind: .ruins, anchor: building.anchor, state: .operational,
-                owner: building.owner, ruinOf: building.kind
-            )
-            stockpiles[fire.building] = nil
-            populations[fire.building] = nil
-            productions[fire.building] = nil
+            burnDown(fire.building)
             seasonalEvents.fire?.fires.removeAll { $0.building == fire.building }
             seasonalEvents.fire?.lost += 1
             seasonalEvents.counters.buildingsLostToFire += 1
             events.append(.buildingBurntDown(building: fire.building, kind: building.kind))
         }
+    }
+
+    /// Leaves ruins of the building's kind, on its footprint and for its owner; its stock, residents and
+    /// production are gone.
+    mutating func burnDown(_ id: EntityID) {
+        guard let building = buildings[id] else { return }
+        buildings[id] = Building(
+            id: building.id, kind: .ruins, anchor: building.anchor, state: .operational, owner: building.owner, ruinOf: building.kind
+        )
+        stockpiles[id] = nil
+        populations[id] = nil
+        productions[id] = nil
     }
 
     /// The fire is out: the building resumes with its stock and residents.

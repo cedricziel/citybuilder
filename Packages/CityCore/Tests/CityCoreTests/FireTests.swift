@@ -434,3 +434,18 @@ func fireShowcaseSeed() {
     #expect(world.seasonalEvents.active?.event == .fire)
     #expect(world.snapshot().watchmen.map(\.watch) == [watch])
 }
+
+@Test("burning down leaves ruins of the kind, keeps the owner and clears stock, residents and production")
+func burnDownLeavesRuins() throws {
+    var world = fireWorld()
+    let sawmill = addOperational(.sawmill, at: TileCoordinate(x: 4, y: 4), in: &world)
+    let house = addOperational(.house, at: TileCoordinate(x: 8, y: 4), residents: 3, in: &world)
+    _ = world.stockpiles[sawmill]?.deposit(.wood, amount: 3)
+    world.burnDown(sawmill)
+    world.burnDown(house)
+    let ruin = try #require(world.buildings[sawmill])
+    #expect(ruin.kind == .ruins && ruin.ruinOf == .sawmill && ruin.owner == .player && ruin.state == .operational)
+    #expect(ruin.footprint == BuildingCatalog.spec(for: .sawmill).footprint)
+    #expect(world.stockpiles[sawmill] == nil && world.productions[sawmill] == nil)
+    #expect(world.populations[house] == nil)
+}
