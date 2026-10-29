@@ -12,3 +12,18 @@
 .cb-goal--met svg {
   color: var(--cb-green);
 }
+
+.cb-goal-pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cb-goal-pair__value {
+  color: var(--cb-secondary-label);
+}
+
+.cb-goal-pair__value--ahead {
+  color: var(--cb-orange);
+}
