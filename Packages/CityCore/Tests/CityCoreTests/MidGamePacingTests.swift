@@ -27,7 +27,7 @@ private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
 @Test(
     "mid-game pacing across seeds",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10), [Difficulty.easy, .normal, .hard]
+    arguments: sweepSeeds(0 ..< 10), [Difficulty.easy, .normal, .hard]
 )
 func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
     if let only = ProcessInfo.processInfo.environment["PACING_DIFFICULTIES"],

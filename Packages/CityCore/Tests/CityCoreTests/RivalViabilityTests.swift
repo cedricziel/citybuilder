@@ -85,7 +85,7 @@ func rivalsStayViableThroughYear3(_ viability: ViabilityCase) {
 @Test(
     "scenario: rivals are viable across seeds",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: cases(seeds: Array(0 ..< 10))
+    arguments: cases(seeds: sweepSeeds(0 ..< 10))
 )
 func scenarioRivalsAreViableAcrossSeeds(_ viability: ViabilityCase) {
     let run = runRivals(viability, years: 15)
