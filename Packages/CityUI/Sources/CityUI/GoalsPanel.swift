@@ -32,6 +32,20 @@ public struct GoalsPanelModel: Equatable {
             return "Outgrow every rival \(progress.current)/\(progress.target)"
         case .orders:
             return "Fulfil orders \(progress.current)/\(progress.target)"
+        case let .buildings(kind, _):
+            return "\(kind.displayName) \(progress.current)/\(progress.target)"
+        case .signatureProjects:
+            return "Signature projects \(progress.current)/\(progress.target)"
+        case let .research(tech):
+            return "Research \(tech.displayName)"
+        case .treasury:
+            return "Treasury $\(progress.current)/$\(progress.target)"
+        case .netIncome:
+            return "Net income last season $\(progress.current)/$\(progress.target)"
+        case .tradeEarnings:
+            return "Trade earnings $\(progress.current)/$\(progress.target)"
+        case let .landedByShip(good, _):
+            return "\(GoodsCatalog.spec(for: good).displayName) landed at home \(progress.current)/\(progress.target)"
         }
     }
 }

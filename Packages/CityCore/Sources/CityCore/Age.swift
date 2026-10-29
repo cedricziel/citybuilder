@@ -17,9 +17,9 @@ extension Age: Comparable {
 }
 
 extension World {
-    /// Residents living at `tier` or above.
-    func residents(atLeast tier: HouseTier) -> Int {
-        populations(of: .player).filter { $0.tier >= tier }.reduce(0) { $0 + Int($1.population) }
+    /// Residents of `owner` living at `tier` or above.
+    func residents(of owner: Owner = .player, atLeast tier: HouseTier) -> Int {
+        populations(of: owner).filter { $0.tier >= tier }.reduce(0) { $0 + Int($1.population) }
     }
 
     /// Regular techs need their age; era techs need to open the next age
