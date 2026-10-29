@@ -1,5 +1,5 @@
 ---
-source = "pending"
+source = "isokit"
 ---
 ## Function
 
@@ -9,16 +9,23 @@ price.
 
 ## Visual identity
 
-Not drawn yet: the renderer shows the missing-sprite placeholder until the
-event-counterplay canvas is approved (task 8.1 of `add-event-counterplay`).
-The recommended look is a charred timber frame on a blackened plot, one per
-footprint.
+Rendered by IsoKit in the shared light rig. What is left of a timber
+house: a rubble plinth, an ash floor, charred posts at uneven heights, a
+surviving top plate, a leaning rafter, fallen beams, ash heaps, the chimney
+stub and a stretch of fence. One sprite per footprint that can burn, the
+same ruin spread over the plot: a 1×1 ruin is lower, a 3×3 one taller, so
+the posts keep their thickness. Design canvas:
+https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (Ruins, option A).
 
 ## Sprites
 
-- `building-ruins` — canonical base (to be drawn, per footprint)
+- `building-ruins` — the 2×2 ruin of a house or workshop
+- `building-ruins-1x1` — the 1×1 ruin of a fire watch
+- `building-ruins-3x3` — the 3×3 ruin of a warehouse
 
 ## Recipe
 
-- Recipe: `building-ruins` (IsoKit, to be written)
-- Cell: the burnt kind's footprint
+- Recipe: `building-ruins`, `building-ruins-1x1`, `building-ruins-3x3` (IsoKit)
+- Cell: 2×2 footprint for `building-ruins`; the others the footprint in their name; 1×1 80 pt, 2×2 112 pt, 3×3 144 pt tall
+- Construction stages: 0
+- Operational frames: 0

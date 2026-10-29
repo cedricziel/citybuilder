@@ -13,6 +13,7 @@ Looks:
 
 - `walker`: the worker: light madder tunic, light enough to read against the earth roads, fustian hose, felt cap
 - `walker-woman`: a woman in a woad dress with a linen apron and coif, a bread basket on her head
+- `walker-watchman`: the fire watch's watchman in a deep madder tunic and walnut hose, a leather fire bucket swinging from his right hand (`SpriteAtlas.watchmanAnimation(facing:)`)
 - `carrier-sack`: a carrier with a sack on the shoulder, straw hat
 - `carrier-crate`: a carrier with a crate on the shoulder
 - `carrier-barrel`: a carrier with a barrel on the shoulder, hood
@@ -84,6 +85,38 @@ Looks:
 - `walker-woman-sw-5`
 - `walker-woman-sw-6`
 - `walker-woman-sw-7`
+- `walker-watchman-ne-0`
+- `walker-watchman-ne-1`
+- `walker-watchman-ne-2`
+- `walker-watchman-ne-3`
+- `walker-watchman-ne-4`
+- `walker-watchman-ne-5`
+- `walker-watchman-ne-6`
+- `walker-watchman-ne-7`
+- `walker-watchman-nw-0`
+- `walker-watchman-nw-1`
+- `walker-watchman-nw-2`
+- `walker-watchman-nw-3`
+- `walker-watchman-nw-4`
+- `walker-watchman-nw-5`
+- `walker-watchman-nw-6`
+- `walker-watchman-nw-7`
+- `walker-watchman-se-0`
+- `walker-watchman-se-1`
+- `walker-watchman-se-2`
+- `walker-watchman-se-3`
+- `walker-watchman-se-4`
+- `walker-watchman-se-5`
+- `walker-watchman-se-6`
+- `walker-watchman-se-7`
+- `walker-watchman-sw-0`
+- `walker-watchman-sw-1`
+- `walker-watchman-sw-2`
+- `walker-watchman-sw-3`
+- `walker-watchman-sw-4`
+- `walker-watchman-sw-5`
+- `walker-watchman-sw-6`
+- `walker-watchman-sw-7`
 - `carrier-sack-ne-0`
 - `carrier-sack-ne-1`
 - `carrier-sack-ne-2`
@@ -215,7 +248,7 @@ Looks:
 
 ## Recipe
 
-- Recipe: `walker-<facing>`, `walker-woman-<facing>`, `carrier-<load>-<facing>` (IsoKit), one per look and facing
+- Recipe: `walker-<facing>`, `walker-woman-<facing>`, `walker-watchman-<facing>`, `carrier-<load>-<facing>` (IsoKit), one per look and facing
 - Cell: 32×32 pt, feet at (12, 5) pt
 - Facings: ne, nw, se, sw
 - Frames per facing: 8

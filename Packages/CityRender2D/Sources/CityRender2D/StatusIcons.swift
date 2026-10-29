@@ -40,6 +40,18 @@ enum StatusIcons {
         }
     }
 
+    /// What a seasonal event does to a building (`add-event-counterplay`): it burns, it is ruins to
+    /// clear, its field is blighted, or fever holds its house back.
+    enum Hazard: String, CaseIterable {
+        case burning, ruins, blight, fever
+    }
+
+    /// The hazard's icon: the flame and the ruins on the red disc, the blight and the fever on the
+    /// cream one with a pip.
+    static func textureName(for hazard: Hazard) -> String {
+        "status-\(hazard.rawValue)"
+    }
+
     /// The good on a cream disc with a red "!": a missing input or an unmet house need.
     static func short(_ good: Good) -> String {
         "status-\(good.rawValue)-short"
@@ -50,8 +62,8 @@ enum StatusIcons {
         "status-\(good.rawValue)-stuck"
     }
 
-    /// The icon for each of the player's buildings that needs one: its issue, else a house's first
-    /// short need in `Good` order, else no road.
+    /// The icon for each of the player's buildings that needs one: a fire or ruins first, then its
+    /// issue, else a house's first short need in `Good` order, else no road.
     static func icons(in snapshot: WorldSnapshot) -> [EntityID: String] {
         let isPlayers = { (id: EntityID) in snapshot.buildings[id]?.owner == .player }
         var icons: [EntityID: String] = [:]
@@ -63,6 +75,13 @@ enum StatusIcons {
         }
         for (id, issue) in snapshot.buildingIssues where isPlayers(id) {
             if let name = textureName(for: issue) { icons[id] = name }
+        }
+        for building in snapshot.buildings.values where building.owner == .player {
+            if building.state == .burning {
+                icons[building.id] = textureName(for: .burning)
+            } else if building.kind == .ruins {
+                icons[building.id] = textureName(for: .ruins)
+            }
         }
         return icons
     }

@@ -142,18 +142,22 @@ for (const file of readdirSync(catalog).filter((name) => name.endsWith(".md"))) 
     footprintOf[name] = [Number(cell[1]), Number(cell[2])];
   }
 }
-const buildingFootprints = Object.fromEntries(Object.keys(buildings).map((key) => [key, footprintOf[key] ?? [1, 1]]));
+// Ruins come one per footprint and say it in their name (`ruins-3x3`); the plain `ruins` is the 2×2 one.
+const named = (key) => /-(\d+)x(\d+)$/.exec(key)?.slice(1).map(Number);
+const buildingFootprints = Object.fromEntries(
+  Object.keys(buildings).map((key) => [key, named(key) ?? footprintOf[key] ?? [1, 1]]),
+);
 writeFileSync(
   join(out, "buildingFootprints.ts"),
   `import type { buildingSpritesKey } from "./buildings";\n// Footprint in tiles: [columns along x, rows along y].\nexport const buildingFootprints: Record<buildingSpritesKey, [number, number]> = ${JSON.stringify(buildingFootprints)};\n`,
 );
 
-// Figures and ships, every animation frame: `walker-ne-0` … `walker-ne-7` become `walker-ne: [8 frames]`,
-// with each cycle's frame size.
+// Figures, ships and effects, every animation frame: `walker-ne-0` … `walker-ne-7` become
+// `walker-ne: [8 frames]`, with each cycle's frame size; `effect-fire-0` … `-2` the flames.
 const unitFrames = {};
 const unitSizes = {};
 for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.localeCompare(b, "en", { numeric: true }))) {
-  const match = /^((?:walker|carrier|animal|ship)-[a-z-]+)-(\d+)\.png$/.exec(file);
+  const match = /^((?:walker|carrier|animal|ship|effect)-[a-z-]+)-(\d+)\.png$/.exec(file);
   if (!match) continue;
   const png = readFileSync(join(resources, "Kit.atlas", file));
   (unitFrames[match[1]] ??= [])[Number(match[2])] = `data:image/png;base64,${png.toString("base64")}`;

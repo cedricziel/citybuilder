@@ -3,8 +3,12 @@ import { statusSprites } from "../../generated/status";
 import { goodName, type Good } from "../GoodIcon/GoodIcon";
 import "./StatusIcon.css";
 
-/** An issue drawn as a white pictogram on a red disc: something blocks the building. */
-export type StatusPictogram = "no-road" | "no-route" | "no-trees" | "no-room-to-plant";
+/**
+ * An issue drawn as a white pictogram on a red disc: something blocks the building, it burns, or it is
+ * ruins to clear. `blight` and `fever` sit on the cream disc with a pip: a blighted field (amber
+ * pause) and a house fever holds back (red "!").
+ */
+export type StatusPictogram = "no-road" | "no-route" | "no-trees" | "no-room-to-plant" | "burning" | "ruins" | "blight" | "fever";
 
 /**
  * What a status icon shows: a pictogram, or a good with a pip. `short` (red "!") is a missing input
@@ -20,6 +24,10 @@ const pictogramLabels: Record<StatusPictogram, string> = {
   "no-route": "No route to storage",
   "no-trees": "No trees in reach",
   "no-room-to-plant": "No room to plant",
+  burning: "On fire",
+  ruins: "Ruins: clear them",
+  blight: "Blighted field",
+  fever: "Fever",
 };
 
 /** "Short of bread", "Output stuck: planks", "No road". */

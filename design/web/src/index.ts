@@ -20,6 +20,7 @@ export * from "./components/AppIcon/AppIcon";
 export * from "./components/AnimatedSprite/AnimatedSprite";
 export * from "./components/WalkerSprite/WalkerSprite";
 export * from "./components/CarrierSprite/CarrierSprite";
+export * from "./components/FireEffect/FireEffect";
 export * from "./components/AnimalSprite/AnimalSprite";
 export * from "./components/ShipSprite/ShipSprite";
 export * from "./components/StatusPill/StatusPill";

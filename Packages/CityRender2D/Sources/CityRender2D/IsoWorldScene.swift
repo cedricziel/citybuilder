@@ -152,7 +152,10 @@ public final class IsoWorldScene: SKScene {
     var lastPlazaPass: PlazaPass?
     /// Halves ambient motion when on. `IsoWorldView` sets it from the
     /// Reduce Motion accessibility setting.
-    public var reduceMotion = false
+    public var reduceMotion = false {
+        didSet { if reduceMotion != oldValue { restyleFires() } }
+    }
+
     /// Whether the tree clumps sway, hold or stand still. Spec:
     /// `rendering-2_5d` / Trees sway in the wind.
     var treeSwayState: TreeSway.State = .running

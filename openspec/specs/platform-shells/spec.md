@@ -65,11 +65,23 @@ On Mac, the simulation SHALL run in a window that can be resized and entered/exi
 - **THEN** the HUD relayouts within one frame to fit the new bounds
 
 ### Requirement: iPhone "compact play" defaults
-On iPhone, the default UX SHALL bias toward short sessions: larger default zoom, tap-to-inspect with bottom sheets, hidden advanced controls behind a "More" menu. Full functionality MUST remain reachable.
+On iPhone, the default UX SHALL bias toward short sessions: a new game starts zoomed out to 0.55 so the town center shows a third of the screen wide with open ground and the coast around it, tap-to-inspect with bottom sheets, hidden advanced controls behind a "More" menu. Every other device SHALL start at zoom 1.0. Full functionality MUST remain reachable.
 
 #### Scenario: iPhone short-session defaults
 - **WHEN** the app launches on iPhone
-- **THEN** the default camera zoom is higher than the iPad default and advanced controls are collapsed
+- **THEN** the default camera zoom is lower than the iPad default and advanced controls are collapsed
+
+#### Scenario: A phone starts zoomed out
+- **WHEN** a new game starts on a phone
+- **THEN** the camera zoom is between 0.5 and 0.6
+
+#### Scenario: Other devices keep the default zoom
+- **WHEN** a new game starts on an iPad, a Mac or an Apple TV
+- **THEN** the camera zoom is 1.0
+
+#### Scenario: New game starts at the device zoom on the town center
+- **WHEN** a new game starts at zoom 0.55
+- **THEN** the camera still centers on the home town center
 
 ### Requirement: iOS audio session category
 
@@ -735,11 +747,27 @@ While the game is over, the game screen SHALL show a banner titled "Bankrupt" th
 
 ### Requirement: Town center market panel
 
-Selecting a player town center SHALL show a market section in the inspector's details. It SHALL list, in catalog order, every good with a non-zero limit as "Wood — buy $6 (10 left) · sell $2 (20 left)", leaving out a side whose limit is 0. Each row SHALL offer Buy 1, Buy 5, Sell 1 and Sell 5, each enqueueing the matching market command for that town center. A Buy button SHALL be disabled when nothing is left to buy, the town center is full, or the balance is below the price. A Sell button SHALL be disabled when nothing is left to sell or the island holds none of the good. Every button SHALL be disabled after the game is over. A rival's town center SHALL show no market.
+Selecting a player town center SHALL show a market section in the inspector's details. It SHALL list, in catalog order, every good the market sells (a non-zero buy limit) and every good with a non-zero limit that the island holds or produces or that the player traded this season, as "Wood — buy $6 (10 left) · sell $2 (20 left)", leaving out a side whose limit is 0. The other goods with a non-zero limit SHALL be collapsed under an "Other goods (N)" button, which shows them, in catalog order, when chosen. Each row SHALL offer Buy 1, Buy 5, Sell 1 and Sell 5, each enqueueing the matching market command for that town center. A Buy button SHALL be disabled when nothing is left to buy, the town center is full, or the balance is below the price. A Sell button SHALL be disabled when nothing is left to sell or the island holds none of the good. Every button SHALL be disabled after the game is over. A rival's town center SHALL show no market.
 
 #### Scenario: Town market rows
 - **WHEN** the player selects their town center at the start of a season with $1,000
-- **THEN** the market's first row reads "Wood — buy $6 (10 left) · sell $2 (20 left)" and the tools row reads "Tools — sell $15 (20 left)"
+- **THEN** the market's first row reads "Wood — buy $6 (10 left) · sell $2 (20 left)" and the tools row, under Other goods, reads "Tools — sell $15 (20 left)"
+
+#### Scenario: Goods the island cannot use are collapsed
+- **WHEN** the player selects their town center in a new Northern European game
+- **THEN** wood is among the visible rows, and Wine, Tea and Coffee are listed only under Other goods
+
+#### Scenario: Goods the island holds are shown
+- **WHEN** the island holds 3 tools
+- **THEN** the tools row is among the visible rows
+
+#### Scenario: Goods the island produces are shown
+- **WHEN** an operational producer of tools on the player's island
+- **THEN** tools are among the visible rows
+
+#### Scenario: A good sold out this season stays visible
+- **WHEN** the island holds no tools, produces none, and the player sold tools this season
+- **THEN** tools stay among the visible rows instead of collapsing under Other goods
 
 #### Scenario: Buy button enqueues a market command
 - **WHEN** the player taps Buy 5 on the wood row of their town center
@@ -748,6 +776,10 @@ Selecting a player town center SHALL show a market section in the inspector's de
 #### Scenario: Buy disabled at the limit
 - **WHEN** the player has bought 10 wood this season
 - **THEN** both wood Buy buttons are disabled
+
+#### Scenario: Buy enabled while a warehouse has room
+- **WHEN** the player's town center is full and a warehouse on its island has room
+- **THEN** the wood Buy buttons are enabled
 
 #### Scenario: Sell disabled without stock
 - **WHEN** the player's island holds no iron
@@ -763,14 +795,14 @@ Selecting a player town center SHALL show a market section in the inspector's de
 
 ### Requirement: Deficit hint
 
-The first time in a session that the treasury is below zero, the game screen SHALL show the deficit hint as its banner: on the tick that emits `bankruptcyWarning`, or when the session starts with the treasury already below zero and the game not over. On the tick it shows, the hint SHALL take the place of any other banner that tick raises. Its title SHALL be "In the red: upkeep $<upkeep> vs tax $<tax>", with the upkeep and tax of one collection as they stand when it shows. Its description SHALL read "Sell surplus at the town center's market, demolish idle buildings, or build houses before more huts."
+The first time in a session that the treasury is below zero, the game screen SHALL show the deficit hint as its banner: on the tick that emits `bankruptcyWarning`, or when the session starts with the treasury already below zero and the game not over. On the tick it shows, the hint SHALL take the place of any other banner that tick raises. Its title SHALL be "In the red: upkeep $<upkeep> vs tax $<tax>", with the upkeep and tax of one collection as they stand when it shows. Its description SHALL read "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market."
 
 While the hint shows, the simulation SHALL be paused without opening the pause menu, so the bankruptcy grace does not run down. The hint SHALL stay until the player dismisses it, with its Resume button, with the pause control or, on the Mac, with Esc; dismissing it resumes the simulation. On Apple TV the Resume button SHALL take focus when the hint shows. The hint SHALL show at most once per session, and the game-over banner SHALL take its place once the game is over.
 
 #### Scenario: Deficit hint names the cause
 
 - **WHEN** a tick emits `bankruptcyWarning` while one collection's upkeep is $14 and its tax is $9
-- **THEN** the session shows a banner titled "In the red: upkeep $14 vs tax $9" that names the market, demolishing idle buildings and building houses
+- **THEN** the session shows a banner titled "In the red: upkeep $14 vs tax $9" that names food, houses and the market
 
 #### Scenario: Deficit hint pauses until dismissed
 
@@ -791,3 +823,324 @@ While the hint shows, the simulation SHALL be paused without opening the pause m
 
 - **WHEN** the player dismisses the hint and a later tick emits `bankruptcyWarning` again in the same session
 - **THEN** no deficit hint shows
+
+### Requirement: Count capsule over the ghost
+
+While a lumberjack hut, forester or mine ghost stands where it could be placed, the HUD SHALL show a capsule centred just above the ghost's roof, moving with it: "N trees in reach" for a hut, "N open grass in reach" for a forester, and "Mine site: N rock tiles" for a mine, with N the mountain tiles under its plot. A hut's or forester's capsule SHALL be neutral glass at 5 or more, amber at 1 to 4, and red at 0; it warns and never blocks placement. Its type SHALL be 13 points on touch devices, 12 points on the Mac and 24 points on Apple TV. On iOS, while the placement HUD shows, the capsule SHALL stay a gap above the HUD's upper nudge arrows at any zoom. The capsule SHALL NOT show for a ghost that could not be placed there, nor for a selected building, whose count the inspector shows.
+
+#### Scenario: Enough trees reads neutral
+- **WHEN** a lumberjack hut ghost could be placed where 18 trees are in reach
+- **THEN** the capsule reads "18 trees in reach" in the neutral tone
+
+#### Scenario: Few trees read amber
+- **WHEN** the ghost's site has 3 trees in reach
+- **THEN** the capsule reads "3 trees in reach" in the amber tone
+
+#### Scenario: No trees read red
+- **WHEN** the ghost's site has no trees in reach
+- **THEN** the capsule reads "No trees in reach" in the red tone, and the ghost may still be placed
+
+#### Scenario: Mine site count
+- **WHEN** a mine ghost stands on a valid plot with 4 rock tiles
+- **THEN** the capsule reads "Mine site: 4 rock tiles"
+
+#### Scenario: The capsule clears the nudge arrows
+- **WHEN** a hut is pending placement on an iPhone at zoom 0.5
+- **THEN** the capsule's bottom lies above the top of the north-east and north-west arrows
+
+#### Scenario: Apple TV type size
+- **WHEN** the capsule shows on Apple TV
+- **THEN** its text is 24 points
+
+### Requirement: Interface actions make a sound
+
+CityUI SHALL send each interface sound to `UISounds.sink`, which the app shell sets at launch:
+- `tap`: choosing Continue, New Game or Settings on the title screen, and inspecting a tile;
+- `select`: choosing a build tool;
+- `toggle`: the player pausing or resuming, with the pause button, a pause hotkey or the Apple TV Menu button. A pause the game makes itself (a sheet, going to the background, Back or Escape opening the pause menu, a load) SHALL make no sound;
+- `open`: opening a build drawer;
+- `close`: closing a build drawer;
+- `reject`: a placement the rules reject, when its message shows. The simulation never sees such a placement, so its `placementRejected` event cannot carry this sound.
+
+With no sink set, nothing SHALL happen.
+
+#### Scenario: Title menu choices tap
+- **WHEN** the player chooses New Game, then Settings, on the title screen
+- **THEN** the sink receives `tap` twice
+
+#### Scenario: Build drawer opens and closes with a sound
+- **WHEN** the player opens the Gather drawer and then closes it
+- **THEN** the sink receives `open`, then `close`
+
+#### Scenario: Tools and pause make a sound
+- **WHEN** the player picks the road tool, then pauses
+- **THEN** the sink receives `select`, then `toggle`
+
+#### Scenario: A rejected placement knocks
+- **WHEN** the player taps a water tile with the house tool armed
+- **THEN** the sink receives `reject`
+
+#### Scenario: A pause the game makes is silent
+- **WHEN** the game sets its paused state itself, without the player's pause action
+- **THEN** the sink receives nothing
+
+### Requirement: Title screen shows the island
+
+When the app has registered a world renderer, the title screen SHALL draw the starting island (single island, seed 0, with finished houses around the town center) behind its menu. The island SHALL be built off the main thread; until it is ready, and when no renderer is registered, the title screen SHALL show a plain warm gradient. The camera SHALL drift around the town center, never more than 4 tiles from it, and the light SHALL move forward as a time-lapse: from morning to evening (time-of-day fraction 0.30 to 0.82) over 150 seconds, then through the night back to morning over 10 seconds. The clock MUST NOT run backwards, so residents never walk in reverse. With Reduce Motion on, the camera SHALL stay on the town center and the time of day SHALL stay at 0.45. The backdrop MUST NOT take touches, clicks or focus.
+
+#### Scenario: Title camera drifts around the town center
+- **WHEN** the title backdrop has run for 0, 20 and 300 seconds
+- **THEN** the camera centers differ from each other, and each is within 4 tiles of the town center
+
+#### Scenario: Title light moves from morning to evening
+- **WHEN** the title backdrop has run for 0, 145 and 160 seconds
+- **THEN** the time-of-day fraction is 0.30, above 0.8, and 0.30 again, and the tick count grew at every step
+
+#### Scenario: Title night passes quickly
+- **WHEN** the title backdrop runs through one 160-second light cycle
+- **THEN** the time of day is night for at most 10 seconds of it
+
+#### Scenario: Title backdrop stands still under Reduce Motion
+- **WHEN** Reduce Motion is on and the title backdrop has run for 0 and 300 seconds
+- **THEN** both cameras are centered on the town center and the time-of-day fraction is 0.45
+
+#### Scenario: Title backdrop without a renderer
+- **WHEN** no world renderer is registered
+- **THEN** the renderer registry has no factory, and the title backdrop draws only the gradient
+
+### Requirement: Title menu entrance
+
+When the title screen appears, the title and each menu button SHALL fade in and rise 16 points into place, one after another, the item at position n (the title is 0) starting n × 0.08 seconds after the screen appears. On Apple TV the items SHALL only rise, staying opaque, so the default focus can land on Continue (or New Game without a save) while they enter. With Reduce Motion on, every item SHALL appear at once in place.
+
+#### Scenario: Menu items enter in order
+- **WHEN** the title screen appears with Reduce Motion off
+- **THEN** item 0 starts at 0 seconds, item 3 at 0.24 seconds, and an item that has not entered sits 16 points below its place
+
+#### Scenario: Menu items appear at once under Reduce Motion
+- **WHEN** the title screen appears with Reduce Motion on
+- **THEN** every item starts at 0 seconds with no offset and no animation
+
+### Requirement: Title menu buttons respond to touch and pointer
+
+On iPhone, iPad and Mac a title menu button SHALL scale to 0.96 while pressed and to 1.03 while the pointer hovers over it. With Reduce Motion on it SHALL keep its size and darken while pressed instead. On Apple TV the title menu SHALL keep the system bordered button styles, so focus lifts and tilts the button natively.
+
+#### Scenario: Pressed and hovered button scale
+- **WHEN** a title menu button is pressed, hovered, or neither, with Reduce Motion off
+- **THEN** its scale is 0.96, 1.03 and 1
+
+#### Scenario: Pressed button under Reduce Motion
+- **WHEN** a title menu button is pressed with Reduce Motion on
+- **THEN** its scale is 1 and its brightness is lowered
+
+### Requirement: First-hour guide
+
+The game screen SHALL show a "First steps" guide while all of these hold: at least one step is open, the game is not over, the player has not hidden the guide this session, and the session has not seen every step met. It SHALL show in every game mode and difficulty, with no time limit. The guide SHALL list five steps in this order:
+
+1. "Build a farm", met when the player owns an operational farm.
+2. "Make planks: a lumberjack and a sawmill", met when the player owns an operational lumberjack hut and an operational sawmill.
+3. "Build 3 houses on a road", met when the player owns at least 3 operational houses with a road beside them.
+4. "Earn more tax than upkeep", met when one collection's tax, as `World.playerTaxAndUpkeep` reports it, is more than its upkeep.
+5. "Sell surplus at the market", met when the player has sold at least one unit at a town center market this season.
+
+A step SHALL count as met when the world meets it as it stands, so a loaded save shows the steps its world meets, and SHALL then stay met for the rest of the session. Buildings of other owners SHALL NOT count. Each step SHALL carry one line saying why it matters: farms feed residents, a house needs planks, residents pay tax, tax against upkeep decides the treasury, and the market turns surplus into cash; a line that names a gesture SHALL use the platform's verb: "Tap" on iPhone and iPad, "Click" on the Mac, "Select" on Apple TV.
+
+The guide SHALL show the tax, the upkeep and the net (tax minus upkeep) of one collection as they stand, and SHALL mark the net as negative when it is below zero. The guide SHALL NOT pause the simulation or take input focus, and SHALL offer a control that hides it for the rest of the session. On a screen narrower than 600 points or shorter than 500 points the guide SHALL collapse to one line with the count of met steps and the net, which expands when activated; assistive technologies SHALL hear the collapsed line as the count and the net in words, and SHALL be able to expand and collapse it.
+
+#### Scenario: Guide shows on a new game
+
+- **WHEN** a session starts on a new game at tick 0
+- **THEN** the guide shows with all five steps open and the simulation is not paused
+
+#### Scenario: Farm step met by a farm
+
+- **WHEN** a farm the player placed finishes construction
+- **THEN** the "Build a farm" step is met
+
+#### Scenario: Planks step needs both buildings
+
+- **WHEN** the player owns an operational lumberjack hut and no sawmill
+- **THEN** the "Make planks" step is still open
+
+#### Scenario: Guide tracks the houses step
+
+- **WHEN** the player owns 2 operational houses on a road and a third house on a road finishes construction
+- **THEN** the "Build 3 houses on a road" step is met
+
+#### Scenario: Houses off the road don't count
+
+- **WHEN** the player places 3 houses with no road beside them and they finish construction
+- **THEN** the "Build 3 houses on a road" step is still open
+
+#### Scenario: Rival buildings don't count
+
+- **WHEN** a rival owns an operational farm, lumberjack hut, sawmill and 3 houses on a road, and the player owns none
+- **THEN** every step of the player's guide is open
+
+#### Scenario: Tax step needs more tax than upkeep
+
+- **WHEN** one collection's tax equals its upkeep
+- **THEN** the "Earn more tax than upkeep" step is still open
+
+#### Scenario: Guide shows the ledger
+
+- **WHEN** one collection's tax is $12 and its upkeep is $36
+- **THEN** the guide shows tax $12, upkeep $36 and a negative net of $24
+
+#### Scenario: Market step met by a sale
+
+- **WHEN** the player sells 5 planks at the town center market
+- **THEN** the "Sell surplus at the market" step is met
+
+#### Scenario: Market step stays met after the season
+
+- **WHEN** the player sold at the market and a new season resets the market ledger
+- **THEN** the "Sell surplus at the market" step is still met
+
+#### Scenario: Hiding the guide
+
+- **WHEN** the player hides the guide
+- **THEN** the guide does not show again in that session
+
+#### Scenario: Guide stays past year one
+
+- **WHEN** the in-game date reaches the second year with a step still open
+- **THEN** the guide still shows
+
+#### Scenario: Guide leaves when every step is met
+
+- **WHEN** the last open step is met
+- **THEN** the guide does not show again in that session
+
+#### Scenario: Loaded save shows its steps
+
+- **WHEN** a session starts on a save whose player owns an operational farm, lumberjack hut and sawmill
+- **THEN** the guide shows the farm and planks steps as met
+
+#### Scenario: Guide collapses on short screens
+
+- **WHEN** the game screen is 844 by 390 points
+- **THEN** the guide shows as its one-line form
+
+### Requirement: Tool strip warns while the guide shows
+
+While the first-hour guide shows, the tool strip caption SHALL add a warning to the armed building's hint: for a house while the player owns no operational farm, "No farm yet: residents need food"; for any building with upkeep, "Upkeep <amount> per collection", the difficulty-scaled upkeep of one collection the building would pay at its candidate site, with any culture upkeep relief there, written as the HUD writes money. When the guide does not show, or neither case applies, the caption SHALL be the same as without this requirement.
+
+#### Scenario: Caption warns about food
+
+- **WHEN** the guide shows, the player owns no operational farm and arms the house
+- **THEN** the tool strip caption ends with "No farm yet: residents need food"
+
+#### Scenario: Caption names upkeep
+
+- **WHEN** the guide shows on Hard and the player arms the sawmill
+- **THEN** the tool strip caption ends with the sawmill's Hard upkeep per collection
+
+#### Scenario: Caption unchanged without the guide
+
+- **WHEN** the player has hidden the guide and arms the house with no farm
+- **THEN** the tool strip caption is the same as without this requirement
+
+### Requirement: Pinch-to-zoom hint
+On a touch device, the first game screen of a new game SHALL show a banner titled "Pinch to zoom" once per install, through the session banner. A session counts as a new game when the title screen committed it from the New Game dialog; a loaded save SHALL NOT show the hint. The device remembers the hint only once the banner has shown.
+
+#### Scenario: Pinch hint is offered once
+- **WHEN** the hint is asked for twice on the same device
+- **THEN** the first time shows it and the second does not
+
+#### Scenario: A new game's session offers the pinch hint, a continued one does not
+- **WHEN** the title screen commits a world from the New Game dialog, and then one from Continue
+- **THEN** the first session offers the hint and the second does not
+
+#### Scenario: A loaded save skips the pinch hint
+- **WHEN** a session that did not come from a new game asks for the hint, even at tick zero
+- **THEN** no banner shows and the hint stays available for the next new game
+
+#### Scenario: Pinch hint shows as a banner that expires
+- **WHEN** the pinch hint shows and the banner's ticks pass
+- **THEN** the banner is gone
+
+### Requirement: HUD chrome caps Dynamic Type
+The HUD's chrome (the status pill, the More and menu buttons, the First steps capsule, the coachmark, the build bar and its drawer tiles, the tool strip, the session banner and the date chip) SHALL stop growing at the `accessibility1` text size. Icon buttons SHALL NOT scale with the text. One-line labels SHALL shrink and then truncate rather than wrap, and a word MUST NOT break across lines. Sheets and panels SHALL keep scaling with the text.
+
+#### Scenario: Chrome stays on screen at the largest text
+- **WHEN** the text size is accessibility 5 on an iPhone in portrait
+- **THEN** the More button, the First steps capsule and the coachmark keep their `accessibility1` size, and no word in them breaks
+
+### Requirement: Building-problem hint
+When a building of the player's has shown a status icon with the same problem for 100 ticks, the session SHALL show a banner titled "<Building> has a problem" with the problem text and "Tap it for details.", once no other banner shows. Each distinct problem text SHALL be named once per session.
+
+#### Scenario: A standing problem names the building
+- **WHEN** a farm with no road has stood for 100 ticks
+- **THEN** the banner reads "Farm has a problem" with "No road: connect it to a road. Tap it for details."
+
+#### Scenario: A problem that clears is not named
+- **WHEN** the farm gets its road before 100 ticks pass
+- **THEN** no problem banner shows
+
+#### Scenario: The problem banner skips a rival's building
+- **WHEN** a rival's building has a status icon for 100 ticks
+- **THEN** no problem banner shows
+
+#### Scenario: Each problem is named once
+- **WHEN** the banner has shown and expired
+- **THEN** the same problem does not raise it again
+
+### Requirement: Touch placement hint
+On a phone or an iPad, the tool strip's hint for a building other than a road SHALL read "Tap to position, then tap ✓ to place". A road's hint SHALL read "Tap or drag to place road". The Mac and Apple TV hints do not change.
+
+#### Scenario: A road hint keeps tap or drag on touch
+- **WHEN** the road tool is armed on a phone
+- **THEN** the hint reads "Tap or drag to place road"
+
+### Requirement: Road callout keeps off neighbours
+When the callout of a selected road would cover a building within three tiles, it SHALL move to the opposite side or to a side of the road that covers none; when no side is clear it SHALL keep its usual side. On a phone the callout is 264 points wide.
+
+#### Scenario: Callout keeps off a neighbouring building
+- **WHEN** the road's usual callout side covers a farm and the opposite side is clear
+- **THEN** the callout takes the opposite side
+
+#### Scenario: A road's neighbours are the buildings beside it, not the road network
+- **WHEN** a road in a run of roads is selected beside a farm
+- **THEN** the buildings the callout avoids are the farm alone, and no road
+
+#### Scenario: Other selections have no neighbours to avoid
+- **WHEN** a farm is selected
+- **THEN** the callout avoids nothing
+
+#### Scenario: Callout keeps its usual side when no side is clear
+- **WHEN** every side of the road would cover a building
+- **THEN** the callout keeps its usual side
+
+### Requirement: Phone date chip
+A phone SHALL show the date in a 26-point chip with a season glyph under the status pill, at the left edge. The chip SHALL give way first: it is hidden at the `accessibility1` text size and above, and on a screen too narrow to hold it beside the First steps capsule.
+
+#### Scenario: The date chip yields when the row is tight
+- **WHEN** the text size is accessibility 1 or larger, or the width cannot hold the chip beside the capsule
+- **THEN** the chip is hidden
+
+#### Scenario: The date chip shows a glyph for the season
+- **WHEN** the season is autumn
+- **THEN** the chip's glyph is a leaf, and each of the four seasons has its own
+
+### Requirement: Landscape drawer clears the status pill
+On a screen shorter than 500 points, an open build drawer SHALL start below the top bar and its tiles SHALL scroll in the height that is left, at least 96 points.
+
+#### Scenario: A drawer on a short screen leaves room for the status pill
+- **WHEN** the drawer opens on a 402-point-tall screen
+- **THEN** its tile area is shorter than the usual 280 points
+
+### Requirement: A new game ends the old one first
+
+When the title screen commits a new game while one is running, it SHALL end the old game session before creating the new one, so the old game's end handlers run before the new game's sounds start.
+
+#### Scenario: A new game ends the old one before it starts
+- **WHEN** a game is committed while another is running
+- **THEN** the old session's end handler runs before the session factory creates the new session
+
+### Requirement: Inspector callout width
+
+The inspector callout SHALL be 220 points wide on iPhone, iPad and Mac, and 520 points wide on Apple TV, so its lines stay readable from across the room.
+
+#### Scenario: Inspector callout width per idiom
+- **WHEN** the HUD idiom is phone, pad, mac or tv
+- **THEN** the callout is 220, 220, 220 and 520 points wide

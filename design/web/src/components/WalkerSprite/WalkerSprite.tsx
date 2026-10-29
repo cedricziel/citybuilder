@@ -2,8 +2,11 @@ import type { CSSProperties } from "react";
 import { AnimatedSprite, type Facing } from "../AnimatedSprite/AnimatedSprite";
 
 export interface WalkerSpriteProps {
-  /** `worker` (the default resident and labourer) or `woman`. Default `worker`. */
-  look?: "worker" | "woman";
+  /**
+   * `worker` (the default resident and labourer), `woman`, or `watchman`: a fire watch's watchman
+   * with his leather bucket, walking to a fire. Default `worker`.
+   */
+  look?: "worker" | "woman" | "watchman";
   /** Default `se`, toward the camera. */
   facing?: Facing;
   /** Walk the 8-frame gait at 0.1 s a frame. Off, the figure stands (frame 0). Default true. */
@@ -19,6 +22,6 @@ export interface WalkerSpriteProps {
  * from its bottom.
  */
 export function WalkerSprite({ look = "worker", facing = "se", animate = true, scale, style }: WalkerSpriteProps) {
-  const cycle = look === "woman" ? (`walker-woman-${facing}` as const) : (`walker-${facing}` as const);
+  const cycle = look === "worker" ? (`walker-${facing}` as const) : (`walker-${look}-${facing}` as const);
   return <AnimatedSprite cycle={cycle} timePerFrame={0.1} animate={animate} scale={scale} alt={`${look} walking ${facing}`} style={style} />;
 }

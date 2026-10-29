@@ -298,7 +298,7 @@ When a build tool is armed and the player is hovering over a tile, the ghost pre
 
 ### Requirement: Road-access marker
 
-The world snapshot SHALL list every building, other than roads, that has no road tile orthogonally adjacent to its footprint. The renderer MUST draw a "no road" marker above each listed building, and MUST remove the marker as soon as a road touches the building. The building inspector MUST show a "Road:" line that reads "connected" or "none".
+The world snapshot SHALL list every building, other than roads, that has no road tile orthogonally adjacent to its footprint. The renderer MUST show the no-road status icon ("Buildings show a status icon while something is wrong") above each listed building, and MUST remove it as soon as a road touches the building. The building inspector MUST show a "Road:" line that reads "connected" or "none".
 
 #### Scenario: Snapshot lists a building without an adjacent road
 
@@ -312,8 +312,8 @@ The world snapshot SHALL list every building, other than roads, that has no road
 
 #### Scenario: Disconnected building sprite carries the no-road marker
 
-- **WHEN** the renderer builds the sprite for a building listed as road-disconnected
-- **THEN** the building node has a child named `overlay-no-road`
+- **WHEN** the renderer reconciles a snapshot listing a building as road-disconnected
+- **THEN** the building's sprite has a status-icon child textured `status-no-road`
 
 #### Scenario: Inspector reports road access
 
@@ -892,3 +892,468 @@ The renderer SHALL draw one map-sized scree cover between the ground tiles and t
 
 - **WHEN** the cover is built for a mountain region in a meadow
 - **THEN** it is opaque in the region's interior, transparent two tiles outside it, and in between at its edge
+
+### Requirement: Areas of effect while placing and selecting
+
+While a building with a catchment radius is the ghost and could be placed there, or is selected with the inspect tool (a rival's building included), the scene SHALL show its area of effect: the outline of every tile within its catchment, drawn in gold over a dark under-stroke with a faint gold tint, on the ground below trees and buildings. The tiles it would work SHALL be highlighted: a tree in reach SHALL brighten on its own node, and open grass a forester would plant SHALL take a stronger gold tint. While a building with a terrain requirement is the ghost, the scene SHALL outline and tint every tile of each valid site within 6 tiles of the cursor and brighten the required terrain's objects there. A red ghost of a building with a catchment, and an anchor off the map, SHALL show no area. The overlay SHALL use a fixed number of nodes whatever the area's size, and SHALL vanish, restoring every brightened tree and rock, when the ghost and the selection go.
+
+#### Scenario: Placing a hut outlines its catchment and brightens its trees
+- **WHEN** a lumberjack hut ghost stands at an anchor with 18 unoccupied forest tiles within 2 tiles of its plot
+- **THEN** the scene outlines the 6 by 6 tiles around the plot and brightens exactly those 18 trees' nodes
+
+#### Scenario: A forester's open grass is tinted
+- **WHEN** a forester ghost stands where its catchment holds 12 open grass tiles
+- **THEN** the target fill covers exactly those 12 tiles
+
+#### Scenario: Placing a mine shows the valid sites nearby
+- **WHEN** the mine is armed and the cursor is within 6 tiles of rock where a mine may stand
+- **THEN** the scene outlines every tile of each valid mine plot whose anchor is within 6 tiles of the cursor, and brightens the rock on those tiles
+
+#### Scenario: A red ghost shows no catchment
+- **WHEN** a lumberjack hut ghost stands on the town center
+- **THEN** the scene shows no area of effect
+
+#### Scenario: A selected hut shows its catchment
+- **WHEN** the player selects a lumberjack hut with the inspect tool
+- **THEN** the scene outlines its catchment and brightens the trees in reach
+
+#### Scenario: The overlay keeps its node count
+- **WHEN** the area of effect shows for a hut and then for a mine with dozens of valid sites
+- **THEN** the overlay layer holds no more than three nodes both times
+
+#### Scenario: Trees return to normal
+- **WHEN** the player disarms the hut tool
+- **THEN** the overlay is gone and no tree keeps its brightening
+
+### Requirement: Buildings show a status icon while something is wrong
+
+The renderer SHALL float one status icon over the roof of every player building that is not doing its job, and SHALL show none over a building that is fine. The icon is chosen in this order:
+
+1. The building's `BuildingIssue`, mapped as follows:
+   - `.missingInputs(goods)` → the first good's "short" icon.
+   - `.outputStuck(good)` → that good's "stuck" icon (`per-good-storage`).
+   - `.noRoad`, `.noRouteToStorage`, `.noTreesInReach` and `.noRoomToPlant` → their pictograms.
+2. Otherwise, for a house, the "short" icon of the first good in its `shortGoods`, in `Good` order.
+3. Otherwise, if the building is in `roadDisconnectedBuildings`, the no-road pictogram.
+
+A "short" icon is the good on a cream disc with a red "!" pip. A "stuck" icon is the good with an amber pause pip. Pictograms are white on a red disc.
+
+The icon SHALL be one sprite node, a child of the building's sprite, centred over the sprite's top. Its size at zoom 1 SHALL be 22 pt on iOS, 20 pt on macOS and 30 pt on tvOS. Its on-screen size SHALL follow clamp(zoom, 0.75, 1.25). It SHALL draw above the night overlay. It SHALL bob 2 pt (times its zoom scale) over 1.8 s with a phase that depends on the building's id, and SHALL be still while Reduce Motion is on.
+
+#### Scenario: Missing input shows the good
+- **WHEN** a player bakery's issue is `.missingInputs([.flour])`
+- **THEN** its sprite has one status-icon child textured `status-flour-short`
+
+#### Scenario: A house short of a need shows the good
+- **WHEN** a player house has no issue and its `shortGoods` is `[.beer, .bread]`
+- **THEN** its status icon is `status-bread-short`
+
+#### Scenario: A working building shows no icon
+- **WHEN** a player sawmill has no issue and has a road
+- **THEN** its sprite has no status-icon child
+
+#### Scenario: The icon goes when the issue is fixed
+- **WHEN** the bakery's flour arrives and its issue clears
+- **THEN** on the next reconcile its sprite has no status-icon child
+
+#### Scenario: Reduce Motion stills the icon
+- **WHEN** Reduce Motion is on and a building gets a status icon
+- **THEN** the icon runs no bob action
+
+#### Scenario: Icon keeps three quarters of its size at zoom 0.5
+- **WHEN** the camera zoom is 0.5 on macOS
+- **THEN** the icon's on-screen size is 15 pt
+
+#### Scenario: Tapping the icon selects the building
+- **WHEN** the Inspect tool is armed and the player taps inside a building's status icon
+- **THEN** the scene dispatches `tapTile` for that building's anchor tile
+
+#### Scenario: Other tools tap through the icon
+- **WHEN** Demolish or a place tool is armed and the player taps inside a building's status icon
+- **THEN** the scene dispatches `tapTile` for the tile under the tap, not the building's anchor
+
+#### Scenario: The nearest icon takes an overlapping tap
+- **WHEN** the hit areas of two status icons both cover the tap
+- **THEN** the tap selects the building whose icon centre is nearer
+
+### Requirement: Carriers glide and show their load
+
+When a carrier's tile changes, its node SHALL move to the new tile's position over the time since its previous step, clamped to 0.03–0.25 s, instead of jumping. A carrier's frames SHALL come from `carrier-<family>-<facing>-<frame>` for its load's family: logs for wood and planks, barrel for beer and wine, sack for food, grain, flour, bread, hops, grapes, tea leaves, coffee cherries, tea and coffee, and crate for ore, charcoal, iron, tools and any good a pack adds later. When those sprites are missing, they SHALL fall back to the walker frames for the same facing. A carrier SHALL draw just above the road it walks on in depth order, so buildings nearer the camera cover it.
+
+#### Scenario: Carrier glides between tiles
+- **WHEN** a carrier steps from one tile to the next between two frames
+- **THEN** its node runs a move to the new tile's position instead of jumping there
+
+#### Scenario: Load family from the good
+- **WHEN** carriers deliver planks, beer, flour and tools
+- **THEN** their load families are logs, barrel, sack and crate
+
+#### Scenario: Carrier sprite falls back to the walker
+- **WHEN** the atlas has no `carrier-sack-se-0`
+- **THEN** a carrier with a sack facing south-east uses the walker's south-east frames
+
+### Requirement: Chimneys smoke
+
+The scene SHALL show smoke rising from the chimney of every operational house with residents, and of every operational player bakery, smelter, toolsmith and charcoal burner that has no building issue. An operational player brewery with no issue SHALL show steam. Rival workshops SHALL stay cold, because building issues are known only for the player's buildings. Empty houses and buildings with an issue SHALL show neither. Which buildings smoke SHALL be a pure function of the snapshot, and smoke SHALL never change simulation state.
+
+#### Scenario: Inhabited house smokes
+- **WHEN** a snapshot holds an operational house with 4 residents and an operational house with none
+- **THEN** only the first house has a smoke source
+
+#### Scenario: Idle workshop is cold
+- **WHEN** a snapshot holds two operational bakeries, one with missing flour
+- **THEN** only the bakery without an issue has a smoke source
+
+#### Scenario: Brewery steams
+- **WHEN** a snapshot holds an operational brewery with no issue
+- **THEN** its source has the steam style
+
+### Requirement: Ambient effects stay in budget
+
+The scene SHALL draw ambient effects only for buildings in the visible tile range, and SHALL show at most `clamp(Int(24 × zoom), 8, 40)` smoke emitters. Working buildings come first, then those nearest the camera centre. Emitters SHALL be pooled and reused. With Reduce Motion on, ambient emitters SHALL emit at half the birth rate and half the speed.
+
+#### Scenario: Smoke budget follows zoom
+- **WHEN** 60 inhabited houses and 2 working bakeries are visible at zoom 0.5
+- **THEN** the scene shows 12 smoke emitters, and both bakeries are among them
+
+#### Scenario: Reduce Motion slows smoke
+- **WHEN** Reduce Motion is on
+- **THEN** a house's smoke emitter has half the birth rate and half the speed it has with Reduce Motion off
+
+### Requirement: Fish jump near the coast
+
+By day, every 8–15 s of scene time, one fish SHALL jump from a visible open-water tile (water on all eight sides) within 4 tiles of land, picked by a seeded generator. It SHALL make a short arc with a three-frame fish drawn in code, and a splash ring SHALL spread where it dives back in. Only one jump SHALL show at a time, at most 3 nodes. The fish SHALL be nodes of their own above the water and SHALL sort by the depth of the tile they jump from. No new jump SHALL start at night or while the game is paused, and a jump under way SHALL hold still. There SHALL be no fish with Reduce Motion on or below zoom 0.5.
+
+#### Scenario: A fish jumps near the coast
+- **WHEN** open water lies within 4 tiles of the land in view, by day
+- **THEN** within 15 s a fish jumps from an open-water tile within 4 tiles of land, in at most 3 nodes, and the next jump comes 8–15 s later
+
+#### Scenario: No fish
+- **WHEN** it is night, the zoom is below 0.5, or Reduce Motion is on
+- **THEN** no fish jumps
+
+### Requirement: Sawdust puffs at the sawmills
+
+Each working player sawmill in view (operational, with no building issue) SHALL show pale sawdust puffs below the saw, at the middle of its +x edge, from one emitter per mill that reuses the smoke puff texture. At most 8 mills SHALL show sawdust, by id. An emitter SHALL go back to a pool when its mill stops working or leaves the view, and come from the pool when one is needed. The puffs SHALL hold still at night and while the game is paused. There SHALL be no sawdust with Reduce Motion on or below zoom 0.5.
+
+#### Scenario: Sawdust puffs at a working sawmill
+- **WHEN** a working sawmill is in view by day
+- **THEN** sawdust puffs at its front, and stops when the mill has a building issue
+
+#### Scenario: Sawdust rests
+- **WHEN** it is night or the game is paused
+- **THEN** the puffs hold still, and with Reduce Motion or below zoom 0.5 there is no sawdust
+
+### Requirement: Workers walk out from the gather sites
+
+Each operational player lumberjack hut or mine with no building issue SHALL show one worker. The worker SHALL:
+- walk from a tile beside the site, one 4-connected step at a time over free grass, road and the site's own terrain, to a forest tile (hut) or mountain tile (mine) at the edge of the woods or rock, next to free grass or road, within `World.lumberjackCatchmentRadius` of the site's footprint, picked by a hash of the site among those it can reach;
+- work there among the trees or rock;
+- walk back by the same tiles, drawn with the carrier frames for logs (hut) or a crate (mine);
+- rest at the site.
+
+A site with an issue, or with no tree or rock it can reach, SHALL show no worker. A worker SHALL finish the trip it is on: the scene SHALL keep each site's trip (its tiles and the day-clock tick it began) and plan a new one only when the worker is back at its rest point, leaving from the same tile. If a tile on the trip stops being walkable, the worker SHALL turn for home from where it stands, along the tiles it has walked. A tree felled or planted in the catchment SHALL never make a worker jump. While it glides between tiles, a worker SHALL sort by the further back of its two ends. Each game SHALL get its own map view, so the workers of another game never carry over. Workers keep working in winter, as the sim does. Workers SHALL stand still at night, while the game is paused, and with Reduce Motion on. They SHALL sort by the depth of their feet. At most 16 workers SHALL be drawn, sites on screen first, then by id; none below zoom 0.5, and none outside the visible tiles plus the sprites' screen margin.
+
+#### Scenario: A woodcutter walks out and back
+- **WHEN** a working lumberjack hut stands two tiles from a forest at midday
+- **THEN** over one round trip its worker stands only on free grass, road or forest, never in the hut, works in the forest, and walks back carrying logs
+
+#### Scenario: An idle site stays empty
+- **WHEN** a lumberjack hut has no trees in reach, or a mine lacks a road
+- **THEN** it shows no worker
+
+#### Scenario: A miner carries a crate
+- **WHEN** a working mine is planned on its way back
+- **THEN** its worker carries a crate
+
+#### Scenario: No jump when the woods change
+- **WHEN** trees are felled and planted in a hut's catchment between ticks, by day, at night and with Reduce Motion on
+- **THEN** its worker never moves more than one tile from one tick to the next
+
+### Requirement: Animals graze by the farms
+
+Each operational farm SHALL keep 2–4 sheep and each operational grain farm 1–2 cows. The count SHALL come from a hash of the building. The animals SHALL stand on free grass within 2 tiles of the farm's footprint. A free grass tile has grass terrain, no building and no terrain object (tree or rock). Each animal SHALL graze at its spot and, every 6–10 s, walk to a 4-connected neighbouring free tile, so every tile a walk passes over is free grass. Animals SHALL move by a day clock that stops at night: at dusk each animal SHALL keep the place it reached and stop animating, and at dawn it SHALL carry on from there. In winter there SHALL be no animals, because the herds and hens are kept inside. Positions SHALL come from the farm, slot and day clock, and from the round the scene keeps (see "Animals keep their round when the pasture changes"), and SHALL never change simulation state. At most 30 herd animals SHALL be drawn, the budget going to the farms nearest the camera centre first, none below zoom 0.5, and none outside the visible tile range. With Reduce Motion on, animals SHALL stand still where they were when it came on. While the game is paused they SHALL stop animating. The visible range SHALL use the same screen margin as the scene's sprites. Animals SHALL sort by the depth of their feet (`figureZ(at:)`), like the other figures, so a building nearer the camera covers them.
+
+#### Scenario: Sheep graze beside a farm
+- **WHEN** an operational farm stands in open grass at midday
+- **THEN** 2 to 4 sheep stand on grass tiles within 2 tiles of it, none on the farm itself
+
+#### Scenario: No animals inside a tree clump
+- **WHEN** every grass tile around a farm carries a terrain object
+- **THEN** the farm has no animals
+
+#### Scenario: Animals hold still at night
+- **WHEN** the same farm is planned at two ticks a minute apart at night
+- **THEN** each animal stands in the same place and is not walking
+
+#### Scenario: Panning to a farm gives it animals
+- **WHEN** more farms are in view than the herd budget covers, and the camera centres on one of them
+- **THEN** eligible farms get animals in order of distance from the camera centre until the budget is full: the farm under the camera has its animals, and no farm has animals while a nearer one has none
+
+### Requirement: Hens peck by the houses
+
+Each inhabited peasant house SHALL keep 1–2 hens, by a hash of the house, in its yard: the half of an open tile (free grass or road) next to its +x or +y edge. Hens SHALL never stand on the house's own plot, whose log piles, barrels and garden beds are part of the house sprite. A house with no open tile in front SHALL keep no hens. A hen SHALL hop to a new spot every 3–5 s. By night there SHALL be no hens. At most 24 hens SHALL be drawn, the houses nearest the camera centre first, and none below zoom 0.75.
+
+#### Scenario: Hens peck by an inhabited house
+- **WHEN** a peasant house with residents is planned at midday at zoom 1
+- **THEN** 1 or 2 hens stand on the open tiles just in front of it, none on its plot
+
+#### Scenario: Animals stay in budget
+- **WHEN** 40 farms in open grass are visible at midday
+- **THEN** at most 30 herd animals are planned
+
+#### Scenario: No jump at dusk or dawn
+- **WHEN** a farm's animals are planned on the ticks either side of dusk, and again either side of dawn
+- **THEN** no animal moves further than one tile between the two ticks
+
+#### Scenario: Walks stay on free grass
+- **WHEN** a farm's pasture is broken up by trees and a house
+- **THEN** at every tick each animal stands on a free grass tile
+
+#### Scenario: No animals in winter
+- **WHEN** a farm and an inhabited house are planned at midday in winter
+- **THEN** there are no animals
+
+### Requirement: Trees sway in the wind
+
+Every tree clump object SHALL rock about its anchor (the trunk base on its tile), by at most 0.7°, on a shared repeating action. Its start SHALL be offset by a phase from a hash of its tile. Rock objects SHALL NOT sway. The sway SHALL be armed when the clump's node is made, with no per-frame work per clump.
+
+Below zoom 0.5, or with Reduce Motion on, clumps SHALL stand upright and still. While the game is paused, they SHALL hold their current lean. The scene SHALL update the clumps on screen only when this state changes, and clumps made afterwards SHALL start in the current state.
+
+#### Scenario: A tree clump sways
+- **WHEN** the scene makes the node for a forest tile with a clump at zoom 1
+- **THEN** the clump runs the sway action, and its lean never exceeds 0.7°
+
+#### Scenario: Rock stays still
+- **WHEN** the scene makes the node for a mountain tile with an outcrop
+- **THEN** the outcrop runs no sway
+
+#### Scenario: Sway stops far out and with Reduce Motion
+- **WHEN** the camera zooms out below 0.5, or Reduce Motion comes on
+- **THEN** every clump on screen stands upright with its sway stopped, and a clump made afterwards starts stopped
+
+### Requirement: Animals keep their round when the pasture changes
+
+The scene SHALL keep each animal's round (its tiles, in walking order) from tick to tick, and SHALL keep it while every tile on it is still open: free grass for a herd animal, free grass or road for a hen. When a tile on the round closes, the animal SHALL plan a new round through the open tiles, starting at the tile it was heading for, or at the nearest open tile when that one has closed, and SHALL walk there from the spot where it stands. A building or road placed on the pasture or yard SHALL never make an animal jump. A round no longer drawn (its home off screen or over budget) SHALL be forgotten; the next time the animal is drawn, its round starts afresh from the farm, slot and day clock. Each game SHALL get its own map view, so the animals and workers of another game never carry over.
+
+#### Scenario: No jump when the pasture is built on
+- **WHEN** a road tile is laid on a farm's pasture every few ticks, with the farm's sheep in view
+- **THEN** no sheep moves more than one tile between two ticks, and a sheep that stands still stands on free grass
+
+### Requirement: Port and shipyard animate while operational
+
+An operational port SHALL loop its facing's six operational frames, `building-port-<o>-operational-0` to `-5`, at 0.45 s each. The loop SHALL show its crane lifting a crate off the wharf, swinging it onto the quay, setting it down and swinging back out.
+
+An operational shipyard SHALL loop its facing's five operational frames, `building-shipyard-<o>-operational-0` to `-4`:
+- frames 0–2, keel and ribs, then two and four strakes, SHALL show for 2.5 s each;
+- frame 3, the finished hull with six strakes, SHALL show for 4 s;
+- frame 4, the empty slipway after its launch, SHALL show for 1.25 s.
+
+An operational entry MAY give each frame its own duration. When it does, it SHALL give exactly one positive duration per frame.
+
+#### Scenario: Cargo comes ashore at an operational port
+
+- **WHEN** the renderer draws an operational port facing east
+- **THEN** it loops `building-port-e-operational-0` to `-5`, at 0.45 s each, 2.7 s per pass
+
+#### Scenario: The shipyard planks a hull and launches it
+
+- **WHEN** the renderer draws an operational shipyard facing north
+- **THEN** it loops `building-shipyard-n-operational-0` to `-4`
+- **AND** the finished hull, frame 3, shows the longest
+- **AND** the empty slipway, frame 4, shows the shortest
+- **AND** one pass lasts 12.75 s
+
+### Requirement: Building animations follow pause and Reduce Motion
+
+The renderer SHALL keep one state for every building animation on screen: running, held or stopped.
+- With Reduce Motion on, the state SHALL be stopped, and each animated building SHALL show its operational frame 0, culture looks included.
+- Otherwise, while the game is paused (no new tick for 0.3 s), the state SHALL be held: each building animation SHALL keep its current frame.
+- Otherwise the state SHALL be running.
+
+A building drawn while the state is held or stopped SHALL start in that state. A change of state SHALL slow only each building's own animation; badges, glows and pennants on the building SHALL keep their motion. The renderer SHALL touch building nodes only on frames where the state changes.
+
+#### Scenario: Reduce Motion rests a building on its first frame
+
+- **WHEN** Reduce Motion turns on while a windmill's sails are mid-turn
+- **THEN** its animation stops and the windmill shows its operational frame 0
+- **AND** the sails turn again once Reduce Motion is off and the game ticks
+
+#### Scenario: Pausing holds a building's animation
+
+- **WHEN** no tick arrives for more than 0.3 s
+- **THEN** each building animation stops on its current frame
+- **AND** it runs again with the next tick
+
+### Requirement: Birds follow pause and Reduce Motion
+
+Birds SHALL follow the same motion state as building animations:
+- while running, flocks cross and gulls wheel;
+- while held, every bird SHALL hang where it is, no new flock SHALL set out, and the wait for the next flock SHALL resume where it stopped;
+- while stopped, the map SHALL show no birds.
+
+#### Scenario: Pausing holds the birds
+
+- **WHEN** the game is paused while a flock crosses
+- **THEN** the flock and the gulls stop where they are, and the next flock's wait pauses with them
+- **AND** they move on when the game ticks again
+
+### Requirement: Plain ground is one backdrop
+
+A tile whose ground is plain grass, beach or water, with no transition, SHALL have no ground sprite of its own. Forest and mountain tiles count as grass. One `SKSpriteNode` under the ground sprites, spanning the screen and clamped to the map, SHALL draw every such tile:
+- a shader finds the tile under each pixel;
+- it draws that tile's look (its grass variant, beach or water, in the current season) with its animation frames;
+- each tile runs on its own phase, from its tile hash;
+- every other tile, and the space outside the map, stays transparent.
+
+The backdrop SHALL look the same as a sprite per tile, in every season and at night, under every overlay. Transition sprites, buildings and figures SHALL stay ordinary nodes. A tree or rock object over plain ground SHALL stand alone at the same z and column slot it has over a ground sprite. A terrain change SHALL update which tiles the backdrop draws, and a season change SHALL update its looks.
+
+#### Scenario: Plain ground is one node
+
+- **WHEN** the scene shows grass, beach and sea with no transitions between them
+- **THEN** those tiles have no sprite, the backdrop draws them, and the scene holds one backdrop node
+
+#### Scenario: Transition tiles keep their sprites
+
+- **WHEN** a tile has a transition
+- **THEN** it keeps its transition sprite and the backdrop leaves it transparent
+
+#### Scenario: Plain ground follows the terrain
+
+- **WHEN** a water tile turns to land
+- **THEN** the backdrop draws it as grass, and the water round it, which now has shore transitions, gets sprites
+
+#### Scenario: Trees and rocks keep their place over the backdrop
+
+- **WHEN** a forest tile's ground is plain
+- **THEN** its tree clump stands alone at the tile, with the z it has over a ground sprite
+
+#### Scenario: Each tile animates on its own phase
+
+- **WHEN** the backdrop's tiles are laid out
+- **THEN** their animation phases come from their tile hashes and spread across the frames
+
+#### Scenario: The ground backdrop follows the season
+
+- **WHEN** the season turns from summer to winter
+- **THEN** the backdrop draws the winter looks
+
+### Requirement: The ground backdrop follows pause and Reduce Motion
+
+The ground backdrop's animation SHALL follow the same motion state as building animations (see "Building animations follow pause and Reduce Motion"):
+- while running, its clock advances;
+- while held, its clock stops, so every tile keeps its frame, and it runs on from there with the next tick;
+- while stopped, every tile shows its look's frame 0.
+
+#### Scenario: Pausing holds the ground's animation
+
+- **WHEN** no tick arrives for more than 0.3 s
+- **THEN** the backdrop's clock stops, so every plain tile keeps its frame
+- **AND** it runs on from there with the next tick
+
+#### Scenario: Reduce Motion rests the ground on its first frame
+
+- **WHEN** Reduce Motion is on
+- **THEN** every plain tile shows its look's frame 0
+
+### Requirement: Camera stays near the map
+
+After every pan, the camera centre SHALL stay within `GameSession.cameraMapMargin` (8) tiles of the map on every axis. On Apple TV it SHALL stay on the map itself. A view that lies wholly off the map SHALL cull to no tiles and draw no terrain or building sprites, without failing.
+
+#### Scenario: Panning far off the map stops at the margin
+
+- **WHEN** the player pans 100,000 points past any of the four edges of a 24 × 24 map
+- **THEN** the camera centre stops 8 tiles past the map on the axis it left by, and no further
+
+#### Scenario: A view off the map draws nothing
+
+- **WHEN** the camera stands 500 tiles past any edge or corner of the map
+- **THEN** culling returns no tile range and the scene places no sprite
+
+### Requirement: Sprites reconcile only on change
+
+The renderer SHALL keep what its terrain and building sprites were drawn from: the tiles on screen, the terrain grid and occupancy, and the buildings with their road access, house populations, house modifiers and rivals. A frame where none of these changed SHALL add, remove and rebuild no sprite and SHALL NOT build the desired sprite set again. When only the camera moves, the renderer SHALL add and remove only the tiles that entered or left the view. When occupancy changes, it SHALL redraw only the tiles whose terrain object changed. After any sequence of frames, the sprites in the scene SHALL be the ones a full rebuild of the latest frame would place.
+
+#### Scenario: An unchanged frame reconciles nothing
+
+- **WHEN** the scene draws five more frames of the same snapshot
+- **THEN** it runs no terrain pass and no building pass, and adds and removes no tile
+
+#### Scenario: A pan redraws only the edges
+
+- **WHEN** the camera moves one tile at zoom 0.5
+- **THEN** the tiles added and removed are fewer than a fifth of the tiles on screen, and the sprites match a full rebuild
+
+#### Scenario: A new building redraws only the tiles round it
+
+- **WHEN** a house is placed beside a forest
+- **THEN** one building pass runs, fewer than 20 tiles are redrawn, and the sprites match a full rebuild
+
+#### Scenario: Incremental frames match a full rebuild
+
+- **WHEN** the camera pans and zooms, a forest tile turns to grass and a house moves, one frame after another
+- **THEN** after each frame the scene's sprites are the ones a fresh scene would place for that frame
+
+### Requirement: Birds cross the sky
+
+By day and at dusk, with Reduce Motion off, the scene SHALL launch a flock of 5–9 dark, code-drawn birds across the view at intervals of 40–90 s of scene time, with at most one flock in the air. Each bird SHALL flap and cast a faint shadow. When the visible tiles include a water tile next to land and the zoom is at least 0.5, three white gulls SHALL circle over one such tile. There SHALL be no birds at night or with Reduce Motion on. Birds SHALL never change simulation state.
+
+#### Scenario: A flock crosses by day
+- **WHEN** the scene time passes the next flock time at midday
+- **THEN** the bird layer holds a flock of 5 to 9 birds moving across the view
+
+#### Scenario: No birds at night or with Reduce Motion
+- **WHEN** the scene renders at midnight, or with Reduce Motion on
+- **THEN** the bird layer is empty
+
+#### Scenario: Gulls wheel over the coast
+- **WHEN** a visible water tile borders land at midday and zoom 1
+- **THEN** three gulls circle over a coastal water tile
+
+### Requirement: Fire trades glow at night
+
+Every working fire trade with its sprite on screen SHALL show a warm, additive glow at its hearth. The fire trades are the bakery, smelter, toolsmith and charcoal burner, and "working" is the rule from "Chimneys smoke". The hearth positions are measured on the sprites. The glow's alpha SHALL be the night's darkness over `nightDarkness`, so there is none by day. The glow SHALL flicker slowly, unless Reduce Motion is on.
+
+#### Scenario: Working forge glows at night
+- **WHEN** a player toolsmith with no issue is on screen at midnight
+- **THEN** its node has a fire-glow child with alpha 1
+
+#### Scenario: Cold forge stays dark
+- **WHEN** the same toolsmith lacks iron
+- **THEN** its node has no fire-glow child
+
+#### Scenario: No glow by day
+- **WHEN** a working toolsmith is on screen at midday
+- **THEN** it has no visible fire glow
+
+### Requirement: Lit windows follow the lights art
+
+From dusk to dawn, a building that is inhabited (a house) or working (any other kind) SHALL light its windows. For any other kind, working means a player building with no issue, or a rival's operational building. The building SHALL show the first of `<sprite stem>-lights-<n>` and `<sprite stem>-lights` the atlas has, additively over its sprite, with alpha 0.85 times the darkness over `nightDarkness`; `n` comes from a hash of the building's id, so a building keeps its variant and a row built in order does not cycle through them. Without either, a house SHALL show its two warm panes and other kinds nothing. From 2:00 to 4:30, four houses in five SHALL go dark, fading over a quarter hour at either end; workshops stay lit.
+
+#### Scenario: Lights mask replaces the panes
+- **WHEN** the atlas has `building-house-lights` and an inhabited house is drawn at midnight
+- **THEN** its window glow is that texture at alpha 0.85 instead of two panes
+
+#### Scenario: Each house shows its own evening
+- **WHEN** the atlas has the lights variants of `building-house` and a row of inhabited houses is drawn at midnight
+- **THEN** each house shows the variant its id hashes to, the same every frame, and the row spreads across all three
+
+#### Scenario: Late at night most houses go to bed
+- **WHEN** a town is drawn at 3 AM
+- **THEN** about four houses in five show no window glow, and a working bakery is still lit
+
+### Requirement: Ships leave a wake
+
+Each visible ship SHALL carry a wake emitter at its stern. The stern is opposite its heading, projected to the screen. The emitter's particles SHALL be left in a wake layer above the terrain and below buildings, so the foam stays where it was laid. The emitter SHALL emit only while the ship's position keeps changing, and SHALL stop 0.3 s after its last move. Below zoom 0.5 the foam SHALL live half as long. With Reduce Motion on, the emitter SHALL emit at half the birth rate and half the speed.
+
+#### Scenario: Moving ship lays foam
+- **WHEN** a ship's position changes between two snapshots
+- **THEN** its wake emitter has a positive birth rate and leaves its particles in the wake layer
+
+#### Scenario: Still ship lays none
+- **WHEN** a ship has not moved since it appeared
+- **THEN** its wake emitter's birth rate is 0
+
+#### Scenario: Reduce Motion halves the wake
+- **WHEN** Reduce Motion is on and a ship moves
+- **THEN** its wake emitter has half the birth rate and half the speed it has with Reduce Motion off

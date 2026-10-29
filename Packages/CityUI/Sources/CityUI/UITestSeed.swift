@@ -46,6 +46,39 @@ public enum UITestSeed {
         return world
     }
 
+    /// `-uiTestSeedFire`: the seeded town with six houses, a fire watch and a granary, two houses
+    /// burning (the watch's watchman on his way to one) and one burnt to ruins, for the event art's shots.
+    public static func fireWorld() -> World {
+        var world = townWorld(houses: 6, showcase: [.fireWatch, .granary])
+        if let watch = world.buildings.values.first(where: { $0.kind == .fireWatch }) {
+            joinToRoads(watch, in: &world)
+        }
+        // The watchman puts out his first fire within seconds of the start, before a shot can catch him,
+        // so a third house catches fire eight seconds in and sends him out again.
+        world.seedFireShowcase(ruined: 2, nextIgnitionIn: fireSeedSecondCall)
+        return world
+    }
+
+    /// Ticks from the start of `fireWorld` to its third fire.
+    static let fireSeedSecondCall: UInt64 = 80
+
+    /// Lays a road on a tile beside `building` that touches the town's roads, if there is one.
+    private static func joinToRoads(_ building: Building, in world: inout World) {
+        let roads = Set(world.buildings.values.filter { $0.kind == .road }.map(\.anchor))
+        func neighbours(_ tile: TileCoordinate) -> [TileCoordinate] {
+            [(1, 0), (-1, 0), (0, 1), (0, -1)].map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
+        }
+        let beside = building.footprint.tiles(anchor: building.anchor).flatMap(neighbours)
+        guard let link = beside.first(where: { tile in
+            guard case .allowed = world.canPlace(.road, at: tile) else { return false }
+            return neighbours(tile).contains(where: roads.contains)
+        })
+        else { return }
+        world.enqueue(.place(.road, at: link))
+        _ = world.tick()
+        settle(&world) { $0.buildings.values.contains { $0.anchor == link && $0.state != .operational } }
+    }
+
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
     /// houses beside the town center, under the default camera. Art reviews screenshot the same town
     /// before and after a sprite family changes. With a `season` (`-uiTestSeason winter`), the town
@@ -104,6 +137,7 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedPort") { return portWorld() }
         if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
         if arguments.contains("-uiTestSeedOrders") { return ordersWorld() }
+        if arguments.contains("-uiTestSeedFire") { return fireWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
@@ -225,12 +259,12 @@ public enum UITestSeed {
         return world
     }
 
-    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`) that has
-    /// its art, or the kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
+    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), or the
+    /// kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         let value = arguments[flag + 1]
-        let category = BuildingKind.allCases.filter { $0.category == value && !PendingArt.buildingKinds.contains($0) }
+        let category = BuildingKind.allCases.filter { $0.category == value }
         return category.isEmpty ? value.split(separator: ",").compactMap { BuildingKind(rawValue: String($0)) } : category
     }
 

@@ -97,6 +97,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let seasonalEvent: SeasonalEventOnset?
     /// Turns any tick into a date, such as when ruins burnt down.
     public let calendar: CalendarState
+    /// Fire watchmen walking to a fire or dousing it. Spec: `rendering-2_5d` /
+    /// Seasonal events are drawn on the map.
+    public let watchmen: [WatchmanWalker]
 
     public init(
         tickCount: UInt64,
@@ -127,7 +130,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         statistics: StatisticsHistory = StatisticsHistory(),
         orders: OrdersState = OrdersState(),
         seasonalEvent: SeasonalEventOnset? = nil,
-        calendar: CalendarState = .inactive
+        calendar: CalendarState = .inactive,
+        watchmen: [WatchmanWalker] = []
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -158,6 +162,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.orders = orders
         self.seasonalEvent = seasonalEvent
         self.calendar = calendar
+        self.watchmen = watchmen
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -238,7 +243,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier) + watchmenOnTheRoad,
+            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier),
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,
@@ -259,7 +264,8 @@ public extension World {
             statistics: statistics,
             orders: orders,
             seasonalEvent: currentSeasonalEvent,
-            calendar: calendar
+            calendar: calendar,
+            watchmen: watchmenAtWork
         )
     }
 
