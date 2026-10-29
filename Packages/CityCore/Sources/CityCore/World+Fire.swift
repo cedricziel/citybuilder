@@ -25,12 +25,13 @@ extension World {
         if state.ignitionTicks.first == tickCount {
             igniteNext(events: &events)
         }
-        spreadFires(events: &events)
-        burnDownFires(events: &events)
+        // A fire out on its spread or burn-down tick neither spreads nor burns down.
         for fire in seasonalEvents.fire?.fires ?? [] where fire.watchman?.outTick == tickCount {
             extinguish(fire.building, events: &events)
             seasonalEvents.counters.firesPutOut += 1
         }
+        spreadFires(events: &events)
+        burnDownFires(events: &events)
         dispatchWatchmen()
         if let state = seasonalEvents.fire, state.fires.isEmpty, state.ignitionTicks.isEmpty {
             endSeasonalEvent(events: &events)

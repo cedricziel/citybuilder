@@ -358,3 +358,18 @@ func ruinsKeepTheBurntFootprint() throws {
     #expect(world.isRoadConnected(ruins))
     #expect(ruins.bounds == TileBoundingBox(minX: 0, minY: 0, maxX: 1, maxY: 1))
 }
+
+@Test("scenario: a fire put out on its spread tick does not spread")
+func fireOutOnItsSpreadTickDoesNotSpread() {
+    var world = fireWorld()
+    let first = addOperational(.house, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let second = addOperational(.house, at: TileCoordinate(x: 2, y: 0), in: &world)
+    let watch = addOperational(.fireWatch, at: TileCoordinate(x: 10, y: 10), in: &world)
+    let ignition = light(first, in: &world)
+    // A watchman whose dousing ends on the spread tick.
+    let walk = Array(repeating: TileCoordinate(x: 10, y: 11), count: 120)
+    world.seasonalEvents.fire?.fires[0].watchman = Watchman(watch: watch, path: walk, departureTick: ignition)
+    let events = run(&world, ticks: 150)
+    #expect(events.contains(.fireExtinguished(building: first)))
+    #expect(world.buildings[second]?.state == .operational)
+}
