@@ -169,7 +169,16 @@ func forwardReference() throws {
 
 // visible-distribution design D9 and #236: the distribution tunables and vehicles.
 
-private let logisticsLine = "  - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }\n"
+private let logisticsLine = """
+  - kind: Logistics
+    id: logistics
+    haulDistance: 12
+    haulMinLoad: 3
+    haulMaxWait: 200
+    houseStockConsumptions: 2
+    houseStockMinimum: 2
+
+"""
 
 private func withVehicles(_ items: String) -> InMemorySource {
     Fixtures.withExtraPack("items:\n" + items)
@@ -193,7 +202,9 @@ private func withVehicles(_ items: String) -> InMemorySource {
 }
 
 @Test func secondLogisticsItemIsRejected() {
-    let errors = Fixtures.errors(withVehicles("  - { kind: Logistics, id: more, haulDistance: 5, haulMinLoad: 2, haulMaxWait: 9 }\n"))
+    let second = "  - { kind: Logistics, id: more, haulDistance: 5, haulMinLoad: 2, haulMaxWait: 9, "
+        + "houseStockConsumptions: 1, houseStockMinimum: 1 }\n"
+    let errors = Fixtures.errors(withVehicles(second))
     #expect(errors.contains { $0.contains("Logistics more") && $0.contains("second") })
 }
 
@@ -224,4 +235,55 @@ func invalidVehiclesAreRejected(items: String, message: String) {
     #expect(source.contains("public enum Vehicle: String, CaseIterable, Codable, Hashable, Sendable"))
     #expect(source.contains("case .cart: .medieval"))
     #expect(source.contains("case .cart: 4"))
+}
+
+// visible-distribution design D9: market hubs and house stock.
+
+private let hubPack = """
+items:
+  - kind: Building
+    id: stall
+    effect: code
+    footprint: [2, 2]
+    cost: 10
+    storagePerGood: 30
+    hub: { radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2 }
+
+"""
+
+@Test func hubLoadsIntoTheModel() throws {
+    let data = try Fixtures.load(Fixtures.withExtraPack(hubPack)).get()
+    let hub = try #require(data.buildings.first { $0.id == "stall" }?.hub)
+    #expect(hub == Hub(radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2))
+}
+
+@Test func hubEmitsItsValues() throws {
+    let data = try Fixtures.load(Fixtures.withExtraPack(hubPack)).get()
+    let source = try #require(SwiftEmitter.emit(data)["BuildingKind+Generated.swift"])
+    let spec = "case .stall: HubSpec(radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2)"
+    #expect(source.contains(spec))
+}
+
+@Test func nonPositiveHubValueIsRejected() {
+    let pack = hubPack.replacingOccurrences(of: "maxPorters: 8", with: "maxPorters: 0")
+    #expect(Fixtures.errors(Fixtures.withExtraPack(pack)).contains { $0.contains("`hub.maxPorters` must be at least 1") })
+}
+
+@Test func hubWithoutStorageIsRejected() {
+    let pack = hubPack.replacingOccurrences(of: "    storagePerGood: 30\n", with: "")
+    #expect(Fixtures.errors(Fixtures.withExtraPack(pack)).contains { $0.contains("`hub` needs storage") })
+}
+
+@Test func unknownHubFieldIsRejected() {
+    let pack = hubPack.replacingOccurrences(of: "reserveConsumptions: 2", with: "reserveConsumptions: 2, carts: 1")
+    #expect(Fixtures.errors(Fixtures.withExtraPack(pack)).contains { $0.contains("carts") })
+}
+
+@Test func houseStockLoadsAndEmits() throws {
+    let data = try Fixtures.load().get()
+    #expect(data.logistics.map(\.houseStockConsumptions) == [2])
+    #expect(data.logistics.map(\.houseStockMinimum) == [2])
+    let source = try #require(SwiftEmitter.emit(data)["Logistics+Generated.swift"])
+    #expect(source.contains("public static let houseStockConsumptions = 2"))
+    #expect(source.contains("public static let houseStockMinimum = 2"))
 }

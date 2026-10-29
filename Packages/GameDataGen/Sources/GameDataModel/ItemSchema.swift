@@ -18,7 +18,7 @@ public enum ItemSchema {
                 "name", "legacyIds", "upkeep", "buildTicks", "storage", "storagePerGood", "plantTicks", "catchmentRadius", "category",
                 "materials",
                 "recipe",
-                "unlockedBy", "obsoletedBy", "culture", "placement", "effect", "crop", "accepts"
+                "unlockedBy", "obsoletedBy", "culture", "placement", "effect", "crop", "accepts", "hub"
             ]
         ),
         "Culture": Fields(
@@ -41,7 +41,10 @@ public enum ItemSchema {
                 "bonus", "lose", "rivalAgeYears", "difficulties", "sweep", "comingLater", "events", "randomEvents"
             ]
         ),
-        "Logistics": Fields(required: ["id", "haulDistance", "haulMinLoad", "haulMaxWait"], optional: []),
+        "Logistics": Fields(
+            required: ["id", "haulDistance", "haulMinLoad", "haulMaxWait", "houseStockConsumptions", "houseStockMinimum"],
+            optional: []
+        ),
         "Vehicle": Fields(required: ["id", "age", "capacity"], optional: [])
     ]
 

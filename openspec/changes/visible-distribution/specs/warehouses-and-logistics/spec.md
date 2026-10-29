@@ -121,3 +121,94 @@ A carrier SHALL travel with its owner's vehicle when its road path is at least t
 
 - **WHEN** a lumberjack hut in the antiquity holds 4 wood and its nearest goods buffer with room lies 15 road tiles away
 - **THEN** a carrier leaves on foot with 1 wood
+
+### Requirement: Market hubs gather house goods
+
+A producer whose output is a good a house tier of its owner's culture needs SHALL send it to the nearest hub of its owner with room, by road, before any other goods buffer; only when no hub on its road network has room SHALL it use the nearest other goods buffer with room. A hub SHALL keep a reserve of each good the houses it serves need: the reserve consumptions (2, `reserveConsumptions` in the hub's game data) times what those houses consume of it per interval. While a hub's stock of such a good plus the units on their way to it is below that reserve, it SHALL pull the good from the nearest other goods buffer of its owner on its road network that holds it, one carrier at a time per good, as a supply haul that may take a vehicle like any other.
+
+#### Scenario: Bread goes to the town center before the warehouse
+
+- **WHEN** a bakery holds 1 bread, and a warehouse lies nearer to it than the town center, both with room
+- **THEN** the carrier leaves the bakery for the town center
+
+#### Scenario: A hub low on food restocks from a warehouse
+
+- **WHEN** a town center holding no food serves a peasant house with 4 residents, and a warehouse on its road holds 10 food
+- **THEN** a carrier takes food from the warehouse to the town center
+
+#### Scenario: A hub at its reserve does not restock
+
+- **WHEN** a town center holds 4 food and serves one peasant house with 4 residents, and a warehouse on its road holds 10 food
+- **THEN** no carrier takes food from the warehouse to the town center
+
+### Requirement: Buildings and houses report what stops them
+
+The world SHALL report, for each operational player house, producer and forester, the first issue that stops it. A forester's only issue SHALL be no open grass in its catchment; it needs no road and no route to storage. For houses and producers, issues SHALL be checked in this order: no road beside it; for a lumberjack hut, no unoccupied forest in its catchment; for a house, no market in reach: no operational hub of the player serves it (see `population-and-needs` / Town center supplies house needs); for a producer, its road does not reach a road beside an operational warehouse, port, town center or marketplace; for a producer whose own stockpile has no room for a cycle's output, output stuck, naming the good it makes that it holds most of (the first in catalog order on a tie), since inputs could not help it; for a producer, inputs short of its recipe (listing the short goods). A building with none of these SHALL have no issue. The query MUST NOT change the world, and the snapshot SHALL carry its result. A house with no market in reach SHALL show the same issue marker on the map as a building whose road reaches no store, and the inspector SHALL name the issue as "No market in reach", with the hint to build a marketplace near it.
+
+#### Scenario: A producer without a road reports no road
+- **WHEN** a farm has no road beside it
+- **THEN** its issue is no road
+
+#### Scenario: A producer off the storage network reports no route to storage
+- **WHEN** a farm's road and a warehouse's road are not connected
+- **THEN** the farm's issue is no route to storage
+
+#### Scenario: A producer on the storage network reports no issue
+- **WHEN** a farm and a warehouse share a road
+- **THEN** the farm has no issue
+
+#### Scenario: A lumberjack without forest reports no trees in reach
+- **WHEN** a road-connected lumberjack hut has no forest within its catchment
+- **THEN** its issue is no trees in reach
+
+#### Scenario: A producer with a full store reports its output stuck
+- **WHEN** a connected farm's store holds 16 food
+- **THEN** its issue is output stuck, naming food
+
+#### Scenario: A producer short of inputs reports the missing goods
+- **WHEN** a connected sawmill holds no wood
+- **THEN** its issue is missing inputs: wood
+
+#### Scenario: A producer full of output reports it stuck, not short
+- **WHEN** a connected sawmill holds 16 planks and no wood
+- **THEN** its issue is output stuck, naming planks
+
+#### Scenario: A house out of every hub's reach reports no market in reach
+- **WHEN** a house's road path to the player's town center is 25 road tiles, and the player has no marketplace
+- **THEN** the house's issue is no market in reach
+
+#### Scenario: A house off every hub's road network reports no market in reach
+- **WHEN** a house's road and every hub's road are not connected
+- **THEN** the house's issue is no market in reach
+
+#### Scenario: A house without a road reports only no road
+- **WHEN** a house has no road beside it and no hub serves it
+- **THEN** its issue is no road
+
+#### Scenario: A marketplace clears no market in reach
+- **WHEN** the player builds a marketplace 5 road tiles from a house that reported no market in reach, and it finishes
+- **THEN** the house no longer reports no market in reach
+
+#### Scenario: The inspector names no market in reach
+- **WHEN** the player inspects a house with no market in reach
+- **THEN** the inspector reads "No market in reach: build a marketplace near it", and the map shows the no-route marker over the house
+
+#### Scenario: The snapshot carries building issues
+- **WHEN** a farm without a road is in the world
+- **THEN** the snapshot's building issues map the farm to no road
+
+#### Scenario: A forester without open grass reports no room to plant
+- **WHEN** every tile in an operational forester's catchment is forest or occupied
+- **THEN** its issue is no room to plant
+
+#### Scenario: A forester without a road reports no issue
+- **WHEN** an operational forester has no road beside it and open grass in its catchment
+- **THEN** it has no issue
+
+## REMOVED Requirements
+
+### Requirement: Buildings report what stops them
+
+**Reason**: Houses no longer need a road to a store; they need a market hub that serves them. "Buildings and houses report what stops them" replaces this requirement with the no-market-in-reach step for houses, and drops the scenario of a house off the storage network.
+
+**Migration**: None. The issue a house reports changes from no route to storage to no market in reach.

@@ -33,6 +33,13 @@ func scenarioEastAsianTownCenter() {
 }
 
 @MainActor
+@Test("scenario: An East Asian marketplace uses its culture's look")
+func scenarioEastAsianMarketplace() {
+    #expect(textureName(spec(.marketplace, state: .operational, size: 2), culture: .eastAsian)
+        == "building-marketplace-east-asian")
+}
+
+@MainActor
 @Test("scenario: shared fallback")
 func scenarioSharedFallback() {
     #expect(textureName(spec(.sawmill, state: .operational, size: 2), culture: .eastAsian) == nil)
@@ -108,7 +115,7 @@ func scenarioEveryCultureVariantIsCatalogued() {
             }
         }
     }
-    #expect(IsoWorldScene.cultureVariantKinds.count * 3 == 12)
+    #expect(IsoWorldScene.cultureVariantKinds.count * 3 == 15)
     #expect(missing.isEmpty, "missing: \(missing)")
 }
 

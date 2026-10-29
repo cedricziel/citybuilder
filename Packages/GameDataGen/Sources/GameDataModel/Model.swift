@@ -110,7 +110,38 @@ public struct Building: Equatable, Sendable {
     public var hasCodeEffect: Bool
     /// A crop field, which blight slows.
     public var isCrop: Bool
+    /// How it serves houses as a market hub; nil when it is none.
+    public var hub: Hub?
     public var origin: Origin
+}
+
+/// A market hub's porter numbers (visible-distribution design D9).
+public struct Hub: Equatable, Sendable {
+    /// Road tiles from the hub to the houses it serves, at most.
+    public var radius: Int
+    /// Houses served per porter beyond the first.
+    public var housesPerPorter: Int
+    public var maxPorters: Int
+    /// Units a porter carries at most.
+    public var basketUnits: Int
+    /// Consumptions of its houses a hub keeps of each good before it restocks.
+    public var reserveConsumptions: Int
+
+    public init(radius: Int, housesPerPorter: Int, maxPorters: Int, basketUnits: Int, reserveConsumptions: Int) {
+        self.radius = radius
+        self.housesPerPorter = housesPerPorter
+        self.maxPorters = maxPorters
+        self.basketUnits = basketUnits
+        self.reserveConsumptions = reserveConsumptions
+    }
+
+    /// The fields in declaration order, for validation.
+    var fields: [(String, Int)] {
+        [
+            ("radius", radius), ("housesPerPorter", housesPerPorter), ("maxPorters", maxPorters),
+            ("basketUnits", basketUnits), ("reserveConsumptions", reserveConsumptions)
+        ]
+    }
 }
 
 public struct Size: Equatable, Sendable {
@@ -240,6 +271,10 @@ public struct Logistics: Equatable, Sendable {
     public var haulMinLoad: Int
     /// Ticks a producer's output waits for a vehicle load before it goes anyway.
     public var haulMaxWait: Int
+    /// Consumptions of each need a house keeps in stock.
+    public var houseStockConsumptions: Int
+    /// Units of each need a house stock holds at least.
+    public var houseStockMinimum: Int
     public var origin: Origin
 }
 

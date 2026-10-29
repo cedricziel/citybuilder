@@ -15,7 +15,13 @@ enum Fixtures {
       - { kind: Tier, id: peasants, name: Peasants, capacity: 4, taxPerResident: 1, needs: [planks] }
       - { kind: Tier, id: citizens, name: Citizens, capacity: 6, taxPerResident: 2, needs: [planks] }
       - { kind: Tier, id: merchants, name: Merchants, capacity: 8, taxPerResident: 4, needs: [planks, wood] }
-      - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }
+      - kind: Logistics
+        id: logistics
+        haulDistance: 12
+        haulMinLoad: 3
+        haulMaxWait: 200
+        houseStockConsumptions: 2
+        houseStockMinimum: 2
       - { kind: Vehicle, id: barrow, age: antiquity, capacity: 3 }
       - kind: Building
         id: house
@@ -172,7 +178,10 @@ enum Fixtures {
         "Tech": ["id": "salting", "cost": "10", "age": "antiquity"],
         "Age": ["id": "bronze", "startYear": "-900", "blurb": "Bronze.", "signature": "monument", "rivalResidents": "0"],
         "Tier": ["id": "nobles", "name": "Nobles", "capacity": "10", "taxPerResident": "8", "needs": "[wood]"],
-        "Logistics": ["id": "carts", "haulDistance": "8", "haulMinLoad": "2", "haulMaxWait": "50"],
+        "Logistics": [
+            "id": "carts", "haulDistance": "8", "haulMinLoad": "2", "haulMaxWait": "50",
+            "houseStockConsumptions": "2", "houseStockMinimum": "2"
+        ],
         "Vehicle": ["id": "barrow", "age": "antiquity", "capacity": "3"],
         "Order": [
             "id": "crown-wood", "issuer": "crown", "good": "wood", "title": "Wood", "text": "Wood for the winter.",
@@ -199,7 +208,8 @@ enum Fixtures {
             "catchmentRadius": "2",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
-            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true", "accepts": "[wood]"
+            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true", "accepts": "[wood]",
+            "hub": "{ radius: 4, housesPerPorter: 2, maxPorters: 3, basketUnits: 5, reserveConsumptions: 1 }"
         ],
         "Culture": ["tiers": "{ peasants: P, citizens: C, merchants: M }"],
         "Tech": [

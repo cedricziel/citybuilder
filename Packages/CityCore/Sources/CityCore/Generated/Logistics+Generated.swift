@@ -11,6 +11,10 @@ public enum LogisticsCatalog {
     public static let haulMinLoad = 3
     /// Ticks a producer's output waits for a vehicle load before it goes anyway.
     public static let haulMaxWait = 200
+    /// Consumptions of each need a house keeps in stock.
+    public static let houseStockConsumptions = 2
+    /// Units of each need a house stock holds at least.
+    public static let houseStockMinimum = 2
 }
 
 public enum Vehicle: String, CaseIterable, Codable, Hashable, Sendable {

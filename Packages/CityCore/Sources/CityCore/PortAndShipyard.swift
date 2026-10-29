@@ -22,7 +22,7 @@ public extension World {
 
     /// Building kinds that take carrier deliveries and supply house
     /// needs. Spec: `warehouses-and-logistics` / Goods buffer storage.
-    static let logisticsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .townCenter, .granary]
+    static let logisticsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .townCenter, .granary, .marketplace]
 
     /// Goods-buffer query — returns every warehouse, port and town
     /// center in the world, sorted by `EntityID.raw` so callers that

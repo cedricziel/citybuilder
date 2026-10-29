@@ -21,10 +21,10 @@
 
 ## 3. Milestone 2: the market as hub (2a and 2b together)
 
-- [ ] 3.1 Marketplace canvas: look, footprint, cost, research gate; the orchestrator signs off
-- [ ] 3.2 Spec deltas (`population-and-needs` modified, market porters added; `buildings-and-construction` marketplace; `rendering-2_5d` porters); tests-first
+- [x] 3.1 Marketplace canvas: look, footprint, cost, research gate; the orchestrator signs off
+- [x] 3.2 Spec deltas (`population-and-needs` modified, market porters added; `buildings-and-construction` marketplace; `rendering-2_5d` porters); tests-first
 - [ ] 3.3 Sweeps before (first-hour solvency, rivals, pacing), with designer2
-- [ ] 3.4 `hub` game-data block on the town center and the marketplace; house-stock values in `Logistics` (D9)
+- [x] 3.4 `hub` game-data block on the town center and the marketplace; house-stock values in `Logistics` (D9)
 - [ ] 3.5 Hub preference for house goods and restock hauls (D3)
 - [ ] 3.6 House stock, consumption from stock, satisfaction with hysteresis (D4)
 - [ ] 3.7 Porter dispatch and missions, including the visible return trip (D4)
