@@ -102,6 +102,7 @@ public struct CityRootView: View {
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
         .statisticsSheet(session: session)
+        .chapterCardSheet(session: session)
         .routesSheet(session: session, isPresented: $routesPresented)
         .settingsSheet(isPresented: settingsBinding(whilePaused: false), content: settingsContent)
         .sheet(
@@ -118,7 +119,7 @@ public struct CityRootView: View {
 
     var isAnySheetPresented: Bool {
         settingsPresented || researchPresented || goalsPresented || standingsPresented || routesPresented
-            || session.isStatisticsPresented || session.isPaused || session.isWinSheetPresented
+            || session.isStatisticsPresented || session.isPaused || session.isWinSheetPresented || session.chapterCard != nil
     }
 }
 
@@ -231,6 +232,12 @@ public final class GameSession {
     /// The first-hour guide while it shows, refreshed every tick.
     var firstStepsGuide: FirstStepsGuide?
     public var isWinSheetPresented = false
+    /// The chapter this game plays, its card, its progress record and the
+    /// title screen's card actions (`GameSession+Chapter.swift`).
+    public var chapter: Chapter?
+    public internal(set) var chapterCard: ChapterCard?
+    public var campaignProgress: CampaignProgressModel?
+    public var onChapterAction: (@MainActor (ChapterAction) -> Void)?
     /// The Statistics sheet is open. Session state, never saved.
     public var isStatisticsPresented = false
     /// The order board is open. Session state, never saved.
@@ -248,7 +255,7 @@ public final class GameSession {
     /// While `isPaused == true` the call is a no-op so the world,
     /// snapshot, and audio events stay frozen.
     public func step() {
-        guard !isPaused, deficitHint == nil else { return }
+        guard !isPaused, deficitHint == nil, chapterCard == nil else { return }
         let result = world.tick()
         noteBannerEvents(in: result.events)
         refreshFirstSteps()

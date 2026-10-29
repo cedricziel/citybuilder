@@ -2,7 +2,7 @@
 
 ### Requirement: Marketplace
 
-The building catalog SHALL include a `marketplace` kind: an open market hall, category town, with a 2×2 footprint, a cost of $150, a material cost of 3 wood and 4 planks, upkeep 1, and no research gate. It SHALL be a goods buffer that holds up to 30 of each good, and a market hub with a radius of 18 road tiles, 1 porter per 4 houses served, at most 8 porters, baskets of 10 units and a reserve of 2 consumptions, all from the game data. Porters SHALL leave and return at its road-access tile, the first road tile next to its footprint, like every other carrier.
+The building catalog SHALL include a `marketplace` kind: an open market hall, category town, with a 2×2 footprint, a cost of $150, a material cost of 3 wood and 4 planks, upkeep 1, and no research gate. It SHALL be a goods buffer that holds up to 30 of each good, and a market hub with a radius of 18 road tiles, 1 porter plus 1 per 4 houses served, at most 8 porters, baskets of 10 units and a reserve of 2 consumptions, all from the game data. Porters SHALL leave and return at its road-access tile, the first road tile next to its footprint, like every other carrier.
 
 #### Scenario: Marketplace spec exposes its footprint and costs
 

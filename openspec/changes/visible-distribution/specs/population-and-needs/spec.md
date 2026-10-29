@@ -78,6 +78,80 @@ Every 100 ticks, each operational house with population SHALL consume its needs 
 - **WHEN** a merchant house has 8 residents
 - **THEN** its stock holds up to 8 food, 2 planks and 4 bread
 
+### Requirement: Houses have a population tier
+
+Each house SHALL belong to one of three tiers: peasants (1), citizens (2) and merchants (3). A newly built house starts as peasants. Each tier MUST define a resident capacity and a list of needs:
+
+| Tier | Capacity | Needs |
+|---|---|---|
+| Peasants | 4 | food |
+| Citizens | 6 | food, planks |
+| Merchants | 8 | food, planks, bread, tools |
+
+A house's population grows towards its tier's capacity while that tier's needs are met, as "Town center supplies house needs" defines met. A house MUST report each need of its current tier as satisfied or unmet.
+
+#### Scenario: New house starts as peasants
+
+- **WHEN** a house finishes construction
+- **THEN** its tier is peasants and its capacity is 4
+
+#### Scenario: Peasants grow with food alone
+
+- **WHEN** a peasant house holds food in its stock but no planks, and enough ticks pass for growth
+- **THEN** its population increases
+
+#### Scenario: Citizens cannot become merchants without tools
+
+- **WHEN** a full citizen house is served by a hub holding food, planks and bread but no tools for 120 ticks
+- **THEN** it stays citizens
+
+### Requirement: Houses advance and decline between tiers
+
+A house at full capacity SHALL move up one tier once, for 120 consecutive ticks, the hub serving it holds every need of the next tier that binds it. The stock that counts for advancing is the serving hub's: goods buffers on the house's road network that are not that hub SHALL NOT count, and a house no hub serves cannot advance. Where a rule sets how much stock advancing takes, it measures the serving hub's stock, and houses that advance in the same tick claim from that hub. A house that is past its grace (see "Houses decline only after a grace period") and whose current tier's needs are not all met for 120 consecutive ticks SHALL move down one tier (never below peasants), and its population MUST be reduced to the lower tier's capacity if it exceeds it.
+
+#### Scenario: Full peasant house becomes citizens
+
+- **WHEN** a peasant house with 4 residents is served by a hub holding food and planks for 120 ticks
+- **THEN** the house becomes citizens with capacity 6
+
+#### Scenario: Citizens with bread become merchants
+
+- **WHEN** a citizen house with 6 residents is served by a hub holding food, planks, bread, tools, cloth and its culture's luxury for 120 ticks
+- **THEN** the house becomes merchants with capacity 8
+
+#### Scenario: Merchants without bread decline to citizens
+
+- **WHEN** a merchant house with 8 residents has no bread in its stock or on the way for its grace of consumption intervals and then for 120 ticks while its other needs are met
+- **THEN** the house becomes citizens and its population is at most 6
+
+#### Scenario: A warehouse's tools do not make merchants
+
+- **WHEN** a full citizen house is served by a town center holding every merchant need but tools, and a warehouse on its road holds tools, for 120 ticks
+- **THEN** it stays citizens
+
+### Requirement: Merchants consume tools
+
+Merchant houses SHALL consume 1 tools per 8 residents (rounded up) each consumption interval, from their house stock like their other needs.
+
+#### Scenario: Merchants consume tools
+
+- **WHEN** the consumption interval elapses for a merchant house with 8 residents holding 2 tools in its stock
+- **THEN** it holds 1 tool
+
+### Requirement: Merchants want their culture's luxury
+
+Merchants SHALL need food, planks, bread, tools and their culture's luxury, eating 1 luxury per 8 residents per consumption interval from their house stock. Peasants' and citizens' needs SHALL not depend on culture.
+
+#### Scenario: East Asian merchants need tea
+
+- **WHEN** the merchants' needs are read for the East Asian culture
+- **THEN** they are food, planks, bread, tools and tea
+
+#### Scenario: Old saves keep their satisfaction
+
+- **WHEN** a house saved with the old per-good satisfaction keys is loaded
+- **THEN** its satisfied goods match the old flags
+
 ## ADDED Requirements
 
 ### Requirement: Market porters supply houses
@@ -114,15 +188,6 @@ Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to
 - **WHEN** a porter brings 2 food to a house that has room for 1
 - **THEN** the house takes 1 and the porter returns the other to its hub
 
-### Requirement: Market hubs gate tier advancement
-
-A house SHALL advance to the next tier only while the hub serving it holds every need of that tier that binds it. A goods buffer on the house's road network that is not a hub serving it SHALL NOT count.
-
-#### Scenario: A warehouse's tools do not make merchants
-
-- **WHEN** a full citizen house is served by a town center holding food, planks and bread but no tools, and a warehouse on its road holds tools, for 120 ticks
-- **THEN** it stays citizens
-
 ### Requirement: Saves from before market porters keep their houses supplied
 
 A save from before market porters SHALL load with each house holding, for each good it counts as met, one consumption's worth of stock for its residents, so no house comes up short at the first consumption after loading because of the change.
@@ -131,3 +196,11 @@ A save from before market porters SHALL load with each house holding, for each g
 
 - **WHEN** a save from before market porters holds a peasant house with 4 residents whose food need is met
 - **THEN** after loading, the house holds 2 food, and its next consumption is not short
+
+## REMOVED Requirements
+
+### Requirement: Per-pop needs in MVP
+
+**Reason**: Houses no longer read warehouses for their needs. "Houses consume food and planks", "Town center supplies house needs" and "Market porters supply houses" now define needs, consumption from the house stock and its supply.
+
+**Migration**: None for players; saves seed the house stock ("Saves from before market porters keep their houses supplied").

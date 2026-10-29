@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.9](https://github.com/cedricziel/citybuilder/compare/v0.2.8...v0.2.9) (2026-10-29)
+
+
+### Features
+
+* **citycore:** carry long and bulk hauls by handcart ([1b73d52](https://github.com/cedricziel/citybuilder/commit/1b73d52ec8a76c1f21dd02fd744d7ce502db32cc))
+
 ## [0.2.8](https://github.com/cedricziel/citybuilder/compare/v0.2.7...v0.2.8) (2026-10-29)
 
 
