@@ -308,3 +308,24 @@ func scheduledEventInTheFirstYear() {
     let summer = runSeasons(&world, untilTick: firstTick(of: .summer, 1200))
     #expect(summer.seasonalEvents == [.seasonalEventStarted(event: .fire)])
 }
+
+@Test("scenario: a scheduled event outside its seasons is dropped")
+func scheduledEventOutsideItsSeasonsIsDropped() throws {
+    var world = eventsWorld(seed: 9)
+    let springFire = ScheduledSeasonalEvent(year: 1202, event: .fire, onset: .spring)
+    let summerBlight = ScheduledSeasonalEvent(year: 1203, event: .blight, onset: .summer)
+    world.seasonalEvents.schedule = [springFire, summerBlight]
+    #expect(world.seasonalEvents.schedule == [summerBlight])
+    // A save that holds one anyway loads without it.
+    var state = SeasonalEventsState()
+    state.schedule = [summerBlight]
+    var json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(state)) as? [String: Any])
+    json["schedule"] = [["year": 1202, "event": "fire", "onset": 0], ["year": 1203, "event": "blight", "onset": 1]]
+    let world2 = try JSONDecoder().decode(WorldStateBox.self, from: JSONSerialization.data(withJSONObject: ["state": json]))
+    #expect(world2.state.schedule == [summerBlight])
+}
+
+/// Decodes a `SeasonalEventsState` through a keyed container, as `World` does.
+private struct WorldStateBox: Decodable {
+    let state: SeasonalEventsState
+}

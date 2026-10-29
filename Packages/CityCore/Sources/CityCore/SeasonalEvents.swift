@@ -10,8 +10,16 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     /// False when a chapter turns the random draw off (`add-event-counterplay` D9).
     public internal(set) var randomEvents = true
     /// A chapter's events, which replace their year's draw and run whatever
-    /// `enabled` says.
-    public internal(set) var schedule: [ScheduledSeasonalEvent] = []
+    /// `enabled` says. One whose onset isn't among its event's seasons could
+    /// never start, so it is dropped.
+    public internal(set) var schedule: [ScheduledSeasonalEvent] = [] {
+        didSet {
+            if !schedule.allSatisfy(\.isValid) {
+                schedule = schedule.filter(\.isValid)
+            }
+        }
+    }
+
     /// This year's decision, stored when it is made so an age change or a
     /// reload never redraws it.
     public internal(set) var plan: SeasonalEventPlan?
@@ -31,8 +39,12 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
 
 extension KeyedDecodingContainer {
     /// Saves written before seasonal events have none.
+    /// A save's schedule entries that could never start are dropped, so it
+    /// still loads.
     func decode(_ type: SeasonalEventsState.Type, forKey key: Key) throws -> SeasonalEventsState {
-        try decodeIfPresent(type, forKey: key) ?? SeasonalEventsState()
+        var state = try decodeIfPresent(type, forKey: key) ?? SeasonalEventsState()
+        state.schedule = state.schedule.filter(\.isValid)
+        return state
     }
 }
 
@@ -46,6 +58,11 @@ public struct ScheduledSeasonalEvent: Codable, Hashable, Sendable {
         self.year = year
         self.event = event
         self.onset = onset
+    }
+
+    /// The onset is one of the event's seasons.
+    public var isValid: Bool {
+        event.seasons.contains(onset)
     }
 }
 
