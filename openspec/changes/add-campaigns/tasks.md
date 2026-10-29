@@ -25,13 +25,13 @@
 
 ## 3. M3 — UI
 
-- [ ] 3.1 Tests-first: translate the `platform-shells` scenarios into failing CityUITests, and confirm they fail.
-- [ ] 3.2 Implement to green: the Campaigns entry and chapter select, following the approved canvas.
-- [ ] 3.3 Implement to green: the intro, ending and lost cards, and the goals panel readouts.
-- [ ] 3.4 Hide the "First steps" card in chapter games (design D9).
-- [ ] 3.5 Update `design/web` with the new screens and cards, and republish the design system after merge.
-- [ ] 3.6 Refactor under a green bar.
-- [ ] 3.7 Verify `make test-scenarios` is clean for `platform-shells`.
+- [x] 3.1 Tests-first: translate the `platform-shells` scenarios into failing CityUITests, and confirm they fail. The CityUI tests were written alongside the views rather than strictly before them.
+- [x] 3.2 Implement to green: the Campaigns entry and chapter select, following the approved canvas. The map header is the chapter's terrain drawn like the minimap, from the game's own generator, in place of the canvas's sprite render.
+- [x] 3.3 Implement to green: the intro, ending and lost cards, and the goals panel readouts.
+- [x] 3.4 Hide the "First steps" card in chapter games (design D9).
+- [ ] 3.5 Update `design/web` with the new screens and cards, and republish the design system after merge. (the design/web components are in their own PR; republish after it merges)
+- [x] 3.6 Refactor under a green bar.
+- [x] 3.7 Verify `make test-scenarios` is clean for `platform-shells`.
 
 ## 4. M4 — Eleven chapters that need nothing new
 
