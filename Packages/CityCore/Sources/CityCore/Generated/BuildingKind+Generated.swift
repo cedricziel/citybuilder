@@ -8,6 +8,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
     case house
     case warehouse
     case granary
+    case fireWatch = "fire-watch"
+    case ruins
     case road
     case lumberjackHut = "lumberjack-hut"
     case forester
@@ -70,6 +72,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: "House"
         case .warehouse: "Warehouse"
         case .granary: "Granary"
+        case .fireWatch: "Fire Watch"
+        case .ruins: "Ruins"
         case .road: "Road"
         case .lumberjackHut: "Lumberjack"
         case .forester: "Forester"
@@ -114,6 +118,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: 8
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: 16
         case .forester: nil
@@ -158,6 +164,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: 80
         case .granary: 60
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: nil
         case .forester: nil
@@ -202,6 +210,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: nil
         case .forester: 40
@@ -246,6 +256,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: 2
         case .forester: 2
@@ -290,6 +302,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: "town"
         case .warehouse: "town"
         case .granary: "town"
+        case .fireWatch: "town"
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: "gather"
         case .forester: "gather"
@@ -334,6 +348,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: nil
         case .forester: nil
@@ -378,6 +394,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: nil
         case .forester: nil
@@ -422,6 +440,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: nil
         case .warehouse: nil
         case .granary: [.bread, .flour, .food, .grain]
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: nil
         case .forester: nil
@@ -466,6 +486,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .house: false
         case .warehouse: false
         case .granary: false
+        case .fireWatch: false
+        case .ruins: false
         case .road: false
         case .lumberjackHut: false
         case .forester: false
@@ -519,6 +541,8 @@ public enum BuildingCatalog {
         case .house: BuildingSpec(kind: .house, footprint: Footprint(width: 2, height: 2), cost: 50, upkeep: 0, buildDurationTicks: 20, shorePlacement: nil, materialCost: [.planks: 4], requiredTerrain: nil)
         case .warehouse: BuildingSpec(kind: .warehouse, footprint: Footprint(width: 3, height: 3), cost: 200, upkeep: 1, buildDurationTicks: 40, shorePlacement: nil, materialCost: [.planks: 6, .wood: 2], requiredTerrain: nil)
         case .granary: BuildingSpec(kind: .granary, footprint: Footprint(width: 2, height: 2), cost: 120, upkeep: 1, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 4, .wood: 4], requiredTerrain: nil)
+        case .fireWatch: BuildingSpec(kind: .fireWatch, footprint: Footprint(width: 1, height: 1), cost: 60, upkeep: 1, buildDurationTicks: 20, shorePlacement: nil, materialCost: [.planks: 2, .wood: 2], requiredTerrain: nil)
+        case .ruins: BuildingSpec(kind: .ruins, footprint: Footprint(width: 1, height: 1), cost: 0, upkeep: 0, buildDurationTicks: 1, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .road: BuildingSpec(kind: .road, footprint: Footprint(width: 1, height: 1), cost: 5, upkeep: 0, buildDurationTicks: 1, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .lumberjackHut: BuildingSpec(kind: .lumberjackHut, footprint: Footprint(width: 2, height: 2), cost: 80, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .forester: BuildingSpec(kind: .forester, footprint: Footprint(width: 2, height: 2), cost: 60, upkeep: 0, buildDurationTicks: 20, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)

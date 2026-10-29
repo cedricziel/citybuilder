@@ -141,7 +141,7 @@ public enum ShoreOrientationMath {
         switch state {
         case .constructing:
             return SpriteAnimation.assetName(for: .buildingConstructing(kind, stem: stem), frame: frame ?? 0)
-        case .operational:
+        case .operational, .burning:
             return SpriteAnimation.assetName(for: .buildingOperational(kind, stem: stem), frame: frame ?? 0)
         case .planned, .none:
             return stem

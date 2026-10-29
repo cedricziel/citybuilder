@@ -53,7 +53,9 @@ extension World {
         case let .deliver(good, amount, _, destination),
              let .retrieve(good, amount, _, destination),
              let .deliverToConsumer(good, amount, _, destination):
-            let placed = stockpiles[destination]?.deposit(good, amount: amount) ?? 0
+            // A burning building takes no deliveries until it is out.
+            let open = buildings[destination]?.state != .burning
+            let placed = open ? stockpiles[destination]?.deposit(good, amount: amount) ?? 0 : 0
             if placed > 0 {
                 events.append(.carrierArrived(carrier: carrier.id, at: arrivalTile, good: good, amount: placed))
             }

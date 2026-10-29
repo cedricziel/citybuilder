@@ -67,7 +67,7 @@ extension World {
     /// with the owner's monument bonus.
     private func taxesByOwner(sources: [Building]) -> [Owner: Int64] {
         var taxes: [Owner: Int64] = [:]
-        for (id, pop) in populations {
+        for (id, pop) in populations where buildings[id]?.state != .burning {
             taxes[owner(of: id), default: 0] += houseTax(house: id, population: pop, sources: sources)
         }
         for (owner, amount) in taxes {

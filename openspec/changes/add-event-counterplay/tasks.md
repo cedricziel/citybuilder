@@ -9,7 +9,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 - [x] 1.1 Tests first: the `Event` kind (effect, seasons, minAge, weights, banner text), its validation (unknown effect or age, no seasons, spring hazard), the `crop` flag, `events` and `randomEvents` on chapters (chapters wait for `add-campaigns`: the pack has no Chapter kind yet; `SeasonalEventsState.schedule` and `randomEvents` are ready for it)
 - [x] 1.2 `GameDataGen`: model, loader, validator, emitter, JSON schema, `FORMAT.md`; regenerate with `make gamedata`
-- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items (done: the pack, the crop flags and the granary; the fire watch and ruins come with section 3; herbs, physician and herb garden with section 5)
+- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items (done: the pack, the crop flags, the granary, the fire watch and ruins; herbs, physician and herb garden with section 5)
 
 ## 2. CityCore: schedule and warnings (can start before M2)
 
@@ -20,10 +20,10 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 3. CityCore: fire, fire watch and ruins (can start before M2)
 
-- [ ] 3.1 Tests first: ignition, spread to touching footprints, roads as firebreaks, burn-down to ruins (stock, residents, carriers), the watchman's response, the queue, Hard's second fire
-- [ ] 3.2 Fire state, the burning stop (production, tax, growth, deliveries), spread, burn-down and the `ruins` kind with `ruinOf`
-- [ ] 3.3 The fire watch: coverage, nearest idle watch, the watchman's walk on the road path, dousing; the watchman in the snapshot as a walker
-- [ ] 3.4 Clearing ruins through Demolish with its fee; `notEnoughMoney`; the ruins inspector
+- [x] 3.1 Tests first: ignition, spread to touching footprints, roads as firebreaks, burn-down to ruins (stock, residents, carriers), the watchman's response, the queue, Hard's second fire
+- [x] 3.2 Fire state, the burning stop (production, tax, growth, deliveries), spread, burn-down and the `ruins` kind with `ruinOf`
+- [x] 3.3 The fire watch: coverage, nearest idle watch, the watchman's walk on the road path, dousing; the watchman in the snapshot as a walker
+- [ ] 3.4 Clearing ruins through Demolish with its fee; `notEnoughMoney`; the ruins inspector (done in CityCore: the fee, `demolitionRejected(notEnoughMoney)` and `ruinsCleared`; the inspector is CityUI and comes with 2.4)
 
 ## 4. Rats and the granary's storage (can start before M2)
 

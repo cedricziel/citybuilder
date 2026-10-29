@@ -171,6 +171,11 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .seasonalEventWarned: return "seasonalEventWarned"
         case .seasonalEventStarted: return "seasonalEventStarted"
         case .seasonalEventEnded: return "seasonalEventEnded"
+        case .buildingCaughtFire: return "buildingCaughtFire"
+        case .fireExtinguished: return "fireExtinguished"
+        case .buildingBurntDown: return "buildingBurntDown"
+        case .ruinsCleared: return "ruinsCleared"
+        case .demolitionRejected: return "demolitionRejected"
         }
     }
 }

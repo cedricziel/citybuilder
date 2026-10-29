@@ -16,7 +16,7 @@ func scenarioLegacyBuildingIdentifiersStillDecode() throws {
 @Test func everyContentCaseHasItsDisplayValues() {
     for kind in BuildingKind.allCases {
         #expect(!kind.displayName.isEmpty, "\(kind)")
-        #expect((kind.category == nil) == [.road, .townCenter].contains(kind), "\(kind)")
+        #expect((kind.category == nil) == [.road, .townCenter, .ruins].contains(kind), "\(kind)")
     }
     for culture in Culture.allCases {
         #expect(!culture.displayName.isEmpty && !culture.blurb.isEmpty, "\(culture)")

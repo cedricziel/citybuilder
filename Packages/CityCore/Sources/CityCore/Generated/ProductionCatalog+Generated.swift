@@ -10,6 +10,8 @@ public enum ProductionCatalog {
         case .house: nil
         case .warehouse: nil
         case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
         case .road: nil
         case .lumberjackHut: ProductionRecipe(inputs: [:], outputs: [.wood: 1], cycleTicks: 30)
         case .forester: nil
