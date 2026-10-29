@@ -407,6 +407,49 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .powerPlant: nil
         }
     }
+
+    public var isCrop: Bool {
+        switch self {
+        case .house: false
+        case .warehouse: false
+        case .road: false
+        case .lumberjackHut: false
+        case .forester: false
+        case .sawmill: false
+        case .farm: true
+        case .bakery: false
+        case .grainFarm: true
+        case .windmill: false
+        case .quernHouse: false
+        case .mine: false
+        case .charcoalBurner: false
+        case .smelter: false
+        case .toolsmith: false
+        case .sheepFarm: false
+        case .weaver: false
+        case .library: false
+        case .townCenter: false
+        case .port: false
+        case .shipyard: false
+        case .hopGarden: true
+        case .brewery: false
+        case .meadHall: false
+        case .vineyard: true
+        case .winery: false
+        case .forum: false
+        case .teaGarden: true
+        case .teaHouse: false
+        case .templeGarden: false
+        case .coffeeGrove: true
+        case .roastery: false
+        case .caravanserai: false
+        case .monument: false
+        case .guildHall: false
+        case .gallery: false
+        case .steamEngine: false
+        case .powerPlant: false
+        }
+    }
 }
 
 public enum BuildingCatalog {

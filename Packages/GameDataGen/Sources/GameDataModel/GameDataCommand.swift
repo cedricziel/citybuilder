@@ -51,8 +51,7 @@ public enum GameDataCommand {
             guard let (positional, values) = options(
                 arguments, allowed: ["--data", "--out", "--namespace"],
                 defaults: ["--data": defaultData, "--out": defaultOut]
-            ), positional.isEmpty
-            else { return usageError }
+            ), positional.isEmpty else { return usageError }
             return generate(
                 data: path(values["--data"]!), out: path(values["--out"]!),
                 namespace: values["--namespace"], checkOnly: checkOnly

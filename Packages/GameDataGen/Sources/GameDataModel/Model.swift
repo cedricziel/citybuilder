@@ -8,6 +8,7 @@ public struct GameData: Equatable, Sendable {
     public var ages: [Age] = []
     public var tiers: [Tier] = []
     public var orders: [OrderTemplate] = []
+    public var events: [SeasonalEvent] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -99,6 +100,8 @@ public struct Building: Equatable, Sendable {
     public var culture: String?
     public var placement: Placement?
     public var hasCodeEffect: Bool
+    /// A crop field, which blight slows.
+    public var isCrop: Bool
     public var origin: Origin
 }
 
@@ -176,6 +179,28 @@ public struct OrderTemplate: Equatable, Sendable {
     public var favour: Int
     public var penalty: Int
     public var origin: Origin
+}
+
+/// A seasonal event: its mechanic, when it can strike and its banners
+/// (`add-event-counterplay` D3).
+public struct SeasonalEvent: Equatable, Sendable {
+    public var id: String
+    /// `fire`, `blight`, `fever` or `festival`: the mechanic, in Swift.
+    public var effect: String
+    /// The possible onset seasons, in written order.
+    public var seasons: [String]
+    public var minAge: String?
+    /// Draw weight per difficulty id.
+    public var weights: [String: Int]
+    /// Banners in written order.
+    public var banners: [Banner]
+    public var origin: Origin
+
+    public struct Banner: Equatable, Sendable {
+        public var key: String
+        public var title: String
+        public var text: String
+    }
 }
 
 /// A house tier. Its position in load order is its raw value, from 1.
