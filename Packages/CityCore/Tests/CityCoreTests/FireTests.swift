@@ -329,3 +329,19 @@ func fireSurvivesASave() throws {
     #expect(events[0] != .buildingCaughtFire(building: id, kind: .farm))
     #expect(events[3] != .ruinsCleared(building: EntityID(raw: 8)))
 }
+
+@Test("scenario: a burning store gives no building materials")
+func burningStoreGivesNoMaterials() {
+    var world = fireWorld()
+    world.testMaterialCredits = [:]
+    world.islands = IslandDetector.detectIslands(width: 24, height: 24, terrain: world.terrainGrid, mapHeightForClimate: 24, seed: 1)
+    let store = addOperational(.warehouse, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.stockpiles[store]?.deposit(.planks, amount: 10)
+    let anchor = TileCoordinate(x: 10, y: 10)
+    #expect(world.canPlace(.house, at: anchor) == .allowed)
+    world.buildings[store]?.state = .burning
+    #expect(world.canPlace(.house, at: anchor) == .rejected(.insufficientMaterials([.planks: 4])))
+    world.enqueue(.place(.house, at: anchor))
+    _ = run(&world, ticks: 1)
+    #expect(world.stockpiles[store]?.quantity(of: .planks) == 10)
+}

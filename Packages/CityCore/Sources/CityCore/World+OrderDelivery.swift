@@ -146,10 +146,13 @@ extension World {
         orders.shipments = moving
     }
 
-    /// Puts a shipment whose order closed back into the store it left, or
-    /// into any other operational player store with room for it.
+    /// Puts a shipment whose order closed back into the store it left, or,
+    /// when that is full or burning, into any other operational player
+    /// store with room for it.
     private mutating func returnShipment(_ shipment: OrderShipment) {
-        let kept = shipment.amount - (stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount) ?? 0)
+        let homeTakes = buildings[shipment.from]?.state != .burning
+        let home = homeTakes ? stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount) ?? 0 : 0
+        let kept = shipment.amount - home
         guard kept > 0 else { return }
         let stores = goodsBuffers(of: .player).filter { $0.state == .operational }
         _ = fill(shipment.good, upTo: kept, into: stores)
