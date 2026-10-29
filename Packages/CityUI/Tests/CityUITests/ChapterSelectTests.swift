@@ -197,3 +197,19 @@ func scenarioSandboxOptionsStayOpen() {
         #expect(dialog.commit()?.layout == layout)
     }
 }
+
+@Test("building goals use the right plural and article")
+func buildingGoalsUseTheRightPluralAndArticle() {
+    let lines: [(Goal, String)] = [
+        (.buildings(.bakery, 3), "Own 3 bakeries"),
+        (.buildings(.gallery, 2), "Own 2 galleries"),
+        (.buildings(.windmill, 2), "Own 2 windmills"),
+        (.buildings(.bakery, 1), "Own a bakery"),
+        (.buildings(.ruins, 2), "Own 2 ruins")
+    ]
+    for (goal, text) in lines {
+        #expect(ChapterText.goal(goal, culture: nil) == text)
+    }
+    #expect(ChapterText.withArticle("observatory") == "an observatory")
+    #expect(ChapterText.withArticle("mine") == "a mine")
+}

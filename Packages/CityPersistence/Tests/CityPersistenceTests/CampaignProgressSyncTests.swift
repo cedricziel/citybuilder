@@ -75,9 +75,12 @@ func anExternalChangeMergesTheCloudCopy() async {
     let merged = await iterator.next()
     #expect(merged?.won["c1"] == ChapterRecord(difficulty: .hard, laurels: 1))
     center.removeObserver(token)
+    #if canImport(Foundation) && !os(Linux)
     #expect(CampaignProgressSync.externalChangeNotification == NSUbiquitousKeyValueStore.didChangeExternallyNotification)
+    #endif
 }
 
+#if canImport(Foundation) && !os(Linux)
 @Test("the iCloud store holds data and ignores other values")
 func theICloudStoreHoldsData() async {
     let store = UbiquitousKeyValueStore(store: NSUbiquitousKeyValueStore())
@@ -88,3 +91,4 @@ func theICloudStoreHoldsData() async {
     _ = await store.synchronize()
     #expect(await store.isAvailable())
 }
+#endif

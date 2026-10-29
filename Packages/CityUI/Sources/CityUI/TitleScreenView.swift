@@ -102,7 +102,10 @@ public struct TitleScreenView: View {
                     onStart: { chapter, world in viewModel.startChapter(chapter, world: world) },
                     onClose: { viewModel.dismissCampaigns() }
                 )
+                #if os(macOS)
+                // A Mac sheet sizes to its content; give the split view room.
                 .frame(minWidth: 720, minHeight: 520)
+                #endif
             }
         }
         .sheet(isPresented: $viewModel.presentingSettings) {

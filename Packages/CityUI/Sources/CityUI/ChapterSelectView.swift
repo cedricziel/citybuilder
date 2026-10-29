@@ -10,6 +10,8 @@ struct ChapterSelectView: View {
     let onClose: () -> Void
     @State private var mapImage: CGImage?
     @FocusState private var focusedRow: String?
+    /// On iPhone the list shows first, though a chapter is chosen.
+    @State private var compactColumn = NavigationSplitViewColumn.sidebar
 
     var body: some View {
         if model.isEmpty {
@@ -24,7 +26,7 @@ struct ChapterSelectView: View {
             .accessibilityIdentifier("campaigns.empty")
             .tvSheetWidth()
         } else {
-            NavigationSplitView {
+            NavigationSplitView(preferredCompactColumn: $compactColumn) {
                 sidebar
             } detail: {
                 detail
@@ -41,34 +43,49 @@ struct ChapterSelectView: View {
         }
     }
 
+    /// The sidebar's selection: on iPhone, where the split view collapses
+    /// to a stack, choosing a row pushes the chapter.
+    private var selection: Binding<String?> {
+        Binding(get: { model.selectedID }, set: { id in if let id { model.select(id) } })
+    }
+
     private var sidebar: some View {
-        List {
-            ForEach(model.sections) { section in
-                Section {
-                    ForEach(section.rows) { row in
-                        Button { model.select(row.id) } label: { rowLabel(row) }
-                            .buttonStyle(.plain)
-                            .focused($focusedRow, equals: row.id)
-                            .listRowBackground(row.id == model.selectedID ? Color.accentColor.opacity(0.15) : nil)
-                            .accessibilityIdentifier("campaigns.chapter.\(row.id)")
-                    }
-                } header: {
-                    HStack {
-                        Text(section.title)
-                        Spacer()
-                        Text(section.tally).monospacedDigit()
-                    }
+        #if os(tvOS)
+        List { sidebarRows }
+            .navigationTitle("Campaigns")
+            .toolbar { closeButton }
+            // Focus picks the chapter, as a sidebar does on Apple TV.
+            .onChange(of: focusedRow) { _, id in
+                if let id { model.select(id) }
+            }
+        #else
+        List(selection: selection) { sidebarRows }
+            .navigationTitle("Campaigns")
+            .toolbar { closeButton }
+        #endif
+    }
+
+    private var sidebarRows: some View {
+        ForEach(model.sections) { section in
+            Section {
+                ForEach(section.rows) { row in
+                    #if os(tvOS)
+                    Button { model.select(row.id) } label: { rowLabel(row) }
+                        .focused($focusedRow, equals: row.id)
+                        .accessibilityIdentifier("campaigns.chapter.\(row.id)")
+                    #else
+                    NavigationLink(value: row.id) { rowLabel(row) }
+                        .accessibilityIdentifier("campaigns.chapter.\(row.id)")
+                    #endif
+                }
+            } header: {
+                HStack {
+                    Text(section.title)
+                    Spacer()
+                    Text(section.tally).monospacedDigit()
                 }
             }
         }
-        .navigationTitle("Campaigns")
-        .toolbar { closeButton }
-        #if os(tvOS)
-        // Focus picks the chapter, as a sidebar does on Apple TV.
-        .onChange(of: focusedRow) { _, id in
-            if let id { model.select(id) }
-        }
-        #endif
     }
 
     private func rowLabel(_ row: ChapterSelectModel.Row) -> some View {

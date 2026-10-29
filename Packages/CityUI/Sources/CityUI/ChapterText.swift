@@ -14,7 +14,7 @@ public enum ChapterText {
         case .outgrowRivals: "Outgrow every rival"
         case let .orders(count): count == 1 ? "Fulfil an order" : "Fulfil \(count) orders"
         case let .buildings(kind, count):
-            count == 1 ? "Own a \(kind.displayName.lowercased())" : "Own \(count) \(kind.displayName.lowercased())s"
+            count == 1 ? "Own \(withArticle(kind.displayName.lowercased()))" : "Own \(count) \(plural(kind.displayName.lowercased()))"
         case let .signatureProjects(count):
             count == 1 ? "Complete a signature project" : "Complete \(count) signature projects"
         case let .research(tech): "Research \(tech.displayName)"
@@ -106,6 +106,20 @@ public enum ChapterText {
     /// A year as the calendar shows it: BC at and below year 0.
     static func year(_ year: Int) -> String {
         year > 0 ? "\(year)" : "\(1 - year) BC"
+    }
+
+    /// "a mine", "an observatory".
+    static func withArticle(_ noun: String) -> String {
+        ("aeiou".contains(noun.first ?? "x") ? "an " : "a ") + noun
+    }
+
+    /// "bakeries", "windmills"; a noun already ending in s stays.
+    static func plural(_ noun: String) -> String {
+        if noun.hasSuffix("s") { return noun }
+        if noun.hasSuffix("y"), let before = noun.dropLast().last, !"aeiou".contains(before) {
+            return noun.dropLast() + "ies"
+        }
+        return noun + "s"
     }
 
     static func raceTarget(_ target: RaceTarget) -> String {
