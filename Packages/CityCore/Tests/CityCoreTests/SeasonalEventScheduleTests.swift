@@ -119,7 +119,7 @@ func onlyStoresNoFire() throws {
 @Test("scenario: No targets, no warning")
 func noTargetsNoWarning() throws {
     let blight = SeasonalEventOnset(event: .blight, season: .autumn)
-    let seed = try #require(seed(drawing: blight, in: 1202))
+    let seed = try #require(seedDrawing(blight, in: 1202))
     var world = townWorld(seed: seed)
     let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1202))
     #expect(events.seasonalEvents.isEmpty)
@@ -296,4 +296,15 @@ func eventsNeedAnActiveCalendar() {
     let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1201))
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvents.plan == nil)
+}
+
+@Test("scenario: a chapter's event in its first year")
+func scheduledEventInTheFirstYear() {
+    var world = eventsWorld(seed: 9)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1200, event: .fire, onset: .summer)]
+    addOperational(.house, at: TileCoordinate(x: 0, y: 0), residents: 2, in: &world)
+    let first = world.tick().events
+    #expect(first.seasonalEvents == [.seasonalEventWarned(event: .fire, onset: .summer)])
+    let summer = runSeasons(&world, untilTick: firstTick(of: .summer, 1200))
+    #expect(summer.seasonalEvents == [.seasonalEventStarted(event: .fire)])
 }

@@ -46,7 +46,9 @@ extension World {
         if let active = seasonalEvents.active, tickCount >= active.lastTick {
             endSeasonalEvent(events: &events)
         }
-        guard tickCount.isMultiple(of: CalendarState.ticksPerSeason) else { return }
+        // A new game's first tick stands in for the spring tick 0 that never
+        // runs, so a chapter can schedule an event in its first year.
+        guard tickCount == 1 || tickCount.isMultiple(of: CalendarState.ticksPerSeason) else { return }
         let today = date
         if today.season == .spring {
             decideSeasonalEvent(forYear: today.year)

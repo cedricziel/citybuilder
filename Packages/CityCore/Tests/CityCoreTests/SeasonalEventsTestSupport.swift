@@ -66,14 +66,14 @@ func firstTick(of season: Season, _ year: Int) -> UInt64 {
 
 /// The first seed whose draw for `year` is `onset`. The draw ignores the
 /// map and the buildings, so the search runs on one-tile worlds.
-func seed(
-    drawing onset: SeasonalEventOnset, in year: Int, difficulty: Difficulty = .normal, age: Age = .medieval
+func seedDrawing(
+    _ onset: SeasonalEventOnset, in year: Int, difficulty: Difficulty = .normal, age: Age = .medieval
 ) -> UInt64? {
     (0 ..< 2000).first { eventsWorld(seed: $0, difficulty: difficulty, age: age, size: 1).seasonalEvent(forYear: year) == onset }
 }
 
 /// A seed whose 1202 draw on Normal is a fire in summer.
-let summerFireSeed = seed(drawing: SeasonalEventOnset(event: .fire, season: .summer), in: 1202)
+let summerFireSeed = seedDrawing(SeasonalEventOnset(event: .fire, season: .summer), in: 1202)
 
 extension [WorldEvent] {
     var seasonalEvents: [WorldEvent] {
