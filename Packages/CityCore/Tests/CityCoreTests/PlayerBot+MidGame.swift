@@ -25,7 +25,8 @@ extension PlayerBot {
         let wantsCloth = clothDemand(in: world, stock: stock) > 0
         guard let tech = Self.midGameResearch.first(where: {
             world.canChooseResearch($0) && ($0 != .weaving || wantsCloth)
-        }) else { return }
+        })
+        else { return }
         world.enqueue(.chooseResearch(tech))
     }
 
