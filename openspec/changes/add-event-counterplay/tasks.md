@@ -16,7 +16,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 - [x] 2.1 Tests first: the `seasonal-events` scenarios for the decision, the first year, the minAge, the target checks, warning → onset → end, chapter scheduling, and the RNG left alone; confirm they fail
 - [x] 2.2 `SeasonalEventsState`, `seasonalEvent(forYear:)`, the derived generators and their salts, `Difficulty` knobs (D10), `runSeasonalEventSystem` after the calendar and before orders
 - [x] 2.3 The `WorldEvent` cases; the events `enabled` flag; events stay off while the calendar is inactive
-- [ ] 2.4 CityUI: the New Game "Seasonal events" toggle (hidden for chapters with a schedule); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
+- [ ] 2.4 CityUI: the New Game "Seasonal events" toggle, default On, passed to `newGame(..., seasonalEvents:)` (hidden for chapters with a schedule; old saves and a `newGame` without it stay off); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
 
 ## 3. CityCore: fire, fire watch and ruins (can start before M2)
 

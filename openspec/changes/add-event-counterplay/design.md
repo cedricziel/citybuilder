@@ -134,16 +134,16 @@ These are the first values. Task 7.3 tunes them against D12. The warning is alwa
 ### D11. Saves
 
 - `World.seasonalEvents: SeasonalEventsState`, an optional key:
-  - `enabled`: true for a new game;
+  - `enabled`: off unless the New Game toggle sets it (`newGame(..., seasonalEvents: true)`); fixtures and `newGame` without it leave it off;
   - `plan`: this year's stored decision (year, event, onset season, or none);
   - `warned`: the warned event (id, onset tick, area anchor and radius, or nil);
   - `active`: fires (entity, ignition tick, responding watch, arrival tick), the blight (anchor, end tick), the fever (anchor, end tick, next leave tick);
   - `festivalUntil`: a tick;
   - `counters`: buildings lost to fire, fires put out, residents who left with fever.
 - `Building.ruinOf`, an optional key.
-- Both are additive, with no version bump, like `orders` and `decline-grace`. A save without them loads with events enabled, nothing warned or active, and zero counters. If its calendar is active, its first draw is the next year that reaches the difficulty's first event year.
-- Fixtures keep the calendar inactive, and no seasonal event ever happens there. `newGame` and the v5 migration activate the calendar, so events are on.
-- The world's RNG is untouched. `DeterminismFixture` moves once, because new games now see events. It is regenerated in its own commit.
+- Both are additive, with no version bump, like `orders` and `decline-grace`. A save without them loads with events off, nothing warned or active, and zero counters, so it ticks exactly as before. A player who wants events in an old game needs a way to turn them on (a later settings change); until then only new games with the toggle on see them.
+- Fixtures keep the calendar inactive, and no seasonal event ever happens there. `newGame` and the v5 migration activate the calendar, but events stay off unless the New Game toggle turns them on.
+- The world's RNG is untouched. `DeterminismFixture` builds its world without the toggle, so it does not move; a fixture with events on is a separate addition (task 7.2).
 
 ### D12. Sweeps and acceptance
 
