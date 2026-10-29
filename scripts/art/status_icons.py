@@ -38,6 +38,8 @@ def _glyphs(colour: str) -> dict[str, str]:
         "no-trees": f'<circle {fill} cx="12" cy="9" r="6"/><path {stroke} stroke-width="2.2" d="M12 14v7"/>',
         "no-room-to-plant": f'<path {stroke} stroke-width="2.2" d="M12 20.5V12M4 20.5h16"/>'
         f'<path {fill} d="M12 12c-4 0-6-2.5-6-6 4 0 6 2.5 6 6zM12 11c0-3.5 2-5.5 6-5.5 0 3.5-2 5.5-6 5.5z"/>',
+        "burning": f'<path {fill} d="M12 2.5c1.6 4.6 6.5 6.4 6.5 12a6.5 6.5 0 0 1-13 0c0-3.2 1.6-4.8 3.2-6.4 0 3.2 1.6 4.8 3.2 4.8 0-4.8-1.6-6.4.1-10.4z"/>',
+        "ruins": f'<path {stroke} stroke-width="2.2" d="M3.5 20h17M5.5 20v-7l4.5-3.5V20M14 20V8.5l5 4V20"/>',
     }
 
 
@@ -47,6 +49,26 @@ PICTOGRAMS: dict[str, tuple[str, bool]] = {
     "no-route": (RED, True),
     "no-trees": (RED, True),
     "no-room-to-plant": (RED, True),
+    # Seasonal events (add-event-counterplay): a building on fire, and ruins to clear.
+    "burning": (RED, False),
+    "ruins": (RED, False),
+}
+
+# Seasonal-event hazards on a cream disc, like a good's issue: the glyph, and the pip's kind. A blight
+# slows a field (amber pause); a fever holds a house back (red "!"). Glyphs on a 24-unit grid.
+HAZARDS: dict[str, tuple[str, str]] = {
+    "blight": (
+        '<path fill="#8a7a2a" stroke="#5c5018" stroke-width="1" d="M5 21c0-9 6-14 14-16-1.5 9-6 15-14 16z"/>'
+        '<path fill="none" stroke="#5c5018" stroke-width="1.2" stroke-linecap="round" d="M5 21 14 10"/>'
+        '<circle fill="#6b4a1e" cx="11" cy="13" r="1.4"/><circle fill="#6b4a1e" cx="14.5" cy="10.5" r="1.1"/>',
+        "stuck",
+    ),
+    "fever": (
+        '<rect fill="#ffffff" stroke="#7a3b2a" stroke-width="1.6" x="9.5" y="2.5" width="5" height="13" rx="2.5"/>'
+        '<circle fill="#c8402e" stroke="#7a3b2a" stroke-width="1.6" cx="12" cy="18" r="4"/>'
+        '<rect fill="#c8402e" x="11" y="8" width="2" height="9"/>',
+        "short",
+    ),
 }
 
 # Good variants: the pip's colour and glyph.
@@ -82,8 +104,8 @@ def _pip(kind: str, cx: float = 21.5, cy: float = 21.5, r: float = 5.2) -> str:
     return disc + glyph
 
 
-def good_icon(good: str, kind: str) -> str:
-    inner = re.sub(r"^<svg[^>]*>|</svg>$", "", goods_icons.svg(good))
+def _cream_icon(inner: str, kind: str) -> str:
+    """A 24-unit glyph on the cream disc, with a pip of `kind` in the lower right."""
     return _svg(
         f'<circle fill="{CREAM}" stroke="{OUTLINE}" stroke-width="1.6" cx="13" cy="13" r="11"/>'
         f'<g transform="translate(4.8 4.8) scale(0.68)">{inner}</g>'
@@ -91,9 +113,18 @@ def good_icon(good: str, kind: str) -> str:
     )
 
 
+def good_icon(good: str, kind: str) -> str:
+    return _cream_icon(re.sub(r"^<svg[^>]*>|</svg>$", "", goods_icons.svg(good)), kind)
+
+
+def hazard_icon(name: str) -> str:
+    return _cream_icon(*HAZARDS[name])
+
+
 def sources() -> dict[str, str]:
-    """Every status icon: `status-<pictogram>` and `status-<good>-short` / `-stuck`."""
+    """Every status icon: `status-<pictogram>`, `status-<hazard>` and `status-<good>-short` / `-stuck`."""
     icons = {f"status-{name}": pictogram(name) for name in PICTOGRAMS}
+    icons.update({f"status-{name}": hazard_icon(name) for name in HAZARDS})
     for good in goods_icons.GLYPHS:
         for kind in PIPS:
             icons[f"status-{good}-{kind}"] = good_icon(good, kind)
