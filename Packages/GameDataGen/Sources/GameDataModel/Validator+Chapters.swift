@@ -155,6 +155,9 @@ extension Validator {
                 report("`events` names unknown event `\(scheduled.event)`")
                 continue
             }
+            if !event.enabled {
+                report("`events` schedules `\(event.id)`, which is disabled (`enabled: false`) until its mechanic ships in step 2")
+            }
             if ItemSchema.hazardEffects.contains(event.effect), scheduled.season == "spring" {
                 report("`events` schedules a \(event.effect) in spring: its warning would come the year before")
             } else if !event.seasons.contains(scheduled.season) {
