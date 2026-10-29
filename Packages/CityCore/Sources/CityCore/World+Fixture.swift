@@ -37,7 +37,8 @@ public extension World {
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
         rivals: Bool = true,
-        seasonalEvents: Bool = false
+        seasonalEvents: Bool = false,
+        directives: [TerrainDirective] = []
     ) -> World {
         let (terrain, width, height) = switch layout {
         case .singleIsland:
@@ -47,7 +48,7 @@ public extension World {
         }
         var world = generate(
             layout: layout, seed: seed, width: width, height: height, terrain: terrain,
-            culture: culture, age: age, difficulty: difficulty, rivals: rivals
+            culture: culture, age: age, difficulty: difficulty, rivals: rivals, directives: directives
         )
         world.seasonalEvents.enabled = seasonalEvents
         return world
@@ -65,7 +66,8 @@ public extension World {
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
-        rivals: Bool = true
+        rivals: Bool = true,
+        directives: [TerrainDirective] = []
     ) -> World {
         var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
         world.layout = layout
@@ -79,6 +81,7 @@ public extension World {
         world.difficulty = difficulty
         world.economy.balance = difficulty.startingBalance
         world.seedTownCenters()
+        world.applyTerrainDirectives(directives)
         world.research = initialResearch(for: age)
         world.calendar = CalendarState(startYear: age.startYear, isActive: true)
         world.culture = culture
