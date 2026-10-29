@@ -410,3 +410,12 @@ func burningBuildingsPayUpkeep() {
     #expect(world.playerTaxAndUpkeep.upkeep == before)
     #expect(before > 0)
 }
+
+@Test("scenario: ruins remember when they burnt")
+func ruinsRememberWhenTheyBurnt() {
+    var world = fireWorld()
+    let house = addOperational(.house, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let ignition = light(house, in: &world)
+    _ = run(&world, ticks: 300)
+    #expect(world.buildings[house]?.burntAtTick == ignition + 300)
+}

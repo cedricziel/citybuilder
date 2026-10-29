@@ -339,3 +339,17 @@ func disabledScheduledEventIsNeverWarned() {
     #expect(world.hasSeasonalEventTargets(.blight, scheduled: true))
     #expect(!world.hasSeasonalEventTargets(.festival, scheduled: true))
 }
+
+@Test("scenario: Events off")
+func eventsOffKeepsHistoryEvents() {
+    var world = World.newGame(layout: .singleIsland, seed: 3, difficulty: .hard, rivals: false, seasonalEvents: false)
+    let events = runSeasons(&world, untilTick: firstTick(of: .spring, 1210))
+    let history = events.filter { if case .historyEvent = $0 { true } else { false } }
+    #expect(events.seasonalEvents.isEmpty)
+    #expect(!history.isEmpty)
+}
+
+@Test func scenarioGamesTakeTheToggle() {
+    let world = World.newGame(layout: .singleIsland, seed: 1, culture: .northernEuropean, scenario: .firstHarvest, seasonalEvents: true)
+    #expect(world.seasonalEvents.enabled)
+}

@@ -93,7 +93,7 @@ extension World {
             guard let building = buildings[fire.building] else { continue }
             buildings[fire.building] = Building(
                 id: building.id, kind: .ruins, anchor: building.anchor, state: .operational,
-                owner: building.owner, ruinOf: building.kind
+                owner: building.owner, ruinOf: building.kind, burntAtTick: tickCount
             )
             stockpiles[fire.building] = nil
             populations[fire.building] = nil
