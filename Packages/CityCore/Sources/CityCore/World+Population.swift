@@ -35,6 +35,9 @@ extension World {
             recordHouseUse(of: good, drawn: drawn, by: building)
             pop.recordConsumption(of: good, short: drawn < amount)
         }
+        // Only a need that binds the house counts, so cloth holds no run
+        // before Weaving that would cut the grace short once it binds.
+        pop.keepShortIntervals(for: bindingNeeds(of: pop.tier, for: building.owner, advancing: false))
     }
 
     /// Consumption intervals in a row a need of `tier` may stay short

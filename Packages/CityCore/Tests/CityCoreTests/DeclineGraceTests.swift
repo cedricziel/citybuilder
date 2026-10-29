@@ -63,13 +63,14 @@ func scenarioAHouseDeclinesOnceTheGraceHasRunOut() throws {
     for _ in 0 ..< grace(fixture) {
         interval(&fixture)
     }
+    // A resident leaves as the grace runs out and another 60 ticks later.
     var house = try pop(fixture)
-    #expect(house.population < 8)
+    #expect(house.population == 6)
     #expect(house.tier == .merchants)
-    run(&fixture, ticks: 22)
+    run(&fixture, ticks: 30)
     house = try pop(fixture)
     #expect(house.tier == .citizens)
-    #expect(house.population <= HouseTier.citizens.capacity)
+    #expect(house.population == HouseTier.citizens.capacity)
 }
 
 /// A merchant house short of `good` for its grace and then 120 ticks, the other needs in stock.
@@ -107,6 +108,23 @@ func scenarioARecoveredNeedResetsTheCount() throws {
         interval(&fixture)
     }
     let house = try pop(fixture)
+    #expect(house.population == 8)
+    #expect(house.tier == .merchants)
+}
+
+@Test("scenario: researching Weaving does not cut the grace short")
+func scenarioResearchingWeavingDoesNotCutTheGraceShort() throws {
+    var fixture = try merchantHouse()
+    fixture.world.research = ResearchState(researched: Tech.allCases.filter { $0 != .weaving })
+    try #require(grace(fixture) >= 2)
+    for _ in 0 ..< grace(fixture) {
+        interval(&fixture, missing: [.cloth])
+    }
+    #expect(try pop(fixture).shortIntervals(of: .cloth) == 0)
+    fixture.world.research = ResearchState(researched: Tech.allCases)
+    interval(&fixture, missing: [.cloth])
+    let house = try pop(fixture)
+    #expect(house.shortIntervals(of: .cloth) == 1)
     #expect(house.population == 8)
     #expect(house.tier == .merchants)
 }

@@ -39,7 +39,7 @@ A house at full capacity whose next tier's needs are all met for 120 consecutive
 
 ### Requirement: Houses decline only after a grace period
 
-A house SHALL count, for each need of its tier, the consumption intervals in a row in which it drew less of that good than it needed. A need that is drawn in full at a consumption MUST reset its count. A house is past its grace when any need that binds it has a count of at least the tier's decline grace (`HouseTier.declineGrace`, scaled by difficulty). Until then the house MUST keep its residents and its tier, and it MUST NOT grow while a binding need is unmet. A house with no residents has nothing to count: it is past its grace as soon as a binding need is unmet. A tier change MUST drop the counts of goods the new tier does not need.
+A house SHALL count, for each need that binds it, the consumption intervals in a row in which it drew less of that good than it needed. A need that does not bind it (cloth before Weaving, for example) MUST hold no count. A need that is drawn in full at a consumption MUST reset its count. A house is past its grace when any need that binds it has a count of at least the tier's decline grace (`HouseTier.declineGrace`, scaled by difficulty). Until then the house MUST keep its residents and its tier, and it MUST NOT grow while a binding need is unmet. A house with no residents has nothing to count: it is past its grace as soon as a binding need is unmet. A tier change MUST drop the counts of goods the new tier does not need.
 
 #### Scenario: A short need does not decline a house within its grace
 - **WHEN** a merchant house with 8 residents is short of tools for one consumption interval fewer than its grace, with its other needs available
@@ -52,6 +52,10 @@ A house SHALL count, for each need of its tier, the consumption intervals in a r
 #### Scenario: A recovered need resets the count
 - **WHEN** a house short of tools for all but one of its grace's intervals draws tools in full, and is then short of them again for one interval fewer than its grace
 - **THEN** it is not past its grace and keeps its residents
+
+#### Scenario: Researching Weaving does not cut the grace short
+- **WHEN** a merchant house has been short of cloth for its whole grace before Weaving is researched, and Weaving is then researched with cloth still short
+- **THEN** its count for cloth starts at 1 at the next consumption and it keeps its residents and tier
 
 #### Scenario: Growth waits during the grace
 - **WHEN** a house below its capacity has an unmet need within its grace
@@ -71,7 +75,7 @@ A house SHALL count, for each need of its tier, the consumption intervals in a r
 
 #### Scenario: A tier without a grace waits one interval
 - **WHEN** a pack declares a tier with no `declineGrace`
-- **THEN** the generated tier has a decline grace of 1, which is the rule before this change
+- **THEN** the generated tier has a decline grace of 1: a house declines after the first short consumption, as before, except that a good that left its reach between two draws now counts at the next draw instead of at once
 
 #### Scenario: The generator rejects a grace below 1
 - **WHEN** a pack declares a tier with `declineGrace: 0`
