@@ -63,3 +63,60 @@ func ruinsUseTheirFootprint() throws {
         #expect(node.position.y == -IsoMath.tileHeight / 2 * CGFloat(2 * side - 1))
     }
 }
+
+private func houseSpec(_ state: BuildingState) -> SpriteSpec {
+    SpriteSpec(coord: TileCoordinate(x: 4, y: 4), kind: .building(
+        kind: .house, state: state, footprint: Footprint(width: 2, height: 2),
+        constructionFrameIndex: nil, orientation: nil, isWaitingForMaterials: false
+    ))
+}
+
+@MainActor
+@Test("scenario: A burning house shows flames, and loses them when the fire is out")
+func burningHouseShowsFlames() throws {
+    let scene = IsoWorldScene()
+    let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
+    let fire = try #require(burning.childNode(withName: FireEffect.nodeName))
+    #expect(fire.zPosition > 95, "self-lit, over the night shade")
+    #expect(abs(burning.colorBlendFactor - FireEffect.soot) < 0.001)
+    // The state is part of the sprite's key: the doused house gets a fresh node, without the fire.
+    let doused = try #require(scene.makeBuildingNode(for: houseSpec(.operational)) as? SKSpriteNode)
+    #expect(doused.childNode(withName: FireEffect.nodeName) == nil)
+    #expect(doused.colorBlendFactor == 0)
+    #expect(houseSpec(.burning) != houseSpec(.operational))
+}
+
+@MainActor
+@Test("scenario: under Reduce Motion the flames hold still")
+func flamesHoldStillUnderReduceMotion() throws {
+    let scene = IsoWorldScene()
+    scene.reduceMotion = true
+    let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
+    let fire = try #require(burning.childNode(withName: FireEffect.nodeName))
+    #expect(fire.children.allSatisfy { !$0.hasActions() })
+}
+
+@MainActor
+@Test("flames grow with the footprint")
+func flamesGrowWithTheFootprint() {
+    let sizes = [1, 2, 3].map { FireEffect.scale(for: Footprint(width: $0, height: $0)) }
+    #expect(sizes == sizes.sorted() && Set(sizes).count == 3)
+}
+
+@Test("scenario: a burning building sends up a smoke column, before any chimney")
+func burningBuildingSmokes() {
+    let base = World.fixtureWithTerrain(width: 10, height: 10, fill: .grass, seed: 1).snapshot()
+    let house = Building(id: EntityID(raw: 1), kind: .sawmill, anchor: TileCoordinate(x: 2, y: 2), state: .burning)
+    let snapshot = WorldSnapshot(
+        tickCount: 1, simulatedTime: base.simulatedTime, mapWidth: 10, mapHeight: 10,
+        terrainGrid: base.terrainGrid, occupiedTiles: [:], buildings: [house.id: house], carriers: [],
+        economy: base.economy, totalPopulation: 0, camera: base.camera
+    )
+    let sources = ChimneyPlanner.sources(in: snapshot)
+    #expect(sources.map(\.style) == [.fireSmoke])
+    let smithy = SmokeSource(id: EntityID(raw: 2), anchor: TileCoordinate(x: 2, y: 2), kind: .toolsmith, style: .smoke)
+    let chosen = ChimneyPlanner.select(
+        [smithy] + sources, xRange: 0 ... 9, yRange: 0 ... 9, camera: Camera(centerX: 2, centerY: 2, zoom: 0.1)
+    )
+    #expect(chosen.first?.style == .fireSmoke)
+}
