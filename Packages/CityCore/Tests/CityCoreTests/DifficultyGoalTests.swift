@@ -108,7 +108,12 @@ func scenarioEasyWaitsOneIntervalLonger() {
     #expect(Difficulty.allCases.map { $0.declineGraceIntervals(base: 3) } == [4, 3, 2])
 }
 
+@Test("scenario: a tier declared at one never waits longer")
+func scenarioATierDeclaredAtOneNeverWaitsLonger() {
+    #expect(Difficulty.allCases.map { $0.declineGraceIntervals(base: 1) } == [1, 1, 1])
+}
+
 @Test("scenario: the grace never drops below one")
 func scenarioTheGraceNeverDropsBelowOne() {
-    #expect(Difficulty.hard.declineGraceIntervals(base: 1) == 1)
+    #expect(Difficulty.hard.declineGraceIntervals(base: 2) == 1)
 }

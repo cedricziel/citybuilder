@@ -54,12 +54,15 @@ public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
     }
 
     /// Consumption intervals a need may stay short before a house
-    /// declines, from its tier's declared `base` (`decline-grace` D3).
+    /// declines, from its tier's declared `base` (`decline-grace` D3). A
+    /// tier declared at 1 keeps shrinking with its food supply on every
+    /// difficulty.
     public func declineGraceIntervals(base: Int) -> Int {
-        switch self {
+        guard base > 1 else { return 1 }
+        return switch self {
         case .easy: base + 1
         case .normal: base
-        case .hard: max(1, base - 1)
+        case .hard: base - 1
         }
     }
 
