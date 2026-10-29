@@ -315,9 +315,9 @@ extension World {
         if waits, held < CarrierConfig.haulMinLoad, allFar(from: road, among: buffers) {
             return wait()
         }
-        guard var (warehouseId, path) = findRoadConnectedBuffer(
-            fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:)
-        ) else { return nil }
+        let inbound = candidates.inbound.count(of:to:)
+        guard var (warehouseId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers, inbound: inbound)
+        else { return nil }
         func room(at store: EntityID) -> Int {
             let pile = stockpiles[store] ?? Stockpile(capacity: 0)
             return pile.room(for: good) - candidates.inbound.pending(of: good, to: store, in: pile)
@@ -404,11 +404,9 @@ extension World {
                 if !onIsland { continue }
             }
             let footprint = site.footprint
-            guard let siteRoad = anyAdjacentRoad(anchor: site.anchor, footprint: footprint), let path = PathFinder.path(
-                from: start,
-                to: siteRoad,
-                in: roadGraph
-            ) else { continue }
+            guard let siteRoad = anyAdjacentRoad(anchor: site.anchor, footprint: footprint),
+                  let path = PathFinder.path(from: start, to: siteRoad, in: roadGraph)
+            else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)
             }
@@ -465,13 +463,10 @@ extension World {
         var best: (EntityID, [TileCoordinate])?
         for building in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
             let id = building.id
-            guard let bufferRoad = anyAdjacentRoad(
-                anchor: building.anchor,
-                footprint: building.footprint
-            ), let stock = stockpiles[id], stock.room(for: good) - inbound(good, id) >= needed, let path = roadPath(
-                from: start,
-                to: bufferRoad
-            ) else { continue }
+            guard let bufferRoad = anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint),
+                  let stock = stockpiles[id], stock.room(for: good) - inbound(good, id) >= needed,
+                  let path = roadPath(from: start, to: bufferRoad)
+            else { continue }
             if best == nil || path.count < best!.1.count {
                 best = (id, path)
             }
