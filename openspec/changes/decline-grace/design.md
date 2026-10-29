@@ -20,7 +20,7 @@
 
 ### D1. Count short consumption intervals per good
 
-`HousePopulation.shortIntervals` maps a good to the number of consumption intervals in a row in which the house drew less than it needed. Each consumption of a good sets it to `previous + 1` when the draw is short and removes it when the draw is in full, so recovery resets the count at the next consumption (at most 100 ticks after the good returns). The count saturates at 255. Goods that are not needs of the house's tier are dropped at each consumption and when the tier changes, so a stale count cannot be inherited by a higher tier.
+`HousePopulation.shortIntervals` maps a good to the number of consumption intervals in a row in which the house drew less than it needed. Each consumption of a good sets it to `previous + 1` when the draw is short and removes it when the draw is in full, so recovery resets the count at the next consumption (at most 100 ticks after the good returns). The count saturates at 255. Only needs that bind the house hold a count: each consumption drops the counts of the others (cloth before Weaving, see `bindingNeeds`), so researching Weaving cannot find a count that has already reached the grace. A tier change drops the counts of goods the new tier does not need, so a stale count cannot be inherited by a higher tier.
 
 A house is **past its grace** when any binding need has a count of at least N. Only then do the two decline rules apply (a resident every 60 ticks, a tier after 120). While a need is unmet but the house is not past its grace, growth stays blocked (it needs every binding need met) and nothing else changes.
 
@@ -34,9 +34,9 @@ A house with no residents eats nothing, so no count can grow. Rather than carry 
 
 ### D3. N in the packs, scaled by difficulty in code
 
-`Tier` gets an optional `declineGrace`, a positive integer of consumption intervals, default 1. The generator emits `HouseTier.declineGrace`. Difficulty adjusts it in `Difficulty.declineGraceIntervals(base:)`: Easy `base + 1`, Normal `base`, Hard `max(1, base - 1)`. The existing difficulty knobs (research cost, upkeep, bankruptcy grace) are also code, keyed by the enum; the pack states the Normal value, which is the one a modder reasons about.
+`Tier` gets an optional `declineGrace`, a positive integer of consumption intervals, default 1. The generator emits `HouseTier.declineGrace`. Difficulty adjusts it in `Difficulty.declineGraceIntervals(base:)`: Easy `base + 1`, Normal `base`, Hard `base - 1`, and a tier declared at 1 stays at 1 on every difficulty (the lower tiers' shrinking is what matches residents to food, D3a, so Easy must not weaken it). The existing difficulty knobs (research cost, upkeep, bankruptcy grace) are also code, keyed by the enum; the pack states the Normal value, which is the one a modder reasons about.
 
-A default of 1 keeps every pack that does not mention the field exactly as before (a third-party pack, the generator's fixtures).
+A default of 1 keeps every pack that does not mention the field as before (a third-party pack, the generator's fixtures), apart from the one case in the proposal: a good that left reach between draws.
 
 Alternative: a `Difficulty` item kind in the packs. Rejected: it is a new generator kind for one number, and difficulty stays an enum in code everywhere else.
 

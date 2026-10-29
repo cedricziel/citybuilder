@@ -7,7 +7,8 @@ The player also has no warning. The red "!" icon shows when a good is short, but
 ## What Changes
 
 - **BREAKING (balance):** a house declines (loses residents or drops a tier) only after one of its needs has been short for N consumption intervals in a row. Before that it is in a grace period: it stops growing, but keeps its residents and its tier.
-- N is the tier's `declineGrace` in the packs, in consumption intervals, and scales with difficulty: one more on Easy, as declared on Normal, one fewer on Hard, never below 1. A tier that declares no grace has N = 1, which is today's behaviour.
+- N is the tier's `declineGrace` in the packs, in consumption intervals, and scales with difficulty: one more on Easy, as declared on Normal, one fewer on Hard, never below 1; a tier declared at 1 waits 1 on every difficulty. A tier that declares no grace has N = 1, which is today's behaviour apart from one case: a good that left the house's reach between two draws used to start the decline at once, and now counts at the next draw (at most 100 ticks later).
+- Only needs that bind the house count (cloth before Weaving does not), so Weaving cannot cut a grace short.
 - A need that is met again resets its count at the next consumption that draws it in full.
 - A house with no residents has nothing to protect: it keeps today's rule and drops a tier as soon as a need is unmet, so an emptied house can start again.
 - A warning during the grace: the house reports a new `BuildingIssue`, `.runningShort(good, intervals:, grace:)`, for the binding need that has been short the longest. It maps to that good's existing "short" status icon (no new art, so no canvas), and the inspector's "Problem:" line reads "Short of <good>: residents will leave" during the grace and "Short of <good>: residents are leaving" once it has run out. Details lists how many intervals the need has been short out of N.
