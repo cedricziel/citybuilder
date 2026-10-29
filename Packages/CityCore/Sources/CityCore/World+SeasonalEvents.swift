@@ -132,6 +132,6 @@ extension World {
     /// What a fire can burn: what can ignite, and the town's wooden stores
     /// and halls.
     static func isFlammable(_ kind: BuildingKind) -> Bool {
-        canIgnite(kind) || [.warehouse, .library].contains(kind)
+        canIgnite(kind) || [.warehouse, .granary, .library].contains(kind)
     }
 }

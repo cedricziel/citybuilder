@@ -60,6 +60,20 @@ items:
     storagePerGood: 80
     materials: { wood: 2, planks: 6 }
 
+  # A food store drawn on last, so it keeps a reserve; rats skip it.
+  # Spec: buildings-and-construction / Granary
+  - kind: Building
+    id: granary
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 120
+    upkeep: 1
+    buildTicks: 30
+    storagePerGood: 60
+    accepts: [food, grain, flour, bread]
+    materials: { wood: 4, planks: 4 }
+
   - kind: Building
     id: road
     effect: code

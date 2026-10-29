@@ -272,22 +272,13 @@ public extension World {
         }.map(\.id))
     }
 
-    /// Building kinds whose stockpiles count toward island aggregates.
-    /// Producer-internal output buffers (sawmill, lumberjack hut) are
-    /// excluded — those are in-transit. The town center is included
-    /// because it's the bootstrap goods-buffer that holds the starter
-    /// inventory players spend on their first placements.
-    private static let goodsBufferKinds: Set<BuildingKind> = [
-        .warehouse, .port, .shipyard, .townCenter
-    ]
-
     private func buildIslandSummaries(
         tileToIsland: [TileCoordinate: IslandID]
     ) -> [IslandID: IslandSummary] {
         var stockpileByIsland: [IslandID: [Good: Int]] = [:]
         var capacityByIsland: [IslandID: [Good: Int]] = [:]
         for (id, building) in buildings {
-            guard Self.goodsBufferKinds.contains(building.kind) else { continue }
+            guard Self.placementBufferKinds.contains(building.kind) else { continue }
             guard let islandID = islandID(forBuilding: building, tileToIsland: tileToIsland)
             else { continue }
             if let stockpile = stockpiles[id] {
@@ -295,7 +286,7 @@ public extension World {
                     stockpileByIsland[islandID, default: [:]][good, default: 0] += amount
                 }
                 if stockpile.capacity > 0 {
-                    for good in Good.allCases {
+                    for good in Good.allCases where stockpile.accepts(good) {
                         capacityByIsland[islandID, default: [:]][good, default: 0] += stockpile.capacity
                     }
                 }

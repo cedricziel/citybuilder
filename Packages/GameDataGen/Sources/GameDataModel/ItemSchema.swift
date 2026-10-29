@@ -18,7 +18,7 @@ public enum ItemSchema {
                 "name", "legacyIds", "upkeep", "buildTicks", "storage", "storagePerGood", "plantTicks", "catchmentRadius", "category",
                 "materials",
                 "recipe",
-                "unlockedBy", "obsoletedBy", "culture", "placement", "effect", "crop"
+                "unlockedBy", "obsoletedBy", "culture", "placement", "effect", "crop", "accepts"
             ]
         ),
         "Culture": Fields(

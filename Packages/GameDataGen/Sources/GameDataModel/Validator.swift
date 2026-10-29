@@ -138,6 +138,10 @@ struct Validator {
         if case let .terrain(type, _)? = building.placement, !ItemSchema.terrainTypes.contains(type) {
             report("unknown terrain `\(type)`; expected one of \(ItemSchema.terrainTypes.sorted().joined(separator: ", "))")
         }
+        if let accepts = building.accepts {
+            if building.storagePerGood == nil { report("`accepts` needs `storagePerGood`: only a store limits its goods") }
+            checkGoods(accepts.map { GoodAmount(good: $0, amount: 1) }, field: "accepts", refs, report)
+        }
         if building.isCrop, building.recipe?.outputs.isEmpty ?? true { report("`crop` needs a recipe that grows a good") }
     }
 

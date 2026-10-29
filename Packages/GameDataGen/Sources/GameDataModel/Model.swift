@@ -88,6 +88,8 @@ public struct Building: Equatable, Sendable {
     public var storage: Int?
     /// Units of each good a store holds, for stores that keep goods apart.
     public var storagePerGood: Int?
+    /// The only goods a store takes; nil for every good.
+    public var accepts: [String]?
     /// Ticks per planted forest tile, for buildings that plant.
     public var plantTicks: Int?
     /// Chebyshev radius around the footprint a gathering or planting building works.

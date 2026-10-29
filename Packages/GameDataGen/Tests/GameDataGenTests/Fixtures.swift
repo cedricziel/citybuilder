@@ -189,7 +189,7 @@ enum Fixtures {
             "catchmentRadius": "2",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
-            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true"
+            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true", "accepts": "[wood]"
         ],
         "Culture": ["tiers": "{ peasants: P, citizens: C, merchants: M }"],
         "Tech": [

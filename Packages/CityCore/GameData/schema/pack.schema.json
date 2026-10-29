@@ -129,6 +129,13 @@
               "culture": { "description": "Only this culture may build it.", "$ref": "#/$defs/id" },
               "placement": { "$ref": "#/$defs/placement" },
               "effect": { "description": "The behaviour is written in Swift.", "const": "code" },
+              "accepts": {
+                "description": "The only goods a store takes; needs storagePerGood. Omit for every good.",
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/id" }
+              },
               "crop": { "description": "A crop field, which blight slows. Needs a recipe that grows a good.", "type": "boolean" }
             }
           }
