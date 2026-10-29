@@ -50,8 +50,28 @@ public enum UITestSeed {
     /// burning (the watch's watchman on his way to one) and one burnt to ruins, for the event art's shots.
     public static func fireWorld() -> World {
         var world = townWorld(houses: 6, showcase: [.fireWatch, .granary])
+        if let watch = world.buildings.values.first(where: { $0.kind == .fireWatch }) {
+            joinToRoads(watch, in: &world)
+        }
         world.seedFireShowcase()
         return world
+    }
+
+    /// Lays a road on a tile beside `building` that touches the town's roads, if there is one.
+    private static func joinToRoads(_ building: Building, in world: inout World) {
+        let roads = Set(world.buildings.values.filter { $0.kind == .road }.map(\.anchor))
+        func neighbours(_ tile: TileCoordinate) -> [TileCoordinate] {
+            [(1, 0), (-1, 0), (0, 1), (0, -1)].map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
+        }
+        let beside = building.footprint.tiles(anchor: building.anchor).flatMap(neighbours)
+        guard let link = beside.first(where: { tile in
+            guard case .allowed = world.canPlace(.road, at: tile) else { return false }
+            return neighbours(tile).contains(where: roads.contains)
+        })
+        else { return }
+        world.enqueue(.place(.road, at: link))
+        _ = world.tick()
+        settle(&world) { $0.buildings.values.contains { $0.anchor == link && $0.state != .operational } }
     }
 
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant

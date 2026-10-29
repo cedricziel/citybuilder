@@ -85,4 +85,6 @@ func fireSeedShowsTheEventArt() {
     let kinds = world.buildings.values.map(\.kind)
     #expect(world.buildings.values.count { $0.state == .burning } == 2)
     #expect(kinds.contains(.ruins) && kinds.contains(.fireWatch) && kinds.contains(.granary))
+    // A road joins the watch to the town, so its watchman walks to a fire.
+    #expect(!world.snapshot().watchmen.isEmpty)
 }
