@@ -64,7 +64,7 @@
       "type": "object",
       "required": ["kind", "id"],
       "properties": {
-        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order"] }
+        "kind": { "enum": ["Good", "Building", "Culture", "Tech", "Age", "Tier", "Order", "Event"] }
       },
       "allOf": [
         {
@@ -128,7 +128,8 @@
               "obsoletedBy": { "$ref": "#/$defs/id" },
               "culture": { "description": "Only this culture may build it.", "$ref": "#/$defs/id" },
               "placement": { "$ref": "#/$defs/placement" },
-              "effect": { "description": "The behaviour is written in Swift.", "const": "code" }
+              "effect": { "description": "The behaviour is written in Swift.", "const": "code" },
+              "crop": { "description": "A crop field, which blight slows. Needs a recipe that grows a good.", "type": "boolean" }
             }
           }
         },
@@ -204,6 +205,50 @@
               "signature": { "$ref": "#/$defs/id" },
               "rivalResidents": { "description": "Residents a rival needs to enter this age.", "$ref": "#/$defs/nonNegative" },
               "orderEvery": { "description": "Seasons between crown orders in this age. Defaults to 4.", "type": "integer", "minimum": 1, "maximum": 12 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "Event" } } },
+          "then": {
+            "additionalProperties": false,
+            "required": ["kind", "id", "effect", "seasons", "weight", "banners"],
+            "properties": {
+              "kind": true,
+              "id": { "$ref": "#/$defs/id" },
+              "effect": { "description": "The mechanic, written in Swift.", "enum": ["fire", "blight", "fever", "festival"] },
+              "seasons": {
+                "description": "Possible onset seasons. A fire, blight or fever never strikes in spring.",
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "enum": ["spring", "summer", "autumn", "winter"] }
+              },
+              "minAge": { "description": "The first age the event can happen in. Defaults to the first age.", "$ref": "#/$defs/id" },
+              "weight": {
+                "description": "Draw weight per difficulty.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["easy", "normal", "hard"],
+                "properties": {
+                  "easy": { "$ref": "#/$defs/nonNegative" },
+                  "normal": { "$ref": "#/$defs/nonNegative" },
+                  "hard": { "$ref": "#/$defs/nonNegative" }
+                }
+              },
+              "banners": {
+                "description": "Banner title and text by moment. Placeholders: {season}, {building}, {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood}, {bonus}.",
+                "type": "object",
+                "propertyNames": { "enum": ["warning", "onset", "ignition", "end", "endNoLoss", "endNoFire", "request", "held", "missed"] },
+                "patternProperties": {
+                  "": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["title", "text"],
+                    "properties": { "title": { "type": "string", "minLength": 1 }, "text": { "type": "string" } }
+                  }
+                }
+              }
             }
           }
         },

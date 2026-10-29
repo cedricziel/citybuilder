@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=../schema/pack.schema.json
+# Seasonal events, at most one a year (add-event-counterplay D2, D3).
+#
+# effect: fire | blight | fever | festival. The mechanic is Swift; the
+#   numbers that differ per difficulty live in `Difficulty`.
+# seasons: the possible onset seasons. A hazard never strikes in spring, so
+#   its warning comes the season before, in the same year.
+# minAge: the first age the event can happen in; defaults to the first age.
+# weight: the draw weight per difficulty.
+# banners: title and text per moment. CityUI fills {season}, {building},
+#   {count}, {date}, {deadline}, {bread}, {luxury}, {luxuryGood} and {bonus}.
+defaults:
+  hazard-weight: &hazard-weight { easy: 1, normal: 1, hard: 2 }
+
+items:
+  - kind: Event
+    id: fire
+    effect: fire
+    seasons: [summer, autumn]
+    weight: *hazard-weight
+    banners:
+      warning:
+        title: "Dry {season} ahead"
+        text: Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames.
+      ignition:
+        title: Fire!
+        text: "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
+      end:
+        title: The fires are out
+        text: "{count} buildings burnt down. Clear the ruins with Demolish."
+      endNoLoss:
+        title: The fires are out
+        text: Nothing was lost.
+      endNoFire:
+        title: The dry spell is over
+        text: No fire broke out.
+
+  - kind: Event
+    id: blight
+    effect: blight
+    seasons: [summer, autumn]
+    weight: *hazard-weight
+    banners:
+      warning:
+        title: "Damp weather: blight is coming"
+        text: Next season, fields in the marked area yield half. Fill a granary, or buy food at the market.
+      onset:
+        title: Blight in the fields
+        text: "Fields in the marked area yield half until {date}."
+      end:
+        title: The blight has passed
+        text: The fields yield in full again.
+
+  - kind: Event
+    id: fever
+    effect: fever
+    seasons: [autumn, winter]
+    minAge: medieval
+    weight: *hazard-weight
+    banners:
+      warning:
+        title: Fever in the harbour towns
+        text: Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe.
+      onset:
+        title: Fever in the town
+        text: "Houses in the marked district can't advance, and some residents leave, until {date}."
+      end:
+        title: The fever has passed
+        text: "{count} residents left the town."
+
+  - kind: Event
+    id: festival
+    effect: festival
+    seasons: [spring, summer]
+    weight: { easy: 3, normal: 1, hard: 1 }
+    banners:
+      request:
+        title: The town wants a festival
+        text: "Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year."
+      held:
+        title: Festival!
+        text: "Houses near the market advance faster and pay {bonus}% more tax until {date}."
+      missed:
+        title: The festival was called off
+        text: Goods already delivered stay with the town. There is no other penalty.

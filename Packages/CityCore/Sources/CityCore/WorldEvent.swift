@@ -128,6 +128,16 @@ public enum WorldEvent: Sendable {
     case orderFailed(order: OrderID)
     /// An offer was not accepted in time.
     case orderExpired(order: OrderID)
+
+    // MARK: Seasonal events
+
+    /// A hazard was warned on the first tick of the season before `onset`.
+    /// Spec: `seasonal-events`.
+    case seasonalEventWarned(event: SeasonalEvent, onset: Season)
+    /// A seasonal event began.
+    case seasonalEventStarted(event: SeasonalEvent)
+    /// A seasonal event ended with what it cost the town.
+    case seasonalEventEnded(event: SeasonalEvent, toll: SeasonalEventToll)
 }
 
 /// Which way goods went in a trade, from the player's point of view.
@@ -206,6 +216,12 @@ extension WorldEvent: Equatable {
              let (.orderFailed(lOrder), .orderFailed(rOrder)),
              let (.orderExpired(lOrder), .orderExpired(rOrder)):
             return lOrder == rOrder
+        case let (.seasonalEventWarned(lEvent, lOnset), .seasonalEventWarned(rEvent, rOnset)):
+            return lEvent == rEvent && lOnset == rOnset
+        case let (.seasonalEventStarted(lEvent), .seasonalEventStarted(rEvent)):
+            return lEvent == rEvent
+        case let (.seasonalEventEnded(lEvent, lToll), .seasonalEventEnded(rEvent, rToll)):
+            return lEvent == rEvent && lToll == rToll
         default:
             return false
         }
@@ -259,7 +275,10 @@ public extension WorldEvent {
              .orderAccepted,
              .orderFulfilled,
              .orderFailed,
-             .orderExpired:
+             .orderExpired,
+             .seasonalEventWarned,
+             .seasonalEventStarted,
+             .seasonalEventEnded:
             return nil
         }
     }
@@ -307,7 +326,10 @@ public extension WorldEvent {
              .orderAccepted,
              .orderFulfilled,
              .orderFailed,
-             .orderExpired:
+             .orderExpired,
+             .seasonalEventWarned,
+             .seasonalEventStarted,
+             .seasonalEventEnded:
             return nil
         }
     }
@@ -354,6 +376,9 @@ public extension WorldEvent {
         case .orderFulfilled: return 33
         case .orderFailed: return 34
         case .orderExpired: return 35
+        case .seasonalEventWarned: return 36
+        case .seasonalEventStarted: return 37
+        case .seasonalEventEnded: return 38
         }
     }
 }

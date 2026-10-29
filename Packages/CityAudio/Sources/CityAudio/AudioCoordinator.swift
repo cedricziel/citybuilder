@@ -168,6 +168,9 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .orderFulfilled: return "orderFulfilled"
         case .orderFailed: return "orderFailed"
         case .orderExpired: return "orderExpired"
+        case .seasonalEventWarned: return "seasonalEventWarned"
+        case .seasonalEventStarted: return "seasonalEventStarted"
+        case .seasonalEventEnded: return "seasonalEventEnded"
         }
     }
 }

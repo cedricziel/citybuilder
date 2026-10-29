@@ -173,6 +173,10 @@ enum Fixtures {
         "Order": [
             "id": "crown-wood", "issuer": "crown", "good": "wood", "title": "Wood", "text": "Wood for the winter.",
             "seasons": "2", "size": "80", "min": "10", "max": "50", "reward": "120"
+        ],
+        "Event": [
+            "id": "fire", "effect": "fire", "seasons": "[summer]", "weight": "{ easy: 1, normal: 1, hard: 2 }",
+            "banners": "{ warning: { title: Dry, text: Fire risk. } }"
         ]
     ]
 
@@ -185,7 +189,7 @@ enum Fixtures {
             "catchmentRadius": "2",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
-            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code"
+            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true"
         ],
         "Culture": ["tiers": "{ peasants: P, citizens: C, merchants: M }"],
         "Tech": [
@@ -194,6 +198,7 @@ enum Fixtures {
         ],
         "Age": ["name": "Bronze", "orderEvery": "3"],
         "Tier": [:],
-        "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"]
+        "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
+        "Event": ["minAge": "medieval"]
     ]
 }

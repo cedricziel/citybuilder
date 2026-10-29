@@ -82,6 +82,16 @@ final class Fields {
         present(key, required: required).flatMap { scalarInt($0, key) }
     }
 
+    func bool(_ key: String, required: Bool = true) -> Bool? {
+        present(key, required: required).flatMap { node in
+            guard case let .scalar(scalar) = node, scalar.style == .plain, ["true", "false"].contains(scalar.string) else {
+                error("`\(key)` must be true or false", key)
+                return nil
+            }
+            return scalar.string == "true"
+        }
+    }
+
     func strings(_ key: String, required: Bool = true) -> [String]? {
         list(key, required: required).map { $0.compactMap { scalarString($0, key) } }
     }

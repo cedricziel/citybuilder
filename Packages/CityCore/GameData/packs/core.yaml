@@ -106,6 +106,7 @@ items:
     id: farm
     <<: *workshop
     category: gather
+    crop: true
     cost: 60
     buildTicks: 25
     materials: { wood: 2 }
@@ -126,6 +127,7 @@ items:
     id: grain-farm
     <<: *workshop
     category: gather
+    crop: true
     cost: 60
     buildTicks: 25
     materials: { wood: 2 }

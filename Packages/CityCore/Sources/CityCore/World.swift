@@ -13,8 +13,8 @@ public struct World: Codable, Sendable, Equatable {
     public let seed: UInt64
 
     // ---- time ------------------------------------------------------
-    public private(set) var tickCount: UInt64
-    public private(set) var simulatedTime: SimulationDuration
+    public internal(set) var tickCount: UInt64
+    public internal(set) var simulatedTime: SimulationDuration
 
     /// ---- RNG -------------------------------------------------------
     public internal(set) var rng: DeterministicRNG
@@ -104,6 +104,9 @@ public struct World: Codable, Sendable, Equatable {
     /// Timed requests from the crown and rivals, with favour. Spec: `orders`.
     /// Saves without it decode an empty state (see `Orders.swift`).
     public internal(set) var orders: OrdersState = .init()
+    /// Fire, blight, fever and festival. Spec: `seasonal-events`. Saves
+    /// without it decode with events off (see `SeasonalEvents.swift`).
+    public internal(set) var seasonalEvents: SeasonalEventsState = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -244,6 +247,7 @@ public struct World: Codable, Sendable, Equatable {
         runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
+        runSeasonalEventSystem(events: &events)
         runOrderSystem(events: &events)
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
