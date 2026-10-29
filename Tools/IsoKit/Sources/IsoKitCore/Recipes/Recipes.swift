@@ -46,7 +46,8 @@ public enum Recipes {
         Recipe(id: "building-forester", cell: SpriteCell(footprint: 2, heightPx: 112), operationalFrames: 2) { kit, _ in
             forester(kit)
         }
-    ] + gather + craft + civic + shore + culture + ages + events).map(CellFit.roomForShadow) + walkers + handcarts + animals + [fire]
+    ] + gather + craft + civic + market + shore + culture + ages + events).map(CellFit.roomForShadow) + walkers + handcarts + animals
+        + [fire]
 
     /// Recipes that get night lights: every house look, the workshops and the fire watch's lantern.
     public static let lit: Set<String> = Set(
