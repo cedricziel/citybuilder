@@ -245,3 +245,21 @@ func aChapterSaveThatHasntStartedShowsItsIntro() throws {
 func fireWatchesPlural() {
     #expect(ChapterText.goal(.buildings(.fireWatch, 2), culture: nil) == "Own 2 fire watches")
 }
+
+private struct SaveFailed: Error, CustomStringConvertible {
+    var description: String {
+        "disk full"
+    }
+}
+
+@MainActor
+@Test("back to chapters keeps the game open when its save fails")
+func backToChaptersKeepsTheGameOpenWhenSaveFails() throws {
+    let (title, session) = try chapterSession()
+    title.saveGame = { _ in throw SaveFailed() }
+    session.perform(.backToChapters)
+    #expect(title.committedSession === session)
+    #expect(title.chapterSelect == nil)
+    #expect(session.banner?.title == "Couldn't save")
+    #expect(session.banner?.description.contains("disk full") == true)
+}

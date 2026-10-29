@@ -221,3 +221,21 @@ func theChapterMapIsMadeOffTheMainActorAndCached() async throws {
     #expect(first != nil)
     #expect(first === second)
 }
+
+@MainActor
+@Test("a map that finishes after the selection moved on is dropped")
+func aStaleMapIsDropped() async throws {
+    let model = ChapterSelectModel(progress: testProgress(won: ["c1"]))
+    model.select("c1")
+    let loading = Task { await model.loadSelectedMap() }
+    // Let the load start on chapter 1 before the selection moves on.
+    await Task.yield()
+    model.select("c2")
+    await loading.value
+    #expect(model.selectedMap == nil)
+    await model.loadSelectedMap()
+    let map = try #require(model.selectedMap)
+    let c2 = try #require(model.selected)
+    let cached = await model.loadMapImage(for: c2)
+    #expect(map === cached)
+}

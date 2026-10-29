@@ -405,4 +405,9 @@ extension GameSession {
             break
         }
     }
+
+    /// A save that failed when leaving a chapter game, which stays open.
+    func noteSaveFailure(_ error: any Error) {
+        show(SessionBanner(title: "Couldn't save", description: "\(error). The game stays open; try again from the pause menu."))
+    }
 }

@@ -8,7 +8,6 @@ struct ChapterSelectView: View {
     @Bindable var model: ChapterSelectModel
     let onStart: (Chapter, World) -> Void
     let onClose: () -> Void
-    @State private var mapImage: CGImage?
     @FocusState private var focusedRow: String?
     /// On iPhone the list shows first, though a chapter is chosen.
     @State private var compactColumn = NavigationSplitViewColumn.sidebar
@@ -32,7 +31,7 @@ struct ChapterSelectView: View {
                 detail
             }
             .task(id: model.selectedID) {
-                if let chapter = model.selected { mapImage = await model.loadMapImage(for: chapter) }
+                await model.loadSelectedMap()
             }
         }
     }
@@ -118,7 +117,7 @@ struct ChapterSelectView: View {
     private var detail: some View {
         if let chapter = model.selected {
             ScrollView {
-                ChapterDetailView(model: model, chapter: chapter, mapImage: mapImage) { world in onStart(chapter, world) }
+                ChapterDetailView(model: model, chapter: chapter, mapImage: model.selectedMap) { world in onStart(chapter, world) }
             }
             .navigationTitle(chapter.title)
             #if !os(tvOS)

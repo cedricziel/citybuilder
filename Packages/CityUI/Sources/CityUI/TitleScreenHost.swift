@@ -79,7 +79,7 @@ public struct TitleScreenHost: View {
         let viewModel = TitleScreenViewModel(
             saveStore: saveStore, sessionFactory: sessionFactory, cloudSync: cloudSync, campaignProgress: campaignProgress
         )
-        viewModel.saveGame = { session in try? pauseMenuFactory(session)?.onSaveGame() }
+        viewModel.saveGame = { session in try pauseMenuFactory(session)?.onSaveGame() }
         return viewModel
     }
 

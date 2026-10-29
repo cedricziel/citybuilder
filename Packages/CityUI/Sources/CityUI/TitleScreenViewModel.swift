@@ -93,8 +93,9 @@ public final class TitleScreenViewModel {
     public private(set) var chapterSelect: ChapterSelectModel?
     /// The player's campaign progress, from the app shell's store.
     public let campaignProgress: CampaignProgressModel
-    /// Saves a game before a card leaves it, as Quit to Title does.
-    public var saveGame: (@MainActor (GameSession) -> Void)?
+    /// Saves a game before a card leaves it. A failed save keeps the game
+    /// open, as the Mac's Quit does.
+    public var saveGame: (@MainActor (GameSession) throws -> Void)?
     /// The culture the player last picked for a chapter that leaves it open.
     private var pickedCulture: Culture?
     /// Set once the player has committed a world. Apps watch this to
@@ -236,7 +237,12 @@ public final class TitleScreenViewModel {
         case .retry:
             if let chapter = session.currentChapter { restart(chapter, like: session.world, culture: session.world.culture) }
         case .backToChapters:
-            saveGame?(session)
+            do {
+                try saveGame?(session)
+            } catch {
+                session.noteSaveFailure(error)
+                return
+            }
             returnToTitle()
             campaignsRequested()
         }

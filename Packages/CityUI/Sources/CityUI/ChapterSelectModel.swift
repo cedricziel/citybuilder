@@ -30,6 +30,8 @@ public final class ChapterSelectModel {
 
     public let progress: CampaignProgressModel
     public private(set) var selectedID: String?
+    /// The chosen chapter's map once it is made; nil while it loads.
+    public private(set) var selectedMap: CGImage?
     public var difficulty: Difficulty = .normal
     public var culture: Culture
     /// Chapter maps, made once per chapter for the app's lifetime.
@@ -102,6 +104,7 @@ public final class ChapterSelectModel {
     }
 
     public func select(_ id: String) {
+        if id != selectedID { selectedMap = nil }
         selectedID = id
         clampDifficulty()
     }
@@ -111,6 +114,15 @@ public final class ChapterSelectModel {
     public func makeWorld() -> World? {
         guard canStart, let chapter = selected else { return nil }
         return World.newGame(chapter: chapter, difficulty: difficulty, culture: culture)
+    }
+
+    /// Loads the chosen chapter's map. A map that arrives after the
+    /// selection moved on is dropped, so one chapter never shows another's.
+    public func loadSelectedMap() async {
+        guard let id = selectedID, let chapter = selected else { return }
+        let image = await loadMapImage(for: chapter)
+        guard selectedID == id, !Task.isCancelled else { return }
+        selectedMap = image
     }
 
     /// The chosen chapter's map, drawn like the minimap: made off the main
