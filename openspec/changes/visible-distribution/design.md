@@ -77,16 +77,18 @@ The candidate list is small: only consumers of the good that are short. Measured
 - **The marketplace building (M2b):** id `marketplace` (`BuildingKind.marketplace`). Its look is option B from the canvas at https://claude.ai/artifact/XtPfzGyD3oVW5juaZgzP1f: an open market hall on posts with stalls, 2 × 2 tiles, with culture variants. The sprites are `building-marketplace` and `building-marketplace-<culture>`, made by the art agent.
   - **Where porters leave and return:** the building's normal road-access tile, the first road tile next to the footprint (`anyAdjacentRoad`), as for every other carrier. There is no fixed entrance side, so the hall reads as open from every edge.
   - Porters never enter the footprint. Idle porters are not drawn.
+- **Cost and gate (signed off by the orchestrator on 2026-10-29):** $150, 3 wood and 4 planks, upkeep 1, 30 of each good in store, and no research gate, so a first-hour town can reach a house beyond the town center's radius as soon as it needs to.
 - **Shipping together:** milestone 2a (the town center as hub) and 2b (the marketplace) land in the same milestone sequence. The player never gets a build where the town center is the only hub, because one hub can't feed a large merchant town (see Risks, Throughput).
 - **Hub radius:** a hub serves the houses whose road path to it is at most `radius` road tiles, read from the hub building's game data (D9). The starting value is 18. A house within reach of several hubs is served by the nearest; ties go to the lower ID.
 - **Hub stock:** hubs keep their goods-buffer role. In addition, house goods prefer them:
   - A producer of a house good sends to the nearest hub with room before trying other buffers (D1 step 3, ahead of warehouses).
-  - A hub that is low on a house good its houses need pulls from warehouses on its network. Low means below the hub's reserve, 2 consumptions of its served houses. The haul uses a new mission, `.restock(good:amount:fromBuffer:toHub:)`.
+  - A hub that is low on a house good its houses need pulls from warehouses on its network. Low means below the hub's reserve, 2 consumptions of its served houses. The haul is a supply haul (`.retrieve` with the hub as its destination), so it takes a cart on a long road like any other and needs no new mission or save change; the design's earlier `.restock` case was dropped for that reason.
 
 ### D4. Market porters and house stock (milestone 2)
 
 - **House stock:** each house keeps a stock per need good: `houseStock[good]`. Its capacity is twice the house's current consumption of that good, and at least 2.
 - **Consumption:** every 100 ticks a house consumes from its own stock. A shortfall marks the need short, as `setShort` does today. Houses no longer call `World.consume` on buffers.
+- **A house with no residents** covers its next consumption only with what one resident eats in stock or on the way, so nobody moves into a house no porter reaches.
 - **When a need counts as met:**
   - It is met while the last consumption of it was not short, and stock plus inbound porter units covers the next consumption.
   - It turns unmet only when a consumption comes up short. That hysteresis is what prevents flicker.
