@@ -44,6 +44,11 @@ On each tick that starts a year after the first, with the calendar active, the w
 - **WHEN** a bountiful harvest applies with an operational town center that has free space
 - **THEN** the town center holds 8 more food
 
+#### Scenario: Bountiful harvest fills only the room for food
+
+- **WHEN** a bountiful harvest applies to a town center holding 35 food and 40 planks
+- **THEN** the town center holds 40 food and still 40 planks
+
 #### Scenario: Travelling scholar brings knowledge
 
 - **WHEN** a travelling scholar event applies
