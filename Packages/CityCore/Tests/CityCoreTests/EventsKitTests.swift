@@ -28,6 +28,8 @@ func kitBuildsAFireWatch() throws {
     world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
     kit.takeTurn(&world)
     world.tick()
+    #expect(kit.watchesBuilt == 0)
+    kit.takeTurn(&world)
     let watch = try #require(world.buildings.values.first { $0.kind == .fireWatch })
     let firstHouse = try #require(world.buildings.values.filter { $0.kind == .house }.min { $0.id.raw < $1.id.raw })
     #expect(World.footprintDistance(watch, firstHouse) <= World.fireWatchReach)
@@ -45,6 +47,7 @@ func kitCoversEveryClusterOnce() {
             world.tick()
         }
     }
+    kit.takeTurn(&world)
     let uncovered = EventsKit.uncovered(in: world)
     #expect(uncovered.isEmpty)
     #expect(kit.watchesBuilt == 2)
@@ -122,4 +125,31 @@ func watchOnAnotherNetworkDoesNotCover() throws {
     #expect(!world.fireWatchCovers(watchBuilding, house))
     let first = EventsKit.uncovered(in: world).first
     #expect(first?.id == house.id)
+}
+
+@Test("scenario: a placement that fails is not counted")
+func failedPlacementIsNotCounted() {
+    var world = streetWorld()
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    // The money is gone before the command runs.
+    world.economy.balance = 0
+    world.tick()
+    world.economy.balance = 1000
+    kit.takeTurn(&world)
+    #expect(kit.watchesBuilt == 0)
+}
+
+@Test("scenario: a building with no plot is tried once")
+func buildingWithoutAPlotIsTriedOnce() {
+    var world = eventsWorld(size: 30)
+    world.economy.balance = 1000
+    // A house with no road has no plot a watch could cover it from.
+    addOperational(.house, at: TileCoordinate(x: 10, y: 10), in: &world)
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands.isEmpty)
 }

@@ -12,15 +12,28 @@ struct EventsKit {
     /// How far from the uncovered building the kit looks for a plot, in tiles.
     static let searchReach = 4
 
+    /// Watches the kit placed that stand: counted once the placement
+    /// succeeded, at the kit's next turn.
     private(set) var watchesBuilt = 0
+    /// Where the last placement went, until the kit sees whether it stood.
+    private var placed: TileCoordinate?
+    /// Buildings with no plot a watch would cover from, not tried again.
+    private var tried: Set<EntityID> = []
 
     mutating func takeTurn(_ world: inout World) {
+        if let anchor = placed {
+            placed = nil
+            if let id = world.occupiedTiles[anchor], world.buildings[id]?.kind == .fireWatch { watchesBuilt += 1 }
+        }
         let price = BuildingCatalog.spec(for: .fireWatch).cost + Self.cushion
         guard Self.isFireSeason(world), world.economy.balance >= price else { return }
-        for target in Self.uncovered(in: world) {
-            guard let anchor = Self.plot(near: target, in: world) else { continue }
+        for target in Self.uncovered(in: world) where !tried.contains(target.id) {
+            guard let anchor = Self.plot(near: target, in: world) else {
+                tried.insert(target.id)
+                continue
+            }
             world.enqueue(.place(.fireWatch, at: anchor))
-            watchesBuilt += 1
+            placed = anchor
             return
         }
     }
@@ -40,17 +53,16 @@ struct EventsKit {
             .filter { building in !watches.contains { world.fireWatchCovers($0, building) } }
     }
 
-    /// The first free plot by a road that reaches `target`, ring by ring
-    /// out from its footprint.
+    /// The first free plot, ring by ring out from `target`'s footprint, from
+    /// which a watch would cover it by the sim's own rule.
     static func plot(near target: Building, in world: World) -> TileCoordinate? {
         let box = target.bounds
         for ring in 1 ... searchReach {
             for y in (box.minY - ring) ... (box.maxY + ring) {
                 for x in (box.minX - ring) ... (box.maxX + ring) where max(box.minX - x, x - box.maxX, box.minY - y, y - box.maxY) == ring {
                     let tile = TileCoordinate(x: x, y: y)
-                    guard world.canPlace(.fireWatch, at: tile) == .allowed,
-                          world.sharesRoadNetwork(tile, .single, with: target.anchor, target.footprint)
-                    else { continue }
+                    let watch = Building(id: EntityID(raw: 0), kind: .fireWatch, anchor: tile, state: .operational)
+                    guard world.canPlace(.fireWatch, at: tile) == .allowed, world.fireWatchCovers(watch, target) else { continue }
                     return tile
                 }
             }
