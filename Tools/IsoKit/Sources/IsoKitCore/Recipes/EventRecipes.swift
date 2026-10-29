@@ -185,13 +185,14 @@ extension Recipes {
 
 extension Recipes {
     static let fireFrames = 3
-    /// 80 x 64 pt: room for a cluster of flame tongues about 3 m across and 2.5 m tall. The cluster stands
-    /// on `fireGround`, 8 pt above the cell's bottom edge; the renderer anchors it there.
-    static let fireCell = SpriteCell(footprint: 1, heightPx: 64, widthPx: 80)
-    static let fireGround = ground(lift: 8, left: 0)
+    /// 80 x 80 pt: a row of flame tongues about 4.5 m along a ridge running +x, as a house's does, and up
+    /// to 5 m tall. The row's middle stands on `fireGround`, 14 pt above the cell's bottom edge; the
+    /// renderer anchors it there.
+    static let fireCell = SpriteCell(footprint: 1, heightPx: 80, widthPx: 80)
+    static let fireGround = ground(lift: 14, left: 0)
 
-    /// Flame tongues licking up from a roof, three frames of a flicker. Self-lit and casting no shadow;
-    /// the game adds the smoke column and the glow as particles.
+    /// Flame tongues licking up along a roof ridge, three frames of a flicker. Self-lit, flat and casting
+    /// no shadow; the game adds the smoke column and the glow.
     static let fire = Recipe(
         id: "effect-fire",
         cell: fireCell,
@@ -202,39 +203,78 @@ extension Recipes {
         unit: true
     ) { _, _ in }
 
+    /// One tongue of the row: where it stands along the ridge (m), how tall it burns at rest (m), and its
+    /// base width (m).
+    private struct Tongue {
+        let along: CGFloat, height: CGFloat, width: CGFloat
+    }
+
+    /// Tall in the middle of the ridge, lower toward its ends, as a roof burns from its heart.
+    private static let tongues = [
+        Tongue(along: -2.1, height: 1.9, width: 0.9), Tongue(along: -1.35, height: 3.0, width: 1.1),
+        Tongue(along: -0.55, height: 4.1, width: 1.3), Tongue(along: 0.2, height: 4.7, width: 1.4),
+        Tongue(along: 0.95, height: 3.6, width: 1.2), Tongue(along: 1.65, height: 2.6, width: 1.0),
+        Tongue(along: 2.25, height: 1.6, width: 0.8)
+    ]
+
+    /// The row in frame `frame`: each tongue keeps its place and flickers in height and bend.
     static func flames(_ kit: Builder, frame: Int) {
         var rng = Rng(state: 7 &+ UInt64(frame) &* 0x9E37)
-        // Across the screen is +x -z; the tongues spread that way, with a little depth.
-        let across = SCNVector3(Iso.invRoot2, 0, -Iso.invRoot2)
-        for offset: CGFloat in [-1.3, -0.75, -0.2, 0.35, 0.9, 1.35] {
-            let depth = rng.jitter(0.6)
-            let base = fireGround + across * (offset + rng.jitter(0.25)) + SCNVector3(depth, 0, depth)
-            let tall = 1.0 - abs(offset) / 2.2
-            flame(
-                kit,
-                at: base,
-                height: (1.3 + rng.next() * 1.7) * tall + 0.4,
-                radius: 0.26 + rng.next() * 0.16,
-                lean: 0.25 + rng.next() * 0.2
-            )
+        for tongue in tongues {
+            let height = tongue.height * (0.82 + rng.next() * 0.3)
+            let bend = 0.35 + rng.next() * 0.6
+            // Some tongues rise from just behind the ridge, so the row's foot isn't a ruled line.
+            let foot = SCNVector3(tongue.along, rng.next() * 0.35, -rng.next() * 0.5)
+            flame(kit, at: fireGround + foot, height: height, width: tongue.width, bend: bend)
         }
     }
 
-    /// One tongue: three nested cones, dark outside and bright at the core, leaning with the wind. Each
-    /// inner cone moves toward the camera until its front meets the outer one's, so the core shows.
-    static func flame(_ kit: Builder, at base: SCNVector3, height: CGFloat, radius: CGFloat, lean: CGFloat) {
+    /// One tongue: three flat, curved, tapering shapes facing the camera, dark red outside, orange, and a
+    /// pale core, each a little in front of the last. Flat and unshaded, so it never stripes.
+    static func flame(_ kit: Builder, at base: SCNVector3, height: CGFloat, width: CGFloat, bend: CGFloat) {
         let towardCamera = SCNVector3(Iso.invRoot2, 0, Iso.invRoot2)
-        let layers: [(width: CGFloat, tall: CGFloat)] = [(1.0, 1.0), (0.7, 0.8), (0.4, 0.55)]
-        for (colour, layer) in zip(Events.flames, layers) {
-            let length = height * layer.tall
-            let forward = radius * (1 - layer.width) + (layer.width < 1 ? 0.03 : 0)
+        let layers: [(size: CGFloat, lift: CGFloat)] = [(1.0, 0), (0.72, 0.03), (0.4, 0.04)]
+        for (index, (colour, layer)) in zip(Events.flames, layers).enumerated() {
+            let shape = SCNShape(path: tonguePath(width: width * layer.size, height: height * layer.size, bend: bend), extrusionDepth: 0.01)
             let node = kit.add(
-                SCNCone(topRadius: 0, bottomRadius: radius * layer.width, height: length),
+                shape,
                 Finish.flame(colour).material(),
-                at: base + towardCamera * forward + SCNVector3(length / 2 * sin(lean), length / 2 * cos(lean), 0),
-                euler: SCNVector3(0, 0, -lean)
+                at: base + towardCamera * (0.04 * CGFloat(index)) + SCNVector3(0, height * layer.lift, 0),
+                euler: SCNVector3(0, CGFloat.pi / 4, 0)
             )
             node.castsShadow = false
         }
+    }
+
+    /// A flame tongue in its own plane: a rounded base, swelling sides, and a tip bent `bend` of its
+    /// height toward +x, the way the wind blows the smoke.
+    static func tonguePath(width: CGFloat, height: CGFloat, bend: CGFloat) -> NSBezierPath {
+        let half = width / 2, tip = NSPoint(x: bend * height * 0.45, y: height)
+        let path = NSBezierPath()
+        path.flatness = 0.01
+        path.move(to: NSPoint(x: 0, y: -half * 0.3))
+        path.curve(
+            to: NSPoint(x: -half, y: height * 0.2),
+            controlPoint1: NSPoint(x: -half * 0.7, y: -half * 0.3),
+            controlPoint2: NSPoint(x: -half, y: 0)
+        )
+        // The left side swells, then sweeps toward the bent tip in an S.
+        path.curve(
+            to: tip,
+            controlPoint1: NSPoint(x: -half * 1.05, y: height * 0.5),
+            controlPoint2: NSPoint(x: tip.x - half * 0.9, y: height * 0.7)
+        )
+        path.curve(
+            to: NSPoint(x: half, y: height * 0.2),
+            controlPoint1: NSPoint(x: tip.x - half * 0.35, y: height * 0.62),
+            controlPoint2: NSPoint(x: half * 1.05, y: height * 0.48)
+        )
+        path.curve(
+            to: NSPoint(x: 0, y: -half * 0.3),
+            controlPoint1: NSPoint(x: half, y: 0),
+            controlPoint2: NSPoint(x: half * 0.7, y: -half * 0.3)
+        )
+        path.close()
+        return path
     }
 }
