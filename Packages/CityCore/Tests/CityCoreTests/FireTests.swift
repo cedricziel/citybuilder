@@ -141,10 +141,19 @@ func watchmanIsAWalker() throws {
     let (watch, house) = watchAndHouse(in: &world)
     _ = light(house, in: &world)
     _ = run(&world, ticks: 4)
-    let walker = try #require(world.snapshot().carriers.first { $0.id == watch })
-    #expect(walker.currentTile == TileCoordinate(x: 4, y: 4))
+    // He is his own walker, never a carrier the renderer could read as a delivery.
+    #expect(world.snapshot().carriers.isEmpty)
+    let walking = try #require(world.snapshot().watchmen.first)
+    #expect(walking.watch == watch && walking.fire == house)
+    #expect(walking.currentTile == TileCoordinate(x: 4, y: 4))
+    #expect(!walking.isDousing)
+    // On arrival he stands at the fire's road tile and douses it until it is out.
     _ = run(&world, ticks: 10)
-    #expect(!world.snapshot().carriers.contains { $0.id == watch })
+    let dousing = try #require(world.snapshot().watchmen.first)
+    #expect(dousing.currentTile == TileCoordinate(x: 8, y: 3))
+    #expect(dousing.isDousing)
+    _ = run(&world, ticks: 26)
+    #expect(world.snapshot().watchmen.isEmpty)
 }
 
 @Test("scenario: A watch finished during the fire")

@@ -146,6 +146,30 @@ public struct Watchman: Codable, Hashable, Sendable {
     }
 }
 
+/// A watchman as the renderer draws him: walking `path` toward the fire, then standing on its last
+/// tile while he douses it. Spec: `rendering-2_5d` / Seasonal events are drawn on the map.
+public struct WatchmanWalker: Hashable, Sendable {
+    /// The fire watch he comes from; one watchman per watch.
+    public let watch: EntityID
+    /// The burning building he answers.
+    public let fire: EntityID
+    public let path: [TileCoordinate]
+    public let pathIndex: Int
+    public let isDousing: Bool
+
+    public init(watch: EntityID, fire: EntityID, path: [TileCoordinate], pathIndex: Int, isDousing: Bool) {
+        self.watch = watch
+        self.fire = fire
+        self.path = path
+        self.pathIndex = pathIndex
+        self.isDousing = isDousing
+    }
+
+    public var currentTile: TileCoordinate? {
+        path.indices.contains(pathIndex) ? path[pathIndex] : nil
+    }
+}
+
 /// Running totals since the game started.
 public struct SeasonalEventCounters: Codable, Hashable, Sendable {
     public internal(set) var buildingsLostToFire = 0

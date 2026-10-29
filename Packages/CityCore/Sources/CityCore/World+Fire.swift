@@ -146,13 +146,13 @@ extension World {
         return roadPath(from: start, to: goal)
     }
 
-    /// The watchmen on their way, as walkers for the renderer.
-    var watchmenOnTheRoad: [Carrier] {
+    /// The watchmen on their way to a fire or dousing it, for the renderer.
+    var watchmenAtWork: [WatchmanWalker] {
         (seasonalEvents.fire?.fires ?? []).compactMap { fire in
-            guard let man = fire.watchman, tickCount < man.arrivalTick else { return nil }
-            return Carrier(
-                id: man.watch, path: man.path, pathIndex: Int(tickCount - man.departureTick),
-                mission: .deliver(good: .wood, amount: 0, fromProducer: man.watch, toWarehouse: fire.building)
+            guard let man = fire.watchman, tickCount < man.outTick, !man.path.isEmpty else { return nil }
+            let walked = Int(min(tickCount - man.departureTick, UInt64(man.path.count - 1)))
+            return WatchmanWalker(
+                watch: man.watch, fire: fire.building, path: man.path, pathIndex: walked, isDousing: tickCount >= man.arrivalTick
             )
         }
     }
