@@ -119,7 +119,7 @@ func onlyStoresNoFire() throws {
 @Test("scenario: No targets, no warning")
 func noTargetsNoWarning() throws {
     let blight = SeasonalEventOnset(event: .blight, season: .autumn)
-    let seed = try #require(seed(drawing: blight, in: 1202))
+    let seed = try #require(seedDrawing(blight, in: 1202))
     var world = townWorld(seed: seed)
     let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1202))
     #expect(events.seasonalEvents.isEmpty)
