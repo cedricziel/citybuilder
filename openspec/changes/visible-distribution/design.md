@@ -91,8 +91,8 @@ The candidate list is small: only consumers of the good that are short. Measured
 - **A house with no residents** covers its next consumption only with what one resident eats in stock or on the way, so nobody moves into a house no porter reaches.
 - **When a need counts as met:**
   - It is met while the last consumption of it was not short, and stock plus inbound porter units covers the next consumption.
-  - It turns unmet only when a consumption comes up short. That hysteresis is what prevents flicker.
-- **Tier advance:** a house can advance only if a hub that serves it holds the next tier's goods. This replaces `hasGoodInReach`, which looked at warehouses.
+  - It turns unmet only when a consumption comes up short, or when the stock plus porter units no longer covers the next consumption. A delivery between consumptions never turns it unmet, so it does not flicker with every meal and basket.
+- **Tier advance:** a house can advance only if the hub that serves it holds the next tier's goods. This replaces `hasGoodInReach`, which looked at warehouses. The two-draw rule of `stock-cover-advancement` keeps its threshold but measures the serving hub's stock, and the claims of houses advancing in the same tick are keyed by hub instead of by road network.
 - **Porters:**
   - **How many:** each hub keeps porters = 1 + one per 4 houses it serves, up to 8. These are starting values from game data (D9).
   - **Choosing a trip:** an idle porter picks the served house with the lowest stock ratio across its needs. The stock ratio is (stock + inbound) ÷ capacity, taking the lowest over the house's needs the hub holds. Ties go to the shorter path, then the lower house ID.

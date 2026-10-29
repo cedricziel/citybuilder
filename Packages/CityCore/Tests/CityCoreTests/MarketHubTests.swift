@@ -39,9 +39,13 @@ func finishedMarketplaceStoresGoods() {
         world.roadGraph.addRoad(at: tile)
     }
     let market = addOperational(.marketplace, at: TileCoordinate(x: 4, y: 0), in: &world)
-    let found = world.findRoadConnectedBuffer(fromRoad: TileCoordinate(x: 0, y: 2), good: .bread)
-    #expect(found?.0 == market)
-    #expect(world.stockpiles[market]?.room(for: .bread) == 30)
+    let bakery = addOperational(.bakery, at: TileCoordinate(x: 0, y: 3), in: &world)
+    world.stockpiles[bakery]?.deposit(.bread, amount: 1)
+    for _ in 0 ..< 10 {
+        world.tick()
+    }
+    #expect(world.stockpiles[market]?.quantity(of: .bread) == 1)
+    #expect(world.stockpiles[market]?.room(for: .bread) == 29)
 }
 
 @Test func houseStockTunablesComeFromGameData() {
