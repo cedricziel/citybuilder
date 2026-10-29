@@ -31,6 +31,7 @@ public enum ProductionCatalog {
         case .townCenter: nil
         case .port: nil
         case .shipyard: ProductionRecipe(inputs: [.planks: 10, .wood: 20], outputs: [:], cycleTicks: 200)
+        case .marketplace: nil
         case .hopGarden: ProductionRecipe(inputs: [:], outputs: [.hops: 1], cycleTicks: 40)
         case .brewery: ProductionRecipe(inputs: [.hops: 2], outputs: [.beer: 1], cycleTicks: 50)
         case .meadHall: nil

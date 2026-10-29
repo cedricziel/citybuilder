@@ -173,9 +173,20 @@ private struct ItemReader {
             placement: placement,
             hasCodeEffect: effect == "code",
             isCrop: fields.bool("crop", required: false) ?? false,
+            hub: fields.mapping("hub", required: false).flatMap(readHub),
             origin: fields.origin
         )
         return footprint?.count == 2 && cost != nil ? building : nil
+    }
+
+    private func readHub(_ hub: Fields) -> Hub? {
+        hub.finish(allowed: ["radius", "housesPerPorter", "maxPorters", "basketUnits", "reserveConsumptions"])
+        let radius = hub.int("radius"), perPorter = hub.int("housesPerPorter"), maxPorters = hub.int("maxPorters")
+        let basket = hub.int("basketUnits"), reserve = hub.int("reserveConsumptions")
+        guard let radius, let perPorter, let maxPorters, let basket, let reserve else { return nil }
+        return Hub(
+            radius: radius, housesPerPorter: perPorter, maxPorters: maxPorters, basketUnits: basket, reserveConsumptions: reserve
+        )
     }
 
     private func readRecipe(_ recipe: Fields) -> Recipe? {
@@ -256,8 +267,12 @@ private struct ItemReader {
 
     private func logistics(_ id: String) -> Logistics? {
         let distance = fields.int("haulDistance"), minLoad = fields.int("haulMinLoad"), maxWait = fields.int("haulMaxWait")
-        guard let distance, let minLoad, let maxWait else { return nil }
-        return Logistics(id: id, haulDistance: distance, haulMinLoad: minLoad, haulMaxWait: maxWait, origin: fields.origin)
+        let stock = fields.int("houseStockConsumptions"), minimum = fields.int("houseStockMinimum")
+        guard let distance, let minLoad, let maxWait, let stock, let minimum else { return nil }
+        return Logistics(
+            id: id, haulDistance: distance, haulMinLoad: minLoad, haulMaxWait: maxWait,
+            houseStockConsumptions: stock, houseStockMinimum: minimum, origin: fields.origin
+        )
     }
 
     private func vehicle(_ id: String) -> Vehicle? {

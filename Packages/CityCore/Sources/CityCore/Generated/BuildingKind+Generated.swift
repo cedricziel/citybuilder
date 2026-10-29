@@ -29,6 +29,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
     case townCenter = "town-center"
     case port
     case shipyard
+    case marketplace
     case hopGarden = "hop-garden"
     case brewery
     case meadHall = "mead-hall"
@@ -93,6 +94,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: "Town Ctr."
         case .port: "Port"
         case .shipyard: "Shipyard"
+        case .marketplace: "Marketplace"
         case .hopGarden: "Hop Garden"
         case .brewery: "Brewery"
         case .meadHall: "Mead Hall"
@@ -139,6 +141,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: 64
+        case .marketplace: nil
         case .hopGarden: 16
         case .brewery: 16
         case .meadHall: 16
@@ -185,6 +188,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: 40
         case .port: 80
         case .shipyard: nil
+        case .marketplace: 30
         case .hopGarden: nil
         case .brewery: nil
         case .meadHall: nil
@@ -231,6 +235,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: nil
+        case .marketplace: nil
         case .hopGarden: nil
         case .brewery: nil
         case .meadHall: nil
@@ -277,6 +282,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: nil
+        case .marketplace: nil
         case .hopGarden: nil
         case .brewery: nil
         case .meadHall: nil
@@ -323,6 +329,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: "town"
         case .shipyard: "town"
+        case .marketplace: "town"
         case .hopGarden: "gather"
         case .brewery: "craft"
         case .meadHall: "town"
@@ -369,6 +376,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: nil
+        case .marketplace: nil
         case .hopGarden: .northernEuropean
         case .brewery: .northernEuropean
         case .meadHall: .northernEuropean
@@ -415,6 +423,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: nil
+        case .marketplace: nil
         case .hopGarden: nil
         case .brewery: nil
         case .meadHall: nil
@@ -461,6 +470,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: nil
         case .port: nil
         case .shipyard: nil
+        case .marketplace: nil
         case .hopGarden: nil
         case .brewery: nil
         case .meadHall: nil
@@ -507,6 +517,7 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .townCenter: false
         case .port: false
         case .shipyard: false
+        case .marketplace: false
         case .hopGarden: true
         case .brewery: false
         case .meadHall: false
@@ -524,6 +535,53 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: false
         case .steamEngine: false
         case .powerPlant: false
+        }
+    }
+
+    public var hub: HubSpec? {
+        switch self {
+        case .house: nil
+        case .warehouse: nil
+        case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
+        case .road: nil
+        case .lumberjackHut: nil
+        case .forester: nil
+        case .sawmill: nil
+        case .farm: nil
+        case .bakery: nil
+        case .grainFarm: nil
+        case .windmill: nil
+        case .quernHouse: nil
+        case .mine: nil
+        case .charcoalBurner: nil
+        case .smelter: nil
+        case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
+        case .library: nil
+        case .townCenter: HubSpec(radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2)
+        case .port: nil
+        case .shipyard: nil
+        case .marketplace: HubSpec(radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2)
+        case .hopGarden: nil
+        case .brewery: nil
+        case .meadHall: nil
+        case .vineyard: nil
+        case .winery: nil
+        case .forum: nil
+        case .teaGarden: nil
+        case .teaHouse: nil
+        case .templeGarden: nil
+        case .coffeeGrove: nil
+        case .roastery: nil
+        case .caravanserai: nil
+        case .monument: nil
+        case .guildHall: nil
+        case .gallery: nil
+        case .steamEngine: nil
+        case .powerPlant: nil
         }
     }
 }
@@ -562,6 +620,7 @@ public enum BuildingCatalog {
         case .townCenter: BuildingSpec(kind: .townCenter, footprint: Footprint(width: 3, height: 3), cost: 0, upkeep: 0, buildDurationTicks: 1, shorePlacement: nil, materialCost: [:], requiredTerrain: nil)
         case .port: BuildingSpec(kind: .port, footprint: Footprint(width: 2, height: 3), cost: 250, upkeep: 1, buildDurationTicks: 35, shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1), materialCost: [.planks: 6, .wood: 8], requiredTerrain: nil)
         case .shipyard: BuildingSpec(kind: .shipyard, footprint: Footprint(width: 2, height: 3), cost: 350, upkeep: 2, buildDurationTicks: 45, shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1), materialCost: [.planks: 8, .wood: 12], requiredTerrain: nil)
+        case .marketplace: BuildingSpec(kind: .marketplace, footprint: Footprint(width: 2, height: 2), cost: 150, upkeep: 1, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 4, .wood: 3], requiredTerrain: nil)
         case .hopGarden: BuildingSpec(kind: .hopGarden, footprint: Footprint(width: 2, height: 2), cost: 60, upkeep: 0, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.wood: 2], requiredTerrain: nil)
         case .brewery: BuildingSpec(kind: .brewery, footprint: Footprint(width: 2, height: 2), cost: 120, upkeep: 1, buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 3, .wood: 3], requiredTerrain: nil)
         case .meadHall: BuildingSpec(kind: .meadHall, footprint: Footprint(width: 3, height: 3), cost: 180, upkeep: 1, buildDurationTicks: 35, shorePlacement: nil, materialCost: [.planks: 2, .wood: 6], requiredTerrain: nil)

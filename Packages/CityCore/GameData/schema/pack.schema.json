@@ -162,6 +162,19 @@
               "culture": { "description": "Only this culture may build it.", "$ref": "#/$defs/id" },
               "placement": { "$ref": "#/$defs/placement" },
               "effect": { "description": "The behaviour is written in Swift.", "const": "code" },
+              "hub": {
+                "description": "Serves houses as a market hub: porters carry house goods from it (visible-distribution D9). Needs storage.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["radius", "housesPerPorter", "maxPorters", "basketUnits", "reserveConsumptions"],
+                "properties": {
+                  "radius": { "description": "Road tiles from the hub to the houses it serves, at most.", "$ref": "#/$defs/positive" },
+                  "housesPerPorter": { "description": "Houses served per porter beyond the first.", "$ref": "#/$defs/positive" },
+                  "maxPorters": { "description": "Porters the hub keeps at most.", "$ref": "#/$defs/positive" },
+                  "basketUnits": { "description": "Units a porter carries at most.", "$ref": "#/$defs/positive" },
+                  "reserveConsumptions": { "description": "Consumptions of its houses the hub keeps of each good before it restocks.", "$ref": "#/$defs/positive" }
+                }
+              },
               "accepts": {
                 "description": "The only goods a store takes; needs storagePerGood. Omit for every good.",
                 "type": "array",
@@ -336,13 +349,15 @@
           "if": { "properties": { "kind": { "const": "Logistics" } } },
           "then": {
             "additionalProperties": false,
-            "required": ["kind", "id", "haulDistance", "haulMinLoad", "haulMaxWait"],
+            "required": ["kind", "id", "haulDistance", "haulMinLoad", "haulMaxWait", "houseStockConsumptions", "houseStockMinimum"],
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
               "haulDistance": { "description": "Road tiles a haul must cover before it takes a vehicle.", "$ref": "#/$defs/positive" },
               "haulMinLoad": { "description": "Units that must be ready for one destination before a vehicle goes.", "$ref": "#/$defs/positive" },
-              "haulMaxWait": { "description": "Ticks a producer's output waits for a vehicle load before it goes anyway.", "$ref": "#/$defs/positive" }
+              "haulMaxWait": { "description": "Ticks a producer's output waits for a vehicle load before it goes anyway.", "$ref": "#/$defs/positive" },
+              "houseStockConsumptions": { "description": "Consumptions of each need a house keeps in stock.", "$ref": "#/$defs/positive" },
+              "houseStockMinimum": { "description": "Units of each need a house stock holds at least.", "$ref": "#/$defs/positive" }
             }
           }
         },
