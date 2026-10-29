@@ -66,7 +66,15 @@ The count is plain integer state updated in the house loop, which already visits
 
 ## Evidence
 
-(Recorded in the PR: the pacing, solvency, control and rival sweeps on `main` and with this change, for each N tried.)
+Release sweeps (`RIVAL_SWEEP=1`, `PACING_RETENTION=1`, `nice -n 10`): `main` at ba2886cc against this change with the merchants' grace at 3 and at 6 (the peasants' and citizens' grace is 1 in both). The pacing sweep is 180 games (seeds 0–9, three difficulties, two layouts, three bot orders, market on), then the solvency sweep with its no-market control and the rival viability sweep (60 rival lines).
+
+| | Games with 20+ merchants at year 10 | Mean merchants at year 10 | No merchant by year 10 | Bankruptcies | Normal careful Renaissance (yr) | Share of turns in years 8–10 with 20+ (Easy / Normal / Hard) |
+|---|---|---|---|---|---|---|
+| `main` | 150 | 25.0 | 10 | 0 | 7.1 | 0.81 / 0.82 / 0.95 |
+| merchants' grace 3 | 155 | 26.4 | 7 | 0 | 6.5 | 0.84 / 0.87 / 0.96 |
+| merchants' grace 6 | 158 | 26.2 | 7 | 0 | 6.5 | 0.83 / 0.87 / 0.96 |
+
+Grace 3 is chosen: 6 is within noise of it, and 3 is the smaller step away from today's rule. Solvency and its control: no bankruptcy with or without the market on `main` and with the change; control residents 990 / 992 (without / with the market) on `main` and 955 / 1,080 with it. The rival sweep shows all 60 lines viable with the same lowest treasury; their residents rise with the grace, mostly on Easy (mean at year 3: 15.8 → 25.1 on Easy, 52.9 → 55.1 on Normal, 65.7 → 65.6 on Hard). The Guild Town test (careful bot wins within 7 years) passes at 12,130 ticks only once the peasants' and citizens' grace are 1 (D3a).
 
 ## Risks / Trade-offs
 
