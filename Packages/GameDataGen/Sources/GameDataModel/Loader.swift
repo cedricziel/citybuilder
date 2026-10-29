@@ -150,6 +150,7 @@ private struct ItemReader {
             buildTicks: fields.int("buildTicks", required: false) ?? 30,
             storage: fields.int("storage", required: false),
             storagePerGood: fields.int("storagePerGood", required: false),
+            accepts: fields.strings("accepts", required: false),
             plantTicks: fields.int("plantTicks", required: false),
             catchmentRadius: fields.int("catchmentRadius", required: false),
             category: fields.string("category", required: false),

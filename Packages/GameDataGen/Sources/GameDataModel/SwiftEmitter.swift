@@ -116,6 +116,7 @@ private struct Types {
             property("category", "String?", all.map { ($0.id, $0.category.map(literal) ?? "nil") }),
             property("culture", "Culture?", all.map { ($0.id, optionalCase($0.culture)) }),
             property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) }),
+            property("accepts", "Set<Good>?", all.map { ($0.id, $0.accepts.map { caseList($0.sorted()) } ?? "nil") }),
             property("isCrop", "Bool", all.map { ($0.id, "\($0.isCrop)") })
         ])
     }
