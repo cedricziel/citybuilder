@@ -9,7 +9,7 @@ extension GameSession {
     func seasonalEventBanner(for event: WorldEvent) -> SessionBanner? {
         switch event {
         case let .seasonalEventWarned(event, onset):
-            return Self.banner(event, .warning, ["season": onset.displayName.lowercased()])
+            return Self.warningBanner(SeasonalEventOnset(event: event, season: onset))
         case let .seasonalEventStarted(event):
             let end = world.seasonalEvents.active.map { Self.endDate(of: $0.lastTick, in: world) } ?? ""
             return Self.banner(event, .onset, ["date": end])
@@ -23,15 +23,20 @@ extension GameSession {
             }
             return Self.banner(event, moment, ["count": "\(toll.count)"])
         case let .demolitionRejected(id, .notEnoughMoney):
-            let kind = world.buildings[id].map { $0.ruinOf ?? $0.kind } ?? .ruins
-            let what = world.buildings[id]?.kind == .ruins ? "these ruins" : "this burning building"
+            guard let building = world.buildings[id] else { return nil }
+            let what = building.kind == .ruins ? "these ruins" : "this burning building"
             return SessionBanner(
                 title: "Not enough money",
-                description: "Clearing \(what) costs \(HUDViewModel.formatMoney(World.clearingFee(of: kind), locale: .current))."
+                description: "Clearing \(what) costs \(HUDViewModel.formatMoney(World.clearingFee(for: building), locale: .current))."
             )
         default:
             return nil
         }
+    }
+
+    /// The warning of `onset`, as first shown and as the chip shows it again.
+    static func warningBanner(_ onset: SeasonalEventOnset) -> SessionBanner? {
+        banner(onset.event, .warning, ["season": onset.season.displayName.lowercased()])
     }
 
     /// The pack's banner for `moment`, its placeholders filled.

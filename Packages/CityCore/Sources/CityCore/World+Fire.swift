@@ -162,7 +162,7 @@ extension World {
     /// treasury can't pay. Other buildings come down for free.
     mutating func payToClear(_ building: Building, events: inout [WorldEvent]) -> Bool {
         guard building.kind == .ruins || building.state == .burning else { return true }
-        guard charge(Self.clearingFee(of: building.ruinOf ?? building.kind), to: .player) else {
+        guard charge(Self.clearingFee(for: building), to: .player) else {
             events.append(.demolitionRejected(building: building.id, reason: .notEnoughMoney))
             return false
         }
@@ -170,6 +170,12 @@ extension World {
             events.append(.ruinsCleared(building: building.id))
         }
         return true
+    }
+
+    /// What clearing these ruins, or pulling this burning building down,
+    /// costs: the fee of the kind that burnt or burns.
+    public static func clearingFee(for building: Building) -> Int64 {
+        clearingFee(of: building.ruinOf ?? building.kind)
     }
 
     /// What clearing ruins costs: a quarter of the burnt kind's price,

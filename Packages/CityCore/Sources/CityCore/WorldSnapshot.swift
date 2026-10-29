@@ -95,6 +95,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// The seasonal event warned or under way, with its onset season.
     /// Spec: `platform-shells` / Seasonal events show banners and a chip.
     public let seasonalEvent: SeasonalEventOnset?
+    /// Turns any tick into a date, such as when ruins burnt down.
+    public let calendar: CalendarState
 
     public init(
         tickCount: UInt64,
@@ -124,7 +126,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         market: [MarketQuote] = [],
         statistics: StatisticsHistory = StatisticsHistory(),
         orders: OrdersState = OrdersState(),
-        seasonalEvent: SeasonalEventOnset? = nil
+        seasonalEvent: SeasonalEventOnset? = nil,
+        calendar: CalendarState = .inactive
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -154,6 +157,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.statistics = statistics
         self.orders = orders
         self.seasonalEvent = seasonalEvent
+        self.calendar = calendar
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -254,7 +258,8 @@ public extension World {
             market: marketQuotes,
             statistics: statistics,
             orders: orders,
-            seasonalEvent: currentSeasonalEvent
+            seasonalEvent: currentSeasonalEvent,
+            calendar: calendar
         )
     }
 

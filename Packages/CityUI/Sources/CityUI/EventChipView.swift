@@ -36,7 +36,6 @@ public struct EventChip: Equatable, Sendable {
 /// Where the chip fits: under the date, never wider than half a narrow HUD,
 /// and only the glyph and the season when the HUD is phone-narrow.
 enum EventChipLayout {
-    static let height: CGFloat = 26
     /// Below this HUD width the chip drops its words but the season.
     static let fullTextWidth: CGFloat = 340
 
@@ -74,11 +73,11 @@ struct EventChipView: View {
                 .foregroundStyle(amber)
                 .padding(.leading, 4)
                 .padding(.trailing, 10)
-                .frame(height: EventChipLayout.height)
-                .frame(maxWidth: EventChipLayout.maxWidth(hudWidth: hudWidth), alignment: .leading)
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(height: DateChipLayout.height)
                 .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
+                // Narrower than this, the text truncates rather than the capsule growing.
+                .frame(maxWidth: EventChipLayout.maxWidth(hudWidth: hudWidth), alignment: .leading)
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
