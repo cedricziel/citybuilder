@@ -58,23 +58,50 @@ func burningHouseShowsFlames() throws {
     let scene = IsoWorldScene()
     let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
     let fire = try #require(burning.childNode(withName: FireEffect.nodeName))
-    #expect(fire.zPosition > 95, "self-lit, over the night shade")
+    // A row along the ridge and a small one out of a window.
+    #expect(fire.children.count == 2)
     #expect(abs(burning.colorBlendFactor - FireEffect.soot) < 0.001)
     // The state is part of the sprite's key: the doused house gets a fresh node, without the fire.
     let doused = try #require(scene.makeBuildingNode(for: houseSpec(.operational)) as? SKSpriteNode)
     #expect(doused.childNode(withName: FireEffect.nodeName) == nil)
+    #expect(doused.childNode(withName: FireEffect.glowName) == nil)
     #expect(doused.colorBlendFactor == 0)
     #expect(houseSpec(.burning) != houseSpec(.operational))
 }
 
 @MainActor
-@Test("scenario: under Reduce Motion the flames hold still")
+@Test("scenario: the flames sort with their building, only the glow lights over the night")
+func flamesSortWithTheirBuilding() throws {
+    let scene = IsoWorldScene()
+    let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
+    let fire = try #require(burning.childNode(withName: FireEffect.nodeName))
+    let glow = try #require(burning.childNode(withName: FireEffect.glowName) as? SKSpriteNode)
+    // A child's z adds to its building's; buildings one row apart differ by 0.01.
+    #expect(fire.zPosition > 0 && fire.zPosition < IsoWorldScene.depthZ(1) - IsoWorldScene.depthZ(0))
+    #expect(glow.zPosition > 95 && glow.blendMode == .add)
+}
+
+/// A burning house, its flame frames stubbed in for the atlas the test bundle lacks; the caller ends the stub.
+@MainActor
+private func stubbedFire(_ scene: IsoWorldScene) throws -> [SKNode] {
+    SpriteAtlas.stub(Dictionary(uniqueKeysWithValues: (0 ..< 3).map { ("effect-fire-\($0)", SKTexture()) }))
+    let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
+    scene.buildingNodes[TileCoordinate(x: 4, y: 4)] = burning
+    return try #require(burning.childNode(withName: FireEffect.nodeName)).children
+}
+
+@MainActor
+@Test("scenario: under Reduce Motion the flames hold still, and flicker again when it is off")
 func flamesHoldStillUnderReduceMotion() throws {
     let scene = IsoWorldScene()
     scene.reduceMotion = true
-    let burning = try #require(scene.makeBuildingNode(for: houseSpec(.burning)) as? SKSpriteNode)
-    let fire = try #require(burning.childNode(withName: FireEffect.nodeName))
-    #expect(fire.children.allSatisfy { !$0.hasActions() })
+    defer { SpriteAtlas.stub([:]) }
+    let flames = try stubbedFire(scene)
+    #expect(flames.allSatisfy { !$0.hasActions() })
+    scene.reduceMotion = false
+    #expect(flames.allSatisfy { $0.action(forKey: FireEffect.flickerKey) != nil })
+    scene.reduceMotion = true
+    #expect(flames.allSatisfy { !$0.hasActions() })
 }
 
 @MainActor
