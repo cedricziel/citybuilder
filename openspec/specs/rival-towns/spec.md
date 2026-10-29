@@ -62,12 +62,16 @@ On a rival's turn (every 80 ticks on Easy, 50 on Normal, 30 on Hard, on ticks wh
 
 ### Requirement: Rival build order
 
-A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step. The threshold rules, in order:
+A rival SHALL build only houses, roads, lumberjack huts, foresters, sawmills, farms and warehouses. On its turn it SHALL take the first threshold rule that applies and that it can carry out, otherwise the next script step.
 
-- food below 4 with fewer farms than houses → farm;
+Before the threshold rules, a rival whose town center has fewer than 4 units of room, with no warehouse built or under construction and no site waiting for materials, SHALL build a warehouse if it can carry the step out. It SHALL take this step at the building cap too.
+
+The threshold rules, in order:
+
+- food below 4 and farms × 2 < houses × 3 → farm;
 - no operational or constructing sawmill, at least one lumberjack hut and fewer than 4 planks in stock → sawmill;
 - once the opening is complete, planks below 6 with fewer sawmills than lumberjack huts → sawmill;
-- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut;
+- wood below 4 with fewer than 1 + houses / 4 lumberjack huts, or less than 6 forest tiles left in the rival's hut catchments → lumberjack hut, unless the rival has a forester and already at least 2 + houses / 2 lumberjack huts, counting every hut;
 - once the opening is complete and the rival has at least 4 houses, fewer foresters than lumberjack huts, counting every hut → forester.
 
 Huts with fewer than 4 forest tiles left in their catchment SHALL not count as huts in these rules.
@@ -81,7 +85,7 @@ A step SHALL be issued only when:
 
 Otherwise the rival waits. While one of its sites waits for materials, a rival SHALL take no script step and only a lumberjack hut may join the waiting site. A rival's lumberjack hut, forester and first sawmill SHALL cost no materials. A script step waited on for 10 turns SHALL be skipped.
 
-House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. No step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
+House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 32 on Hard. Lumberjack hut steps SHALL be skipped while the rival has a forester and at least 2 + houses / 2 lumberjack huts, counting every hut. Warehouse steps SHALL be skipped once the rival has a warehouse built or under construction. No other step SHALL be taken at the building cap: 32 buildings on Easy, 48 on Normal, 64 on Hard, counting every rival building except roads and foresters.
 
 #### Scenario: Opening step
 
@@ -97,6 +101,11 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 - **WHEN** a rival past its opening with 5 houses, 4 farms and 2 food in stock takes a turn while its script points at a house
 - **THEN** it places a farm
+
+#### Scenario: Three farms for every two houses
+
+- **WHEN** a rival past its opening with 4 houses, 5 farms and 2 food in stock takes a turn while its script points at a house
+- **THEN** it places a farm, while with 6 farms it does not
 
 #### Scenario: Waiting for money
 
@@ -132,6 +141,31 @@ House steps SHALL be skipped at the house cap: 16 houses on Easy, 24 on Normal, 
 
 - **WHEN** a Normal rival with 24 houses reaches a house step
 - **THEN** it skips the step and takes the next one
+
+#### Scenario: Replanting towns keep their huts
+
+- **WHEN** a rival past its opening with 4 houses, a forester, 2 wood and 4 lumberjack huts whose forest is cut takes a turn
+- **THEN** it does not place a lumberjack hut, while without the forester it does
+
+#### Scenario: A full town center gets a warehouse
+
+- **WHEN** a rival past its opening with no warehouse, 2 units of room in its town center, 6 food and enough money takes a turn
+- **THEN** it places a warehouse, while with room for 12 more units it does not
+
+#### Scenario: The building cap does not stop a first warehouse
+
+- **WHEN** a Normal rival at the building cap, with no warehouse, 2 units of room in its town center and enough money takes a turn
+- **THEN** it places a warehouse, while a rival that already has a warehouse issues no commands
+
+#### Scenario: Script hut steps stop at the hut limit
+
+- **WHEN** a rival with 8 houses, 6 foresters and 6 lumberjack huts takes a turn while its script points at a lumberjack hut
+- **THEN** it skips the step and places the house that follows, while with 5 huts it places the hut
+
+#### Scenario: One warehouse per town
+
+- **WHEN** a rival that already has a warehouse takes a turn while its script points at the opening's warehouse
+- **THEN** it skips the step and places the house that follows
 
 #### Scenario: Building cap ignores foresters and roads
 
