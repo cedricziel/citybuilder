@@ -53,9 +53,14 @@ public enum UITestSeed {
         if let watch = world.buildings.values.first(where: { $0.kind == .fireWatch }) {
             joinToRoads(watch, in: &world)
         }
-        world.seedFireShowcase()
+        // The watchman puts out his first fire within seconds of the start, before a shot can catch him,
+        // so a third house catches fire eight seconds in and sends him out again.
+        world.seedFireShowcase(ruined: 2, nextIgnitionIn: fireSeedSecondCall)
         return world
     }
+
+    /// Ticks from the start of `fireWorld` to its third fire.
+    static let fireSeedSecondCall: UInt64 = 80
 
     /// Lays a road on a tile beside `building` that touches the town's roads, if there is one.
     private static func joinToRoads(_ building: Building, in world: inout World) {
