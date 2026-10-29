@@ -425,3 +425,15 @@ func loadingAnOlderSaveSeedsHouseStock() throws {
     #expect(world.snapshot().porters == world.porters)
     #expect(world.snapshot().porters.count == 1)
 }
+
+@Test func aPorterStandsOnItsPathTile() throws {
+    var world = strip()
+    let hub = center(in: &world)
+    fill(hub, [.food: 10], in: &world)
+    _ = house(at: 10, in: &world)
+    run(&world, ticks: 3)
+    var porter = try #require(world.porters.first)
+    #expect(porter.currentTile == porter.path[2])
+    porter.pathIndex = porter.path.count
+    #expect(porter.currentTile == nil)
+}
