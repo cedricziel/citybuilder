@@ -7,6 +7,8 @@ public struct GameData: Equatable, Sendable {
     public var techs: [Tech] = []
     public var ages: [Age] = []
     public var tiers: [Tier] = []
+    public var orders: [OrderTemplate] = []
+    public var events: [SeasonalEvent] = []
 
     /// Buildings that name `tech` in `unlockedBy`, in building order.
     public func unlocks(of tech: String) -> [String] {
@@ -86,6 +88,8 @@ public struct Building: Equatable, Sendable {
     public var storage: Int?
     /// Units of each good a store holds, for stores that keep goods apart.
     public var storagePerGood: Int?
+    /// The only goods a store takes; nil for every good.
+    public var accepts: [String]?
     /// Ticks per planted forest tile, for buildings that plant.
     public var plantTicks: Int?
     /// Chebyshev radius around the footprint a gathering or planting building works.
@@ -98,6 +102,8 @@ public struct Building: Equatable, Sendable {
     public var culture: String?
     public var placement: Placement?
     public var hasCodeEffect: Bool
+    /// A crop field, which blight slows.
+    public var isCrop: Bool
     public var origin: Origin
 }
 
@@ -153,7 +159,50 @@ public struct Age: Equatable, Sendable {
     public var blurb: String
     public var signature: String
     public var rivalResidents: Int
+    /// Seasons between crown orders in this age.
+    public var orderEvery: Int
     public var origin: Origin
+}
+
+/// A timed request an issuer can make (`add-orders` D4).
+public struct OrderTemplate: Equatable, Sendable {
+    public var id: String
+    /// `crown` or `rival`.
+    public var issuer: String
+    public var good: String
+    public var title: String
+    public var text: String
+    public var minAge: String?
+    public var seasons: Int
+    public var size: Int
+    public var min: Int
+    public var max: Int
+    public var reward: Int
+    public var favour: Int
+    public var penalty: Int
+    public var origin: Origin
+}
+
+/// A seasonal event: its mechanic, when it can strike and its banners
+/// (`add-event-counterplay` D3).
+public struct SeasonalEvent: Equatable, Sendable {
+    public var id: String
+    /// `fire`, `blight`, `fever` or `festival`: the mechanic, in Swift.
+    public var effect: String
+    /// The possible onset seasons, in written order.
+    public var seasons: [String]
+    public var minAge: String?
+    /// Draw weight per difficulty id.
+    public var weights: [String: Int]
+    /// Banners in written order.
+    public var banners: [Banner]
+    public var origin: Origin
+
+    public struct Banner: Equatable, Sendable {
+        public var key: String
+        public var title: String
+        public var text: String
+    }
 }
 
 /// A house tier. Its position in load order is its raw value, from 1.

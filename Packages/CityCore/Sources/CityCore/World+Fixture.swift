@@ -36,7 +36,8 @@ public extension World {
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
-        rivals: Bool = true
+        rivals: Bool = true,
+        seasonalEvents: Bool = false
     ) -> World {
         let (terrain, width, height) = switch layout {
         case .singleIsland:
@@ -44,10 +45,12 @@ public extension World {
         case .archipelago:
             (ArchipelagoGenerator.generate(seed: seed), ArchipelagoGenerator.width, ArchipelagoGenerator.height)
         }
-        return generate(
+        var world = generate(
             layout: layout, seed: seed, width: width, height: height, terrain: terrain,
             culture: culture, age: age, difficulty: difficulty, rivals: rivals
         )
+        world.seasonalEvents.enabled = seasonalEvents
+        return world
     }
 
     /// A new game on the given generator terrain: islands, town centers
@@ -170,6 +173,51 @@ public extension World {
     /// real goods-buffer stockpiles.
     mutating func seedUnlimitedTestInventory() {
         testMaterialCredits = [.wood: 999_999, .planks: 999_999, .food: 999_999]
+    }
+
+    /// Test helper: puts four orders on the board for the board's screenshots,
+    /// two accepted (a crown order whose planks are mostly in the stores, and
+    /// a rival's half delivered) and two offers, with some favour. The rival
+    /// orders name the first two rivals, so an archipelago game shows them.
+    mutating func seedOrdersShowcase() {
+        let first = rivals.first?.id ?? 1
+        let second = rivals.dropFirst().first?.id ?? first
+        let season = CalendarState.ticksPerSeason
+        struct Sample {
+            let template: OrderTemplate
+            let issuer: OrderIssuer
+            let quantity: Int
+            let reward: Int64
+            let state: OrderState
+            let delivered: Int
+        }
+        let showcase = [
+            Sample(template: .crownTimber, issuer: .crown, quantity: 54, reward: 540, state: .accepted, delivered: 0),
+            Sample(template: .rivalBread, issuer: .rival(first), quantity: 24, reward: 120, state: .accepted, delivered: 8),
+            Sample(template: .crownTools, issuer: .crown, quantity: 12, reward: 486, state: .offered, delivered: 0),
+            Sample(template: .rivalTimber, issuer: .rival(second), quantity: 30, reward: 96, state: .offered, delivered: 0)
+        ]
+        for sample in showcase {
+            let template = sample.template
+            orders.orders.append(Order(
+                id: orders.nextOrderRaw, template: template, issuer: sample.issuer, good: template.good,
+                quantity: sample.quantity, reward: sample.reward, favourGain: template.favourGain,
+                favourLoss: template.favourLoss, issuedTick: tickCount, offerEndsTick: tickCount + season,
+                deadlineTick: tickCount + 3 * season, state: sample.state, delivered: sample.delivered
+            ))
+            orders.nextOrderRaw += 1
+        }
+        orders.favour.adjust(.crown, by: 7)
+        orders.favour.adjust(.rival(first), by: 3)
+        // Exactly 38 planks in the stores, whatever the starter stock was.
+        let stores = goodsBuffers(of: .player)
+        for store in stores {
+            let held = stockpiles[store.id]?.quantity(of: .planks) ?? 0
+            stockpiles[store.id]?.withdraw(.planks, amount: held)
+        }
+        if let center = stores.first(where: { $0.kind == .townCenter }) {
+            stockpiles[center.id]?.deposit(.planks, amount: 38)
+        }
     }
 
     /// A short grain chain on a grass strip, placed by command: two

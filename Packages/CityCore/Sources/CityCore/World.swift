@@ -13,8 +13,8 @@ public struct World: Codable, Sendable, Equatable {
     public let seed: UInt64
 
     // ---- time ------------------------------------------------------
-    public private(set) var tickCount: UInt64
-    public private(set) var simulatedTime: SimulationDuration
+    public internal(set) var tickCount: UInt64
+    public internal(set) var simulatedTime: SimulationDuration
 
     /// ---- RNG -------------------------------------------------------
     public internal(set) var rng: DeterministicRNG
@@ -101,6 +101,12 @@ public struct World: Codable, Sendable, Equatable {
     /// decode an empty history (see the `KeyedDecodingContainer` overload
     /// in `Statistics.swift`).
     public internal(set) var statistics: StatisticsHistory = .init()
+    /// Timed requests from the crown and rivals, with favour. Spec: `orders`.
+    /// Saves without it decode an empty state (see `Orders.swift`).
+    public internal(set) var orders: OrdersState = .init()
+    /// Fire, blight, fever and festival. Spec: `seasonal-events`. Saves
+    /// without it decode with events off (see `SeasonalEvents.swift`).
+    public internal(set) var seasonalEvents: SeasonalEventsState = .init()
 
     /// ---- view state (persisted with the save) ---------------------
     public var camera: Camera
@@ -241,6 +247,8 @@ public struct World: Codable, Sendable, Equatable {
         runPopulationSystem(signatureSources: signatureSources)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
+        runSeasonalEventSystem(events: &events)
+        runOrderSystem(events: &events)
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
         runEconomySystem(signatureSources: signatureSources, events: &events)
@@ -317,8 +325,8 @@ public struct World: Codable, Sendable, Equatable {
         else { return }
         // Anchor lookup uses the literal tile — but multi-tile buildings
         // resolve via the building's recorded anchor.
-        let spec = BuildingCatalog.spec(for: building.kind)
-        for tile in spec.footprint.tiles(anchor: building.anchor) {
+        guard payToClear(building, events: &events) else { return }
+        for tile in building.footprint.tiles(anchor: building.anchor) {
             occupiedTiles.removeValue(forKey: tile)
         }
         buildings.removeValue(forKey: id)

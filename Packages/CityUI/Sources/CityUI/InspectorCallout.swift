@@ -124,8 +124,11 @@ public enum InspectorCalloutLayout {
     /// its capsule's band) while it shows. Spec: `platform-shells` /
     /// Minimap layout, First-hour guide.
     public static func freeArea(
-        size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false
+        size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false,
+        showsOrdersBoard: Bool = false
     ) -> CGRect {
+        // The open board collapses the first-steps card (`Order board layout`).
+        let layout = showsOrdersBoard ? layout.withFirstStepsCollapsed : layout
         let margin = layout.margin
         var top = topBarBottom(topInset: insets.top, layout: layout)
         let left = insets.leading + margin + layout.railInset
@@ -144,10 +147,13 @@ public enum InspectorCalloutLayout {
         }
         if showsFirstSteps {
             if layout.collapsesFirstSteps {
-                top = max(top, rightColumnTop + FirstStepsCardView.capsuleHeight + MinimapLayout.gap)
+                top = max(top, rightColumnTop + layout.focusableHeight(FirstStepsCardView.capsuleHeight) + MinimapLayout.gap)
             } else {
                 right = min(right, size.width - insets.trailing - margin - FirstStepsCardView.width - MinimapLayout.gap)
             }
+        }
+        if showsOrdersBoard {
+            right = min(right, size.width - insets.trailing - margin - OrderBoardLayout.width(for: layout.idiom) - MinimapLayout.gap)
         }
         return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
     }
@@ -204,7 +210,11 @@ struct InspectorCalloutView<Actions: View>: View {
             let (anchor, half) = projection(viewSize: proxy.size)
             let bounds = InspectorCalloutLayout.freeArea(
                 size: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
-                showsFirstSteps: session.firstStepsGuide != nil
+                showsFirstSteps: session.firstStepsGuide != nil,
+                showsOrdersBoard: session.isOrdersPresented && OrderBoardLayout.presentation(
+                    in: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
+                    showsFirstSteps: session.firstStepsGuide != nil
+                ) == .column
             )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,
@@ -234,7 +244,7 @@ struct InspectorCalloutView<Actions: View>: View {
 
     private func projection(of building: Building, viewSize: CGSize) -> (CGPoint, CGSize) {
         let camera = session.world.camera
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         let first = PlacementHUDLayout.viewPoint(forTile: building.anchor, camera: camera, viewSize: viewSize)
         let last = PlacementHUDLayout.viewPoint(
             forTile: TileCoordinate(x: building.anchor.x + footprint.width - 1, y: building.anchor.y + footprint.height - 1),

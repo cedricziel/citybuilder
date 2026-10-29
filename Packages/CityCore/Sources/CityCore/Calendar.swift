@@ -140,8 +140,9 @@ extension World {
         events.append(.historyEvent(event))
     }
 
+    /// Every operational player store but the granaries, which rats skip.
     private var playerFoodStores: [(id: EntityID, food: Int)] {
-        goodsBuffers(of: .player).filter { $0.state == .operational }.map {
+        goodsBuffers(of: .player).filter { $0.state == .operational && $0.kind != .granary }.map {
             ($0.id, stockpiles[$0.id]?.quantity(of: .food) ?? 0)
         }
     }

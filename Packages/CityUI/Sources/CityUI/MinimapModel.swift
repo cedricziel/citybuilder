@@ -119,7 +119,7 @@ public final class MinimapModel {
         let newBuildings = snapshot.buildings.values
             .sorted { $0.id.raw < $1.id.raw }
             .map { building in
-                let footprint = BuildingCatalog.spec(for: building.kind).footprint
+                let footprint = building.footprint
                 return MinimapBuildingMarker(
                     id: building.id,
                     anchor: building.anchor,

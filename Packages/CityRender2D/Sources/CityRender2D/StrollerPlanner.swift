@@ -46,7 +46,7 @@ public enum StrollerPlanner {
     /// Deterministic: ties break by distance, then reading order, and the search visits neighbours in
     /// a fixed order.
     static func nearbyRoads(of house: Building, in roads: Set<TileCoordinate>) -> [TileCoordinate] {
-        let footprint = BuildingCatalog.spec(for: house.kind).footprint
+        let footprint = house.footprint
         let xs = (house.anchor.x - reach) ... (house.anchor.x + footprint.width - 1 + reach)
         let ys = (house.anchor.y - reach) ... (house.anchor.y + footprint.height - 1 + reach)
         let near = roads.filter { xs.contains($0.x) && ys.contains($0.y) }

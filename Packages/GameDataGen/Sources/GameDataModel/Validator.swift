@@ -13,12 +13,16 @@ struct Validator {
             ages: unique(data.ages, kind: "Age", id: \.id, origin: \.origin),
             tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin)
         )
+        _ = unique(data.orders, kind: "Order", id: \.id, origin: \.origin)
+        _ = unique(data.events, kind: "Event", id: \.id, origin: \.origin)
         data.goods.forEach { check($0, refs) }
         data.tiers.forEach { check($0, refs) }
         data.buildings.forEach { check($0, refs) }
         data.cultures.forEach { check($0, refs) }
         data.techs.forEach { check($0, refs) }
         data.ages.forEach { check($0, refs) }
+        data.orders.forEach { check($0, refs) }
+        data.events.forEach { check($0, refs) }
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
         checkConsumers()
@@ -135,6 +139,36 @@ struct Validator {
         if case let .terrain(type, _)? = building.placement, !ItemSchema.terrainTypes.contains(type) {
             report("unknown terrain `\(type)`; expected one of \(ItemSchema.terrainTypes.sorted().joined(separator: ", "))")
         }
+        if let accepts = building.accepts {
+            if building.storagePerGood == nil { report("`accepts` needs `storagePerGood`: only a store limits its goods") }
+            checkGoods(accepts.map { GoodAmount(good: $0, amount: 1) }, field: "accepts", refs, report)
+        }
+        if building.isCrop, building.recipe?.outputs.isEmpty ?? true { report("`crop` needs a recipe that grows a good") }
+    }
+
+    private func check(_ event: SeasonalEvent, _ refs: References) {
+        let report = reporter("Event", event.id, event.origin)
+        if !ItemSchema.eventEffects.contains(event.effect) {
+            report("`effect` must be one of \(ItemSchema.eventEffects.sorted().joined(separator: ", ")), not `\(event.effect)`")
+        }
+        if let age = event.minAge, refs.ages[age] == nil { report("`minAge` names unknown age `\(age)`") }
+        if event.seasons.isEmpty { report("`seasons` must name at least one season") }
+        for season in event.seasons where !ItemSchema.seasons.contains(season) {
+            report("`seasons` names unknown season `\(season)`")
+        }
+        if ItemSchema.hazardEffects.contains(event.effect), event.seasons.contains("spring") {
+            report("a \(event.effect) can't strike in spring: its warning would come the season before, in the previous year")
+        }
+        for difficulty in ItemSchema.difficulties {
+            guard let weight = event.weights[difficulty] else {
+                report("`weight` is missing `\(difficulty)`")
+                continue
+            }
+            if weight < 0 { report("`weight` for \(difficulty) must not be negative") }
+        }
+        for banner in event.banners where banner.title.isEmpty {
+            report("`banners.\(banner.key).title` must not be empty")
+        }
     }
 
     /// A planter plants within its catchment, and a harvester's Swift behaviour cuts within it, so
@@ -243,6 +277,24 @@ struct Validator {
         let report = reporter("Age", age.id, age.origin)
         if refs.buildings[age.signature] == nil { report("`signature` names unknown building `\(age.signature)`") }
         if age.rivalResidents < 0 { report("`rivalResidents` must not be negative") }
+        if !(1 ... 12).contains(age.orderEvery) { report("`orderEvery` must be from 1 to 12 seasons") }
+    }
+
+    private func check(_ order: OrderTemplate, _ refs: References) {
+        let report = reporter("Order", order.id, order.origin)
+        if !ItemSchema.orderIssuers.contains(order.issuer) {
+            report("`issuer` must be one of \(ItemSchema.orderIssuers.sorted().joined(separator: ", ")), not `\(order.issuer)`")
+        }
+        if refs.goods[order.good] == nil { report("`good` names unknown good `\(order.good)`") }
+        if let age = order.minAge, refs.ages[age] == nil { report("`minAge` names unknown age `\(age)`") }
+        if order.title.isEmpty { report("`title` must not be empty") }
+        if order.text.count > 100 { report("`text` is \(order.text.count) characters; the limit is 100") }
+        if !(1 ... 8).contains(order.seasons) { report("`seasons` must be from 1 to 8") }
+        if !(1 ... 300).contains(order.size) { report("`size` must be from 1 to 300 percent") }
+        if order.min < 1 { report("`min` must be at least 1") }
+        if order.min > order.max { report("`min` must not be above `max`") }
+        if !(0 ... 500).contains(order.reward) { report("`reward` must be from 0 to 500 percent") }
+        if order.favour < 0 || order.penalty < 0 { report("`favour` and `penalty` must not be negative") }
     }
 
     // MARK: - Consumers

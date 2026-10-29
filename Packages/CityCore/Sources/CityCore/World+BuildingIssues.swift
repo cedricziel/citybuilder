@@ -36,7 +36,7 @@ public extension World {
         let components = roadComponents()
         let storageComponents = Set(goodsBuffers(of: .player).compactMap { buffer -> Int? in
             guard buffer.state == .operational else { return nil }
-            let footprint = BuildingCatalog.spec(for: buffer.kind).footprint
+            let footprint = buffer.footprint
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).flatMap { components[$0] }
         })
         var issues: [EntityID: BuildingIssue] = [:]
@@ -51,7 +51,7 @@ public extension World {
             }
             let recipe = Self.activeRecipe(of: building)
             guard building.kind == .house || recipe != nil else { continue }
-            let footprint = BuildingCatalog.spec(for: building.kind).footprint
+            let footprint = building.footprint
             guard let road = anyAdjacentRoad(anchor: building.anchor, footprint: footprint) else {
                 issues[building.id] = .noRoad
                 continue

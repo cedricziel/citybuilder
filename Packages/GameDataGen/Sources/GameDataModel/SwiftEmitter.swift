@@ -31,7 +31,9 @@ public enum SwiftEmitter {
             ("Culture+Generated.swift", types.culture),
             ("Tech+Generated.swift", types.tech),
             ("Age+Generated.swift", types.age),
-            ("HouseTier+Generated.swift", types.houseTier)
+            ("HouseTier+Generated.swift", types.houseTier),
+            ("OrderTemplate+Generated.swift", types.orderTemplate),
+            ("SeasonalEvent+Generated.swift", types.seasonalEvent)
         ]
         guard let namespace else {
             return Dictionary(uniqueKeysWithValues: files.map { ($0.0, banner + $0.1 + footer) })
@@ -113,7 +115,9 @@ private struct Types {
             property("catchmentRadius", "Int?", all.map { ($0.id, $0.catchmentRadius.map(String.init) ?? "nil") }),
             property("category", "String?", all.map { ($0.id, $0.category.map(literal) ?? "nil") }),
             property("culture", "Culture?", all.map { ($0.id, optionalCase($0.culture)) }),
-            property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) })
+            property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) }),
+            property("accepts", "Set<Good>?", all.map { ($0.id, $0.accepts.map { caseList($0.sorted()) } ?? "nil") }),
+            property("isCrop", "Bool", all.map { ($0.id, "\($0.isCrop)") })
         ])
     }
 
@@ -172,7 +176,40 @@ private struct Types {
             property("startYear", "Int", all.map { ($0.id, "\($0.startYear)") }),
             property("blurb", "String", all.map { ($0.id, literal($0.blurb)) }),
             property("signature", "BuildingKind", all.map { ($0.id, ".\(caseName($0.signature))") }),
-            property("rivalResidents", "Int", all.map { ($0.id, "\($0.rivalResidents)") })
+            property("rivalResidents", "Int", all.map { ($0.id, "\($0.rivalResidents)") }),
+            property("orderEvery", "Int", all.map { ($0.id, "\($0.orderEvery)") })
+        ])
+    }
+
+    var orderTemplate: String {
+        let all = data.orders
+        return enumDecl("OrderTemplate", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
+            property("issuer", "OrderIssuerKind", all.map { ($0.id, ".\(caseName($0.issuer))") }),
+            property("good", "Good", all.map { ($0.id, ".\(caseName($0.good))") }),
+            property("title", "String", all.map { ($0.id, literal($0.title)) }),
+            property("text", "String", all.map { ($0.id, literal($0.text)) }),
+            property("minAge", "Age?", all.map { ($0.id, optionalCase($0.minAge)) }),
+            property("seasons", "Int", all.map { ($0.id, "\($0.seasons)") }),
+            property("sizePercent", "Int", all.map { ($0.id, "\($0.size)") }),
+            property("minUnits", "Int", all.map { ($0.id, "\($0.min)") }),
+            property("maxUnits", "Int", all.map { ($0.id, "\($0.max)") }),
+            property("rewardPercent", "Int", all.map { ($0.id, "\($0.reward)") }),
+            property("favourGain", "Int", all.map { ($0.id, "\($0.favour)") }),
+            property("favourLoss", "Int", all.map { ($0.id, "\($0.penalty)") })
+        ])
+    }
+
+    var seasonalEvent: String {
+        let all = data.events
+        let firstAge = data.ages.first?.id ?? ""
+        return enumDecl("SeasonalEvent", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
+            property("effect", "SeasonalEffect", all.map { ($0.id, ".\(caseName($0.effect))") }),
+            property("seasons", "[Season]", all.map { ($0.id, caseList($0.seasons)) }),
+            property("minAge", "Age", all.map { ($0.id, ".\(caseName($0.minAge ?? firstAge))") }),
+            property("weights", "[Difficulty: Int]", all.map { event in
+                (event.id, "[" + ItemSchema.difficulties.map { ".\($0): \(event.weights[$0] ?? 0)" }.joined(separator: ", ") + "]")
+            }),
+            property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) })
         ])
     }
 
@@ -217,6 +254,14 @@ private struct Types {
     private func amounts(_ amounts: GoodAmounts) -> String {
         guard !amounts.isEmpty else { return "[:]" }
         return "[" + amounts.sorted { $0.good < $1.good }.map { ".\(caseName($0.good)): \($0.amount)" }.joined(separator: ", ") + "]"
+    }
+
+    /// `[.warning: SeasonalBanner(title: …, text: …)]`, in `ItemSchema.eventBanners` order.
+    private func banners(_ banners: [SeasonalEvent.Banner]) -> String {
+        let ordered = ItemSchema.eventBanners.compactMap { key in banners.first { $0.key == key } }
+        guard !ordered.isEmpty else { return "[:]" }
+        return "[" + ordered.map { ".\($0.key): SeasonalBanner(title: \(literal($0.title)), text: \(literal($0.text)))" }
+            .joined(separator: ", ") + "]"
     }
 
     private func optionalCase(_ id: String?) -> String {

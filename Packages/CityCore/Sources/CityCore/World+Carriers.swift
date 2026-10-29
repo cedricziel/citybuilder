@@ -53,7 +53,9 @@ extension World {
         case let .deliver(good, amount, _, destination),
              let .retrieve(good, amount, _, destination),
              let .deliverToConsumer(good, amount, _, destination):
-            let placed = stockpiles[destination]?.deposit(good, amount: amount) ?? 0
+            // A burning building takes no deliveries until it is out.
+            let open = buildings[destination]?.state != .burning
+            let placed = open ? stockpiles[destination]?.deposit(good, amount: amount) ?? 0 : 0
             if placed > 0 {
                 events.append(.carrierArrived(carrier: carrier.id, at: arrivalTile, good: good, amount: placed))
             }
@@ -138,7 +140,7 @@ extension World {
             let inFlight = carrierCountByProducer[producerId, default: 0]
             guard inFlight < CarrierConfig.perProducerCap else { continue }
             guard let producerStock = stockpiles[producerId] else { continue }
-            let footprint = BuildingCatalog.spec(for: building.kind).footprint
+            let footprint = building.footprint
             guard let road = anyAdjacentRoad(anchor: building.anchor, footprint: footprint)
             else { continue }
 
@@ -255,7 +257,7 @@ extension World {
                   needsSupply(building.id, good: good, amount: consumer.amount),
                   let consumerRoad = anyAdjacentRoad(
                       anchor: building.anchor,
-                      footprint: BuildingCatalog.spec(for: building.kind).footprint
+                      footprint: building.footprint
                   ),
                   candidates.components.labels[consumerRoad] == component,
                   let path = PathFinder.path(from: road, to: consumerRoad, in: roadGraph)
@@ -315,7 +317,7 @@ extension World {
                 )
                 if !onIsland { continue }
             }
-            let footprint = BuildingCatalog.spec(for: site.kind).footprint
+            let footprint = site.footprint
             guard let siteRoad = anyAdjacentRoad(anchor: site.anchor, footprint: footprint)
             else { continue }
             guard let path = PathFinder.path(from: start, to: siteRoad, in: roadGraph)
@@ -331,7 +333,7 @@ extension World {
         building: Building,
         tileToIsland: [TileCoordinate: IslandID]
     ) -> IslandID? {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         for tile in footprint.tiles(anchor: building.anchor) {
             if let id = tileToIsland[tile] { return id }
         }
@@ -376,7 +378,7 @@ extension World {
             let id = building.id
             guard let bufferRoad = anyAdjacentRoad(
                 anchor: building.anchor,
-                footprint: BuildingCatalog.spec(for: building.kind).footprint
+                footprint: building.footprint
             )
             else { continue }
             guard let stock = stockpiles[id], stock.room(for: good) > inbound(good, id) else { continue }

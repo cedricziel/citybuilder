@@ -10,7 +10,7 @@ public extension World {
     /// buildings it's the full footprint.
     func isRoadConnected(building: Building) -> Bool {
         let connectivityTiles = building.landFaceTiles.isEmpty
-            ? BuildingCatalog.spec(for: building.kind).footprint.tiles(anchor: building.anchor)
+            ? building.footprint.tiles(anchor: building.anchor)
             : building.landFaceTiles
         for tile in connectivityTiles {
             for neighbor in orthogonalNeighbors(of: tile) where roadGraph.roadTiles.contains(neighbor) {
@@ -22,7 +22,7 @@ public extension World {
 
     /// Building kinds that take carrier deliveries and supply house
     /// needs. Spec: `warehouses-and-logistics` / Goods buffer storage.
-    static let logisticsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .townCenter]
+    static let logisticsBufferKinds: Set<BuildingKind> = [.warehouse, .port, .townCenter, .granary]
 
     /// Goods-buffer query — returns every warehouse, port and town
     /// center in the world, sorted by `EntityID.raw` so callers that

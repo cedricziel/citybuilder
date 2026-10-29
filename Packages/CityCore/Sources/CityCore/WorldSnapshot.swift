@@ -89,6 +89,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let market: [MarketQuote]
     /// The player's finished seasons. Spec: `statistics` / The Statistics sheet.
     public let statistics: StatisticsHistory
+    /// The order board, favour and the shipments on the road. Spec:
+    /// `platform-shells` / Order board.
+    public let orders: OrdersState
 
     public init(
         tickCount: UInt64,
@@ -116,7 +119,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         houseModifiers: [EntityID: HouseModifiers] = [:],
         rivals: [RivalSummary] = [],
         market: [MarketQuote] = [],
-        statistics: StatisticsHistory = StatisticsHistory()
+        statistics: StatisticsHistory = StatisticsHistory(),
+        orders: OrdersState = OrdersState()
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -144,6 +148,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.rivals = rivals
         self.market = market
         self.statistics = statistics
+        self.orders = orders
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -186,8 +191,10 @@ public struct RivalSummary: Hashable, Sendable {
     /// Goods across the rival's buffers, which its market offers come
     /// from (`add-rival-trade` D5).
     public let stock: [Good: Int]
+    /// Price improvement from the player's favour with this rival, in percent.
+    public let priceBonusPercent: Int
 
-    public init(_ rival: RivalTown, stock: [Good: Int] = [:]) {
+    public init(_ rival: RivalTown, stock: [Good: Int] = [:], priceBonusPercent: Int = 0) {
         id = rival.id
         name = rival.name
         colour = rival.colour
@@ -195,14 +202,15 @@ public struct RivalSummary: Hashable, Sendable {
         age = rival.age
         islandID = rival.islandID
         self.stock = stock
+        self.priceBonusPercent = priceBonusPercent
     }
 
     public var sellOffers: [RivalOffer] {
-        RivalMarket.sellOffers(stock: stock)
+        RivalMarket.sellOffers(stock: stock, bonusPercent: priceBonusPercent)
     }
 
     public var buyOffers: [RivalOffer] {
-        RivalMarket.buyOffers(stock: stock)
+        RivalMarket.buyOffers(stock: stock, bonusPercent: priceBonusPercent)
     }
 }
 
@@ -221,7 +229,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: Array(carriers.values),
+            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier) + watchmenOnTheRoad,
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,
@@ -237,9 +245,10 @@ public extension World {
             culture: culture,
             age: age,
             houseModifiers: snapshotHouseModifiers(),
-            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id)) },
+            rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id), priceBonusPercent: rivalPriceBonusPercent($0.id)) },
             market: marketQuotes,
-            statistics: statistics
+            statistics: statistics,
+            orders: orders
         )
     }
 
@@ -256,21 +265,12 @@ public extension World {
 
     private func roadDisconnectedBuildings() -> Set<EntityID> {
         Set(buildings.values.lazy.filter { building in
-            building.kind != .road && !roadGraph.isAnchorRoadConnected(
+            building.kind != .road && building.kind != .ruins && !roadGraph.isAnchorRoadConnected(
                 building.anchor,
-                footprint: BuildingCatalog.spec(for: building.kind).footprint
+                footprint: building.footprint
             )
         }.map(\.id))
     }
-
-    /// Building kinds whose stockpiles count toward island aggregates.
-    /// Producer-internal output buffers (sawmill, lumberjack hut) are
-    /// excluded — those are in-transit. The town center is included
-    /// because it's the bootstrap goods-buffer that holds the starter
-    /// inventory players spend on their first placements.
-    private static let goodsBufferKinds: Set<BuildingKind> = [
-        .warehouse, .port, .shipyard, .townCenter
-    ]
 
     private func buildIslandSummaries(
         tileToIsland: [TileCoordinate: IslandID]
@@ -278,7 +278,7 @@ public extension World {
         var stockpileByIsland: [IslandID: [Good: Int]] = [:]
         var capacityByIsland: [IslandID: [Good: Int]] = [:]
         for (id, building) in buildings {
-            guard Self.goodsBufferKinds.contains(building.kind) else { continue }
+            guard Self.placementBufferKinds.contains(building.kind) else { continue }
             guard let islandID = islandID(forBuilding: building, tileToIsland: tileToIsland)
             else { continue }
             if let stockpile = stockpiles[id] {
@@ -286,7 +286,7 @@ public extension World {
                     stockpileByIsland[islandID, default: [:]][good, default: 0] += amount
                 }
                 if stockpile.capacity > 0 {
-                    for good in Good.allCases {
+                    for good in Good.allCases where stockpile.accepts(good) {
                         capacityByIsland[islandID, default: [:]][good, default: 0] += stockpile.capacity
                     }
                 }

@@ -1,4 +1,5 @@
 import CityCore
+import CityRender2D
 import Foundation
 
 /// Debug-only starting states for the Apple TV walk-through UI tests.
@@ -34,6 +35,14 @@ public enum UITestSeed {
         if let yard = world.buildings.values.first(where: { $0.kind == .shipyard && $0.owner == .player }) {
             world.emitShip(fromShipyard: yard.id)
         }
+        return world
+    }
+
+    /// `-uiTestSeedOrders`: a new archipelago game with four orders on the board, two accepted and
+    /// two offered, and some favour. Shots of the order board start from it (`-uiTestOpenOrders`).
+    public static func ordersWorld() -> World {
+        var world = World.newGame(layout: .archipelago, seed: 0)
+        world.seedOrdersShowcase()
         return world
     }
 
@@ -94,6 +103,7 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedShore") { return shoreWorld() }
         if arguments.contains("-uiTestSeedPort") { return portWorld() }
         if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
+        if arguments.contains("-uiTestSeedOrders") { return ordersWorld() }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
@@ -131,6 +141,11 @@ public enum UITestSeed {
     /// `-uiTestOpenStocks`: the started game opens with the stocks tray shown, for shots of the goods icons.
     public static func opensStocks(fromArguments arguments: [String]) -> Bool {
         arguments.contains("-uiTestOpenStocks")
+    }
+
+    /// `-uiTestOpenOrders`: the started game opens with the order board shown.
+    public static func opensOrders(fromArguments arguments: [String]) -> Bool {
+        arguments.contains("-uiTestOpenOrders")
     }
 
     /// `-uiTestOpenStatistics`: the started game opens with the Statistics sheet shown, on the tab named after it.
@@ -210,12 +225,12 @@ public enum UITestSeed {
         return world
     }
 
-    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), or the
-    /// kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
+    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`) that has
+    /// its art, or the kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         let value = arguments[flag + 1]
-        let category = BuildingKind.allCases.filter { $0.category == value }
+        let category = BuildingKind.allCases.filter { $0.category == value && !PendingArt.buildingKinds.contains($0) }
         return category.isEmpty ? value.split(separator: ",").compactMap { BuildingKind(rawValue: String($0)) } : category
     }
 

@@ -3,6 +3,7 @@
 defaults:
   garden: &garden
     category: gather
+    crop: true                     # blight slows it (add-event-counterplay D6)
     footprint: [2, 2]
     cost: 60
     buildTicks: 25

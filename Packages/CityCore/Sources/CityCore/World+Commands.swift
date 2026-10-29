@@ -4,6 +4,7 @@ import Foundation
 /// demolition, routes and forest harvesting. Kept out of `World.swift` so
 /// that file stays under SwiftLint's length limit.
 extension World {
+    // swiftlint:disable:next cyclomatic_complexity
     mutating func apply(_ command: Command, events: inout [WorldEvent]) {
         switch command {
         case .noop:
@@ -26,6 +27,14 @@ extension World {
             applySetExport(caravanserai, good: good)
         case .marketBuy, .marketSell, .rivalMarketBuy, .rivalMarketSell:
             applyMarketCommand(command, events: &events)
+        case let .acceptOrder(id):
+            applyAcceptOrder(id, events: &events)
+        case let .declineOrder(id):
+            applyDeclineOrder(id)
+        case let .abandonOrder(id):
+            applyAbandonOrder(id, events: &events)
+        case let .dispatchOrder(id):
+            applyDispatch(id)
         }
     }
 
@@ -137,7 +146,7 @@ extension World {
     /// pack's `storagePerGood`, shared for those with `storage`; nil for a
     /// kind with no stockpile, e.g. roads.
     static func newStockpile(for kind: BuildingKind) -> Stockpile? {
-        if let perGood = kind.storagePerGood { return Stockpile(perGood: perGood) }
+        if let perGood = kind.storagePerGood { return Stockpile(perGood: perGood, accepting: kind.accepts) }
         return kind.storage.map { Stockpile(capacity: $0) }
     }
 }

@@ -66,7 +66,7 @@ public enum PlazaCrowdPlanner {
     /// (one rank apart), so no two stand on the same spot; each rank sets
     /// off a little later, so a lane never moves in step.
     static func figure(center: Building, slot: Int, layout: PlazaLayout, tick: UInt64, reduceMotion: Bool) -> Figure {
-        let footprint = BuildingCatalog.spec(for: center.kind).footprint
+        let footprint = center.footprint
         let laneIndex = slot % layout.lanes.count, rank = slot / layout.lanes.count
         let lane = layout.lanes[laneIndex]
         let stagger = UInt64(laneIndex) * ticksPerVisit / UInt64(layout.lanes.count) + UInt64(center.id.raw) * 13

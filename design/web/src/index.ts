@@ -30,6 +30,8 @@ export * from "./components/ToolStrip/ToolStrip";
 export * from "./components/Minimap/Minimap";
 export * from "./components/MarketPanel/MarketPanel";
 export * from "./components/RivalMarketPanel/RivalMarketPanel";
+export * from "./components/OrdersBoard/OrdersBoard";
+export * from "./components/OrdersChip/OrdersChip";
 export * from "./components/StandingsPanel/StandingsPanel";
 export * from "./components/StatisticsPanel/StatisticsPanel";
 export * from "./components/CostBreakdown/CostBreakdown";

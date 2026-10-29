@@ -115,6 +115,46 @@ public enum WorldEvent: Sendable {
     /// The player bought or sold `quantity` units of `good` for `total` at
     /// the town market. Spec: `town-market` / Market trades are reported.
     case marketTraded(good: Good, quantity: Int, total: Int64, direction: TradeDirection)
+
+    // MARK: Orders
+
+    /// An order went on the board. Spec: `orders`.
+    case orderOffered(order: OrderID, issuer: OrderIssuer)
+    /// The player accepted an offer.
+    case orderAccepted(order: OrderID)
+    /// An accepted order was delivered in full and paid `reward`.
+    case orderFulfilled(order: OrderID, reward: Int64)
+    /// An accepted order missed its deadline or was abandoned.
+    case orderFailed(order: OrderID)
+    /// An offer was not accepted in time.
+    case orderExpired(order: OrderID)
+
+    // MARK: Seasonal events
+
+    /// A hazard was warned on the first tick of the season before `onset`.
+    /// Spec: `seasonal-events`.
+    case seasonalEventWarned(event: SeasonalEvent, onset: Season)
+    /// A seasonal event began.
+    case seasonalEventStarted(event: SeasonalEvent)
+    /// A seasonal event ended with what it cost the town.
+    case seasonalEventEnded(event: SeasonalEvent, toll: SeasonalEventToll)
+    /// A building caught fire. Spec: `seasonal-events` / Fire.
+    case buildingCaughtFire(building: EntityID, kind: BuildingKind)
+    /// A fire went out without the building burning down.
+    case fireExtinguished(building: EntityID)
+    /// A building burnt down and is now ruins of `kind`.
+    case buildingBurntDown(building: EntityID, kind: BuildingKind)
+    /// The player cleared ruins with Demolish.
+    case ruinsCleared(building: EntityID)
+    /// A demolition was refused. Spec: `buildings-and-construction` /
+    /// Ruins block their plot until cleared.
+    case demolitionRejected(building: EntityID, reason: DemolitionRejection)
+}
+
+/// Why a demolition was refused.
+public enum DemolitionRejection: Hashable, Sendable {
+    /// Clearing ruins costs more than the treasury holds.
+    case notEnoughMoney
 }
 
 /// Which way goods went in a trade, from the player's point of view.
@@ -185,6 +225,28 @@ extension WorldEvent: Equatable {
                 && lDirection == rDirection
         case let (.marketTraded(lGood, lQuantity, lTotal, lDirection), .marketTraded(rGood, rQuantity, rTotal, rDirection)):
             return (lGood, lQuantity, lTotal, lDirection) == (rGood, rQuantity, rTotal, rDirection)
+        case let (.orderOffered(lOrder, lIssuer), .orderOffered(rOrder, rIssuer)):
+            return lOrder == rOrder && lIssuer == rIssuer
+        case let (.orderFulfilled(lOrder, lReward), .orderFulfilled(rOrder, rReward)):
+            return lOrder == rOrder && lReward == rReward
+        case let (.orderAccepted(lOrder), .orderAccepted(rOrder)),
+             let (.orderFailed(lOrder), .orderFailed(rOrder)),
+             let (.orderExpired(lOrder), .orderExpired(rOrder)):
+            return lOrder == rOrder
+        case let (.seasonalEventWarned(lEvent, lOnset), .seasonalEventWarned(rEvent, rOnset)):
+            return lEvent == rEvent && lOnset == rOnset
+        case let (.seasonalEventStarted(lEvent), .seasonalEventStarted(rEvent)):
+            return lEvent == rEvent
+        case let (.seasonalEventEnded(lEvent, lToll), .seasonalEventEnded(rEvent, rToll)):
+            return lEvent == rEvent && lToll == rToll
+        case let (.buildingCaughtFire(lBuilding, lKind), .buildingCaughtFire(rBuilding, rKind)),
+             let (.buildingBurntDown(lBuilding, lKind), .buildingBurntDown(rBuilding, rKind)):
+            return lBuilding == rBuilding && lKind == rKind
+        case let (.fireExtinguished(lBuilding), .fireExtinguished(rBuilding)),
+             let (.ruinsCleared(lBuilding), .ruinsCleared(rBuilding)):
+            return lBuilding == rBuilding
+        case let (.demolitionRejected(lBuilding, lReason), .demolitionRejected(rBuilding, rReason)):
+            return lBuilding == rBuilding && lReason == rReason
         default:
             return false
         }
@@ -218,7 +280,12 @@ public extension WorldEvent {
              let .monumentCompleted(building),
              let .commissionStarted(building),
              let .commissionEnded(building),
-             let .caravanSold(building, _, _):
+             let .caravanSold(building, _, _),
+             let .buildingCaughtFire(building, _),
+             let .fireExtinguished(building),
+             let .buildingBurntDown(building, _),
+             let .ruinsCleared(building),
+             let .demolitionRejected(building, _):
             return building
         case .forestHarvested,
              .placementRejected,
@@ -233,7 +300,15 @@ public extension WorldEvent {
              .scenarioWon,
              .rivalAgeAdvanced,
              .tradeCompleted,
-             .marketTraded:
+             .marketTraded,
+             .orderOffered,
+             .orderAccepted,
+             .orderFulfilled,
+             .orderFailed,
+             .orderExpired,
+             .seasonalEventWarned,
+             .seasonalEventStarted,
+             .seasonalEventEnded:
             return nil
         }
     }
@@ -250,7 +325,9 @@ public extension WorldEvent {
              let .productionCycleCompleted(_, kind),
              let .productionStalled(_, kind),
              let .productionResumed(_, kind),
-             let .fuelRanOut(_, kind):
+             let .fuelRanOut(_, kind),
+             let .buildingCaughtFire(_, kind),
+             let .buildingBurntDown(_, kind):
             return kind
         case let .placementRejected(kind, _):
             return kind
@@ -276,7 +353,18 @@ public extension WorldEvent {
              .caravanSold,
              .rivalAgeAdvanced,
              .tradeCompleted,
-             .marketTraded:
+             .marketTraded,
+             .orderOffered,
+             .orderAccepted,
+             .orderFulfilled,
+             .orderFailed,
+             .orderExpired,
+             .seasonalEventWarned,
+             .seasonalEventStarted,
+             .seasonalEventEnded,
+             .fireExtinguished,
+             .ruinsCleared,
+             .demolitionRejected:
             return nil
         }
     }
@@ -318,6 +406,19 @@ public extension WorldEvent {
         case .tradeCompleted: return 28
         case .forestPlanted: return 29
         case .marketTraded: return 30
+        case .orderOffered: return 31
+        case .orderAccepted: return 32
+        case .orderFulfilled: return 33
+        case .orderFailed: return 34
+        case .orderExpired: return 35
+        case .seasonalEventWarned: return 36
+        case .seasonalEventStarted: return 37
+        case .seasonalEventEnded: return 38
+        case .buildingCaughtFire: return 39
+        case .fireExtinguished: return 40
+        case .buildingBurntDown: return 41
+        case .ruinsCleared: return 42
+        case .demolitionRejected: return 43
         }
     }
 }

@@ -56,7 +56,8 @@ extension World {
     /// Upkeep of every owner's operational buildings, unscaled.
     private func upkeepByOwner(sources: [Building]) -> [Owner: Int64] {
         var totals: [Owner: Int64] = [:]
-        for building in buildings.values where building.state == .operational {
+        // A burning building still costs its upkeep.
+        for building in buildings.values where building.state == .operational || building.state == .burning {
             totals[building.owner, default: 0] += upkeep(of: building, sources: sources)
         }
         return totals
@@ -67,7 +68,7 @@ extension World {
     /// with the owner's monument bonus.
     private func taxesByOwner(sources: [Building]) -> [Owner: Int64] {
         var taxes: [Owner: Int64] = [:]
-        for (id, pop) in populations {
+        for (id, pop) in populations where buildings[id]?.state != .burning {
             taxes[owner(of: id), default: 0] += houseTax(house: id, population: pop, sources: sources)
         }
         for (owner, amount) in taxes {
@@ -111,6 +112,6 @@ public extension World {
     /// Whether a road touches the building's footprint. Spec:
     /// `platform-shells` / First-hour guide.
     func isRoadConnected(_ building: Building) -> Bool {
-        anyAdjacentRoad(anchor: building.anchor, footprint: BuildingCatalog.spec(for: building.kind).footprint) != nil
+        anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint) != nil
     }
 }

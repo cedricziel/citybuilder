@@ -1,0 +1,41 @@
+.cb-orders-chip {
+  position: relative;
+  display: inline-flex;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cb-orders-chip__face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cb-orders-chip__dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cb-red);
+  box-shadow: 0 0 0 1.5px var(--cb-bg);
+}
+
+.cb-orders-chip__badge {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--cb-accent);
+  color: var(--cb-on-accent);
+  text-align: center;
+  line-height: 16px;
+}

@@ -1,0 +1,90 @@
+.cb-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.cb-orders__head,
+.cb-orders__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-orders__row--body {
+  gap: 10px;
+}
+
+.cb-orders__grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cb-orders__close {
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.cb-orders__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.25);
+}
+
+.cb-orders__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cb-orders__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--cb-fill-secondary);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.cb-orders__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+
+.cb-orders__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--cb-fill-secondary);
+}
+
+.cb-orders__card--accepted {
+  box-shadow: inset 0 0 0 1.5px var(--cb-accent);
+}
+
+.cb-orders__reward {
+  text-align: right;
+}
+
+.cb-orders__progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--cb-fill);
+  overflow: hidden;
+}
+
+.cb-orders__progress > div {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cb-green);
+}

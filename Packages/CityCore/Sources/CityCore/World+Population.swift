@@ -58,7 +58,7 @@ extension World {
     /// the good and the last consumption of it was not short. `goods` is
     /// every tier's needs, so a house knows them before it advances.
     private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], building: Building, reach: SupplyReach) {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         for good in goods {
             let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint, reach: reach)
             pop.setSatisfied(good, inReach && !pop.isShort(good))
@@ -90,7 +90,7 @@ extension World {
     private func updateTier(
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach, pastGrace: Bool
     ) {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         let canAdvance = pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
                 && bindingNeeds(of: next, for: building.owner, advancing: true)

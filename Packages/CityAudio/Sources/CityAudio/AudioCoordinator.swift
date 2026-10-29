@@ -163,6 +163,19 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .rivalAgeAdvanced: return "rivalAgeAdvanced"
         case .tradeCompleted: return "tradeCompleted"
         case .marketTraded: return "marketTraded"
+        case .orderOffered: return "orderOffered"
+        case .orderAccepted: return "orderAccepted"
+        case .orderFulfilled: return "orderFulfilled"
+        case .orderFailed: return "orderFailed"
+        case .orderExpired: return "orderExpired"
+        case .seasonalEventWarned: return "seasonalEventWarned"
+        case .seasonalEventStarted: return "seasonalEventStarted"
+        case .seasonalEventEnded: return "seasonalEventEnded"
+        case .buildingCaughtFire: return "buildingCaughtFire"
+        case .fireExtinguished: return "fireExtinguished"
+        case .buildingBurntDown: return "buildingBurntDown"
+        case .ruinsCleared: return "ruinsCleared"
+        case .demolitionRejected: return "demolitionRejected"
         }
     }
 }
