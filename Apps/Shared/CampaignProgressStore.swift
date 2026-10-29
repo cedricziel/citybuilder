@@ -11,7 +11,8 @@ enum CampaignProgressStore {
 
     static func make() -> CampaignProgressModel {
         let sync = CampaignProgressSync(store: UbiquitousKeyValueStore())
-        let model = CampaignProgressModel(progress: sync.progress) { chapter, difficulty, laurels in
+        // The stored copy arrives a moment later, merged with iCloud's.
+        let model = CampaignProgressModel { chapter, difficulty, laurels in
             await sync.recordWin(of: chapter, difficulty: difficulty, laurels: laurels)
         }
         observer = sync.observeExternalChanges { progress in
@@ -19,7 +20,7 @@ enum CampaignProgressStore {
         }
         Task {
             await sync.pullCloudToLocal()
-            let progress = sync.progress
+            let progress = await sync.progress
             model.merge(progress)
         }
         return model

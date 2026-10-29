@@ -28,7 +28,7 @@ func aWinOnOneDeviceReachesTheOther() async {
     await phone.recordWin(of: chapter("c2"), difficulty: .normal, laurels: 0)
     await tablet.recordWin(of: chapter("c1"), difficulty: .hard, laurels: 2)
     await phone.pullCloudToLocal()
-    let merged = phone.progress
+    let merged = await phone.progress
     #expect(Set(merged.won.keys) == ["c1", "c2"])
     #expect(merged.won["c1"] == ChapterRecord(difficulty: .hard, laurels: 2))
 }
@@ -39,25 +39,36 @@ func progressStaysLocalWithoutICloud() async {
     let sync = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
     await sync.recordWin(of: chapter("c1"), difficulty: .easy, laurels: 1)
     await sync.pullCloudToLocal()
-    #expect(sync.progress.won["c1"] == ChapterRecord(difficulty: .easy, laurels: 1))
+    let offline = await sync.progress
+    #expect(offline.won["c1"] == ChapterRecord(difficulty: .easy, laurels: 1))
     await store.setAvailable(true)
     await store.set(Data("not json".utf8), forKey: CampaignProgressSync.key)
     await sync.pullCloudToLocal()
-    #expect(sync.progress.won["c1"] == ChapterRecord(difficulty: .easy, laurels: 1))
+    let kept = await sync.progress
+    #expect(kept.won["c1"] == ChapterRecord(difficulty: .easy, laurels: 1))
 }
 
 @Test("scenario: deleting a save keeps progress")
 func scenarioDeletingASaveKeepsProgress() async throws {
-    let defaults = ephemeralDefaults()
-    let sync = CampaignProgressSync(store: InMemoryCloudKeyValueStore(available: true), defaults: defaults)
+    let suite = "CityPersistence-campaign-\(UUID().uuidString)"
+    // swiftlint:disable:next force_unwrapping
+    let sync = try CampaignProgressSync(
+        store: InMemoryCloudKeyValueStore(available: true),
+        defaults: #require(UserDefaults(suiteName: suite))
+    )
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     let saves = SaveStore(baseDirectory: directory)
     let gameID = UUID()
     try saves.save(World.newGame(), gameID: gameID)
     await sync.recordWin(of: chapter("c1"), difficulty: .normal, laurels: 0)
     try saves.delete(gameID: gameID)
-    let reloaded = CampaignProgressSync(store: InMemoryCloudKeyValueStore(available: false), defaults: defaults)
-    #expect(reloaded.progress.won["c1"] != nil)
+    // swiftlint:disable:next force_unwrapping
+    let reloaded = try CampaignProgressSync(
+        store: InMemoryCloudKeyValueStore(available: false),
+        defaults: #require(UserDefaults(suiteName: suite))
+    )
+    let progress = await reloaded.progress
+    #expect(progress.won["c1"] != nil)
 }
 
 @Test("an external change merges the cloud copy and reports it")
@@ -92,3 +103,22 @@ func theICloudStoreHoldsData() async {
     #expect(await store.isAvailable())
 }
 #endif
+
+@Test("a win made while a pull is in flight survives, here and in iCloud")
+func aWinMadeDuringAPullSurvives() async {
+    let store = InMemoryCloudKeyValueStore(available: true)
+    let phone = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
+    let tablet = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
+    await tablet.recordWin(of: chapter("c1"), difficulty: .hard, laurels: 1)
+    for round in 0 ..< 20 {
+        async let pull: Void = phone.pullCloudToLocal()
+        async let win = phone.recordWin(of: chapter("p\(round)"), difficulty: .normal, laurels: 0)
+        _ = await (pull, win)
+    }
+    let local = await phone.progress
+    #expect(local.won.count == 21)
+    let fresh = CampaignProgressSync(store: store, defaults: ephemeralDefaults())
+    await fresh.pullCloudToLocal()
+    let cloud = await fresh.progress
+    #expect(cloud.won.count == 21)
+}

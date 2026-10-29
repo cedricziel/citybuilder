@@ -3,8 +3,10 @@ import Foundation
 
 /// Keeps campaign progress in UserDefaults, apart from world saves, and
 /// merges it through the iCloud key-value store (`add-campaigns` D8).
-/// Spec: `campaigns` / Campaign progress is a profile record.
-public final class CampaignProgressSync: @unchecked Sendable {
+/// Spec: `campaigns` / Campaign progress is a profile record. An actor, so
+/// a win and a pull from another device never read and write the record
+/// at once.
+public actor CampaignProgressSync {
     public static let key = "campaign.progress"
 
     private let store: CloudKeyValueStore
@@ -53,7 +55,7 @@ public final class CampaignProgressSync: @unchecked Sendable {
     /// iCloud's external-change notification, then hands the merged copy
     /// to `onChange`. Keep the returned token as long as the observation
     /// should last.
-    public func observeExternalChanges(
+    public nonisolated func observeExternalChanges(
         center: NotificationCenter = .default,
         name: Notification.Name = CampaignProgressSync.externalChangeNotification,
         onChange: @escaping @Sendable (CampaignProgress) async -> Void
@@ -67,7 +69,7 @@ public final class CampaignProgressSync: @unchecked Sendable {
     }
 
     /// iCloud's notice that the key-value store changed on another device.
-    public static var externalChangeNotification: Notification.Name {
+    public nonisolated static var externalChangeNotification: Notification.Name {
         #if canImport(Foundation) && !os(Linux)
         NSUbiquitousKeyValueStore.didChangeExternallyNotification
         #else
