@@ -16,7 +16,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 - [x] 2.1 Tests first: the `seasonal-events` scenarios for the decision, the first year, the minAge, the target checks, warning → onset → end, chapter scheduling, and the RNG left alone; confirm they fail
 - [x] 2.2 `SeasonalEventsState`, `seasonalEvent(forYear:)`, the derived generators and their salts, `Difficulty` knobs (D10), `runSeasonalEventSystem` after the calendar and before orders
 - [x] 2.3 The `WorldEvent` cases; the events `enabled` flag; events stay off while the calendar is inactive
-- [ ] 2.4 CityUI: the New Game "Seasonal events" toggle (hidden for chapters with a schedule); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
+- [ ] 2.4 CityUI: the New Game "Seasonal events" toggle, default On, passed to `newGame(..., seasonalEvents:)` (hidden for chapters with a schedule; old saves and a `newGame` without it stay off); warning, onset and end banners, the event chip (iOS, macOS, tvOS) and its layout rules (wait for 0.2 for the chip's look)
 
 ## 3. CityCore: fire, fire watch and ruins (can start before M2)
 
@@ -51,7 +51,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 8. Art, rendering and statistics (after 0.2)
 
-- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D): give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
+- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D); the granary stays out of the palette until 5.2 ("drawn last") lands: if its art comes first, move it from `PendingArt` to a palette-only hold rather than shipping it: give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
 - [ ] 8.2 CityRender2D: effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
 - [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge

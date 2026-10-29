@@ -1,4 +1,5 @@
 import CityCore
+import CityRender2D
 import Foundation
 
 /// Debug-only starting states for the Apple TV walk-through UI tests.
@@ -224,12 +225,12 @@ public enum UITestSeed {
         return world
     }
 
-    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`), or the
-    /// kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
+    /// Every kind in the build category after `-uiTestShowcase` (`gather`, `craft`, `town`) that has
+    /// its art, or the kinds it lists by raw value (`lumberjack-hut,sawmill`), if any.
     public static func showcase(fromArguments arguments: [String]) -> [BuildingKind] {
         guard let flag = arguments.firstIndex(of: "-uiTestShowcase"), arguments.indices.contains(flag + 1) else { return [] }
         let value = arguments[flag + 1]
-        let category = BuildingKind.allCases.filter { $0.category == value }
+        let category = BuildingKind.allCases.filter { $0.category == value && !PendingArt.buildingKinds.contains($0) }
         return category.isEmpty ? value.split(separator: ",").compactMap { BuildingKind(rawValue: String($0)) } : category
     }
 

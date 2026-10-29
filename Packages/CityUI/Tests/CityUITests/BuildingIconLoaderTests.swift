@@ -78,3 +78,10 @@ func pendingArtIsNotInThePalette() {
     let offered = Set(BuildPalette.kinds)
     #expect(offered.isDisjoint(with: PendingArt.buildingKinds))
 }
+
+@Test("kinds waiting for their art stay out of the category showcase")
+func pendingArtIsNotInTheShowcase() {
+    let town = UITestSeed.showcase(fromArguments: ["-uiTestShowcase", "town"])
+    #expect(!town.isEmpty)
+    #expect(Set(town).isDisjoint(with: PendingArt.buildingKinds))
+}
