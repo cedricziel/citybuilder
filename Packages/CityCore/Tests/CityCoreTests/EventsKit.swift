@@ -3,7 +3,7 @@ import Foundation
 
 /// The PlayerBot's events kit (`add-event-counterplay` D12), for fire
 /// season: while a fire is warned or under way it builds a fire watch by
-/// the first house or workshop no watch covers, one a turn, so every
+/// the first house or workshop no watch covers that has a plot, one a turn, so every
 /// 8-tile cluster ends up with one. Blight, fever and the festival answers
 /// come with their mechanics (sections 5 and 6).
 struct EventsKit {
@@ -15,25 +15,29 @@ struct EventsKit {
     private(set) var watchesBuilt = 0
 
     mutating func takeTurn(_ world: inout World) {
-        guard Self.isFireSeason(world), let target = Self.uncovered(in: world) else { return }
         let price = BuildingCatalog.spec(for: .fireWatch).cost + Self.cushion
-        guard world.economy.balance >= price, let anchor = Self.plot(near: target, in: world) else { return }
-        world.enqueue(.place(.fireWatch, at: anchor))
-        watchesBuilt += 1
+        guard Self.isFireSeason(world), world.economy.balance >= price else { return }
+        for target in Self.uncovered(in: world) {
+            guard let anchor = Self.plot(near: target, in: world) else { continue }
+            world.enqueue(.place(.fireWatch, at: anchor))
+            watchesBuilt += 1
+            return
+        }
     }
 
     static func isFireSeason(_ world: World) -> Bool {
         world.currentSeasonalEvent?.event.effect == .fire
     }
 
-    /// The lowest-ID player house or workshop with no fire watch, built or
-    /// building, within reach.
-    static func uncovered(in world: World) -> Building? {
+    /// The player's houses and workshops no fire watch, built or building,
+    /// would answer, by the sim's own rule (reach and a road path), in
+    /// entity order.
+    static func uncovered(in world: World) -> [Building] {
         let watches = world.buildings.values.filter { $0.kind == .fireWatch && $0.owner == .player }
         return world.buildings.values
             .filter { $0.owner == .player && $0.state != .constructing && World.canIgnite($0.kind) }
             .sorted { $0.id.raw < $1.id.raw }
-            .first { building in !watches.contains { World.footprintDistance($0, building) <= World.fireWatchReach } }
+            .filter { building in !watches.contains { world.fireWatchCovers($0, building) } }
     }
 
     /// The first free plot by a road that reaches `target`, ring by ring

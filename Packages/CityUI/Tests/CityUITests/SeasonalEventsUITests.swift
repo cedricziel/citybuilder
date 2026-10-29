@@ -1,6 +1,6 @@
-@testable import CityCore
 import Foundation
 import Testing
+@testable import CityCore
 @testable import CityUI
 
 // Scenarios from openspec/changes/add-event-counterplay (platform-shells /
@@ -38,7 +38,8 @@ func fireWarningText() throws {
     session.noteBannerEvents(in: [.seasonalEventWarned(event: .fire, onset: .summer)])
     let banner = try #require(session.banner)
     #expect(banner.title == "Dry summer ahead")
-    let text = "Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames."
+    let text = "Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, "
+        + "and a road between buildings stops the flames."
     #expect(banner.description == text)
 }
 
@@ -54,7 +55,7 @@ func ignitionBannerNamesTheBuilding() throws {
 
 @MainActor
 @Test("scenario: the fire end banners")
-func fireEndBanners() throws {
+func fireEndBanners() {
     let session = eventsSession()
     session.noteBannerEvents(in: [.seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 2, fires: 3))])
     #expect(session.banner?.description == "2 buildings burnt down. Clear the ruins with Demolish.")
@@ -76,7 +77,7 @@ func feverEndText() throws {
 
 @MainActor
 @Test("scenario: a blight's onset names its end")
-func blightOnsetNamesItsEnd() throws {
+func blightOnsetNamesItsEnd() {
     let session = eventsSession { world in
         world.tickCount = 600
         world.seasonalEvents.active = ActiveSeasonalEvent(event: .blight, startTick: 600, lastTick: 1199)
@@ -116,7 +117,7 @@ func warningChipText() {
 
 @MainActor
 @Test("scenario: tapping the chip shows the warning again")
-func chipReplaysTheWarning() throws {
+func chipReplaysTheWarning() {
     let session = eventsSession { world in
         world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .autumn)
     }
@@ -134,7 +135,7 @@ func chipFitsANarrowHUD() {
 
 @MainActor
 @Test("scenario: Inspecting burnt house ruins")
-func inspectingBurntHouseRuins() throws {
+func inspectingBurntHouseRuins() {
     var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false)
     let id = EntityID(raw: world.nextEntityRaw)
     world.nextEntityRaw += 1

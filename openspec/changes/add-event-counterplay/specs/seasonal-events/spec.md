@@ -188,7 +188,7 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 
 | Event | Banner | Title | Text |
 |---|---|---|---|
-| fire | warning | Dry {season} ahead | Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames. |
+| fire | warning | Dry {season} ahead | Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames. |
 | fire | each ignition | Fire! | A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins. |
 | fire | end, losses | The fires are out | {count} buildings burnt down. Clear the ruins with Demolish. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
@@ -208,7 +208,7 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 #### Scenario: Fire warning text
 
 - **WHEN** a fire in summer is warned
-- **THEN** the banner title is "Dry summer ahead" and its text is "Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames."
+- **THEN** the banner title is "Dry summer ahead" and its text is "Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames."
 
 #### Scenario: Festival request names its deadline
 

@@ -138,6 +138,13 @@ extension World {
         seasonalEvents.fire = state
     }
 
+    /// Whether `watch` would answer a fire in `target`: within its reach,
+    /// with a road path between them.
+    func fireWatchCovers(_ watch: Building, _ target: Building) -> Bool {
+        guard let goal = anyAdjacentRoad(anchor: target.anchor, footprint: target.footprint) else { return false }
+        return watchmanPath(from: watch, to: target, goal: goal) != nil
+    }
+
     /// The road path from a watch to a burning building within its reach.
     private func watchmanPath(from watch: Building, to target: Building, goal: TileCoordinate) -> [TileCoordinate]? {
         guard Self.footprintDistance(watch, target) <= Self.fireWatchReach,

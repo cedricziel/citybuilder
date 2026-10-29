@@ -46,7 +46,7 @@ func kitCoversEveryClusterOnce() {
         }
     }
     let uncovered = EventsKit.uncovered(in: world)
-    #expect(uncovered == nil)
+    #expect(uncovered.isEmpty)
     #expect(kit.watchesBuilt == 2)
 }
 
@@ -110,4 +110,16 @@ func forcedFireFirstHour(seed: UInt64) {
             #expect(residents >= 20, "\(layout) seed \(seed) \(onset): \(residents) residents")
         }
     }
+}
+
+@Test("scenario: a watch on another road network doesn't cover a house")
+func watchOnAnotherNetworkDoesNotCover() throws {
+    var world = streetWorld()
+    let watch = addOperational(.fireWatch, at: TileCoordinate(x: 2, y: 6), in: &world)
+    let house = try #require(world.buildings.values.filter { $0.kind == .house }.min { $0.id.raw < $1.id.raw })
+    let watchBuilding = try #require(world.buildings[watch])
+    #expect(World.footprintDistance(watchBuilding, house) <= World.fireWatchReach)
+    #expect(!world.fireWatchCovers(watchBuilding, house))
+    let first = EventsKit.uncovered(in: world).first
+    #expect(first?.id == house.id)
 }

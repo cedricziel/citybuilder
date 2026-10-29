@@ -23,7 +23,7 @@ items:
     banners:
       warning:
         title: "Dry {season} ahead"
-        text: Fire risk is high next season. A fire watch puts out fires within 8 tiles, and a road between buildings stops the flames.
+        text: Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames.
       ignition:
         title: Fire!
         text: "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
