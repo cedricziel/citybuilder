@@ -28,7 +28,7 @@ A building tied to a culture SHALL be rejected for placement with `wrongCulture`
 
 ### Requirement: Cultivation unlocks the luxury chain
 
-The Medieval tech Cultivation (700 knowledge, no prerequisites) SHALL unlock every culture's garden and producer.
+The Medieval tech Cultivation (900 knowledge, no prerequisites) SHALL unlock every culture's garden and producer.
 
 #### Scenario: Brewery needs Cultivation
 

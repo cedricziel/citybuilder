@@ -128,6 +128,12 @@
     },
     "Minimap": {
       "cardMode": "column"
+    },
+    "ChapterSelect": {
+      "cardMode": "column"
+    },
+    "ChapterCard": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"

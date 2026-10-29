@@ -2,7 +2,6 @@
 
 ## Purpose
 TBD - created by archiving change add-archipelago-and-sea. Update Purpose after archive.
-
 ## Requirements
 ### Requirement: Port building kind
 The buildings catalog SHALL include a `Port` building kind with a default footprint of 2 tiles × 3 tiles. A port building SHALL be placeable only if its footprint satisfies the shore-placement rule defined in `buildings-and-construction`: at least one tile of the footprint is a buildable land tile, and at least one tile of the footprint is a water tile. The water tile occupied by the port footprint MUST be designated as the port's `shipAnchor` and MUST NOT be navigable by other ships' integration paths (it is reserved dock space).
@@ -20,14 +19,14 @@ The buildings catalog SHALL include a `Port` building kind with a default footpr
 - **THEN** placement is rejected with reason code `port_requires_land_tile`
 
 ### Requirement: Port acts as a goods buffer
-A port SHALL store goods of any catalog type up to a declared per-port capacity. Storage MUST be queryable per good and in aggregate. The same buffer storage MUST be accessible to carriers from the land side and to ships from the sea side.
+A port SHALL store each catalog good separately, up to the per-good limit its kind declares, like every goods buffer. Storage MUST be queryable per good and in aggregate. The same buffer storage MUST be accessible to carriers from the land side and to ships from the sea side.
 
 #### Scenario: Carrier deposits into port from land
 - **WHEN** a carrier walking the road network arrives at a port (road-connected to its land-side tiles) carrying 1 unit of wood
 - **THEN** the port's wood stock increases by 1 and the carrier despawns
 
 #### Scenario: Ship deposits into port from sea
-- **WHEN** a docked ship executes `.unloadUpTo(wood, 10)` at a port with sufficient free capacity and 10 units of wood in its cargo
+- **WHEN** a docked ship executes `.unloadUpTo(wood, 10)` at a port with room for 10 wood and 10 units of wood in its cargo
 - **THEN** the port's wood stock increases by 10 and the ship's wood cargo decreases by 10
 
 #### Scenario: Single port stock view across faces
@@ -35,11 +34,11 @@ A port SHALL store goods of any catalog type up to a declared per-port capacity.
 - **THEN** the land-side query returns wood stock 25
 
 #### Scenario: Port respects buffer capacity on land-side deposit
-- **WHEN** a carrier attempts to deposit into a port whose buffer is already at capacity
+- **WHEN** a carrier attempts to deposit wood into a port that holds its limit of wood
 - **THEN** the deposit is rejected and the carrier behaves identically to a rejected warehouse deposit (returns or routes to another goods-buffer)
 
 #### Scenario: Port respects buffer capacity on sea-side deposit
-- **WHEN** a docked ship attempts to `.unloadUpTo(wood, 50)` at a port with only 10 units of free buffer capacity
+- **WHEN** a docked ship attempts to `.unloadUpTo(wood, 50)` at a port with room for only 10 more wood
 - **THEN** only 10 units transfer and the remaining 40 stay in the ship's cargo
 
 ### Requirement: Port road connectivity
