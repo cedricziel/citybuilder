@@ -9,7 +9,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 - [x] 1.1 Tests first: the `Event` kind (effect, seasons, minAge, weights, banner text), its validation (unknown effect or age, no seasons, spring hazard), the `crop` flag, `events` and `randomEvents` on chapters (chapters wait for `add-campaigns`: the pack has no Chapter kind yet; `SeasonalEventsState.schedule` and `randomEvents` are ready for it)
 - [x] 1.2 `GameDataGen`: model, loader, validator, emitter, JSON schema, `FORMAT.md`; regenerate with `make gamedata`
-- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items (done: the pack and the crop flags; the fire watch, ruins and granary come with sections 3 and 4; herbs, physician and herb garden with section 5)
+- [ ] 1.3 The `events` pack with the four events and their banner text; `crop: true` on the farm, the grain farm and each culture's crop; the herbs good; the fire watch, granary, physician, herb garden and ruins items (done: the pack, the crop flags and the granary; the fire watch and ruins come with section 3; herbs, physician and herb garden with section 5)
 
 ## 2. CityCore: schedule and warnings (can start before M2)
 
@@ -27,8 +27,8 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 4. Rats and the granary's storage (can start before M2)
 
-- [ ] 4.1 Tests first: the granary accepts only food goods; rats skip granaries (the modified `calendar-and-events` scenarios)
-- [ ] 4.2 The granary building and its per-good storage; the rats change
+- [x] 4.1 Tests first: the granary accepts only food goods; rats skip granaries (the modified `calendar-and-events` scenarios)
+- [x] 4.2 The granary building and its per-good storage; the rats change
 
 ## 5. After #238 M2: blight, the granary reserve and fever
 
@@ -51,7 +51,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 8. Art, rendering and statistics (after 0.2)
 
-- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me)
+- [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me). Drawing a kind takes it out of `PendingArt.buildingKinds` (CityRender2D): give its catalog brief `source = "isokit"`; once the set is empty, delete it, the `BuildPalette` filter and the pending exemption in `SpritesStyleCatalogTests`
 - [ ] 8.2 CityRender2D: effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
 - [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge

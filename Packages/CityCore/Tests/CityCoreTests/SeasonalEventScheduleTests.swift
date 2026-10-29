@@ -105,8 +105,8 @@ func onlyStoresNoFire() throws {
         for index in 0 ..< 4 {
             addOperational(.warehouse, at: TileCoordinate(x: index * 4, y: 0), in: &world)
         }
-        addOperational(.library, at: TileCoordinate(x: 0, y: 5), in: &world)
-        addOperational(.library, at: TileCoordinate(x: 4, y: 5), in: &world)
+        addOperational(.granary, at: TileCoordinate(x: 0, y: 5), in: &world)
+        addOperational(.granary, at: TileCoordinate(x: 4, y: 5), in: &world)
         return world
     }
     let seed = try #require(summerFireSeed)

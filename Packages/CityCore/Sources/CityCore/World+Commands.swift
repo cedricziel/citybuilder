@@ -146,7 +146,7 @@ extension World {
     /// pack's `storagePerGood`, shared for those with `storage`; nil for a
     /// kind with no stockpile, e.g. roads.
     static func newStockpile(for kind: BuildingKind) -> Stockpile? {
-        if let perGood = kind.storagePerGood { return Stockpile(perGood: perGood) }
+        if let perGood = kind.storagePerGood { return Stockpile(perGood: perGood, accepting: kind.accepts) }
         return kind.storage.map { Stockpile(capacity: $0) }
     }
 }

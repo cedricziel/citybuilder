@@ -7,5 +7,5 @@ import Foundation
 /// `add-event-counterplay` draws them and empties this set; a test fails
 /// once a kind here has committed sprites.
 public enum PendingArt {
-    public static let buildingKinds: Set<BuildingKind> = []
+    public static let buildingKinds: Set<BuildingKind> = [.granary]
 }

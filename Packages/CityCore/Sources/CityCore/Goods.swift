@@ -25,6 +25,8 @@ public struct Stockpile: Hashable, Codable, Sendable {
     /// True when `capacity` limits each good on its own.
     public private(set) var limitsEachGood: Bool
     public private(set) var contents: [Good: Int] = [:]
+    /// The only goods it takes, nil for every good: a granary's food goods.
+    public private(set) var accepted: Set<Good>?
 
     /// A pooled stockpile: `capacity` units in all.
     public init(capacity: Int) {
@@ -32,10 +34,12 @@ public struct Stockpile: Hashable, Codable, Sendable {
         limitsEachGood = false
     }
 
-    /// A per-good stockpile: up to `perGood` units of each good.
-    public init(perGood: Int) {
+    /// A per-good stockpile: up to `perGood` units of each good it
+    /// accepts, every good unless `accepted` names some.
+    public init(perGood: Int, accepting accepted: Set<Good>? = nil) {
         capacity = max(0, perGood)
         limitsEachGood = true
+        self.accepted = accepted
     }
 
     public var totalStored: Int {
@@ -54,7 +58,12 @@ public struct Stockpile: Hashable, Codable, Sendable {
     /// a save made before the limit) stays until it is used, and leaves
     /// no room meanwhile.
     public func room(for good: Good) -> Int {
-        limitsEachGood ? max(0, capacity - quantity(of: good)) : max(0, capacity - totalStored)
+        guard accepts(good) else { return 0 }
+        return limitsEachGood ? max(0, capacity - quantity(of: good)) : max(0, capacity - totalStored)
+    }
+
+    public func accepts(_ good: Good) -> Bool {
+        accepted?.contains(good) ?? true
     }
 
     public func quantity(of good: Good) -> Int {
@@ -91,7 +100,7 @@ public struct Stockpile: Hashable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case capacity, limitsEachGood, contents
+        case capacity, limitsEachGood, contents, accepted
     }
 
     public init(from decoder: Decoder) throws {
@@ -99,5 +108,6 @@ public struct Stockpile: Hashable, Codable, Sendable {
         capacity = try container.decode(Int.self, forKey: .capacity)
         limitsEachGood = try container.decodeIfPresent(Bool.self, forKey: .limitsEachGood) ?? false
         contents = try container.decode([Good: Int].self, forKey: .contents)
+        accepted = try container.decodeIfPresent(Set<Good>.self, forKey: .accepted)
     }
 }

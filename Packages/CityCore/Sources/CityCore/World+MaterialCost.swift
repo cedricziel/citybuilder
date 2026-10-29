@@ -5,11 +5,11 @@ import Foundation
 /// Spec: `add-build-materials-cost` (buildings-and-construction,
 /// warehouses-and-logistics).
 public extension World {
-    /// Building kinds whose stockpiles back placement material checks.
-    /// Mirrors `WorldSnapshot.goodsBufferKinds` but lives on World so
-    /// canPlace doesn't depend on snapshot construction.
+    /// Building kinds whose stockpiles back placement material checks and
+    /// the snapshot's island totals: every store and the shipyard, not
+    /// the producers' in-transit output buffers.
     static let placementBufferKinds: Set<BuildingKind> = [
-        .warehouse, .port, .shipyard, .townCenter
+        .warehouse, .port, .shipyard, .townCenter, .granary
     ]
 
     /// Sum of goods across every goods-buffer building (warehouse,
