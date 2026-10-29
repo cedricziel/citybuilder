@@ -43,9 +43,23 @@ struct CarrierVisual {
     var walking = true
 }
 
+/// Who walks the road: a carrier with a load, or a fire watch's watchman with his bucket.
+enum RoadFigure: Equatable {
+    case carrier(CarrierLoad)
+    case watchman
+}
+
 struct CarrierLook: Equatable {
-    let load: CarrierLoad
+    let figure: RoadFigure
     let facing: SpriteAtlas.WalkerFacing
+}
+
+/// One figure on the road this tick: a carrier, or a watchman, who stands still while he douses.
+private struct RoadWalker {
+    let id: EntityID
+    let look: CarrierLook
+    let target: CGPoint
+    let moving: Bool
 }
 
 extension IsoWorldScene {
@@ -68,27 +82,27 @@ extension IsoWorldScene {
             return
         }
         lastCarrierTick = snapshot.tickCount
-        let live = Set(snapshot.carriers.map(\.id))
+        let walkers = Self.roadWalkers(in: snapshot)
+        let live = Set(walkers.map(\.id))
         for (id, visual) in carrierVisuals where !live.contains(id) {
             visual.node.removeFromParent()
             carrierVisuals.removeValue(forKey: id)
         }
-        for carrier in snapshot.carriers {
-            let look = CarrierLook(load: CarrierLoad.family(of: carrier.good), facing: Self.facing(of: carrier))
-            let target = Self.position(of: carrier)
-            guard var visual = carrierVisuals[carrier.id] else {
+        for walker in walkers {
+            let (look, target) = (walker.look, walker.target)
+            guard var visual = carrierVisuals[walker.id] else {
                 let node = SKSpriteNode.walker()
                 node.position = target
                 node.zPosition = Self.figureZ(at: target)
-                Self.animate(node, look: look)
+                Self.animate(node, look: look, moving: walker.moving)
                 addChild(node)
-                carrierVisuals[carrier.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now)
+                carrierVisuals[walker.id] = CarrierVisual(node: node, look: look, target: target, movedAt: now, walking: walker.moving)
                 continue
             }
-            if visual.look != look || !visual.walking {
+            if visual.look != look || visual.walking != walker.moving {
                 visual.look = look
-                visual.walking = true
-                Self.animate(visual.node, look: look)
+                visual.walking = walker.moving
+                Self.animate(visual.node, look: look, moving: walker.moving)
             }
             if visual.target != target {
                 let step = min(0.25, max(0.03, now - visual.movedAt))
@@ -96,13 +110,37 @@ extension IsoWorldScene {
                 visual.target = target
                 visual.movedAt = now
             }
-            carrierVisuals[carrier.id] = visual
+            carrierVisuals[walker.id] = visual
         }
     }
 
-    /// The carrier's own frames, or the walker's while carrier art is missing, each with its own key.
+    /// The carriers and the watchmen at work, each with its look and where it stands.
+    private static func roadWalkers(in snapshot: WorldSnapshot) -> [RoadWalker] {
+        snapshot.carriers.map { carrier in
+            RoadWalker(
+                id: carrier.id,
+                look: CarrierLook(figure: .carrier(CarrierLoad.family(of: carrier.good)), facing: facing(of: carrier)),
+                target: position(of: carrier.currentTile),
+                moving: true
+            )
+        } + snapshot.watchmen.map { man in
+            // Dousing, he stands on the fire's road tile still facing the way he came.
+            let step = min(man.pathIndex, man.path.count - 2)
+            return RoadWalker(
+                id: man.watch,
+                look: CarrierLook(figure: .watchman, facing: facing(path: man.path, index: step)),
+                target: position(of: man.currentTile),
+                moving: !man.isDousing
+            )
+        }
+    }
+
+    /// The figure's own frames, or the walker's while its art is missing, each with its own key.
     private static func animate(_ node: SKSpriteNode, look: CarrierLook, moving: Bool = true) {
-        let own = SpriteAnimation.AnimationKey.carrier(look.load, look.facing)
+        let own: SpriteAnimation.AnimationKey = switch look.figure {
+        case let .carrier(load): .carrier(load, look.facing)
+        case .watchman: .watchman(look.facing)
+        }
         if let frames = SpriteAtlas.frames(for: own) {
             node.playWalkCycle(own, frames: frames, moving: moving)
         } else {
@@ -112,15 +150,23 @@ extension IsoWorldScene {
 
     /// Facing from the next path segment.
     static func facing(of carrier: Carrier) -> SpriteAtlas.WalkerFacing {
-        let idx = carrier.pathIndex
-        guard idx >= 0, idx < carrier.path.count - 1 else { return .se }
-        let from = carrier.path[idx], next = carrier.path[idx + 1]
+        facing(path: carrier.path, index: carrier.pathIndex)
+    }
+
+    /// Facing along the step from `path[index]` to the next tile.
+    static func facing(path: [TileCoordinate], index: Int) -> SpriteAtlas.WalkerFacing {
+        guard index >= 0, index < path.count - 1 else { return .se }
+        let from = path[index], next = path[index + 1]
         return SpriteAtlas.WalkerFacing(stepX: Double(next.x - from.x), stepY: Double(next.y - from.y))
     }
 
-    /// Slightly below the tile centre, so the figure stands on the tile.
     static func position(of carrier: Carrier) -> CGPoint {
-        guard let current = carrier.currentTile else { return .zero }
+        position(of: carrier.currentTile)
+    }
+
+    /// Slightly below the tile centre, so the figure stands on the tile.
+    static func position(of tile: TileCoordinate?) -> CGPoint {
+        guard let current = tile else { return .zero }
         let base = IsoMath.screenPoint(forTile: current)
         return CGPoint(x: base.x, y: base.y - IsoMath.tileHeight / 2)
     }
