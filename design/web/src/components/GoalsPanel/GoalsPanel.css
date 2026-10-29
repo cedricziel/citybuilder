@@ -24,6 +24,7 @@
   color: var(--cb-secondary-label);
 }
 
-.cb-goal-pair__value--ahead {
-  color: var(--cb-orange);
+.cb-goal--deadline,
+.cb-goal--deadline svg {
+  color: var(--cb-secondary-label);
 }

@@ -54,13 +54,9 @@ export const Intro = () => (
       chapterNumber={3}
       title="The Guild Charter"
       text="Merchants will not settle where there are no tools to buy and no guild to vouch for them. The charter is yours if the town can earn it: smiths, a guild hall, and full stalls in the market."
-      goals={[
-        { text: "Research Metallurgy" },
-        { text: "Own a guild hall" },
-        { text: "20 merchants", bonus: "+ bonus 30" },
-        { text: "20 tools in store", bonus: "+ bonus 30" },
-      ]}
-      deadline={{ label: "Before 1210", remaining: "7 years" }}
+      goals={["Research Metallurgy", "Own a guild hall", "20 merchants", "20 tools in store"]}
+      bonus={["30 merchants", "30 tools in store", "20 merchants for a season"]}
+      deadline={{ label: "Before 1210", remaining: "6 years, 3 seasons left" }}
       town={guildTown}
     />
   </OverMap>
@@ -109,7 +105,7 @@ export const LostDeadline = () => (
       variant="lost"
       chapterNumber={3}
       reason={{ kind: "deadline" }}
-      detail="1210 began with “20 tools in store” unmet (14 of 20)."
+      detail="1210 began with “20 tools in store” unmet."
     />
   </OverMap>
 );
@@ -121,19 +117,19 @@ export const LostReasons = () => (
         variant="lost"
         chapterNumber={4}
         reason={{ kind: "rivalRace", rival: "Ravenshore" }}
-        detail="Ravenshore reached the Renaissance in Spring 1208."
+        detail="A rival town reached the race goal before yours. You can keep building, or try again."
       />
       <ChapterCard
         variant="lost"
         chapterNumber={1}
         reason={{ kind: "collapse" }}
-        detail="The town fell below 25 citizens after reaching 30."
+        detail="Too few residents stayed for a whole season. You can keep building, or try again."
       />
       <ChapterCard
         variant="lost"
         chapterNumber={2}
         reason={{ kind: "bankruptcy" }}
-        detail="The treasury stayed below $0 for a season."
+        detail="The treasury stayed in the red too long. You can still save from the pause menu."
       />
     </div>
   </OverMap>
@@ -148,12 +144,9 @@ export const Dark = () => (
         chapterNumber={1}
         title="The Thin Forest"
         text="Goats and old fires have stripped these hills. Every tree is precious. Plant before you cut, build what pays, and let the forum's coin carry the rest."
-        goals={[
-          { text: "30 citizens" },
-          { text: "Own 4 foresters" },
-          { text: "Hold 30 residents for a season" },
-        ]}
-        deadline={{ label: "Before 1206", remaining: "3 years" }}
+        goals={["30 citizens", "Own 4 foresters", "30 residents for a season"]}
+        bonus={["Own a forum", "Treasury of $1,000"]}
+        deadline={{ label: "Before 1206", remaining: "2 years, 3 seasons left" }}
         town={[
           { art: "town-center", x: 5, y: 5 },
           { art: "forester", x: 8, y: 6 },

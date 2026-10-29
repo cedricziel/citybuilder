@@ -46,7 +46,7 @@ const campaigns: CampaignInfo[] = [
           "20 merchants",
           "20 tools in store",
         ],
-        bonus: ["30 merchants and 30 tools", "Hold 20 merchants for a season"],
+        bonus: ["30 merchants and 30 tools", "20 merchants for a season"],
         start: "Medieval, 1203, no rivals",
         lostIf: "1210 begins, or bankruptcy",
         reward: "banner “Guild key”. Opens The Merchant Sea and Hard Ground.",
@@ -133,12 +133,13 @@ const campaigns: CampaignInfo[] = [
         title: "The Thin Forest",
         art: "forester",
         status: open,
+        difficulties: ["Normal", "Hard"],
         intro:
           "Goats and old fires have stripped these hills. Every tree is precious. Plant before you cut, build what pays, and let the forum's coin carry the rest.",
         goals: [
           "30 citizens",
           "Own 4 foresters",
-          "Hold 30 residents for a season",
+          "30 residents for a season",
         ],
         bonus: ["Own a forum", "Treasury of $1,000"],
         start: "Medieval, 1203, no rivals",

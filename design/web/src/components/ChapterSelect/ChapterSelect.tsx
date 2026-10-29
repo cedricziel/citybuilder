@@ -44,6 +44,8 @@ export interface ChapterInfo {
   lostIf?: string;
   /** The culture the chapter fixes, e.g. "Mediterranean". Omit when the player picks. */
   culture?: string;
+  /** The difficulties the chapter offers. Default all three. */
+  difficulties?: Difficulty[];
   /** "Banner “Guild key”. Opens The Merchant Sea and Hard Ground." */
   reward?: string;
   /** The map header's town. Default: the signature building with a few houses. */
@@ -78,7 +80,7 @@ export interface ChapterSelectProps {
 }
 
 const cultures = ["Northern European", "Mediterranean", "East Asian", "Middle Eastern"];
-const difficulties: Difficulty[] = ["Easy", "Normal", "Hard"];
+const allDifficulties: Difficulty[] = ["Easy", "Normal", "Hard"];
 
 function statusLine(status: ChapterStatus): string {
   switch (status.kind) {
@@ -272,7 +274,7 @@ function Detail({
             <span className="cb-footnote cb-secondary">Difficulty</span>
             <SegmentedPicker
               label="Difficulty"
-              options={difficulties}
+              options={chapter.difficulties ?? allDifficulties}
               selected={difficulty}
               onChange={(value) => onDifficulty(value as Difficulty)}
             />
@@ -385,6 +387,9 @@ export function ChapterSelect({
   const chapter =
     campaign.chapters.find((c) => c.id === chosen) ?? campaign.chapters[0];
 
+  const allowed = chapter.difficulties ?? allDifficulties;
+  const offered = allowed.includes(difficulty) ? difficulty : allowed[0];
+
   return (
     <div className="cb-chapters" style={{ width, height }}>
       <nav className="cb-chapters__nav" aria-label="Chapters">
@@ -429,13 +434,11 @@ export function ChapterSelect({
       <Detail
         campaign={campaign}
         chapter={chapter}
-        difficulty={difficulty}
+        difficulty={offered}
         culture={culture}
         onDifficulty={setDifficulty}
         onCulture={setCulture}
-        onStart={() =>
-          onStart?.(chapter.id, difficulty, chapter.culture ?? culture)
-        }
+        onStart={() => onStart?.(chapter.id, offered, chapter.culture ?? culture)}
       />
     </div>
   );

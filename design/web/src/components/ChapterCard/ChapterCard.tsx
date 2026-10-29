@@ -12,13 +12,6 @@ export type ChapterLostReason =
   | { kind: "collapse" }
   | { kind: "bankruptcy" };
 
-export interface ChapterCardGoal {
-  /** "20 merchants". */
-  text: string;
-  /** The bonus target on the same line, e.g. "+ bonus 30". */
-  bonus?: string;
-}
-
 export interface ChapterCardProps {
   /** `intro` before the chapter, `ending` once it's won, `lost` once a lose condition fires. */
   variant: "intro" | "ending" | "lost";
@@ -29,9 +22,11 @@ export interface ChapterCardProps {
   title?: string;
   /** The intro or ending text, up to 320 characters. */
   text?: string;
-  /** Intro: the goals list. */
-  goals?: ChapterCardGoal[];
-  /** Intro: the deadline row, e.g. `{ label: "Before 1210", remaining: "7 years" }`. */
+  /** Intro: the goals, one line each ("20 merchants"). */
+  goals?: string[];
+  /** Intro: the bonus goals, listed after the goals as "Bonus: Treasury of $1,500". */
+  bonus?: string[];
+  /** Intro: the deadline row, e.g. `{ label: "Before 1210", remaining: "5 years, 3 seasons left" }`. */
   deadline?: { label: string; remaining: string };
   /** Ending: the difficulty it was won on. */
   difficulty?: "Easy" | "Normal" | "Hard";
@@ -54,6 +49,8 @@ export interface ChapterCardProps {
   onNext?: () => void;
   onRetry?: () => void;
   onKeepBuilding?: () => void;
+  /** Lost on bankruptcy: Close replaces Keep building. */
+  onClose?: () => void;
   onBackToChapters?: () => void;
 }
 
@@ -76,7 +73,7 @@ const defaultWidth = { intro: 420, ending: 360, lost: 300 };
  * The chapter cards: an iOS sheet with a render of the chapter's map at the
  * top. `intro` opens a chapter with its text, goals and Begin; `ending`
  * closes a won chapter with laurels, reward and Next; `lost` is the small
- * sheet with Retry, Keep building and Back to chapters.
+ * sheet with Retry, Keep building (Close after bankruptcy) and Back to chapters.
  */
 export function ChapterCard(props: ChapterCardProps) {
   const {
@@ -106,9 +103,15 @@ export function ChapterCard(props: ChapterCardProps) {
           <Button variant="borderedProminent" fullWidth onClick={props.onRetry}>
             Retry chapter
           </Button>
-          <Button variant="bordered" fullWidth onClick={props.onKeepBuilding}>
-            Keep building
-          </Button>
+          {props.reason?.kind === "bankruptcy" ? (
+            <Button variant="bordered" fullWidth onClick={props.onClose}>
+              Close
+            </Button>
+          ) : (
+            <Button variant="bordered" fullWidth onClick={props.onKeepBuilding}>
+              Keep building
+            </Button>
+          )}
           <Button
             variant="borderless"
             fullWidth
@@ -157,22 +160,22 @@ export function ChapterCard(props: ChapterCardProps) {
         ) : null}
         {intro ? (
           <>
-            {props.goals?.length || props.deadline ? (
+            {props.goals?.length || props.bonus?.length || props.deadline ? (
               <div className="cb-chapter-card__group cb-callout">
                 {props.goals?.map((goal) => (
-                  <div key={goal.text} className="cb-chapter-card__row">
-                    <span>{goal.text}</span>
-                    {goal.bonus ? (
-                      <span className="cb-secondary cb-footnote">
-                        {goal.bonus}
-                      </span>
-                    ) : null}
+                  <div key={goal} className="cb-chapter-card__row">
+                    {goal}
+                  </div>
+                ))}
+                {props.bonus?.map((goal) => (
+                  <div key={`bonus-${goal}`} className="cb-chapter-card__row">
+                    Bonus: {goal}
                   </div>
                 ))}
                 {props.deadline ? (
                   <div className="cb-chapter-card__row">
                     <span>{props.deadline.label}</span>
-                    <span className="cb-secondary cb-mono cb-footnote">
+                    <span className="cb-secondary">
                       {props.deadline.remaining}
                     </span>
                   </div>
