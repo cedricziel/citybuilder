@@ -8,7 +8,10 @@ import Testing
 // without the market. A measurement, not a balance gate: it prints one
 // PACING_SWEEP line per game and runs only in the weekly `rival-sweep` job.
 // The job runs the market arms; the no-market arms, which mostly never
-// climb and so run all 20 years, run with PACING_FULL=1.
+// climb and so run all 20 years, run with PACING_FULL=1. With
+// PACING_RETENTION=1 each line also has merchants at year 10, the held
+// share and the mean merchants (meanLate) of years 8–10. Run it locally
+// with `scripts/sweeps/run-release-sweeps.sh`.
 
 private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == "1"
 private let markets = ProcessInfo.processInfo.environment["PACING_FULL"] == "1" ? [true, false] : [true]
@@ -23,6 +26,18 @@ private let orderArms = ProcessInfo.processInfo.environment["PACING_ORDERS"] == 
 
 /// 20 years: every climb measured so far took under 15.
 private let pacingTicks = 20 * Int(CalendarState.ticksPerYear)
+
+@Test("late years count held turns and mean merchants")
+func lateYearsCountHeldTurnsAndMeanMerchants() {
+    var late = LateYears()
+    #expect(late.heldShare == 0)
+    #expect(late.meanMerchants == 0)
+    for merchants in [10, 20, 30, 0] {
+        late.add(merchants: merchants)
+    }
+    #expect(late.heldShare == 0.5)
+    #expect(late.meanMerchants == 15)
+}
 
 @Test(
     "mid-game pacing across seeds",
@@ -47,6 +62,7 @@ func midGamePacingAcrossSeeds(seed: UInt64, difficulty: Difficulty) {
                             + "bankrupt=\(MidGameMilestones.years(run.bankruptAt)) "
                             + "merchantsAtTen=\(run.merchantsAtTen.map(String.init) ?? "-") "
                             + "heldShare=\(run.heldShare.map { String(format: "%.2f", $0) } ?? "-") "
+                            + "meanLate=\(run.meanLate.map { String(format: "%.1f", $0) } ?? "-") "
                             + "hints=\(run.hinted.isEmpty ? "-" : run.hinted.map(\.rawValue).joined(separator: ","))"
                     )
                 }
