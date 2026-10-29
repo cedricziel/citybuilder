@@ -40,3 +40,9 @@ func scenarioDetailsCountsTheIntervals() throws {
     let inspector = try merchantHouse(issue: .noRoad)
     #expect(!inspector.bullets.contains { $0.hasPrefix("Short of") })
 }
+
+@Test("scenario: details never counts past the grace")
+func scenarioDetailsNeverCountsPastTheGrace() throws {
+    let inspector = try merchantHouse(issue: .runningShort(.tools, intervals: 5, grace: 3))
+    #expect(inspector.bullets.contains("Short of tools: 3 of 3 intervals"))
+}

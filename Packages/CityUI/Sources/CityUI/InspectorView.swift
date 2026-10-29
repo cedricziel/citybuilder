@@ -125,7 +125,7 @@ public struct InspectorViewModel: Sendable {
     /// `platform-shells` / The inspector warns of a house about to decline.
     static func shortageLine(_ issue: BuildingIssue?) -> [String] {
         guard case let .runningShort(good, intervals, grace)? = issue else { return [] }
-        return ["Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): \(intervals) of \(grace) intervals"]
+        return ["Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): \(min(intervals, grace)) of \(grace) intervals"]
     }
 }
 
