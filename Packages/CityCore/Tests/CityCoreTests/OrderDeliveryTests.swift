@@ -288,3 +288,17 @@ func scenarioFulfillingARivalOrder() {
     _ = fixture.dock()
     #expect(fixture.world.order(id)?.delivered == 0)
 }
+
+@Test("scenario: a returning shipment passes a burning store by")
+func aReturningShipmentPassesABurningStoreBy() {
+    var fixture = OrdersFixture()
+    _ = accepted(&fixture)
+    fixture.world.buildings[fixture.warehouse]?.state = .burning
+    fixture.world.orders.shipments = [OrderShipment(
+        id: EntityID(raw: 800), order: 999, good: .planks, amount: 5,
+        path: [TileCoordinate(x: 13, y: 12)], from: fixture.warehouse, to: fixture.center
+    )]
+    fixture.world.tick()
+    #expect(fixture.stock(.planks, in: fixture.warehouse) == 0)
+    #expect(fixture.stock(.planks, in: fixture.center) == 5)
+}

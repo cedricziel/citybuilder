@@ -91,6 +91,9 @@ public enum BuildingState: String, Codable, Sendable {
     case planned
     case constructing
     case operational
+    /// On fire: stopped until it is put out or burns down. Spec:
+    /// `seasonal-events` / Fire starts, spreads and burns down.
+    case burning
 }
 
 /// Substate of `.constructing`: distinguishes "waiting for materials
@@ -150,6 +153,8 @@ public struct Building: Hashable, Codable, Sendable {
     /// long haul, 0 when nothing waits. Spec: `warehouses-and-logistics`
     /// / Handcarts carry long and bulk hauls.
     public internal(set) var haulWaitTicks: UInt32
+    /// For ruins, the kind that burnt down; nil for every other building.
+    public let ruinOf: BuildingKind?
 
     public init(
         id: EntityID,
@@ -168,7 +173,8 @@ public struct Building: Hashable, Codable, Sendable {
         exportGood: Good? = nil,
         lastCaravan: CaravanSale? = nil,
         owner: Owner = .player,
-        haulWaitTicks: UInt32 = 0
+        haulWaitTicks: UInt32 = 0,
+        ruinOf: BuildingKind? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -187,6 +193,7 @@ public struct Building: Hashable, Codable, Sendable {
         self.lastCaravan = lastCaravan
         self.owner = owner
         self.haulWaitTicks = haulWaitTicks
+        self.ruinOf = ruinOf
     }
 }
 
@@ -228,6 +235,7 @@ public extension Building {
         self.exportGood = try container.decodeIfPresent(Good.self, forKey: .exportGood)
         self.lastCaravan = try container.decodeIfPresent(CaravanSale.self, forKey: .lastCaravan)
         self.owner = try container.decodeIfPresent(Owner.self, forKey: .owner) ?? .player
+        self.ruinOf = try container.decodeIfPresent(BuildingKind.self, forKey: .ruinOf)
     }
 }
 
@@ -235,6 +243,13 @@ public extension BuildingKind {
     /// False for buildings tied to another culture.
     func isBuildable(in culture: Culture) -> Bool {
         self.culture.map { $0 == culture } ?? true
+    }
+}
+
+public extension Building {
+    /// The tiles it covers: ruins keep the footprint of the kind that burnt.
+    var footprint: Footprint {
+        BuildingCatalog.spec(for: ruinOf ?? kind).footprint
     }
 }
 

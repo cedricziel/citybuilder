@@ -19,10 +19,12 @@ func kitIconsScaleSmoothly() {
     #expect(BuildingIconLoader.interpolation(for: .townCenter) == .high)
 }
 
-/// Every building family is on the art kit, so every kind's icon is a linearly filtered kit render.
+/// Every building family is on the art kit, so every kind's icon is a linearly filtered kit render;
+/// kinds still waiting for their art have no icon yet.
 @Test("every building icon is a kit render")
 func everyBuildingIconIsAKitRender() {
-    let pixelArt = BuildingKind.allCases.filter { BuildingIconLoader.interpolation(for: $0) != .high }
+    let drawn = BuildingKind.allCases.filter { !PendingArt.buildingKinds.contains($0) }
+    let pixelArt = drawn.filter { BuildingIconLoader.interpolation(for: $0) != .high }
     #expect(pixelArt.isEmpty, "\(pixelArt)")
 }
 
@@ -69,4 +71,17 @@ func iconsAreCutToTheBuilding() throws {
     #expect((0 ..< cropped.width * cropped.height).allSatisfy { pixels[$0 * 4 + 3] == 255 })
     let empty = try #require(bitmap(width: 4, height: 4)?.makeImage())
     #expect(BuildingIconLoader.croppedToBuilding(empty).width == 4)
+}
+
+@Test("kinds waiting for their art stay out of the build palette")
+func pendingArtIsNotInThePalette() {
+    let offered = Set(BuildPalette.kinds)
+    #expect(offered.isDisjoint(with: PendingArt.buildingKinds))
+}
+
+@Test("kinds waiting for their art stay out of the category showcase")
+func pendingArtIsNotInTheShowcase() {
+    let town = UITestSeed.showcase(fromArguments: ["-uiTestShowcase", "town"])
+    #expect(!town.isEmpty)
+    #expect(Set(town).isDisjoint(with: PendingArt.buildingKinds))
 }

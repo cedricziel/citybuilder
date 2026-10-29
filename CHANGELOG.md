@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.7](https://github.com/cedricziel/citybuilder/compare/v0.2.6...v0.2.7) (2026-10-28)
+
+
+### Features
+
+* **orders:** timed requests from the crown and rival towns, with favour ([16942ac](https://github.com/cedricziel/citybuilder/commit/16942ac83abfc70595b9d0d4546be4078e04ab24))
+
+
+### Bug Fixes
+
+* **ui:** keep favour pills on one line; leave the determinism task open until CI is green ([ce5499d](https://github.com/cedricziel/citybuilder/commit/ce5499d8c497e69c9eaa2464d72c7e938f259c6c)), closes [#255](https://github.com/cedricziel/citybuilder/issues/255)
+
 ## [0.2.6](https://github.com/cedricziel/citybuilder/compare/v0.2.5...v0.2.6) (2026-10-25)
 
 

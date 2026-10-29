@@ -45,7 +45,15 @@ private let eventSamples: [WorldEvent] = [
     .orderAccepted(order: 1),
     .orderFulfilled(order: 1, reward: 540),
     .orderFailed(order: 1),
-    .orderExpired(order: 1)
+    .orderExpired(order: 1),
+    .seasonalEventWarned(event: .fire, onset: .summer),
+    .seasonalEventStarted(event: .fire),
+    .seasonalEventEnded(event: .fire, toll: SeasonalEventToll(count: 0)),
+    .buildingCaughtFire(building: EntityID(raw: 1), kind: .house),
+    .fireExtinguished(building: EntityID(raw: 1)),
+    .buildingBurntDown(building: EntityID(raw: 1), kind: .house),
+    .ruinsCleared(building: EntityID(raw: 1)),
+    .demolitionRejected(building: EntityID(raw: 1), reason: .notEnoughMoney)
 ]
 
 @Test("scenario: event enum is exhaustive over mvp capabilities")
@@ -53,7 +61,7 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
     // Construct one event of every case. Exhaustiveness is enforced by the
     // case-less switch below: removing a case breaks the construction;
     // adding a case without updating the test makes the compiler warn.
-    #expect(eventSamples.count == 36)
+    #expect(eventSamples.count == 44)
     for event in eventSamples {
         switch event {
         case .buildingPlaced,
@@ -91,7 +99,15 @@ func scenarioEventEnumIsExhaustiveOverMvpCapabilities() {
              .orderAccepted,
              .orderFulfilled,
              .orderFailed,
-             .orderExpired:
+             .orderExpired,
+             .seasonalEventWarned,
+             .seasonalEventStarted,
+             .seasonalEventEnded,
+             .buildingCaughtFire,
+             .fireExtinguished,
+             .buildingBurntDown,
+             .ruinsCleared,
+             .demolitionRejected:
             break
         }
     }

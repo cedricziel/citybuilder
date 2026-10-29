@@ -71,11 +71,7 @@ extension World {
         // Dispatching moves goods, not buildings: list the buffers once.
         let buffers = goodsBuffers().filter { $0.state == .operational }
         for (consumer, needs) in consumers {
-            guard let consumerRoad = anyAdjacentRoad(
-                anchor: consumer.anchor,
-                footprint: BuildingCatalog.spec(for: consumer.kind).footprint
-            )
-            else { continue }
+            guard let consumerRoad = anyAdjacentRoad(anchor: consumer.anchor, footprint: consumer.footprint) else { continue }
             let vehicle = CarrierConfig.vehicle(in: age(of: consumer.owner))
             for good in Good.allCases {
                 guard let amount = needs[good] else { continue }
@@ -192,7 +188,7 @@ extension World {
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   let bufferRoad = anyAdjacentRoad(
                       anchor: buffer.anchor,
-                      footprint: BuildingCatalog.spec(for: buffer.kind).footprint
+                      footprint: buffer.footprint
                   ),
                   let path = roadPath(from: bufferRoad, to: road)
             else { continue }
@@ -207,10 +203,10 @@ extension World {
     /// on `building`'s road network, lowest entity ID first. Returns the
     /// amount actually withdrawn.
     mutating func consume(_ good: Good, amount: Int, by building: Building) -> Int {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         var remaining = amount
         for buffer in goodsBuffers() where remaining > 0 && buffer.state == .operational {
-            let bufferFootprint = BuildingCatalog.spec(for: buffer.kind).footprint
+            let bufferFootprint = buffer.footprint
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   sharesRoadNetwork(building.anchor, footprint, with: buffer.anchor, bufferFootprint)
             else { continue }

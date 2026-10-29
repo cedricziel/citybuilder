@@ -125,7 +125,7 @@ public enum GatherWorkerPlanner {
 
     /// Every tile still one a worker may stand on.
     static func isStandable(_ path: [TileCoordinate], site: Building, ground: Ground) -> Bool {
-        let footprint = BuildingCatalog.spec(for: site.kind).footprint.tiles(anchor: site.anchor)
+        let footprint = site.footprint.tiles(anchor: site.anchor)
         return path.allSatisfy { !footprint.contains($0) && (ground.isWalkable($0) || ground.terrain($0) == wanted(by: site)) }
     }
 
@@ -151,7 +151,7 @@ public enum GatherWorkerPlanner {
     /// still stand there) into its woods or rock: the tiles in order, each a
     /// 4-connected step from the one before.
     static func route(from site: Building, ground: Ground, leavingFrom: TileCoordinate? = nil) -> [TileCoordinate]? {
-        let footprint = BuildingCatalog.spec(for: site.kind).footprint
+        let footprint = site.footprint
         let reach = site.kind.catchmentRadius ?? minerReach
         let wanted: TerrainType = site.kind == .mine ? .mountain : .forest
         let cols = (site.anchor.x - reach) ... (site.anchor.x + footprint.width - 1 + reach)

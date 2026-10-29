@@ -5,12 +5,17 @@ import Foundation
 /// Spec: `add-build-materials-cost` (buildings-and-construction,
 /// warehouses-and-logistics).
 public extension World {
-    /// Building kinds whose stockpiles back placement material checks.
-    /// Mirrors `WorldSnapshot.goodsBufferKinds` but lives on World so
-    /// canPlace doesn't depend on snapshot construction.
+    /// Building kinds whose stockpiles back placement material checks and
+    /// the snapshot's island totals: every store and the shipyard, not
+    /// the producers' in-transit output buffers.
     static let placementBufferKinds: Set<BuildingKind> = [
-        .warehouse, .port, .shipyard, .townCenter
+        .warehouse, .port, .shipyard, .townCenter, .granary
     ]
+
+    /// A store whose stock building sites can draw on: not one on fire.
+    static func givesMaterials(_ building: Building) -> Bool {
+        placementBufferKinds.contains(building.kind) && building.state != .burning
+    }
 
     /// Sum of goods across every goods-buffer building (warehouse,
     /// port, shipyard, town center) anchored on the island that
@@ -21,7 +26,7 @@ public extension World {
     ) -> [Good: Int] {
         guard let islandID = tileToIsland[anchor] else { return [:] }
         var totals: [Good: Int] = [:]
-        for (id, building) in buildings where Self.placementBufferKinds.contains(building.kind) {
+        for (id, building) in buildings where Self.givesMaterials(building) {
             guard buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland)
             else { continue }
             guard let stockpile = stockpiles[id] else { continue }
@@ -163,7 +168,7 @@ extension World {
         tileToIsland: [TileCoordinate: IslandID]
     ) -> [EntityID] {
         buildings
-            .filter { Self.placementBufferKinds.contains($0.value.kind) }
+            .filter { Self.givesMaterials($0.value) }
             .filter { _, building in
                 buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland)
             }
@@ -183,7 +188,7 @@ extension World {
         islandID: IslandID,
         tileToIsland: [TileCoordinate: IslandID]
     ) -> Bool {
-        let footprint = BuildingCatalog.spec(for: building.kind).footprint
+        let footprint = building.footprint
         for tile in footprint.tiles(anchor: building.anchor) where tileToIsland[tile] == islandID {
             return true
         }

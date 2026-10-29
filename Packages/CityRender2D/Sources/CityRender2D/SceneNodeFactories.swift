@@ -285,7 +285,7 @@ extension IsoWorldScene {
         case .constructing:
             return constructingTexture(kind: kind, frameIndex: constructionFrameIndex)
                 ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
-        case .operational:
+        case .operational, .burning:
             return SpriteAtlas.frames(for: .buildingOperational(kind))?.first
                 ?? SpriteAtlas.buildingTextureOrPlaceholder(for: kind, coord: coord)
         case .planned:

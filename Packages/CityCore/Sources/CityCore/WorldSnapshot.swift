@@ -229,7 +229,7 @@ public extension World {
             terrainGrid: terrainGrid,
             occupiedTiles: occupiedTiles,
             buildings: buildings,
-            carriers: orders.shipments.isEmpty ? Array(carriers.values) : Array(carriers.values) + orders.shipments.map(\.asCarrier),
+            carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier) + watchmenOnTheRoad,
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,
@@ -265,21 +265,12 @@ public extension World {
 
     private func roadDisconnectedBuildings() -> Set<EntityID> {
         Set(buildings.values.lazy.filter { building in
-            building.kind != .road && !roadGraph.isAnchorRoadConnected(
+            building.kind != .road && building.kind != .ruins && !roadGraph.isAnchorRoadConnected(
                 building.anchor,
-                footprint: BuildingCatalog.spec(for: building.kind).footprint
+                footprint: building.footprint
             )
         }.map(\.id))
     }
-
-    /// Building kinds whose stockpiles count toward island aggregates.
-    /// Producer-internal output buffers (sawmill, lumberjack hut) are
-    /// excluded — those are in-transit. The town center is included
-    /// because it's the bootstrap goods-buffer that holds the starter
-    /// inventory players spend on their first placements.
-    private static let goodsBufferKinds: Set<BuildingKind> = [
-        .warehouse, .port, .shipyard, .townCenter
-    ]
 
     private func buildIslandSummaries(
         tileToIsland: [TileCoordinate: IslandID]
@@ -287,7 +278,7 @@ public extension World {
         var stockpileByIsland: [IslandID: [Good: Int]] = [:]
         var capacityByIsland: [IslandID: [Good: Int]] = [:]
         for (id, building) in buildings {
-            guard Self.goodsBufferKinds.contains(building.kind) else { continue }
+            guard Self.placementBufferKinds.contains(building.kind) else { continue }
             guard let islandID = islandID(forBuilding: building, tileToIsland: tileToIsland)
             else { continue }
             if let stockpile = stockpiles[id] {
@@ -295,7 +286,7 @@ public extension World {
                     stockpileByIsland[islandID, default: [:]][good, default: 0] += amount
                 }
                 if stockpile.capacity > 0 {
-                    for good in Good.allCases {
+                    for good in Good.allCases where stockpile.accepts(good) {
                         capacityByIsland[islandID, default: [:]][good, default: 0] += stockpile.capacity
                     }
                 }

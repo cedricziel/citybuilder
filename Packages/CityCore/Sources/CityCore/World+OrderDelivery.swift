@@ -59,12 +59,12 @@ extension World {
                 sources.append(Source(store: store, center: store.id, path: []))
                 continue
             }
-            guard let road = anyAdjacentRoad(anchor: store.anchor, footprint: BuildingCatalog.spec(for: store.kind).footprint),
+            guard let road = anyAdjacentRoad(anchor: store.anchor, footprint: store.footprint),
                   let component = labels[road]
             else { continue }
             var best: (center: EntityID, path: [TileCoordinate])?
             for center in centers {
-                guard let centerRoad = anyAdjacentRoad(anchor: center.anchor, footprint: BuildingCatalog.spec(for: center.kind).footprint),
+                guard let centerRoad = anyAdjacentRoad(anchor: center.anchor, footprint: center.footprint),
                       labels[centerRoad] == component, let path = roadPath(from: road, to: centerRoad)
                 else { continue }
                 if best == nil || path.count < best!.path.count { best = (center.id, path) }
@@ -146,10 +146,13 @@ extension World {
         orders.shipments = moving
     }
 
-    /// Puts a shipment whose order closed back into the store it left, or
-    /// into any other operational player store with room for it.
+    /// Puts a shipment whose order closed back into the store it left, or,
+    /// when that is full or burning, into any other operational player
+    /// store with room for it.
     private mutating func returnShipment(_ shipment: OrderShipment) {
-        let kept = shipment.amount - (stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount) ?? 0)
+        let homeTakes = buildings[shipment.from]?.state != .burning
+        let home = homeTakes ? stockpiles[shipment.from]?.deposit(shipment.good, amount: shipment.amount) ?? 0 : 0
+        let kept = shipment.amount - home
         guard kept > 0 else { return }
         let stores = goodsBuffers(of: .player).filter { $0.state == .operational }
         _ = fill(shipment.good, upTo: kept, into: stores)

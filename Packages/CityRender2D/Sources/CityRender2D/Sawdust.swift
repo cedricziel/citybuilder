@@ -24,7 +24,7 @@ final class SawdustLayerNode: SKNode {
     /// Where the saw stands: the middle of the mill's +x edge, under the
     /// saw's sails on the sprite.
     static func saw(of mill: Building) -> CGPoint {
-        let footprint = BuildingCatalog.spec(for: mill.kind).footprint
+        let footprint = mill.footprint
         let point = IsoMath.screenPoint(
             forTileFractionalX: Double(mill.anchor.x + footprint.width) - 0.5,
             fractionalY: Double(mill.anchor.y) + Double(footprint.height - 1) / 2

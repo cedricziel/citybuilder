@@ -164,8 +164,7 @@ public extension TileBoundingBox {
 public extension Building {
     /// Inclusive tile bounds of the footprint.
     var bounds: TileBoundingBox {
-        let footprint = BuildingCatalog.spec(for: kind).footprint
-        return TileBoundingBox(
+        TileBoundingBox(
             minX: anchor.x, minY: anchor.y,
             maxX: anchor.x + footprint.width - 1, maxY: anchor.y + footprint.height - 1
         )

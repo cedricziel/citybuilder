@@ -14,6 +14,7 @@ struct Validator {
             tiers: unique(data.tiers, kind: "Tier", id: \.id, origin: \.origin)
         )
         _ = unique(data.orders, kind: "Order", id: \.id, origin: \.origin)
+        _ = unique(data.events, kind: "Event", id: \.id, origin: \.origin)
         data.goods.forEach { check($0, refs) }
         data.tiers.forEach { check($0, refs) }
         data.buildings.forEach { check($0, refs) }
@@ -21,6 +22,7 @@ struct Validator {
         data.techs.forEach { check($0, refs) }
         data.ages.forEach { check($0, refs) }
         data.orders.forEach { check($0, refs) }
+        data.events.forEach { check($0, refs) }
         checkLegacyIds()
         checkPrerequisiteCycles(refs.techs)
         checkConsumers()
@@ -136,6 +138,36 @@ struct Validator {
         }
         if case let .terrain(type, _)? = building.placement, !ItemSchema.terrainTypes.contains(type) {
             report("unknown terrain `\(type)`; expected one of \(ItemSchema.terrainTypes.sorted().joined(separator: ", "))")
+        }
+        if let accepts = building.accepts {
+            if building.storagePerGood == nil { report("`accepts` needs `storagePerGood`: only a store limits its goods") }
+            checkGoods(accepts.map { GoodAmount(good: $0, amount: 1) }, field: "accepts", refs, report)
+        }
+        if building.isCrop, building.recipe?.outputs.isEmpty ?? true { report("`crop` needs a recipe that grows a good") }
+    }
+
+    private func check(_ event: SeasonalEvent, _ refs: References) {
+        let report = reporter("Event", event.id, event.origin)
+        if !ItemSchema.eventEffects.contains(event.effect) {
+            report("`effect` must be one of \(ItemSchema.eventEffects.sorted().joined(separator: ", ")), not `\(event.effect)`")
+        }
+        if let age = event.minAge, refs.ages[age] == nil { report("`minAge` names unknown age `\(age)`") }
+        if event.seasons.isEmpty { report("`seasons` must name at least one season") }
+        for season in event.seasons where !ItemSchema.seasons.contains(season) {
+            report("`seasons` names unknown season `\(season)`")
+        }
+        if ItemSchema.hazardEffects.contains(event.effect), event.seasons.contains("spring") {
+            report("a \(event.effect) can't strike in spring: its warning would come the season before, in the previous year")
+        }
+        for difficulty in ItemSchema.difficulties {
+            guard let weight = event.weights[difficulty] else {
+                report("`weight` is missing `\(difficulty)`")
+                continue
+            }
+            if weight < 0 { report("`weight` for \(difficulty) must not be negative") }
+        }
+        for banner in event.banners where banner.title.isEmpty {
+            report("`banners.\(banner.key).title` must not be empty")
         }
     }
 

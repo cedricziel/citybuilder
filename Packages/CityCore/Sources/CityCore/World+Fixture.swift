@@ -36,7 +36,8 @@ public extension World {
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
-        rivals: Bool = true
+        rivals: Bool = true,
+        seasonalEvents: Bool = false
     ) -> World {
         let (terrain, width, height) = switch layout {
         case .singleIsland:
@@ -44,10 +45,12 @@ public extension World {
         case .archipelago:
             (ArchipelagoGenerator.generate(seed: seed), ArchipelagoGenerator.width, ArchipelagoGenerator.height)
         }
-        return generate(
+        var world = generate(
             layout: layout, seed: seed, width: width, height: height, terrain: terrain,
             culture: culture, age: age, difficulty: difficulty, rivals: rivals
         )
+        world.seasonalEvents.enabled = seasonalEvents
+        return world
     }
 
     /// A new game on the given generator terrain: islands, town centers

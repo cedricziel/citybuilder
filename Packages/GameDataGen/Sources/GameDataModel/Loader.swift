@@ -116,6 +116,7 @@ private struct ItemReader {
         case "Logistics": logistics(id).map { data.logistics.append($0) }
         case "Vehicle": vehicle(id).map { data.vehicles.append($0) }
         case "Order": order(id).map { data.orders.append($0) }
+        case "Event": event(id).map { data.events.append($0) }
         default: age(id).map { data.ages.append($0) }
         }
     }
@@ -151,6 +152,7 @@ private struct ItemReader {
             buildTicks: fields.int("buildTicks", required: false) ?? 30,
             storage: fields.int("storage", required: false),
             storagePerGood: fields.int("storagePerGood", required: false),
+            accepts: fields.strings("accepts", required: false),
             plantTicks: fields.int("plantTicks", required: false),
             catchmentRadius: fields.int("catchmentRadius", required: false),
             category: fields.string("category", required: false),
@@ -161,6 +163,7 @@ private struct ItemReader {
             culture: fields.string("culture", required: false),
             placement: placement,
             hasCodeEffect: effect == "code",
+            isCrop: fields.bool("crop", required: false) ?? false,
             origin: fields.origin
         )
         return footprint?.count == 2 && cost != nil ? building : nil
@@ -272,6 +275,29 @@ private struct ItemReader {
             minAge: fields.string("minAge", required: false), seasons: seasons, size: size, min: min, max: max, reward: reward,
             favour: fields.int("favour", required: false) ?? 2, penalty: fields.int("penalty", required: false) ?? 2,
             origin: fields.origin
+        )
+    }
+
+    private func event(_ id: String) -> SeasonalEvent? {
+        let effect = fields.string("effect"), seasons = fields.strings("seasons")
+        let weight = fields.mapping("weight").map { weight in
+            weight.finish(allowed: Set(ItemSchema.difficulties))
+            return Dictionary(uniqueKeysWithValues: weight.keys.compactMap { key in weight.int(key).map { (key, $0) } })
+        }
+        let banners = fields.mapping("banners").map { banners in
+            banners.finish(allowed: Set(ItemSchema.eventBanners))
+            return banners.keys.compactMap { key -> SeasonalEvent.Banner? in
+                guard let banner = banners.mapping(key) else { return nil }
+                banner.finish(allowed: ["title", "text"])
+                let title = banner.string("title"), text = banner.string("text")
+                guard let title, let text else { return nil }
+                return SeasonalEvent.Banner(key: key, title: title, text: text)
+            }
+        }
+        guard let effect, let seasons, let weight, let banners else { return nil }
+        return SeasonalEvent(
+            id: id, effect: effect, seasons: seasons, minAge: fields.string("minAge", required: false),
+            weights: weight, banners: banners, origin: fields.origin
         )
     }
 }
