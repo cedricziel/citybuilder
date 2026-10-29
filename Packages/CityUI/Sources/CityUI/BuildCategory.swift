@@ -8,9 +8,8 @@ import Foundation
 public enum BuildPalette {
     /// Drawn, but not offered yet: the granary waits for "drawn last"
     /// (`add-event-counterplay` task 5.2), without which it is only a
-    /// smaller warehouse. Empty this set when 5.2 lands. The marketplace
-    /// waits for market porters (`visible-distribution` task 3.7).
-    public static let held: Set<BuildingKind> = [.granary, .marketplace]
+    /// smaller warehouse. Empty this set when 5.2 lands.
+    public static let held: Set<BuildingKind> = [.granary]
 
     public static let kinds = BuildingKind.allCases.filter {
         $0 != .townCenter && $0 != .ruins && !held.contains($0)
