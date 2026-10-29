@@ -203,7 +203,7 @@ public final class GameSession {
     /// The banner on screen and the tick it hides at.
     var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
     /// Banners waiting their turn, urgent ones ("Fire!") first.
-    var bannerQueue: [(banner: SessionBanner, isUrgent: Bool)] = []
+    var bannerQueue: [QueuedBanner] = []
     /// True once this session showed the deficit hint (`deficit-hint` D2).
     var hasShownDeficitHint = false
     /// The deficit hint while it shows; the simulation waits for the

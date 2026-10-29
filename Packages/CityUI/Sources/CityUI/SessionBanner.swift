@@ -12,6 +12,8 @@ extension GameSession {
     /// Ticks between one banner hiding and the next showing, so the two
     /// never draw at once while one slides out and the other in.
     static let bannerGapTicks: UInt64 = 5
+    /// Banners waiting at most; past it the oldest that isn't urgent goes.
+    static let bannerQueueLimit = 8
     static let gameOverBanner = SessionBanner(
         title: "Bankrupt",
         description: "The treasury stayed in the red too long and the town is lost. "
@@ -85,7 +87,7 @@ extension GameSession {
             guard let order = world.order(id) else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let verb = order.issuer == .crown ? "orders" : "wants"
-            show(SessionBanner(
+            show(expiringAt: order.offerEndsTick, SessionBanner(
                 title: "\(name) \(verb) \(order.quantity) \(InspectorViewModel.goodName(order.good))",
                 description: "\(order.template.title), \(OrdersBoardModel.deadlineText(order, in: world)). "
                     + "Pays \(HUDViewModel.formatMoney(order.reward, locale: .current)) and \(order.favourGain) favour. "
@@ -179,7 +181,9 @@ extension GameSession {
     /// show banners and a chip.
     public func replaySeasonalWarning() {
         guard let banner = seasonalChipBanner() else { return }
-        show(banner)
+        // The player asked: it takes the slot at once, paused or not.
+        bannerQueue.removeAll { $0.banner == banner }
+        bannerState = (banner, world.tickCount + Self.bannerTicks)
     }
 
     /// Resume, the pause control or Esc: the simulation runs again.
@@ -267,19 +271,25 @@ extension GameSession {
     /// A banner shows, or waits while one shows: one at a time, each once.
     /// An urgent one ("Fire!") goes ahead of the others, and a newer urgent
     /// one with the same title takes the place of the one waiting.
-    private func show(_ banner: SessionBanner, isUrgent: Bool = false) {
+    /// A banner that goes stale at `expiringAt` (an order offer that lapses)
+    /// is dropped if it is still waiting then.
+    private func show(expiringAt expiry: UInt64? = nil, _ banner: SessionBanner, isUrgent: Bool = false) {
         guard bannerState?.banner != banner || !isBannerShowing, !bannerQueue.contains(where: { $0.banner == banner }) else { return }
         if isUrgent {
             bannerQueue.removeAll { $0.isUrgent && $0.banner.title == banner.title }
         }
         let place = isUrgent ? bannerQueue.firstIndex { !$0.isUrgent } ?? bannerQueue.endIndex : bannerQueue.endIndex
-        bannerQueue.insert((banner, isUrgent), at: place)
+        bannerQueue.insert(QueuedBanner(banner: banner, isUrgent: isUrgent, expiresAtTick: expiry), at: place)
+        if bannerQueue.count > Self.bannerQueueLimit, let oldest = bannerQueue.firstIndex(where: { !$0.isUrgent }) {
+            bannerQueue.remove(at: oldest)
+        }
         showNextBanner()
     }
 
     /// The next waiting banner, once the one before has hidden and the gap passed.
     private func showNextBanner() {
         let free = bannerState.map { world.tickCount >= $0.hidesAtTick + Self.bannerGapTicks } ?? true
+        bannerQueue.removeAll { $0.expiresAtTick.map { world.tickCount >= $0 } ?? false }
         guard free, !bannerQueue.isEmpty else { return }
         bannerState = (bannerQueue.removeFirst().banner, world.tickCount + Self.bannerTicks)
     }
@@ -298,6 +308,15 @@ private extension WorldEvent {
     var isIgnition: Bool {
         if case .buildingCaughtFire = self { true } else { false }
     }
+}
+
+/// A banner waiting for the slot.
+struct QueuedBanner {
+    let banner: SessionBanner
+    /// "Fire!" goes ahead of the others.
+    let isUrgent: Bool
+    /// The tick it goes stale at, such as an order offer's end; nil for never.
+    let expiresAtTick: UInt64?
 }
 
 /// Where the session banner goes. Spec: `platform-shells` / Session banners.

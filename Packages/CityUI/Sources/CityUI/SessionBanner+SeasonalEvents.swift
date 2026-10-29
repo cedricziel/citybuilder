@@ -56,8 +56,9 @@ extension GameSession {
     /// What the event chip shows again: while a fire burns, that it burns,
     /// else the warning.
     func seasonalChipBanner() -> SessionBanner? {
+        // The same banner as the ignition's, covered or not, so it matches the one on screen.
         if let fire = world.seasonalEvents.fire?.fires.first, let kind = world.buildings[fire.building]?.kind {
-            return Self.banner(.fire, .ignition, ["building": BuildTool.place(kind).displayName.lowercased()])
+            return seasonalEventBanner(for: .buildingCaughtFire(building: fire.building, kind: kind))
         }
         return world.currentSeasonalEvent.flatMap(Self.warningBanner)
     }

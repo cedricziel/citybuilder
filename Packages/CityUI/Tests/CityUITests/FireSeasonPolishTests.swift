@@ -182,3 +182,58 @@ func ruinsPolish() {
 func glyphOnlyChipTapTarget() {
     #expect(EventChipLayout.minimumTapSide == 44)
 }
+
+// MARK: - Review of #309
+
+@MainActor
+@Test("scenario: a chip tap takes the banner slot at once")
+func chipTapTakesTheSlot() {
+    let session = session { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .autumn)
+    }
+    session.noteBannerEvents(in: [.ageAdvanced(.renaissance)])
+    session.replaySeasonalWarning()
+    #expect(session.banner?.title == "Dry autumn ahead")
+}
+
+@MainActor
+@Test("scenario: the chip replays the covered Fire! text")
+func chipReplaysTheCoveredText() {
+    let fixture = WatchFixture()
+    let session = fixture.session
+    session.world.buildings[fixture.onRoad]?.state = .burning
+    session.world.seasonalEvents.active = ActiveSeasonalEvent(event: .fire, startTick: 0, lastTick: 1199)
+    var fire = FireEventState(ignitionTicks: [])
+    fire.fires = [Fire(building: fixture.onRoad, ignitionTick: 0)]
+    session.world.seasonalEvents.fire = fire
+    session.noteBannerEvents(in: [.buildingCaughtFire(building: fixture.onRoad, kind: .house)])
+    let shown = session.banner
+    session.replaySeasonalWarning()
+    #expect(session.banner == shown)
+    #expect(shown?.description.contains("sends its watchman") == true)
+}
+
+@MainActor
+@Test("scenario: a stale order offer is dropped from the queue")
+func staleOfferIsDropped() {
+    let session = boardSession([order(1, offerEnds: 30)])
+    session.noteBannerEvents(in: [.ageAdvanced(.renaissance)])
+    session.noteBannerEvents(in: [.orderOffered(order: 1, issuer: .crown)])
+    showNextBanner(session)
+    #expect(session.banner == nil)
+}
+
+@MainActor
+@Test("scenario: the queue keeps at most eight banners, urgent ones first")
+func queueIsCapped() {
+    let session = session()
+    session.noteBannerEvents(in: [.ageAdvanced(.renaissance)])
+    session.noteBannerEvents(in: [.buildingCaughtFire(building: EntityID(raw: 900), kind: .farm)])
+    let distinct: [WorldEvent] = Age.allCases.map { .ageAdvanced($0) } + HistoryEvent.allCases.map { .historyEvent($0) } + [
+        .monumentCompleted(building: EntityID(raw: 2)), .commissionEnded(building: EntityID(raw: 4)),
+        .fuelRanOut(building: EntityID(raw: 3), kind: .steamEngine)
+    ]
+    session.noteBannerEvents(in: distinct)
+    #expect(session.bannerQueue.count == GameSession.bannerQueueLimit)
+    #expect(session.bannerQueue.first?.isUrgent == true)
+}

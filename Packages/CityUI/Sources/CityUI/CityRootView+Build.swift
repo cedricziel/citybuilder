@@ -81,9 +81,11 @@ extension CityRootView {
         ))
     }
 
-    /// A column too narrow for a banner (a small phone with the first steps
-    /// open) would squeeze it over the inspector: it spans the HUD above the
-    /// build controls instead.
+    /// The left column is the HUD less the rail and whatever takes the right
+    /// column (the open first-steps card or a top-right minimap). Under
+    /// `SessionBannerLayout.minWidth` it would squeeze a banner over the
+    /// inspector, so the banner spans the HUD above the build controls
+    /// instead, as on an iPhone SE with the first-steps card open.
     private func wideBanner(layout: HUDLayout) -> some View {
         VStack {
             Spacer()
