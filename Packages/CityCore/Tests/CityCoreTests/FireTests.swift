@@ -433,6 +433,18 @@ func fireShowcaseSeed() {
     #expect(world.buildings[houses[3]]?.state == .operational)
     #expect(world.seasonalEvents.active?.event == .fire)
     #expect(world.snapshot().watchmen.map(\.watch) == [watch])
+    #expect(world.seasonalEvents.fire?.ignitionTicks.isEmpty == true)
+}
+
+@Test("the fire showcase can set one more house alight later, and the fires run their course")
+func fireShowcaseLaterIgnition() {
+    var world = eventsWorld(size: 24)
+    world.seasonalEvents.enabled = false
+    let houses = (0 ..< 3).map { addOperational(.house, at: TileCoordinate(x: 2 + 3 * $0, y: 2), residents: 2, in: &world) }
+    world.seedFireShowcase(burning: 1, ruined: 0, nextIgnitionIn: 5)
+    #expect(world.seasonalEvents.enabled)
+    _ = runEvents(&world, untilTick: world.tickCount + 5)
+    #expect(houses.count { world.buildings[$0]?.state == .burning } == 2)
 }
 
 @Test("burning down leaves ruins of the kind, keeps the owner and clears stock, residents and production")
