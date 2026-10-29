@@ -261,3 +261,9 @@ func aCampaignThatCanNeverOpenIsRejected() {
     #expect(cycle.contains { $0.contains("Campaign chronicle") && $0.contains("never open") }, "\(cycle)")
     #expect(cycle.contains { $0.contains("Campaign sea") && $0.contains("never open") }, "\(cycle)")
 }
+
+@Test("a chapter that schedules a disabled event is rejected")
+func aChapterThatSchedulesADisabledEventIsRejected() {
+    let found = errors(replacing: "    effect: fire\n", with: "    effect: fire\n    enabled: false\n")
+    #expect(found.contains { $0.contains("Chapter the-crossing") && $0.contains("`fire`") && $0.contains("disabled") }, "\(found)")
+}
