@@ -181,6 +181,15 @@ The canvas https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 shows the current s
 
 The final choice is the owner's. Art and `design/web` components follow the approval.
 
+### D14. Two-step rollout
+
+The owner approved the canvas on 2026-10-29 (task 0.2), with the recommended option for each piece. Events ship in two steps:
+
+1. **Fire season** (next release): fire, the fire watch, ruins, the granary, the New Game toggle, the banners, the event chip and the ruins inspector. Only fire is drawn and warned.
+2. **Blight, fever and the festival** (after #238 M2, and #277 for the festival): sections 5 and 6.
+
+Each event item in the pack carries `enabled`. Only enabled events enter the random draw, and only they are warned or started, scheduled or not. Step 1 ships with `enabled: false` on blight, fever and festival. Step 2 turns each on in data when its section lands, with no code change to the draw.
+
 ## Risks / Trade-offs
 
 - **[Risk]** A fire in year 3 bankrupts a Hard start. → Ignition comes a season after the warning, a watch costs $60, and the forced first-hour variant is a gate (D12, bar 1).

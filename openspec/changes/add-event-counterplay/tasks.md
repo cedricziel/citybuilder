@@ -1,7 +1,7 @@
 ## 0. Design
 
 - [x] 0.1 Proposal, design and spec deltas; `openspec validate add-event-counterplay --strict`
-- [ ] 0.2 Claude Design canvas approved for fire, ruins, fire watch, granary, physician, warning banner and festival notice (https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5); the owner's answers to the open questions in design.md
+- [x] 0.2 Claude Design canvas approved for fire, ruins, fire watch, granary, physician, warning banner and festival notice (https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5); the owner's answers to the open questions in design.md. Approved 2026-10-29 with the recommended options; events ship in two steps (design D14)
 
 Sections 1–4 can start before #238 M2: they don't touch house supply or the marketplace. Sections 5–6 wait for M2, and section 6 also waits for orders (#277). The art in section 8 waits for 0.2.
 
