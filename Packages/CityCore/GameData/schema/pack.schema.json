@@ -64,7 +64,11 @@
     "chapterStart": {
       "type": "object",
       "additionalProperties": false,
-      "properties": { "money": { "$ref": "#/$defs/nonNegative" }, "stock": { "$ref": "#/$defs/amounts" } }
+      "properties": {
+        "money": { "$ref": "#/$defs/nonNegative" },
+        "stock": { "$ref": "#/$defs/amounts" },
+        "rivalAgeYears": { "description": "The earliest year a rival may enter each age on this difficulty.", "type": "object", "propertyNames": { "$ref": "#/$defs/id" }, "additionalProperties": { "type": "integer" } }
+      }
     },
     "chapterGoal": {
       "description": "Exactly one goal kind. residents takes an optional tier (default the first tier); stock, buildings and landed take a count. hold: true needs the condition for a whole season.",
@@ -357,11 +361,11 @@
               "seed": { "$ref": "#/$defs/nonNegative" },
               "age": { "$ref": "#/$defs/id" },
               "culture": { "description": "A fixed culture. Omit to let the player choose.", "$ref": "#/$defs/id" },
-              "rivals": { "description": "Rival towns on the archipelago.", "type": "integer", "minimum": 0, "maximum": 4 },
+              "rivals": { "description": "Rival towns on the archipelago; there are three rival cultures.", "type": "integer", "minimum": 0, "maximum": 3 },
               "money": { "description": "Normal starting money: Easy ×1.5 and Hard ×0.7, rounded to $50.", "$ref": "#/$defs/nonNegative" },
               "stock": { "description": "Normal starting stock per town center: Easy ×1.5 and Hard ×0.5, rounded up.", "$ref": "#/$defs/amounts" },
               "overrides": {
-                "description": "Money or stock for one difficulty, in place of the scaled value.",
+                "description": "Money, stock or rival age years for one difficulty, in place of the chapter's.",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
@@ -385,7 +389,7 @@
                       "required": ["island", "keep"],
                       "properties": { "island": { "$ref": "#/$defs/island" }, "keep": { "type": "integer", "minimum": 0, "maximum": 100 } }
                     },
-                    "pushMineOut": { "description": "Radius around the home town center.", "$ref": "#/$defs/positive" },
+                    "pushMineOut": { "description": "Radius around the home town center, beyond its start area.", "type": "integer", "minimum": 8 },
                     "noMountains": { "$ref": "#/$defs/island" },
                     "raiseMineSite": { "$ref": "#/$defs/island" }
                   }

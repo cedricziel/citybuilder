@@ -85,7 +85,7 @@ extension World {
     }
 
     /// The start area's columns and rows, clipped to the map.
-    private func startBounds(ofTownCenterAt anchor: TileCoordinate) -> (ClosedRange<Int>, ClosedRange<Int>) {
+    func startBounds(ofTownCenterAt anchor: TileCoordinate) -> (ClosedRange<Int>, ClosedRange<Int>) {
         let reach = Self.startAreaReach
         let footprint = BuildingCatalog.spec(for: .townCenter).footprint
         return (
@@ -155,16 +155,19 @@ extension World {
     /// Plants the starter grove nearest the town center at `anchor`:
     /// forest with a 2×2 grass clearing in the middle (design D3).
     /// Plants nothing when no square qualifies.
+    @discardableResult
     mutating func plantStarterGrove(
         besideTownCenterAt anchor: TileCoordinate,
         island: IslandID,
         tileToIsland: [TileCoordinate: IslandID]
-    ) {
-        guard let corner = starterGroveCorner(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland) else { return }
-        for tile in Footprint(width: Self.groveSide, height: Self.groveSide).tiles(anchor: corner) {
+    ) -> [TileCoordinate] {
+        guard let corner = starterGroveCorner(besideTownCenterAt: anchor, island: island, tileToIsland: tileToIsland) else { return [] }
+        let grove = Footprint(width: Self.groveSide, height: Self.groveSide).tiles(anchor: corner)
+        for tile in grove {
             let clearing = (2 ... 3).contains(tile.x - corner.x) && (2 ... 3).contains(tile.y - corner.y)
             terrainGrid[tile.y * mapWidth + tile.x] = clearing ? .grass : .forest
         }
+        return grove
     }
 
     /// The corner of the starter grove beside the town center at `anchor`:

@@ -6,14 +6,15 @@ extension World {
     /// Runs after every town center, starter grove and starter mine site
     /// is placed, and before rivals are seated and starter roads laid. The
     /// island list never changes: directives only swap land types.
-    mutating func applyTerrainDirectives(_ directives: [TerrainDirective]) {
+    /// `groves` holds each town center's starter grove tiles, as planted.
+    mutating func applyTerrainDirectives(_ directives: [TerrainDirective], groves: [EntityID: [TileCoordinate]] = [:]) {
         for directive in directives {
             let map = tileToIslandMap()
             switch directive {
             case let .thinForest(ref, keep):
-                island(ref, in: map).map { thinForest(on: $0, keepPercent: keep, map: map) }
+                island(ref, in: map).map { thinForest(on: $0, keepPercent: keep, groves: groves, map: map) }
             case let .pushMineOut(radius):
-                pushMineOut(radius: radius, map: map)
+                pushMineOut(radius: radius, groves: groves, map: map)
             case let .noMountains(ref):
                 island(ref, in: map).map { clearMountains(on: $0, map: map) { _ in true } }
             case let .raiseMineSite(ref):
@@ -38,21 +39,14 @@ extension World {
 
     /// A forest tile outside the starter grove stays forest only when the
     /// tile's hash, modulo 100, is below `keepPercent`.
-    private mutating func thinForest(on island: Island, keepPercent: Int, map: [TileCoordinate: IslandID]) {
-        let grove = Set(townCenter(onIsland: island.id, tileToIsland: map)
-            .flatMap { starterGroveTiles(of: $0.anchor, island: island.id, map: map) } ?? [])
+    private mutating func thinForest(
+        on island: Island, keepPercent: Int, groves: [EntityID: [TileCoordinate]], map: [TileCoordinate: IslandID]
+    ) {
+        let grove = Set(townCenter(onIsland: island.id, tileToIsland: map).flatMap { groves[$0.id] } ?? [])
         for tile in islandTiles(of: island, tileToIsland: map) where terrain(at: tile) == .forest && !grove.contains(tile) {
             if Self.directiveHash(seed: seed, tile: tile) % 100 >= UInt64(keepPercent) {
                 terrainGrid[tile.y * mapWidth + tile.x] = .grass
             }
-        }
-    }
-
-    /// The starter grove's tiles beside the town center at `anchor`: the
-    /// corner the grove rule picks, which planting never changes.
-    func starterGroveTiles(of anchor: TileCoordinate, island: IslandID, map: [TileCoordinate: IslandID]) -> [TileCoordinate]? {
-        starterGroveCorner(besideTownCenterAt: anchor, island: island, tileToIsland: map).map {
-            Footprint(width: Self.groveSide, height: Self.groveSide).tiles(anchor: $0)
         }
     }
 
@@ -65,10 +59,11 @@ extension World {
     /// Clears every mountain within `radius` (Chebyshev) of the home town
     /// center, then raises an outcrop farther out when no mine site is
     /// left on the home island.
-    private mutating func pushMineOut(radius: Int, map: [TileCoordinate: IslandID]) {
+    private mutating func pushMineOut(radius: Int, groves: [EntityID: [TileCoordinate]], map: [TileCoordinate: IslandID]) {
         guard let home = homeIslandID(in: map), let island = islands.first(where: { $0.id == home }),
-              let anchor = townCenter(onIsland: home, tileToIsland: map)?.anchor
+              let center = townCenter(onIsland: home, tileToIsland: map)
         else { return }
+        let anchor = center.anchor
         let distance = { (tile: TileCoordinate) in max(abs(tile.x - anchor.x), abs(tile.y - anchor.y)) }
         clearMountains(on: island, map: map) { distance($0) <= radius }
         let islandTiles = islandTiles(of: island, tileToIsland: map)
@@ -76,9 +71,14 @@ extension World {
         probe.research.markResearched(.mining)
         guard !islandTiles.contains(where: { probe.isMineSite($0, map: map) }) else { return }
         let occupied = occupiedTiles
+        let (startXs, startYs) = startBounds(ofTownCenterAt: anchor)
+        let kept = Set(Self.ringSquare(of: anchor) + (groves[center.id] ?? []))
         _ = raiseNearMineOutcrop(
             among: islandTiles,
-            raisable: { distance($0) > radius && occupied[$0] == nil },
+            raisable: { tile in
+                distance(tile) > radius && occupied[tile] == nil && !kept.contains(tile)
+                    && !(startXs.contains(tile.x) && startYs.contains(tile.y))
+            },
             roads: Dictionary(uniqueKeysWithValues: islandTiles.map { ($0, distance($0)) }),
             probe: probe,
             tileToIsland: map

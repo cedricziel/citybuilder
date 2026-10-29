@@ -46,7 +46,8 @@ func scenarioThinForestKeepsAboutTheShareAsked() throws {
     let map = world.tileToIslandMap()
     let home = try #require(world.homeIslandID(in: map))
     let anchor = try homeAnchor(world)
-    let grove = try Set(#require(world.starterGroveTiles(of: anchor, island: home, map: map)))
+    let corner = try #require(before.starterGroveCorner(besideTownCenterAt: anchor, island: home, tileToIsland: map))
+    let grove = Set(Footprint(width: World.groveSide, height: World.groveSide).tiles(anchor: corner))
     let groveForest = grove.filter { before.terrain(at: $0) == .forest }
     #expect(!groveForest.isEmpty)
     #expect(groveForest.allSatisfy { world.terrain(at: $0) == .forest })
@@ -77,16 +78,24 @@ func scenarioPushingTheMineOut() throws {
     #expect(sites.allSatisfy { max(abs($0.x - anchor.x), abs($0.y - anchor.y)) > 16 })
 }
 
-@Test("pushing the mine out raises a site when none is left")
+@Test("pushing the mine out raises a site when none is left, clear of the start area and grove")
 func pushingTheMineOutRaisesASiteWhenNoneIsLeft() throws {
-    let world = World.newGame(
-        layout: .archipelago, seed: 303, directives: [.noMountains(.home), .pushMineOut(radius: 12)]
-    )
-    let anchor = try homeAnchor(world)
-    let home = try #require(world.homeIslandID(in: world.tileToIslandMap()))
-    let sites = mineSites(on: home, of: world)
-    #expect(!sites.isEmpty)
-    #expect(sites.allSatisfy { max(abs($0.x - anchor.x), abs($0.y - anchor.y)) > 12 })
+    for seed: UInt64 in [303, 5, 17] {
+        let before = World.newGame(layout: .archipelago, seed: seed, directives: [.noMountains(.home)])
+        let world = World.newGame(layout: .archipelago, seed: seed, directives: [.noMountains(.home), .pushMineOut(radius: 8)])
+        let map = world.tileToIslandMap()
+        let anchor = try homeAnchor(world)
+        let home = try #require(world.homeIslandID(in: map))
+        let sites = mineSites(on: home, of: world)
+        #expect(!sites.isEmpty, "seed \(seed)")
+        #expect(sites.allSatisfy { max(abs($0.x - anchor.x), abs($0.y - anchor.y)) > 8 })
+        let raised = tiles(on: home, of: world, where: .mountain)
+        let (xs, ys) = world.startBounds(ofTownCenterAt: anchor)
+        let corner = try #require(before.starterGroveCorner(besideTownCenterAt: anchor, island: home, tileToIsland: map))
+        let kept = Set(World.ringSquare(of: anchor) + Footprint(width: World.groveSide, height: World.groveSide).tiles(anchor: corner))
+        let intruders = raised.filter { kept.contains($0) || (xs.contains($0.x) && ys.contains($0.y)) }
+        #expect(intruders.isEmpty, "seed \(seed): \(intruders)")
+    }
 }
 
 @Test("scenario: no mountains removes the home mine site")

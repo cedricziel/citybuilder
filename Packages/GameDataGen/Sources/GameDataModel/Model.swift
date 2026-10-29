@@ -261,10 +261,11 @@ public struct ChapterStart: Equatable, Sendable {
     public var stock: GoodAmounts
 }
 
-/// A difficulty's override of a chapter's money or stock.
+/// A difficulty's override of a chapter's money, stock or rival age years.
 public struct ChapterStartData: Equatable, Sendable {
     public var money: Int?
     public var stock: GoodAmounts?
+    public var rivalAgeYears: [String: Int]?
 }
 
 /// A seasonal event a chapter puts in a year.

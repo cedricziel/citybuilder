@@ -3,6 +3,8 @@
 extension Validator {
     /// The card text limit, in characters.
     static let cardTextLimit = 320
+    /// The smallest `pushMineOut` radius: beyond the town center's start area.
+    static let minimumMineRadius = 8
 
     /// Every chapter belongs to exactly one campaign, every listed chapter
     /// exists, and `opensAfter` names a chapter.
@@ -20,8 +22,9 @@ extension Validator {
                     owner[chapter] = campaign.id
                 }
             }
-            if let after = campaign.opensAfter, chapters[after] == nil {
-                report("`opensAfter` names unknown chapter `\(after)`")
+            if let after = campaign.opensAfter {
+                if chapters[after] == nil { report("`opensAfter` names unknown chapter `\(after)`") }
+                if chapters[after]?.comingLater == true { report("`opensAfter` names `\(after)`, which is coming later") }
             }
         }
         for chapter in data.chapters where owner[chapter.id] == nil {
@@ -75,7 +78,7 @@ extension Validator {
         if chapter.seed < 0 { report("`seed` must not be negative") }
         if refs.ages[chapter.age] == nil { report("`age` names unknown age `\(chapter.age)`") }
         if let culture = chapter.culture, refs.cultures[culture] == nil { report("`culture` names unknown culture `\(culture)`") }
-        if !(0 ... 4).contains(chapter.rivals) { report("`rivals` must be from 0 to 4") }
+        if !(0 ... 3).contains(chapter.rivals) { report("`rivals` must be from 0 to 3: there are three rival cultures") }
         if chapter.rivals > 0, chapter.layout != "archipelago" { report("rivals need the archipelago layout") }
         if chapter.start.money < 0 { report("`money` must not be negative") }
         checkGoods(chapter.start.stock, field: "stock", refs, report)
@@ -83,6 +86,7 @@ extension Validator {
             if !ItemSchema.difficulties.contains(difficulty) { report("`overrides` names unknown difficulty `\(difficulty)`") }
             if let money = start.money, money < 0 { report("`overrides.\(difficulty).money` must not be negative") }
             checkGoods(start.stock ?? [], field: "overrides.\(difficulty).stock", refs, report)
+            checkRivalAgeYears(start.rivalAgeYears ?? [:], field: "overrides.\(difficulty).rivalAgeYears", chapter, refs, report)
         }
         checkLists(chapter, refs, report)
         checkDirectives(chapter, report)
@@ -94,6 +98,10 @@ extension Validator {
         }
         for tech in chapter.closedTechs + chapter.researched where refs.techs[tech] == nil {
             report("names unknown tech `\(tech)`")
+        }
+        let atStart = Set(chapter.researched).union(grantedTechs(at: chapter.age))
+        for tech in chapter.closedTechs where atStart.contains(tech) {
+            report("`closedTechs` closes `\(tech)`, which is researched at the start")
         }
         for difficulty in chapter.difficulties where !ItemSchema.difficulties.contains(difficulty) {
             report("`difficulties` names unknown difficulty `\(difficulty)`")
@@ -110,8 +118,8 @@ extension Validator {
             if directive.kind == "thinForest", !(0 ... 100).contains(directive.amount ?? -1) {
                 report("`thinForest.keep` must be a percent from 0 to 100")
             }
-            if directive.kind == "pushMineOut", (directive.amount ?? 0) <= 0 {
-                report("`pushMineOut` must be a positive radius")
+            if directive.kind == "pushMineOut", (directive.amount ?? 0) < Self.minimumMineRadius {
+                report("`pushMineOut` must be a radius of at least \(Self.minimumMineRadius), clear of the start area")
             }
         }
     }
@@ -140,16 +148,43 @@ extension Validator {
             if chapter.rivals == 0 { report("`lose.rivalRace` needs rivals") }
         }
         if let floor = chapter.collapse, floor <= 0 { report("`lose.collapse` must be positive") }
-        for age in chapter.rivalAgeYears.keys.sorted() where refs.ages[age] == nil {
-            report("`rivalAgeYears` names unknown age `\(age)`")
+        checkRivalAgeYears(chapter.rivalAgeYears, field: "rivalAgeYears", chapter, refs, report)
+    }
+
+    /// `rivalAgeYears` names known ages and needs rivals.
+    private func checkRivalAgeYears(
+        _ years: [String: Int], field: String, _ chapter: ChapterData, _ refs: References, _ report: (String) -> Void
+    ) {
+        if !years.isEmpty, chapter.rivals == 0 { report("`\(field)` needs rivals") }
+        for age in years.keys.sorted() where refs.ages[age] == nil {
+            report("`\(field)` names unknown age `\(age)`")
         }
     }
 
+    /// The techs a game in `age` starts with, as `World.initialResearch`
+    /// grants them: Scholarship, every tech of an earlier age, and every era
+    /// tech up to `age`.
+    private func grantedTechs(at age: String) -> Set<String> {
+        let order = data.ages.map(\.id)
+        guard let current = order.firstIndex(of: age) else { return [] }
+        let index = { (id: String) in order.firstIndex(of: id) ?? Int.max }
+        return Set(data.techs.filter { tech in
+            if tech.id == "scholarship" { return true }
+            if let era = tech.era { return index(era) <= current }
+            return index(tech.age) < current
+        }.map(\.id))
+    }
+
     /// Scheduled events name a known event in one of its seasons, one a
-    /// year (`add-event-counterplay` D9).
+    /// year (`add-event-counterplay` D9), between the start year and the
+    /// deadline.
     private func checkEvents(_ chapter: ChapterData, _ refs: References, _ report: (String) -> Void) {
         var years = Set<Int>()
+        let start = refs.ages[chapter.age]?.startYear ?? Int.min
         for scheduled in chapter.events {
+            if scheduled.year < start || scheduled.year >= (chapter.deadline ?? Int.max) {
+                report("`events` schedules \(scheduled.year), which is not between the start year and the deadline")
+            }
             if !years.insert(scheduled.year).inserted { report("`events` schedules two events in \(scheduled.year)") }
             guard let event = refs.events[scheduled.event] else {
                 report("`events` names unknown event `\(scheduled.event)`")
