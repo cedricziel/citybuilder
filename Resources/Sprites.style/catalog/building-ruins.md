@@ -26,6 +26,6 @@ https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (Ruins, option A).
 ## Recipe
 
 - Recipe: `building-ruins`, `building-ruins-1x1`, `building-ruins-3x3` (IsoKit)
-- Cell: the burnt kind's footprint; 1×1 80 pt, 2×2 112 pt, 3×3 144 pt tall
+- Cell: 2×2 footprint for `building-ruins`; the others the footprint in their name; 1×1 80 pt, 2×2 112 pt, 3×3 144 pt tall
 - Construction stages: 0
 - Operational frames: 0
