@@ -64,6 +64,12 @@ public extension Chapter {
         return ChapterStart(money: override?.money ?? scaled.money, stock: override?.stock ?? scaled.stock)
     }
 
+    /// The rival age years for `difficulty`: its override, else the
+    /// chapter's own.
+    func rivalAgeYears(for difficulty: Difficulty) -> [Age: Int] {
+        overrides[difficulty]?.rivalAgeYears ?? rivalAgeYears
+    }
+
     /// On Easy each deadline falls a third of the chapter's span later,
     /// rounded up to a whole year.
     func loseConditions(for difficulty: Difficulty) -> [LoseCondition] {
@@ -85,16 +91,17 @@ public extension World {
         let start = chapter.start(for: difficulty)
         world.economy.balance = start.money
         world.setStarterStock(start.stock)
-        for tech in chapter.researched {
-            world.research.markResearched(tech)
-        }
+        let researched = Set(world.research.researched + chapter.researched).subtracting(chapter.closedTechs)
+        world.research = ResearchState(researched: Array(researched))
         world.goals = chapter.goals
         world.loseConditions = chapter.loseConditions(for: difficulty).map { LoseConditionState(condition: $0) }
         world.chapterRules = ChapterRules(
             chapterID: chapter.id, closedBuildings: chapter.closedBuildings, closedTechs: chapter.closedTechs,
-            rivalAgeYears: chapter.rivalAgeYears
+            rivalAgeYears: chapter.rivalAgeYears(for: difficulty)
         )
-        world.seasonalEvents.enabled = true
+        // Chapters never show the New Game toggle: events run when the
+        // chapter schedules or draws them.
+        world.seasonalEvents.enabled = !chapter.events.isEmpty || chapter.randomEvents
         world.seasonalEvents.randomEvents = chapter.randomEvents
         world.seasonalEvents.schedule = chapter.events
         return world
@@ -103,8 +110,12 @@ public extension World {
     /// A sandbox game on a chapter's map: its layout, seed and terrain
     /// directives, with the sandbox's own difficulty, culture and rivals,
     /// and no goals. Spec: `campaigns` / Campaign rewards.
-    static func newGame(mapPreset chapter: Chapter, difficulty: Difficulty, culture: Culture, rivals: Bool) -> World {
-        newChapterMap(chapter, difficulty: difficulty, culture: culture, rivals: rivals ? nil : 0)
+    static func newGame(
+        mapPreset chapter: Chapter, difficulty: Difficulty, culture: Culture, rivals: Bool, seasonalEvents: Bool
+    ) -> World {
+        var world = newChapterMap(chapter, difficulty: difficulty, culture: culture, rivals: rivals ? nil : 0)
+        world.seasonalEvents.enabled = seasonalEvents
+        return world
     }
 
     private static func newChapterMap(_ chapter: Chapter, difficulty: Difficulty, culture: Culture, rivals: Int?) -> World {

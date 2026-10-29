@@ -144,7 +144,7 @@ func scenarioAMapPresetReachesTheSandbox() {
         layout: .archipelago, seed: 301, rivals: 1, directives: [.thinForest(.home, keepPercent: 15)],
         loseConditions: [.deadline(year: 1206)]
     )
-    let preset = World.newGame(mapPreset: chapter, difficulty: .hard, culture: .mediterranean, rivals: true)
+    let preset = World.newGame(mapPreset: chapter, difficulty: .hard, culture: .mediterranean, rivals: true, seasonalEvents: false)
     let thinned = World.newGame(layout: .archipelago, seed: 301, directives: chapter.directives)
     #expect(preset.layout == .archipelago && preset.seed == 301)
     #expect(preset.terrainGrid == thinned.terrainGrid)
@@ -164,4 +164,49 @@ func chapterRulesSurviveASave() throws {
     json.removeValue(forKey: "chapterRules")
     let old = try JSONDecoder().decode(World.self, from: JSONSerialization.data(withJSONObject: json))
     #expect(old.chapterRules == ChapterRules())
+}
+
+@Test("a map preset honours the sandbox's events toggle")
+func aMapPresetHonoursTheEventsToggle() {
+    let chapter = Chapter.testChapter(events: [ScheduledSeasonalEvent(year: 1202, event: .fire, onset: .summer)], randomEvents: false)
+    let on = World.newGame(mapPreset: chapter, difficulty: .normal, culture: .northernEuropean, rivals: false, seasonalEvents: true)
+    let off = World.newGame(mapPreset: chapter, difficulty: .normal, culture: .northernEuropean, rivals: false, seasonalEvents: false)
+    #expect(on.seasonalEvents.enabled && on.seasonalEvents.schedule.isEmpty && on.seasonalEvents.randomEvents)
+    #expect(!off.seasonalEvents.enabled)
+}
+
+@Test("a chapter turns events on only when it schedules or draws them")
+func aChapterTurnsEventsOnOnlyWhenItSchedulesOrDrawsThem() {
+    let fire = ScheduledSeasonalEvent(year: 1202, event: .fire, onset: .summer)
+    let quiet = World.newGame(chapter: Chapter.testChapter(randomEvents: false), difficulty: .normal, culture: .northernEuropean)
+    let scheduled = World.newGame(
+        chapter: Chapter.testChapter(events: [fire], randomEvents: false),
+        difficulty: .normal,
+        culture: .northernEuropean
+    )
+    let drawn = World.newGame(chapter: Chapter.testChapter(), difficulty: .normal, culture: .northernEuropean)
+    #expect(!quiet.seasonalEvents.enabled)
+    #expect(scheduled.seasonalEvents.enabled)
+    #expect(drawn.seasonalEvents.enabled)
+}
+
+@Test("a closed tech is never researched at the start")
+func aClosedTechIsNeverResearchedAtTheStart() {
+    let chapter = Chapter.testChapter(closedTechs: [.scholarship, .metallurgy], researched: [.metallurgy])
+    let world = World.newGame(chapter: chapter, difficulty: .normal, culture: .northernEuropean)
+    #expect(!world.research.isResearched(.scholarship))
+    #expect(!world.research.isResearched(.metallurgy))
+}
+
+@Test("a difficulty can override the rival age years")
+func aDifficultyCanOverrideTheRivalAgeYears() {
+    let chapter = Chapter.testChapter(
+        layout: .archipelago, rivals: 1,
+        overrides: [.hard: ChapterStartOverride(rivalAgeYears: [.renaissance: 1205])],
+        rivalAgeYears: [.renaissance: 1207]
+    )
+    let hard = World.newGame(chapter: chapter, difficulty: .hard, culture: .northernEuropean)
+    let normal = World.newGame(chapter: chapter, difficulty: .normal, culture: .northernEuropean)
+    #expect(hard.chapterRules.rivalAgeYears == [.renaissance: 1205])
+    #expect(normal.chapterRules.rivalAgeYears == [.renaissance: 1207])
 }
