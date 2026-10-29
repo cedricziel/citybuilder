@@ -47,3 +47,13 @@ The directives are:
 
 - **WHEN** an archipelago game with directives is created
 - **THEN** its island list has the same IDs, tile counts and bounding boxes as the same game without directives
+
+## MODIFIED Requirements
+
+### Requirement: New game camera starts on the home town center
+
+A new game's camera SHALL be centred on the middle of the player's home town center footprint. The home island SHALL be the island under the map's centre tile or, when that tile is water, the largest island, ties by lower island ID; the same rule names "home" for rival seating and terrain directives. The home town center SHALL be the player town center on the home island, or the player town center with the lowest entity ID when that island has none. Without a player town center the camera SHALL stay at the map's centre.
+
+#### Scenario: Camera starts on the player's town center
+- **WHEN** a new single-island game or a new archipelago game is created
+- **THEN** the camera's centre tile lies on the player's home town center footprint
