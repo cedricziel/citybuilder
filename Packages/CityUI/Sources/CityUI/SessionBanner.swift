@@ -170,6 +170,15 @@ extension GameSession {
         ))
     }
 
+    /// The event chip's tap: the warning of the event warned or under way,
+    /// again. Spec: `platform-shells` / Seasonal events show banners and a chip.
+    public func replaySeasonalWarning() {
+        guard let onset = world.currentSeasonalEvent,
+              let banner = Self.banner(onset.event, .warning, ["season": onset.season.displayName.lowercased()])
+        else { return }
+        show(banner)
+    }
+
     /// Resume, the pause control or Esc: the simulation runs again.
     public func dismissDeficitHint() {
         deficitHint = nil

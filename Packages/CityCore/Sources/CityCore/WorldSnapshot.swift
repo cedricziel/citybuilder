@@ -92,6 +92,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// The order board, favour and the shipments on the road. Spec:
     /// `platform-shells` / Order board.
     public let orders: OrdersState
+    /// The seasonal event warned or under way, with its onset season.
+    /// Spec: `platform-shells` / Seasonal events show banners and a chip.
+    public let seasonalEvent: SeasonalEventOnset?
 
     public init(
         tickCount: UInt64,
@@ -120,7 +123,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         rivals: [RivalSummary] = [],
         market: [MarketQuote] = [],
         statistics: StatisticsHistory = StatisticsHistory(),
-        orders: OrdersState = OrdersState()
+        orders: OrdersState = OrdersState(),
+        seasonalEvent: SeasonalEventOnset? = nil
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -149,6 +153,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.market = market
         self.statistics = statistics
         self.orders = orders
+        self.seasonalEvent = seasonalEvent
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -248,7 +253,8 @@ public extension World {
             rivals: rivals.map { RivalSummary($0, stock: rivalStock($0.id), priceBonusPercent: rivalPriceBonusPercent($0.id)) },
             market: marketQuotes,
             statistics: statistics,
-            orders: orders
+            orders: orders,
+            seasonalEvent: currentSeasonalEvent
         )
     }
 

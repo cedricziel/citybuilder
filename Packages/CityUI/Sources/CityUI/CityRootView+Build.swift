@@ -30,6 +30,7 @@ extension CityRootView {
                         DateChipView(
                             hud: session.hud, layout: layout, hudWidth: hudWidth, showsFirstSteps: firstStepsGuide != nil
                         )
+                        EventChipView(chip: session.hud.eventChip, hudWidth: hudWidth) { session.replaySeasonalWarning() }
                         StocksTrayView(
                             hud: session.hud,
                             layout: layout,

@@ -43,6 +43,13 @@ extension World {
         return SeasonalEventOnset(event: event, season: event.seasons[Int(rng.next() % UInt64(event.seasons.count))])
     }
 
+    /// The event warned or under way, with its onset season.
+    public var currentSeasonalEvent: SeasonalEventOnset? {
+        seasonalEvents.warned ?? seasonalEvents.active.map {
+            SeasonalEventOnset(event: $0.event, season: calendar.date(atTick: $0.startTick).season)
+        }
+    }
+
     mutating func runSeasonalEventSystem(events: inout [WorldEvent]) {
         guard calendar.isActive, seasonalEvents.enabled || !seasonalEvents.schedule.isEmpty else { return }
         if seasonalEvents.fire != nil {

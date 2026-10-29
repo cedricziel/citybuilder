@@ -98,3 +98,36 @@ func clearingRuinsWithoutMoneyBanner() throws {
     #expect(session.banner?.title == "Not enough money")
     #expect(session.banner?.description == "Clearing these ruins costs $15.")
 }
+
+@MainActor
+@Test("scenario: Warning banner and chip")
+func warningChipText() {
+    let fire = EventChip(SeasonalEventOnset(event: .fire, season: .summer))
+    #expect(fire.text == "Fire risk · Summer")
+    #expect(EventChip(SeasonalEventOnset(event: .blight, season: .summer)).text == "Blight · Summer")
+    #expect(EventChip(SeasonalEventOnset(event: .fever, season: .autumn)).text == "Fever · Autumn")
+    #expect(EventChip(SeasonalEventOnset(event: .festival, season: .autumn)).text == "Festival · by Autumn")
+    let hud = HUDViewModel()
+    var world = World.newGame()
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
+    hud.apply(world.snapshot())
+    #expect(hud.eventChip == fire)
+}
+
+@MainActor
+@Test("scenario: tapping the chip shows the warning again")
+func chipReplaysTheWarning() throws {
+    let session = eventsSession { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .autumn)
+    }
+    #expect(session.banner == nil)
+    session.replaySeasonalWarning()
+    #expect(session.banner?.title == "Dry autumn ahead")
+}
+
+@Test("scenario: the chip doesn't crowd a 300-point HUD")
+func chipFitsANarrowHUD() {
+    #expect(EventChipLayout.showsText(hudWidth: 300) == false)
+    #expect(EventChipLayout.showsText(hudWidth: 390))
+    #expect(EventChipLayout.maxWidth(hudWidth: 300) <= 150)
+}

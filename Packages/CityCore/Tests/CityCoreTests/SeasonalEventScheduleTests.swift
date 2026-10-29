@@ -353,3 +353,16 @@ func eventsOffKeepsHistoryEvents() {
     let world = World.newGame(layout: .singleIsland, seed: 1, culture: .northernEuropean, scenario: .firstHarvest, seasonalEvents: true)
     #expect(world.seasonalEvents.enabled)
 }
+
+@Test("scenario: the snapshot names the event warned or under way")
+func snapshotNamesTheCurrentEvent() {
+    var world = eventsWorld(seed: 9)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .fire, onset: .summer)]
+    addOperational(.house, at: TileCoordinate(x: 0, y: 0), residents: 2, in: &world)
+    #expect(world.snapshot().seasonalEvent == nil)
+    _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1201))
+    let warned = SeasonalEventOnset(event: .fire, season: .summer)
+    #expect(world.snapshot().seasonalEvent == warned)
+    _ = runSeasons(&world, untilTick: firstTick(of: .summer, 1201))
+    #expect(world.snapshot().seasonalEvent == warned)
+}

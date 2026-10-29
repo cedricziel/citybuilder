@@ -22,6 +22,9 @@ public final class HUDViewModel {
     public var timeOfDaySymbol: String = "sun.max.fill"
     /// SF Symbol for the season, next to the date on a phone.
     public var seasonSymbol: String = "camera.macro"
+    /// The seasonal event warned or under way. Spec: `platform-shells` /
+    /// Seasonal events show banners and a chip.
+    public var eventChip: EventChip?
 
     /// Whether the status pill's stocks tray is open. Spec:
     /// `platform-shells` / Status pill and stocks tray.
@@ -49,6 +52,7 @@ public final class HUDViewModel {
         dateText = snapshot.date.displayText
         timeOfDaySymbol = Self.symbol(for: TimeOfDay(tick: snapshot.tickCount).phase)
         seasonSymbol = Self.symbol(for: snapshot.date.season)
+        eventChip = snapshot.seasonalEvent.map(EventChip.init)
         currentIsland = resolveIsland(in: snapshot) ?? currentIsland.flatMap {
             // Sticky over water: keep showing the previous island, but
             // refresh its aggregates so any new deposits land in the
