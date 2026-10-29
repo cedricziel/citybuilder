@@ -151,7 +151,7 @@ func everyRequestedBuildingSpriteIsOnDisk() {
     // Every migrated kind contributes its base and three construction stages at least, so the walk
     // can never pass by checking nothing.
     #expect(!kinds.isEmpty)
-    #expect(looks == 18, "the house tiers, town center, warehouse and library looks of three cultures")
+    #expect(looks == 21, "the house tiers, town center, warehouse, library and marketplace looks of three cultures")
     #expect(ages == 48, "three house tiers in four ages and four cultures")
     #expect(facings >= 16, "the port and shipyard in four facings, the ship in eight")
     #expect(names.count >= kinds.count * 4 + looks + ages + facings * 2)
