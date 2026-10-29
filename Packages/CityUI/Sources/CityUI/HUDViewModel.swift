@@ -52,7 +52,9 @@ public final class HUDViewModel {
         dateText = snapshot.date.displayText
         timeOfDaySymbol = Self.symbol(for: TimeOfDay(tick: snapshot.tickCount).phase)
         seasonSymbol = Self.symbol(for: snapshot.date.season)
-        eventChip = snapshot.seasonalEvent.map(EventChip.init)
+        eventChip = snapshot.seasonalEvent.map { onset in
+            EventChip(onset, burning: snapshot.isSeasonalEventUnderWay ? snapshot.buildings.values.count { $0.state == .burning } : nil)
+        }
         currentIsland = resolveIsland(in: snapshot) ?? currentIsland.flatMap {
             // Sticky over water: keep showing the previous island, but
             // refresh its aggregates so any new deposits land in the

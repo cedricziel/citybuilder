@@ -116,6 +116,7 @@ func scenarioForumOutOfWine() {
     session.noteBannerEvents(in: [.fuelRanOut(building: EntityID(raw: 3), kind: .forum)])
     #expect(session.banner?.title == "Forum is out of wine")
     #expect(session.banner?.description == "Its effect halves until carriers bring more.")
+    showNextBanner(session)
     session.noteBannerEvents(in: [.fuelRanOut(building: EntityID(raw: 4), kind: .steamEngine)])
     #expect(session.banner?.title == "Steam engine is out of charcoal")
 }

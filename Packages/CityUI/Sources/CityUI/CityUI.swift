@@ -11,6 +11,8 @@ import SwiftUI
 public struct CityRootView: View {
     @State var session: GameSession
     @State var settingsPresented: Bool = false
+    /// The build controls' measured height, which a full-width banner clears.
+    @State var bottomControlsHeight: CGFloat = 0
     @State var researchPresented: Bool = false
     @State var goalsPresented: Bool = false
     @State var standingsPresented: Bool = false
@@ -202,6 +204,11 @@ public final class GameSession {
 
     /// The banner on screen and the tick it hides at.
     var bannerState: (banner: SessionBanner, hidesAtTick: UInt64)?
+    /// Banners waiting their turn, urgent ones ("Fire!") first.
+    var bannerQueue: [QueuedBanner] = []
+    /// True while a tick's events queue their banners, so the slot goes to
+    /// the most urgent of them, not the first.
+    var isQueueingTickBanners = false
     /// True once this session showed the deficit hint (`deficit-hint` D2).
     var hasShownDeficitHint = false
     /// The deficit hint while it shows; the simulation waits for the

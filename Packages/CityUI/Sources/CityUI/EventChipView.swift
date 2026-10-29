@@ -6,17 +6,26 @@ import SwiftUI
 public struct EventChip: Equatable, Sendable {
     public let event: SeasonalEvent
     public let season: Season
+    /// Buildings on fire while the event is under way; nil while it is only warned.
+    public let burning: Int?
 
-    public init(_ onset: SeasonalEventOnset) {
+    public init(_ onset: SeasonalEventOnset, burning: Int? = nil) {
         event = onset.event
         season = onset.season
+        self.burning = burning
     }
 
-    /// "Fire risk · Summer", "Blight · Summer", "Festival · by Autumn".
+    /// "Fire risk · Summer" while warned, "Fire · 2 burning" or "Fire season ·
+    /// Summer" once under way, "Blight · Summer", "Festival · by Autumn".
     public var text: String {
         let season = season.displayName
         return switch event.effect {
-        case .fire: "Fire risk · \(season)"
+        case .fire:
+            switch burning {
+            case nil: "Fire risk · \(season)"
+            case 0?: "Fire season · \(season)"
+            case let count?: "Fire · \(count) burning"
+            }
         case .blight: "Blight · \(season)"
         case .fever: "Fever · \(season)"
         case .festival: "Festival · by \(season)"
@@ -49,6 +58,9 @@ enum EventChipLayout {
         !layout.isPhone || room(hudWidth: hudWidth, showsFirstSteps: showsFirstSteps) >= fullTextWidth
     }
 
+    /// The smallest side of the glyph-only chip's tap target.
+    static let minimumTapSide: CGFloat = 44
+
     /// As tall as the date chip, and on Apple TV tall enough for its focus highlight.
     static func height(layout: HUDLayout) -> CGFloat {
         layout.focusableHeight(DateChipLayout.height)
@@ -68,6 +80,7 @@ struct EventChipView: View {
 
     var body: some View {
         if let chip {
+            let showsText = EventChipLayout.showsText(layout: layout, hudWidth: hudWidth, showsFirstSteps: showsFirstSteps)
             Button(action: onTap) {
                 HStack(spacing: 6) {
                     Image(systemName: chip.symbol)
@@ -76,7 +89,7 @@ struct EventChipView: View {
                         .frame(width: 18, height: 18)
                         .background(Color(red: 0.91, green: 0.51, blue: 0.05), in: Circle())
                         .accessibilityHidden(true)
-                    if EventChipLayout.showsText(layout: layout, hudWidth: hudWidth, showsFirstSteps: showsFirstSteps) {
+                    if showsText {
                         Text(chip.text)
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
@@ -89,10 +102,16 @@ struct EventChipView: View {
                 .frame(height: EventChipLayout.height(layout: layout))
                 .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
+                // The glyph alone is too small to tap: its target grows to 44 points.
+                .frame(
+                    minWidth: showsText ? nil : EventChipLayout.minimumTapSide,
+                    minHeight: showsText ? nil : EventChipLayout.minimumTapSide
+                )
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
-            .accessibilityLabel("\(chip.text): show the warning again")
+            .accessibilityLabel("\(chip.text): show it again")
             .frame(maxWidth: .infinity, alignment: .leading)
             .transition(.opacity)
         }

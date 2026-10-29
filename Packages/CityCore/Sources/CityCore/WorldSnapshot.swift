@@ -97,6 +97,11 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let seasonalEvent: SeasonalEventOnset?
     /// Turns any tick into a date, such as when ruins burnt down.
     public let calendar: CalendarState
+    /// True once the seasonal event has started, false while it is only warned.
+    public let isSeasonalEventUnderWay: Bool
+    /// The flammable buildings each fire watch would answer. Spec:
+    /// `platform-shells` / Fire watch inspector.
+    public let fireWatchCover: [EntityID: Int]
     /// Fire watchmen walking to a fire or dousing it. Spec: `rendering-2_5d` /
     /// Seasonal events are drawn on the map.
     public let watchmen: [WatchmanWalker]
@@ -131,7 +136,9 @@ public struct WorldSnapshot: Hashable, Sendable {
         orders: OrdersState = OrdersState(),
         seasonalEvent: SeasonalEventOnset? = nil,
         calendar: CalendarState = .inactive,
-        watchmen: [WatchmanWalker] = []
+        watchmen: [WatchmanWalker] = [],
+        isSeasonalEventUnderWay: Bool = false,
+        fireWatchCover: [EntityID: Int] = [:]
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -163,6 +170,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.seasonalEvent = seasonalEvent
         self.calendar = calendar
         self.watchmen = watchmen
+        self.isSeasonalEventUnderWay = isSeasonalEventUnderWay
+        self.fireWatchCover = fireWatchCover
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -265,7 +274,9 @@ public extension World {
             orders: orders,
             seasonalEvent: currentSeasonalEvent,
             calendar: calendar,
-            watchmen: watchmenAtWork
+            watchmen: watchmenAtWork,
+            isSeasonalEventUnderWay: seasonalEvents.active != nil,
+            fireWatchCover: fireWatchCoverCounts()
         )
     }
 
