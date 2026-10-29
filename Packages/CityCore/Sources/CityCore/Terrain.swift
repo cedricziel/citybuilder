@@ -54,6 +54,9 @@ public enum PlacementRejection: Hashable, Sendable {
     /// Spec: `buildings-and-construction` / Placement on another owner's
     /// island is rejected.
     case foreignIsland(Owner)
+    /// The chapter closes this building. Spec: `campaigns` / Chapter build
+    /// lists.
+    case closed
 
     /// Stable string code suitable for logging and analytics.
     public var code: String {
@@ -70,6 +73,7 @@ public enum PlacementRejection: Hashable, Sendable {
         case .wrongCulture: "wrong_culture"
         case .alreadyBuilt: "already_built"
         case .foreignIsland: "foreign_island"
+        case .closed: "closed"
         }
     }
 }

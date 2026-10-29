@@ -169,3 +169,8 @@ func paletteMarksLockedBuildings() {
     #expect(session.isLocked(.mine))
     #expect(!session.isLocked(.house))
 }
+
+@Test("a closed building reads as not in this chapter")
+func aClosedBuildingReadsAsNotInThisChapter() {
+    #expect(PlacementRejectionText.message(for: .closed) == "Not in this chapter")
+}

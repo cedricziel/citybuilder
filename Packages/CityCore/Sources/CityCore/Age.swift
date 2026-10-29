@@ -25,7 +25,7 @@ extension World {
     /// Regular techs need their age; era techs need to open the next age
     /// and a big enough city (design D3).
     public func canChooseResearch(_ tech: Tech) -> Bool {
-        guard research.canChoose(tech) else { return false }
+        guard research.canChoose(tech), !chapterRules.closedTechs.contains(tech) else { return false }
         if let era = tech.era {
             guard age.next == era, let gate = tech.eraGate else { return false }
             return residents(atLeast: gate.tier) >= gate.residents

@@ -38,7 +38,8 @@ public extension World {
         difficulty: Difficulty = .normal,
         rivals: Bool = true,
         seasonalEvents: Bool = false,
-        directives: [TerrainDirective] = []
+        directives: [TerrainDirective] = [],
+        rivalCount: Int? = nil
     ) -> World {
         let (terrain, width, height) = switch layout {
         case .singleIsland:
@@ -48,7 +49,7 @@ public extension World {
         }
         var world = generate(
             layout: layout, seed: seed, width: width, height: height, terrain: terrain,
-            culture: culture, age: age, difficulty: difficulty, rivals: rivals, directives: directives
+            culture: culture, age: age, difficulty: difficulty, rivals: rivals, directives: directives, rivalCount: rivalCount
         )
         world.seasonalEvents.enabled = seasonalEvents
         return world
@@ -67,7 +68,8 @@ public extension World {
         age: Age = .medieval,
         difficulty: Difficulty = .normal,
         rivals: Bool = true,
-        directives: [TerrainDirective] = []
+        directives: [TerrainDirective] = [],
+        rivalCount: Int? = nil
     ) -> World {
         var world = World(seed: seed, mapWidth: width, mapHeight: height, terrainGrid: grid)
         world.layout = layout
@@ -87,7 +89,7 @@ public extension World {
         world.culture = culture
         world.age = age
         if layout == .archipelago, rivals {
-            world.seedRivals()
+            world.seedRivals(count: rivalCount)
         }
         world.seedStarterRoads()
         world.centerCameraOnHomeTownCenter()

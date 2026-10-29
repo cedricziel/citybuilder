@@ -104,6 +104,9 @@ extension World {
             return .wrongCulture(kindCulture)
         }
         if owner == .player {
+            if chapterRules.closedBuildings.contains(kind) {
+                return .closed
+            }
             if let tech = Tech.unlocking(kind), !research.isResearched(tech) {
                 return .locked(tech)
             }

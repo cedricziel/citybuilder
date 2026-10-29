@@ -203,7 +203,7 @@ extension World {
         guard let index = rivalIndex(id) else { return }
         takeRivalStep(index)
         let rival = rivals[index]
-        if let next = rival.age.next, population(of: rival.owner) >= next.rivalResidents {
+        if let next = rival.age.next, population(of: rival.owner) >= next.rivalResidents, rivalMayEnter(next) {
             rivals[index].age = next
             events.append(.rivalAgeAdvanced(id, next))
         }
