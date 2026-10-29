@@ -53,6 +53,11 @@ extension Recipes {
                 $0.headwear = .hood
                 $0.load = .barrel
             }),
+            ("walker-watchman", look {
+                $0.tunic = Cloth.watch
+                $0.hose = Cloth.walnut
+                $0.load = .bucket
+            }),
             ("carrier-logs", look {
                 $0.tunic = Cloth.fustian
                 $0.hose = Cloth.walnut

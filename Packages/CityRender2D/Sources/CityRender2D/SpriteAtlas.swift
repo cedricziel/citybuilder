@@ -24,7 +24,7 @@ public enum SpriteAtlasRouting {
     public static func atlasName(for spriteName: String) -> String? {
         // Every terrain, building, people, animal and ship family, the goods icons and the building
         // status icons are art-kit renders; the Terrain, Buildings and Units atlases are retired.
-        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-", "status-"]
+        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-", "status-", "effect-"]
         if kitPrefixes.contains(where: spriteName.hasPrefix) { return kitAtlasName }
         // The status badges drawn over buildings are pixel art.
         if spriteName.hasPrefix("overlay-") { return iconsAtlasName }
@@ -179,6 +179,20 @@ public enum SpriteAtlas {
     public static func animalAnimation(_ action: AnimalAction, facing: WalkerFacing) -> [SKTexture]? {
         frames(for: .animal(action, facing))
     }
+
+    /// The fire watch's watchman, bucket in hand.
+    public static func watchmanAnimation(facing: WalkerFacing) -> [SKTexture]? {
+        frames(for: .watchman(facing))
+    }
+
+    /// The ruin of a footprint: `building-ruins` for 2 x 2, `building-ruins-<n>x<n>` for the others.
+    public static func ruinsName(footprint: Footprint) -> String {
+        let side = max(footprint.width, footprint.height)
+        return side == 2 ? "building-ruins" : "building-ruins-\(side)x\(side)"
+    }
+
+    /// The footprints a ruin is drawn for: every footprint a building that can burn has.
+    public static let ruinSides = [1, 2, 3]
 
     /// The worker's walk cycle.
     public static func walkerAnimation(facing: WalkerFacing) -> [SKTexture]? {
@@ -338,6 +352,10 @@ public enum SpriteAtlas {
                 }
                 continue
             }
+            if kind == .ruins {
+                names += ruinSides.map { ruinsName(footprint: Footprint(width: $0, height: $0)) }
+                continue
+            }
             names.append("building-\(kind.rawValue)")
             // Art variants (road): variant 0 = the canonical stem just
             // appended; variants 1..N-1 use `-vN`. Only applies to
@@ -370,7 +388,7 @@ public enum SpriteAtlas {
             }
         }
 
-        for key in SpriteAnimation.AnimationKey.figures {
+        for key in SpriteAnimation.AnimationKey.figures + SpriteAnimation.AnimationKey.effects {
             let frames = SpriteAnimation.entry(for: key)?.frameCount ?? 0
             names += (0 ..< frames).map { SpriteAnimation.assetName(for: key, frame: $0) }
         }

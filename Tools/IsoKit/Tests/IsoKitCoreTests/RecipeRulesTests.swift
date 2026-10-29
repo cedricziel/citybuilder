@@ -50,6 +50,35 @@ struct RecipeRulesTests {
         #expect(RecipeRules.problems(in: lamp).contains { $0.contains("glows") })
     }
 
+    /// Flames light themselves, so a fire reads at night; only an effect may burn, never a building.
+    @Test("scenario: Only effects may use the self-lit flame finish")
+    func onlyEffectsBurn() {
+        func recipe(_ id: String) -> Recipe {
+            Recipe(id: id, cell: SpriteCell(footprint: 1, heightPx: 64), constructionFrames: 0) { kit, _ in
+                kit.block(SCNVector3(1, 0, 1), SCNVector3(3, 2, 3), .flame(.orange))
+            }
+        }
+        #expect(RecipeRules.problems(in: recipe("effect-test-fire")).isEmpty)
+        #expect(RecipeRules.problems(in: recipe("building-test-fire")) == [
+            "building-test-fire finished: material finish:flame is self-lit outside an effect"
+        ])
+    }
+
+    /// A self-lit flame casts no shadow, so its cell needs no room for one.
+    @Test("scenario: geometry that casts no shadow needs no room for one")
+    func shadowlessGeometryNeedsNoShadowRoom() {
+        func tower(castsShadow: Bool) -> Recipe {
+            Recipe(
+                id: "effect-test-tower", cell: SpriteCell(footprint: 1, heightPx: 160, widthPx: 32), constructionFrames: 0,
+                operationalFrames: 1, moving: MovingPart(name: "tower") { kit, _ in
+                    kit.block(SCNVector3(3.6, 0, 3.6), SCNVector3(3.8, 12, 3.8), .flame(.orange)).castsShadow = castsShadow
+                }, plot: nil, unit: true
+            ) { _, _ in }
+        }
+        #expect(CellFit.problems(in: tower(castsShadow: true)).contains { $0.contains("shadow") })
+        #expect(!CellFit.problems(in: tower(castsShadow: false)).contains { $0.contains("shadow") })
+    }
+
     @Test("every shipped recipe passes the rules at every stage and moving-part frame")
     func shippedRecipesPassTheRules() {
         #expect(Recipes.all.flatMap(RecipeRules.problems).isEmpty)

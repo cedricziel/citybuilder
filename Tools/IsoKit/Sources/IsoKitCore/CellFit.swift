@@ -22,11 +22,12 @@ public enum CellFit {
         var max: SCNVector3
     }
 
-    /// World-space corners of every geometry under `root`.
-    static func corners(of root: SCNNode) -> [SCNVector3] {
+    /// World-space corners of every geometry under `root`, or with `castersOnly` of those that cast a
+    /// shadow (a self-lit flame casts none).
+    static func corners(of root: SCNNode, castersOnly: Bool = false) -> [SCNVector3] {
         var points: [SCNVector3] = []
         root.enumerateHierarchy { node, _ in
-            guard let geometry = node.geometry else { return }
+            guard let geometry = node.geometry, !castersOnly || node.castsShadow else { return }
             let (lo, hi) = geometry.boundingBox
             for x in [lo.x, hi.x] {
                 for y in [lo.y, hi.y] {
@@ -72,9 +73,9 @@ public enum CellFit {
     /// stay inside the cell on the left, the right and the bottom, or the sprite shows a hard cut.
     static let unitShadowMargin: CGFloat = 0.5
 
-    static func unitProblems(_ recipe: Recipe, _ stage: String, _ corners: [SCNVector3]) -> [String] {
+    static func unitProblems(_ recipe: Recipe, _ stage: String, _ corners: [SCNVector3], casters: [SCNVector3]) -> [String] {
         let body = corners.map { Projection.screen($0, in: recipe.cell) }
-        let shade = corners.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell) }
+        let shade = casters.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell) }
         var problems: [String] = []
         if let bottom = body.map(\.y).min(), bottom < 0 {
             problems.append("\(recipe.id) \(stage): bottom at \(String(format: "%.1f", bottom)) pt is below the cell")
@@ -99,7 +100,8 @@ public enum CellFit {
     static func shadowHalfSpan(of recipe: Recipe) -> CGFloat {
         let centre = CGFloat(recipe.cell.widthPx) / 2
         return fitBuilds(of: recipe).flatMap { _, root in
-            corners(of: root).filter { $0.y > 0.01 }.map { abs(Projection.screen(shadow(of: $0), in: recipe.cell).x - centre) }
+            corners(of: root, castersOnly: true).filter { $0.y > 0.01 }
+                .map { abs(Projection.screen(shadow(of: $0), in: recipe.cell).x - centre) }
         }.max() ?? 0
     }
 
@@ -118,11 +120,11 @@ public enum CellFit {
         var problems: [String] = []
         let edgeTolerance = edgeTolerance(for: recipe)
         for (stage, root) in fitBuilds(of: recipe) {
-            let world = corners(of: root)
+            let world = corners(of: root), casters = corners(of: root, castersOnly: true)
             if recipe.unit {
-                problems += unitProblems(recipe, stage, world)
+                problems += unitProblems(recipe, stage, world, casters: casters)
             } else {
-                let shade = world.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell).x }
+                let shade = casters.filter { $0.y > 0.01 }.map { Projection.screen(shadow(of: $0), in: recipe.cell).x }
                 if let left = shade.min(), let right = shade.max(), left < 0 || right > CGFloat(recipe.cell.widthPx) {
                     problems
                         .append("\(recipe.id) \(stage): shadow spans \(Int(left))…\(Int(right)) pt outside width \(recipe.cell.widthPx)")
