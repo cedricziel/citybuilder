@@ -297,3 +297,9 @@ func kitLeavesFieldsUnguarded() {
     #expect(EventsKit.uncovered(in: world).isEmpty)
     #expect(world.pendingCommands.isEmpty)
 }
+
+@Test func sweepEventArmsFromTheEnvironment() {
+    #expect(BotEvents.arms(from: "1") == [false, true])
+    #expect(BotEvents.arms(from: "only") == [true])
+    #expect(BotEvents.arms(from: nil) == [false])
+}

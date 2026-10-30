@@ -9,8 +9,9 @@ import Testing
 
 private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == "1"
 /// SOLVENCY_EVENTS=1 also runs each game with seasonal events on and the
-/// `EventsKit` answering them (`add-event-counterplay` D12, bar 4).
-private let eventArms = ProcessInfo.processInfo.environment["SOLVENCY_EVENTS"] == "1" ? [false, true] : [false]
+/// `EventsKit` answering them (`add-event-counterplay` D12, bar 4);
+/// SOLVENCY_EVENTS=only runs that game alone.
+private let eventArms = BotEvents.arms(from: ProcessInfo.processInfo.environment["SOLVENCY_EVENTS"])
 
 @Test(
     "scenario: market-trading towns stay solvent across seeds",

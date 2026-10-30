@@ -25,8 +25,9 @@ private let orders: [MidGameOrder] = ProcessInfo.processInfo.environment["PACING
 private let orderArms = ProcessInfo.processInfo.environment["PACING_ORDERS"] == "1" ? [false, true] : [false]
 
 /// PACING_EVENTS=1 adds an arm of each setup with seasonal events on and the
-/// `EventsKit` answering them (`add-event-counterplay` D12, bars 3 and 6).
-private let eventArms = ProcessInfo.processInfo.environment["PACING_EVENTS"] == "1" ? [false, true] : [false]
+/// `EventsKit` answering them (`add-event-counterplay` D12, bars 3 and 6);
+/// PACING_EVENTS=only runs that arm alone.
+private let eventArms = BotEvents.arms(from: ProcessInfo.processInfo.environment["PACING_EVENTS"])
 
 /// "fire:2,blight:1,fever:0,festival:1": the events warned or requested.
 private func eventCounts(_ counts: [SeasonalEffect: Int]) -> String {
