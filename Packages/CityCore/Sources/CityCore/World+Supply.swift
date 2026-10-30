@@ -239,15 +239,38 @@ extension World {
         }
     }
 
+    /// A granary keeps a reserve: every draw takes from the other stores
+    /// first, in its own order, and from a granary only when those hold
+    /// none of the good. Spec: `goods-and-production` / Granaries are drawn
+    /// from last.
+    static func isDrawnLast(_ store: Building) -> Bool {
+        store.kind == .granary
+    }
+
+    /// `stores` in the order a draw takes from them: their own order, with
+    /// the granaries moved to the end.
+    static func granariesLast(_ stores: [Building]) -> [Building] {
+        stores.filter { !isDrawnLast($0) } + stores.filter(isDrawnLast)
+    }
+
     /// Operational goods buffer holding `good` with the shortest road
-    /// path to `road`; ties go to the lower entity ID.
+    /// path to `road`; ties go to the lower entity ID. A granary only when
+    /// no other buffer qualifies (`isDrawnLast`).
     /// `buffers` are the operational buffers in entity order, when the
     /// caller has listed them already.
     func nearestBuffer(
         holding good: Good, toRoad road: TileCoordinate, among buffers: [Building]? = nil
     ) -> (EntityID, [TileCoordinate])? {
+        let candidates = buffers ?? goodsBuffers().filter { $0.state == .operational }
+        return nearestBuffer(holding: good, toRoad: road, in: candidates.filter { !Self.isDrawnLast($0) })
+            ?? nearestBuffer(holding: good, toRoad: road, in: candidates.filter(Self.isDrawnLast))
+    }
+
+    private func nearestBuffer(
+        holding good: Good, toRoad road: TileCoordinate, in buffers: [Building]
+    ) -> (EntityID, [TileCoordinate])? {
         var best: (EntityID, [TileCoordinate])?
-        for buffer in buffers ?? goodsBuffers().filter({ $0.state == .operational }) {
+        for buffer in buffers {
             guard (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0,
                   let bufferRoad = anyAdjacentRoad(
                       anchor: buffer.anchor,
