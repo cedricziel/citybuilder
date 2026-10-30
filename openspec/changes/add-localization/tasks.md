@@ -3,12 +3,13 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 ## 1. M1 — Catalogs, lookup, pseudo-locale and the check
 
 - [ ] 1.1 Tests-first: translate "Tests resolve text in a pinned language", "The pseudo-locale lengthens and marks a string", "The pseudo-locale keeps placeholders", "Numbers use the locale's grouping" and every "fails the check" / "Complete catalogs pass the check" scenario into failing tests (CityUITests and L10nCheckTests); confirm red
-- [ ] 1.2 Implement to green: `defaultLocalization: "en"`, `Resources/Localizable.xcstrings` in CityUI, and the `GameText` lookup with an explicit `Language` (design D1, D3)
+- [ ] 1.2 Implement to green: `defaultLocalization: "en"`, `Resources/Localizable.xcstrings` in CityUI, and the `GameText` lookup with an explicit `Language` chosen from `Bundle.main.preferredLocalizations`, with tests for English-system/German-app and German-system/English-app (design D1, D3)
 - [ ] 1.3 Implement to green: the pseudo-locale transform and the `-CBPseudoLocale` launch argument (D10)
 - [ ] 1.4 Implement to green: the `Tools/L10nCheck` package (rules library, `l10n-check` executable, tests), `glossary.json` from the spec table, `make l10n-check`, the lint-job step and the pre-commit hook (D8)
-- [ ] 1.5 Move the pause menu to the catalog as the first real keys (en + de), so "German locale shows German text" and "An unsupported language falls back to English" have a subject; make those tests green
-- [ ] 1.6 Refactor under a green bar
-- [ ] 1.7 Verify `make test-scenarios` and `make l10n-check` clean for this milestone's scenarios
+- [ ] 1.5 Run `L10nCheckTests` in `make test` and in CI (beside the IsoKit tests, selected by `scripts/select_ci_jobs.py` when `Tools/L10nCheck` changes) (D8)
+- [ ] 1.6 Move the pause menu to the catalog as the first real keys (en + de), so "German locale shows German text" and "An unsupported language falls back to English" have a subject; make those tests green
+- [ ] 1.7 Refactor under a green bar
+- [ ] 1.8 Verify `make test-scenarios` and `make l10n-check` clean for this milestone's scenarios
 
 ## 2. M2 — CityUI static strings
 
@@ -41,11 +42,12 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 ## 5. M5 — Pack text keys
 
 - [ ] 5.1 Tests-first: translate "A pack name gets a derived key", "German values survive regeneration", "Changing English text marks German for review", "A removed pack item drops its keys", "Pack placeholders are named" and "A noun placeholder is filled with the localized noun" into failing tests (GameDataGenTests and CityUITests); confirm red
-- [ ] 5.2 Implement to green: the catalog emitter in GameDataGen with the merge rules and Xcode's JSON layout; `gamedata-check` covers `GameData.xcstrings` (D5)
-- [ ] 5.3 Implement to green: generated Swift exposes key strings and drops the English members; CityUI resolves names, units, blurbs, banners and order texts through `GameData.xcstrings`, filling `{names}` after the lookup (D6)
-- [ ] 5.4 Author the German values for every pack key, following the glossary
-- [ ] 5.5 Refactor under a green bar
-- [ ] 5.6 Verify `make gamedata-check`, `make test-scenarios` and `make l10n-check` clean
+- [ ] 5.2 Implement to green: the catalog emitter in GameDataGen with the merge rules and Xcode's JSON layout, writing to a `--catalog` path; `gamedata-check` covers `GameData.xcstrings`, and `scripts/check-gamedata-fixture-build.sh` passes a scratch catalog path (D5)
+- [ ] 5.3 Make catalog edits trigger the drift check: add `GameData.xcstrings` to the `gamedata-check` pre-commit `files:` pattern and to GameDataGen's inputs in `scripts/select_ci_jobs.py` (D5)
+- [ ] 5.4 Implement to green: generated Swift exposes key strings and drops the English members; CityUI resolves names, units, blurbs, banners and order texts through `GameData.xcstrings`, filling `{names}` after the lookup (D6)
+- [ ] 5.5 Author the German values for every pack key, following the glossary
+- [ ] 5.6 Refactor under a green bar
+- [ ] 5.7 Verify `make gamedata-check`, `make test-scenarios` and `make l10n-check` clean
 
 ## 6. M6 — Rival names
 
