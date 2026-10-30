@@ -150,6 +150,7 @@ struct Validator {
             if building.storagePerGood == nil { report("`accepts` needs `storagePerGood`: only a store limits its goods") }
             checkGoods(accepts.map { GoodAmount(good: $0, amount: 1) }, field: "accepts", refs, report)
         }
+        building.fuel.map { checkFuel($0, refs, report) }
         if building.isCrop, building.recipe?.outputs.isEmpty ?? true { report("`crop` needs a recipe that grows a good") }
     }
 
@@ -176,6 +177,11 @@ struct Validator {
         for banner in event.banners where banner.title.isEmpty {
             report("`banners.\(banner.key).title` must not be empty")
         }
+    }
+
+    private func checkFuel(_ fuel: Fuel, _ refs: References, _ report: (String) -> Void) {
+        if refs.goods[fuel.good] == nil { report("`fuel.good` names unknown good `\(fuel.good)`") }
+        if fuel.amount <= 0 || fuel.everyTicks <= 0 { report("`fuel` needs a positive `amount` and `everyTicks`") }
     }
 
     /// A planter plants within its catchment, and a harvester's Swift behaviour cuts within it, so
@@ -325,6 +331,7 @@ struct Validator {
         var consumed = Set(data.cultures.map(\.luxury.good) + needs)
         for building in data.buildings {
             consumed.formUnion((building.materials + (building.recipe?.inputs ?? [])).map(\.good))
+            if let fuel = building.fuel { consumed.insert(fuel.good) }
         }
         for good in data.goods where !consumed.contains(good.id) {
             reporter("Good", good.id, good.origin)(

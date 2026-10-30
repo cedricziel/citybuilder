@@ -173,6 +173,7 @@ private struct ItemReader {
             placement: placement,
             hasCodeEffect: effect == "code",
             isCrop: fields.bool("crop", required: false) ?? false,
+            fuel: fields.mapping("fuel", required: false).flatMap(readFuel),
             hub: fields.mapping("hub", required: false).flatMap(readHub),
             origin: fields.origin
         )
@@ -194,6 +195,13 @@ private struct ItemReader {
         let inputs = recipe.amounts("inputs", required: false), outputs = recipe.amounts("outputs", required: false)
         guard let ticks = recipe.int("cycleTicks") else { return nil }
         return Recipe(inputs: inputs ?? [], outputs: outputs ?? [], cycleTicks: ticks)
+    }
+
+    private func readFuel(_ fuel: Fields) -> Fuel? {
+        fuel.finish(allowed: ["good", "amount", "everyTicks"])
+        let good = fuel.string("good"), amount = fuel.int("amount"), every = fuel.int("everyTicks")
+        guard let good, let amount, let every else { return nil }
+        return Fuel(good: good, amount: amount, everyTicks: every)
     }
 
     private func readPlacement(_ placement: Fields) -> Placement? {

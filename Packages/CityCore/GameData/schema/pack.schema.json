@@ -182,6 +182,17 @@
                 "uniqueItems": true,
                 "items": { "$ref": "#/$defs/id" }
               },
+              "fuel": {
+                "description": "A good the building burns from its store: amount every everyTicks ticks. Counts as the good's consumer.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["good", "amount", "everyTicks"],
+                "properties": {
+                  "good": { "$ref": "#/$defs/id" },
+                  "amount": { "$ref": "#/$defs/positive" },
+                  "everyTicks": { "$ref": "#/$defs/positive" }
+                }
+              },
               "crop": { "description": "A crop field, which blight slows. Needs a recipe that grows a good.", "type": "boolean" }
             }
           }

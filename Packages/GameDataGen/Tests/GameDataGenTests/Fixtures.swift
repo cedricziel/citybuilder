@@ -208,7 +208,8 @@ enum Fixtures {
             "catchmentRadius": "2",
             "category": "gather", "materials": "{ wood: 1 }", "recipe": "{ outputs: { wood: 1 }, cycleTicks: 10 }",
             "unlockedBy": "seafaring", "obsoletedBy": "cultivation", "culture": "northern-european",
-            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code", "crop": "true", "accepts": "[wood]",
+            "placement": "{ terrain: { type: beach, minTiles: 1 } }", "effect": "code",
+            "crop": "true", "accepts": "[wood]", "fuel": "{ good: wood, amount: 1, everyTicks: 50 }",
             "hub": "{ radius: 4, housesPerPorter: 2, maxPorters: 3, basketUnits: 5, reserveConsumptions: 1 }"
         ],
         "Culture": ["tiers": "{ peasants: P, citizens: C, merchants: M }"],

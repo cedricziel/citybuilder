@@ -110,6 +110,8 @@ public struct Building: Equatable, Sendable {
     public var hasCodeEffect: Bool
     /// A crop field, which blight slows.
     public var isCrop: Bool
+    /// A good the building burns on an interval, from its store.
+    public var fuel: Fuel?
     /// How it serves houses as a market hub; nil when it is none.
     public var hub: Hub?
     public var origin: Origin
@@ -386,4 +388,11 @@ public struct ChapterData: Equatable, Sendable {
 public struct ChapterReward: Equatable, Sendable {
     public var kind: String
     public var name: String
+}
+
+/// `amount` of `good` burnt every `everyTicks` ticks.
+public struct Fuel: Equatable, Sendable {
+    public var good: String
+    public var amount: Int
+    public var everyTicks: Int
 }
