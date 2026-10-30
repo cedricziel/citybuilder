@@ -2282,7 +2282,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kunstwerk endet in %@"
+            "value" : "Kunstauftrag endet in %@"
           }
         },
         "en" : {
@@ -2966,7 +2966,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schenkt %@ aus"
+            "value" : "Bietet %@ an"
           }
         },
         "en" : {
