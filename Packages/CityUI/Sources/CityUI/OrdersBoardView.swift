@@ -11,7 +11,11 @@ struct OrderCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Circle().fill(Color(hex: card.issuerColourHex)).frame(width: 10, height: 10)
+                if card.isFestival {
+                    Image(systemName: "party.popper.fill").font(.caption).foregroundStyle(.orange)
+                } else {
+                    Circle().fill(Color(hex: card.issuerColourHex)).frame(width: 10, height: 10)
+                }
                 Text(card.issuerName).font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
                 Text(card.deadline).font(.caption).foregroundStyle(.secondary)
@@ -40,7 +44,10 @@ struct OrderCardView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+        .background(
+            card.isFestival ? Color.orange.opacity(0.12) : Color.primary.opacity(0.06),
+            in: RoundedRectangle(cornerRadius: 10)
+        )
         .overlay {
             if card.isAccepted {
                 RoundedRectangle(cornerRadius: 10).stroke(Color.accentColor, lineWidth: 1.5)

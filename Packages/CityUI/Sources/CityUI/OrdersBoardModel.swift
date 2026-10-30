@@ -20,6 +20,9 @@ public struct OrdersBoardModel: Equatable {
         public let isAccepted: Bool
         /// A rival's order, filled by ship at its port.
         public let byShip: Bool
+        /// One of the town's two festival orders: no money or favour, and
+        /// outside the limit of accepted orders.
+        public let isFestival: Bool
         /// 0...1 of the quantity in the stores or delivered; accepted orders only.
         public let progress: Double
         /// What the card says about stock, delivery or when the offer ends.
@@ -60,12 +63,13 @@ public struct OrdersBoardModel: Equatable {
         switch issuer {
         case .crown: "The Crown"
         case let .rival(id): world.rival(id)?.name ?? "Rival \(id)"
+        case .town: "Your town"
         }
     }
 
     static func colourHex(of issuer: OrderIssuer, in world: World) -> String {
         switch issuer {
-        case .crown: crownColourHex
+        case .crown, .town: crownColourHex
         case let .rival(id): world.rival(id)?.colour.hex ?? crownColourHex
         }
     }
@@ -77,7 +81,8 @@ public struct OrdersBoardModel: Equatable {
 
     private static func card(_ order: Order, in world: World, locked: Bool, accepted: Int, locale: Locale) -> Card {
         let isAccepted = order.state == .accepted
-        let byShip = order.issuer != .crown
+        let byShip = !order.issuer.deliversToTownCenter
+        let isFestival = order.issuer == .town
         let inTransit = world.orders.shipments.filter { $0.order == order.id }.reduce(0) { $0 + $1.amount }
         let dispatch = world.orderDispatch(for: order.id)
         var canSend = false
@@ -109,13 +114,14 @@ public struct OrdersBoardModel: Equatable {
             goodName: GoodsCatalog.spec(for: order.good).displayName,
             quantity: order.quantity,
             deadline: deadlineText(order, in: world),
-            reward: HUDViewModel.formatMoney(order.reward, locale: locale),
-            favour: "+\(order.favourGain) favour",
+            reward: isFestival ? "Festival" : HUDViewModel.formatMoney(order.reward, locale: locale),
+            favour: isFestival ? "No favour at stake" : "+\(order.favourGain) favour",
             isAccepted: isAccepted,
             byShip: byShip,
+            isFestival: isFestival,
             progress: isAccepted ? min(1, progress) : 0,
             status: status,
-            canAccept: !locked && !isAccepted && accepted < OrderRules.maxAccepted,
+            canAccept: !locked && !isAccepted && (isFestival || accepted < OrderRules.maxAccepted),
             canSend: !locked && canSend,
             canAbandon: !locked && isAccepted && order.delivered == 0 && inTransit == 0
         )
