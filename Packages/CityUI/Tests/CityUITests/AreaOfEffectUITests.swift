@@ -163,3 +163,15 @@ func invalidGhostHidesTheThreat() throws {
     #expect(threatened?.style == .threat)
     #expect(session.areaOfEffect() == nil)
 }
+
+@MainActor
+@Test("a plain building selected in a blight still shows the marked area")
+func plainSelectionShowsTheThreat() throws {
+    let session = GameSession()
+    session.world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+    session.world.seasonalEvents.marked = MarkedArea(around: TileBoundingBox(minX: 4, minY: 4, maxX: 5, maxY: 5), radius: 6)
+    let center = try #require(session.world.buildings.values.first { $0.kind == .townCenter })
+    session.selectedTile = center.anchor
+    let area = session.areaOfEffect()
+    #expect(area?.style == .threat)
+}
