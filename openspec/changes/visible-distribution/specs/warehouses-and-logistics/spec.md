@@ -124,7 +124,7 @@ A carrier SHALL travel with its owner's vehicle when its road path is at least t
 
 ### Requirement: Market hubs gather house goods
 
-A producer whose output is a good a house tier of its owner's culture needs SHALL send it to the nearest hub of its owner with room, by road, before any other goods buffer; only when no hub on its road network has room SHALL it use the nearest other goods buffer with room. A hub SHALL keep a reserve of each good the houses it serves need now or at their next tier: the reserve consumptions (2, `reserveConsumptions` in the hub's game data) times what those houses would eat of it per interval (an empty house counting one resident). While a hub's stock of such a good plus the units on their way to it is below that reserve, it SHALL pull the good from the nearest other goods buffer of its owner on its road network that holds it, or, with none, from the nearest other hub holding more than its own reserve, and never more than that surplus; one carrier at a time per good. The haul takes the owner's vehicle where the vehicle rules allow, and otherwise walks a basket of up to the hub's `basketUnits`.
+A producer whose output is a good a house tier of its owner's culture needs SHALL send it to the nearest hub of its owner with room, by road, before any other goods buffer; only when no hub on its road network has room SHALL it use the nearest other goods buffer with room. A hub SHALL keep a reserve of each good the houses it serves need now: the reserve consumptions (2, `reserveConsumptions` in the hub's game data) times what those houses eat of it per interval (an empty house counting one resident). Of a good that only the next tier of a served house adds, a hub SHALL keep a reserve only for houses at their tier's capacity, which may advance: what those houses would eat of it at their next tier per interval, and no more than one basket (`basketUnits`) in all, so scarce goods are not split across every hub ahead of need. While a hub's stock of such a good plus the units on their way to it is below that reserve, it SHALL pull the good from the nearest other goods buffer of its owner on its road network that holds it, or, with none, from the nearest other hub holding more than its own reserve, and never more than that surplus; one carrier at a time per good. The haul takes the owner's vehicle where the vehicle rules allow, and otherwise walks a basket of up to the hub's `basketUnits`.
 
 #### Scenario: Bread goes to the town center before the warehouse
 
@@ -135,6 +135,16 @@ A producer whose output is a good a house tier of its owner's culture needs SHAL
 
 - **WHEN** a town center holding no food serves a peasant house with 4 residents, and a warehouse on its road holds 10 food
 - **THEN** a carrier takes food from the warehouse to the town center
+
+#### Scenario: A hub keeps the next tier's goods only for houses that may advance
+
+- **WHEN** a town center serves one full citizen house and one citizen house with room to grow, and a warehouse on its road holds tools
+- **THEN** the town center pulls tools for the full house only: one consumption of a merchant house
+
+#### Scenario: The next tier's reserve is at most a basket
+
+- **WHEN** a town center serves twenty full citizen houses, and a warehouse on its road holds 40 tools
+- **THEN** the town center's reserve of tools is 10
 
 #### Scenario: A hub at its reserve does not restock
 
