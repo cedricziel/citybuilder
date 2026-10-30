@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 @testable import CityCore
 @testable import CityUI
@@ -56,4 +57,24 @@ func hubServingOneHouseSaysHouse() {
     placeOperational(.house, at: TileCoordinate(x: 3, y: 4), residents: 2, in: &world)
     let lines = inspect(hub, in: world).bullets
     #expect(lines.contains("Serves: 1 house within 18 road tiles"))
+}
+
+@MainActor
+@Test("a merchant house's stock line wraps in a phone callout instead of truncating")
+func merchantStockLineWrapsOnAPhone() throws {
+    var (world, _) = marketStrip()
+    let home = placeOperational(.house, at: TileCoordinate(x: 10, y: 4), residents: 8, in: &world)
+    world.populations[home]?.tier = .merchants
+    let stock = try #require(inspect(home, in: world).keyLines.first { $0.hasPrefix("Stock:") })
+    let width = InspectorCalloutLayout.width(for: .phone) - 2 * InspectorCalloutLayout.padding.width
+    func size(_ line: String) throws -> CGSize {
+        let renderer = ImageRenderer(content: InspectorKeyLine(line: line))
+        renderer.proposedSize = ProposedViewSize(width: width, height: nil)
+        return try #require(renderer.nsImage).size
+    }
+    let oneLine = try size("Stock: food 2/2").height
+    let wrapped = try size(stock)
+    #expect(stock == "Stock: food 0/8 · planks 0/2 · bread 0/4 · tools 0/2 · cloth 0/2 · beer 0/2")
+    #expect(wrapped.width <= width)
+    #expect(wrapped.height >= 2 * oneLine)
 }
