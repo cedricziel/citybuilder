@@ -83,7 +83,6 @@ The candidate list is small: only consumers of the good that are short. Measured
 - **Hub stock:** hubs keep their goods-buffer role. In addition, house goods prefer them:
   - A producer of a house good sends to the nearest hub with room before trying other buffers (D1 step 3, ahead of warehouses).
   - A hub that is low on a house good its houses need pulls from warehouses on its network. Low means below the hub's reserve, 2 consumptions of its served houses. The haul is a supply haul (`.retrieve` with the hub as its destination), so it takes a cart on a long road like any other and needs no new mission or save change; the design's earlier `.restock` case was dropped for that reason.
-  - *After the M2 sweep (follow-up):* the reserve of a good only the next tier adds counts only houses at their tier's capacity, the ones that may advance, and is capped at one basket per hub. Counting every house spread scarce bread, tools and cloth across all hubs ahead of need.
   - *After review:* the reserve counts the next tier's needs too, since a house advances only while its hub holds them; without that a marketplace's houses never stocked planks and could not become citizens. A hub with no store holding a good pulls from another hub's surplus above that hub's own reserve, so a town with a town center and a marketplace but no warehouse still feeds both. A restock on foot walks a basket (the hub's `basketUnits`), not one unit; on a long road it takes the cart as before.
 
 ### D4. Market porters and house stock (milestone 2)
