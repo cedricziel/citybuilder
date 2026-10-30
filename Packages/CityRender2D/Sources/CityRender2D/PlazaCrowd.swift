@@ -47,8 +47,10 @@ public enum PlazaCrowdPlanner {
                 let near = max(abs(house.anchor.x - center.anchor.x), abs(house.anchor.y - center.anchor.y)) <= reach
                 return near ? sum &+ house.residents : sum
             }
-            let count = min(maxPerPlaza, Int(residents / residentsPerFigure))
             let layout = PlazaLayout.layout(for: culture(of: center, in: snapshot))
+            // A festival's first season fills the player's plaza, one figure a spot.
+            let festive = snapshot.isFestivalCrowd && center.owner == .player
+            let count = festive ? layout.lanes.joined().count : min(maxPerPlaza, Int(residents / residentsPerFigure))
             for slot in 0 ..< count {
                 result.append(figure(center: center, slot: slot, layout: layout, tick: snapshot.tickCount, reduceMotion: reduceMotion))
             }

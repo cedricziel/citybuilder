@@ -7,7 +7,7 @@ import Testing
 
 private let center = Building(id: EntityID(raw: 1), kind: .townCenter, anchor: TileCoordinate(x: 8, y: 8), state: .operational)
 
-private func town(residents: UInt32, tick: UInt64, zoom: Double = 1) -> WorldSnapshot {
+private func town(residents: UInt32, tick: UInt64, zoom: Double = 1, festival: Bool = false) -> WorldSnapshot {
     let base = World.fixtureWithTerrain(width: 30, height: 30, fill: .grass, seed: 1).snapshot()
     var buildings = [center.id: center]
     var pops: [EntityID: HousePopulation] = [:]
@@ -30,7 +30,7 @@ private func town(residents: UInt32, tick: UInt64, zoom: Double = 1) -> WorldSna
         tickCount: tick, simulatedTime: base.simulatedTime, mapWidth: 30, mapHeight: 30,
         terrainGrid: base.terrainGrid, occupiedTiles: [:], buildings: buildings, carriers: [],
         economy: base.economy, totalPopulation: 0, camera: Camera(centerX: 8, centerY: 8, zoom: zoom),
-        housePopulations: pops
+        housePopulations: pops, isFestivalCrowd: festival
     )
 }
 
@@ -42,6 +42,14 @@ private func plan(_ snapshot: WorldSnapshot, reduceMotion: Bool = false) -> [Pla
 func scenarioBusyPlazaByDay() {
     #expect(plan(town(residents: 30, tick: 180)).count == 8)
     #expect(plan(town(residents: 9, tick: 180)).count == 3)
+}
+
+@Test("scenario: a festival crowd fills the plaza")
+func festivalCrowdFillsThePlaza() {
+    let spots = PlazaLayout.northernEuropean.lanes.joined().count
+    let crowd = plan(town(residents: 3, tick: 180, festival: true))
+    #expect(crowd.count == spots)
+    #expect(Set(crowd.map { PlazaFigureKey(townCenter: $0.townCenter, slot: $0.slot) }).count == spots)
 }
 
 @Test("scenario: empty plaza at night")
