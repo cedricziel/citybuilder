@@ -28,6 +28,6 @@ None. Existing scenarios that quote English text keep holding under the English 
 - **GameDataGen**: a new emitter writes `Packages/CityUI/Sources/CityUI/Resources/GameData.xcstrings`; `gamedata-check` covers it.
 - **CityUI**: gains `defaultLocalization: "en"`, a `Resources` folder with `Localizable.xcstrings` and `GameData.xcstrings`, and a small lookup layer every view and view model goes through. Banner and inspector sentence builders move to catalog templates with plural variations.
 - **Apps**: `project.yml` declares `de` in `knownRegions` and `CFBundleLocalizations`; the Mac menu's literals move to the catalog.
-- **CI**: a new `make l10n-check` target, run in the lint job. The check is a small dependency-free Swift package under `Tools/`; no new tool dependency (`xcstringstool` ships with Xcode, and SwiftPM already compiles `.xcstrings` under `xcrun swift build`, plurals included; verified).
+- **CI**: a new `make l10n-check` target, run in the lint job. The check is a small dependency-free Swift package under `Tools/`; no new tool dependency (`xcstringstool` ships with Xcode).
 - **Layout**: German runs about 30% longer. Tight buttons (#305, #308) get fixes in the slice that ships German; any visible layout change goes through a Claude Design canvas.
 - **Out of scope**: languages beyond English and German; an in-game language picker; localized audio; translating the CLI and PlayerBot reports, which stay English.
