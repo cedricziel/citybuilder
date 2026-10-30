@@ -228,7 +228,9 @@ private struct Types {
                 (event.id, "[" + ItemSchema.difficulties.map { ".\($0): \(event.weights[$0] ?? 0)" }.joined(separator: ", ") + "]")
             }),
             property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) }),
-            property("isEnabled", "Bool", all.map { ($0.id, "\($0.enabled)") })
+            property("isEnabled", "Bool", all.map { ($0.id, "\($0.enabled)") }),
+            property("firstYear", "Int", all.map { ($0.id, "\($0.firstYear)") }),
+            property("minFoodSeasons", "Int", all.map { ($0.id, "\($0.minFoodSeasons)") })
         ])
     }
 

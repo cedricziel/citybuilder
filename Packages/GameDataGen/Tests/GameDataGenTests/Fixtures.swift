@@ -220,7 +220,7 @@ enum Fixtures {
         "Age": ["name": "Bronze", "orderEvery": "3"],
         "Tier": ["declineGrace": "3"],
         "Order": ["minAge": "medieval", "favour": "3", "penalty": "1"],
-        "Event": ["minAge": "medieval", "enabled": "false"],
+        "Event": ["minAge": "medieval", "enabled": "false", "firstYear": "4", "minFoodSeasons": "1"],
         "Campaign": ["opensAfter": "the-guild-charter"],
         "Chapter": [
             "culture": "northern-european", "rivals": "0", "stock": "{ wood: 6 }", "overrides": "{ easy: { money: 2000 } }",

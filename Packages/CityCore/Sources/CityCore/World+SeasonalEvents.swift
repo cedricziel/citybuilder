@@ -39,10 +39,10 @@ extension World {
             Array(repeating: event, count: event.weights[difficulty] ?? 0)
         }
         guard !pool.isEmpty else { return nil }
-        // Drawn from every event, then a disabled pick is a quiet year, so
-        // fire keeps its D10 rate and its years when the others switch on.
+        // Drawn from every event, then a disabled pick, or one before its
+        // first year, is a quiet year, so the other events keep their years.
         let event = pool[Int(rng.next() % UInt64(pool.count))]
-        guard event.isEnabled else { return nil }
+        guard event.isEnabled, year - calendar.startYear + 1 >= event.firstYear else { return nil }
         return SeasonalEventOnset(event: event, season: event.seasons[Int(rng.next() % UInt64(event.seasons.count))])
     }
 
@@ -96,7 +96,9 @@ extension World {
             : onset.season == today
         guard announces else { return }
         let scheduled = seasonalEvents.schedule.contains { $0.year == date.year }
-        guard hasSeasonalEventTargets(onset.event.effect, scheduled: scheduled) else {
+        // A drawn event also needs the food it would threaten stored (D10).
+        let stocked = scheduled || storedFood() >= onset.event.minFoodSeasons * seasonFoodDraw()
+        guard stocked, hasSeasonalEventTargets(onset.event.effect, scheduled: scheduled) else {
             seasonalEvents.plan = SeasonalEventPlan(year: date.year, onset: nil)
             return
         }
@@ -162,7 +164,8 @@ extension World {
     /// A player crop field in the marked area while a blight is under way:
     /// it takes twice its cycle, like a field in winter, without stalling.
     func isBlighted(_ building: Building) -> Bool {
-        guard seasonalEvents.active?.event.effect == .blight, building.kind.isCrop, building.owner == .player,
+        guard seasonalEvents.active?.event.effect == .blight, building.state == .operational, building.kind.isCrop,
+              building.owner == .player,
               let area = seasonalEvents.marked
         else { return false }
         return area.contains(building)
@@ -188,6 +191,21 @@ extension World {
     }
 
     static let seasonalEventMinimumTargets = 6
+
+    /// The food the player's houses eat in a season at their size now.
+    func seasonFoodDraw() -> Int {
+        let intervals = Int(CalendarState.ticksPerSeason / HousePopulation.consumptionIntervalTicks)
+        let perInterval = buildings.values
+            .filter { $0.kind == .house && $0.owner == .player && $0.state == .operational }
+            .reduce(0) { $0 + (populations[$1.id]?.consumption(of: .food, in: culture) ?? 0) }
+        return perInterval * intervals
+    }
+
+    /// Food in the player's operational stores, granaries and hubs included.
+    func storedFood() -> Int {
+        goodsBuffers(of: .player).filter { $0.state == .operational }
+            .reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: .food) ?? 0) }
+    }
 
     /// Houses and producers; not monuments, shipyards or signature buildings.
     static func canIgnite(_ kind: BuildingKind) -> Bool {

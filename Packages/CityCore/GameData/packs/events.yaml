@@ -44,6 +44,8 @@ items:
   - kind: Event
     id: blight
     effect: blight
+    firstYear: 4                   # a town has fields worth guarding by then (D10)
+    minFoodSeasons: 1              # nothing stored, nothing to protect: a quiet year
     seasons: [summer, autumn]
     weight: *hazard-weight
     banners:
