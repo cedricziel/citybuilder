@@ -15,6 +15,9 @@ struct EventsKit {
     static let cushion: Int64 = 50
     /// How far from its target the kit looks for a plot, in tiles.
     static let searchReach = 4
+    /// How far from the town center the kit looks for a granary or herb
+    /// garden plot: a grown town has no room right beside it.
+    static let townReach = 12
     /// Herbs the kit buys at a time, and the physicians' stock it buys below.
     static let herbsBought = 4
     static let herbsLow = 2
@@ -79,7 +82,7 @@ struct EventsKit {
 
     private mutating func answerBlight(_ world: inout World) {
         guard !Self.owns(.granary, world), Self.canAfford(.granary, world), let center = Self.townCenter(world),
-              let anchor = Self.plot(for: .granary, near: center, in: world)
+              let anchor = Self.plot(for: .granary, near: center, in: world, reach: Self.townReach)
         else { return }
         place(.granary, at: anchor, in: &world)
     }
@@ -95,15 +98,16 @@ struct EventsKit {
                   let anchor = Self.plot(for: .physician, near: district, in: world, where: inReach)
             else { return }
             place(.physician, at: anchor, in: &world)
-        } else if !Self.owns(.herbGarden, world) {
-            guard Self.canAfford(.herbGarden, world), let center = Self.townCenter(world),
-                  let anchor = Self.plot(for: .herbGarden, near: center, in: world)
-            else { return }
-            place(.herbGarden, at: anchor, in: &world)
-        } else if let center = Self.townCenter(world), Self.herbsLow(world) {
+            return
+        }
+        if let center = Self.townCenter(world), Self.herbsLow(world) {
             world.enqueue(.marketBuy(center.id, .herbs, Self.herbsBought))
             herbsBuys += 1
         }
+        guard !Self.owns(.herbGarden, world), Self.canAfford(.herbGarden, world), let center = Self.townCenter(world),
+              let anchor = Self.plot(for: .herbGarden, near: center, in: world, reach: Self.townReach)
+        else { return }
+        place(.herbGarden, at: anchor, in: &world)
     }
 
     /// The house the fever's district is marked around.
@@ -170,11 +174,12 @@ struct EventsKit {
     /// passes `accepts`. Anything but a fire watch also needs a road beside
     /// it, for its carriers.
     static func plot(
-        for kind: BuildingKind, near target: Building, in world: World, where accepts: (TileCoordinate) -> Bool = { _ in true }
+        for kind: BuildingKind, near target: Building, in world: World, reach: Int = searchReach,
+        where accepts: (TileCoordinate) -> Bool = { _ in true }
     ) -> TileCoordinate? {
         let box = target.bounds
         let footprint = BuildingCatalog.spec(for: kind).footprint
-        for ring in 1 ... searchReach {
+        for ring in 1 ... reach {
             for y in (box.minY - ring) ... (box.maxY + ring) {
                 for x in (box.minX - ring) ... (box.maxX + ring) where max(box.minX - x, x - box.maxX, box.minY - y, y - box.maxY) == ring {
                     let tile = TileCoordinate(x: x, y: y)
