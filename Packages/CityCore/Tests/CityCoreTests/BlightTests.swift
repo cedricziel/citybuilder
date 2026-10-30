@@ -177,3 +177,14 @@ func fieldUnderConstructionIsNotBlighted() throws {
     #expect(!world.isBlighted(building))
     #expect(!world.snapshot().blightedFields.contains(site))
 }
+
+@Test("scenario: a town with fields but no houses and no food stored gets a quiet year")
+func blightNeedsFoodEvenWithoutHouses() throws {
+    let seed = try #require(seedDrawing(SeasonalEventOnset(event: .blight, season: .summer), in: 1203))
+    var world = eventsWorld(seed: seed, size: 30)
+    addOperational(.farm, at: TileCoordinate(x: 20, y: 20), in: &world)
+    _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1203) + 1)
+    #expect(world.seasonFoodDraw() == 0)
+    #expect(world.seasonalEvents.warned == nil)
+    #expect(world.seasonalEvents.plan?.onset == nil)
+}

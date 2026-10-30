@@ -31,11 +31,9 @@ public extension GameSession {
             return cache.area
         }
         // A red ghost shows no area at all, not the threat behind it.
-        let area: AreaOfEffect? = if let source {
-            world.areaOfEffect(of: source.kind, at: source.anchor, owner: source.owner, placing: source.placing)
-        } else {
-            hasGhost ? nil : world.threatenedArea()
-        }
+        // A selected building with no reach of its own still shows the threat.
+        let own = source.flatMap { world.areaOfEffect(of: $0.kind, at: $0.anchor, owner: $0.owner, placing: $0.placing) }
+        let area = own ?? (hasGhost ? nil : world.threatenedArea())
         areaOfEffectCache = AreaOfEffectCache(source: source, hasGhost: hasGhost, tick: world.tickCount, area: area)
         return area
     }

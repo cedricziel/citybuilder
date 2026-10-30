@@ -111,7 +111,10 @@ extension World {
         guard announces else { return }
         let scheduled = seasonalEvents.schedule.contains { $0.year == date.year }
         // A drawn event also needs the food it would threaten stored (D10).
-        let stocked = scheduled || storedFood() >= onset.event.minFoodSeasons * seasonFoodDraw()
+        // Nothing stored is nothing to protect, even in a town without houses.
+        let food = storedFood()
+        let stocked = scheduled || onset.event.minFoodSeasons == 0
+            || (food > 0 && food >= onset.event.minFoodSeasons * seasonFoodDraw())
         guard stocked, hasSeasonalEventTargets(onset.event.effect, scheduled: scheduled) else {
             seasonalEvents.plan = SeasonalEventPlan(year: date.year, onset: nil)
             return
