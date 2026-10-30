@@ -18,6 +18,11 @@ A market porter SHALL be drawn with the porter frames (`porter-<facing>-<frame>`
 - **WHEN** a porter is on its way to a house
 - **THEN** its node plays the porter frames for its facing
 
+#### Scenario: Full baskets read at game zoom
+
+- **WHEN** a loaded porter is drawn at zoom 1 over grass or a road
+- **THEN** each basket shows a heaped load in warm, light colours that stand clear of the grass, the road and the wicker, and rises above the basket rim
+
 #### Scenario: A returning porter shows empty baskets
 
 - **WHEN** a porter is on its way back to its hub
