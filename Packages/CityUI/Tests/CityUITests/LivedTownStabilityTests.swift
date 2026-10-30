@@ -12,16 +12,20 @@ func aShortageFallsOnTheNewestHouse() {
     var world = UITestSeed.livedTownWorld()
     let houses = world.buildings.values.filter { $0.kind == .house && $0.owner == .player }.map(\.id)
     var changes: [EntityID: Int] = [:]
+    var lived: Set<EntityID> = []
     var last = Dictionary(uniqueKeysWithValues: houses.map { ($0, world.populations[$0]?.population ?? 0) })
     for _ in 0 ..< 1800 {
         _ = world.tick()
         for id in houses {
             let now = world.populations[id]?.population ?? 0
             if now != last[id] { changes[id, default: 0] += 1 }
+            if now > 0 { lived.insert(id) }
             last[id] = now
         }
     }
-    let churning = changes.values.filter { $0 >= 4 }.count
-    #expect(houses.count >= 3)
-    #expect(churning <= 1)
+    // The shortage shows as the newest lived-in house shrinking and regrowing; no older house churns.
+    let churning = Set(changes.filter { $0.value >= 4 }.keys)
+    let newest = lived.max { $0.raw < $1.raw }
+    #expect(lived.count >= 3)
+    #expect(churning == Set([newest].compactMap(\.self)))
 }
