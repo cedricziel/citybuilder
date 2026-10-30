@@ -85,7 +85,7 @@ public struct GameCommands: Commands {
     public init() {}
 
     public var body: some Commands {
-        CommandMenu("Game") {
+        CommandMenu(GameText.string("mac.gameMenu")) {
             ForEach(GameMenuCommand.groups.indices, id: \.self) { index in
                 if index > 0 { Divider() }
                 ForEach(GameMenuCommand.groups[index], id: \.self, content: item)

@@ -16,9 +16,9 @@ struct ChapterSelectView: View {
         if model.isEmpty {
             NavigationStack {
                 ContentUnavailableView {
-                    Label("Campaigns", systemImage: "map")
+                    Label(GameText.string("campaigns.title"), systemImage: "map")
                 } description: {
-                    Text("The first campaign is on its way. Chapters will appear here with a coming update.")
+                    Text(l10n: "campaigns.comingSoon")
                 }
                 .toolbar { closeButton }
             }
@@ -38,7 +38,7 @@ struct ChapterSelectView: View {
 
     private var closeButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Close", action: onClose).cancelActionHotkey()
+            Button(GameText.string("common.close"), action: onClose).cancelActionHotkey()
         }
     }
 
@@ -51,7 +51,7 @@ struct ChapterSelectView: View {
     private var sidebar: some View {
         #if os(tvOS)
         List { sidebarRows }
-            .navigationTitle("Campaigns")
+            .navigationTitle(GameText.string("campaigns.title"))
             .toolbar { closeButton }
             // Focus picks the chapter, as a sidebar does on Apple TV.
             .onChange(of: focusedRow) { _, id in
@@ -59,7 +59,7 @@ struct ChapterSelectView: View {
             }
         #else
         List(selection: selection) { sidebarRows }
-            .navigationTitle("Campaigns")
+            .navigationTitle(GameText.string("campaigns.title"))
             .toolbar { closeButton }
         #endif
     }
@@ -89,7 +89,7 @@ struct ChapterSelectView: View {
 
     private func rowLabel(_ row: ChapterSelectModel.Row) -> some View {
         HStack(spacing: 10) {
-            Text("\(row.number)").monospacedDigit().foregroundStyle(.secondary).frame(minWidth: 18)
+            Text(verbatim: "\(row.number)").monospacedDigit().foregroundStyle(.secondary).frame(minWidth: 18)
             VStack(alignment: .leading, spacing: 2) {
                 Text(row.title)
                 Text(row.status).font(.caption).foregroundStyle(statusColor(row.state))
@@ -159,13 +159,13 @@ struct ChapterDetailView: View {
 
     private var goals: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Goals").font(.headline)
+            Text(l10n: "goals.title").font(.headline)
             ForEach(Array(chapter.goals.filter { !$0.isBonus }.enumerated()), id: \.offset) { _, goal in
                 Text(ChapterText.goal(goal, culture: culture))
             }
             let bonus = chapter.goals.filter(\.isBonus)
             if !bonus.isEmpty {
-                Text("Bonus · one laurel each").font(.headline).padding(.top, 6)
+                Text(l10n: "goals.bonusHeader").font(.headline).padding(.top, 6)
                 ForEach(Array(bonus.enumerated()), id: \.offset) { _, goal in
                     Text(ChapterText.goal(goal, culture: culture)).foregroundStyle(.secondary)
                 }
@@ -175,28 +175,28 @@ struct ChapterDetailView: View {
 
     private var facts: some View {
         VStack(alignment: .leading, spacing: 6) {
-            LabeledContent("Starts", value: ChapterText.start(chapter))
-            LabeledContent("Lost if", value: ChapterText.lostIf(chapter.loseConditions(for: model.difficulty)))
-            LabeledContent("Reward", value: ChapterText.reward(chapter.reward))
+            LabeledContent(GameText.string("chapter.starts"), value: ChapterText.start(chapter))
+            LabeledContent(GameText.string("chapter.lostIf"), value: ChapterText.lostIf(chapter.loseConditions(for: model.difficulty)))
+            LabeledContent(GameText.string("chapter.reward"), value: ChapterText.reward(chapter.reward))
         }
         .font(.callout)
     }
 
     @ViewBuilder
     private var picks: some View {
-        Picker("Difficulty", selection: $model.difficulty) {
+        Picker(GameText.string("newGame.difficulty"), selection: $model.difficulty) {
             ForEach(model.difficulties, id: \.self) { Text($0.displayName).tag($0) }
         }
         .pickerStyle(.segmented)
         .accessibilityIdentifier("campaigns.difficulty")
         if model.showsCulturePicker {
-            Picker("Culture", selection: $model.culture) {
+            Picker(GameText.string("newGame.culture"), selection: $model.culture) {
                 ForEach(Culture.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
             .pickerStyle(.menu)
             .accessibilityIdentifier("campaigns.culture")
         } else if let culture = chapter.culture {
-            LabeledContent("Culture", value: culture.displayName).font(.callout)
+            LabeledContent(GameText.string("newGame.culture"), value: culture.displayName).font(.callout)
         }
     }
 

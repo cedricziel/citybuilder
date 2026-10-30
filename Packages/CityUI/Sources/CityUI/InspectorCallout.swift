@@ -372,7 +372,7 @@ struct InspectorCalloutView<Actions: View>: View {
                     Capsule().fill(Color.green).frame(width: proxy.size.width * fill)
                 }
             }
-            .accessibilityLabel("Residents \(Int((fill * 100).rounded())) percent")
+            .accessibilityLabel(GameText.string("a11y.residentsPercent", Int((fill * 100).rounded())))
     }
 
     /// A diamond on the edge facing the building.

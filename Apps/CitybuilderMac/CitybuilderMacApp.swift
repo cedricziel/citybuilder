@@ -131,7 +131,7 @@ struct CitybuilderMacApp: App {
         }
         .commands {
             CommandGroup(replacing: .appTermination) {
-                Button("Quit Citybuilder") { MacAppTerminator.terminate() }
+                Button(GameText.string("mac.quit")) { MacAppTerminator.terminate() }
                     .keyboardShortcut("q")
             }
             GameCommands()
@@ -150,9 +150,9 @@ struct CitybuilderMacApp: App {
                 .onDisappear {
                     Task { await audio.syncSettingsToCloud() }
                 }
-                .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                .tabItem { Label(GameText.string("settings.audio"), systemImage: "speaker.wave.2") }
                 CreditsView(manifest: audio.manifest)
-                    .tabItem { Label("Credits", systemImage: "info.circle") }
+                    .tabItem { Label(GameText.string("settings.credits"), systemImage: "info.circle") }
             }
             .frame(width: 480, height: 360)
         }
@@ -179,13 +179,13 @@ private struct TitleSettingsSheet: View {
                         audio.engine.setSpatialDistances(reference: reference, max: maxDistance)
                     }
                 )
-                .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                .tabItem { Label(GameText.string("settings.audio"), systemImage: "speaker.wave.2") }
                 CreditsView(manifest: audio.manifest)
-                    .tabItem { Label("Credits", systemImage: "info.circle") }
+                    .tabItem { Label(GameText.string("settings.credits"), systemImage: "info.circle") }
             }
             HStack {
                 Spacer()
-                Button("Done") {
+                Button(GameText.string("common.done")) {
                     Task { await audio.syncSettingsToCloud() }
                     dismiss()
                 }

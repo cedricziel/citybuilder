@@ -111,7 +111,7 @@ struct TownMarketView: View {
                 }
             }
         } header: {
-            Text("Market").font(.caption.bold())
+            Text(l10n: "market.title").font(.caption.bold())
         }
         .panelAnimation(value: showsOtherGoods)
     }
@@ -149,16 +149,16 @@ struct TownMarketView: View {
     @ViewBuilder
     private func buttons(_ row: TownMarketSection.Row, only direction: TradeDirection? = nil) -> some View {
         if row.isBuyable, direction != .sold {
-            button("Buy", .bought, row, isEnabled: row.canBuy)
+            button("market.buyQuantity", .bought, row, isEnabled: row.canBuy)
         }
         if row.isSellable, direction != .bought {
-            button("Sell", .sold, row, isEnabled: row.canSell)
+            button("market.sellQuantity", .sold, row, isEnabled: row.canSell)
         }
     }
 
-    private func button(_ verb: String, _ direction: TradeDirection, _ row: TownMarketSection.Row, isEnabled: Bool) -> some View {
+    private func button(_ key: String, _ direction: TradeDirection, _ row: TownMarketSection.Row, isEnabled: Bool) -> some View {
         ForEach([1, 5], id: \.self) { quantity in
-            Button("\(verb) \(quantity)") { onTrade(direction, row.good, quantity) }
+            Button(GameText.string(key, quantity)) { onTrade(direction, row.good, quantity) }
                 .font(.caption.weight(.semibold))
                 .buttonStyle(.borderless)
                 .disabled(!isEnabled)

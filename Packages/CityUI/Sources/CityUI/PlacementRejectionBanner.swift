@@ -15,7 +15,7 @@ struct PlacementRejectionBanner: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(Color.red.opacity(0.85), in: Capsule())
-                    .accessibilityLabel("Can't place: \(message)")
+                    .accessibilityLabel(GameText.string("a11y.cantPlace", message))
             }
         }
     }

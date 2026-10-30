@@ -41,7 +41,7 @@ public struct SteppedValueControl: View {
                 Image(systemName: "minus")
             }
             .disabled(!stepped.canDecrement)
-            .accessibilityLabel("Decrease \(title)")
+            .accessibilityLabel(GameText.string("a11y.decrease", title))
             Text(stepped.text)
                 .monospacedDigit()
                 .frame(minWidth: 80)
@@ -51,7 +51,7 @@ public struct SteppedValueControl: View {
                 Image(systemName: "plus")
             }
             .disabled(!stepped.canIncrement)
-            .accessibilityLabel("Increase \(title)")
+            .accessibilityLabel(GameText.string("a11y.increase", title))
         }
         .buttonRepeatBehavior(.enabled)
     }

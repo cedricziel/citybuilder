@@ -31,7 +31,7 @@ public struct NewGameDialogView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("New Game")
+            Text(l10n: "newGame.title")
                 .font(.title.bold())
             // A remote cannot reach a Start button below the long form,
             // and a TV is wide, so Apple TV shows the buttons under the
@@ -82,13 +82,13 @@ public struct NewGameDialogView: View {
 
     private var actionButtons: some View {
         HStack {
-            Button("Cancel") {
+            Button(GameText.string("common.cancel")) {
                 viewModel.cancel()
                 onCancel()
             }
             .cancelActionHotkey()
             Spacer()
-            Button("Start") {
+            Button(GameText.string("newGame.start")) {
                 if let world = viewModel.commit() {
                     onStart(world)
                 }
@@ -102,9 +102,9 @@ public struct NewGameDialogView: View {
     }
 
     private var modeSection: some View {
-        Picker("Mode", selection: $viewModel.mode) {
-            Text("Sandbox").tag(NewGameDialogViewModel.Mode.sandbox)
-            Text("Scenario").tag(NewGameDialogViewModel.Mode.scenario)
+        Picker(GameText.string("newGame.mode"), selection: $viewModel.mode) {
+            Text(l10n: "newGame.sandbox").tag(NewGameDialogViewModel.Mode.sandbox)
+            Text(l10n: "newGame.scenario").tag(NewGameDialogViewModel.Mode.scenario)
         }
         .pickerStyle(.segmented)
         .accessibilityIdentifier("newGame.mode")
@@ -112,8 +112,8 @@ public struct NewGameDialogView: View {
 
     private var difficultySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Difficulty").font(.headline)
-            Picker("Difficulty", selection: $viewModel.difficulty) {
+            Text(l10n: "newGame.difficulty").font(.headline)
+            Picker(GameText.string("newGame.difficulty"), selection: $viewModel.difficulty) {
                 ForEach(Difficulty.allCases, id: \.self) { difficulty in
                     Text(difficulty.displayName).tag(difficulty)
                 }
@@ -125,8 +125,8 @@ public struct NewGameDialogView: View {
 
     private var scenarioSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Scenario").font(.headline)
-            Picker("Scenario", selection: $viewModel.scenario) {
+            Text(l10n: "newGame.scenario").font(.headline)
+            Picker(GameText.string("newGame.scenario"), selection: $viewModel.scenario) {
                 ForEach(Scenario.allCases, id: \.self) { scenario in
                     Text(scenario.title).tag(scenario)
                 }
@@ -136,7 +136,7 @@ public struct NewGameDialogView: View {
             Text(viewModel.scenario.blurb)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            Text("\(viewModel.scenario.age.displayName) · \(viewModel.scenario.difficulty.displayName)")
+            Text(verbatim: "\(viewModel.scenario.age.displayName) · \(viewModel.scenario.difficulty.displayName)")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
         }
@@ -144,8 +144,8 @@ public struct NewGameDialogView: View {
 
     private var ageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Starting age").font(.headline)
-            Picker("Starting age", selection: $viewModel.age) {
+            Text(l10n: "newGame.startingAge").font(.headline)
+            Picker(GameText.string("newGame.startingAge"), selection: $viewModel.age) {
                 ForEach(Age.allCases, id: \.self) { age in
                     Text(age.displayName).tag(age)
                 }
@@ -160,8 +160,8 @@ public struct NewGameDialogView: View {
 
     private var cultureSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Culture").font(.headline)
-            Picker("Culture", selection: $viewModel.culture) {
+            Text(l10n: "newGame.culture").font(.headline)
+            Picker(GameText.string("newGame.culture"), selection: $viewModel.culture) {
                 ForEach(Culture.allCases, id: \.self) { culture in
                     Text(culture.displayName).tag(culture)
                 }
@@ -176,20 +176,20 @@ public struct NewGameDialogView: View {
 
     private var layoutSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("World layout").font(.headline)
-            Picker("Layout", selection: $viewModel.layout) {
-                Text("Single Island").tag(WorldLayout.singleIsland)
-                Text("Archipelago").tag(WorldLayout.archipelago)
+            Text(l10n: "newGame.worldLayout").font(.headline)
+            Picker(GameText.string("newGame.layout"), selection: $viewModel.layout) {
+                Text(l10n: "newGame.singleIsland").tag(WorldLayout.singleIsland)
+                Text(l10n: "newGame.archipelago").tag(WorldLayout.archipelago)
             }
             .pickerStyle(.segmented)
             .disabled(viewModel.isLayoutLocked)
             .accessibilityIdentifier("newGame.layout")
             if viewModel.showsRivalToggle {
-                Toggle("Rival towns", isOn: $viewModel.rivalTowns)
+                Toggle(GameText.string("newGame.rivalTowns"), isOn: $viewModel.rivalTowns)
                     .accessibilityIdentifier("newGame.rivalTowns")
             }
             // A campaign chapter that schedules events will hide this and run its schedule.
-            Toggle("Seasonal events", isOn: $viewModel.seasonalEvents)
+            Toggle(GameText.string("newGame.seasonalEvents"), isOn: $viewModel.seasonalEvents)
                 .accessibilityIdentifier("newGame.seasonalEvents")
             Text(NewGameDialogViewModel.seasonalEventsHint)
                 .font(.footnote)
@@ -199,11 +199,11 @@ public struct NewGameDialogView: View {
 
     private var seedSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Seed").font(.headline)
-            Picker("Seed mode", selection: seedModeTag) {
-                Text("Default").tag(SeedModeTag.default)
-                Text("Random").tag(SeedModeTag.random)
-                Text("Custom").tag(SeedModeTag.custom)
+            Text(l10n: "newGame.seed").font(.headline)
+            Picker(GameText.string("newGame.seedMode"), selection: seedModeTag) {
+                Text(l10n: "newGame.seedDefault").tag(SeedModeTag.default)
+                Text(l10n: "newGame.seedRandom").tag(SeedModeTag.random)
+                Text(l10n: "newGame.seedCustom").tag(SeedModeTag.custom)
             }
             .pickerStyle(.segmented)
             .accessibilityIdentifier("newGame.seedMode")
@@ -216,22 +216,22 @@ public struct NewGameDialogView: View {
     private var seedDetail: some View {
         switch viewModel.seedMode {
         case .default:
-            Text("Seed: 0 (same world every time)")
+            Text(l10n: "newGame.seedZero")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         case let .random(captured):
             HStack {
-                Text("Seed: \(captured)")
+                Text(l10n: "newGame.seedValue", "\(captured)")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Re-roll") {
+                Button(GameText.string("newGame.reroll")) {
                     viewModel.useRandomSeed()
                 }
                 .buttonStyle(.borderless)
             }
         case .custom:
-            TextField("Decimal seed (UInt64)", text: customSeedBinding)
+            TextField(GameText.string("newGame.customSeed"), text: customSeedBinding)
                 #if !os(tvOS)
                 .textFieldStyle(.roundedBorder)
                 #endif

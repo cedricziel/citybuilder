@@ -11,7 +11,7 @@ struct RouteAuthoringOverlay: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("New route").font(.headline)
+            Text(l10n: "routes.newRouteTitle").font(.headline)
             Label(authoring.message, systemImage: authoring.isWarning ? "exclamationmark.triangle.fill" : "hand.tap")
                 .font(.callout)
                 .foregroundStyle(authoring.isWarning ? .red : .primary)
@@ -25,11 +25,11 @@ struct RouteAuthoringOverlay: View {
                 }
             }
             HStack {
-                Button("Undo", systemImage: "arrow.uturn.backward", action: authoring.removeLastWaypoint)
+                Button(GameText.string("common.undo"), systemImage: "arrow.uturn.backward", action: authoring.removeLastWaypoint)
                     .disabled(authoring.inProgressWaypoints.isEmpty)
                 Spacer()
-                Button("Cancel", role: .cancel, action: session.cancelRouteAuthoring)
-                Button("Commit", action: session.commitRouteAuthoring)
+                Button(GameText.string("common.cancel"), role: .cancel, action: session.cancelRouteAuthoring)
+                Button(GameText.string("routes.commit"), action: session.commitRouteAuthoring)
                     .buttonStyle(.borderedProminent)
             }
             .buttonStyle(.bordered)
@@ -53,12 +53,12 @@ struct RouteAuthoringOverlay: View {
                 editing = ManifestEditTarget(id: id, title: label, model: ManifestEditorModel(snapshot: snapshot, port: id))
             } label: {
                 let actions = authoring.manifest[id]?.count ?? 0
-                Label("\(index + 1). \(label)\(actions > 0 ? " · \(actions)" : "")", systemImage: "shippingbox")
+                Label(String("\(index + 1). \(label)\(actions > 0 ? " · \(actions)" : "")"), systemImage: "shippingbox")
             }
             .buttonStyle(.bordered)
-            .accessibilityHint("Edit what ships do here")
+            .accessibilityHint(GameText.string("routes.editStopHint"))
         } else {
-            Text("\(index + 1). \(label)")
+            Text(verbatim: "\(index + 1). \(label)")
                 .font(.callout)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)

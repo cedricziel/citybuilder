@@ -17,17 +17,17 @@ struct RouteListView: View {
         return NavigationStack {
             List {
                 Section {
-                    Button("New Route", systemImage: "plus") {
+                    Button(GameText.string("routes.newRoute"), systemImage: "plus") {
                         done()
                         session.beginRouteAuthoring()
                     }
                     .disabled(session.isGameOver)
                 } footer: {
-                    Text("Idle ships: \(idleShips). Or tap a port and choose Route from here.")
+                    Text(l10n: "routes.idleShips", idleShips)
                 }
-                Section("Routes") {
+                Section(GameText.string("routes.title")) {
                     if rows.isEmpty {
-                        Text("No routes yet.").foregroundStyle(.secondary)
+                        Text(l10n: "routes.empty").foregroundStyle(.secondary)
                     }
                     ForEach(rows) { row in
                         RouteRowView(row: row, list: list, isSelected: list.selectedRouteID == row.id, canAssignShip: idleShips > 0)
@@ -35,9 +35,9 @@ struct RouteListView: View {
                     }
                 }
             }
-            .navigationTitle("Routes")
+            .navigationTitle(GameText.string("routes.title"))
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
+                ToolbarItem(placement: .confirmationAction) { Button(GameText.string("common.done"), action: done).cancelActionHotkey() }
             }
         }
         .presentationDetents([.medium, .large])
@@ -70,16 +70,16 @@ private struct RouteRowView: View {
             .buttonStyle(.plain)
             HStack {
                 if row.isPaused {
-                    Button("Resume", systemImage: "play.fill") { list.resume(row.id) }
+                    Button(GameText.string("routes.resume"), systemImage: "play.fill") { list.resume(row.id) }
                 } else {
-                    Button("Pause", systemImage: "pause.fill") { list.pause(row.id) }
+                    Button(GameText.string("routes.pause"), systemImage: "pause.fill") { list.pause(row.id) }
                 }
                 Button(canAssignShip ? "Assign ship" : "No idle ship", systemImage: "ferry") {
                     list.assignIdleShip(to: row.id)
                 }
                 .disabled(!canAssignShip)
                 Spacer()
-                Button("Delete", systemImage: "trash", role: .destructive) { list.delete(row.id) }
+                Button(GameText.string("common.delete"), systemImage: "trash", role: .destructive) { list.delete(row.id) }
                     .labelStyle(.iconOnly)
             }
             .buttonStyle(.borderless)
@@ -101,7 +101,7 @@ extension CityRootView {
                     .background(.thinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Routes")
+            .accessibilityLabel(GameText.string("routes.title"))
         }
     }
 }

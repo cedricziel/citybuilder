@@ -31,42 +31,42 @@ struct ManifestEditorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Actions") {
+                Section(GameText.string("manifest.actions")) {
                     if draft.actions.isEmpty {
-                        Text("No actions yet. Ships stop here and sail on.").foregroundStyle(.secondary)
+                        Text(l10n: "manifest.empty").foregroundStyle(.secondary)
                     }
                     ForEach(Array(draft.actions.enumerated()), id: \.offset) { _, action in
                         Text(model.line(for: action))
                     }
                     .onDelete { draft.remove(atOffsets: $0) }
                 }
-                Section("Add") {
-                    Picker("Action", selection: $verb) {
+                Section(GameText.string("manifest.addSection")) {
+                    Picker(GameText.string("manifest.action"), selection: $verb) {
                         Text(model.label(for: .load)).tag(ManifestVerb.load)
                         Text(model.label(for: .unload)).tag(ManifestVerb.unload)
                     }
                     .pickerStyle(.segmented)
-                    Picker("Good", selection: $good) {
+                    Picker(GameText.string("manifest.good"), selection: $good) {
                         ForEach(model.rows(for: verb), id: \.good) { row in
                             Text(row.title).tag(row.good)
                         }
                     }
                     #if os(tvOS)
                     SteppedValueControl(
-                        "Up to",
+                        GameText.string("manifest.upTo"),
                         value: $quantity,
                         step: ManifestDraft.quantityStep,
                         range: ManifestDraft.quantityRange
                     )
                     #else
                     Stepper(
-                        "Up to \(quantity)",
+                        GameText.string("manifest.upToQuantity", quantity),
                         value: $quantity,
                         in: ManifestDraft.quantityRange,
                         step: ManifestDraft.quantityStep
                     )
                     #endif
-                    Button("Add \(model.label(for: verb))") {
+                    Button(GameText.string("manifest.add", model.label(for: verb))) {
                         draft.add(verb, good: good, quantity: quantity)
                     }
                 }
@@ -74,11 +74,11 @@ struct ManifestEditorSheet: View {
             .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(GameText.string("common.cancel")) { dismiss() }
                         .cancelActionHotkey()
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(GameText.string("common.done")) {
                         onDone(draft.actions)
                         dismiss()
                     }

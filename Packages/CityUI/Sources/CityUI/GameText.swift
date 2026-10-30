@@ -66,6 +66,10 @@ public enum GameText {
     /// The text for `key` in `language`, its format arguments filled. A
     /// missing key shows as itself.
     public static func string(_ key: String, _ arguments: any CVarArg..., in language: Language = .current) -> String {
+        string(key, arguments: arguments, in: language)
+    }
+
+    static func string(_ key: String, arguments: [any CVarArg], in language: Language) -> String {
         var format = table?.format(for: key, in: language.catalogLanguage.rawValue, arguments: arguments) ?? key
         if language == .pseudo { format = PseudoLocale.transform(format) }
         return arguments.isEmpty ? format : String(format: format, locale: language.locale, arguments: arguments)
@@ -102,8 +106,8 @@ public enum PseudoLocale {
 }
 
 public extension Text {
-    /// A catalog string in the current language.
-    init(l10n key: String) {
-        self.init(verbatim: GameText.string(key))
+    /// A catalog string in the current language, its format arguments filled.
+    init(l10n key: String, _ arguments: any CVarArg...) {
+        self.init(verbatim: GameText.string(key, arguments: arguments, in: .current))
     }
 }

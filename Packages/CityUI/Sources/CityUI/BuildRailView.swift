@@ -165,7 +165,7 @@ struct BuildDrawerView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Close")
+                    .accessibilityLabel(GameText.string("common.close"))
                 }
                 .padding(.horizontal, 4)
                 ScrollView(.vertical, showsIndicators: false) {

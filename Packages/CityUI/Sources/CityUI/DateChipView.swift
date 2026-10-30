@@ -48,7 +48,7 @@ struct DateChipView: View {
             .hudChromeTypeSize()
             .allowsHitTesting(false)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Date: \(hud.dateText)")
+            .accessibilityLabel(GameText.string("a11y.date", hud.dateText))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 4)
         }

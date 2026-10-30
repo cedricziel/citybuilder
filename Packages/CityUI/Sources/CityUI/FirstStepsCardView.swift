@@ -26,7 +26,7 @@ struct FirstStepsCardView: View {
     }
 
     private var countText: some View {
-        Text("First steps \(guide.metCount)/\(guide.stepCount)").font(.caption.weight(.semibold))
+        Text(l10n: "firstSteps.progress", guide.metCount, guide.stepCount).font(.caption.weight(.semibold))
     }
 
     private var capsule: some View {
@@ -35,7 +35,7 @@ struct FirstStepsCardView: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 6) {
                     countText
-                    Text("· net \(FirstStepsLedger.money(guide.ledger.net))")
+                    Text(l10n: "firstSteps.net", FirstStepsLedger.money(guide.ledger.net))
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(guide.ledger.isNegative ? .red : .secondary)
                 }
@@ -48,19 +48,21 @@ struct FirstStepsCardView: View {
             .background(.thinMaterial, in: Capsule())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(
-            "First steps, \(guide.metCount) of \(guide.stepCount) done, "
-                + "net \(FirstStepsLedger.spokenMoney(guide.ledger.net))"
-        )
-        .accessibilityValue("Collapsed")
-        .accessibilityHint("Shows the first steps")
+        .accessibilityLabel(GameText.string(
+            "firstSteps.a11y.collapsed",
+            guide.metCount,
+            guide.stepCount,
+            FirstStepsLedger.spokenMoney(guide.ledger.net)
+        ))
+        .accessibilityValue(GameText.string("a11y.collapsed"))
+        .accessibilityHint(GameText.string("firstSteps.showHint"))
     }
 
     private var card: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("First steps").font(.headline)
-                Text("\(guide.metCount)/\(guide.stepCount)")
+                Text(l10n: "firstSteps.title").font(.headline)
+                Text(verbatim: "\(guide.metCount)/\(guide.stepCount)")
                     .font(.system(.subheadline, design: .monospaced))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
@@ -72,10 +74,10 @@ struct FirstStepsCardView: View {
                         .frame(minHeight: layout.focusableHeight(36))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Hide first steps")
+                .accessibilityLabel(GameText.string("firstSteps.hide"))
             }
             ledger
-            Text("Per collection, every 50 ticks.")
+            Text(l10n: "firstSteps.perCollection")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ForEach(guide.steps(idiom: layout.idiom), id: \.title) { step in
@@ -103,7 +105,7 @@ struct FirstStepsCardView: View {
         .accessibilityValue(layout.collapsesFirstSteps ? "Expanded" : "")
         .accessibilityActions {
             if layout.collapsesFirstSteps {
-                Button("Collapse") { isExpanded = false }
+                Button(GameText.string("firstSteps.collapse")) { isExpanded = false }
             }
         }
     }
