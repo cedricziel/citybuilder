@@ -68,6 +68,11 @@
   background: var(--cb-fill-secondary);
 }
 
+.cb-orders__card--festival {
+  --cb-festival: #e8743b;
+  background: color-mix(in srgb, var(--cb-festival) 12%, transparent);
+}
+
 .cb-orders__card--accepted {
   box-shadow: inset 0 0 0 1.5px var(--cb-accent);
 }

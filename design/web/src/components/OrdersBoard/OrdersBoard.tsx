@@ -27,6 +27,12 @@ export interface OrderCard {
   accepted?: boolean;
   /** A rival's order, filled by ship at its port. */
   byShip?: boolean;
+  /**
+   * One of the town's two festival orders: a party popper instead of the
+   * issuer's dot, a warm card, "Festival" for the reward and no favour.
+   * Accepting it never counts toward the limit of two.
+   */
+  festival?: boolean;
   /** 0...1 of the quantity in the stores or delivered; accepted orders only. */
   progress?: number;
   /** "In stores 38 of 54", "Delivered 8 of 24 by ship" or "Offer ends with spring". */
@@ -88,9 +94,15 @@ export function OrdersBoard({ cards, favour, width = 340, height, onClose }: Ord
 
 function OrderCardView({ card }: { card: OrderCard }) {
   return (
-    <div className={`cb-orders__card ${card.accepted ? "cb-orders__card--accepted" : ""}`}>
+    <div
+      className={`cb-orders__card ${card.accepted ? "cb-orders__card--accepted" : ""} ${card.festival ? "cb-orders__card--festival" : ""}`}
+    >
       <div className="cb-orders__row">
-        <span className="cb-orders__dot" style={{ background: ownerColours[card.colour] }} />
+        {card.festival ? (
+          <Icon name="party.popper.fill" size={12} color="var(--cb-festival)" />
+        ) : (
+          <span className="cb-orders__dot" style={{ background: ownerColours[card.colour] }} />
+        )}
         <span className="cb-caption cb-secondary">{card.issuer}</span>
         <span className="cb-orders__grow" />
         <span className="cb-caption cb-secondary">{card.deadline}</span>
