@@ -99,7 +99,13 @@ extension World {
     /// (the hub's porter load) or takes the owner's cart on a long road.
     /// Spec: `warehouses-and-logistics` / Market hubs gather house goods.
     mutating func spawnRestockCarriers(service: HubService, events: inout [WorldEvent]) {
-        let reserves = hubReserves(service: service)
+        var reserves: [EntityID: [Good: Int]] = [:]
+        for hub in service.hubs {
+            let factor = hub.kind.hub?.reserveConsumptions ?? 0
+            for (good, eaten) in consumption(of: service.housesOf[hub.id] ?? []) {
+                reserves[hub.id, default: [:]][good] = factor * eaten
+            }
+        }
         func surplus(of good: Good, at building: Building) -> Int {
             (stockpiles[building.id]?.quantity(of: good) ?? 0) - (reserves[building.id]?[good] ?? 0)
         }
@@ -127,33 +133,19 @@ extension World {
         }
     }
 
-    /// Each hub's reserve per good: its reserve consumptions of what its
-    /// served houses eat now, and, of a good only their next tier adds, what
-    /// the houses at capacity would eat of it there, one basket at most.
-    /// Spec: `warehouses-and-logistics` / Market hubs gather house goods.
-    func hubReserves(service: HubService) -> [EntityID: [Good: Int]] {
-        var reserves: [EntityID: [Good: Int]] = [:]
-        for hub in service.hubs {
-            guard let spec = hub.kind.hub else { continue }
-            var eaten: [Good: Int] = [:], ahead: [Good: Int] = [:]
-            for house in service.housesOf[hub.id] ?? [] {
-                guard let pop = populations[house] else { continue }
-                let needs = pop.tier.needs(in: culture)
-                for good in needs {
-                    eaten[good, default: 0] += pop.nextConsumption(of: good)
-                }
-                guard let next = pop.tier.next, pop.population >= pop.capacity else { continue }
-                for good in next.needs(in: culture) where !needs.contains(good) {
-                    ahead[good, default: 0] += HousePopulation.amount(of: good, residents: pop.population)
-                }
+    /// What `houses` eat of each good per interval, in `Good` order, counting
+    /// the needs their next tier adds too: a house advances only while its
+    /// hub holds those, so the hub keeps them before anyone eats them.
+    private func consumption(of houses: [EntityID]) -> [(Good, Int)] {
+        var eaten: [Good: Int] = [:]
+        for house in houses {
+            guard let pop = populations[house] else { continue }
+            let needs = pop.tier.needs(in: culture) + (pop.tier.next?.needs(in: culture) ?? [])
+            for good in Set(needs) {
+                eaten[good, default: 0] += pop.nextConsumption(of: good)
             }
-            var reserve = eaten.mapValues { spec.reserveConsumptions * $0 }
-            for (good, units) in ahead {
-                reserve[good, default: 0] += min(units, spec.basketUnits)
-            }
-            reserves[hub.id] = reserve
         }
-        return reserves
+        return Good.allCases.compactMap { good in eaten[good].map { (good, $0) } }
     }
 
     /// Operational buildings with goods to be supplied, in entity order,
