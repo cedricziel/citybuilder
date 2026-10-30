@@ -22,13 +22,13 @@ public struct EventChip: Equatable, Sendable {
         return switch event.effect {
         case .fire:
             switch burning {
-            case nil: "Fire risk · \(season)"
-            case 0?: "Fire season · \(season)"
-            case let count?: "Fire · \(count) burning"
+            case nil: GameText.string("chip.fireRisk", season)
+            case 0?: GameText.string("chip.fireSeason", season)
+            case let count?: GameText.string("chip.fireBurning", count)
             }
-        case .blight: "Blight · \(season)"
-        case .fever: "Fever · \(season)"
-        case .festival: "Festival · by \(season)"
+        case .blight: GameText.string("chip.blight", season)
+        case .fever: GameText.string("chip.fever", season)
+        case .festival: GameText.string("chip.festival", season)
         }
     }
 
