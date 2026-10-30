@@ -12,8 +12,9 @@ struct AreaOfEffectCache {
         let placing: Bool
     }
 
-    /// Nil for the area a blight or fever threatens.
+    /// Nil for the area a blight or fever threatens, or under a red ghost.
     let source: Source?
+    let hasGhost: Bool
     let tick: UInt64
     let area: AreaOfEffect?
 }
@@ -25,12 +26,17 @@ public extension GameSession {
     /// mine's sites take a placement check each.
     func areaOfEffect() -> AreaOfEffect? {
         let source = areaOfEffectSource()
-        if let cache = areaOfEffectCache, cache.source == source, cache.tick == world.tickCount {
+        let hasGhost = ghostSite() != nil
+        if let cache = areaOfEffectCache, cache.source == source, cache.hasGhost == hasGhost, cache.tick == world.tickCount {
             return cache.area
         }
-        let area = source.map { world.areaOfEffect(of: $0.kind, at: $0.anchor, owner: $0.owner, placing: $0.placing) }
-            ?? world.threatenedArea()
-        areaOfEffectCache = AreaOfEffectCache(source: source, tick: world.tickCount, area: area)
+        // A red ghost shows no area at all, not the threat behind it.
+        let area: AreaOfEffect? = if let source {
+            world.areaOfEffect(of: source.kind, at: source.anchor, owner: source.owner, placing: source.placing)
+        } else {
+            hasGhost ? nil : world.threatenedArea()
+        }
+        areaOfEffectCache = AreaOfEffectCache(source: source, hasGhost: hasGhost, tick: world.tickCount, area: area)
         return area
     }
 
