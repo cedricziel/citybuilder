@@ -59,15 +59,14 @@ public enum Language: String, Sendable {
 /// call site (`GameText.string("pause.resume")`, `Text(l10n: "pause.title")`)
 /// so `l10n-check` can find them.
 public enum GameText {
-    private static let bundles: [Language: Bundle] = Dictionary(uniqueKeysWithValues: [Language.en, .de].compactMap { language in
-        Bundle.module.path(forResource: language.rawValue, ofType: "lproj").flatMap(Bundle.init(path:)).map { (language, $0) }
-    })
+    /// The catalog, copied into the bundle as JSON (see `StringTable`).
+    private static let table: StringTable? = Bundle.module.url(forResource: "Localizable", withExtension: "xcstrings")
+        .flatMap { try? StringTable(json: Data(contentsOf: $0)) }
 
     /// The text for `key` in `language`, its format arguments filled. A
     /// missing key shows as itself.
     public static func string(_ key: String, _ arguments: any CVarArg..., in language: Language = .current) -> String {
-        let bundle = bundles[language.catalogLanguage] ?? .module
-        var format = bundle.localizedString(forKey: key, value: key, table: nil)
+        var format = table?.format(for: key, in: language.catalogLanguage.rawValue, arguments: arguments) ?? key
         if language == .pseudo { format = PseudoLocale.transform(format) }
         return arguments.isEmpty ? format : String(format: format, locale: language.locale, arguments: arguments)
     }
