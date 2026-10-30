@@ -108,10 +108,10 @@ struct ResearchPanelView: View {
 
     private func stateLabel(_ row: ResearchPanelModel.Row) -> String {
         switch row.state {
-        case .researched: "Researched"
+        case .researched: GameText.string("research.researched")
         case .inProgress: "\(row.progress)/\(row.cost)"
-        case .available: "\(row.cost) knowledge"
-        case .locked: "Locked"
+        case .available: GameText.string("research.cost", row.cost)
+        case .locked: GameText.string("research.locked")
         }
     }
 }

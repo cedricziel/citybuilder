@@ -75,6 +75,12 @@ public enum GameText {
         return arguments.isEmpty ? format : String(format: format, locale: language.locale, arguments: arguments)
     }
 
+    /// A name as it reads inside a sentence: English lowercases common
+    /// nouns there, German keeps their capital.
+    public static func inSentence(_ name: String, in language: Language = .current) -> String {
+        language == .de ? name : name.lowercased()
+    }
+
     public static func number(_ value: Int, in language: Language = .current) -> String {
         value.formatted(.number.locale(language.locale))
     }

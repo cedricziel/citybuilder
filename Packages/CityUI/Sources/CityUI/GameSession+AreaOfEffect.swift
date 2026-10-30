@@ -91,14 +91,14 @@ public struct AreaCountCapsuleModel: Equatable, Sendable {
     /// "18 trees in reach", "12 open grass in reach" or "Mine site: 4 rock
     /// tiles"; nil for a kind that counts nothing.
     public static func text(kind: BuildingKind, count: Int) -> String? {
-        if kind.catchmentRadius != nil {
-            guard let noun = ToolStripText.inReachNoun(kind) else { return nil }
-            if count == 0 { return "No \(noun) in reach" }
-            return count == 1 && noun == "trees" ? "1 tree in reach" : "\(count) \(noun) in reach"
+        switch kind {
+        case .lumberjackHut: return count == 0 ? GameText.string("aoe.noTrees") : GameText.string("aoe.trees", count)
+        case .forester: return count == 0 ? GameText.string("aoe.noGrass") : GameText.string("aoe.grass", count)
+        default: if kind.catchmentRadius != nil { return nil }
         }
         guard let terrain = BuildingCatalog.spec(for: kind).requiredTerrain?.terrain else { return nil }
-        let ground = terrain == .mountain ? "rock" : terrain.rawValue
-        return "\(kind.displayName) site: \(count) \(ground) tiles"
+        let ground = terrain == .mountain ? GameText.string("terrain.rock") : terrain.localizedName
+        return GameText.string("aoe.site", kind.displayName, count, ground)
     }
 
     public static func tone(kind: BuildingKind, count: Int) -> Tone {

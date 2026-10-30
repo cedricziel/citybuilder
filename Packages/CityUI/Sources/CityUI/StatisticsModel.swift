@@ -219,16 +219,16 @@ public struct StatisticsModel: Equatable, Sendable {
     /// Tax and trade income, which draw above the axis.
     public var income: [Series] {
         [
-            Series(name: "Tax", points: points { Int($0.money.tax) }),
-            Series(name: "Trade", points: points { Int($0.money.tradeIncome) })
+            Series(name: GameText.string("stats.series.tax"), points: points { Int($0.money.tax) }),
+            Series(name: GameText.string("stats.series.trade"), points: points { Int($0.money.tradeIncome) })
         ]
     }
 
     /// Upkeep and trade spending as negative values, which draw below the axis.
     public var spending: [Series] {
         [
-            Series(name: "Upkeep", points: points { -Int($0.money.upkeep) }),
-            Series(name: "Bought", points: points { -Int($0.money.tradeSpending) })
+            Series(name: GameText.string("stats.series.upkeep"), points: points { -Int($0.money.upkeep) }),
+            Series(name: GameText.string("stats.series.bought"), points: points { -Int($0.money.tradeSpending) })
         ]
     }
 
@@ -250,7 +250,7 @@ public struct StatisticsModel: Equatable, Sendable {
 
     /// Residents per town: "You" first, then each rival by ID.
     public var residentLines: [Series] {
-        let you = Series(name: "You", points: points { $0.residents.values.reduce(0, +) })
+        let you = Series(name: GameText.string("stats.you"), points: points { $0.residents.values.reduce(0, +) })
         let others = rivalNames.keys.sorted().map { id in
             Series(name: rivalNames[id] ?? "", points: points { season in
                 season.rivals.first { $0.id == id }?.residents ?? 0
@@ -268,7 +268,7 @@ public struct StatisticsModel: Equatable, Sendable {
     public var standings: [RivalRow] {
         guard let latest = seasons.last else { return [] }
         let you = RivalRow(
-            name: "You", colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
+            name: GameText.string("stats.you"), colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
             age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
         )
         let others = latest.rivals.map { rival in

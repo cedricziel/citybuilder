@@ -41,8 +41,9 @@ public final class NewGameDialogViewModel {
     public var seasonalEvents = true
 
     /// The line under the "Seasonal events" toggle.
-    public nonisolated static let seasonalEventsHint =
-        "Fire, blight and fever, each warned a season ahead, and a festival when the town asks for one."
+    public nonisolated static var seasonalEventsHint: String {
+        GameText.string("newGame.seasonalEventsHint")
+    }
 
     /// The camera's zoom when the game starts; a phone starts further out.
     private let startZoom: Double

@@ -24,7 +24,9 @@ public struct SaveSummary: Sendable, Equatable {
 /// `surface-save-load-failure` / `persistence-save-load` Requirement:
 /// Failed load is visible on the title screen.
 public struct SaveLoadFailure: Sendable, Equatable {
-    public static let title = "This save could not be loaded"
+    public static var title: String {
+        GameText.string("title.loadFailedTitle")
+    }
 
     public let gameID: UUID
     public let reason: String
@@ -116,14 +118,17 @@ public final class TitleScreenViewModel {
     /// True while a conflict is being settled.
     public private(set) var isResolvingSaveConflict = false
 
-    public static let saveConflictSupersededText =
-        "A newer save arrived in iCloud while you were choosing. Choose again."
+    public static var saveConflictSupersededText: String {
+        GameText.string("title.conflictChanged")
+    }
 
-    public static let saveConflictFailureText =
-        "iCloud could not be reached. Check your connection and try again."
+    public static var saveConflictFailureText: String {
+        GameText.string("title.cloudUnreachable")
+    }
 
-    public static let iCloudNoticeText =
-        "Sign in to iCloud to keep your cities. Without it, Apple TV may delete your progress."
+    public static var iCloudNoticeText: String {
+        GameText.string("title.cloudSignIn")
+    }
 
     private static let logger = Logger(subsystem: "com.cedricziel.citybuilder", category: "TitleScreen")
 

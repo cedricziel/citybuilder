@@ -30,10 +30,10 @@ public enum GameMenuCommand: Hashable, CaseIterable, Sendable {
 
     public func title(isPaused: Bool) -> String {
         switch self {
-        case .togglePause: isPaused ? "Resume" : "Pause"
-        case let .speed(speed): "Speed \(speed.label)"
-        case .zoomIn: "Zoom In"
-        case .zoomOut: "Zoom Out"
+        case .togglePause: if isPaused { GameText.string("pause.resume") } else { GameText.string("commands.pause") }
+        case let .speed(speed): GameText.string("commands.speed", speed.label)
+        case .zoomIn: GameText.string("commands.zoomIn")
+        case .zoomOut: GameText.string("commands.zoomOut")
         }
     }
 

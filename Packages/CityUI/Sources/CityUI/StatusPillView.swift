@@ -71,7 +71,7 @@ struct StatusPillView: View {
                 .lineLimit(1)
                 .accessibilityLabel(GameText.string("a11y.date", hud.dateText))
             }
-            stat("Money", Text(hud.formattedMoney).monospaced())
+            stat(GameText.string("hud.money"), Text(hud.formattedMoney).monospaced())
             stat(GameText.string("hud.population"), Text(verbatim: "\(hud.population)").monospaced())
             if let name = hud.currentIslandName {
                 islandButton(name)
@@ -104,7 +104,7 @@ struct StatusPillView: View {
     private func islandButton(_ name: String) -> some View {
         Button(action: hud.toggleStocksTray) {
             HStack(spacing: 6) {
-                stat("Island", Text(name))
+                stat(GameText.string("hud.island"), Text(name))
                     .foregroundStyle(.primary)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 11, weight: .semibold))
@@ -118,7 +118,7 @@ struct StatusPillView: View {
         .buttonStyle(.plain)
         .padding(.horizontal, -8)
         .accessibilityLabel(GameText.string("a11y.islandStocks", name))
-        .accessibilityValue(hud.isStocksTrayOpen ? "Shown" : "Hidden")
+        .accessibilityValue(hud.isStocksTrayOpen ? GameText.string("a11y.shown") : GameText.string("a11y.hidden"))
     }
 }
 
@@ -148,7 +148,7 @@ struct SpeedControlView: View {
                     .contentShape(Capsule())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(session.isPaused ? "Resume" : "Pause")
+            .accessibilityLabel(session.isPaused ? GameText.string("pause.resume") : GameText.string("commands.pause"))
             .pauseHotkeys()
             if layout.usesSpeedCycleButton {
                 segment(session.speed.label, isOn: false, action: session.stepSpeed)

@@ -100,13 +100,13 @@ public final class HUDViewModel {
     }
 
     public var formattedPopulation: String {
-        "Pop. \(population)"
+        GameText.string("hud.populationValue", population)
     }
 
     /// Name of the currently displayed island, or nil when the HUD's
     /// island row is hidden (camera never landed on any island).
     public var currentIslandName: String? {
-        currentIslandRival.map { "\($0) (rival)" } ?? currentIsland?.name
+        currentIslandRival.map { GameText.string("hud.rivalIsland", $0) } ?? currentIsland?.name
     }
 
     public func toggleStocksTray() {
