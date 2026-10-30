@@ -6,13 +6,15 @@ extension World {
     /// Carrier lifecycle: advance in-flight carriers along their path,
     /// deposit goods on arrival, then spawn fresh carriers from producers
     /// whose output stockpiles have something to ship.
-    mutating func runCarrierSystem(events: inout [WorldEvent]) {
+    mutating func runCarrierSystem(service: HubService, events: inout [WorldEvent]) {
         advanceCarriers(events: &events)
         let tileToIsland = tileToIslandMap()
         let consumers = operationalConsumers()
         spawnCarriersFromProducers(consumers: consumers, tileToIsland: tileToIsland, events: &events)
         spawnSupplyCarriers(consumers: consumers, events: &events)
+        spawnRestockCarriers(service: service, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
+        runPorterSystem(service: service, events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {
@@ -124,8 +126,10 @@ extension World {
     ) {
         // Spawning carriers moves goods, not buildings, so list the
         // candidate destinations once for every producer.
+        let buffers = goodsBuffers().filter { $0.state == .operational }
         let candidates = DestinationCandidates(
-            buffers: goodsBuffers().filter { $0.state == .operational },
+            buffers: buffers,
+            hubs: buffers.filter { $0.kind.hub != nil },
             waitingSites: buildings.values
                 .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
                 .sorted { $0.id.raw < $1.id.raw },
@@ -162,6 +166,8 @@ extension World {
     /// Where producers may send output this tick, listed once.
     private struct DestinationCandidates {
         let buffers: [Building]
+        /// The buffers that are market hubs, which house goods try first.
+        let hubs: [Building]
         let waitingSites: [Building]
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
@@ -231,6 +237,11 @@ extension World {
         return storageHaul(of: good, held: held, from: producer, road: road, among: candidates)
     }
 
+    /// True for a good a house tier of `owner`'s culture needs.
+    func awaitedByHouses(_ good: Good, owner: Owner) -> Bool {
+        HouseTier.allNeeds(in: culture(of: owner)).contains(good)
+    }
+
     /// Goods any building costs as a construction material.
     private static let materialGoods = Set(BuildingCatalog.all.flatMap(\.materialCost.keys))
 
@@ -240,7 +251,7 @@ extension World {
     /// take these before it. Spec: `warehouses-and-logistics` /
     /// Producers deliver to short consumers.
     func goesThroughStorage(_ good: Good, for owner: Owner) -> Bool {
-        Self.materialGoods.contains(good) || HouseTier.allNeeds(in: culture(of: owner)).contains(good)
+        Self.materialGoods.contains(good) || awaitedByHouses(good, owner: owner)
     }
 
     /// A consumer of a good, with the amount its recipe or fuel uses at a time.
@@ -303,7 +314,7 @@ extension World {
         let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
         // Batching is for bulk nobody is waiting on: a good houses need, or
         // one a building of the owner is short of, never waits for a load.
-        let awaited = HouseTier.allNeeds(in: culture(of: producer.owner)).contains(good)
+        let awaited = awaitedByHouses(good, owner: producer.owner)
             || candidates.consumers[good]?.contains {
                 $0.building.owner == producer.owner && needsSupply($0.building.id, good: good, amount: $0.amount)
             } ?? false
@@ -316,7 +327,12 @@ extension World {
             return wait()
         }
         let inbound = candidates.inbound.count(of:to:)
-        guard var (warehouseId, path) = findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers, inbound: inbound)
+        // House goods gather at the market hubs first. Spec:
+        // `warehouses-and-logistics` / Market hubs gather house goods.
+        let hubs = awaitedByHouses(good, owner: producer.owner) ? candidates.hubs : []
+        let hubHit = findRoadConnectedBuffer(fromRoad: road, good: good, among: hubs, inbound: inbound)
+        let pool = hubHit == nil ? buffers : hubs
+        guard var (warehouseId, path) = hubHit ?? findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers, inbound: inbound)
         else { return nil }
         func room(at store: EntityID) -> Int {
             let pile = stockpiles[store] ?? Stockpile(capacity: 0)
@@ -326,7 +342,7 @@ extension World {
         // a nearer one with room for only a unit or two.
         let minLoad = CarrierConfig.haulMinLoad
         if vehicle != nil, CarrierConfig.isLong(path), room(at: warehouseId) < minLoad, let roomier = findRoadConnectedBuffer(
-            fromRoad: road, good: good, among: buffers, inbound: candidates.inbound.count(of:to:), room: minLoad
+            fromRoad: road, good: good, among: pool, inbound: candidates.inbound.count(of:to:), room: minLoad
         ) {
             (warehouseId, path) = roomier
         }

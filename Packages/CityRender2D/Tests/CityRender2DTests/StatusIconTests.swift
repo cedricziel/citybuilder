@@ -303,13 +303,13 @@ func scenarioARunningShortIssueShowsTheGoodsShortIcon() {
 @Test("every issue maps to a drawn icon")
 func everyIssueMapsToADrawnIcon() {
     let issues: [BuildingIssue] = [
-        .noRoad, .noRouteToStorage, .noTreesInReach, .noRoomToPlant,
+        .noRoad, .noRouteToStorage, .noMarketInReach, .noTreesInReach, .noRoomToPlant,
         .outputStuck(.planks), .missingInputs([.wood, .iron]),
         .runningShort(.tools, intervals: 1, grace: 3), .runningShort(.cloth, intervals: 3, grace: 3)
     ]
     let names = issues.compactMap(StatusIcons.textureName(for:))
     #expect(names == [
-        "status-no-road", "status-no-route", "status-no-trees", "status-no-room-to-plant",
+        "status-no-road", "status-no-route", "status-no-route", "status-no-trees", "status-no-room-to-plant",
         "status-planks-stuck", "status-wood-short", "status-tools-short", "status-cloth-short"
     ])
     #expect(Set(names).isSubset(of: TextureFiltering.statusIcons))

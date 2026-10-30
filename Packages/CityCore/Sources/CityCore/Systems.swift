@@ -100,11 +100,8 @@ extension World {
         terrainGrid[tile.y * mapWidth + tile.x] = .grass
     }
 
-    /// What a pass over every house needs to answer `hasGoodInReach`:
-    /// the operational goods buffers and the road network's components.
-    /// Consumption changes stock, not buildings or roads, so one snapshot
-    /// serves the whole pass instead of a listing and a path search per
-    /// house, need and buffer.
+    /// The operational goods buffers and the road network's components,
+    /// listed once for a pass that asks which buffers share a road.
     struct SupplyReach {
         /// Each operational buffer, in entity order, with the road
         /// component of its first adjacent road (nil without one).
@@ -119,20 +116,5 @@ extension World {
             return (buffer.id, road.flatMap { components[$0] })
         }
         return SupplyReach(buffers: buffers, roadComponents: components)
-    }
-
-    /// True if any operational buffer holding `good` is road-connected
-    /// (any path) from `anchor`. M4 simplified: we just check
-    /// road-connected warehouses, not a full path-finding query.
-    /// Carriers do the rest.
-    func hasGoodInReach(
-        _ good: Good, fromAnchor anchor: TileCoordinate, footprint: Footprint, reach: SupplyReach
-    ) -> Bool {
-        guard let from = anyAdjacentRoad(anchor: anchor, footprint: footprint),
-              let component = reach.roadComponents[from]
-        else { return false }
-        return reach.buffers.contains { buffer in
-            buffer.component == component && (stockpiles[buffer.id]?.quantity(of: good) ?? 0) > 0
-        }
     }
 }

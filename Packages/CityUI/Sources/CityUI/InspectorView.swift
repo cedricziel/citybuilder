@@ -120,7 +120,8 @@ public struct InspectorViewModel: Sendable {
     static func problemText(_ issue: BuildingIssue) -> String {
         switch issue {
         case .noRoad: "No road: connect it to a road"
-        case .noRouteToStorage: "Its road doesn't reach a warehouse or the town center"
+        case .noRouteToStorage: "Its road doesn't reach a warehouse, marketplace or the town center"
+        case .noMarketInReach: "No market in reach: build a marketplace near it"
         case .noTreesInReach: "No forest within \(BuildingKind.lumberjackHut.catchmentRadius ?? 0) tiles: build a forester beside it"
         case .noRoomToPlant: "No open grass within \(BuildingKind.forester.catchmentRadius ?? 0) tiles to plant"
         case let .missingInputs(goods):

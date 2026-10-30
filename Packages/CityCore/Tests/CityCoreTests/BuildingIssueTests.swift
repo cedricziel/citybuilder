@@ -113,14 +113,14 @@ func scenarioAProducerShortOfInputsReportsTheMissingGoods() {
     #expect(world.buildingIssues()[sawmill] == .missingInputs([.wood]))
 }
 
-@Test("scenario: a house off the storage network reports no route to storage")
-func scenarioAHouseOffTheStorageNetworkReportsNoRouteToStorage() {
+@Test("scenario: A house off every hub's road network reports no market in reach")
+func scenarioAHouseOffEveryHubsRoadNetworkReportsNoMarketInReach() {
     var world = grassWorld()
     let house = inject(.house, in: &world, at: TileCoordinate(x: 1, y: 1))
-    _ = inject(.warehouse, in: &world, at: TileCoordinate(x: 11, y: 0))
+    _ = inject(.townCenter, in: &world, at: TileCoordinate(x: 11, y: 0))
     roads(&world, y: 3, 0 ... 5)
     roads(&world, y: 3, 8 ... 14)
-    #expect(world.buildingIssues()[house] == .noRouteToStorage)
+    #expect(world.buildingIssues()[house] == .noMarketInReach)
 }
 
 @Test("scenario: the snapshot carries building issues")

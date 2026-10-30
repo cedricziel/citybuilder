@@ -3,21 +3,22 @@ import Foundation
 /// House growth, consumption and tier changes. Spec:
 /// `population-and-needs`.
 extension World {
-    mutating func runPopulationSystem(signatureSources sources: [Building]) {
+    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService) {
         // Houses draw from shared buffers, so visit them in a fixed order.
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
             .sorted { $0.id.raw < $1.id.raw }
-        let reach = supplyReach()
         let tracked = HouseTier.allNeeds(in: culture)
+        let inbound = porterInbound()
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
+            let hub = service.hubOf[building.id]?.hub
             consumeIfDue(&pop, building: building)
-            updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
+            updateSatisfaction(&pop, of: tracked, hub: hub, inbound: inbound[building.id] ?? [:])
             let pastGrace = isPastGrace(pop, owner: building.owner)
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
-            updateTier(&pop, building: building, modifiers: modifiers, reach: reach, pastGrace: pastGrace)
+            updateTier(&pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace)
             populations[building.id] = pop
         }
     }
@@ -31,7 +32,7 @@ extension World {
         }
         for good in pop.tier.needs(in: culture) {
             let amount = HousePopulation.amount(of: good, residents: pop.population)
-            let drawn = consume(good, amount: amount, by: building)
+            let drawn = pop.takeStock(good, amount: amount)
             recordHouseUse(of: good, drawn: drawn, by: building)
             pop.recordConsumption(of: good, short: drawn < amount)
         }
@@ -57,15 +58,26 @@ extension World {
         return binding.contains { pop.shortIntervals(of: $0) >= grace }
     }
 
-    /// A need is met while a buffer on the house's road network holds
-    /// the good and the last consumption of it was not short. `goods` is
-    /// every tier's needs, so a house knows them before it advances.
-    private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], building: Building, reach: SupplyReach) {
-        let footprint = building.footprint
+    /// A need of the house's tier is met while its last consumption was not
+    /// short and its stock plus what porters bring covers the next one; any
+    /// other good while the house's hub holds it. `goods` is every tier's
+    /// needs, so a house knows them before it advances. Spec:
+    /// `population-and-needs` / Town center supplies house needs.
+    private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], hub: EntityID?, inbound: [Good: Int]) {
+        let needs = pop.tier.needs(in: culture)
         for good in goods {
-            let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint, reach: reach)
-            pop.setSatisfied(good, inReach && !pop.isShort(good))
+            let met = if needs.contains(good) {
+                !pop.isShort(good) && pop.stock(of: good) + (inbound[good] ?? 0) >= pop.nextConsumption(of: good)
+            } else {
+                hubHolds(good, hub)
+            }
+            pop.setSatisfied(good, met)
         }
+    }
+
+    /// True when `hub` holds some `good`.
+    func hubHolds(_ good: Good, _ hub: EntityID?) -> Bool {
+        hub.map { (stockpiles[$0]?.quantity(of: good) ?? 0) > 0 } ?? false
     }
 
     /// Inspired houses grow twice as fast; a house above its capacity
@@ -91,13 +103,18 @@ extension World {
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
     private func updateTier(
-        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, reach: SupplyReach, pastGrace: Bool
+        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool
     ) {
-        let footprint = building.footprint
+        // Spec: `population-and-needs` / Market hubs gate tier advancement.
+        // A need the house already eats counts while it is met: porters keep
+        // its stock, and they may have just emptied the hub into it. A need
+        // the next tier adds counts only while the serving hub holds it.
+        let eaten = Set(pop.tier.needs(in: culture))
         let canAdvance = pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
-                && bindingNeeds(of: next, for: building.owner, advancing: true)
-                .allSatisfy { hasGoodInReach($0, fromAnchor: building.anchor, footprint: footprint, reach: reach) }
+                && bindingNeeds(of: next, for: building.owner, advancing: true).allSatisfy { good in
+                    eaten.contains(good) ? pop.isSatisfied(good) : hubHolds(good, hub)
+                }
         } ?? false
         let mustDecline = pop.tier.previous != nil && pastGrace
         guard canAdvance || mustDecline else {

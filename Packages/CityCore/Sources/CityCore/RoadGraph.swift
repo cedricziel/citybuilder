@@ -76,6 +76,58 @@ public struct RoadGraph: Codable, Sendable, Equatable {
         return labels
     }
 
+    /// Road distance from the nearest of `sources` to every road tile at most `limit` tiles away, by
+    /// breadth-first search. `isRoad`, when given, decides which tiles count as road instead of the graph,
+    /// so a plan can measure roads it has not laid yet.
+    func distances(
+        from sources: [TileCoordinate], upTo limit: Int, isRoad: ((TileCoordinate) -> Bool)? = nil
+    ) -> [TileCoordinate: Int] {
+        var distances: [TileCoordinate: Int] = [:]
+        var frontier: [TileCoordinate] = []
+        for source in sources where distances[source] == nil {
+            distances[source] = 0
+            frontier.append(source)
+        }
+        var next: [TileCoordinate] = []
+        var distance = 0
+        while !frontier.isEmpty, distance < limit {
+            distance += 1
+            for tile in frontier {
+                for neighbor in roadNeighbors(of: tile, isRoad: isRoad) where distances[neighbor] == nil {
+                    distances[neighbor] = distance
+                    next.append(neighbor)
+                }
+            }
+            swap(&frontier, &next)
+            next.removeAll(keepingCapacity: true)
+        }
+        return distances
+    }
+
+    /// A shortest road path from the nearest of `sources` to `goal`, read back from `distances` (the
+    /// result of `distances(from: sources, …)`). Each step back takes the lowest neighbour by row, then
+    /// column, so the path never depends on set order.
+    func path(to goal: TileCoordinate, along distances: [TileCoordinate: Int]) -> [TileCoordinate]? {
+        guard var step = distances[goal] else { return nil }
+        var path = [goal]
+        var tile = goal
+        while step > 0 {
+            let back = roadNeighbors(of: tile, isRoad: nil)
+                .filter { distances[$0] == step - 1 }
+                .min { ($0.y, $0.x) < ($1.y, $1.x) }
+            guard let back else { return nil }
+            path.append(back)
+            tile = back
+            step -= 1
+        }
+        return path.reversed()
+    }
+
+    private func roadNeighbors(of tile: TileCoordinate, isRoad: ((TileCoordinate) -> Bool)?) -> [TileCoordinate] {
+        guard let isRoad else { return Array(adjacency[tile] ?? []) }
+        return neighbors(of: tile).filter(isRoad)
+    }
+
     private func neighbors(of coord: TileCoordinate) -> [TileCoordinate] {
         [
             TileCoordinate(x: coord.x + 1, y: coord.y),

@@ -52,6 +52,12 @@ func houseNextToTownCenter(
     var pop = HousePopulation()
     pop.tier = tier
     pop.population = residents
+    // The house holds what it was given, up to its stock capacity, so no
+    // porter sets out before the measured consumption.
+    let given: [(Good, Int)] = [(.food, food), (.planks, planks), (.bread, bread), (.tools, tools), (.cloth, cloth), (.beer, beer)]
+    for (good, amount) in given {
+        pop.addStock(good, amount: amount)
+    }
     world.populations[house] = pop
     return HouseFixture(world: world, house: house, center: center)
 }
@@ -65,8 +71,10 @@ private func advanceToNextConsumption(_ world: inout World) {
 func scenarioPopulatedHouseEatsFoodOnTheConsumptionInterval() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 10, residents: 4)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 8)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 9)
+    let pop = fixture.world.populations[fixture.house]
+    #expect(pop?.stock(of: .food) == 2)
+    #expect(pop?.stock(of: .planks) == 1)
+    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 10)
 }
 
 @Test("scenario: unmet consumption reports the need as unmet")
@@ -80,8 +88,8 @@ func scenarioUnmetConsumptionReportsTheNeedAsUnmet() throws {
 func scenarioEmptyHouseConsumesNothing() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 10, residents: 0, tier: .peasants)
     advanceToNextConsumption(&fixture.world)
+    #expect(fixture.world.populations[fixture.house]?.stock(of: .food) == 2)
     #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 10)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 10)
 }
 
 @Test("an emptied house recovers once food is back")
@@ -106,17 +114,18 @@ func housePopulationFromOlderSaveDecodes() throws {
 func scenarioPeasantsConsumeNoPlanks() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 10, residents: 4, tier: .peasants)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 8)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 10)
+    #expect(fixture.world.populations[fixture.house]?.stock(of: .food) == 2)
+    #expect(fixture.world.populations[fixture.house]?.stock(of: .planks) == 2)
 }
 
 @Test("scenario: merchants eat bread")
 func scenarioMerchantsEatBread() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 10, bread: 10, residents: 8, tier: .merchants)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .food) == 6)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .planks) == 9)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .bread) == 8)
+    let pop = fixture.world.populations[fixture.house]
+    #expect(pop?.stock(of: .food) == 4)
+    #expect(pop?.stock(of: .planks) == 1)
+    #expect(pop?.stock(of: .bread) == 2)
 }
 
 // MARK: - Tiers
@@ -200,7 +209,7 @@ func scenarioBakerySpecExposesItsFootprintAndCosts() {
 func scenarioMerchantsConsumeTools() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 5, bread: 5, tools: 5, residents: 8, tier: .merchants)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .tools) == 4)
+    #expect(fixture.world.populations[fixture.house]?.stock(of: .tools) == 1)
 }
 
 @Test("scenario: citizens cannot become merchants without tools")
@@ -214,7 +223,7 @@ func scenarioCitizensCannotBecomeMerchantsWithoutTools() throws {
 func scenarioMerchantsConsumeCloth() throws {
     var fixture = try houseNextToTownCenter(food: 10, planks: 5, bread: 5, tools: 5, cloth: 5, residents: 8, tier: .merchants)
     advanceToNextConsumption(&fixture.world)
-    #expect(fixture.world.stockpiles[fixture.center]?.quantity(of: .cloth) == 4)
+    #expect(fixture.world.populations[fixture.house]?.stock(of: .cloth) == 1)
 }
 
 @Test("scenario: citizens cannot become merchants without cloth")

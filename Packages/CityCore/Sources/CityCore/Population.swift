@@ -35,6 +35,10 @@ public struct HousePopulation: Hashable, Sendable {
     /// a good drawn in full has no entry. Spec: `population-and-needs` /
     /// Houses decline only after a grace period.
     public private(set) var shortIntervals: [Good: UInt8] = [:]
+    /// Units of each need the house holds, delivered by market porters and
+    /// eaten at consumption. Spec: `population-and-needs` / Houses consume
+    /// food and planks (visible-distribution design D4).
+    public private(set) var stock: [Good: Int] = [:]
 
     public static let growthIntervalTicks: UInt64 = 60
     public static let declineIntervalTicks: UInt64 = 60
@@ -61,6 +65,40 @@ public struct HousePopulation: Hashable, Sendable {
         case .bread: Int((residents + 3) / 4)
         default: Int((residents + 7) / 8)
         }
+    }
+
+    /// What `good` takes per interval once someone lives here: a house
+    /// with no residents is stocked for its first.
+    public func nextConsumption(of good: Good) -> Int {
+        Self.amount(of: good, residents: max(population, 1))
+    }
+
+    /// Units of `good` the house's stock holds at most: two consumptions,
+    /// and at least the minimum (game data).
+    public func stockCapacity(of good: Good) -> Int {
+        max(LogisticsCatalog.houseStockMinimum, LogisticsCatalog.houseStockConsumptions * nextConsumption(of: good))
+    }
+
+    /// Units of `good` in the house's stock.
+    public func stock(of good: Good) -> Int {
+        stock[good] ?? 0
+    }
+
+    /// Puts up to `amount` of `good` into the stock, as far as its
+    /// capacity allows. Returns the units taken.
+    @discardableResult
+    mutating func addStock(_ good: Good, amount: Int) -> Int {
+        let taken = max(0, min(amount, stockCapacity(of: good) - stock(of: good)))
+        if taken > 0 { stock[good] = stock(of: good) + taken }
+        return taken
+    }
+
+    /// Takes up to `amount` of `good` from the stock. Returns the units taken.
+    mutating func takeStock(_ good: Good, amount: Int) -> Int {
+        let taken = min(amount, stock(of: good))
+        let left = stock(of: good) - taken
+        stock[good] = left == 0 ? nil : left
+        return taken
     }
 
     public func isSatisfied(_ good: Good) -> Bool {
@@ -120,7 +158,7 @@ public struct HousePopulation: Hashable, Sendable {
 extension HousePopulation: Codable {
     private enum CodingKeys: String, CodingKey {
         case population, tier, satisfiedGoods, shortGoods, shortIntervals
-        case ticksAtCurrentSatisfaction, ticksAtTierCondition
+        case ticksAtCurrentSatisfaction, ticksAtTierCondition, stock
     }
 
     /// Per-good flag keys written before design D2.
@@ -136,6 +174,12 @@ extension HousePopulation: Codable {
             (.foodShortfall, .food), (.planksShortfall, .planks),
             (.breadShortfall, .bread), (.toolsShortfall, .tools)
         ]
+    }
+
+    /// One good's units in the house stock, as saved.
+    private struct StockEntry: Codable {
+        let good: Good
+        let units: Int
     }
 
     /// One good's run of short intervals, as saved.
@@ -164,6 +208,12 @@ extension HousePopulation: Codable {
         let runs = try container.decodeIfPresent([ShortRun].self, forKey: .shortIntervals)
             ?? shortGoods.map { ShortRun(good: $0, intervals: 1) }
         shortIntervals = Dictionary(runs.map { ($0.good, $0.intervals) }, uniquingKeysWith: { $1 })
+        // A save from before market porters holds no stock: each need the
+        // house counts as met gets one consumption, so it is not short at
+        // the first draw after loading (design D6).
+        let entries = try container.decodeIfPresent([StockEntry].self, forKey: .stock)
+            ?? satisfiedGoods.sortedByRawValue.map { StockEntry(good: $0, units: Self.amount(of: $0, residents: max(population, 1))) }
+        stock = Dictionary(entries.filter { $0.units > 0 }.map { ($0.good, $0.units) }, uniquingKeysWith: { $1 })
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -176,6 +226,8 @@ extension HousePopulation: Codable {
         try container.encode(shortGoods.sortedByRawValue, forKey: .shortGoods)
         let runs = shortIntervals.sorted { $0.key.rawValue < $1.key.rawValue }.map { ShortRun(good: $0.key, intervals: $0.value) }
         try container.encode(runs, forKey: .shortIntervals)
+        let entries = stock.sorted { $0.key.rawValue < $1.key.rawValue }.map { StockEntry(good: $0.key, units: $0.value) }
+        try container.encode(entries, forKey: .stock)
     }
 
     private static func decodeFlags(

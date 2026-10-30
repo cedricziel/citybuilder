@@ -2,7 +2,7 @@
 
 ### Requirement: Town center supplies house needs
 
-A house's needs SHALL be supplied by market hubs: the town center and marketplaces of the house's owner. A hub serves the houses whose road path to it is at most its hub radius (18 road tiles for the town center and the marketplace, from the game data). A house within reach of several hubs SHALL be served by the nearest, ties going to the lower entity ID. Warehouses and ports SHALL NOT serve houses directly. A need of the house's current tier SHALL count as met while the last consumption of it was not short and the house's stock of it plus the units porters are bringing covers its next consumption; it SHALL turn unmet only when a consumption comes up short or the stock no longer covers the next one. A house with no residents covers its next consumption only with what one resident eats in stock or on the way, so no one moves in before a delivery. A good the current tier does not need SHALL count as met while the hub serving the house holds it.
+A house's needs SHALL be supplied by market hubs: the town center and marketplaces of the house's owner. A hub serves the houses whose road path to it, from any road tile beside the hub to any road tile beside the house, is at most its hub radius (18 road tiles for the town center and the marketplace, from the game data). A house within reach of several hubs SHALL be served by the nearest, ties going to the lower entity ID. Warehouses and ports SHALL NOT serve houses directly. A need of the house's current tier SHALL count as met while the last consumption of it was not short and the house's stock of it plus the units porters are bringing covers its next consumption; it SHALL turn unmet only when a consumption comes up short or the stock no longer covers the next one. A house with no residents covers its next consumption only with what one resident eats in stock or on the way, so no one moves in before a delivery. A good the current tier does not need SHALL count as met while the hub serving the house holds it.
 
 #### Scenario: Town center food satisfies a connected house
 
@@ -60,8 +60,8 @@ Every 100 ticks, each operational house with population SHALL consume its needs 
 
 #### Scenario: Houses leave the stores alone
 
-- **WHEN** the consumption interval elapses for a peasant house with 4 residents holding 2 food, next to a town center holding 10 food
-- **THEN** the house holds no food and the town center still holds 10
+- **WHEN** the consumption interval elapses for a peasant house with 4 residents holding 2 food, sharing a road with a warehouse holding 10 food
+- **THEN** the house holds no food and the warehouse still holds 10
 
 #### Scenario: Unmet consumption reports the need as unmet
 
@@ -107,7 +107,7 @@ A house's population grows towards its tier's capacity while that tier's needs a
 
 ### Requirement: Houses advance and decline between tiers
 
-A house at full capacity SHALL move up one tier once, for 120 consecutive ticks, the hub serving it holds every need of the next tier that binds it. The stock that counts for advancing is the serving hub's: goods buffers on the house's road network that are not that hub SHALL NOT count, and a house no hub serves cannot advance. Where a rule sets how much stock advancing takes, it measures the serving hub's stock, and houses that advance in the same tick claim from that hub. A house that is past its grace (see "Houses decline only after a grace period") and whose current tier's needs are not all met for 120 consecutive ticks SHALL move down one tier (never below peasants), and its population MUST be reduced to the lower tier's capacity if it exceeds it.
+A house at full capacity SHALL move up one tier once, for 120 consecutive ticks, every need of the next tier that binds it is available: a need the house already eats while it is met, and a need the next tier adds while the hub serving it holds it. The stock that counts for advancing is the serving hub's: goods buffers on the house's road network that are not that hub SHALL NOT count, and a house no hub serves cannot advance. Where a rule sets how much stock advancing takes, it measures the serving hub's stock, and houses that advance in the same tick claim from that hub. A house that is past its grace (see "Houses decline only after a grace period") and whose current tier's needs are not all met for 120 consecutive ticks SHALL move down one tier (never below peasants), and its population MUST be reduced to the lower tier's capacity if it exceeds it.
 
 #### Scenario: Full peasant house becomes citizens
 
@@ -156,17 +156,22 @@ Merchants SHALL need food, planks, bread, tools and their culture's luxury, eati
 
 ### Requirement: Market porters supply houses
 
-Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to 8 (`housesPerPorter` and `maxPorters` in the hub's game data). Every tick, while a hub has fewer porters out than it keeps, it SHALL send one to the served house with the lowest stock ratio. A house's stock ratio is the lowest, over the needs of its tier the hub holds, of its stock plus the units on the way divided by its house-stock capacity; houses whose every such need is full are skipped. Ties SHALL go to the shorter road path, then to the lower entity ID. The porter SHALL carry one basket: for each need of the house's tier the hub holds, in the tier's order of needs, as much as keeps the house within its capacity and at most one consumption, and no more than 10 units in all (`basketUnits`). The basket leaves the hub's stock when the porter sets off. On arrival the porter SHALL put the basket into the house's stock, as far as it has room, and walk back to the hub with what is left, where it puts the rest back. A porter whose house is gone SHALL walk back with the whole basket. Porters SHALL move one road tile per tick and SHALL count as carriers in the world snapshot.
+Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to 8 (`housesPerPorter` and `maxPorters` in the hub's game data). Every tick, while a hub has fewer porters out than it keeps, it SHALL send one to a served house of the highest tier that has something to take, and among those to the house with the lowest stock ratio. A house's stock ratio is the lowest, over the needs of its tier the hub holds, of its stock plus the units on the way divided by its house-stock capacity; houses whose every such need is full are skipped. Ties SHALL go to the shorter road path, then to the lower entity ID. The porter SHALL carry one basket of no more than 10 units in all (`basketUnits`), filled in two passes over the needs of the house's tier the hub holds, in the tier's order of needs: first up to one consumption of each, then, with room left, each topped up to the house's capacity. The basket leaves the hub's stock when the porter sets off. On arrival the porter SHALL put the basket into the house's stock, as far as it has room, and walk back to the hub with what is left, where it puts the rest back; what the hub cannot take, because it is full or gone, SHALL go on as a carrier to the nearest store of the owner with room. A porter whose house is gone SHALL walk back with the whole basket. Porters SHALL move one road tile per tick. They are not carriers: they hold no producer's carrier slot and count toward no inbound supply, and the world snapshot SHALL list them beside the carriers.
 
 #### Scenario: A hub sends a porter to a house short of food
 
 - **WHEN** the town center holds 10 food and serves one peasant house with 4 residents and no stock
-- **THEN** a porter leaves the town center for the house with 2 food
+- **THEN** a porter leaves the town center for the house with 4 food, filling its stock
 
 #### Scenario: Porters go to the house that needs them most
 
 - **WHEN** a town center serves two peasant houses, one with half its food stock and one with none
 - **THEN** its porter goes first to the house with none
+
+#### Scenario: Porters serve the higher tier first
+
+- **WHEN** a town center holding food and planks serves a peasant house with no stock and a citizen house with half its stock
+- **THEN** its porter goes first to the citizen house
 
 #### Scenario: Porter count follows the houses served
 
@@ -176,7 +181,7 @@ Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to
 #### Scenario: A basket holds at most 10 units
 
 - **WHEN** a hub holding 20 each of food, planks, bread and tools, and nothing else, sends a porter to a merchant house with 8 residents and no stock
-- **THEN** the porter carries 4 food, 1 plank, 2 bread and 1 tools
+- **THEN** the porter carries 6 food, 1 plank, 2 bread and 1 tools: one consumption of each, then food topped up with the two units left
 
 #### Scenario: Porters walk back empty
 
@@ -190,7 +195,7 @@ Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to
 
 ### Requirement: Saves from before market porters keep their houses supplied
 
-A save from before market porters SHALL load with each house holding, for each good it counts as met, one consumption's worth of stock for its residents, so no house comes up short at the first consumption after loading because of the change.
+A save from before market porters SHALL load with each house holding, for each good it counts as met, one consumption's worth of stock for its residents (at least one resident), so no house comes up short at the first consumption after loading because of the change.
 
 #### Scenario: Loading an older save seeds house stock
 

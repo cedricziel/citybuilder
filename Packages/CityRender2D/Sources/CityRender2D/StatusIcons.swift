@@ -32,7 +32,7 @@ enum StatusIcons {
     static func textureName(for issue: BuildingIssue) -> String? {
         switch issue {
         case .noRoad: "status-no-road"
-        case .noRouteToStorage: "status-no-route"
+        case .noRouteToStorage, .noMarketInReach: "status-no-route"
         case .noTreesInReach: "status-no-trees"
         case .noRoomToPlant: "status-no-room-to-plant"
         case let .missingInputs(goods): goods.first.map(short)

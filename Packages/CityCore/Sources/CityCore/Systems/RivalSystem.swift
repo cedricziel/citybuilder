@@ -226,6 +226,12 @@ extension World {
             return
         }
         guard turn.cappedBuildings < difficulty.rivalBuildingCap else { return }
+        // Houses beyond every hub's reach wait for a marketplace
+        // (visible-distribution D11).
+        if turn.waiting.isEmpty, plan.needsMarketplace(), let commands = rivalCommands(.marketplace, turn: turn, plan: &plan) {
+            pendingCommands += commands
+            return
+        }
         if let commands = thresholdCommands(turn: turn, plan: &plan) {
             pendingCommands += commands
             return
