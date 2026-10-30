@@ -273,7 +273,9 @@ extension World {
             let tier = pop.tier.rawValue
             let better = best.map { best in
                 let bestTier = populations[best.house.id]?.tier.rawValue ?? 0
-                if tierFirst, tier != bestTier { return tier > bestTier }
+                // Of one tier, the player's oldest house comes first, as houses drew
+                // from the stores in entity order before porters.
+                if tierFirst { return tier > bestTier }
                 return lowest.isBelow(best.rank.ratio) || (!best.rank.ratio.isBelow(lowest) && distance < best.rank.distance)
             } ?? true
             if better {
