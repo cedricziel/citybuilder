@@ -28,3 +28,14 @@ public struct HubSpec: Equatable, Sendable {
         min(maxPorters, 1 + houses / housesPerPorter)
     }
 }
+
+/// The market serving a house: its hub and the road distance to it.
+public struct MarketServing: Hashable, Sendable {
+    public let hub: EntityID
+    public let distance: Int
+
+    public init(hub: EntityID, distance: Int) {
+        self.hub = hub
+        self.distance = distance
+    }
+}

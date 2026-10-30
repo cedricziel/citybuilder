@@ -34,3 +34,4 @@
 - [x] 3.11 Save migration: seeded house stock (D6), with a pre-milestone fixture save
 - [x] 3.12 Porter figures in IsoKit from the approved canvas (yoke, with empty-basket return frames), `.yoke` pose agreed with the art agent; `CarrierRendering` picks them
 - [ ] 3.13 Sweeps after: first-hour guided sweep at 0/20 bankruptcies, rival sweep green, pacing compared with designer2; determinism baseline; coverage
+- [x] 3.14 Market UX from the 0.2.10 playtest: inspector market lines (house stock and market, hub reach and porters), the distant-house market hint, full baskets readable at zoom 1 (`platform-shells`, `rendering-2_5d` deltas); tests-first

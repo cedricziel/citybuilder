@@ -256,6 +256,36 @@ extension GameSession {
         show(Self.problemHint(name: BuildTool.place(building.kind).displayName, problem: seen.text))
     }
 
+    /// Road tiles short of a market's reach at which a house counts as distant.
+    static let distantHouseMargin = 4
+
+    /// The first time this session a player's house stands near the edge of
+    /// its market's reach, or out of every market's reach, a banner says a
+    /// marketplace near the outer houses serves them, once no other banner
+    /// shows. Spec: `platform-shells` / Distant-house market hint.
+    func noteDistantHouses(in snapshot: WorldSnapshot) {
+        guard !hintedDistantHouses, !isBannerBusy, deficitHint == nil, !isGameOver else { return }
+        let isPlayers = { (house: EntityID) in snapshot.buildings[house]?.owner == .player }
+        let nearEdge = snapshot.marketServing.first { house, serving in
+            let radius = snapshot.buildings[serving.hub]?.kind.hub?.radius ?? 0
+            return isPlayers(house) && serving.distance >= radius - Self.distantHouseMargin
+        }
+        let outOfReach = snapshot.buildingIssues.contains { $0.value == .noMarketInReach && isPlayers($0.key) }
+        guard nearEdge != nil || outOfReach else { return }
+        hintedDistantHouses = true
+        if outOfReach {
+            // This banner says what the problem hint's "No market in reach" would.
+            hintedProblems.insert(InspectorViewModel.problemText(.noMarketInReach))
+        }
+        let hub = nearEdge.flatMap { snapshot.buildings[$0.value.hub]?.kind } ?? .townCenter
+        let radius = hub.hub?.radius ?? 0
+        show(SessionBanner(
+            title: "Your town is outgrowing its market",
+            description: "Porters carry goods only \(radius) road tiles from the town center or a marketplace. "
+                + "Build a marketplace near your outer houses."
+        ))
+    }
+
     /// The problem text of each of the player's buildings that shows a status icon.
     private func playerBuildingProblems(in snapshot: WorldSnapshot) -> [EntityID: String] {
         var problems: [EntityID: String] = [:]
@@ -275,9 +305,7 @@ extension GameSession {
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
         let good = GoodsCatalog.spec(for: idle.good).displayName.lowercased()
-        // The raw value names the building ("charcoal-burner"); the
-        // palette's short label names its good ("Charcoal").
-        let builds = idle.users.map { "a " + $0.rawValue.replacingOccurrences(of: "-", with: " ") }
+        let builds = idle.users.map { "a " + $0.spokenName }
         let named = builds.count < 2 ? builds.joined() : builds.dropLast().joined(separator: ", ") + " or " + builds[builds.count - 1]
         return SessionBanner(
             title: "Nothing uses your \(good)",

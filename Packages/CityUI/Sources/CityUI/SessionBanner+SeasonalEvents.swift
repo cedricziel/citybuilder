@@ -49,7 +49,7 @@ extension GameSession {
     }
 
     /// "1 building", "3 buildings".
-    static func counted(_ count: Int, _ noun: String) -> String {
+    nonisolated static func counted(_ count: Int, _ noun: String) -> String {
         "\(count) \(noun)\(count == 1 ? "" : "s")"
     }
 
