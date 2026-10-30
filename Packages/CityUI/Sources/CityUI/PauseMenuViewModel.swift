@@ -118,7 +118,7 @@ public final class PauseMenuViewModel {
         var result: [PauseMenuAction] = [
             PauseMenuAction(kind: .resume, label: GameText.string("pause.resume"), systemImage: "play.fill"),
             PauseMenuAction(kind: .saveGame, label: GameText.string("pause.saveGame"), systemImage: "tray.and.arrow.down"),
-            PauseMenuAction(kind: .settings, label: GameText.string("pause.settings"), systemImage: "gear")
+            PauseMenuAction(kind: .settings, label: GameText.string("common.settings"), systemImage: "gear")
         ]
         if onQuitToTitle != nil {
             result.append(
@@ -128,7 +128,7 @@ public final class PauseMenuViewModel {
         if platform == .mac, onQuit != nil {
             result.append(
                 PauseMenuAction(
-                    kind: .quit, label: GameText.string("pause.quit"),
+                    kind: .quit, label: GameText.string("common.quit"),
                     systemImage: "power", role: .destructive
                 )
             )

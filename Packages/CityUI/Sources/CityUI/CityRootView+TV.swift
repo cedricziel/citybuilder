@@ -115,7 +115,7 @@ struct TVReticleOverlay: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityElement(children: .ignore)
             .accessibilityIdentifier("tv.reticle")
-            .accessibilityLabel("Reticle at \(session.reticleTile.x), \(session.reticleTile.y)")
+            .accessibilityLabel(GameText.string("a11y.reticle", session.reticleTile.x, session.reticleTile.y))
         }
     }
 

@@ -113,7 +113,7 @@ struct MinimapCard: View {
             .padding(MinimapLayout.padding)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Minimap")
+            .accessibilityLabel(GameText.string("minimap.title"))
             .accessibilityIdentifier("hud.minimap")
     }
 

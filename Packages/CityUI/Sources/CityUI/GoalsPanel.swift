@@ -122,7 +122,7 @@ struct GoalsPanelView: View {
                     ForEach(model.rows) { row in goalRow(row) }
                 }
                 if !model.bonusRows.isEmpty {
-                    Section("Bonus · one laurel each") {
+                    Section(GameText.string("goals.bonusHeader")) {
                         ForEach(model.bonusRows) { row in goalRow(row) }
                     }
                 }
@@ -137,9 +137,9 @@ struct GoalsPanelView: View {
                     }
                 }
             }
-            .navigationTitle("Goals")
+            .navigationTitle(GameText.string("goals.title"))
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
+                ToolbarItem(placement: .confirmationAction) { Button(GameText.string("common.done"), action: done).cancelActionHotkey() }
             }
         }
     }
@@ -152,13 +152,13 @@ struct ScenarioWonView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "laurel.leading").font(.largeTitle)
-            Text("Scenario complete").font(.title.bold())
-            Text("Every goal is met. Keep building, or return to the title screen.")
+            Text(l10n: "goals.scenarioComplete").font(.title.bold())
+            Text(l10n: "goals.scenarioCompleteText")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            Button("Keep Playing", action: keepPlaying).buttonStyle(.borderedProminent).cancelActionHotkey()
+            Button(GameText.string("goals.keepPlaying"), action: keepPlaying).buttonStyle(.borderedProminent).cancelActionHotkey()
             if let quitToTitle {
-                Button("Quit to Title", action: quitToTitle)
+                Button(GameText.string("pause.quitToTitle"), action: quitToTitle)
             }
         }
         .padding(32)
@@ -178,7 +178,7 @@ extension CityRootView {
                     .background(.thinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Goals")
+            .accessibilityLabel(GameText.string("goals.title"))
         }
     }
 }

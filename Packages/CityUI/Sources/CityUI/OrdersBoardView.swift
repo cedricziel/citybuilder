@@ -27,7 +27,7 @@ struct OrderCardView: View {
                     .frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.title).font(.headline)
-                    Text("\(card.quantity) \(card.goodName.lowercased())")
+                    Text(verbatim: "\(card.quantity) \(card.goodName.lowercased())")
                         .font(.system(.subheadline, design: .monospaced))
                 }
                 Spacer(minLength: 0)
@@ -54,29 +54,31 @@ struct OrderCardView: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(card.issuerName): \(card.title), \(card.quantity) \(card.goodName), \(card.deadline), \(card.reward)")
+        .accessibilityLabel(
+            String("\(card.issuerName): \(card.title), \(card.quantity) \(card.goodName), \(card.deadline), \(card.reward)")
+        )
     }
 
     private var buttons: some View {
         HStack(spacing: 8) {
             if card.isAccepted {
                 if !card.byShip {
-                    Button("Send") { session.sendOrder(card.id) }
+                    Button(GameText.string("orders.send")) { session.sendOrder(card.id) }
                         .buttonStyle(.borderedProminent)
                         .disabled(!card.canSend)
                 } else {
-                    Label("Unload at their port", systemImage: "ferry.fill")
+                    Label(GameText.string("orders.unloadAtPort"), systemImage: "ferry.fill")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if card.canAbandon {
-                    Button("Abandon", role: .destructive) { session.abandonOrder(card.id) }
+                    Button(GameText.string("orders.abandon"), role: .destructive) { session.abandonOrder(card.id) }
                         .buttonStyle(.borderless)
                 }
             } else {
-                Button("Accept") { session.acceptOrder(card.id) }
+                Button(GameText.string("orders.accept")) { session.acceptOrder(card.id) }
                     .buttonStyle(.borderedProminent)
                     .disabled(!card.canAccept)
-                Button("Decline") { session.declineOrder(card.id) }
+                Button(GameText.string("orders.decline")) { session.declineOrder(card.id) }
                     .buttonStyle(.bordered)
             }
         }
@@ -94,14 +96,14 @@ struct FavourPillsView: View {
                 HStack(spacing: 5) {
                     Circle().fill(Color(hex: row.colourHex)).frame(width: 9, height: 9)
                     Text(row.name.replacingOccurrences(of: "The ", with: "")).font(.caption).lineLimit(1)
-                    Text("\(row.value)").font(.system(.caption, design: .monospaced)).fontWeight(.semibold)
+                    Text(verbatim: "\(row.value)").font(.system(.caption, design: .monospaced)).fontWeight(.semibold)
                 }
                 .padding(.horizontal, 9)
                 .padding(.vertical, 3)
                 .background(Color.primary.opacity(0.06), in: Capsule())
                 .help(row.perk)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(row.name) favour \(row.value)")
+                .accessibilityLabel(GameText.string("orders.a11y.favour", row.name, row.value))
                 .accessibilityValue(row.perk)
             }
         }
@@ -119,14 +121,14 @@ struct OrdersBoardContent: View {
             VStack(alignment: .leading, spacing: 10) {
                 FavourPillsView(rows: board.favour)
                 if board.cards.isEmpty {
-                    Text("No orders yet. The crown sends one a year from the second year; neighbours ask when they are short.")
+                    Text(l10n: "orders.empty")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(board.cards) { card in
                     OrderCardView(card: card, session: session, isTV: isTV)
                 }
                 ForEach(board.favour.filter { $0.step > 0 || $0.value != 0 }) { row in
-                    Text("\(row.name): \(row.perk)").font(.caption2).foregroundStyle(.secondary)
+                    Text(verbatim: "\(row.name): \(row.perk)").font(.caption2).foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, 2)
@@ -145,7 +147,7 @@ struct OrdersBoardColumn: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Orders").font(.title3.weight(.bold))
+                Text(l10n: "orders.title").font(.title3.weight(.bold))
                 Spacer(minLength: 0)
                 Button {
                     session.isOrdersPresented = false
@@ -153,7 +155,7 @@ struct OrdersBoardColumn: View {
                     Image(systemName: "xmark").imageScale(.medium).padding(8)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close orders")
+                .accessibilityLabel(GameText.string("orders.close"))
                 .cancelActionHotkey()
             }
             OrdersBoardContent(session: session, isTV: isTV)
@@ -163,7 +165,7 @@ struct OrdersBoardColumn: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
         .tvFocusSection()
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Orders")
+        .accessibilityLabel(GameText.string("orders.title"))
     }
 }
 
@@ -175,10 +177,10 @@ struct OrdersBoardSheet: View {
         NavigationStack {
             OrdersBoardContent(session: session, isTV: false)
                 .padding(.horizontal)
-                .navigationTitle("Orders")
+                .navigationTitle(GameText.string("orders.title"))
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { session.isOrdersPresented = false }.cancelActionHotkey()
+                        Button(GameText.string("common.done")) { session.isOrdersPresented = false }.cancelActionHotkey()
                     }
                 }
         }
@@ -203,8 +205,8 @@ struct OrdersChipView: View {
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "scroll.fill")
-                    Text("Orders").fontWeight(.semibold)
-                    Text("\(chip.accepted)/\(OrderRules.maxAccepted)").monospacedDigit()
+                    Text(l10n: "orders.title").fontWeight(.semibold)
+                    Text(verbatim: "\(chip.accepted)/\(OrderRules.maxAccepted)").monospacedDigit()
                 }
                 .font(.subheadline)
                 .padding(.horizontal, 12)

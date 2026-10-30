@@ -82,7 +82,7 @@ private func capRule(_ cap: Int) -> some ChartContent {
             .foregroundStyle(StatisticsPalette.stuck)
             .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 4]))
             .annotation(position: .top, alignment: .trailing) {
-                Text("Store cap \(value)").font(.caption2).foregroundStyle(StatisticsPalette.stuck)
+                Text(l10n: "stats.storeCap", value).font(.caption2).foregroundStyle(StatisticsPalette.stuck)
             }
     }
 }
@@ -124,7 +124,7 @@ struct StatisticsGoodDetailView: View {
                 figure("Bought", detail.latestBought)
                 figure("Stored", detail.latestStored)
             }
-            Text("Made and used per season").font(.footnote.weight(.semibold))
+            Text(l10n: "stats.madeUsed").font(.footnote.weight(.semibold))
             Chart {
                 flowBars(detail.row.made, name: "Made")
                 flowBars(detail.row.used, name: "Used")
@@ -133,8 +133,8 @@ struct StatisticsGoodDetailView: View {
             .chartXAxis { seasonAxis(model, seasons) }
             .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 150)
-            .accessibilityLabel("\(detail.row.name) made and used per season")
-            Text("In store at season end").font(.footnote.weight(.semibold))
+            .accessibilityLabel(GameText.string("stats.a11y.madeUsed", detail.row.name))
+            Text(l10n: "stats.inStore").font(.footnote.weight(.semibold))
             Chart {
                 storeMarks(detail.stored)
                 capRule(detail.storeCap)
@@ -143,7 +143,7 @@ struct StatisticsGoodDetailView: View {
             .chartXAxis { seasonAxis(model, seasons) }
             .chartXScale(range: .plotDimension(padding: 10))
             .frame(height: 100)
-            .accessibilityLabel("\(detail.row.name) in store at season end")
+            .accessibilityLabel(GameText.string("stats.a11y.inStore", detail.row.name))
             stuckStrip(detail, seasons: seasons)
             producers(detail)
         }
@@ -152,7 +152,7 @@ struct StatisticsGoodDetailView: View {
     private func figure(_ title: String, _ value: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased()).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-            Text("\(value)").font(.title3.weight(.semibold)).monospacedDigit()
+            Text(verbatim: "\(value)").font(.title3.weight(.semibold)).monospacedDigit()
         }
         .fixedSize()
     }
@@ -160,21 +160,21 @@ struct StatisticsGoodDetailView: View {
     @ViewBuilder
     private func stuckStrip(_ detail: StatisticsModel.GoodDetail, seasons: [Int]) -> some View {
         if detail.stuckShare.contains(where: { $0 > 0 }) {
-            Text("Stopped: output stuck").font(.footnote.weight(.semibold)).foregroundStyle(StatisticsPalette.stuck)
+            Text(l10n: "stats.stopped").font(.footnote.weight(.semibold)).foregroundStyle(StatisticsPalette.stuck)
             Chart { stuckBars(Array(zip(seasons, detail.stuckShare)).map(StuckPoint.init)) }
                 .chartYScale(domain: 0 ... 1)
                 .chartYAxis(.hidden)
                 .chartXAxis { seasonAxis(model, seasons) }
                 .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 50)
-                .accessibilityLabel("Share of each season the \(detail.row.name) producers were stopped, output stuck")
+                .accessibilityLabel(GameText.string("stats.a11y.stopped", detail.row.name))
         }
     }
 
     @ViewBuilder
     private func producers(_ detail: StatisticsModel.GoodDetail) -> some View {
         if !detail.producers.isEmpty {
-            Text("Who makes it, last season").font(.footnote.weight(.semibold))
+            Text(l10n: "stats.producers").font(.footnote.weight(.semibold))
             ForEach(detail.producers) { share in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(share.name)
@@ -218,14 +218,14 @@ struct StatisticsMoneyTab: View {
         let allSeries: [StatisticsModel.Series] = model.income + model.spending
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Income and upkeep per season").font(.footnote.weight(.semibold))
+                Text(l10n: "stats.income").font(.footnote.weight(.semibold))
                 Chart { moneyBars(allSeries) }
                     .chartForegroundStyleScale(domain: StatisticsPalette.moneyNames, range: StatisticsPalette.moneyColours)
                     .chartXAxis { seasonAxis(model, seasons) }
                     .chartXScale(range: .plotDimension(padding: 10))
                     .frame(height: 200)
-                    .accessibilityLabel("Tax and trade income above zero, upkeep and purchases below, per season")
-                Text("Balance at season end").font(.footnote.weight(.semibold))
+                    .accessibilityLabel(GameText.string("stats.a11y.income"))
+                Text(l10n: "stats.balance").font(.footnote.weight(.semibold))
                 Chart(model.balance) { point in
                     LineMark(x: .value("Season", point.season), y: .value("Balance", point.value))
                 }
@@ -233,7 +233,7 @@ struct StatisticsMoneyTab: View {
                 .chartXAxis { seasonAxis(model, seasons) }
                 .chartXScale(range: .plotDimension(padding: 10))
                 .frame(height: 120)
-                .accessibilityLabel("Balance at the end of each season")
+                .accessibilityLabel(GameText.string("stats.a11y.balance"))
             }
             .padding()
         }
@@ -247,12 +247,12 @@ struct StatisticsPeopleTab: View {
         let seasons = model.balance.map(\.season)
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Residents by tier, season end").font(.footnote.weight(.semibold))
+                Text(l10n: "stats.byTier").font(.footnote.weight(.semibold))
                 Chart { tierAreas(model.tiers) }
                     .chartXAxis { seasonAxis(model, seasons) }
                     .chartXScale(range: .plotDimension(padding: 10))
                     .frame(height: 260)
-                    .accessibilityLabel("Residents by house tier at the end of each season")
+                    .accessibilityLabel(GameText.string("stats.a11y.byTier"))
             }
             .padding()
         }
@@ -268,19 +268,19 @@ struct StatisticsRivalsTab: View {
         let lineColours: [Color] = model.residentLineColours.map { Color(hex: $0) }
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Residents by town, season end").font(.footnote.weight(.semibold))
+                Text(l10n: "stats.byTown").font(.footnote.weight(.semibold))
                 Chart { townLines(lines) }
                     .chartForegroundStyleScale(domain: lines.map(\.name), range: lineColours)
                     .chartXAxis { seasonAxis(model, seasons) }
                     .chartXScale(range: .plotDimension(padding: 10))
                     .frame(height: 220)
-                    .accessibilityLabel("Residents of your town and each rival at the end of each season")
+                    .accessibilityLabel(GameText.string("stats.a11y.byTown"))
                 ForEach(model.standings) { row in
                     HStack(spacing: 10) {
                         Circle().fill(Color(hex: row.colourHex)).frame(width: 12, height: 12)
                         Text(row.name).fontWeight(row.name == "You" ? .bold : .regular)
                         Spacer()
-                        Text("\(row.residents)").monospacedDigit()
+                        Text(verbatim: "\(row.residents)").monospacedDigit()
                         Text(row.age).foregroundStyle(.secondary)
                         Text(row.wealth).monospacedDigit()
                     }

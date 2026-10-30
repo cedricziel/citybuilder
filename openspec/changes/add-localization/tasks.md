@@ -13,12 +13,13 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 2. M2 — CityUI static strings
 
-- [ ] 2.1 Tests-first: a test per screen that resolves its labels in English and asserts today's text, plus one German assertion per screen; confirm red
-- [ ] 2.2 Implement to green: title screen, new-game dialog, chapter select, pause menu, settings, statistics, research, goals and standings panels, tool strip, build rail and Mac menu literals through the catalog
-- [ ] 2.3 Implement to green: accessibility labels through the catalog
-- [ ] 2.4 Add the SwiftLint custom rule banning string literals in `Text(`, `Button(`, `Label(`, `.navigationTitle(` and `accessibilityLabel(` in CityUI (D3)
-- [ ] 2.5 Refactor under a green bar
-- [ ] 2.6 Verify `make test-scenarios` and `make l10n-check` clean
+- [x] 2.1 Tests-first: a test per screen that resolves its labels in English and asserts today's text, plus one German assertion per screen; confirm red
+- [x] 2.2 Implement to green: title screen, new-game dialog, chapter select, pause menu, settings, statistics, research, goals and standings panels, tool strip, build rail and Mac menu literals through the catalog
+- [x] 2.3 Implement to green: accessibility labels through the catalog
+- [ ] 2.7 Move the CityAudio settings and credits views (`AudioSettingsView`, `CreditsView`) to the catalog. CityAudio can't reach CityUI's catalog, so this needs either label injection from the app shells or a small shared lookup package; decide with the orchestrator
+- [x] 2.4 Add the SwiftLint custom rule banning string literals in `Text(`, `Button(`, `Label(`, `.navigationTitle(` and `accessibilityLabel(` in CityUI (D3)
+- [x] 2.5 Refactor under a green bar
+- [x] 2.6 Verify `make test-scenarios` and `make l10n-check` clean
 
 ## 3. M3 — CityUI sentence builders
 

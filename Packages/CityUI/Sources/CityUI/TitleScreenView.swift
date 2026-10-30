@@ -71,26 +71,26 @@ public struct TitleScreenView: View {
                 set: { if !$0 { viewModel.dismissLoadFailure() } }
             )
         ) {
-            Button("OK", role: .cancel) {}
+            Button(GameText.string("common.ok"), role: .cancel) {}
         } message: {
-            Text("The file may be damaged or from an older version of the game. You can still start a new game.")
+            Text(l10n: "title.loadFailed")
         }
         .alert(
-            "A newer save is in iCloud",
+            GameText.string("title.conflictTitle"),
             isPresented: Binding(
                 get: { !viewModel.saveConflicts.isEmpty && !viewModel.isResolvingSaveConflict },
                 set: { _ in }
             )
         ) {
-            Button("Load iCloud Save") {
+            Button(GameText.string("title.loadCloudSave")) {
                 Task { await viewModel.resolveSaveConflict(keepICloud: true) }
             }
-            Button("Keep This Save") {
+            Button(GameText.string("title.keepThisSave")) {
                 Task { await viewModel.resolveSaveConflict(keepICloud: false) }
             }
         } message: {
             Text((viewModel.saveConflictFailure.map { $0 + "\n\n" } ?? "")
-                + "Load the newer save from iCloud, or keep the save on this device and replace the iCloud copy.")
+                + GameText.string("title.conflictMessage"))
         }
         .sheet(isPresented: Binding(
             get: { viewModel.chapterSelect != nil },
@@ -137,7 +137,7 @@ public struct TitleScreenView: View {
     private var menu: some View {
         // Title at the top, buttons in the lower third: the town shows between.
         VStack(spacing: 32) {
-            Text("Citybuilder")
+            Text(verbatim: "Citybuilder")
                 .font(.system(size: 56, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.6), radius: 8, y: 3)
@@ -151,7 +151,7 @@ public struct TitleScreenView: View {
                         viewModel.continueRequested()
                     } label: {
                         VStack(spacing: 2) {
-                            Text("Continue").font(.title3.bold())
+                            Text(l10n: "title.continue").font(.title3.bold())
                             Text(summary.displayName)
                                 .font(.caption)
                                 .opacity(0.8)
@@ -168,7 +168,7 @@ public struct TitleScreenView: View {
                     .accessibilityIdentifier("title.continue")
                     .menuEntrance(1, entered: entered)
                 }
-                Button("New Game…") {
+                Button(GameText.string("title.newGame")) {
                     viewModel.newGameRequested()
                 }
                 .titleMenuButtonStyle(prominent: viewModel.mostRecentSave == nil)
@@ -177,7 +177,7 @@ public struct TitleScreenView: View {
                 .accessibilityIdentifier("title.newGame")
                 .menuEntrance(2, entered: entered)
 
-                Button("Campaigns") {
+                Button(GameText.string("campaigns.title")) {
                     viewModel.campaignsRequested()
                 }
                 .titleMenuButtonStyle()
@@ -185,7 +185,7 @@ public struct TitleScreenView: View {
                 .accessibilityIdentifier("title.campaigns")
                 .menuEntrance(3, entered: entered)
 
-                Button("Settings") {
+                Button(GameText.string("common.settings")) {
                     viewModel.settingsRequested()
                 }
                 .titleMenuButtonStyle()
@@ -193,7 +193,7 @@ public struct TitleScreenView: View {
                 .menuEntrance(4, entered: entered)
 
                 #if os(macOS)
-                Button("Quit") {
+                Button(GameText.string("common.quit")) {
                     NSApplication.shared.terminate(nil)
                 }
                 .titleMenuButtonStyle()
@@ -203,7 +203,7 @@ public struct TitleScreenView: View {
             }
             .padding(.bottom, 40)
             if viewModel.isPreparingCloudSaves {
-                ProgressView("Checking iCloud for saves…")
+                ProgressView(GameText.string("title.checkingCloud"))
                     .foregroundStyle(.white)
                     .accessibilityIdentifier("title.preparingCloudSaves")
             }

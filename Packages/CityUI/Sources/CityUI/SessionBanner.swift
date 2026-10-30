@@ -406,7 +406,7 @@ struct SessionBannerView: View {
                     .font(.caption)
                     .multilineTextAlignment(.center)
                 if let onResume {
-                    Button("Resume", action: onResume)
+                    Button(GameText.string("pause.resume"), action: onResume)
                         .buttonStyle(.borderedProminent)
                         .tint(Color(red: 0.42, green: 0.29, blue: 0.16))
                         .padding(.top, 4)

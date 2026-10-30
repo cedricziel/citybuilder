@@ -16,7 +16,7 @@ public struct PerfOverlayView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("tick \(tickCount)").font(.caption2.monospaced())
+            Text(verbatim: "tick \(tickCount)").font(.caption2.monospaced())
             if let nanos = lastTickNanos {
                 let ms = Double(nanos) / 1_000_000
                 Text(String(format: "%.2f ms/tick", ms))

@@ -24,7 +24,7 @@ struct SnapshotHostView: View {
             )
         } else {
             Color.black.overlay(
-                Text("World renderer not registered")
+                Text(verbatim: "World renderer not registered")
                     .foregroundStyle(.white)
             )
         }

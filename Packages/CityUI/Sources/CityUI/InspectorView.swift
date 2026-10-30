@@ -203,14 +203,14 @@ public struct InspectorView: View {
                     TownMarketView(market: townMarket, onTrade: onMarketTrade)
                 }
                 if let port = viewModel.routeStartPort {
-                    Button("Route from here", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
+                    Button(GameText.string("inspector.routeFromHere"), systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
                         onStartRoute(port)
                     }
                     .font(.caption)
                     .buttonStyle(.bordered)
                 }
                 if let picker = viewModel.exportPicker {
-                    Picker("Export", selection: Binding(get: { picker.selected }, set: { onPickExport($0) })) {
+                    Picker(GameText.string("inspector.export"), selection: Binding(get: { picker.selected }, set: { onPickExport($0) })) {
                         ForEach(picker.options, id: \.self) { option in
                             Text(ExportPicker.title(of: option)).tag(option)
                         }
@@ -228,10 +228,10 @@ public struct InspectorView: View {
 
     private func marketSection(_ market: RivalMarketSection) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Market").font(.caption.bold())
-            Text("Sells").font(.caption2.bold())
+            Text(l10n: "market.title").font(.caption.bold())
+            Text(l10n: "market.sells").font(.caption2.bold())
             ForEach(market.sells, id: \.self) { Text($0).font(.caption.monospaced()) }
-            Text("Buys").font(.caption2.bold())
+            Text(l10n: "market.buys").font(.caption2.bold())
             ForEach(market.buys, id: \.self) { Text($0).font(.caption.monospaced()) }
         }
     }

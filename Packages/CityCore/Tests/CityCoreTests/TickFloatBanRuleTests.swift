@@ -48,8 +48,11 @@ func scenarioRendererIsExemptFromTheBan() throws {
         Issue.record("expected tick_float_ban: block in .swiftlint.yml")
         return
     }
+    // The block ends at the next line indented no deeper than its own key:
+    // the next custom rule or the next top-level key.
+    let indent = lines[startIdx].prefix(while: \.isWhitespace).count
     let blockEnd = lines[(startIdx + 1)...].firstIndex(where: { line in
-        !line.isEmpty && !line.first!.isWhitespace
+        !line.isEmpty && line.prefix(while: \.isWhitespace).count <= indent
     }) ?? lines.endIndex
     let block = lines[startIdx ..< blockEnd].joined(separator: "\n")
     #expect(!block.contains("CityRender2D"))

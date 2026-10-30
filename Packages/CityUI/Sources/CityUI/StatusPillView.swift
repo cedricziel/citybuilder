@@ -69,10 +69,10 @@ struct StatusPillView: View {
                 }
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                .accessibilityLabel("Date: \(hud.dateText)")
+                .accessibilityLabel(GameText.string("a11y.date", hud.dateText))
             }
             stat("Money", Text(hud.formattedMoney).monospaced())
-            stat("Pop.", Text("\(hud.population)").monospaced())
+            stat(GameText.string("hud.population"), Text(verbatim: "\(hud.population)").monospaced())
             if let name = hud.currentIslandName {
                 islandButton(name)
             }
@@ -85,7 +85,7 @@ struct StatusPillView: View {
     }
 
     private static func caption(_ text: String) -> some View {
-        Text(text.uppercased())
+        Text(text.uppercased(with: Language.current.locale))
             .font(.system(size: 10))
             .tracking(0.3)
             .foregroundStyle(.secondary)
@@ -117,7 +117,7 @@ struct StatusPillView: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal, -8)
-        .accessibilityLabel("Island \(name), stocks")
+        .accessibilityLabel(GameText.string("a11y.islandStocks", name))
         .accessibilityValue(hud.isStocksTrayOpen ? "Shown" : "Hidden")
     }
 }
@@ -152,13 +152,13 @@ struct SpeedControlView: View {
             .pauseHotkeys()
             if layout.usesSpeedCycleButton {
                 segment(session.speed.label, isOn: false, action: session.stepSpeed)
-                    .accessibilityLabel("Speed \(session.speed.label)")
+                    .accessibilityLabel(GameText.string("a11y.speed", session.speed.label))
             } else {
                 ForEach(GameSpeed.allCases, id: \.self) { speed in
                     segment(speed.label, isOn: !session.isPaused && session.speed == speed) {
                         session.choose(speed: speed)
                     }
-                    .accessibilityLabel("Speed \(speed.label)")
+                    .accessibilityLabel(GameText.string("a11y.speed", speed.label))
                     .accessibilityAddTraits(session.speed == speed ? .isSelected : [])
                 }
             }
@@ -219,7 +219,11 @@ struct StocksTrayView: View {
                 count: count
             )
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(hud.currentIslandName ?? "Island") stocks · \(chips.count) goods".uppercased())
+                Text(verbatim: GameText.string(
+                    "hud.stocksHeader",
+                    hud.currentIslandName ?? GameText.string("hud.island"),
+                    GameText.string("count.good", chips.count)
+                ).uppercased(with: Language.current.locale))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
@@ -230,7 +234,7 @@ struct StocksTrayView: View {
                             Text(name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(name) \(chip.count)")
+                        .accessibilityLabel(String("\(name) \(chip.count)"))
                     }
                 }
             }
@@ -240,7 +244,7 @@ struct StocksTrayView: View {
             .fixedSize(horizontal: false, vertical: true)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("Island stocks")
+            .accessibilityLabel(GameText.string("a11y.islandStocksTitle"))
         }
     }
 }

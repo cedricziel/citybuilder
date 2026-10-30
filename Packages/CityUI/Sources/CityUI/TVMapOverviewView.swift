@@ -33,13 +33,13 @@ struct TVMapOverviewView: View {
             .ignoresSafeArea()
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("tv.overview")
-            .accessibilityLabel("Map, cursor at \(overview.cursorTile.x), \(overview.cursorTile.y)")
+            .accessibilityLabel(GameText.string("map.a11y.cursor", overview.cursorTile.x, overview.cursorTile.y))
         }
     }
 
     private var header: some View {
         HStack(spacing: 24) {
-            Text("Map").font(.title2.bold())
+            Text(l10n: "map.title").font(.title2.bold())
             Spacer()
             TVMapLegend(rivals: session.minimap.rivals)
         }
@@ -49,10 +49,10 @@ struct TVMapOverviewView: View {
 
     private var hints: some View {
         HStack(spacing: 48) {
-            Text("Swipe or click to move the cursor")
-            Text("Select: go there")
-            Text("Back: close")
-            Text("Hold Play/Pause: close and zoom in")
+            Text(l10n: "map.hintMove")
+            Text(l10n: "map.hintSelect")
+            Text(l10n: "map.hintBack")
+            Text(l10n: "map.hintPlayPause")
         }
         .font(.callout)
         .foregroundStyle(.white.opacity(0.75))
@@ -110,7 +110,7 @@ struct TVMapButton: View {
                 .background(.thinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Map")
+        .accessibilityLabel(GameText.string("map.title"))
         .accessibilityIdentifier("hud.mapOverview")
     }
 }

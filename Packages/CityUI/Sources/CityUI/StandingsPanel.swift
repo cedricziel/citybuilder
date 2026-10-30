@@ -56,9 +56,9 @@ struct StandingsPanelView: View {
                 .fontWeight(row.isPlayer ? .bold : .regular)
                 .accessibilityElement(children: .combine)
             }
-            .navigationTitle("Standings")
+            .navigationTitle(GameText.string("standings.title"))
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
+                ToolbarItem(placement: .confirmationAction) { Button(GameText.string("common.done"), action: done).cancelActionHotkey() }
             }
         }
     }
@@ -77,7 +77,7 @@ extension CityRootView {
                     .background(.thinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Standings")
+            .accessibilityLabel(GameText.string("standings.title"))
         }
     }
 }

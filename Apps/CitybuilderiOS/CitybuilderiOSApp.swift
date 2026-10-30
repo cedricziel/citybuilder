@@ -167,15 +167,15 @@ private struct AudioSettingsSheet: View {
                         audio.engine.setSpatialDistances(reference: reference, max: maxDistance)
                     }
                 )
-                .tabItem { Label("Audio", systemImage: "speaker.wave.2") }
+                .tabItem { Label(GameText.string("settings.audio"), systemImage: "speaker.wave.2") }
                 CreditsView(manifest: audio.manifest)
-                    .tabItem { Label("Credits", systemImage: "info.circle") }
+                    .tabItem { Label(GameText.string("settings.credits"), systemImage: "info.circle") }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(GameText.string("common.settings"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(GameText.string("common.done")) {
                         Task {
                             await audio.syncSettingsToCloud()
                         }

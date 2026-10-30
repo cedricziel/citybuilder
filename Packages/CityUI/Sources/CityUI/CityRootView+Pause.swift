@@ -50,25 +50,25 @@ extension CityRootView {
     var moreMenu: some View {
         Menu {
             if !session.world.goals.isEmpty {
-                Button("Goals", systemImage: "flag.checkered") { goalsPresented = true }
+                Button(GameText.string("goals.title"), systemImage: "flag.checkered") { goalsPresented = true }
             }
             if let chip = session.ordersChip {
                 Button(chip.label, systemImage: "scroll.fill") { session.toggleOrdersBoard() }
             }
-            Button("Research", systemImage: "book.fill") { researchPresented = true }
+            Button(GameText.string("research.title"), systemImage: "book.fill") { researchPresented = true }
                 .disabled(!session.isResearchAvailable)
             if StandingsPanelModel.isAvailable(in: session.world) {
-                Button("Standings", systemImage: "trophy.fill") { standingsPresented = true }
+                Button(GameText.string("standings.title"), systemImage: "trophy.fill") { standingsPresented = true }
             }
-            Button("Statistics", systemImage: "chart.xyaxis.line") { session.isStatisticsPresented = true }
+            Button(GameText.string("stats.title"), systemImage: "chart.xyaxis.line") { session.isStatisticsPresented = true }
             if session.showsRoutesButton {
-                Button("Routes", systemImage: "ferry.fill") { routesPresented = true }
+                Button(GameText.string("routes.title"), systemImage: "ferry.fill") { routesPresented = true }
             }
             #if !os(tvOS)
             Button(showsMinimap ? "Hide Minimap" : "Show Minimap", systemImage: "map") { showsMinimap.toggle() }
             #endif
             if settingsContent != nil {
-                Button("Settings", systemImage: "gearshape.fill") { settingsPresented = true }
+                Button(GameText.string("common.settings"), systemImage: "gearshape.fill") { settingsPresented = true }
             }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -77,7 +77,7 @@ extension CityRootView {
                 .background(.thinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("More")
+        .accessibilityLabel(GameText.string("hud.more"))
     }
 
     var researchButton: some View {
@@ -92,7 +92,7 @@ extension CityRootView {
         .buttonStyle(.plain)
         .disabled(!session.isResearchAvailable)
         .opacity(session.isResearchAvailable ? 1 : 0.4)
-        .accessibilityLabel("Research")
+        .accessibilityLabel(GameText.string("research.title"))
     }
 
     var settingsButton: some View {
@@ -105,7 +105,7 @@ extension CityRootView {
                 .background(.thinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Settings")
+        .accessibilityLabel(GameText.string("common.settings"))
     }
 
     @ViewBuilder

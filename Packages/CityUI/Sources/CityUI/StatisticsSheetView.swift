@@ -17,7 +17,7 @@ struct StatisticsSheetView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                Picker("View", selection: tabBinding) {
+                Picker(GameText.string("stats.view"), selection: tabBinding) {
                     ForEach(model.tabs) { tab in
                         Text(tab.title).tag(tab)
                     }
@@ -31,9 +31,9 @@ struct StatisticsSheetView: View {
                 ScrollView { StatisticsGoodDetailView(model: model, good: good).padding() }
             }
             .background { tabHotkeys }
-            .navigationTitle("Statistics")
+            .navigationTitle(GameText.string("stats.title"))
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: done).cancelActionHotkey() }
+                ToolbarItem(placement: .confirmationAction) { Button(GameText.string("common.done"), action: done).cancelActionHotkey() }
             }
         }
         #if os(macOS)
@@ -73,9 +73,9 @@ struct StatisticsSheetView: View {
     private var content: some View {
         if model.isEmpty {
             ContentUnavailableView(
-                "No season has finished yet",
+                GameText.string("stats.noSeason"),
                 systemImage: "chart.xyaxis.line",
-                description: Text("Come back when the first season ends.")
+                description: Text(l10n: "stats.empty")
             )
         } else {
             switch currentTab {
@@ -113,7 +113,7 @@ struct StatisticsGoodsTab: View {
         let goods = model.goods
         let current = resolveCurrent(in: goods)
         if goods.isEmpty {
-            ContentUnavailableView("Nothing made or traded yet", systemImage: "shippingbox")
+            ContentUnavailableView(GameText.string("stats.noGoods"), systemImage: "shippingbox")
         } else if isCompact {
             // The sheet's own stack pushes the detail.
             goodsList(goods, current: current, selectionPushes: true)
@@ -134,7 +134,7 @@ struct StatisticsGoodsTab: View {
         List {
             if model.stoppedProducersNow > 0 {
                 Label(
-                    "\(model.stoppedProducersNow) producers stopped: output stuck",
+                    GameText.string("stats.producersStopped", model.stoppedProducersNow),
                     systemImage: "exclamationmark.octagon.fill"
                 )
                 .foregroundStyle(.red)
@@ -179,7 +179,7 @@ struct StatisticsGoodRowView: View {
             Text(row.name).fontWeight(isSelected ? .semibold : .regular)
             Spacer()
             if row.stoppedNow > 0 {
-                Text("\(row.stoppedNow) stopped")
+                Text(l10n: "stats.stoppedNow", row.stoppedNow)
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
@@ -205,7 +205,7 @@ extension CityRootView {
                 .background(.thinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Statistics")
+        .accessibilityLabel(GameText.string("stats.title"))
         .accessibilityIdentifier("hud.statistics")
     }
 }

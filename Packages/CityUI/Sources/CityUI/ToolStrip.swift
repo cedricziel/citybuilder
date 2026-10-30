@@ -141,7 +141,7 @@ struct ToolStripView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Cancel tool")
+                .accessibilityLabel(GameText.string("tools.cancel"))
             }
             .padding(.leading, 10)
             .padding([.trailing, .vertical], 6)
@@ -170,7 +170,7 @@ struct ToolStripView: View {
         HStack(spacing: 0) {
             Text(tool.displayName).font(.subheadline.weight(.semibold))
             if session.armedToolCost > 0 {
-                Text(" · $\(session.armedToolCost)")
+                Text(verbatim: " · $\(session.armedToolCost)")
                     .font(.system(.subheadline, design: .monospaced).weight(.medium))
                     .foregroundStyle(.secondary)
             }

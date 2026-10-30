@@ -23,7 +23,7 @@ extension CityRootView {
     var inspectorActionsButton: some View {
         #if os(iOS)
         if session.offersTileMenu, let tile = session.selectedTile {
-            Button("Actions") {
+            Button(GameText.string("touch.actions")) {
                 session.tileMenuRequest = TileMenuRequest(tile: tile)
             }
         }
@@ -61,7 +61,7 @@ private struct TouchPlacementDialogs: ViewModifier {
     func body(content: Content) -> some View {
         content
             .confirmationDialog(
-                "Tile actions",
+                GameText.string("touch.tileActions"),
                 isPresented: Binding(
                     get: { session.tileMenuRequest != nil },
                     set: { if !$0 { session.tileMenuRequest = nil } }
@@ -104,11 +104,11 @@ private struct CoachmarkView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "hand.tap")
-            Text("Long-press a tile to build")
+            Text(l10n: "touch.longPressHint")
                 .font(.callout)
                 .hudOneLine(minimumScale: 0.6)
             Button(action: dismiss) {
-                Text("Got it").hudOneLine()
+                Text(l10n: "touch.gotIt").hudOneLine()
             }
             .buttonStyle(.borderedProminent)
         }
@@ -141,9 +141,9 @@ private struct PlacementHUDOverlay: View {
                     // Confirm and cancel sit side by side under the ghost so
                     // the building being placed stays visible.
                     let below = center.y + PlacementHUDLayout.arrowRadius + PlacementHUDLayout.actionGap
-                    hudButton("checkmark", label: "Place", tint: hud.isValid ? .green : .orange, action: hud.confirm)
+                    hudButton("checkmark", label: GameText.string("touch.place"), tint: hud.isValid ? .green : .orange, action: hud.confirm)
                         .position(x: center.x + PlacementHUDLayout.actionGap, y: below)
-                    hudButton("xmark", label: "Cancel", tint: .red, action: hud.cancel)
+                    hudButton("xmark", label: GameText.string("common.cancel"), tint: .red, action: hud.cancel)
                         .position(x: center.x - PlacementHUDLayout.actionGap, y: below)
                 }
             }

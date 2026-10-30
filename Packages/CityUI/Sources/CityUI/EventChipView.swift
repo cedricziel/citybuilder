@@ -111,7 +111,7 @@ struct EventChipView: View {
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
-            .accessibilityLabel("\(chip.text): show it again")
+            .accessibilityLabel(GameText.string("a11y.eventChip", chip.text))
             .frame(maxWidth: .infinity, alignment: .leading)
             .transition(.opacity)
         }

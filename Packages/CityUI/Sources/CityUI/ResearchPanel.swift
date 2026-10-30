@@ -84,9 +84,10 @@ struct ResearchPanelView: View {
                             Spacer()
                             Text(stateLabel(row)).font(.caption).foregroundStyle(.secondary)
                         }
-                        Text("Unlocks: \(row.unlocks)").font(.caption)
+                        Text(l10n: "research.unlocks", row.unlocks).font(.caption)
                         if !row.prerequisites.isEmpty {
-                            Text("Requires: \(row.prerequisites)").font(.caption2).foregroundStyle(.secondary)
+                            Text(l10n: "research.requires", row.prerequisites).font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
                         if row.state == .inProgress {
                             ProgressView(value: Double(row.progress), total: Double(row.cost))
@@ -95,10 +96,10 @@ struct ResearchPanelView: View {
                 }
                 .disabled(row.state != .available)
             }
-            .navigationTitle("Research")
+            .navigationTitle(GameText.string("research.title"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: dismiss)
+                    Button(GameText.string("common.done"), action: dismiss)
                         .cancelActionHotkey()
                 }
             }
