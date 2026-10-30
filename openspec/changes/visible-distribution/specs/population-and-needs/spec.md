@@ -185,7 +185,7 @@ Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to
 
 #### Scenario: A shortage falls on the newest house, not on every house
 
-- **WHEN** a town's food falls short of what its peasant houses eat
+- **WHEN** a town's food falls short of what its peasant houses eat, with enough food and porter capacity to keep the older houses supplied
 - **THEN** the oldest houses stay fed and only the newest one shrinks and regrows, instead of every house shrinking at the same draw
 
 #### Scenario: Porter count follows the houses served
