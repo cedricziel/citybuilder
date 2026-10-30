@@ -159,7 +159,7 @@ func goalsReadAsTargets() {
         (.signatureProjects(1), "Complete a signature project"),
         (.signatureProjects(2), "Complete 2 signature projects"),
         (.research(.metallurgy), "Research Metallurgy"),
-        (.treasury(1200), "Treasury of " + HUDViewModel.formatMoney(1200, locale: .current)),
+        (.treasury(1200), "Treasury of " + ChapterText.money(1200)),
         (.netIncome(60), "Net income of $60 a season"),
         (.tradeEarnings(300), "Earn $300 from trade"),
         (.landedByShip(.ore, 30), "Land 30 ore at home by ship")
