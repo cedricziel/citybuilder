@@ -11,7 +11,7 @@ The goods catalog SHALL include herbs (unit bunches, base price 5), which the to
 
 ### Requirement: Granaries are drawn from last
 
-Every draw of a good from the player's stores (a market hub's restock for its houses and porters, producer inputs, construction materials, market sales and order dispatch) SHALL take from stores other than granaries first, in its usual order, and from a granary only when those stores together hold none of the good. Where no granary exists, every draw SHALL behave as before.
+Every draw of a good from the player's stores (a market hub's restock for its houses and porters, producer inputs, construction materials, market sales and order dispatch) SHALL take from stores other than granaries first, in its usual order, and from a granary only when those stores together hold none of the good. A hub's restock SHALL try other hubs' surplus before a granary. A caravanserai's export SHALL never take from a granary. Where no granary exists, every draw SHALL behave as before.
 
 #### Scenario: Houses eat from the warehouse first
 
@@ -22,6 +22,11 @@ Every draw of a good from the player's stores (a market hub's restock for its ho
 
 - **WHEN** a market hub restocks food on a network whose only food is 20 in a granary
 - **THEN** the restock comes from the granary
+
+#### Scenario: Another hub's surplus before the granary
+
+- **WHEN** a market hub restocks food, no warehouse holds any, a granary holds 20 and another hub holds food above its reserve
+- **THEN** the restock comes from the other hub
 
 ### Requirement: Crop fields are marked in the game data
 
