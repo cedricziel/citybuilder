@@ -80,7 +80,8 @@ Open `Citybuilder.xcodeproj` in Xcode and pick `CitybuilderiOS` or `CitybuilderM
 │   └── GameDataGen/         # build-time generator: YAML packs → CityCore Swift
 ├── scripts/
 │   ├── check-coverage.sh
-│   └── check-scenario-coverage.swift
+│   ├── check-scenario-coverage.swift
+│   └── sweeps/              # release balance sweeps (PlayerBot)
 └── openspec/                # change proposals and capability specs
 ```
 
@@ -94,6 +95,10 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 4. Refactor under a green bar.
 5. Run `make lint && make format` before committing.
 6. Use Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `perf:`, `build:`, `ci:`); the `commit-msg` hook enforces this.
+
+### Balance sweeps
+
+`scripts/sweeps/run-release-sweeps.sh` runs the long PlayerBot balance sweeps locally; see [`scripts/sweeps/README.md`](scripts/sweeps/README.md). Run one sweep at a time on the Mac: a full run takes hours and uses every core.
 
 ## Game data packs
 

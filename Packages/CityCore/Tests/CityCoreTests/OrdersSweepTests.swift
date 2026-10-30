@@ -11,7 +11,7 @@ private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == 
 @Test(
     "orders: market-trading towns that fill orders stay solvent across seeds",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func scenarioOrderKitTownsStaySolventAcrossSeeds(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
@@ -28,7 +28,7 @@ func scenarioOrderKitTownsStaySolventAcrossSeeds(seed: UInt64) {
 @Test(
     "orders: guided Hard start that fills orders stays solvent and grows",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func scenarioGuidedHardStartWithOrdersStaysSolventAndGrows(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
@@ -60,16 +60,18 @@ func scenarioTheMarketDoesNotMakeOrderTownsWorseOff() async {
     let without = await orderControlRuns(tradesAtMarket: false)
     let with = await orderControlRuns(tradesAtMarket: true)
     print(
-        "SOLVENCY_SWEEP control orders=true seeds=0-29 layout=archipelago bankrupt_without=\(without.bankrupt) "
+        "SOLVENCY_SWEEP control orders=true seeds=\(seedSpan(orderControlSeeds)) layout=archipelago bankrupt_without=\(without.bankrupt) "
             + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
     )
     #expect(with.bankrupt <= without.bankrupt)
     #expect(with.residents * 100 >= without.residents * 95)
 }
 
+private let orderControlSeeds = sweepSeeds(0 ..< 30)
+
 private func orderControlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, residents: Int) {
     await withTaskGroup(of: (Bool, Int).self) { group in
-        for seed in UInt64(0) ..< 30 {
+        for seed in orderControlSeeds {
             group.addTask {
                 let world = World.botGame(
                     layout: .archipelago, seed: seed, difficulty: .normal,
@@ -92,7 +94,7 @@ private func orderControlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, res
 )
 func scenarioOrderKitFillsHalfOfWhatResolves() async {
     let worlds = await withTaskGroup(of: World.self) { group in
-        for seed in UInt64(0) ..< 10 {
+        for seed in sweepSeeds(0 ..< 10) {
             for layout in [WorldLayout.singleIsland, .archipelago] {
                 group.addTask {
                     World.botGame(layout: layout, seed: seed, difficulty: .normal, tradesAtMarket: true, orders: true, ticks: 36000)

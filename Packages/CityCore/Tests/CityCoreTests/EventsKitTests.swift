@@ -138,7 +138,7 @@ func kitAcceptsAFestival() {
 @Test(
     "scenario: guided Hard start stays solvent with fire season",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func guidedHardStartWithFireSeason(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
@@ -160,7 +160,7 @@ func guidedHardStartWithFireSeason(seed: UInt64) {
 @Test(
     "scenario: a forced fire in 1202 leaves the first hour standing",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func forcedFireFirstHour(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {

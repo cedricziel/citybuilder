@@ -15,7 +15,7 @@ private let eventArms = ProcessInfo.processInfo.environment["SOLVENCY_EVENTS"] =
 @Test(
     "scenario: market-trading towns stay solvent across seeds",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
@@ -42,7 +42,7 @@ func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
 /// once asked for bankruptcies without the market; per-good storage ended
 /// the store clog that caused them (`per-good-storage` D5), and with
 /// handcarts market-less towns grow slightly faster (#268).
-private let controlSeeds = Array(UInt64(0) ..< 30)
+private let controlSeeds = sweepSeeds(0 ..< 30)
 
 @Test(
     "scenario: the market does not make towns worse off",
@@ -52,7 +52,7 @@ func scenarioTheMarketDoesNotMakeTownsWorseOff() async {
     let without = await controlRuns(tradesAtMarket: false)
     let with = await controlRuns(tradesAtMarket: true)
     print(
-        "SOLVENCY_SWEEP control seeds=0-29 layout=archipelago bankrupt_without=\(without.bankrupt) "
+        "SOLVENCY_SWEEP control seeds=\(seedSpan(controlSeeds)) layout=archipelago bankrupt_without=\(without.bankrupt) "
             + "bankrupt_with=\(with.bankrupt) residents_without=\(without.residents) residents_with=\(with.residents)"
     )
     #expect(with.bankrupt <= without.bankrupt)
@@ -84,7 +84,7 @@ private func controlRuns(tradesAtMarket: Bool) async -> (bankrupt: Int, resident
 @Test(
     "scenario: guided Hard start stays solvent and grows",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: Array(UInt64(0) ..< 10)
+    arguments: sweepSeeds(0 ..< 10)
 )
 func scenarioGuidedHardStartStaysSolventAndGrows(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
@@ -103,7 +103,7 @@ func scenarioGuidedHardStartStaysSolventAndGrows(seed: UInt64) {
 @Test(
     "scenario: unguided Hard start goes bankrupt",
     .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
-    arguments: [UInt64(0), 5]
+    arguments: sweepSeeds([0, 5])
 )
 func scenarioUnguidedHardStartGoesBankrupt(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {

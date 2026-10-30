@@ -156,7 +156,7 @@ Merchants SHALL need food, planks, bread, tools and their culture's luxury, eati
 
 ### Requirement: Market porters supply houses
 
-Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to 8 (`housesPerPorter` and `maxPorters` in the hub's game data). Every tick, while a hub has fewer porters out than it keeps, it SHALL send one to a served house of the highest tier that has something to take, and among those to the house with the lowest stock ratio. A house's stock ratio is the lowest, over the needs of its tier the hub holds, of its stock plus the units on the way divided by its house-stock capacity; houses whose every such need is full are skipped. Ties SHALL go to the shorter road path, then to the lower entity ID. The porter SHALL carry one basket of no more than 10 units in all (`basketUnits`), filled in two passes over the needs of the house's tier the hub holds, in the tier's order of needs: first up to one consumption of each, then, with room left, each topped up to the house's capacity. The basket leaves the hub's stock when the porter sets off. On arrival the porter SHALL put the basket into the house's stock, as far as it has room, and walk back to the hub with what is left, where it puts the rest back; what the hub cannot take, because it is full or gone, SHALL go on as a carrier to the nearest store of the owner with room. A porter whose house is gone SHALL walk back with the whole basket. Porters SHALL move one road tile per tick. They are not carriers: they hold no producer's carrier slot and count toward no inbound supply, and the world snapshot SHALL list them beside the carriers.
+Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to 8 (`housesPerPorter` and `maxPorters` in the hub's game data). Every tick, while a hub has fewer porters out than it keeps, it SHALL send one: a hub of the player to a served house of the highest tier that has something to take, and among those to the house with the lowest stock ratio; a rival's hub to the served house with the lowest stock ratio, whatever its tier. A house's stock ratio is the lowest, over the needs of its tier the hub holds, of its stock plus the units on the way divided by its house-stock capacity; houses whose every such need is full are skipped. Ties SHALL go to the shorter road path, then to the lower entity ID. The porter SHALL carry one basket of no more than 10 units in all (`basketUnits`), filled in two passes over the needs of the house's tier the hub holds, in the tier's order of needs: first up to one consumption of each, then, with room left, each topped up to the house's capacity. The basket leaves the hub's stock when the porter sets off. On arrival the porter SHALL put the basket into the house's stock, as far as it has room, and walk back to the hub with what is left, where it puts the rest back; what the hub cannot take, because it is full or gone, SHALL go on as a carrier to the nearest store of the owner with room. A porter whose house is gone SHALL walk back with the whole basket. Porters SHALL move one road tile per tick. They are not carriers: they hold no producer's carrier slot and count toward no inbound supply, and the world snapshot SHALL list them beside the carriers.
 
 #### Scenario: A hub sends a porter to a house short of food
 
@@ -172,6 +172,11 @@ Each operational hub SHALL keep porters: 1, plus 1 per 4 houses it serves, up to
 
 - **WHEN** a town center holding food and planks serves a peasant house with no stock and a citizen house with half its stock
 - **THEN** its porter goes first to the citizen house
+
+#### Scenario: A rival's porters go by stock ratio alone
+
+- **WHEN** a rival's town center holding food and planks serves a peasant house with no stock and a citizen house with half its stock
+- **THEN** its porter goes first to the peasant house
 
 #### Scenario: Porter count follows the houses served
 
