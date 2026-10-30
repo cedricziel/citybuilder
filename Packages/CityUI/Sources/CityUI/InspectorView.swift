@@ -62,9 +62,9 @@ public struct InspectorViewModel: Sendable {
 
         let spec = BuildingCatalog.spec(for: building.kind)
         let buildProgress = if building.state == .operational {
-            "ready"
+            GameText.string("inspector.ready")
         } else {
-            "\(building.ticksSincePlacement)/\(spec.buildDurationTicks) ticks"
+            GameText.string("inspector.buildTicks", building.ticksSincePlacement, spec.buildDurationTicks)
         }
         let rival = building.owner.rivalID.flatMap(snapshot.rival)
         let culture = snapshot.culture(for: building.owner)
@@ -79,26 +79,20 @@ public struct InspectorViewModel: Sendable {
             let needs = pop.tier.needs(in: culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
-                "Tier: \(pop.tier.displayName(in: culture))",
-                "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
-                "Needs: \(needs.joined(separator: " · "))"
+                GameText.string("inspector.tier", pop.tier.displayName(in: culture)),
+                GameText.string("inspector.residents", pop.population, (modifiers ?? .none).capacity(of: pop.tier)),
+                GameText.string("inspector.needs", needs.joined(separator: " · "))
             ] + Self.nextTierLine(after: pop.tier, in: culture) + houseNotes(modifiers)
                 + houseMarketLines(house: entityID, population: pop, culture: culture, in: snapshot)
                 + residentLines(house: entityID, population: pop, culture: culture) + shortageLine(issue)
         }
         let problem = issue.map(problemText)
-        let footprint = building.footprint
-        let basics = [
-            "Kind: \(building.kind.rawValue)",
-            "Anchor: (\(building.anchor.x), \(building.anchor.y))",
-            "Footprint: \(footprint.width)×\(footprint.height)",
-            "State: \(building.kind == .ruins ? "ruins" : building.state.rawValue)",
-            "Build: \(buildProgress)",
-            "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
-        ]
+        let basics = basicLines(
+            for: building, buildProgress: buildProgress, hasRoad: !snapshot.roadDisconnectedBuildings.contains(entityID)
+        )
         let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + hubLines(for: building, in: snapshot)
         let signature = signatureLines(for: building, in: snapshot)
-        let problemLines = problem.map { ["Problem: \($0)"] } ?? []
+        let problemLines = problem.map { [GameText.string("inspector.problem", $0)] } ?? []
         let fire = fireLines(for: building, in: snapshot) + fireWatchLines(for: building, in: snapshot)
             + physicianLines(for: building, in: snapshot)
         let bullets: [String] = fire + basics + reach + signature + houseLines + problemLines
@@ -118,20 +112,36 @@ public struct InspectorViewModel: Sendable {
         )
     }
 
+    /// Kind, anchor, footprint, state, build progress and road: the Details lines every building has.
+    static func basicLines(for building: Building, buildProgress: String, hasRoad: Bool) -> [String] {
+        let road = hasRoad ? GameText.string("inspector.road.connected") : GameText.string("inspector.road.none")
+        return [
+            GameText.string("inspector.kind", building.kind.rawValue),
+            GameText.string("inspector.anchor", building.anchor.x, building.anchor.y),
+            GameText.string("inspector.footprint", building.footprint.width, building.footprint.height),
+            GameText.string("inspector.state", stateName(of: building)),
+            GameText.string("inspector.build", buildProgress),
+            GameText.string("inspector.road", road)
+        ]
+    }
+
     /// Spec: `platform-shells` / Inspector names what stops a building.
     static func problemText(_ issue: BuildingIssue) -> String {
         switch issue {
-        case .noRoad: "No road: connect it to a road"
-        case .noRouteToStorage: "Its road doesn't reach a warehouse, marketplace or the town center"
-        case .noMarketInReach: "No market in reach: build a marketplace near it"
-        case .noTreesInReach: "No forest within \(BuildingKind.lumberjackHut.catchmentRadius ?? 0) tiles: build a forester beside it"
-        case .noRoomToPlant: "No open grass within \(BuildingKind.forester.catchmentRadius ?? 0) tiles to plant"
+        case .noRoad: GameText.string("problem.noRoad")
+        case .noRouteToStorage: GameText.string("problem.noRouteToStorage")
+        case .noMarketInReach: GameText.string("problem.noMarketInReach")
+        case .noTreesInReach: GameText.string("problem.noTreesInReach", BuildingKind.lumberjackHut.catchmentRadius ?? 0)
+        case .noRoomToPlant: GameText.string("problem.noRoomToPlant", BuildingKind.forester.catchmentRadius ?? 0)
         case let .missingInputs(goods):
-            "Waiting for " + goods.map { GoodsCatalog.spec(for: $0).displayName.lowercased() }.joined(separator: ", ")
-        case let .outputStuck(good): "Output stuck: no room for \(GoodsCatalog.spec(for: good).displayName.lowercased())"
+            GameText.string("problem.waitingFor", goods.map(goodName).joined(separator: ", "))
+        case let .outputStuck(good): GameText.string("problem.outputStuck", goodName(good))
         case let .runningShort(good, _, _):
-            "Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): residents "
-                + (issue.isDeclining ? "are leaving" : "will leave")
+            if issue.isDeclining {
+                GameText.string("problem.shortLeaving", goodName(good))
+            } else {
+                GameText.string("problem.shortWillLeave", goodName(good))
+            }
         }
     }
 
@@ -139,7 +149,7 @@ public struct InspectorViewModel: Sendable {
     /// `platform-shells` / The inspector warns of a house about to decline.
     static func shortageLine(_ issue: BuildingIssue?) -> [String] {
         guard case let .runningShort(good, intervals, grace)? = issue else { return [] }
-        return ["Short of \(GoodsCatalog.spec(for: good).displayName.lowercased()): \(min(intervals, grace)) of \(grace) intervals"]
+        return [GameText.string("inspector.shortage", goodName(good), min(intervals, grace), grace)]
     }
 }
 
@@ -242,16 +252,40 @@ extension InspectorViewModel {
     /// market for a house, otherwise state, road and a hub's reach. Spec:
     /// `platform-shells` / Inspector callout.
     public var keyLines: [String] {
-        let head = (tier == nil
-            ? ["State:", "Road:", Self.inReachMarker, "Serves:", "Porters:"]
-            : ["Residents:", "Needs:", "Next:", "Stock:", "Market:"]) + Self.fireMarkers
-        return (head + ["Problem:"]).compactMap { marker in
-            bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
-        }
+        let keys = (tier == nil ? Self.buildingMarkerKeys : Self.houseMarkerKeys) + Self.sharedMarkerKeys
+        return keys.map { Self.marker($0) }.compactMap { marker in bullets.first { $0.hasPrefix(marker) } }
     }
 
-    private static let inReachMarker = " in reach: "
-    private static let fireMarkers = ["Burning", "Burnt down in ", "Covers ", "Watchman: ", "Keeps ", "Burns "]
+    private static let buildingMarkerKeys = [
+        "inspector.state", "inspector.road", "inspector.inReach.trees", "inspector.inReach.grass", "inspector.serves",
+        "inspector.porters"
+    ]
+    private static let houseMarkerKeys = ["inspector.residents", "inspector.needs", "inspector.next", "inspector.stock", "inspector.market"]
+    private static let sharedMarkerKeys = [
+        "inspector.burning", "inspector.burntDown", "inspector.fireWatch.covers", "inspector.watchman",
+        "inspector.physician.keeps", "inspector.physician.burns", "inspector.problem"
+    ]
+    static var markerKeys: [String] {
+        buildingMarkerKeys + houseMarkerKeys + sharedMarkerKeys
+    }
+
+    /// A line's marker: its template's text before the first placeholder,
+    /// in the player's language, so the callout finds the line in any language.
+    static func marker(_ key: String, in language: Language = .current) -> String {
+        let template = GameText.string(key, in: language)
+        return String(template[..<(template.firstIndex(of: "%") ?? template.endIndex)])
+    }
+
+    /// The state the inspector names, ruins counting as their own.
+    static func stateName(of building: Building) -> String {
+        if building.kind == .ruins { return GameText.string("inspector.stateName.ruins") }
+        return switch building.state {
+        case .planned: GameText.string("inspector.stateName.planned")
+        case .constructing: GameText.string("inspector.stateName.constructing")
+        case .operational: GameText.string("inspector.stateName.operational")
+        case .burning: GameText.string("inspector.stateName.burning")
+        }
+    }
 
     /// What the next tier wants beyond this one's needs, below the top
     /// tier. Spec: `platform-shells` / Inspector callout.
@@ -260,22 +294,27 @@ extension InspectorViewModel {
         let current = Set(tier.needs(in: culture))
         let added = next.needs(in: culture).filter { !current.contains($0) }.map(\.rawValue)
         guard !added.isEmpty else { return [] }
-        return ["Next: \(next.displayName(in: culture)) need \(added.joined(separator: ", "))"]
+        return [GameText.string("inspector.next", next.displayName(in: culture), added.joined(separator: ", "))]
     }
 
     /// Trees in reach of a hut, or open grass in reach of a forester.
     /// Spec: `platform-shells` / Forestry in the inspector and while
     /// placing.
     static func inReachLine(for kind: BuildingKind, count: Int?) -> [String] {
-        guard let noun = ToolStripText.inReachNoun(kind), let count else { return [] }
-        return [noun.prefix(1).uppercased() + noun.dropFirst() + inReachMarker + "\(count)"]
+        guard let count else { return [] }
+        return switch kind {
+        case .lumberjackHut: [GameText.string("inspector.inReach.trees", count)]
+        case .forester: [GameText.string("inspector.inReach.grass", count)]
+        default: []
+        }
     }
 
     /// Up to three named residents with the house's wish. Spec:
     /// `platform-shells` / Inspector introduces residents.
     static func residentLines(house: EntityID, population: HousePopulation, culture: Culture) -> [String] {
-        let wish = population.wish(in: culture).map { "wants \(GoodsCatalog.spec(for: $0).displayName.lowercased())" }
-            ?? "content"
+        let wish = population.wish(in: culture)
+            .map { GameText.string("inspector.wants", goodName($0)) }
+            ?? GameText.string("inspector.content")
         let tier = population.tier.displayName(in: culture)
         let count = min(3, Int(population.population))
         return ResidentNames.names(for: house, culture: culture, count: count).map { "\($0) · \(tier) · \(wish)" }
