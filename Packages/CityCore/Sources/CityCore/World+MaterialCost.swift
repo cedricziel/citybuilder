@@ -171,11 +171,11 @@ extension World {
             .filter { _, building in
                 buildingIsOnIsland(building, islandID: islandID, tileToIsland: tileToIsland)
             }
+            // Granaries last, though they hold no building material today.
             .sorted { lhs, rhs in
-                let lhsDistance = manhattan(anchor, lhs.value.anchor)
-                let rhsDistance = manhattan(anchor, rhs.value.anchor)
-                if lhsDistance != rhsDistance { return lhsDistance < rhsDistance }
-                return lhs.key.raw < rhs.key.raw
+                let left = (Self.isDrawnLast(lhs.value) ? 1 : 0, manhattan(anchor, lhs.value.anchor), lhs.key.raw)
+                let right = (Self.isDrawnLast(rhs.value) ? 1 : 0, manhattan(anchor, rhs.value.anchor), rhs.key.raw)
+                return left < right
             }
             .map(\.key)
     }

@@ -93,7 +93,11 @@ extension World {
         let holding = reachableSources()
             .map { ($0, stockpiles[$0.store.id]?.quantity(of: order.good) ?? 0) }
             .filter { $0.1 > 0 }
-            .sorted { ($0.0.path.count, $0.0.store.id.raw) < ($1.0.path.count, $1.0.store.id.raw) }
+            .sorted { lhs, rhs in
+                let left = (Self.isDrawnLast(lhs.0.store) ? 1 : 0, lhs.0.path.count, lhs.0.store.id.raw)
+                let right = (Self.isDrawnLast(rhs.0.store) ? 1 : 0, rhs.0.path.count, rhs.0.store.id.raw)
+                return left < right
+            }
         let available = holding.reduce(0) { $0 + $1.1 }
         guard available >= order.quantity else { return .unavailable(.short(available: available)) }
         var left = order.quantity

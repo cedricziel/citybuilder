@@ -72,7 +72,7 @@ extension World {
         case .bought:
             depositAffordable(good, upTo: wanted, at: price, into: purchaseBuffers(of: center))
         case .sold:
-            drain(good, upTo: wanted, from: marketBuffers(of: center))
+            drain(good, upTo: wanted, from: Self.granariesLast(marketBuffers(of: center)))
         }
         guard units > 0 else { return }
         let total = Int64(units) * price

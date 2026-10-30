@@ -45,7 +45,9 @@ extension World {
                   let road = anyAdjacentRoad(anchor: exporter.anchor, footprint: exporter.footprint)
             else { continue }
             var surplus = islandStock(of: good, around: exporter, tileToIsland: tileToIsland) - Self.exportReserve
-            while wanted > 0, surplus > 0, let (bufferID, path) = nearestBuffer(holding: good, toRoad: road) {
+            // A granary's reserve stays home.
+            let stores = goodsBuffers().filter { $0.state == .operational && !Self.isDrawnLast($0) }
+            while wanted > 0, surplus > 0, let (bufferID, path) = nearestBuffer(holding: good, toRoad: road, among: stores) {
                 dispatchSupply(good, from: bufferID, to: exporter.id, along: path, events: &events)
                 wanted -= 1
                 surplus -= 1
@@ -66,11 +68,12 @@ extension World {
         )
     }
 
-    /// `good` held by operational goods buffers on `building`'s island.
+    /// `good` held by operational goods buffers on `building`'s island,
+    /// granaries aside.
     private func islandStock(of good: Good, around building: Building, tileToIsland: [TileCoordinate: IslandID]) -> Int {
         let island = islandFor(building: building, tileToIsland: tileToIsland)
         return goodsBuffers()
-            .filter { $0.state == .operational && islandFor(building: $0, tileToIsland: tileToIsland) == island }
+            .filter { $0.state == .operational && !Self.isDrawnLast($0) && islandFor(building: $0, tileToIsland: tileToIsland) == island }
             .reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: good) ?? 0) }
     }
 

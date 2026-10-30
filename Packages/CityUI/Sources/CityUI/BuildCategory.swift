@@ -6,10 +6,9 @@ import Foundation
 /// free and fire leaves ruins, so neither is offered, and held kinds wait
 /// for their mechanics.
 public enum BuildPalette {
-    /// Drawn, but not offered yet: the granary waits for "drawn last"
-    /// (`add-event-counterplay` task 5.2), without which it is only a
-    /// smaller warehouse. Empty this set when 5.2 lands.
-    public static let held: Set<BuildingKind> = [.granary]
+    /// Drawn, but not offered yet, while their mechanics wait. Empty now
+    /// that the granary is drawn last (`add-event-counterplay` task 5.2).
+    public static let held: Set<BuildingKind> = []
 
     public static let kinds = BuildingKind.allCases.filter {
         $0 != .townCenter && $0 != .ruins && !held.contains($0)
