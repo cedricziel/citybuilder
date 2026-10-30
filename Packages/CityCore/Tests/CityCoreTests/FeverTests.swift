@@ -180,3 +180,19 @@ func idlePhysicianBooksNoHerbs() {
     let used = world.statistics.current.goods[.herbs]?.usedByProduction ?? 0
     #expect(used == 0)
 }
+
+@Test("scenario: a save in the middle of a fever plays on the same")
+func feverSurvivesASaveAndLoad() throws {
+    var world = feverWorld()
+    _ = world.tick()
+    let house = merchantHouse(in: &world)
+    _ = runTended(&world, house: house, untilTick: firstTick(of: .autumn, 1201) + 250)
+    let left = world.seasonalEvents.fever?.residentsLeft
+    #expect(left == 1)
+    var loaded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
+    #expect(loaded.seasonalEvents == world.seasonalEvents)
+    let original = runTended(&world, house: house, untilTick: world.tickCount + 400)
+    let reloaded = runTended(&loaded, house: house, untilTick: loaded.tickCount + 400)
+    #expect(reloaded == original)
+    #expect(loaded.populations == world.populations)
+}
