@@ -239,6 +239,8 @@ struct MidGameArm {
     let order: MidGameOrder
     /// Also accepts and fills the crown's orders (`OrdersKit`).
     var orders = false
+    /// Seasonal events on, answered by the `EventsKit`.
+    var events = false
 }
 
 /// When a bot game first reached each mid-game milestone, in ticks.
@@ -255,6 +257,9 @@ struct MidGameMilestones {
     var orders: OrdersKit.Result?
     /// Goods the idle-good hint would have named, in first-seen order.
     var hinted: [Good] = []
+    /// With events on: each event warned or requested, and festivals held.
+    var events: [SeasonalEffect: Int]?
+    var festivalsHeld = 0
 
     static func years(_ tick: Int?) -> String {
         tick.map { String(format: "%.1f", Double($0) / Double(CalendarState.ticksPerYear)) } ?? "-"
@@ -298,13 +303,22 @@ extension World {
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
         var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
         var kit = arm.orders ? OrdersKit() : nil
+        var eventsKit = arm.events ? EventsKit() : nil
+        if arm.events {
+            world.seasonalEvents.enabled = true
+            milestones.events = [:]
+        }
         for tick in 1 ... ticks {
             if tick.isMultiple(of: 50) {
+                eventsKit?.takeTurn(&world)
                 bot.takeTurn(&world)
                 kit?.takeTurn(&world)
                 if milestones.note(world, tick: tick, retention: retention, late: &late) { break }
             }
-            world.tick()
+            for event in world.tick().events {
+                if case let .seasonalEventWarned(seasonal, _) = event { milestones.events?[seasonal.effect, default: 0] += 1 }
+                if event == .seasonalEventStarted(event: .festival) { milestones.festivalsHeld += 1 }
+            }
             if world.economy.gameOver {
                 milestones.bankruptAt = tick
                 break

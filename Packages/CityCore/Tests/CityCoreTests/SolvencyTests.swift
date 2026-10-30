@@ -8,6 +8,9 @@ import Testing
 // workflow does (design D2).
 
 private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == "1"
+/// SOLVENCY_EVENTS=1 also runs each game with seasonal events on and the
+/// `EventsKit` answering them (`add-event-counterplay` D12, bar 4).
+private let eventArms = ProcessInfo.processInfo.environment["SOLVENCY_EVENTS"] == "1" ? [false, true] : [false]
 
 @Test(
     "scenario: market-trading towns stay solvent across seeds",
@@ -16,11 +19,20 @@ private let isFullSweep = ProcessInfo.processInfo.environment["RIVAL_SWEEP"] == 
 )
 func scenarioMarketTradingTownsStaySolventAcrossSeeds(seed: UInt64) {
     for layout in [WorldLayout.singleIsland, .archipelago] {
-        let bankrupt = World.botGame(
-            layout: layout, seed: seed, difficulty: .normal, tradesAtMarket: true, ticks: 36000
-        ).economy.gameOver
-        print("SOLVENCY_SWEEP seed=\(seed) layout=\(layout.rawValue) market=true bankrupt=\(bankrupt)")
-        #expect(!bankrupt, "\(layout) seed \(seed)")
+        for events in eventArms {
+            let world = World.botGame(
+                layout: layout, seed: seed, difficulty: .normal, tradesAtMarket: true,
+                events: events ? .drawn(answered: true) : .off, ticks: 36000
+            )
+            let bankrupt = world.economy.gameOver
+            let counters = world.seasonalEvents.counters
+            print(
+                "SOLVENCY_SWEEP seed=\(seed) layout=\(layout.rawValue) market=true events=\(events) bankrupt=\(bankrupt) "
+                    + "residents=\(world.population(of: .player)) lost=\(counters.buildingsLostToFire) "
+                    + "left=\(counters.residentsLeftWithFever)"
+            )
+            #expect(!bankrupt, "\(layout) seed \(seed) events \(events)")
+        }
     }
 }
 
