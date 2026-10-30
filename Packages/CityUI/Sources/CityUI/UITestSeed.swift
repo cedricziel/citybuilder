@@ -47,7 +47,7 @@ public enum UITestSeed {
     }
 
     /// `-uiTestSeedFire`: the seeded town with six houses, a fire watch and a granary, two houses
-    /// burning (the watch's watchman on his way to one) and one burnt to ruins, for the event art's shots.
+    /// burning (the watch's watchman on his way to one) and two burnt to ruins, for the event art's shots.
     public static func fireWorld() -> World {
         var world = townWorld(houses: 6, showcase: [.fireWatch, .granary])
         if let watch = world.buildings.values.first(where: { $0.kind == .fireWatch }) {
