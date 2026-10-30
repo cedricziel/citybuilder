@@ -32,7 +32,7 @@ extension World {
 
     /// Accepted crown and rival orders: town orders sit outside the limit.
     public var acceptedOrderCount: Int {
-        orders.orders.count { $0.state == .accepted && $0.issuer != .town }
+        orders.orders.count { $0.state == .accepted && $0.issuer.isBoardOrder }
     }
 
     // MARK: - Settlement
@@ -46,8 +46,7 @@ extension World {
             case .accepted where tickCount > order.deadlineTick:
                 fail(index, events: &events)
             case .offered where tickCount >= order.offerEndsTick:
-                orders.orders[index].state = .expired
-                events.append(.orderExpired(order: order.id))
+                expire(index, events: &events)
             default:
                 break
             }
@@ -60,7 +59,7 @@ extension World {
         orders.orders[index].state = .fulfilled
         economy.credit(order.reward)
         orders.favour.adjust(order.issuer, by: order.favourGain)
-        if order.issuer != .town {
+        if order.issuer.isBoardOrder {
             orders.fulfilledCount += 1
         }
         events.append(.orderFulfilled(order: order.id, reward: order.reward))
@@ -71,10 +70,15 @@ extension World {
         let order = orders.orders[index]
         orders.orders[index].state = .failed
         orders.favour.adjust(order.issuer, by: -order.favourLoss)
-        if order.issuer != .town {
+        if order.issuer.isBoardOrder {
             orders.failedCount += 1
         }
         events.append(.orderFailed(order: order.id))
+    }
+
+    mutating func expire(_ index: Int, events: inout [WorldEvent]) {
+        orders.orders[index].state = .expired
+        events.append(.orderExpired(order: orders.orders[index].id))
     }
 
     private mutating func trimClosedOrders() {
@@ -88,7 +92,7 @@ extension World {
 
     mutating func applyAcceptOrder(_ id: OrderID, events: inout [WorldEvent]) {
         guard let index = orderIndex(id), orders.orders[index].state == .offered,
-              orders.orders[index].issuer == .town || acceptedOrderCount < OrderRules.maxAccepted
+              !orders.orders[index].issuer.isBoardOrder || acceptedOrderCount < OrderRules.maxAccepted
         else { return }
         orders.orders[index].state = .accepted
         events.append(.orderAccepted(order: id))
@@ -127,7 +131,7 @@ extension World {
     }
 
     private var offerCount: Int {
-        orders.orders.count { $0.state == .offered && $0.issuer != .town }
+        orders.orders.count { $0.state == .offered && $0.issuer.isBoardOrder }
     }
 
     private mutating func issueCrownOrder(events: inout [WorldEvent]) {
@@ -163,16 +167,30 @@ extension World {
         var rng = DeterministicRNG(seed: seed &+ UInt64(orders.nextOrderRaw) &* 0x9E37_79B9_7F4A_7C15)
         let (template, quantity) = candidates[Int(rng.next() % UInt64(candidates.count))]
         let window = max(1, (template.seasons * difficulty.orderWindowPercent + 50) / 100)
+        offer(
+            template, by: issuer, quantity: quantity,
+            offerEndsTick: tickCount + UInt64(OrderRules.offerSeasons) * Self.seasonTicks,
+            deadlineTick: tickCount + UInt64(window) * Self.seasonTicks, events: &events
+        )
+    }
+
+    /// Puts a new offer on the board, paying the template's reward on its
+    /// good's base price, and returns its number.
+    @discardableResult
+    mutating func offer( // swiftlint:disable:this function_parameter_count
+        _ template: OrderTemplate, by issuer: OrderIssuer, quantity: Int, offerEndsTick: UInt64, deadlineTick: UInt64,
+        events: inout [WorldEvent]
+    ) -> OrderID {
         let order = Order(
             id: orders.nextOrderRaw, template: template, issuer: issuer, good: template.good, quantity: quantity,
             reward: Int64(quantity) * template.good.basePrice * Int64(template.rewardPercent) / 100,
             favourGain: template.favourGain, favourLoss: template.favourLoss, issuedTick: tickCount,
-            offerEndsTick: tickCount + UInt64(OrderRules.offerSeasons) * Self.seasonTicks,
-            deadlineTick: tickCount + UInt64(window) * Self.seasonTicks
+            offerEndsTick: offerEndsTick, deadlineTick: deadlineTick
         )
         orders.nextOrderRaw += 1
         orders.orders.append(order)
         events.append(.orderOffered(order: order.id, issuer: issuer))
+        return order.id
     }
 
     // MARK: - Size
@@ -180,14 +198,20 @@ extension World {
     /// The quantity `template` would ask for now, nil when the town does
     /// not make enough of the good (design D5).
     func orderQuantity(for template: OrderTemplate, storeCapacity: Int) -> Int? {
-        let closed = statistics.seasons.suffix(OrderRules.outputWindowSeasons)
-        let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.made ?? 0) }
-        guard !closed.isEmpty, recent > 0 else { return nil }
-        let units = recent * template.seasons * template.sizePercent / (closed.count * 100)
+        guard let units = recentOrderUnits(for: template) else { return nil }
         let scaled = units * difficulty.orderSizePercent / 100
         let cap = storeCapacity * OrderRules.storeCapPercent / 100
         let quantity = min(scaled, template.maxUnits, cap)
         return quantity >= template.minUnits ? quantity : nil
+    }
+
+    /// The template's size of what the town made of its good over the last
+    /// closed seasons, scaled to its window; nil when it made none.
+    func recentOrderUnits(for template: OrderTemplate) -> Int? {
+        let closed = statistics.seasons.suffix(OrderRules.outputWindowSeasons)
+        let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.made ?? 0) }
+        guard !closed.isEmpty, recent > 0 else { return nil }
+        return recent * template.seasons * template.sizePercent / (closed.count * 100)
     }
 
     /// What the player's stores can hold of `good`: the stores a crown

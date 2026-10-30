@@ -19,6 +19,12 @@ public enum OrderIssuer: Hashable, Sendable {
     public var deliversToTownCenter: Bool {
         rivalID == nil
     }
+
+    /// Crown and rival orders count toward the board's limits, its counts
+    /// and favour; the town's festival orders sit outside them.
+    public var isBoardOrder: Bool {
+        self != .town
+    }
 }
 
 extension OrderIssuer: Codable {

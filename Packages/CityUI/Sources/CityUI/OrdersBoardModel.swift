@@ -82,7 +82,7 @@ public struct OrdersBoardModel: Equatable {
     private static func card(_ order: Order, in world: World, locked: Bool, accepted: Int, locale: Locale) -> Card {
         let isAccepted = order.state == .accepted
         let byShip = !order.issuer.deliversToTownCenter
-        let isFestival = order.issuer == .town
+        let isFestival = !order.issuer.isBoardOrder
         let inTransit = world.orders.shipments.filter { $0.order == order.id }.reduce(0) { $0 + $1.amount }
         let dispatch = world.orderDispatch(for: order.id)
         var canSend = false

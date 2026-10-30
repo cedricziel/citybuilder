@@ -32,10 +32,7 @@ extension World {
     /// at what the stores a shipment starts from can hold. Nil when the town
     /// made none of it.
     func festivalQuantity(for template: OrderTemplate) -> Int? {
-        let closed = statistics.seasons.suffix(OrderRules.outputWindowSeasons)
-        let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.made ?? 0) }
-        guard !closed.isEmpty, recent > 0 else { return nil }
-        let half = recent * template.seasons * template.sizePercent / (closed.count * 100)
+        guard let half = recentOrderUnits(for: template) else { return nil }
         let cap = orderStoreCapacity(forCrown: true) * OrderRules.storeCapPercent / 100
         let quantity = min(max(half, template.minUnits), template.maxUnits, cap)
         return quantity > 0 ? quantity : nil
@@ -60,15 +57,7 @@ extension World {
         let window = UInt64(difficulty.festivalWindowSeasons) * Self.seasonTicks
         let deadline = tickCount / Self.seasonTicks * Self.seasonTicks + window - 1
         let ids = sized.map { template, quantity in
-            let order = Order(
-                id: orders.nextOrderRaw, template: template, issuer: .town, good: template.good, quantity: quantity,
-                reward: 0, favourGain: template.favourGain, favourLoss: template.favourLoss, issuedTick: tickCount,
-                offerEndsTick: deadline + 1, deadlineTick: deadline
-            )
-            orders.nextOrderRaw += 1
-            orders.orders.append(order)
-            events.append(.orderOffered(order: order.id, issuer: .town))
-            return order.id
+            offer(template, by: .town, quantity: quantity, offerEndsTick: deadline + 1, deadlineTick: deadline, events: &events)
         }
         seasonalEvents.festival = FestivalRequest(orders: ids)
         seasonalEvents.active = ActiveSeasonalEvent(event: onset.event, startTick: tickCount, lastTick: deadline + 1)
@@ -98,8 +87,7 @@ extension World {
             guard let index = orderIndex(id) else { continue }
             switch orders.orders[index].state {
             case .offered:
-                orders.orders[index].state = .expired
-                events.append(.orderExpired(order: id))
+                expire(index, events: &events)
             case .accepted:
                 fail(index, events: &events)
             default:
