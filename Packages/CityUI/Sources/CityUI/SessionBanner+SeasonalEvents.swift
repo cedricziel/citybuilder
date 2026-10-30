@@ -27,16 +27,19 @@ extension GameSession {
             default: .end
             }
             let values = [
-                "count": "\(toll.count)", "buildings": Self.counted(toll.count, "building"),
-                "residents": Self.counted(toll.count, "resident")
+                "count": "\(toll.count)", "buildings": GameText.string("count.building", toll.count),
+                "residents": GameText.string("count.resident", toll.count)
             ]
             return Self.banner(event, moment, values)
         case let .demolitionRejected(id, .notEnoughMoney):
             guard let building = world.buildings[id] else { return nil }
-            let what = building.kind == .ruins ? "these ruins" : "this burning building"
+            let text = building.kind == .ruins ? "banner.clearCost.ruins" : "banner.clearCost.burning"
             return SessionBanner(
-                title: "Not enough money",
-                description: "Clearing \(what) costs \(HUDViewModel.formatMoney(World.clearingFee(for: building), locale: .current))."
+                title: GameText.string("banner.noMoney"),
+                description: GameText.string(
+                    text,
+                    HUDViewModel.formatMoney(World.clearingFee(for: building))
+                )
             )
         default:
             return nil
@@ -95,6 +98,6 @@ extension GameSession {
 
     /// "End of Summer 1203": the season of `tick`, as the HUD shows a date.
     static func endDate(of tick: UInt64, in world: World) -> String {
-        "End of \(world.calendar.date(atTick: tick).displayText)"
+        GameText.string("banner.endOf", world.calendar.date(atTick: tick).displayText)
     }
 }

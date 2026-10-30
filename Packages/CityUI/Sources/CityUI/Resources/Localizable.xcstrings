@@ -199,6 +199,924 @@
         }
       }
     },
+    "audio.advanced" : {
+      "comment" : "Expands the spatial audio distances.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweitert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced"
+          }
+        }
+      }
+    },
+    "audio.maxDistance" : {
+      "comment" : "Distance in tiles beyond which sound is silent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höchstabstand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Max distance"
+          }
+        }
+      }
+    },
+    "audio.music" : {
+      "comment" : "Music volume.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Musik"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Music"
+          }
+        }
+      }
+    },
+    "audio.muteAll" : {
+      "comment" : "Audio settings toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles stummschalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute all audio"
+          }
+        }
+      }
+    },
+    "audio.referenceDistance" : {
+      "comment" : "Distance in tiles at which sound starts to fade.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezugsabstand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reference distance"
+          }
+        }
+      }
+    },
+    "audio.sfx" : {
+      "comment" : "Sound effects volume.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effekte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SFX"
+          }
+        }
+      }
+    },
+    "audio.spatial" : {
+      "comment" : "Section and toggle for positional sound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raumklang"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spatial audio"
+          }
+        }
+      }
+    },
+    "audio.volume" : {
+      "comment" : "Audio settings section.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lautstärke"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume"
+          }
+        }
+      }
+    },
+    "banner.ageBegins" : {
+      "comment" : "%@ is the age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein neues Zeitalter beginnt: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %@ age begins"
+          }
+        }
+      }
+    },
+    "banner.bankrupt.text" : {
+      "comment" : "Game-over banner text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadtkasse war zu lange im Minus, die Stadt ist verloren. Du kannst noch im Pausemenü speichern oder zum Hauptmenü gehen, um einen Spielstand zu laden oder neu zu beginnen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The treasury stayed in the red too long and the town is lost. You can still save from the pause menu, or quit to the title to load a save or start a new game."
+          }
+        }
+      }
+    },
+    "banner.bankrupt.title" : {
+      "comment" : "Game-over banner title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bankrott"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bankrupt"
+          }
+        }
+      }
+    },
+    "banner.clearCost.burning" : {
+      "comment" : "%@ is the fee.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses brennende Gebäude zu räumen kostet %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clearing this burning building costs %@."
+          }
+        }
+      }
+    },
+    "banner.clearCost.ruins" : {
+      "comment" : "%@ is the fee.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Ruinen zu räumen kostet %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clearing these ruins costs %@."
+          }
+        }
+      }
+    },
+    "banner.commission.text" : {
+      "comment" : "Gallery banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib neue Kunst in Auftrag, damit sie die Häuser wieder begeistert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commission new art to inspire the houses again."
+          }
+        }
+      }
+    },
+    "banner.commission.title" : {
+      "comment" : "Gallery banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Kunstauftrag der Galerie ist abgelaufen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The gallery's commission has ended"
+          }
+        }
+      }
+    },
+    "banner.deficit.text" : {
+      "comment" : "Deficit hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einwohner zahlen nur Steuern, wenn sie satt sind. Baue einen Hof, füll deine Häuser und verkaufe Überschuss am Markt des Rathauses."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market."
+          }
+        }
+      }
+    },
+    "banner.deficit.title" : {
+      "comment" : "Upkeep and tax per collection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Minus: Unterhalt $%1$lld, Steuern $%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the red: upkeep $%1$lld vs tax $%2$lld"
+          }
+        }
+      }
+    },
+    "banner.endOf" : {
+      "comment" : "%@ is a season and year.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ende %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of %@"
+          }
+        }
+      }
+    },
+    "banner.fuelGeneric" : {
+      "comment" : "Fallback fuel name mid-sentence.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brennstoff"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuel"
+          }
+        }
+      }
+    },
+    "banner.fuelOut.halves" : {
+      "comment" : "A culture signature without fuel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wirkung halbiert sich, bis Träger Nachschub bringen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its effect halves until carriers bring more."
+          }
+        }
+      }
+    },
+    "banner.fuelOut.stops" : {
+      "comment" : "A building without fuel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wirkung setzt aus, bis Träger Nachschub bringen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its effects stop until carriers bring more."
+          }
+        }
+      }
+    },
+    "banner.fuelOut.title" : {
+      "comment" : "%1$@ is the building, %2$@ its fuel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ohne %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is out of %2$@"
+          }
+        }
+      }
+    },
+    "banner.idle.text" : {
+      "comment" : "%1$@ lists buildings, %2$@ is the good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baue dafür %1$@ oder verkaufe %2$@ am Markt des Rathauses."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build %1$@ for it, or sell %2$@ at the town center's market."
+          }
+        }
+      }
+    },
+    "banner.idle.title" : {
+      "comment" : "%@ is the good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungenutzt: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing uses your %@"
+          }
+        }
+      }
+    },
+    "banner.idle.user" : {
+      "comment" : "One building that would use the good; English adds its article.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a %@"
+          }
+        }
+      }
+    },
+    "banner.monument.text" : {
+      "comment" : "Monument banner; the English % is literal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Steuern steigen um zehn Prozent."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taxes rise by 10%."
+          }
+        }
+      }
+    },
+    "banner.monument.title" : {
+      "comment" : "Monument banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Monument ist vollendet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The monument is complete"
+          }
+        }
+      }
+    },
+    "banner.noMoney" : {
+      "comment" : "Can't pay to clear a building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht genug Geld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough money"
+          }
+        }
+      }
+    },
+    "banner.order.filled.text" : {
+      "comment" : "Issuer, pay, new favour.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ zahlt %2$@, die Gunst steigt auf %3$lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pays %2$@, and its favour rises to %3$lld."
+          }
+        }
+      }
+    },
+    "banner.order.filled.title" : {
+      "comment" : "Quantity and good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auftrag erfüllt: %1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order filled: %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "banner.order.lapsed.text" : {
+      "comment" : "Lapsed offer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Angebot verfallen zu lassen kostet nichts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignoring an offer costs nothing."
+          }
+        }
+      }
+    },
+    "banner.order.lapsed.title.crown" : {
+      "comment" : "Lapsed crown offer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Angebot der Krone ist verfallen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An offer from The Crown lapsed"
+          }
+        }
+      }
+    },
+    "banner.order.lapsed.title.rival" : {
+      "comment" : "%@ is the rival town.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Angebot von %@ ist verfallen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An offer from %@ lapsed"
+          }
+        }
+      }
+    },
+    "banner.order.missed.text.crown" : {
+      "comment" : "Delivered, ordered, favour lost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Frist ist um, %1$lld von %2$lld geliefert. Die Gunst der Krone sinkt um %3$lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The deadline passed with %1$lld of %2$lld delivered. The Crown's favour falls by %3$lld."
+          }
+        }
+      }
+    },
+    "banner.order.missed.text.rival" : {
+      "comment" : "Delivered, ordered, rival town, favour lost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Frist ist um, %1$lld von %2$lld geliefert. Die Gunst von %3$@ sinkt um %4$lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The deadline passed with %1$lld of %2$lld delivered. %3$@'s favour falls by %4$lld."
+          }
+        }
+      }
+    },
+    "banner.order.missed.title.crown" : {
+      "comment" : "%@ is the good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auftrag verfehlt: %@ für die Krone"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order missed: %@ for the crown"
+          }
+        }
+      }
+    },
+    "banner.order.missed.title.rival" : {
+      "comment" : "Good and rival town.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auftrag verfehlt: %1$@ für %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order missed: %1$@ for %2$@"
+          }
+        }
+      }
+    },
+    "banner.order.offered.crown" : {
+      "comment" : "Quantity and good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auftrag der Krone: %1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Crown orders %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "banner.order.offered.rival" : {
+      "comment" : "A rival offers an order: issuer, quantity, good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ fragt an: %2$lld %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wants %2$lld %3$@"
+          }
+        }
+      }
+    },
+    "banner.order.offered.text" : {
+      "comment" : "%1$@ is the order, %2$@ its deadline, %3$@ the pay.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@. Bringt %3$@ und %4$lld Gunst. Öffne die Auftragstafel, um anzunehmen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@. Pays %3$@ and %4$lld favour. Open the board to accept."
+          }
+        }
+      }
+    },
+    "banner.outgrowing.text" : {
+      "comment" : "%lld is the market's reach.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Träger bringen Waren nur %lld Straßenfelder weit vom Rathaus oder einem Marktplatz. Baue einen Marktplatz nahe deinen äußeren Häusern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porters carry goods only %lld road tiles from the town center or a marketplace. Build a marketplace near your outer houses."
+          }
+        }
+      }
+    },
+    "banner.outgrowing.title" : {
+      "comment" : "Distant-house hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Stadt wächst ihrem Markt davon"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your town is outgrowing its market"
+          }
+        }
+      }
+    },
+    "banner.pinch.text" : {
+      "comment" : "Touch hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zieh zwei Finger zusammen, um mehr von der Insel zu sehen, oder auseinander, um näher heranzugehen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinch to see more of the island, or to look closer."
+          }
+        }
+      }
+    },
+    "banner.pinch.title" : {
+      "comment" : "Touch hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit zwei Fingern zoomen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinch to zoom"
+          }
+        }
+      }
+    },
+    "banner.problem.text" : {
+      "comment" : "%@ is the problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Tippe darauf für Details."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Tap it for details."
+          }
+        }
+      }
+    },
+    "banner.problem.title" : {
+      "comment" : "%@ is the building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ has a problem"
+          }
+        }
+      }
+    },
+    "banner.rivalAge.text" : {
+      "comment" : "Rival age banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Nachbarstadt wächst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A rival town grows."
+          }
+        }
+      }
+    },
+    "banner.rivalAge.title" : {
+      "comment" : "%1$@ is the rival town, %2$@ the age.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ erreicht ein neues Zeitalter: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ enters the %2$@"
+          }
+        }
+      }
+    },
+    "banner.saveFailed.text" : {
+      "comment" : "%@ is the error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Das Spiel bleibt offen; versuch es im Pausemenü noch einmal."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. The game stays open; try again from the pause menu."
+          }
+        }
+      }
+    },
+    "banner.saveFailed.title" : {
+      "comment" : "Save failure banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichern fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save"
+          }
+        }
+      }
+    },
+    "banner.won.text" : {
+      "comment" : "Scenario won banner.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Ziele sind erreicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every goal is met."
+          }
+        }
+      }
+    },
     "campaigns.comingSoon" : {
       "comment" : "Shown while no campaign ships.",
       "extractionState" : "manual",
@@ -285,6 +1203,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starts"
+          }
+        }
+      }
+    },
+    "chip.blight" : {
+      "comment" : "Event chip; %@ is the season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fäule · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blight · %@"
+          }
+        }
+      }
+    },
+    "chip.festival" : {
+      "comment" : "Event chip; %@ is the season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fest · bis %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Festival · by %@"
+          }
+        }
+      }
+    },
+    "chip.fever" : {
+      "comment" : "Event chip; %@ is the season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fieber · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fever · %@"
+          }
+        }
+      }
+    },
+    "chip.fireBurning" : {
+      "comment" : "Event chip while buildings burn.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Feuer · %lld Brand"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Feuer · %lld Brände"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Fire · %lld burning"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Fire · %lld burning"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chip.fireRisk" : {
+      "comment" : "Event chip; %@ is the season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brandgefahr · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire risk · %@"
+          }
+        }
+      }
+    },
+    "chip.fireSeason" : {
+      "comment" : "Event chip; %@ is the season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brandzeit · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire season · %@"
           }
         }
       }
@@ -699,6 +1749,96 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "credits.by" : {
+      "comment" : "Credits row; %@ is the author.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "by %@"
+          }
+        }
+      }
+    },
+    "credits.empty" : {
+      "comment" : "Credits when no audio ships.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build enthält keine Tonaufnahmen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No audio assets bundled in this build."
+          }
+        }
+      }
+    },
+    "credits.intro" : {
+      "comment" : "Credits list heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tonaufnahmen in diesem Spiel:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio assets used in this app:"
+          }
+        }
+      }
+    },
+    "credits.source" : {
+      "comment" : "Link to an audio asset's source.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source"
+          }
+        }
+      }
+    },
+    "credits.title" : {
+      "comment" : "Credits screen title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitwirkende & Lizenzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credits & Licenses"
           }
         }
       }
@@ -2211,6 +3351,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : " and "
+          }
+        }
+      }
+    },
+    "list.or" : {
+      "comment" : "Joins the last item of a list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " oder "
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " or "
           }
         }
       }

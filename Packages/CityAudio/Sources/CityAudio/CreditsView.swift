@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CityUI
 import SwiftUI
 
 /// SwiftUI view that lists every audio asset's title, author, license, and
@@ -19,7 +20,7 @@ public struct CreditsView: View {
     public var body: some View {
         List {
             Section {
-                Text("Audio assets used in this app:")
+                Text(l10n: "credits.intro")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -27,12 +28,12 @@ public struct CreditsView: View {
                 CreditsRow(entry: entry)
             }
             if manifest.entries.isEmpty {
-                Text("No audio assets bundled in this build.")
+                Text(l10n: "credits.empty")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle("Credits & Licenses")
+        .navigationTitle(GameText.string("credits.title"))
     }
 }
 
@@ -43,7 +44,7 @@ private struct CreditsRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(entry.title).font(.headline)
-            Text("by \(entry.author)").font(.subheadline).foregroundStyle(.secondary)
+            Text(l10n: "credits.by", entry.author).font(.subheadline).foregroundStyle(.secondary)
             Text(entry.license.rawValue).font(.caption).foregroundStyle(.tertiary)
             if let attribution = entry.attribution, !attribution.isEmpty {
                 Text(attribution).font(.caption).italic()
@@ -52,7 +53,7 @@ private struct CreditsRow: View {
                 #if os(tvOS)
                 Text(url.absoluteString).font(.caption).foregroundStyle(.secondary)
                 #else
-                Link("Source", destination: url).font(.caption)
+                Link(GameText.string("credits.source"), destination: url).font(.caption)
                 #endif
             }
         }
