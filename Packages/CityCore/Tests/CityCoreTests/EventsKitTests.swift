@@ -254,3 +254,46 @@ func buildingWithoutAPlotIsTriedOnce() {
     kit.takeTurn(&world)
     #expect(world.pendingCommands.isEmpty)
 }
+
+@Test("scenario: the kit looks further out when the town center is crowded")
+func kitLooksFurtherForAGranary() throws {
+    var world = eventsWorld(size: 40)
+    world.economy.balance = 2000
+    for x in 0 ... 39 {
+        SignatureFixture.inject(.road, at: TileCoordinate(x: x, y: 3), in: &world)
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+    }
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 4), in: &world)
+    // Every free tile within 15 columns of the town center is taken.
+    let filler = EntityID(raw: 999_999)
+    for y in 0 ..< 40 {
+        for x in 0 ... 15 where world.occupiedTiles[TileCoordinate(x: x, y: y)] == nil {
+            world.occupiedTiles[TileCoordinate(x: x, y: y)] = filler
+        }
+    }
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    let placed = world.pendingCommands.compactMap { command -> TileCoordinate? in
+        if case let .place(.granary, anchor) = command { anchor } else { nil }
+    }
+    let anchor = try #require(placed.first)
+    #expect(anchor.x > 15)
+    #expect(world.buildings[center] != nil)
+}
+
+@Test("scenario: the kit guards houses and workshops, not lone fields")
+func kitLeavesFieldsUnguarded() {
+    var world = eventsWorld(size: 30)
+    world.economy.balance = 1000
+    for x in 0 ... 20 {
+        SignatureFixture.inject(.road, at: TileCoordinate(x: x, y: 3), in: &world)
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+    }
+    addOperational(.farm, at: TileCoordinate(x: 2, y: 4), in: &world)
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    #expect(EventsKit.uncovered(in: world).isEmpty)
+    #expect(world.pendingCommands.isEmpty)
+}

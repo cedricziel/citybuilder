@@ -16,8 +16,9 @@ struct EventsKit {
     /// How far from its target the kit looks for a plot, in tiles.
     static let searchReach = 4
     /// How far from the town center the kit looks for a granary or herb
-    /// garden plot: a grown town has no room right beside it.
-    static let townReach = 12
+    /// garden plot, ring by ring: a grown town has no room right beside it,
+    /// and a crowded one may have none within 12.
+    static let townReach = 20
     /// Herbs the kit buys at a time, and the physicians' stock it buys below.
     static let herbsBought = 4
     static let herbsLow = 2
@@ -69,11 +70,13 @@ struct EventsKit {
 
     /// The player's houses and workshops no fire watch, built or building,
     /// would answer, by the sim's own rule (reach and a road path), in
-    /// entity order.
+    /// entity order. Crop fields lie spread out and burn alone, so the kit,
+    /// like a careful player, leaves them; once these are covered it builds
+    /// no more watches.
     static func uncovered(in world: World) -> [Building] {
         let watches = world.buildings.values.filter { $0.kind == .fireWatch && $0.owner == .player }
         return world.buildings.values
-            .filter { $0.owner == .player && $0.state != .constructing && World.canIgnite($0.kind) }
+            .filter { $0.owner == .player && $0.state != .constructing && World.canIgnite($0.kind) && !$0.kind.isCrop }
             .sorted { $0.id.raw < $1.id.raw }
             .filter { building in !watches.contains { world.fireWatchCovers($0, building) } }
     }
