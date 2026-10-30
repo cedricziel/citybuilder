@@ -191,6 +191,17 @@ struct Validator {
         if radius <= 0 { report("`catchmentRadius` must be positive") }
     }
 
+    /// A hub's porters fill baskets from its store, and every number counts something.
+    private func checkHub(_ building: Building, _ report: (String) -> Void) {
+        guard let hub = building.hub else { return }
+        if building.storage == nil, building.storagePerGood == nil {
+            report("`hub` needs storage: porters fill baskets from it")
+        }
+        for (field, value) in hub.fields where value < 1 {
+            report("`hub.\(field)` must be at least 1")
+        }
+    }
+
     private func checkNumbers(_ building: Building, _ report: (String) -> Void) {
         if building.footprint.width <= 0 || building.footprint.height <= 0 { report("`footprint` must be positive") }
         if building.cost < 0 || building.upkeep < 0 { report("`cost` and `upkeep` must not be negative") }
@@ -199,6 +210,7 @@ struct Validator {
         if let perGood = building.storagePerGood, perGood <= 0 { report("`storagePerGood` must be positive; omit it for none") }
         if building.storage != nil, building.storagePerGood != nil { report("set `storage` or `storagePerGood`, not both") }
         if let ticks = building.plantTicks, ticks <= 0 { report("`plantTicks` must be positive") }
+        checkHub(building, report)
         checkCatchment(building, report)
         if let ticks = building.recipe?.cycleTicks, ticks <= 0 { report("`recipe.cycleTicks` must be positive") }
         switch building.placement {
@@ -359,7 +371,10 @@ extension Validator {
         for extra in data.logistics.dropFirst() {
             log.error("a second `Logistics` item, first declared at \(first.origin)", at: extra.origin, item: "Logistics \(extra.id)")
         }
-        let values = [("haulDistance", first.haulDistance), ("haulMinLoad", first.haulMinLoad), ("haulMaxWait", first.haulMaxWait)]
+        let values = [
+            ("haulDistance", first.haulDistance), ("haulMinLoad", first.haulMinLoad), ("haulMaxWait", first.haulMaxWait),
+            ("houseStockConsumptions", first.houseStockConsumptions), ("houseStockMinimum", first.houseStockMinimum)
+        ]
         for (field, value) in values where value < 1 {
             log.error("`\(field)` must be at least 1", at: first.origin, item: "Logistics \(first.id)")
         }

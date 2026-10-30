@@ -42,8 +42,16 @@ items:
 
   # How goods travel. Spec: warehouses-and-logistics / Handcarts carry
   # long and bulk hauls (visible-distribution design D9). A haul this long
-  # with this much ready takes the owner's age's vehicle.
-  - { kind: Logistics, id: logistics, haulDistance: 12, haulMinLoad: 3, haulMaxWait: 200 }
+  # with this much ready takes the owner's age's vehicle. A house keeps
+  # this many consumptions of each need in stock, and at least the minimum
+  # (population-and-needs / Houses consume food and planks).
+  - kind: Logistics
+    id: logistics
+    haulDistance: 12
+    haulMinLoad: 3
+    haulMaxWait: 200
+    houseStockConsumptions: 2
+    houseStockMinimum: 2
   # The vehicle each age uses from its start; earlier ages walk (#236).
   - { kind: Vehicle, id: handcart, age: medieval, capacity: 4 }
 
@@ -294,6 +302,9 @@ items:
     cost: 0
     buildTicks: 1
     storagePerGood: 40
+    # Porters carry house goods from here to the houses in reach.
+    # Spec: population-and-needs / Market porters supply houses.
+    hub: { radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2 }
 
   # Shore building; carriers use the land side, ships the sea side.
   # Spec: port-and-shipyard
@@ -325,6 +336,20 @@ items:
     placement: { shore: { minLand: 1, minWater: 1 } }
     unlockedBy: seafaring
     recipe: { inputs: { wood: 20, planks: 10 }, cycleTicks: 200 }
+
+  # A second market hub, so a town can grow beyond the town center's reach.
+  # Spec: buildings-and-construction / Marketplace.
+  - kind: Building
+    id: marketplace
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 150
+    upkeep: 1
+    buildTicks: 30
+    storagePerGood: 30
+    materials: { wood: 3, planks: 4 }
+    hub: { radius: 18, housesPerPorter: 4, maxPorters: 8, basketUnits: 10, reserveConsumptions: 2 }
 
   # --- Techs ---------------------------------------------------------
   # Spec: research / Tech tree

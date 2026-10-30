@@ -133,7 +133,8 @@ private struct Types {
             property("culture", "Culture?", all.map { ($0.id, optionalCase($0.culture)) }),
             property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) }),
             property("accepts", "Set<Good>?", all.map { ($0.id, $0.accepts.map { caseList($0.sorted()) } ?? "nil") }),
-            property("isCrop", "Bool", all.map { ($0.id, "\($0.isCrop)") })
+            property("isCrop", "Bool", all.map { ($0.id, "\($0.isCrop)") }),
+            property("hub", "HubSpec?", all.map { ($0.id, $0.hub.map(hubSpec) ?? "nil") })
         ])
     }
 
@@ -255,6 +256,10 @@ private struct Types {
             \(access)static let haulMinLoad = \(values.haulMinLoad)
             /// Ticks a producer's output waits for a vehicle load before it goes anyway.
             \(access)static let haulMaxWait = \(values.haulMaxWait)
+            /// Consumptions of each need a house keeps in stock.
+            \(access)static let houseStockConsumptions = \(values.houseStockConsumptions)
+            /// Units of each need a house stock holds at least.
+            \(access)static let houseStockMinimum = \(values.houseStockMinimum)
         }
 
         """
@@ -271,6 +276,11 @@ private struct Types {
     }
 
     // MARK: - Values
+
+    private func hubSpec(_ hub: Hub) -> String {
+        "HubSpec(radius: \(hub.radius), housesPerPorter: \(hub.housesPerPorter), maxPorters: \(hub.maxPorters), "
+            + "basketUnits: \(hub.basketUnits), reserveConsumptions: \(hub.reserveConsumptions))"
+    }
 
     private func spec(_ building: Building) -> String {
         var shore = "nil", terrain = "nil"

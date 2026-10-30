@@ -2,28 +2,24 @@
 
 ### Requirement: Advancing needs stock for two draws
 
-A full house SHALL count a need that the next tier adds as available for advancing only when the buffers on its road network hold, in all, at least two of its draws of that good. One draw is what the house takes at one consumption with its current residents (`HousePopulation.amount`). A need the house's current tier already has (food and planks, for citizens becoming merchants) keeps today's rule: one unit in reach is enough, because advancing adds no new demand for it. Houses are visited in entity order. A house that moves up a tier SHALL claim two of its draws of each need that the next tier adds and that binds it, on its road network, until the end of that tick. A later house's check that tick MUST subtract the claims on its network from the stock. A claim MUST NOT move goods and MUST NOT outlast the tick. A house whose next tier's needs are not all available this way MUST restart its count of ticks towards advancing. The rule applies to player and rival houses alike. It changes nothing about when a need is met for growth, consumption or decline.
+A full house SHALL count a need that the next tier adds as available for advancing only while the hub serving it holds at least two of the house's draws of that good, net of what other houses claimed there earlier in the same tick. One draw is what the house takes at one consumption with its current residents (`HousePopulation.amount`). A need the house already eats keeps the rule in "Houses advance and decline between tiers": it counts while it is met. Houses are visited in entity order. A house that moves up a tier SHALL claim, at its serving hub, two of its draws of each need that the next tier adds and that binds it, until the end of that tick. A claim MUST NOT move goods and MUST NOT outlast the tick. A house whose next tier's needs are not all available this way MUST restart its count of ticks towards advancing. The rule applies to player and rival houses alike.
 
-#### Scenario: One unit in reach is not enough to advance
-- **WHEN** a full citizen house with 6 residents shares a road network with a buffer holding plenty of food, planks, bread and cloth but only 1 tool, for 120 ticks
+#### Scenario: One unit at the hub is not enough to advance
+- **WHEN** a full citizen house with 6 residents, with its food and planks met, is served by a hub holding plenty of bread, cloth and its culture's luxury but only 1 tool, for 120 ticks
 - **THEN** the house is still citizens
 
 #### Scenario: Stock for two draws lets a house advance
-- **WHEN** a full citizen house with 6 residents shares a road network with a buffer holding plenty of food, planks, bread and cloth and 2 tools, for 120 ticks
+- **WHEN** a full citizen house with 6 residents, with its food and planks met, is served by a hub holding plenty of bread, cloth and its culture's luxury and 2 tools, for 120 ticks
 - **THEN** the house becomes merchants
 
-#### Scenario: Houses advancing in the same tick share the stock
-- **WHEN** two full citizen houses with 6 residents each reach 120 ticks of advancing in the same tick, on one road network whose buffers hold plenty of food, planks, bread and cloth but only 3 tools
+#### Scenario: Houses advancing in the same tick share the hub's stock
+- **WHEN** two full citizen houses with 6 residents each, served by the same hub holding plenty of bread, cloth and the luxury but only 3 tools, reach 120 ticks of advancing in the same tick
 - **THEN** the house with the lower entity ID becomes merchants, and the other stays citizens and restarts its count
 
 #### Scenario: Claims last one tick
-- **WHEN** a house advanced in the previous tick and claimed tools, and no tools have been drawn since
-- **THEN** another house on the same road network sees the full tool stock this tick
+- **WHEN** a house advanced in the previous tick and claimed tools at its hub, and no tools have left the hub since
+- **THEN** another house served by that hub sees the full tool stock this tick
 
-#### Scenario: Houses on separate road networks do not share claims
-- **WHEN** two full citizen houses on two separate road networks, each with its own buffer holding plenty of food, planks, bread and cloth and 2 tools, reach 120 ticks of advancing in the same tick
+#### Scenario: Houses served by different hubs do not share claims
+- **WHEN** two full citizen houses served by two different hubs, each holding plenty of bread, cloth and the luxury and 2 tools, reach 120 ticks of advancing in the same tick
 - **THEN** both houses become merchants
-
-#### Scenario: A need the house already has needs one unit
-- **WHEN** a full citizen house with 6 residents shares a road network with a buffer holding plenty of food, two draws of bread, tools, cloth and its culture's luxury, and planks that are down to 1 when its 120 ticks are up
-- **THEN** the house becomes merchants

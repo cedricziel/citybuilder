@@ -3,22 +3,28 @@ import Foundation
 /// House growth, consumption and tier changes. Spec:
 /// `population-and-needs`.
 extension World {
-    mutating func runPopulationSystem(signatureSources sources: [Building]) {
+    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService) {
         // Houses draw from shared buffers, so visit them in a fixed order.
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
             .sorted { $0.id.raw < $1.id.raw }
-        let reach = supplyReach()
         let tracked = HouseTier.allNeeds(in: culture)
-        var advancing = AdvancePass(reach: reach)
+        let inbound = porterInbound()
+        var claims = AdvanceClaims()
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
+            let hub = service.hubOf[building.id]?.hub
             consumeIfDue(&pop, building: building)
-            updateSatisfaction(&pop, of: tracked, building: building, reach: reach)
+            updateSatisfaction(&pop, of: tracked, hub: hub, inbound: inbound[building.id] ?? [:])
             let pastGrace = isPastGrace(pop, owner: building.owner)
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
-            updateTier(&pop, building: building, modifiers: modifiers, pastGrace: pastGrace, pass: &advancing)
+            let advance = advanceDraws(for: pop, building: building, modifiers: modifiers, hub: hub, claims: claims)
+            let tier = pop.tier
+            updateTier(&pop, modifiers: modifiers, canAdvance: advance != nil, pastGrace: pastGrace)
+            if pop.tier > tier, let hub, let advance {
+                claims.claim(advance, at: hub)
+            }
             populations[building.id] = pop
         }
     }
@@ -32,7 +38,7 @@ extension World {
         }
         for good in pop.tier.needs(in: culture) {
             let amount = HousePopulation.amount(of: good, residents: pop.population)
-            let drawn = consume(good, amount: amount, by: building)
+            let drawn = pop.takeStock(good, amount: amount)
             recordHouseUse(of: good, drawn: drawn, by: building)
             pop.recordConsumption(of: good, short: drawn < amount)
         }
@@ -58,15 +64,26 @@ extension World {
         return binding.contains { pop.shortIntervals(of: $0) >= grace }
     }
 
-    /// A need is met while a buffer on the house's road network holds
-    /// the good and the last consumption of it was not short. `goods` is
-    /// every tier's needs, so a house knows them before it advances.
-    private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], building: Building, reach: SupplyReach) {
-        let footprint = building.footprint
+    /// A need of the house's tier is met while its last consumption was not
+    /// short and its stock plus what porters bring covers the next one; any
+    /// other good while the house's hub holds it. `goods` is every tier's
+    /// needs, so a house knows them before it advances. Spec:
+    /// `population-and-needs` / Town center supplies house needs.
+    private func updateSatisfaction(_ pop: inout HousePopulation, of goods: [Good], hub: EntityID?, inbound: [Good: Int]) {
+        let needs = pop.tier.needs(in: culture)
         for good in goods {
-            let inReach = hasGoodInReach(good, fromAnchor: building.anchor, footprint: footprint, reach: reach)
-            pop.setSatisfied(good, inReach && !pop.isShort(good))
+            let met = if needs.contains(good) {
+                !pop.isShort(good) && pop.stock(of: good) + (inbound[good] ?? 0) >= pop.nextConsumption(of: good)
+            } else {
+                hubHolds(good, hub)
+            }
+            pop.setSatisfied(good, met)
         }
+    }
+
+    /// True when `hub` holds some `good`.
+    func hubHolds(_ good: Good, _ hub: EntityID?) -> Bool {
+        hub.map { (stockpiles[$0]?.quantity(of: good) ?? 0) > 0 } ?? false
     }
 
     /// Inspired houses grow twice as fast; a house above its capacity
@@ -89,26 +106,39 @@ extension World {
         }
     }
 
+    /// What a full house would claim of its serving hub to advance a tier, nil while it cannot.
+    /// Spec: `population-and-needs` / Market hubs gate tier advancement, and Advancing needs stock
+    /// for two draws. A need the house already eats counts while it is met: porters keep its stock,
+    /// and they may have just emptied the hub into it. A need the next tier adds counts only while
+    /// the serving hub holds two of the house's draws of it, net of what houses that advanced
+    /// earlier this tick claimed there; those draws are the claim.
+    private func advanceDraws(
+        for pop: HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, claims: AdvanceClaims
+    ) -> [Good: Int]? {
+        guard let next = pop.tier.next, pop.population >= modifiers.capacity(of: pop.tier), let hub else { return nil }
+        let eaten = Set(pop.tier.needs(in: culture))
+        var claim: [Good: Int] = [:]
+        for good in bindingNeeds(of: next, for: building.owner, advancing: true) {
+            if eaten.contains(good) {
+                guard pop.isSatisfied(good) else { return nil }
+                continue
+            }
+            let units = HousePopulation.advanceDraws * HousePopulation.amount(of: good, residents: pop.population)
+            guard advancementStock(of: good, at: hub) - claims.claimed(good, at: hub) >= units else { return nil }
+            claim[good] = units
+        }
+        return claim
+    }
+
+    /// Units of `good` at `hub`, the house's serving hub, before this tick's claims: the one place
+    /// the advancing stock is read, so the claims are keyed by the same hub.
+    func advancementStock(of good: Good, at hub: EntityID) -> Int {
+        stockpiles[hub]?.quantity(of: good) ?? 0
+    }
+
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
-    private func updateTier(
-        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, pastGrace: Bool, pass: inout AdvancePass
-    ) {
-        let source = advancementSource(for: building, reach: pass.reach)
-        let held = Set(pop.tier.needs(in: culture))
-        let needs = pop.tier.next.map { bindingNeeds(of: $0, for: building.owner, advancing: true) } ?? []
-        // The needs the next tier adds must cover two draws; those the house already eats need one unit.
-        let added = Dictionary(uniqueKeysWithValues: needs.filter { !held.contains($0) }.map { good in
-            (good, HousePopulation.advanceDraws * HousePopulation.amount(of: good, residents: pop.population))
-        })
-        let canAdvance = pop.tier.next != nil && pop.population >= modifiers.capacity(of: pop.tier)
-            && source.map { source in
-                needs.allSatisfy { good in
-                    let inStock = advancementStock(of: good, at: source, reach: pass.reach)
-                    guard let units = added[good] else { return inStock > 0 }
-                    return inStock - pass.claimed(good, at: source) >= units
-                }
-            } ?? false
+    private func updateTier(_ pop: inout HousePopulation, modifiers: HouseModifiers, canAdvance: Bool, pastGrace: Bool) {
         let mustDecline = pop.tier.previous != nil && pastGrace
         guard canAdvance || mustDecline else {
             pop.ticksAtTierCondition = 0
@@ -117,28 +147,13 @@ extension World {
         pop.ticksAtTierCondition &+= 1
         guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / modifiers.paceDivisor else { return }
         pop.ticksAtTierCondition = 0
-        if canAdvance, let next = pop.tier.next, let source {
+        if canAdvance, let next = pop.tier.next {
             pop.tier = next
-            pass.claim(added, at: source)
         } else if let previous = pop.tier.previous {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))
         }
         pop.keepShortages(for: pop.tier.needs(in: culture))
-    }
-
-    /// Where `house` finds the stock it advances on: the road network it is on, nil without a road.
-    /// This and `advancementStock` are the one place that source lives; the claims are keyed by it.
-    func advancementSource(for house: Building, reach: SupplyReach) -> Int? {
-        anyAdjacentRoad(anchor: house.anchor, footprint: house.footprint).flatMap { reach.roadComponents[$0] }
-    }
-
-    /// Units of `good` at `source` before this tick's claims: what the operational buffers on that
-    /// road network hold in all.
-    func advancementStock(of good: Good, at source: Int, reach: SupplyReach) -> Int {
-        reach.buffers.reduce(0) { sum, buffer in
-            buffer.component == source ? sum + (stockpiles[buffer.id]?.quantity(of: good) ?? 0) : sum
-        }
     }
 
     /// The needs of `tier` that hold a house of `owner` to it (spec
@@ -154,26 +169,20 @@ extension World {
     }
 }
 
-/// One tick's population pass: the buffers' reach, and what houses that moved
-/// up a tier this tick claimed of each good at each advancement source, so a
-/// later house drawing on the same source cannot advance on the same units
-/// (spec `population-and-needs` / Advancing needs stock for two draws). Claims
-/// move no goods and end with the pass.
-struct AdvancePass {
-    let reach: World.SupplyReach
-    private var claims: [Int: [Good: Int]] = [:]
+/// What houses that moved up a tier this tick claimed of each good at each
+/// serving hub, so a later house served by the same hub cannot advance on the
+/// same units (spec `population-and-needs` / Advancing needs stock for two
+/// draws). Claims move no goods and end with the population pass.
+struct AdvanceClaims {
+    private var claims: [EntityID: [Good: Int]] = [:]
 
-    init(reach: World.SupplyReach) {
-        self.reach = reach
+    func claimed(_ good: Good, at hub: EntityID) -> Int {
+        claims[hub]?[good] ?? 0
     }
 
-    func claimed(_ good: Good, at source: Int) -> Int {
-        claims[source]?[good] ?? 0
-    }
-
-    mutating func claim(_ units: [Good: Int], at source: Int) {
+    mutating func claim(_ units: [Good: Int], at hub: EntityID) {
         for (good, amount) in units {
-            claims[source, default: [:]][good, default: 0] += amount
+            claims[hub, default: [:]][good, default: 0] += amount
         }
     }
 }

@@ -4,8 +4,11 @@ import Foundation
 /// / Buildings report why they are idle.
 public enum BuildingIssue: Hashable, Sendable {
     case noRoad
-    /// Its road doesn't reach a warehouse, port or town center.
+    /// Its road doesn't reach a warehouse, port, town center or marketplace.
     case noRouteToStorage
+    /// A house no market hub of its owner serves: its road path to every
+    /// hub is longer than that hub's radius (visible-distribution D10).
+    case noMarketInReach
     case noTreesInReach
     /// A forester's catchment holds no open grass.
     case noRoomToPlant
@@ -39,6 +42,7 @@ public extension World {
             let footprint = buffer.footprint
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).flatMap { components[$0] }
         })
+        let service = hubService()
         var issues: [EntityID: BuildingIssue] = [:]
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
@@ -62,12 +66,12 @@ public extension World {
                 issues[building.id] = .noTreesInReach
                 continue
             }
-            guard let component = components[road], storageComponents.contains(component) else {
-                issues[building.id] = .noRouteToStorage
+            if building.kind == .house {
+                issues[building.id] = service.hubOf[building.id] == nil ? .noMarketInReach : shortageIssue(of: building)
                 continue
             }
-            if building.kind == .house {
-                issues[building.id] = shortageIssue(of: building)
+            guard let component = components[road], storageComponents.contains(component) else {
+                issues[building.id] = .noRouteToStorage
                 continue
             }
             guard let recipe, let issue = productionIssue(of: building.id, recipe: recipe) else { continue }

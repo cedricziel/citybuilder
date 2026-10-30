@@ -98,7 +98,7 @@ func scenarioFarmFoodSatisfiesAConnectedHouse() throws {
     var world = World.fixtureWithTerrain(width: 14, height: 8, fill: .grass, seed: 1)
     let house = TileCoordinate(x: 1, y: 1)
     let farm = TileCoordinate(x: 5, y: 1)
-    _ = injectBuffer(.warehouse, in: &world, at: TileCoordinate(x: 9, y: 0), capacity: 200)
+    _ = injectBuffer(.townCenter, in: &world, at: TileCoordinate(x: 9, y: 0), capacity: 200)
     world.enqueue(.place(.house, at: house))
     world.enqueue(.place(.farm, at: farm))
     placeRoad(in: &world, y: 3, xs: 0 ... 12)

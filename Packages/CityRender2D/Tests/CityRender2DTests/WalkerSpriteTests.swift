@@ -45,8 +45,8 @@ func scenarioDefaultVariantIsTheWorker() {
 
 @Test("scenario: Every walker frame is catalogued")
 func scenarioEveryWalkerFrameIsCatalogued() {
-    // Residents, carriers, vehicles and the fire watch's watchman.
-    let figures = looks.count + CarrierLoad.allCases.count + Vehicle.allCases.count + 1
+    // Residents, carriers, vehicles, the fire watch's watchman and the porter, filled and empty.
+    let figures = looks.count + CarrierLoad.allCases.count + Vehicle.allCases.count + 1 + 2
     #expect(names(SpriteAnimation.AnimationKey.people).count == figures * 4 * 8)
     #expect(names(SpriteAnimation.AnimationKey.animals).count == 4 * (8 + 4 + 8 + 4 + 4))
     let catalogued = Set(SpriteAtlas.catalogSpriteNames)

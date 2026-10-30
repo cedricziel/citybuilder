@@ -39,11 +39,17 @@ struct PlayerBot {
         let town = Town(world: world)
         var plan = RivalTownPlan(world: world, owner: .player, center: center.anchor)
         if followIdleGoodHint(in: &world, plan: &plan, stock: stock) { return }
+        // Like a rival, the bot builds a marketplace once its next house
+        // would fall outside every hub's reach, a guided house too.
+        let needsMarketplace = plan.needsMarketplace()
         if let next = nextFirstStep(in: world) {
+            // A marketplace it can't place yet doesn't hold up the guided house.
+            if next == .house, needsMarketplace, place(.marketplace, in: &world, plan: &plan, stock: stock) { return }
             _ = place(next, in: &world, plan: &plan, stock: stock)
             return
         }
-        let kinds = town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
+        let kinds = (needsMarketplace ? [.marketplace] : [])
+            + town.thresholdKinds(stock: stock, pastOpening: script.isPastOpening)
         for kind in kinds where !town.waiting || kind == .lumberjackHut {
             if place(kind, in: &world, plan: &plan, stock: stock) { return }
         }

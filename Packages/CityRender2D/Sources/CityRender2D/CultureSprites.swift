@@ -4,7 +4,7 @@ import SpriteKit
 /// Culture-specific building looks. Spec: `rendering-2_5d` / Buildings
 /// render in the world's culture.
 extension IsoWorldScene {
-    static let cultureVariantKinds: Set<BuildingKind> = [.house, .townCenter, .warehouse, .library]
+    static let cultureVariantKinds: Set<BuildingKind> = [.house, .townCenter, .warehouse, .library, .marketplace]
 
     /// The culture variant's sprite name for a finished building, or nil
     /// when the culture has no variant for it. Northern European uses the

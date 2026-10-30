@@ -47,6 +47,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let occupiedTiles: [TileCoordinate: EntityID]
     public let buildings: [EntityID: Building]
     public let carriers: [Carrier]
+    /// Market porters out, in entity order. Spec: `rendering-2_5d` /
+    /// Market porters render.
+    public let porters: [Porter]
     public let ships: [Ship]
     public let routes: [EntityID: Route]
     public let economy: Economy
@@ -115,6 +118,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         occupiedTiles: [TileCoordinate: EntityID],
         buildings: [EntityID: Building],
         carriers: [Carrier],
+        porters: [Porter] = [],
         ships: [Ship] = [],
         routes: [EntityID: Route] = [:],
         economy: Economy,
@@ -148,6 +152,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.occupiedTiles = occupiedTiles
         self.buildings = buildings
         self.carriers = carriers
+        self.porters = porters
         self.ships = ships
         self.routes = routes
         self.economy = economy
@@ -253,6 +258,7 @@ public extension World {
             occupiedTiles: occupiedTiles,
             buildings: buildings,
             carriers: Array(carriers.values) + orders.shipments.map(\.asCarrier),
+            porters: porters,
             ships: Array(ships.values).sorted { $0.id.raw < $1.id.raw },
             routes: routes,
             economy: economy,

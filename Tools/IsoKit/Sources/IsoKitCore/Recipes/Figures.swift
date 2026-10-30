@@ -27,6 +27,9 @@ enum Cloth {
     /// The fire watch's livery: a deep madder, darker than the worker's so the two never mix up.
     static let watch = NSColor(red: 0.50, green: 0.20, blue: 0.16, alpha: 1)
     static let bucket = NSColor(red: 0.40, green: 0.24, blue: 0.13, alpha: 1)
+    /// A porter's produce: greens and a red top, greyer than the target under the warm sun.
+    static let greens = NSColor(red: 0.30, green: 0.44, blue: 0.22, alpha: 1)
+    static let apples = NSColor(red: 0.60, green: 0.22, blue: 0.16, alpha: 1)
 }
 
 /// What a figure carries.
@@ -34,6 +37,8 @@ enum Load {
     case none, basket, sack, crate, barrel, logs, push
     /// A leather fire bucket swinging from the right hand.
     case bucket
+    /// A market porter's shoulder yoke with a basket at each end, filled or empty (visible-distribution).
+    case yoke(full: Bool)
 }
 
 enum Headwear {
@@ -161,6 +166,9 @@ extension Builder {
         case (.push, _):
             // Both hands forward at the hips, on the cart's handles.
             return (top + SCNVector3(0.16, -0.24, side * 0.03), top + SCNVector3(0.42, -0.44, side * 0.04))
+        case (.yoke, _):
+            // Both hands up at the shoulders, steadying the pole either side of the neck.
+            return (top + SCNVector3(0.14, -0.16, side * 0.08), top + SCNVector3(0.10, 0.06, side * 0.22))
         case (.bucket, true):
             // Right arm hanging straight, a little out from the body, carrying the bucket's weight.
             return (top + SCNVector3(0.03, -0.31, 0.06), top + SCNVector3(0.05, -0.60, 0.09))
@@ -206,6 +214,8 @@ extension Builder {
             )
             limb(hand + SCNVector3(0, -0.07, -0.12), hand + SCNVector3(0, 0.02, 0), radius: 0.012, Cloth.leather)
             limb(hand + SCNVector3(0, -0.07, 0.12), hand + SCNVector3(0, 0.02, 0), radius: 0.012, Cloth.leather)
+        case let .yoke(full):
+            yoke(full: full, shoulder: shoulder)
         case .basket:
             let base = SCNVector3(0.02, headTop + 0.02, 0)
             add(
@@ -243,6 +253,29 @@ extension Builder {
                     at: right + offset,
                     euler: SCNVector3(0, 0, CGFloat.pi / 2 - 0.12)
                 )
+            }
+        }
+    }
+
+    /// A pole across the shoulders, square to the walk, with a wicker basket hung from each end by two cords.
+    private func yoke(full: Bool, shoulder: SCNVector3) {
+        let pole = shoulder + SCNVector3(-0.02, 0.1, 0)
+        limb(pole + SCNVector3(0, 0, -0.56), pole + SCNVector3(0, 0, 0.56), radius: 0.035, Cloth.bark)
+        for side in [CGFloat(-1), 1] {
+            let end = pole + SCNVector3(0, 0, side * 0.48)
+            let rim = SCNVector3(end.x, 0.62, end.z)
+            for cord in [CGFloat(-1), 1] {
+                limb(end, rim + SCNVector3(cord * 0.12, 0, 0), radius: 0.012, Cloth.leather)
+            }
+            add(
+                SCNCone(topRadius: 0.17, bottomRadius: 0.12, height: 0.22),
+                Finish.paint(Cloth.wicker).material(),
+                at: rim + SCNVector3(0, -0.12, 0)
+            )
+            if full {
+                // A heaped load, greens under a red top, so a filled basket reads against the wicker.
+                ball(rim + SCNVector3(0, 0.05, 0), radius: 0.16, Cloth.greens, scale: SCNVector3(1, 0.95, 1))
+                ball(rim + SCNVector3(0.02, 0.2, side * 0.02), radius: 0.1, Cloth.apples)
             }
         }
     }

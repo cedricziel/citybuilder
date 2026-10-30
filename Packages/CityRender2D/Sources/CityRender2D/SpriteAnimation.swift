@@ -22,6 +22,9 @@ public enum SpriteAnimation {
         case vehicle(Vehicle, SpriteAtlas.WalkerFacing)
         /// A fire watch's watchman with his bucket; shares the walker's cycle (`add-event-counterplay`).
         case watchman(SpriteAtlas.WalkerFacing)
+        /// A market porter with the yoke's baskets filled, or empty on the way back; shares the walker's cycle
+        /// (`visible-distribution` milestone 2).
+        case porter(SpriteAtlas.WalkerFacing, empty: Bool)
         /// The flames on a burning building (`effect-fire`).
         case fire
 
@@ -32,7 +35,7 @@ public enum SpriteAnimation {
         public static let people: [AnimationKey] = SpriteAtlas.WalkerFacing.allCases.flatMap { facing in
             SpriteAtlas.WalkerLook.allCases.map { AnimationKey.walker(facing, $0) } + CarrierLoad.allCases.map { .carrier($0, facing) }
                 + Vehicle.allCases.map { .vehicle($0, facing) }
-                + [.watchman(facing)]
+                + [.watchman(facing), .porter(facing, empty: false), .porter(facing, empty: true)]
         }
 
         /// Every animal action in every facing.
@@ -83,7 +86,7 @@ public enum SpriteAnimation {
             Entry(frameCount: 3, timePerFrame: 0, loop: .progress)
         case .fire:
             Entry(frameCount: 3, timePerFrame: 0.14, loop: .forever)
-        case .walker, .carrier, .vehicle, .watchman:
+        case .walker, .carrier, .vehicle, .watchman, .porter:
             // realistic-walkers D3: an 8-frame gait; frame 0 is the standing pose.
             Entry(frameCount: 8, timePerFrame: 0.1, loop: .forever)
         case let .animal(action, _):
@@ -118,7 +121,7 @@ public enum SpriteAnimation {
         // The hull is planked in four stages, held once finished, then launched off an empty
         // slipway for a beat before the next keel (#120).
         case .shipyard: Entry(frameCount: 5, timePerFrame: 2.5, loop: .forever, frameDurations: [2.5, 2.5, 2.5, 4.0, 1.25])
-        case .house, .warehouse, .road, .granary, .fireWatch, .ruins: nil
+        case .house, .warehouse, .road, .granary, .fireWatch, .ruins, .marketplace: nil
         default: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         }
     }
@@ -148,6 +151,8 @@ public enum SpriteAnimation {
             "\(action.stem)-\(facing.rawValue)-\(frame)"
         case let .watchman(facing):
             "walker-watchman-\(facing.rawValue)-\(frame)"
+        case let .porter(facing, empty):
+            "porter\(empty ? "-empty" : "")-\(facing.rawValue)-\(frame)"
         case .fire:
             "effect-fire-\(frame)"
         }

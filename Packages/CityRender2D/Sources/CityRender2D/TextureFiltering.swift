@@ -38,7 +38,9 @@ public enum TextureFiltering {
         "building-house-mediterranean", "building-house-tier2-mediterranean", "building-house-tier3-mediterranean",
         "building-house-middle-eastern", "building-house-tier2-middle-eastern", "building-house-tier3-middle-eastern",
         "building-town-center-east-asian", "building-town-center-mediterranean", "building-town-center-middle-eastern",
-        "building-fire-watch", "building-granary", "effect-fire"
+        "building-fire-watch", "building-granary", "effect-fire",
+        "building-marketplace", "building-marketplace-east-asian", "building-marketplace-mediterranean",
+        "building-marketplace-middle-eastern"
     ]).union(houseAgeLooks).union(figureStems).union(goodsIcons).union(statusIcons).union(ruins)
 
     /// The ruins, one per footprint that can burn.
