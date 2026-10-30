@@ -11,7 +11,7 @@ A carrier with a vehicle SHALL be drawn with that vehicle's frames (`<vehicle>-<
 
 ### Requirement: Market porters render
 
-A carrier on a porter mission SHALL be drawn with the porter frames (`porter-<facing>-<frame>`), a figure carrying two baskets on a shoulder yoke, in place of a load look, and SHALL walk, pause and face like other carriers. On the way back to its hub it SHALL be drawn with the empty-basket frames (`porter-empty-<facing>-<frame>`). Idle porters at a hub SHALL NOT be drawn.
+A market porter SHALL be drawn with the porter frames (`porter-<facing>-<frame>`), a figure carrying two baskets on a shoulder yoke, in place of a load look, and SHALL walk, pause and face like other carriers. On the way back to its hub it SHALL be drawn with the empty-basket frames (`porter-empty-<facing>-<frame>`). Idle porters at a hub SHALL NOT be drawn.
 
 #### Scenario: A loaded porter shows full baskets
 

@@ -83,6 +83,7 @@ The candidate list is small: only consumers of the good that are short. Measured
 - **Hub stock:** hubs keep their goods-buffer role. In addition, house goods prefer them:
   - A producer of a house good sends to the nearest hub with room before trying other buffers (D1 step 3, ahead of warehouses).
   - A hub that is low on a house good its houses need pulls from warehouses on its network. Low means below the hub's reserve, 2 consumptions of its served houses. The haul is a supply haul (`.retrieve` with the hub as its destination), so it takes a cart on a long road like any other and needs no new mission or save change; the design's earlier `.restock` case was dropped for that reason.
+  - *After review:* the reserve counts the next tier's needs too, since a house advances only while its hub holds them; without that a marketplace's houses never stocked planks and could not become citizens. A hub with no store holding a good pulls from another hub's surplus above that hub's own reserve, so a town with a town center and a marketplace but no warehouse still feeds both. A restock on foot walks a basket (the hub's `basketUnits`), not one unit; on a long road it takes the cart as before.
 
 ### D4. Market porters and house stock (milestone 2)
 
@@ -92,11 +93,11 @@ The candidate list is small: only consumers of the good that are short. Measured
 - **When a need counts as met:**
   - It is met while the last consumption of it was not short, and stock plus inbound porter units covers the next consumption.
   - It turns unmet only when a consumption comes up short, or when the stock plus porter units no longer covers the next consumption. A delivery between consumptions never turns it unmet, so it does not flicker with every meal and basket.
-- **Tier advance:** a house can advance only if the hub that serves it holds the next tier's goods. This replaces `hasGoodInReach`, which looked at warehouses. The two-draw rule of `stock-cover-advancement` keeps its threshold but measures the serving hub's stock, and the claims of houses advancing in the same tick are keyed by hub instead of by road network.
+- **Tier advance:** a house can advance only if the hub that serves it holds the goods the next tier adds; a need the house already eats counts while it is met, because porters keep emptying the hub into the houses' stocks. This replaces `hasGoodInReach`, which looked at warehouses. The two-draw rule of `stock-cover-advancement` keeps its threshold but measures the serving hub's stock, and the claims of houses advancing in the same tick are keyed by hub instead of by road network.
 - **Porters:**
   - **How many:** each hub keeps porters = 1 + one per 4 houses it serves, up to 8. These are starting values from game data (D9).
   - **Choosing a trip:** an idle porter picks the served house with the lowest stock ratio across its needs. The stock ratio is (stock + inbound) ÷ capacity, taking the lowest over the house's needs the hub holds. Ties go to the shorter path, then the lower house ID.
-  - **The trip:** the porter carries one mixed basket: for each need the hub holds, enough to fill the house up to one consumption, at most 10 units in all (game data, D9). It walks there, deposits them into the house stock, and walks back empty.
+  - **The trip:** the porter carries one mixed basket, at most 10 units in all (game data, D9): first up to one consumption of each need the hub holds, then, with room left, each topped up to the house's capacity, so a trip refills a house rather than half of it. It walks there, deposits them into the house stock, and walks back empty.
   - **On the map:** a porter is its own entity (`World.porters`, a `Porter` with hub, house, path, basket and a returning flag), not a carrier mission. Its return trip is visible too: a porter with an empty basket. The snapshot lists porters beside the carriers.
   - *Why not a `Carrier.Mission` case:* a basket holds several goods, and every carrier path (redirects on a full destination, inbound counts, producer slots, cart loads) assumes one good. Keeping porters apart leaves all of that untouched, and an older build loading a newer save drops the porters and the house stock instead of failing, so the save version stays at 12.
 - **Where the stock lives:** house stock sits in `HousePopulation`, so the inspector can show it. The snapshot carries it.
