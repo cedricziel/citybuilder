@@ -89,7 +89,7 @@ extension GameSession {
     private func noteOrderEvent(_ event: WorldEvent) {
         switch event {
         case let .orderOffered(id, _):
-            guard let order = world.order(id) else { return }
+            guard let order = world.order(id), order.issuer != .town else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let verb = order.issuer == .crown ? "orders" : "wants"
             show(expiringAt: order.offerEndsTick, SessionBanner(
@@ -99,7 +99,7 @@ extension GameSession {
                     + "Open the board to accept."
             ))
         case let .orderFulfilled(id, reward):
-            guard let order = world.order(id) else { return }
+            guard let order = world.order(id), order.issuer != .town else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             show(SessionBanner(
                 title: "Order filled: \(order.quantity) \(InspectorViewModel.goodName(order.good))",
@@ -107,7 +107,7 @@ extension GameSession {
                     + "and its favour rises to \(world.orders.favour.value(for: order.issuer))."
             ))
         case let .orderFailed(id):
-            guard let order = world.order(id) else { return }
+            guard let order = world.order(id), order.issuer != .town else { return }
             let name = OrdersBoardModel.name(of: order.issuer, in: world)
             let target = order.issuer == .crown ? "the crown" : name
             show(SessionBanner(
@@ -116,7 +116,7 @@ extension GameSession {
                     + "\(name)'s favour falls by \(order.favourLoss)."
             ))
         case let .orderExpired(id):
-            guard let order = world.order(id) else { return }
+            guard let order = world.order(id), order.issuer != .town else { return }
             show(SessionBanner(
                 title: "An offer from \(OrdersBoardModel.name(of: order.issuer, in: world)) lapsed",
                 description: "Ignoring an offer costs nothing."
