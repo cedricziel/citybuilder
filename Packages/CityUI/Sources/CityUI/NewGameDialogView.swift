@@ -191,7 +191,7 @@ public struct NewGameDialogView: View {
             // A campaign chapter that schedules events will hide this and run its schedule.
             Toggle("Seasonal events", isOn: $viewModel.seasonalEvents)
                 .accessibilityIdentifier("newGame.seasonalEvents")
-            Text("Dry seasons bring fires, each warned a season ahead.")
+            Text(NewGameDialogViewModel.seasonalEventsHint)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
