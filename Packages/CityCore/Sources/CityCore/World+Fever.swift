@@ -4,7 +4,7 @@ import Foundation
 /// unless a fuelled physician is near. Spec: `seasonal-events` / Fever
 /// holds a district back.
 extension World {
-    static let physicianReach = 8
+    public static let physicianReach = 8
 
     /// The player houses a fever under way holds back: in the marked
     /// district, with no fuelled player physician within 8 tiles. Entity order.
