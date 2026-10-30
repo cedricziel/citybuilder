@@ -465,3 +465,15 @@ func loadingAnOlderSaveSeedsHouseStock() throws {
     let pop = try JSONDecoder().decode(HousePopulation.self, from: legacy)
     #expect(pop.stock(of: .food) == 1)
 }
+
+@Test("scenario: Porters serve the higher tier first")
+func portersServeTheHigherTierFirst() {
+    var world = strip()
+    let hub = center(in: &world)
+    fill(hub, [.food: 10, .planks: 10], in: &world)
+    _ = house(at: 6, in: &world)
+    let citizens = house(at: 12, tier: .citizens, in: &world)
+    stock(citizens, [.food: 3, .planks: 1], in: &world)
+    run(&world, ticks: 1)
+    #expect(world.porters.map(\.house) == [citizens])
+}

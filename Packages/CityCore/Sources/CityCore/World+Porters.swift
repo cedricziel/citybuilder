@@ -248,8 +248,11 @@ extension World {
             }
             guard let lowest else { continue }
             let distance = service.hubOf[id]?.distance ?? 0
+            let tier = pop.tier.rawValue
             let better = best.map { best in
-                lowest.isBelow(best.rank.ratio) || (!best.rank.ratio.isBelow(lowest) && distance < best.rank.distance)
+                let bestTier = populations[best.house.id]?.tier.rawValue ?? 0
+                if tier != bestTier { return tier > bestTier }
+                return lowest.isBelow(best.rank.ratio) || (!best.rank.ratio.isBelow(lowest) && distance < best.rank.distance)
             } ?? true
             if better {
                 best = (house, (lowest, distance))
