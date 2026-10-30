@@ -22,9 +22,9 @@ public enum SpriteAtlasRouting {
     /// Returns the atlas name for a given sprite name, or nil if the
     /// prefix is unknown.
     public static func atlasName(for spriteName: String) -> String? {
-        // Every terrain, building, people, vehicle, animal and ship family, the goods icons, the building
+        // Every terrain, building, people (porters too), vehicle, animal and ship family, the goods icons, the building
         // status icons and the effects are art-kit renders; the Terrain, Buildings and Units atlases are retired.
-        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "animal-", "ship-", "good-", "status-", "effect-"]
+        let kitPrefixes = ["terrain-", "building-", "walker-", "carrier-", "porter-", "animal-", "ship-", "good-", "status-", "effect-"]
             + Vehicle.allCases.map { "\($0.rawValue)-" }
         if kitPrefixes.contains(where: spriteName.hasPrefix) { return kitAtlasName }
         // The status badges drawn over buildings are pixel art.

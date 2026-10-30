@@ -67,6 +67,18 @@ extension Recipes {
         ]
     }()
 
+    /// The market porter, in a weld tunic and felt cap, with the yoke's baskets filled on the way to a house
+    /// and empty on the way back (visible-distribution milestone 2): `porter-` and `porter-empty-<facing>-<frame>`.
+    static let porters: [Recipe] = [(stem: "porter", full: true), (stem: "porter-empty", full: false)].flatMap { stem, full in
+        var porter = storybook
+        porter.tunic = Cloth.weld
+        porter.hose = Cloth.walnut
+        porter.load = .yoke(full: full)
+        return facingRecipes(stem, entry: "porter", cell: walkerCell, frames: gaitFrames, scale: porter.scale) {
+            $0.figure(porter, phase: $1)
+        }
+    }
+
     static let walkers: [Recipe] = walkerLooks.flatMap { stem, figure in
         facingRecipes(stem, entry: "walker", cell: walkerCell, frames: gaitFrames, scale: figure.scale) { $0.figure(figure, phase: $1) }
     }

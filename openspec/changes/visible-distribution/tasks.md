@@ -32,5 +32,5 @@
 - [x] 3.9 Marketplace building: game data, placement, rendering from its canvas
 - [x] 3.10 Rivals use the same hubs and build marketplaces (D11)
 - [x] 3.11 Save migration: seeded house stock (D6), with a pre-milestone fixture save
-- [ ] 3.12 Porter figures in IsoKit from the approved canvas (yoke, with empty-basket return frames), `.yoke` pose agreed with the art agent; `CarrierRendering` picks them
+- [x] 3.12 Porter figures in IsoKit from the approved canvas (yoke, with empty-basket return frames), `.yoke` pose agreed with the art agent; `CarrierRendering` picks them
 - [ ] 3.13 Sweeps after: first-hour guided sweep at 0/20 bankruptcies, rival sweep green, pacing compared with designer2; determinism baseline; coverage

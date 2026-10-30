@@ -43,10 +43,12 @@ struct CarrierVisual {
     var walking = true
 }
 
-/// Who walks the road: a carrier with a load, or a fire watch's watchman with his bucket.
+/// Who walks the road: a carrier with a load, a fire watch's watchman with his bucket, or a market porter
+/// with the yoke's baskets filled or, on the way back, empty.
 enum RoadFigure: Equatable {
     case carrier(CarrierLoad)
     case watchman
+    case porter(empty: Bool)
 }
 
 struct CarrierLook: Equatable {
@@ -115,7 +117,7 @@ extension IsoWorldScene {
         }
     }
 
-    /// The carriers and the watchmen at work, each with its look and where it stands.
+    /// The carriers, the porters and the watchmen at work, each with its look and where it stands.
     private static func roadWalkers(in snapshot: WorldSnapshot) -> [RoadWalker] {
         snapshot.carriers.map { carrier in
             RoadWalker(
@@ -124,6 +126,13 @@ extension IsoWorldScene {
                     figure: .carrier(CarrierLoad.family(of: carrier.good)), facing: facing(of: carrier), vehicle: carrier.vehicle
                 ),
                 target: position(of: carrier.currentTile),
+                moving: true
+            )
+        } + snapshot.porters.map { porter in
+            RoadWalker(
+                id: porter.id,
+                look: CarrierLook(figure: .porter(empty: porter.returning), facing: facing(path: porter.path, index: porter.pathIndex)),
+                target: position(of: porter.currentTile),
                 moving: true
             )
         } + snapshot.watchmen.map { man in
@@ -149,6 +158,7 @@ extension IsoWorldScene {
         let own: SpriteAnimation.AnimationKey = switch look.figure {
         case let .carrier(load): .carrier(load, look.facing)
         case .watchman: .watchman(look.facing)
+        case let .porter(empty): .porter(look.facing, empty: empty)
         }
         if let frames = SpriteAtlas.frames(for: own) {
             node.playWalkCycle(own, frames: frames, moving: moving)

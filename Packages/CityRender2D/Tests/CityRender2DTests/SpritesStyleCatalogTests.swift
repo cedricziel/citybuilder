@@ -122,6 +122,8 @@ private func expectedCatalogIds() -> Set<String> {
     // The building status icons, one brief for every good's icons and the issue pictograms.
     ids.insert("status-icons")
     ids.insert("walker")
+    // The market porter, filled and empty (`visible-distribution`).
+    ids.insert("porter")
     ids.formUnion(Vehicle.allCases.map(\.rawValue))
     // The flames on a burning building (`add-event-counterplay`).
     ids.insert("effect-fire")

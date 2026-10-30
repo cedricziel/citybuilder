@@ -157,7 +157,7 @@ writeFileSync(
 const unitFrames = {};
 const unitSizes = {};
 for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.localeCompare(b, "en", { numeric: true }))) {
-  const match = /^((?:walker|carrier|animal|ship|effect)-[a-z-]+)-(\d+)\.png$/.exec(file);
+  const match = /^((?:walker|carrier|porter|animal|ship|effect)-[a-z-]+)-(\d+)\.png$/.exec(file);
   if (!match) continue;
   const png = readFileSync(join(resources, "Kit.atlas", file));
   (unitFrames[match[1]] ??= [])[Number(match[2])] = `data:image/png;base64,${png.toString("base64")}`;
@@ -165,7 +165,7 @@ for (const file of readdirSync(join(resources, "Kit.atlas")).sort((a, b) => a.lo
 }
 // No match would emit `export type unitSpritesKey = ;`, and a missing frame a hole in a cycle; stop with a reason.
 if (Object.keys(unitFrames).length === 0) {
-  throw new Error("gen-sprites: no walker, carrier, animal or ship frames (`<name>-<n>.png`) in Resources/Kit.atlas");
+  throw new Error("gen-sprites: no walker, carrier, porter, animal or ship frames (`<name>-<n>.png`) in Resources/Kit.atlas");
 }
 for (const [cycle, frames] of Object.entries(unitFrames)) {
   const missing = Array.from(frames.keys()).filter((index) => frames[index] === undefined);
