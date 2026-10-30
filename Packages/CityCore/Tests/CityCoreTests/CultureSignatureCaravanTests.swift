@@ -105,6 +105,16 @@ func exportSupplyTakesTheSurplus() {
     #expect(world.stockpiles[id]?.quantity(of: .food) == 2)
 }
 
+@Test("scenario: caravans never export a granary's reserve")
+func caravansLeaveTheGranaryAlone() {
+    var (world, id) = exportStreet(food: 10)
+    let granary = Fixture.inject(.granary, at: TileCoordinate(x: 14, y: 2), in: &world)
+    world.stockpiles[granary]?.deposit(.food, amount: 20)
+    _ = Fixture.run(&world, ticks: 90)
+    #expect(world.stockpiles[id]?.quantity(of: .food) == 0)
+    #expect(world.stockpiles[granary]?.quantity(of: .food) == 20)
+}
+
 @Test("export supply stops at 8 on hand or in flight")
 func exportSupplyCap() {
     var (world, id) = exportStreet(food: 40)

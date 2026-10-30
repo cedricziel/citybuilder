@@ -219,3 +219,17 @@ func chipOnAppleTV() {
     #expect(EventChipLayout.height(layout: tv) == tv.controlHeight)
     #expect(EventChipLayout.height(layout: phone) == DateChipLayout.height)
 }
+
+@MainActor
+@Test("scenario: tapping the chip in a blight centres the camera on the marked area")
+func chipCentresTheMarkedArea() {
+    let session = eventsSession { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+        world.seasonalEvents.marked = MarkedArea(around: TileBoundingBox(minX: 20, minY: 30, maxX: 21, maxY: 31), radius: 6)
+    }
+    session.replaySeasonalWarning(animated: false)
+    let camera = session.world.camera
+    #expect(camera.centerX == 21)
+    #expect(camera.centerY == 31)
+    #expect(session.banner?.title == "Damp weather: blight is coming")
+}
