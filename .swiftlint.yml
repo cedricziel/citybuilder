@@ -91,7 +91,7 @@ custom_rules:
       GameText.string("key"), or Text(verbatim:) for text that is not language;
       never wrap language in String("...") to pass this rule
       (spec localization, design D3 of add-localization).
-    included: '(Packages/CityUI/Sources|Apps)/.*\.swift'
+    included: '(Packages/(CityUI|CityAudio)/Sources|Apps)/.*\.swift'
     severity: error
 
 reporter: "xcode"
