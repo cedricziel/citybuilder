@@ -2,14 +2,14 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 1. M1 — Catalogs, lookup, pseudo-locale and the check
 
-- [ ] 1.1 Tests-first: translate "Tests resolve text in a pinned language", "The pseudo-locale lengthens and marks a string", "The pseudo-locale keeps placeholders", "Numbers use the locale's grouping" and every "fails the check" / "Complete catalogs pass the check" scenario into failing tests (CityUITests and L10nCheckTests); confirm red
-- [ ] 1.2 Implement to green: `defaultLocalization: "en"`, `Resources/Localizable.xcstrings` in CityUI, and the `GameText` lookup with an explicit `Language` chosen from `Bundle.main.preferredLocalizations`, with tests for English-system/German-app and German-system/English-app (design D1, D3)
-- [ ] 1.3 Implement to green: the pseudo-locale transform and the `-CBPseudoLocale` launch argument (D10)
-- [ ] 1.4 Implement to green: the `Tools/L10nCheck` package (rules library, `l10n-check` executable, tests), `glossary.json` from the spec table, `make l10n-check`, the lint-job step and the pre-commit hook (D8)
-- [ ] 1.5 Run `L10nCheckTests` in `make test` and in CI (beside the IsoKit tests, selected by `scripts/select_ci_jobs.py` when `Tools/L10nCheck` changes) (D8)
-- [ ] 1.6 Move the pause menu to the catalog as the first real keys (en + de), so "German locale shows German text" and "An unsupported language falls back to English" have a subject; make those tests green
-- [ ] 1.7 Refactor under a green bar
-- [ ] 1.8 Verify `make test-scenarios` and `make l10n-check` clean for this milestone's scenarios
+- [x] 1.1 Tests-first: translate "Tests resolve text in a pinned language", "The pseudo-locale lengthens and marks a string", "The pseudo-locale keeps placeholders", "Numbers use the locale's grouping" and every "fails the check" / "Complete catalogs pass the check" scenario into failing tests (CityUITests and L10nCheckTests); confirm red
+- [x] 1.2 Implement to green: `defaultLocalization: "en"`, `Resources/Localizable.xcstrings` in CityUI, and the `GameText` lookup with an explicit `Language` chosen from `Bundle.main.preferredLocalizations`, with tests for English-system/German-app and German-system/English-app (design D1, D3)
+- [x] 1.3 Implement to green: the pseudo-locale transform and the `-CBPseudoLocale` launch argument (D10)
+- [x] 1.4 Implement to green: the `Tools/L10nCheck` package (rules library, `l10n-check` executable, tests), `glossary.json` from the spec table, `make l10n-check`, the lint-job step and the pre-commit hook (D8)
+- [x] 1.5 Run `L10nCheckTests` in `make test` and in CI (a step of the lint job, which runs on every PR, so no selector change is needed) (D8)
+- [x] 1.6 Move the pause menu to the catalog as the first real keys (en + de), so "German locale shows German text" and "An unsupported language falls back to English" have a subject; make those tests green
+- [x] 1.7 Refactor under a green bar
+- [x] 1.8 Verify `make test-scenarios` and `make l10n-check` clean for this milestone's scenarios
 
 ## 2. M2 — CityUI static strings
 
@@ -61,7 +61,7 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 - [ ] 7.2 Design the layout fixes on a Claude Design canvas when they change the HUD visibly; get the go-ahead
 - [ ] 7.3 Implement to green: shorter German where the glossary allows, then layout fixes; keep `design/web` in step
 - [ ] 7.4 Implement to green: "German locale shows German text" end to end; add `de` to the supported languages, `knownRegions` and `CFBundleLocalizations` in `project.yml`
-- [ ] 7.5 Translate "German text uses the glossary words" and "German text addresses the player with du" into tests over the shipped catalogs; make them green
+- [x] 7.5 Translate "German text uses the glossary words" and "German text addresses the player with du" into tests over the shipped catalogs; make them green
 - [ ] 7.6 Playtest a German and a pseudo-locale session in the simulator for strings that bypass the catalog — DEFERRED (requires the orchestrator's simulator slot)
 - [ ] 7.7 Refactor under a green bar
 - [ ] 7.8 Verify `make test-scenarios` and `make l10n-check` clean for every scenario of the change
