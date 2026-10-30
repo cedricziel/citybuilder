@@ -10,6 +10,11 @@ public struct Porter: Hashable, Codable, Sendable {
     public struct Load: Hashable, Codable, Sendable {
         public let good: Good
         public var units: Int
+
+        public init(good: Good, units: Int) {
+            self.good = good
+            self.units = units
+        }
     }
 
     public let id: EntityID
@@ -21,6 +26,19 @@ public struct Porter: Hashable, Codable, Sendable {
     public var basket: [Load]
     /// True on the walk back to the hub.
     public var returning = false
+
+    public init(
+        id: EntityID, hub: EntityID, house: EntityID, path: [TileCoordinate], pathIndex: Int = 0, basket: [Load],
+        returning: Bool = false
+    ) {
+        self.id = id
+        self.hub = hub
+        self.house = house
+        self.path = path
+        self.pathIndex = pathIndex
+        self.basket = basket
+        self.returning = returning
+    }
 
     public var currentTile: TileCoordinate? {
         path.indices.contains(pathIndex) ? path[pathIndex] : nil
