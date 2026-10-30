@@ -68,8 +68,10 @@ extension World {
     /// with the owner's monument bonus.
     private func taxesByOwner(sources: [Building]) -> [Owner: Int64] {
         var taxes: [Owner: Int64] = [:]
+        let festive = isFestivalRunning ? festivalHouses(service: hubService()) : []
         for (id, pop) in populations where buildings[id]?.state != .burning {
-            taxes[owner(of: id), default: 0] += houseTax(house: id, population: pop, sources: sources)
+            let tax = houseTax(house: id, population: pop, sources: sources)
+            taxes[owner(of: id), default: 0] += festive.contains(id) ? festivalTax(tax) : tax
         }
         for (owner, amount) in taxes {
             taxes[owner] = taxWithMonumentBonus(amount, for: owner)

@@ -77,7 +77,6 @@ items:
   - kind: Event
     id: festival
     effect: festival
-    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [spring, summer]
     weight: { easy: 3, normal: 1, hard: 1 }
     banners:

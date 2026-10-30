@@ -30,8 +30,9 @@ extension World {
         }
     }
 
+    /// Accepted crown and rival orders: town orders sit outside the limit.
     public var acceptedOrderCount: Int {
-        orders.orders.count { $0.state == .accepted }
+        orders.orders.count { $0.state == .accepted && $0.issuer != .town }
     }
 
     // MARK: - Settlement
@@ -59,16 +60,20 @@ extension World {
         orders.orders[index].state = .fulfilled
         economy.credit(order.reward)
         orders.favour.adjust(order.issuer, by: order.favourGain)
-        orders.fulfilledCount += 1
+        if order.issuer != .town {
+            orders.fulfilledCount += 1
+        }
         events.append(.orderFulfilled(order: order.id, reward: order.reward))
     }
 
     /// Costs favour, never money; what was delivered was paid for already.
-    private mutating func fail(_ index: Int, events: inout [WorldEvent]) {
+    mutating func fail(_ index: Int, events: inout [WorldEvent]) {
         let order = orders.orders[index]
         orders.orders[index].state = .failed
         orders.favour.adjust(order.issuer, by: -order.favourLoss)
-        orders.failedCount += 1
+        if order.issuer != .town {
+            orders.failedCount += 1
+        }
         events.append(.orderFailed(order: order.id))
     }
 
@@ -83,7 +88,7 @@ extension World {
 
     mutating func applyAcceptOrder(_ id: OrderID, events: inout [WorldEvent]) {
         guard let index = orderIndex(id), orders.orders[index].state == .offered,
-              acceptedOrderCount < OrderRules.maxAccepted
+              orders.orders[index].issuer == .town || acceptedOrderCount < OrderRules.maxAccepted
         else { return }
         orders.orders[index].state = .accepted
         events.append(.orderAccepted(order: id))
@@ -102,7 +107,7 @@ extension World {
         fail(index, events: &events)
     }
 
-    private func orderIndex(_ id: OrderID) -> Int? {
+    func orderIndex(_ id: OrderID) -> Int? {
         orders.orders.firstIndex { $0.id == id }
     }
 
@@ -122,7 +127,7 @@ extension World {
     }
 
     private var offerCount: Int {
-        orders.orders.count { $0.state == .offered }
+        orders.orders.count { $0.state == .offered && $0.issuer != .town }
     }
 
     private mutating func issueCrownOrder(events: inout [WorldEvent]) {

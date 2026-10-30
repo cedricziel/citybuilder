@@ -46,10 +46,12 @@ extension World {
         return SeasonalEventOnset(event: event, season: event.seasons[Int(rng.next() % UInt64(event.seasons.count))])
     }
 
-    /// The event warned or under way, with its onset season.
+    /// The event warned or under way, with its onset season; a festival's
+    /// request with the season its orders are due in.
     public var currentSeasonalEvent: SeasonalEventOnset? {
         seasonalEvents.warned ?? seasonalEvents.active.map {
-            SeasonalEventOnset(event: $0.event, season: calendar.date(atTick: $0.startTick).season)
+            let named = $0.event.effect == .festival ? $0.lastTick - 1 : $0.startTick
+            return SeasonalEventOnset(event: $0.event, season: calendar.date(atTick: named).season)
         }
     }
 
@@ -60,6 +62,12 @@ extension World {
         }
         if seasonalEvents.fever != nil {
             runFeverSystem(events: &events)
+        }
+        if seasonalEvents.festival != nil {
+            settleFestival(events: &events)
+        }
+        if let until = seasonalEvents.festivalUntil, tickCount > until {
+            seasonalEvents.festivalUntil = nil
         }
         if let active = seasonalEvents.active, tickCount >= active.lastTick {
             endSeasonalEvent(events: &events)
@@ -100,6 +108,10 @@ extension World {
             seasonalEvents.plan = SeasonalEventPlan(year: date.year, onset: nil)
             return
         }
+        guard onset.event.effect.isHazard else {
+            requestFestival(onset, events: &events)
+            return
+        }
         seasonalEvents.warned = onset
         seasonalEvents.marked = markedArea(for: onset.event.effect)
         events.append(.seasonalEventWarned(event: onset.event, onset: onset.season))
@@ -125,6 +137,7 @@ extension World {
     /// becoming ruins: the rains.
     mutating func endSeasonalEvent(events: inout [WorldEvent]) {
         guard let active = seasonalEvents.active else { return }
+        callOffFestival(events: &events)
         for fire in seasonalEvents.fire?.fires ?? [] {
             extinguish(fire.building, events: &events)
         }
@@ -169,8 +182,8 @@ extension World {
     }
 
     /// Whether the town has what the event strikes. A chapter's event needs
-    /// one target; a drawn one needs a town worth striking. The festival
-    /// waits for the marketplace (#238 M2), so it has none yet.
+    /// one target; a drawn one needs a town worth striking. A festival needs
+    /// a marketplace and both of its goods made.
     func hasSeasonalEventTargets(_ effect: SeasonalEffect, scheduled: Bool) -> Bool {
         let minimum = scheduled ? 1 : Self.seasonalEventMinimumTargets
         let owned = buildings.values.filter { $0.owner == .player && $0.state == .operational }
@@ -183,7 +196,7 @@ extension World {
         case .fever:
             return owned.count { $0.kind == .house && (populations[$0.id]?.population ?? 0) > 0 } >= minimum
         case .festival:
-            return false
+            return festivalQuantities() != nil
         }
     }
 

@@ -11,6 +11,7 @@ extension World {
         let tracked = HouseTier.allNeeds(in: culture)
         let inbound = porterInbound()
         let feverHeld = Set(feverHouses().map(\.id))
+        let festive = festivalHouses(service: service)
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
@@ -21,7 +22,7 @@ extension World {
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
             updateTier(
                 &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
-                feverHeld: feverHeld.contains(building.id)
+                feverHeld: feverHeld.contains(building.id), festive: festive.contains(building.id)
             )
             populations[building.id] = pop
         }
@@ -108,7 +109,7 @@ extension World {
     /// between tiers.
     private func updateTier( // swiftlint:disable:this function_parameter_count
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool,
-        feverHeld: Bool
+        feverHeld: Bool, festive: Bool
     ) {
         // Spec: `population-and-needs` / Market hubs gate tier advancement.
         // A need the house already eats counts while it is met: porters keep
@@ -128,7 +129,9 @@ extension World {
             return
         }
         pop.ticksAtTierCondition &+= 1
-        guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / modifiers.paceDivisor else { return }
+        // Spec: `population-and-needs` / Festivals speed advancement near the market.
+        let pace = canAdvance && festive ? max(modifiers.paceDivisor, Self.festivalPaceDivisor) : modifiers.paceDivisor
+        guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / pace else { return }
         pop.ticksAtTierCondition = 0
         if canAdvance, let next = pop.tier.next {
             pop.tier = next

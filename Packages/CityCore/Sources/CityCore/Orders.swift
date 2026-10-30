@@ -3,14 +3,21 @@ import Foundation
 /// An order's number, from 1. Spec: `orders`.
 public typealias OrderID = UInt32
 
-/// Who sent an order. Encoded as one string, `"crown"` or `"rival-<id>"`,
-/// like `Owner`.
+/// Who sent an order. Encoded as one string, `"crown"`, `"town"` or
+/// `"rival-<id>"`, like `Owner`. The town asks only for a festival, outside
+/// the board's limits and favour (`add-event-counterplay` D8).
 public enum OrderIssuer: Hashable, Sendable {
     case crown
     case rival(RivalID)
+    case town
 
     public var rivalID: RivalID? {
         if case let .rival(id) = self { id } else { nil }
+    }
+
+    /// Crown and town orders go by road to a town center; a rival's by ship.
+    public var deliversToTownCenter: Bool {
+        rivalID == nil
     }
 }
 
@@ -21,6 +28,8 @@ extension OrderIssuer: Codable {
         let raw = try decoder.singleValueContainer().decode(String.self)
         if raw == "crown" {
             self = .crown
+        } else if raw == "town" {
+            self = .town
         } else if raw.hasPrefix(Self.rivalPrefix), let id = RivalID(raw.dropFirst(Self.rivalPrefix.count)) {
             self = .rival(id)
         } else {
@@ -34,6 +43,7 @@ extension OrderIssuer: Codable {
         var container = encoder.singleValueContainer()
         switch self {
         case .crown: try container.encode("crown")
+        case .town: try container.encode("town")
         case let .rival(id): try container.encode("\(Self.rivalPrefix)\(id)")
         }
     }
@@ -163,6 +173,7 @@ public struct FavourLedger: Codable, Hashable, Sendable {
         switch issuer {
         case .crown: crown
         case let .rival(id): rivals[id, default: 0]
+        case .town: 0
         }
     }
 
@@ -171,6 +182,7 @@ public struct FavourLedger: Codable, Hashable, Sendable {
         switch issuer {
         case .crown: crown = value
         case let .rival(id): rivals[id] = value
+        case .town: break
         }
     }
 }

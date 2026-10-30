@@ -318,18 +318,9 @@ func onlyEnabledEventsAreDrawn() {
         (1202 ... 1210).compactMap { eventsWorld(seed: seed, difficulty: .hard, size: 1).seasonalEvent(forYear: $0)?.event }
     }
     let disabled = draws.filter { !$0.isEnabled }
-    #expect(!draws.isEmpty)
+    let drawn = Set(draws)
     #expect(disabled.isEmpty)
-}
-
-@Test("scenario: a disabled event is never warned, even scheduled")
-func disabledScheduledEventIsNeverWarned() {
-    var world = eventsWorld(seed: 2)
-    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .festival, onset: .summer)]
-    addHouses(6, in: &world)
-    let events = runSeasons(&world, untilTick: firstTick(of: .autumn, 1201))
-    #expect(events.seasonalEvents.isEmpty)
-    #expect(world.seasonalEvent(forYear: 1201) == nil)
+    #expect(drawn == Set(SeasonalEvent.allCases))
 }
 
 @Test func blightAndFestivalTargets() {
