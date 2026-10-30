@@ -171,3 +171,36 @@ func marketplaceClearsNoMarketInReach() {
     #expect(world.hubService().hubOf[home]?.hub == center)
     #expect(world.hubService().hubOf[home]?.distance == 18)
 }
+
+// The next tier's reserve (visible-distribution follow-up to the M2 sweep).
+
+@Test("scenario: A hub keeps the next tier's goods only for houses that may advance")
+func aHubKeepsTheNextTiersGoodsOnlyForHousesThatMayAdvance() throws {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let full = peasants(at: 6, in: &world)
+    world.populations[full]?.tier = .citizens
+    world.populations[full]?.population = 6
+    let growing = peasants(at: 9, in: &world)
+    world.populations[growing]?.tier = .citizens
+    let reserve = try #require(world.hubReserves(service: world.hubService())[center])
+    #expect(reserve[.tools] == 1)
+    #expect(reserve[.food] == 2 * (3 + 2))
+}
+
+@Test("scenario: The next tier's reserve is at most a basket")
+func theNextTiersReserveIsAtMostABasket() throws {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    var service = world.hubService()
+    for index in 0 ..< 20 {
+        let id = EntityID(raw: 50000 + UInt32(index))
+        var pop = HousePopulation()
+        pop.tier = .citizens
+        pop.population = 6
+        world.populations[id] = pop
+        service.housesOf[center, default: []].append(id)
+    }
+    let reserve = try #require(world.hubReserves(service: service)[center])
+    #expect(reserve[.tools] == 10)
+}
