@@ -166,3 +166,14 @@ func blightWarnsAStockedTown() throws {
     #expect(draw > 0)
     #expect(events.seasonalEvents == [.seasonalEventWarned(event: .blight, onset: .summer)])
 }
+
+@Test("scenario: a field still being built is not blighted")
+func fieldUnderConstructionIsNotBlighted() throws {
+    var (world, _) = blightWorld()
+    _ = world.tick()
+    let site = addOperational(.farm, at: TileCoordinate(x: 3, y: 0), in: &world)
+    world.buildings[site]?.state = .constructing
+    let building = try #require(world.buildings[site])
+    #expect(!world.isBlighted(building))
+    #expect(!world.snapshot().blightedFields.contains(site))
+}

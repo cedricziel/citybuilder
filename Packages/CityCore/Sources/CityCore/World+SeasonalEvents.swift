@@ -149,7 +149,8 @@ extension World {
     /// A player crop field in the marked area while a blight is under way:
     /// it takes twice its cycle, like a field in winter, without stalling.
     func isBlighted(_ building: Building) -> Bool {
-        guard seasonalEvents.active?.event.effect == .blight, building.kind.isCrop, building.owner == .player,
+        guard seasonalEvents.active?.event.effect == .blight, building.state == .operational, building.kind.isCrop,
+              building.owner == .player,
               let area = seasonalEvents.marked
         else { return false }
         return area.contains(building)
