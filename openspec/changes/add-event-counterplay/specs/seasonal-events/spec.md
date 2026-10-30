@@ -142,7 +142,7 @@ A burning building within 8 tiles (footprint gap) of an operational, road-connec
 
 ### Requirement: Blight halves crop yields in a marked area
 
-A drawn blight SHALL NOT come before the 4th year of a game, and SHALL be warned only when the player's operational stores hold at least one season of what the player's houses eat in food; otherwise that year SHALL have no seasonal event. A scheduled blight SHALL NOT need the food. Both values SHALL come from the blight's pack item (`firstYear`, `minFoodSeasons`). At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL take twice its recipe's cycle ticks, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
+A drawn blight SHALL NOT come before the 4th year of a game (the blight's pack item sets `firstYear`), and SHALL be warned only when the player owns at least 6 operational crop fields, as a drawn fire needs 6 buildings that can burn; otherwise that year SHALL have no seasonal event. A scheduled blight SHALL need one crop field. At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL take twice its recipe's cycle ticks, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
 
 #### Scenario: Blighted farm takes twice as long
 
@@ -159,10 +159,20 @@ A drawn blight SHALL NOT come before the 4th year of a game, and SHALL be warned
 - **WHEN** the events of 1202 are decided on Normal or Hard for many seeds
 - **THEN** none is a blight
 
-#### Scenario: A town with nothing stored gets a quiet year
+#### Scenario: A town with five fields gets a quiet year
 
-- **WHEN** a blight is drawn for summer and, at the start of spring, the player's stores hold less food than the houses eat in a season
+- **WHEN** a blight is drawn for summer and, at the start of spring, the player owns 5 operational crop fields
 - **THEN** no warning comes and that year has no seasonal event
+
+#### Scenario: A town with six fields is warned
+
+- **WHEN** a blight is drawn for summer and, at the start of spring, the player owns 6 operational crop fields
+- **THEN** the blight is warned
+
+#### Scenario: A scheduled blight needs one field
+
+- **WHEN** a chapter schedules a blight and the player owns one crop field at its warning
+- **THEN** the blight is warned
 
 ### Requirement: Fever holds a district back
 
