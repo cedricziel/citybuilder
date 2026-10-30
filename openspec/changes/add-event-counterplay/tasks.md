@@ -44,7 +44,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 7. Saves, determinism and sweeps
 
-- [ ] 7.1 Decode a save without the new keys; round-trip with a burning house, a watchman on the road, a warned blight and ruins; fixture from the previous version
+- [ ] 7.1 Decode a save without the new keys; round-trip with a burning house, a watchman on the road, a warned blight and ruins; fixture from the previous version (step 2: a save mid-blight and mid-fever plays on the same, and festival orders round-trip)
 - [ ] 7.2 Regenerate `DeterminismFixture` in its own commit; macOS and Linux agree; events off is equal to main
 - [ ] 7.3 PlayerBot `EventsKit`; the forced-hazard first-hour variant; the before-and-after sweeps of design D12 (code done for fire season: `EventsKit` builds fire watches, `BotEvents` drives drawn and forced events, and `EventsKitTests` holds the `GUIDE_SWEEP events` and `FIRE_SWEEP` runs behind `RIVAL_SWEEP=1`. Step 1 bars 1 and 2 pass with D10 unchanged; the table is in design D12. Step 2 code done: `EventsKit` builds a granary on a blight warning, a physician over a fever's district, a herb garden and buys herbs, and accepts and sends a festival; `HAZARD_SWEEP` runs forced blights and fevers; `PACING_EVENTS=1` and `SOLVENCY_EVENTS=1` add event arms to the pacing and solvency sweeps. Bars 3–6 wait for the sweep slot). Tune D10 until the bars hold and write the measured table into design D12
 - [ ] 7.4 Seasonal events in the weekly `rival-sweep` workflow and the `GUIDE_SWEEP`, `PACING_SWEEP` and `SOLVENCY_SWEEP` lines
