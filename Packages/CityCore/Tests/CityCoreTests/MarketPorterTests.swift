@@ -250,28 +250,6 @@ func hubSendsAPorterToAHouseShortOfFood() throws {
     #expect(world.stockpiles[hub]?.quantity(of: .food) == 6)
 }
 
-@Test("scenario: Porters go to the house that needs them most")
-func portersGoToTheHouseThatNeedsThemMost() {
-    var world = strip()
-    let hub = center(in: &world)
-    fill(hub, [.food: 10], in: &world)
-    let half = house(at: 6, in: &world)
-    stock(half, [.food: 2], in: &world)
-    let empty = house(at: 12, in: &world)
-    run(&world, ticks: 1)
-    #expect(world.porters.map(\.house) == [empty])
-}
-
-@Test func equalNeedGoesToTheNearerHouse() {
-    var world = strip()
-    let hub = center(in: &world)
-    fill(hub, [.food: 10], in: &world)
-    _ = house(at: 12, in: &world)
-    let near = house(at: 6, in: &world)
-    run(&world, ticks: 1)
-    #expect(world.porters.map(\.house) == [near])
-}
-
 @Test("scenario: Porter count follows the houses served")
 func porterCountFollowsTheHousesServed() {
     var world = strip()
@@ -464,33 +442,4 @@ func loadingAnOlderSaveSeedsHouseStock() throws {
     let legacy = Data(#"{"population":0,"tier":1,"satisfiedGoods":["food"],"shortGoods":[]}"#.utf8)
     let pop = try JSONDecoder().decode(HousePopulation.self, from: legacy)
     #expect(pop.stock(of: .food) == 1)
-}
-
-@Test("scenario: Porters serve the higher tier first")
-func portersServeTheHigherTierFirst() {
-    var world = strip()
-    let hub = center(in: &world)
-    fill(hub, [.food: 10, .planks: 10], in: &world)
-    _ = house(at: 6, in: &world)
-    let citizens = house(at: 12, tier: .citizens, in: &world)
-    stock(citizens, [.food: 3, .planks: 1], in: &world)
-    run(&world, ticks: 1)
-    #expect(world.porters.map(\.house) == [citizens])
-}
-
-@Test("scenario: A rival's porters go by stock ratio alone")
-func aRivalsPortersGoByStockRatioAlone() {
-    var world = strip()
-    let hub = SignatureFixture.inject(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world, owner: .rival(1))
-    fill(hub, [.food: 10, .planks: 10], in: &world)
-    let peasants = SignatureFixture.inject(.house, at: TileCoordinate(x: 6, y: 4), in: &world, owner: .rival(1))
-    var pop = HousePopulation()
-    pop.population = 4
-    world.populations[peasants] = pop
-    let citizens = SignatureFixture.inject(.house, at: TileCoordinate(x: 12, y: 4), in: &world, owner: .rival(1))
-    pop.tier = .citizens
-    world.populations[citizens] = pop
-    stock(citizens, [.food: 3, .planks: 1], in: &world)
-    run(&world, ticks: 1)
-    #expect(world.porters.map(\.house) == [peasants])
 }

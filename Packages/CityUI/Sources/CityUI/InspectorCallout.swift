@@ -324,7 +324,7 @@ struct InspectorCalloutView<Actions: View>: View {
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(line).font(.caption.monospaced()).lineLimit(2)
+                    InspectorKeyLine(line: line)
                 }
             }
         }
@@ -390,5 +390,16 @@ struct InspectorCalloutView<Actions: View>: View {
             .frame(width: 12, height: 12)
             .rotationEffect(.degrees(45))
             .offset(offset)
+    }
+}
+
+/// One key line of the callout. It wraps at word gaps as far as it needs, so a
+/// merchant house's stock of six goods never truncates at the callout width.
+/// Spec: `platform-shells` / Market lines in the inspector.
+struct InspectorKeyLine: View {
+    let line: String
+
+    var body: some View {
+        Text(line).font(.caption.monospaced()).fixedSize(horizontal: false, vertical: true)
     }
 }

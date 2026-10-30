@@ -75,6 +75,9 @@ public struct WorldSnapshot: Hashable, Sendable {
     /// Population state of every house, keyed by building. Spec:
     /// `rendering-2_5d` / Houses render their tier.
     public let housePopulations: [EntityID: HousePopulation]
+    /// The market serving each house in reach of one. Spec:
+    /// `platform-shells` / Market lines in the inspector.
+    public let marketServing: [EntityID: MarketServing]
     /// Spec: `calendar-and-events` / The world has a date.
     public let date: GameDate
     /// Spec: `cultures` / Snapshot carries the culture.
@@ -138,6 +141,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         buildingIssues: [EntityID: BuildingIssue] = [:],
         catchments: [EntityID: Int] = [:],
         housePopulations: [EntityID: HousePopulation] = [:],
+        marketServing: [EntityID: MarketServing] = [:],
         date: GameDate = GameDate(year: 1200, season: .spring),
         culture: Culture = .northernEuropean,
         age: Age = .medieval,
@@ -176,6 +180,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.buildingIssues = buildingIssues
         self.catchments = catchments
         self.housePopulations = housePopulations
+        self.marketServing = marketServing
         self.date = date
         self.culture = culture
         self.age = age
@@ -265,6 +270,7 @@ public extension World {
         let pop = UInt64(population(of: .player))
         let tileToIsland = tileToIslandMap()
         let summaries = buildIslandSummaries(tileToIsland: tileToIsland)
+        let service = hubService()
         return WorldSnapshot(
             tickCount: tickCount,
             simulatedTime: simulatedTime,
@@ -283,9 +289,10 @@ public extension World {
             islandSummaries: summaries,
             tileToIsland: tileToIsland,
             roadDisconnectedBuildings: roadDisconnectedBuildings(),
-            buildingIssues: buildingIssues(tileToIsland: tileToIsland),
+            buildingIssues: buildingIssues(tileToIsland: tileToIsland, service: service),
             catchments: catchmentCounts(tileToIsland: tileToIsland),
             housePopulations: populations,
+            marketServing: service.hubOf.mapValues(\.market),
             date: date,
             culture: culture,
             age: age,
