@@ -170,6 +170,19 @@ func bothOrdersHoldTheFestival() {
     #expect(fixture.world.orders.fulfilledCount == fulfilled)
 }
 
+@Test("scenario: trimming the board's history never calls a festival off")
+func trimmingKeepsTheFestival() {
+    var fixture = festivalFixture()
+    request(&fixture)
+    deliver([.bread, .beer], in: &fixture)
+    for _ in 0 ..< OrderRules.closedOrdersKept + 2 {
+        fixture.world.testAddOrder(state: .expired)
+    }
+    let events = fixture.run(to: fixture.world.tickCount + 2)
+    #expect(events.contains(.seasonalEventStarted(event: .festival)))
+    #expect(!events.contains(.seasonalEventEnded(event: .festival, toll: SeasonalEventToll(count: 0))))
+}
+
 @Test("scenario: the crowd leaves after the festival's first season")
 func festivalCrowdLeaves() {
     var fixture = festivalFixture()

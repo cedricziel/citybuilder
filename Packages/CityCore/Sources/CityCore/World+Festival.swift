@@ -68,14 +68,15 @@ extension World {
     /// either closes unfilled.
     mutating func settleFestival(events: inout [WorldEvent]) {
         guard let request = seasonalEvents.festival, let active = seasonalEvents.active else { return }
-        let pair = request.orders.compactMap(order)
-        if pair.count == request.orders.count, pair.allSatisfy({ $0.state == .fulfilled }) {
+        // Judged by state: an order the board's history dropped is closed, not missed.
+        let states = request.orders.compactMap { order($0)?.state }
+        if states.allSatisfy({ $0 == .fulfilled }) {
             let heldSeason = tickCount / Self.seasonTicks
             seasonalEvents.festivalUntil = (heldSeason + Self.festivalSeasons) * Self.seasonTicks - 1
             seasonalEvents.festival = nil
             seasonalEvents.active = nil
             events.append(.seasonalEventStarted(event: active.event))
-        } else if pair.count < request.orders.count || pair.contains(where: { !$0.state.isOpen && $0.state != .fulfilled }) {
+        } else if states.contains(where: { !$0.isOpen && $0 != .fulfilled }) {
             endSeasonalEvent(events: &events)
         }
     }

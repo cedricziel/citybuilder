@@ -82,7 +82,9 @@ extension World {
     }
 
     private mutating func trimClosedOrders() {
-        let closed = orders.orders.filter { !$0.state.isOpen }
+        // A festival's orders stay until it is held or called off.
+        let festival = Set(seasonalEvents.festival?.orders ?? [])
+        let closed = orders.orders.filter { !$0.state.isOpen && !festival.contains($0.id) }
         guard closed.count > OrderRules.closedOrdersKept else { return }
         let drop = Set(closed.prefix(closed.count - OrderRules.closedOrdersKept).map(\.id))
         orders.orders.removeAll { drop.contains($0.id) }
