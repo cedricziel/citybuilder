@@ -83,6 +83,7 @@ public struct InspectorViewModel: Sendable {
                 "Residents: \(pop.population)/\((modifiers ?? .none).capacity(of: pop.tier))",
                 "Needs: \(needs.joined(separator: " · "))"
             ] + Self.nextTierLine(after: pop.tier, in: culture) + houseNotes(modifiers)
+                + houseMarketLines(house: entityID, population: pop, culture: culture, in: snapshot)
                 + residentLines(house: entityID, population: pop, culture: culture) + shortageLine(issue)
         }
         let problem = issue.map(problemText)
@@ -95,7 +96,7 @@ public struct InspectorViewModel: Sendable {
             "Build: \(buildProgress)",
             "Road: \(snapshot.roadDisconnectedBuildings.contains(entityID) ? "none" : "connected")"
         ]
-        let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID])
+        let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + hubLines(for: building, in: snapshot)
         let signature = signatureLines(for: building, in: snapshot)
         let problemLines = problem.map { ["Problem: \($0)"] } ?? []
         let fire = fireLines(for: building, in: snapshot) + fireWatchLines(for: building, in: snapshot)
@@ -236,11 +237,13 @@ public struct InspectorView: View {
 }
 
 extension InspectorViewModel {
-    /// The lines the callout shows before Details: residents and needs for
-    /// a house, otherwise state and road. Spec: `platform-shells` /
-    /// Inspector callout.
+    /// The lines the callout shows before Details: residents, needs and
+    /// market for a house, otherwise state, road and a hub's reach. Spec:
+    /// `platform-shells` / Inspector callout.
     public var keyLines: [String] {
-        let head = (tier == nil ? ["State:", "Road:", Self.inReachMarker] : ["Residents:", "Needs:", "Next:"]) + Self.fireMarkers
+        let head = (tier == nil
+            ? ["State:", "Road:", Self.inReachMarker, "Serves:", "Porters:"]
+            : ["Residents:", "Needs:", "Next:", "Stock:", "Market:"]) + Self.fireMarkers
         return (head + ["Problem:"]).compactMap { marker in
             bullets.first { marker == Self.inReachMarker ? $0.contains(marker) : $0.hasPrefix(marker) }
         }
