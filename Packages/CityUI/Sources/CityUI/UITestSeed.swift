@@ -59,6 +59,18 @@ public enum UITestSeed {
         return world
     }
 
+    /// `-uiTestSeedBlight`, `-uiTestSeedFever`, `-uiTestSeedFestival`: the lived town with a marketplace, which
+    /// a festival needs, seasonal events on and `event` due, run to a tick before the season change that warns of
+    /// it or asks for it, so its banner shows as the game starts.
+    public static func eventWorld(_ event: SeasonalEvent) -> World {
+        var world = livedTownWorld(adding: [.marketplace])
+        let announcement = world.seedSeasonalEvent(event)
+        while world.tickCount + 1 < announcement {
+            _ = world.tick()
+        }
+        return world
+    }
+
     /// Ticks from the start of `fireWorld` to its third fire.
     static let fireSeedSecondCall: UInt64 = 80
 
@@ -117,7 +129,8 @@ public enum UITestSeed {
     }
 
     /// The seed the launch arguments ask for, if any: `-uiTestSeedLived`, `-uiTestSeedShore`,
-    /// `-uiTestSeedPort`, `-uiTestSeedArchipelago` (the largest map, seed 0, for frame times) or
+    /// `-uiTestSeedPort`, `-uiTestSeedArchipelago` (the largest map, seed 0, for frame times),
+    /// `-uiTestSeedOrders`, `-uiTestSeedFire`, `-uiTestSeedBlight`, `-uiTestSeedFever`, `-uiTestSeedFestival` or
     /// `-uiTestSeedTown` (with `-uiTestShowcase`, `-uiTestSeason`, `-uiTestCulture` and `-uiTestAge`),
     /// checked in that order. `-uiTestCamera x,y,zoom` then moves its camera.
     public static func world(fromArguments arguments: [String]) -> World? {
@@ -138,6 +151,9 @@ public enum UITestSeed {
         if arguments.contains("-uiTestSeedArchipelago") { return World.newGame(layout: .archipelago, seed: 0) }
         if arguments.contains("-uiTestSeedOrders") { return ordersWorld() }
         if arguments.contains("-uiTestSeedFire") { return fireWorld() }
+        if arguments.contains("-uiTestSeedBlight") { return eventWorld(.blight) }
+        if arguments.contains("-uiTestSeedFever") { return eventWorld(.fever) }
+        if arguments.contains("-uiTestSeedFestival") { return eventWorld(.festival) }
         guard arguments.contains("-uiTestSeedTown") else { return nil }
         return townWorld(
             showcase: showcase(fromArguments: arguments), season: season(fromArguments: arguments),
@@ -239,9 +255,10 @@ public enum UITestSeed {
 
     /// `-uiTestSeedLived`: the town seed with two farms and the fire trades, every free tile within
     /// six of the town center paved, and 300 ticks run, so the houses hold residents and the
-    /// workshops work. In-game checks of ambient life (smoke, strollers) start from it.
-    public static func livedTownWorld() -> World {
-        var world = townWorld(showcase: [.farm, .farm, .bakery, .smelter, .brewery, .toolsmith])
+    /// workshops work. In-game checks of ambient life (smoke, strollers) start from it. `adding` places
+    /// more kinds with the showcase.
+    public static func livedTownWorld(adding extra: [BuildingKind] = []) -> World {
+        var world = townWorld(showcase: [.farm, .farm, .bakery, .smelter, .brewery, .toolsmith] + extra)
         guard let center = playerTownCenter(in: world) else {
             return world
         }

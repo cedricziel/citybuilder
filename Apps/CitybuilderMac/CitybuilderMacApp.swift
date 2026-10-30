@@ -61,8 +61,9 @@ struct CitybuilderMacApp: App {
     }
 
     /// The iOS app's debug seeds (Debug only), so a new Mac game can start from the same towns:
-    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore` and
-    /// `-uiTestSeedLived`.
+    /// `-uiTestSeedTown` (with `-uiTestShowcase` and `-uiTestSeason`), `-uiTestSeedShore`,
+    /// `-uiTestSeedLived` and the event seeds (`-uiTestSeedFire`, `-uiTestSeedBlight`, `-uiTestSeedFever`,
+    /// `-uiTestSeedFestival`).
     /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
     private static var uiTestSaveDirectory: URL? {
         #if DEBUG

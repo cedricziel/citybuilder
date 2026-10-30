@@ -61,6 +61,8 @@ struct CitybuilderiOSApp: App {
     /// `-uiTestSeedShore` starts from
     /// `UITestSeed.shoreWorld()`: a port, a shipyard and a ship, for the shore family's shots.
     /// `-uiTestSeedLived` starts from `UITestSeed.livedTownWorld()`, an inhabited town at work.
+    /// `-uiTestSeedBlight`, `-uiTestSeedFever` and `-uiTestSeedFestival` start from `UITestSeed.eventWorld(_:)`:
+    /// that town with seasonal events on, a tick before the event is announced.
     /// Debug launches with a `-uiTest…` flag save into a folder of their own (`UITestSeed.saveDirectory`).
     private static var uiTestSaveDirectory: URL? {
         #if DEBUG
