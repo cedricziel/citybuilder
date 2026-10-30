@@ -236,6 +236,10 @@ extension World {
         from hub: EntityID, among houses: [EntityID], service: HubService, inbound: [EntityID: [Good: Int]]
     ) -> Building? {
         let held = stockpiles[hub] ?? Stockpile(capacity: 0)
+        // The player's porters serve the highest tier first, so the houses a
+        // player worked up keep their goods; a rival's spread by stock ratio,
+        // since rivals grow residents rather than merchants.
+        let tierFirst = buildings[hub]?.owner == .player
         var best: (house: Building, rank: (ratio: StockRatio, distance: Int))?
         for id in houses {
             guard let house = buildings[id], let pop = populations[id] else { continue }
@@ -251,7 +255,7 @@ extension World {
             let tier = pop.tier.rawValue
             let better = best.map { best in
                 let bestTier = populations[best.house.id]?.tier.rawValue ?? 0
-                if tier != bestTier { return tier > bestTier }
+                if tierFirst, tier != bestTier { return tier > bestTier }
                 return lowest.isBelow(best.rank.ratio) || (!best.rank.ratio.isBelow(lowest) && distance < best.rank.distance)
             } ?? true
             if better {
