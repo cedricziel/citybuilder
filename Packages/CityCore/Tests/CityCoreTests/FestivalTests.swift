@@ -290,3 +290,18 @@ func festivalOrdersRoundTrip() throws {
     let encoded = try String(bytes: JSONEncoder().encode(OrderIssuer.town), encoding: .utf8)
     #expect(encoded == "\"town\"")
 }
+
+@Test("scenario: the festival's tax bonus starts on the tick it is held")
+func festivalTaxOnTheHeldTick() {
+    var (world, _) = marketStreet()
+    world.calendar = CalendarState(startYear: 1200, isActive: true)
+    world.seasonalEvents.enabled = true
+    let bread = world.testAddOrder(.town, good: .bread, quantity: 6, state: .fulfilled, reward: 0)
+    let beer = world.testAddOrder(.town, good: .beer, quantity: 4, state: .fulfilled, reward: 0)
+    world.seasonalEvents.festival = FestivalRequest(orders: [bread, beer])
+    world.seasonalEvents.active = ActiveSeasonalEvent(event: .festival, startTick: 0, lastTick: 500)
+    world.tickCount = Economy.taxIntervalTicks - 1
+    let events = world.tick().events
+    #expect(events.contains(.seasonalEventStarted(event: .festival)))
+    #expect(events.contains(.taxesCollected(amount: 35)))
+}

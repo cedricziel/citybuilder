@@ -265,7 +265,9 @@ public struct World: Codable, Sendable, Equatable {
         runOrderSystem(events: &events)
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
-        runEconomySystem(signatureSources: signatureSources, festive: festive, events: &events)
+        // A festival held this tick already pays its bonus.
+        let taxed = festive.isEmpty ? festivalHouses(service: service) : festive
+        runEconomySystem(signatureSources: signatureSources, festive: taxed, events: &events)
         runScenarioRecords(events: &events)
         runStatisticsSystem(events: events)
 
