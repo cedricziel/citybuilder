@@ -21,6 +21,7 @@ struct CitybuilderMacApp: App {
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
+        Language.adoptAtLaunch()
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         self.fullscreenTracker = MacFullscreenTracker()
