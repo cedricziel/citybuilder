@@ -246,10 +246,12 @@ struct MidGameMilestones {
     var firstMerchant: Int?
     var twentyMerchants: Int?
     var renaissance: Int?
-    /// With PACING_RETENTION=1: merchants at the end of year 10 and the
-    /// share of years 8–10's bot turns with 20 or more merchants (#223).
+    /// With PACING_RETENTION=1: merchants at the end of year 10, the share
+    /// of years 8–10's bot turns with 20 or more merchants (#223) and the
+    /// mean merchants over those turns.
     var merchantsAtTen: Int?
     var heldShare: Double?
+    var meanLate: Double?
     var bankruptAt: Int?
     /// With the order kit on: what it did with the orders.
     var orders: OrdersKit.Result?
@@ -261,11 +263,33 @@ struct MidGameMilestones {
     }
 }
 
+/// Merchants over the bot turns of years 8–10.
+struct LateYears {
+    private(set) var turns = 0
+    private(set) var held = 0
+    private(set) var merchants = 0
+
+    mutating func add(merchants count: Int) {
+        turns += 1
+        merchants += count
+        if count >= 20 { held += 1 }
+    }
+
+    /// The share of turns with 20 or more merchants.
+    var heldShare: Double {
+        Double(held) / Double(max(turns, 1))
+    }
+
+    var meanMerchants: Double {
+        Double(merchants) / Double(max(turns, 1))
+    }
+}
+
 extension MidGameMilestones {
     /// Notes this bot turn's milestones; true when the run can stop. With
     /// `retention` the run goes on to year 10 and records the merchants
-    /// there and the share of years 8–10's turns with 20 or more (#223).
-    mutating func note(_ world: World, tick: Int, retention: Bool, late: inout (turns: Int, held: Int)) -> Bool {
+    /// there, and the held share and mean merchants of years 8–10 (#223).
+    mutating func note(_ world: World, tick: Int, retention: Bool, late: inout LateYears) -> Bool {
         for idle in world.idleGoods(of: .player) where !hinted.contains(idle.good) {
             hinted.append(idle.good)
         }
@@ -275,13 +299,11 @@ extension MidGameMilestones {
         if renaissance == nil, world.age >= .renaissance { renaissance = tick }
         guard retention else { return renaissance != nil }
         let year = Int(CalendarState.ticksPerYear)
-        if tick > 8 * year {
-            late.turns += 1
-            if merchants >= 20 { late.held += 1 }
-        }
+        if tick > 8 * year { late.add(merchants: merchants) }
         guard tick >= 10 * year else { return false }
         merchantsAtTen = merchants
-        heldShare = Double(late.held) / Double(max(late.turns, 1))
+        heldShare = late.heldShare
+        meanLate = late.meanMerchants
         return true
     }
 }
@@ -294,7 +316,7 @@ extension World {
         world.calendar = CalendarState(startYear: 1200, isActive: true)
         var milestones = MidGameMilestones()
         let retention = ProcessInfo.processInfo.environment["PACING_RETENTION"] == "1"
-        var late = (turns: 0, held: 0)
+        var late = LateYears()
         guard let center = world.goodsBuffers(of: .player).first(where: { $0.kind == .townCenter }) else { return milestones }
         var bot = PlayerBot(center: center, tradesAtMarket: arm.tradesAtMarket, firstSteps: PlayerBot.guideSteps, midGame: arm.order)
         var kit = arm.orders ? OrdersKit() : nil
