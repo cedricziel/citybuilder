@@ -18,10 +18,11 @@ extension World {
             consumeIfDue(&pop, building: building)
             updateSatisfaction(&pop, of: tracked, hub: hub, inbound: inbound[building.id] ?? [:])
             let pastGrace = isPastGrace(pop, owner: building.owner)
-            updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
+            let held = feverHeld.contains(building.id)
+            updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace, feverHeld: held)
             updateTier(
                 &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
-                feverHeld: feverHeld.contains(building.id)
+                feverHeld: held
             )
             populations[building.id] = pop
         }
@@ -86,13 +87,16 @@ extension World {
 
     /// Inspired houses grow twice as fast; a house above its capacity
     /// shrinks even with its needs met (spec `age-signatures`).
-    private func updateGrowth(_ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers, pastGrace: Bool) {
+    /// A house a fever holds back doesn't grow until the fever ends.
+    private func updateGrowth(
+        _ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers, pastGrace: Bool, feverHeld: Bool
+    ) {
         pop.ticksAtCurrentSatisfaction &+= 1
         let met = bindingNeeds(of: pop.tier, for: owner, advancing: false).allSatisfy(pop.isSatisfied)
         let streak = pop.ticksAtCurrentSatisfaction
         let capacity = modifiers.capacity(of: pop.tier)
         let growthInterval = HousePopulation.growthIntervalTicks / modifiers.paceDivisor
-        let canGrow = met && streak >= growthInterval && pop.population < capacity
+        let canGrow = !feverHeld && met && streak >= growthInterval && pop.population < capacity
         let mustShrink = streak >= HousePopulation.declineIntervalTicks
             && (pop.population > capacity || (pastGrace && pop.population > 0))
         if canGrow {

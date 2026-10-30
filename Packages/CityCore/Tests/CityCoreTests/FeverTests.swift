@@ -63,7 +63,9 @@ func feverEmptiesAHouse() {
     let onset = firstTick(of: .autumn, 1201)
     let events = runTended(&world, house: house, untilTick: onset + CalendarState.ticksPerSeason)
     let left = events.count { $0 == .residentLeftWithFever(house: house) }
+    let population = world.populations[house]?.population
     #expect(left == 3)
+    #expect(population == 5)
     #expect(world.populations[house]?.tier == .merchants)
     #expect(world.seasonalEvents.counters.residentsLeftWithFever >= 3)
     let ended = events.first { if case .seasonalEventEnded(.fever, _) = $0 { true } else { false } }

@@ -34,6 +34,7 @@ extension World {
         else { return }
         for house in feverHouses() where (populations[house.id]?.population ?? 0) >= 2 {
             populations[house.id]?.population -= 1
+            populations[house.id]?.ticksAtCurrentSatisfaction = 0
             seasonalEvents.fever?.residentsLeft += 1
             seasonalEvents.counters.residentsLeftWithFever += 1
             events.append(.residentLeftWithFever(house: house.id))
