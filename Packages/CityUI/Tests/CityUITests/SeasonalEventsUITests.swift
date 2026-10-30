@@ -23,6 +23,12 @@ func eventsToggleReachesTheWorld() throws {
     #expect(dialog.seasonalEvents)
 }
 
+@Test("the events toggle's hint names every seasonal event")
+func eventsToggleHintNamesEveryEvent() {
+    let hint = NewGameDialogViewModel.seasonalEventsHint.lowercased()
+    #expect(SeasonalEvent.allCases.allSatisfy { hint.contains($0.rawValue) })
+}
+
 /// A new Normal game with seasonal events on, changed by `change`.
 @MainActor
 private func eventsSession(change: (inout World) -> Void = { _ in }) -> GameSession {

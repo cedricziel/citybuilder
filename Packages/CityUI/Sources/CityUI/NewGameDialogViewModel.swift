@@ -40,6 +40,10 @@ public final class NewGameDialogViewModel {
     /// default; old saves and a world built without it have them off.
     public var seasonalEvents = true
 
+    /// The line under the "Seasonal events" toggle.
+    public nonisolated static let seasonalEventsHint =
+        "Fire, blight and fever, each warned a season ahead, and a festival when the town asks for one."
+
     /// The camera's zoom when the game starts; a phone starts further out.
     private let startZoom: Double
 
