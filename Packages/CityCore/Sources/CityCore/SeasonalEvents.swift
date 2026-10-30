@@ -29,6 +29,8 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     public internal(set) var active: ActiveSeasonalEvent?
     /// The fires of a fire event under way.
     public internal(set) var fire: FireEventState?
+    /// A fever under way: the residents it has sent away.
+    public internal(set) var fever: FeverEventState?
     /// The area a blight or a fever threatens, from its warning to its end.
     public internal(set) var marked: MarkedArea?
     public internal(set) var counters = SeasonalEventCounters()
@@ -244,4 +246,9 @@ public struct MarkedArea: Codable, Hashable, Sendable {
         let gap = max(0, box.minX - around.maxX, around.minX - box.maxX, box.minY - around.maxY, around.minY - box.maxY)
         return gap <= radius
     }
+}
+
+/// A fever under way. Spec: `seasonal-events` / Fever holds a district back.
+public struct FeverEventState: Codable, Hashable, Sendable {
+    public internal(set) var residentsLeft = 0
 }

@@ -58,6 +58,9 @@ extension World {
         if seasonalEvents.fire != nil {
             runFireSystem(events: &events)
         }
+        if seasonalEvents.fever != nil {
+            runFeverSystem(events: &events)
+        }
         if let active = seasonalEvents.active, tickCount >= active.lastTick {
             endSeasonalEvent(events: &events)
         }
@@ -112,6 +115,9 @@ extension World {
         if onset.event.effect == .fire {
             seasonalEvents.fire = FireEventState(ignitionTicks: fireIgnitionTicks())
         }
+        if onset.event.effect == .fever {
+            seasonalEvents.fever = FeverEventState()
+        }
         events.append(.seasonalEventStarted(event: onset.event))
     }
 
@@ -123,25 +129,34 @@ extension World {
             extinguish(fire.building, events: &events)
         }
         let fire = seasonalEvents.fire
+        let left = seasonalEvents.fever?.residentsLeft ?? 0
         seasonalEvents.active = nil
         seasonalEvents.fire = nil
+        seasonalEvents.fever = nil
         seasonalEvents.marked = nil
-        let toll = SeasonalEventToll(count: fire?.lost ?? 0, fires: fire?.caught.count ?? 0)
+        let toll = SeasonalEventToll(count: (fire?.lost ?? 0) + left, fires: fire?.caught.count ?? 0)
         events.append(.seasonalEventEnded(event: active.event, toll: toll))
     }
 
     static let blightRadius = 6
 
-    /// The area a blight threatens: around one operational player crop
-    /// field picked with the year's area generator. Nil for other events.
+    /// The area a blight or fever threatens: around one operational player
+    /// crop field for a blight, one player house with residents for a fever,
+    /// picked with the year's area or district generator. Nil for other events.
     private func markedArea(for effect: SeasonalEffect) -> MarkedArea? {
-        guard effect == .blight else { return nil }
-        let fields = buildings.values
-            .filter { $0.owner == .player && $0.state == .operational && $0.kind.isCrop }
+        let draw: SeasonalEventDraw
+        let isTarget: (Building) -> Bool
+        switch effect {
+        case .blight: (draw, isTarget) = (.area, { $0.kind.isCrop })
+        case .fever: (draw, isTarget) = (.district, { $0.kind == .house && (self.populations[$0.id]?.population ?? 0) > 0 })
+        case .fire, .festival: return nil
+        }
+        let targets = buildings.values
+            .filter { $0.owner == .player && $0.state == .operational && isTarget($0) }
             .sorted { $0.id.raw < $1.id.raw }
-        var rng = seasonalEventRNG(.area, year: date.year)
-        guard !fields.isEmpty else { return nil }
-        return MarkedArea(around: fields[Int(rng.next() % UInt64(fields.count))].bounds, radius: Self.blightRadius)
+        var rng = seasonalEventRNG(draw, year: date.year)
+        guard !targets.isEmpty else { return nil }
+        return MarkedArea(around: targets[Int(rng.next() % UInt64(targets.count))].bounds, radius: Self.blightRadius)
     }
 
     /// A player crop field in the marked area while a blight is under way:
@@ -183,6 +198,6 @@ extension World {
     /// What a fire can burn: what can ignite, and the town's wooden stores
     /// and halls.
     static func isFlammable(_ kind: BuildingKind) -> Bool {
-        canIgnite(kind) || [.warehouse, .granary, .library, .fireWatch].contains(kind)
+        canIgnite(kind) || [.warehouse, .granary, .library, .fireWatch, .physician].contains(kind)
     }
 }

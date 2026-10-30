@@ -49,6 +49,8 @@ public enum ProductionCatalog {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: ProductionRecipe(inputs: [:], outputs: [.herbs: 1], cycleTicks: 60)
+        case .physician: nil
         }
     }
 }

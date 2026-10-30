@@ -10,6 +10,7 @@ extension World {
             .sorted { $0.id.raw < $1.id.raw }
         let tracked = HouseTier.allNeeds(in: culture)
         let inbound = porterInbound()
+        let feverHeld = Set(feverHouses().map(\.id))
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
@@ -18,7 +19,10 @@ extension World {
             updateSatisfaction(&pop, of: tracked, hub: hub, inbound: inbound[building.id] ?? [:])
             let pastGrace = isPastGrace(pop, owner: building.owner)
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace)
-            updateTier(&pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace)
+            updateTier(
+                &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
+                feverHeld: feverHeld.contains(building.id)
+            )
             populations[building.id] = pop
         }
     }
@@ -102,15 +106,17 @@ extension World {
 
     /// Spec: `population-and-needs` / Houses advance and decline
     /// between tiers.
-    private func updateTier(
-        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool
+    private func updateTier( // swiftlint:disable:this function_parameter_count
+        _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool,
+        feverHeld: Bool
     ) {
         // Spec: `population-and-needs` / Market hubs gate tier advancement.
         // A need the house already eats counts while it is met: porters keep
         // its stock, and they may have just emptied the hub into it. A need
         // the next tier adds counts only while the serving hub holds it.
         let eaten = Set(pop.tier.needs(in: culture))
-        let canAdvance = pop.tier.next.map { next in
+        // Spec: `seasonal-events` / Fever holds a district back.
+        let canAdvance = !feverHeld && pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
                 && bindingNeeds(of: next, for: building.owner, advancing: true).allSatisfy { good in
                     eaten.contains(good) ? pop.isSatisfied(good) : hubHolds(good, hub)

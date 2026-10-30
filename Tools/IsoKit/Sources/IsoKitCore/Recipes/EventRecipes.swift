@@ -1,5 +1,5 @@
 // isokit: what seasonal events add to the town (add-event-counterplay): the fire watch, the granary,
-// ruins per footprint and the fire effect. Design canvas: https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5
+// the physician and herb garden, ruins per footprint and the fire effect. Design canvas: https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5
 // (option A of each).
 import AppKit
 import SceneKit
@@ -11,6 +11,11 @@ enum Events {
     static let scorched = NSColor(red: 0.36, green: 0.31, blue: 0.27, alpha: 1)
     static let bronze = NSColor(red: 0.55, green: 0.40, blue: 0.20, alpha: 1)
     static let burlap = NSColor(red: 0.62, green: 0.54, blue: 0.40, alpha: 1)
+    static let shutterBlue = NSColor(red: 0.22, green: 0.33, blue: 0.48, alpha: 1)
+    static let herb = NSColor(red: 0.42, green: 0.60, blue: 0.27, alpha: 1)
+    static let driedHerb = NSColor(red: 0.50, green: 0.52, blue: 0.30, alpha: 1)
+    static let lavender = NSColor(red: 0.66, green: 0.52, blue: 0.80, alpha: 1)
+    static let wicker = NSColor(red: 0.74, green: 0.60, blue: 0.34, alpha: 1)
     /// Outer, middle and inner flame, dark to bright.
     static let flames: [NSColor] = [
         NSColor(red: 0.80, green: 0.22, blue: 0.04, alpha: 1),
@@ -36,7 +41,9 @@ extension Recipes {
 
     static let events: [Recipe] = [
         Recipe(id: "building-fire-watch", cell: SpriteCell(footprint: 1, heightPx: 176)) { kit, _ in fireWatch(kit) },
-        Recipe(id: "building-granary", cell: SpriteCell(footprint: 2, heightPx: 144)) { kit, _ in granary(kit) }
+        Recipe(id: "building-granary", cell: SpriteCell(footprint: 2, heightPx: 144)) { kit, _ in granary(kit) },
+        Recipe(id: "building-physician", cell: SpriteCell(footprint: 2, heightPx: 128)) { kit, _ in physician(kit) },
+        Recipe(id: "building-herb-garden", cell: SpriteCell(footprint: 2, heightPx: 96)) { kit, _ in herbGarden(kit) }
     ] + ruinSizes.map { size in
         Recipe(
             id: ruinsID(tiles: size.tiles),
@@ -124,6 +131,74 @@ extension Recipes {
             kit.ball(spot, radius: 0.32, Events.burlap, scale: SCNVector3(1, 0.85, 0.9))
         }
         kit.crate(at: SCNVector3(2.4, 0, 7.0))
+    }
+
+    /// A half-timbered house under a tile roof with blue shutters, herb bundles drying under the
+    /// eave, a hanging sign with a bronze mortar, a lavender bed and a drying rack (canvas option A).
+    static func physician(_ kit: Builder) {
+        let lo: CGFloat = 1.0, hi: CGFloat = 5.4, base: CGFloat = 0.3, eave: CGFloat = 3.1
+        kit.block(SCNVector3(lo - 0.15, 0, lo - 0.15), SCNVector3(hi + 0.15, base, hi + 0.15), .rubble)
+        kit.block(SCNVector3(lo, base, lo), SCNVector3(hi, eave, hi), .plaster)
+        kit.timberFrame(.south(wallZ: hi), span: lo ... hi, base: base, height: eave - base, posts: 4)
+        kit.timberFrame(.east(wallX: hi), span: lo ... hi, base: base, height: eave - base, posts: 4)
+        kit.door(.south(wallZ: hi), along: 2.3, base: base, width: 0.9, height: 1.9)
+        kit.window(.south(wallZ: hi), along: 4.2, y: 1.6, shutters: Events.shutterBlue)
+        kit.window(.east(wallX: hi), along: 2.2, y: 1.6, shutters: Events.shutterBlue)
+        kit.window(.east(wallX: hi), along: 4.2, y: 1.6, shutters: Events.shutterBlue)
+        kit.gableRoof(RoofSpec(lo: SCNVector3(lo, eave, lo), hi: SCNVector3(hi, 0, hi), pitchDegrees: 45, finish: .tile))
+        kit.chimney(x: 2.0, depth: 1.8, from: eave, to: eave + 2.4, finish: .rubble)
+        // Herb bundles drying under the east eave.
+        for row in stride(from: lo + 0.5, to: hi - 0.2, by: 0.7) {
+            kit.block(SCNVector3(hi + 0.08, eave - 0.75, row), SCNVector3(hi + 0.3, eave - 0.15, row + 0.3), .paint(Events.driedHerb))
+        }
+        // The sign: a post, an arm and a bronze mortar with its pestle.
+        kit.block(SCNVector3(3.2, 0, hi + 0.9), SCNVector3(3.35, 2.6, hi + 1.05), .timber)
+        kit.block(SCNVector3(3.2, 2.45, hi + 0.9), SCNVector3(4.2, 2.6, hi + 1.05), .timber)
+        let mortar = SCNCone(topRadius: 0.3, bottomRadius: 0.18, height: 0.38)
+        kit.add(mortar, Finish.paint(Events.bronze).material(), at: SCNVector3(3.95, 2.05, hi + 0.97))
+        kit.add(
+            SCNBox(width: 0.07, height: 0.5, length: 0.07, chamferRadius: 0), Finish.paint(Events.bronze).material(),
+            at: SCNVector3(4.0, 2.3, hi + 0.97), euler: SCNVector3(0, 0, -0.5)
+        )
+        // A lavender bed along the east side and a drying rack behind it.
+        kit.ground(SCNVector3(6.0, 0, 1.0), SCNVector3(7.4, 0, 5.6), .paint(Palette.soil))
+        for row in stride(from: CGFloat(1.4), to: 5.4, by: 0.6) {
+            for x in [CGFloat(6.35), 7.0] {
+                kit.ball(SCNVector3(x, 0.2, row), radius: 0.24, Events.herb, scale: SCNVector3(1, 0.8, 1))
+                kit.ball(SCNVector3(x, 0.42, row), radius: 0.1, Events.lavender, scale: SCNVector3(1, 1.4, 1))
+            }
+        }
+        kit.block(SCNVector3(6.1, 0, 6.3), SCNVector3(6.2, 1.5, 6.4), .timber)
+        kit.block(SCNVector3(7.3, 0, 6.3), SCNVector3(7.4, 1.5, 6.4), .timber)
+        kit.block(SCNVector3(6.1, 1.4, 6.3), SCNVector3(7.4, 1.5, 6.4), .timber)
+        for x in stride(from: CGFloat(6.35), to: 7.3, by: 0.3) {
+            kit.block(SCNVector3(x, 0.95, 6.28), SCNVector3(x + 0.16, 1.4, 6.42), .paint(Events.driedHerb))
+        }
+    }
+
+    /// A low fenced plot of herb rows flecked with lavender, a small drying frame hung with bunches
+    /// and a wicker basket, so it reads neither as a farm nor as a tea garden (canvas, herb garden).
+    static func herbGarden(_ kit: Builder) {
+        kit.ground(SCNVector3(0.6, 0, 0.6), SCNVector3(7.4, 0, 7.4), .paint(Palette.soil))
+        for row in stride(from: CGFloat(1.2), to: 7.0, by: 1.1) {
+            for x in stride(from: CGFloat(1.0), to: 5.4, by: 0.55) {
+                kit.ball(SCNVector3(x, 0.18, row), radius: 0.24, Events.herb, scale: SCNVector3(1, 0.7, 1))
+            }
+            for x in stride(from: CGFloat(1.3), to: 5.4, by: 1.1) {
+                kit.ball(SCNVector3(x, 0.38, row + 0.05), radius: 0.09, Events.lavender, scale: SCNVector3(1, 1.4, 1))
+            }
+        }
+        kit.fence(from: SCNVector3(0.4, 0, 7.6), to: SCNVector3(7.6, 0, 7.6), height: 0.6)
+        kit.fence(from: SCNVector3(7.6, 0, 0.4), to: SCNVector3(7.6, 0, 7.6), height: 0.6)
+        kit.block(SCNVector3(6.0, 0, 1.4), SCNVector3(6.12, 1.8, 1.52), .timber)
+        kit.block(SCNVector3(6.0, 0, 4.4), SCNVector3(6.12, 1.8, 4.52), .timber)
+        kit.block(SCNVector3(6.0, 1.7, 1.4), SCNVector3(6.12, 1.82, 4.52), .timber)
+        for row in stride(from: CGFloat(1.7), to: 4.3, by: 0.45) {
+            kit.block(SCNVector3(5.98, 1.15, row), SCNVector3(6.14, 1.7, row + 0.2), .paint(Events.driedHerb))
+        }
+        kit.add(
+            SCNCylinder(radius: 0.38, height: 0.42), Finish.paint(Events.wicker).material(), at: SCNVector3(6.6, 0.21, 6.0)
+        )
     }
 
     /// What a burnt building leaves on `tiles` x `tiles`: the 2 x 2 ruin of the peasant house (rubble

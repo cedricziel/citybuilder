@@ -169,6 +169,16 @@ GLYPHS: dict[str, list[Shape]] = {
         shape("path", "dark", "stroke", d="M4 13.5c5 2 11 2 16 0", stroke_width=1.3, stroke_linecap="round"),
         shape("circle", "dark", cx=19.5, cy=19.5, r=1.6),
     ],
+    "herbs": [  # a bunch of leafy sprigs tied with twine, lavender among them
+        shape("path", "dark", "stroke", d="M12 21V11M12 21l-4-9M12 21l4-9", stroke_width=1.2, stroke_linecap="round"),
+        shape("ellipse", "main", cx=7, cy=8.5, rx=3, ry=4.6, transform="rotate(-25 7 8.5)"),
+        shape("ellipse", "main", cx=17, cy=8.5, rx=3, ry=4.6, transform="rotate(25 17 8.5)"),
+        shape("ellipse", "main", cx=12, cy=6.5, rx=3.2, ry=5),
+        shape("ellipse", "light", cx=11, cy=4.8, rx=1, ry=2),
+        shape("ellipse", "accent2", cx=9.5, cy=3, rx=1.3, ry=2.2),
+        shape("ellipse", "accent2", cx=15, cy=3.4, rx=1.2, ry=2),
+        shape("rect", "accent", x=9.5, y=15, width=5, height=2.2, rx=0.8),
+    ],
     "cloth": [  # two folded bolts, madder on woad
         shape("rect", "accent2", x=3, y=13.5, width=18, height=6.5, rx=1.6),
         shape("rect", "main", x=4, y=6, width=17, height=7, rx=1.6),
@@ -200,6 +210,7 @@ PALETTES: dict[str, tuple[str, str, str, str | None, str | None]] = {
     "coffee": ("#6e4426", "#3d2412", "#a77a52", None, None),
     "wool": ("#ece4cf", "#9a7a50", "#ffffff", None, None),
     "cloth": ("#b5473a", "#7f2a22", "#e08a76", "#9cb4d8", "#3f5f8f"),
+    "herbs": ("#6aa23e", "#3f6a25", "#a8d27a", "#c9a85a", "#a884cc"),
 }
 
 

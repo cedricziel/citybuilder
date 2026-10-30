@@ -325,9 +325,9 @@ func onlyEnabledEventsAreDrawn() {
 @Test("scenario: a disabled event is never warned, even scheduled")
 func disabledScheduledEventIsNeverWarned() {
     var world = eventsWorld(seed: 2)
-    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .fever, onset: .winter)]
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .festival, onset: .summer)]
     addHouses(6, in: &world)
-    let events = runSeasons(&world, untilTick: firstTick(of: .spring, 1202) - 1)
+    let events = runSeasons(&world, untilTick: firstTick(of: .autumn, 1201))
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvent(forYear: 1201) == nil)
 }

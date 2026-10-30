@@ -25,6 +25,7 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case tea
     case coffeeCherries = "coffee-cherries"
     case coffee
+    case herbs
 
     public var basePrice: Int64 {
         switch self {
@@ -48,6 +49,7 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .tea: 16
         case .coffeeCherries: 3
         case .coffee: 16
+        case .herbs: 5
         }
     }
 
@@ -73,6 +75,7 @@ public enum Good: String, CaseIterable, Codable, Sendable {
         case .tea: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .coffeeCherries: MarketTerms(buyLimit: 0, sellLimit: 20)
         case .coffee: MarketTerms(buyLimit: 0, sellLimit: 20)
+        case .herbs: MarketTerms(buyLimit: 10, sellLimit: 20)
         }
     }
 }
@@ -107,6 +110,7 @@ public enum GoodsCatalog {
         case .tea: GoodSpec(good: .tea, displayName: "Tea", stackUnit: "chests")
         case .coffeeCherries: GoodSpec(good: .coffeeCherries, displayName: "Coffee Cherries", stackUnit: "sacks")
         case .coffee: GoodSpec(good: .coffee, displayName: "Coffee", stackUnit: "sacks")
+        case .herbs: GoodSpec(good: .herbs, displayName: "Herbs", stackUnit: "bunches")
         }
     }
 }

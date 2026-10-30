@@ -58,7 +58,10 @@ public extension World {
         let columns = max(0, box.minX - area.radius) ... min(mapWidth - 1, box.maxX + area.radius)
         let rows = max(0, box.minY - area.radius) ... min(mapHeight - 1, box.maxY + area.radius)
         let tiles = Set(rows.flatMap { y in columns.map { TileCoordinate(x: $0, y: y) } })
-        let struck = buildings.values.filter { $0.owner == .player && $0.kind.isCrop && area.contains($0) }
+        let isFever = currentSeasonalEvent?.event.effect == .fever
+        let struck = buildings.values.filter {
+            $0.owner == .player && (isFever ? $0.kind == .house : $0.kind.isCrop) && area.contains($0)
+        }
         let targets = struck.flatMap { $0.footprint.tiles(anchor: $0.anchor) }.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
         return AreaOfEffect(tiles: tiles, targets: targets, count: nil, style: .threat)
     }

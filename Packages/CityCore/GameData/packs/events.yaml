@@ -60,7 +60,6 @@ items:
   - kind: Event
     id: fever
     effect: fever
-    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [autumn, winter]
     minAge: medieval
     weight: *hazard-weight
@@ -91,3 +90,32 @@ items:
       missed:
         title: The festival was called off
         text: Goods already delivered stay with the town. There is no other penalty.
+
+  # --- The answer to fever (design D7) --------------------------------
+  # Herbs, not soap: one new building, every culture, and no crop, so a
+  # blight can't take the answer to a fever away.
+  - { kind: Good, id: herbs, name: Herbs, unit: bunches, basePrice: 5, market: { buy: 10, sell: 20 } }
+
+  - kind: Building
+    id: herb-garden
+    category: gather
+    footprint: [2, 2]
+    cost: 50
+    buildTicks: 20
+    storage: 16
+    materials: { wood: 2 }
+    recipe: { outputs: { herbs: 1 }, cycleTicks: 60 }
+
+  # Spares houses within 8 tiles from fever while fuelled with herbs; burns
+  # them only while a fever is warned or under way (Swift).
+  - kind: Building
+    id: physician
+    effect: code
+    category: town
+    footprint: [2, 2]
+    cost: 90
+    upkeep: 1
+    buildTicks: 25
+    storage: 8
+    materials: { wood: 2, planks: 3 }
+    fuel: { good: herbs, amount: 1, everyTicks: 100 }

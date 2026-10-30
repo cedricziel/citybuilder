@@ -44,7 +44,7 @@ func eventSpritesAreCommitted() {
         (0 ..< 8).map { SpriteAnimation.assetName(for: .watchman(facing), frame: $0) }
     }
     let icons = ["burning", "ruins", "blight", "fever"].map { "status-\($0)" }
-    let names = ["building-fire-watch", "building-granary"] + fire + watchman + icons
+    let names = ["building-fire-watch", "building-granary", "building-physician", "building-herb-garden"] + fire + watchman + icons
     #expect(names.filter { !committed($0) }.isEmpty)
     #expect(fire.allSatisfy { SpriteAtlasRouting.atlasName(for: $0) == SpriteAtlasRouting.kitAtlasName })
 }

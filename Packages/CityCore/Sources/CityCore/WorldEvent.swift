@@ -152,6 +152,9 @@ public enum WorldEvent: Sendable {
     /// A demolition was refused. Spec: `buildings-and-construction` /
     /// Ruins block their plot until cleared.
     case demolitionRejected(building: EntityID, reason: DemolitionRejection)
+    /// A resident left a house in a fever's district. Spec: `seasonal-events`
+    /// / Fever holds a district back.
+    case residentLeftWithFever(house: EntityID)
 }
 
 /// Why a demolition was refused.
@@ -250,6 +253,8 @@ extension WorldEvent: Equatable {
         case let (.fireExtinguished(lBuilding), .fireExtinguished(rBuilding)),
              let (.ruinsCleared(lBuilding), .ruinsCleared(rBuilding)):
             return lBuilding == rBuilding
+        case let (.residentLeftWithFever(lHouse), .residentLeftWithFever(rHouse)):
+            return lHouse == rHouse
         case let (.demolitionRejected(lBuilding, lReason), .demolitionRejected(rBuilding, rReason)):
             return lBuilding == rBuilding && lReason == rReason
         default:
@@ -290,7 +295,8 @@ public extension WorldEvent {
              let .fireExtinguished(building),
              let .buildingBurntDown(building, _),
              let .ruinsCleared(building),
-             let .demolitionRejected(building, _):
+             let .demolitionRejected(building, _),
+             let .residentLeftWithFever(building):
             return building
         case .forestHarvested,
              .placementRejected,
@@ -371,7 +377,8 @@ public extension WorldEvent {
              .seasonalEventEnded,
              .fireExtinguished,
              .ruinsCleared,
-             .demolitionRejected:
+             .demolitionRejected,
+             .residentLeftWithFever:
             return nil
         }
     }
@@ -426,6 +433,7 @@ public extension WorldEvent {
         case .buildingBurntDown: return 41
         case .ruinsCleared: return 42
         case .demolitionRejected: return 43
+        case .residentLeftWithFever: return 44
         case .scenarioLost: return 44
         }
     }
