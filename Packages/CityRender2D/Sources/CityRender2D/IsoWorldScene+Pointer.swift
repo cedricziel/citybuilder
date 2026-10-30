@@ -26,9 +26,9 @@ extension IsoWorldScene {
     }
 
     private func dispatchTap(at sceneLocation: CGPoint) {
-        // A tap on a status icon selects its building, but only with the Inspect tool: under
-        // Demolish or a place tool the tap belongs to the tile underneath.
-        if inspectingProvider?() == true, let anchor = statusIconTile(at: sceneLocation) {
+        // A tap on a status icon or a building's sprite selects the building, but only with the Inspect
+        // tool: under Demolish or a place tool the tap belongs to the tile underneath.
+        if inspectingProvider?() == true, let anchor = statusIconTile(at: sceneLocation) ?? buildingTile(at: sceneLocation) {
             intentSink?(.tapTile(anchor))
             return
         }
@@ -36,6 +36,22 @@ extension IsoWorldScene {
               let coord = tile(forScene: sceneLocation, mapWidth: snapshot.mapWidth, mapHeight: snapshot.mapHeight)
         else { return }
         intentSink?(.tapTile(coord))
+    }
+
+    /// The anchor of the frontmost standing building whose sprite covers `sceneLocation`, so a tap on a
+    /// roof selects the building rather than the tile behind it.
+    func buildingTile(at sceneLocation: CGPoint) -> TileCoordinate? {
+        guard let snapshot = dataSource?.currentSnapshot() else { return nil }
+        let point = convert(sceneLocation, to: buildingLayer)
+        return buildingNodes.lazy.filter { anchor, sprite in
+            let frame = sprite.frame
+            guard frame.contains(point),
+                  let building = snapshot.occupiedTiles[anchor].flatMap({ snapshot.buildings[$0] }),
+                  !Self.liesFlat(building.kind)
+            else { return false }
+            return IsoMath.isWithinBuilding(point, anchor: anchor, footprint: building.footprint, top: frame.maxY)
+        }
+        .max { ($0.value.zPosition, $0.value.position.x) < ($1.value.zPosition, $1.value.position.x) }?.key
     }
 
     /// Long-press recognizer callback (`.began`): open the tile menu for

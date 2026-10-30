@@ -40,6 +40,16 @@ public enum IsoMath {
         return (col, row)
     }
 
+    /// Whether `point` falls within a building on `footprint` at `anchor` whose sprite reaches up to `top`:
+    /// the footprint's diamond swept up to that height.
+    static func isWithinBuilding(_ point: CGPoint, anchor: TileCoordinate, footprint: Footprint, top: CGFloat) -> Bool {
+        let (col, row) = tileCoordinate(forScreenPoint: point)
+        let lowX = Double(anchor.x) - 0.5, lowY = Double(anchor.y) - 0.5
+        let highX = lowX + Double(footprint.width), highY = lowY + Double(footprint.height)
+        let rise = Double((top - screenPoint(forTileFractionalX: lowX, fractionalY: lowY).y) / tileHeight)
+        return max(lowX - col, lowY - row, 0) <= min(highX - col, highY - row, rise)
+    }
+
     /// Snap fractional tile coordinates to the nearest integer tile.
     public static func nearestTile(toScreenPoint point: CGPoint) -> TileCoordinate {
         let (col, row) = tileCoordinate(forScreenPoint: point)
