@@ -171,3 +171,17 @@ func marketplaceClearsNoMarketInReach() {
     #expect(world.hubService().hubOf[home]?.hub == center)
     #expect(world.hubService().hubOf[home]?.distance == 18)
 }
+
+@Test("scenario: a hub restocks from another hub's surplus before a granary")
+func hubRestocksFromAnotherHubBeforeAGranary() {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let granary = addOperational(.granary, at: TileCoordinate(x: 14, y: 1), in: &world)
+    world.stockpiles[granary]?.deposit(.food, amount: 10)
+    let market = addOperational(.marketplace, at: TileCoordinate(x: 30, y: 1), in: &world)
+    world.stockpiles[market]?.deposit(.food, amount: 20)
+    _ = peasants(at: 6, in: &world)
+    _ = world.tick()
+    let sources = restocks(to: center, in: world).map(\.source)
+    #expect(sources == [market])
+}
