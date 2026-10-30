@@ -74,7 +74,7 @@ func iconsAreCutToTheBuilding() throws {
 @Test("held kinds and ruins stay out of the build palette")
 func heldKindsAreNotInThePalette() {
     let offered = Set(BuildPalette.kinds)
-    #expect(!offered.contains(.granary))
+    #expect(offered.isDisjoint(with: BuildPalette.held))
     #expect(!offered.contains(.ruins))
     #expect(offered.contains(.fireWatch))
 }
