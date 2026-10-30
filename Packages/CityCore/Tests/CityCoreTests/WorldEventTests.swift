@@ -307,3 +307,9 @@ func scenarioReplayWorldStateRemainsByteIdentical() {
     }
     #expect(worldA == worldB)
 }
+
+@Test("every event case has its own sort ordinal")
+func everyCaseHasItsOwnOrdinal() {
+    let ordinals = Set(eventSamples.map(\.caseOrdinal))
+    #expect(ordinals.count == eventSamples.count)
+}
