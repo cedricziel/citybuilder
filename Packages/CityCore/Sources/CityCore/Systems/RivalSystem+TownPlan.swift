@@ -28,45 +28,85 @@ struct RivalTownPlan {
     let owner: Owner
     let center: TileCoordinate
     let tileToIsland: [TileCoordinate: IslandID]
-    /// The owner's hubs, built or being built: anchor and radius.
-    private let hubs: [(anchor: TileCoordinate, radius: Int)]
+    /// A hub of the owner, built or being built.
+    private struct PlannedHub {
+        let anchor: TileCoordinate
+        let footprint: Footprint
+        let radius: Int
+    }
+
+    private let hubs: [PlannedHub]
+    /// Anchors of the owner's houses no hub serves, though they have a road.
+    private let unservedHouses: [TileCoordinate]
+    /// True while a hub of the owner is being built, so its reach is coming.
+    private let hubUnderConstruction: Bool
     private var missingRings: [Block: [TileCoordinate]] = [:]
     private var openable: [Block: Bool] = [:]
+    /// Road distance from each hub over the roads a house in the block would get.
+    private var hubReach: [Block: [[TileCoordinate: Int]]] = [:]
 
     init(world: World, owner: Owner, center: TileCoordinate) {
         self.world = world
         self.owner = owner
         self.center = center
         tileToIsland = world.tileToIslandMap()
-        hubs = world.buildings.values
-            .filter { $0.owner == owner }
-            .sorted { $0.id.raw < $1.id.raw }
-            .compactMap { hub in hub.kind.hub.map { (hub.anchor, $0.radius) } }
+        let owned = world.buildings.values.filter { $0.owner == owner }.sorted { $0.id.raw < $1.id.raw }
+        hubs = owned.compactMap { hub in
+            hub.kind.hub.map { PlannedHub(anchor: hub.anchor, footprint: hub.footprint, radius: $0.radius) }
+        }
+        hubUnderConstruction = owned.contains { $0.kind.hub != nil && $0.state != .operational }
+        let served = world.hubService().hubOf
+        unservedHouses = owned.filter { house in
+            house.kind == .house && house.state == .operational && served[house.id] == nil
+                && world.anyAdjacentRoad(anchor: house.anchor, footprint: house.footprint) != nil
+        }.map(\.anchor)
     }
 
     private static func gridDistance(_ lhs: TileCoordinate, _ rhs: TileCoordinate) -> Int {
         abs(lhs.x - rhs.x) + abs(lhs.y - rhs.y)
     }
 
-    /// Road tiles a grid detour adds to the straight distance, at most.
-    static let hubReachMargin = 2
+    private func block(of anchor: TileCoordinate) -> Block {
+        func floorDiv(_ value: Int) -> Int {
+            value >= 0 ? value / Self.span : -((-value + Self.span - 1) / Self.span)
+        }
+        return Block(column: floorDiv(anchor.x - center.x), row: floorDiv(anchor.y - center.y))
+    }
 
-    /// True when a house at `anchor` lies within some hub's radius, by grid
-    /// distance plus the detour a ring road adds (visible-distribution D11).
-    func isInHubReach(_ anchor: TileCoordinate) -> Bool {
-        hubs.contains { Self.gridDistance(anchor, $0.anchor) + Self.hubReachMargin <= $0.radius }
+    /// True when a house at `anchor` would lie within some hub's radius by
+    /// road, over today's roads plus the ring roads its slot would lay
+    /// (visible-distribution D11), measured as `World.hubService` measures.
+    mutating func isInHubReach(_ anchor: TileCoordinate) -> Bool {
+        let block = block(of: anchor)
+        let planned = Set(missingRing(Self.home) + missingRing(block))
+        let graph = world.roadGraph
+        let isRoad = { (tile: TileCoordinate) in graph.isConnected(tile) || planned.contains(tile) }
+        let reach = hubReach[block] ?? hubs.map { hub in
+            graph.distances(
+                from: World.tilesAround(anchor: hub.anchor, footprint: hub.footprint).filter(isRoad), upTo: hub.radius,
+                isRoad: isRoad
+            )
+        }
+        hubReach[block] = reach
+        let houseRoads = World.tilesAround(anchor: anchor, footprint: BuildingCatalog.spec(for: .house).footprint).filter(isRoad)
+        return reach.contains { distances in houseRoads.contains { distances[$0] != nil } }
     }
 
     /// True when a marketplace at `anchor` would reach houses the existing
-    /// hubs don't: at least half a radius from each.
+    /// hubs don't: at least half a radius from each, and near a house no hub
+    /// serves when there is one.
     private func extendsHubReach(_ anchor: TileCoordinate) -> Bool {
-        hubs.allSatisfy { Self.gridDistance(anchor, $0.anchor) >= $0.radius / 2 }
+        let radius = BuildingKind.marketplace.hub?.radius ?? 0
+        let nearUnserved = unservedHouses.isEmpty || unservedHouses.contains { Self.gridDistance(anchor, $0) <= radius / 2 }
+        return nearUnserved && hubs.allSatisfy { Self.gridDistance(anchor, $0.anchor) >= $0.radius / 2 }
     }
 
-    /// True when the next house would fall outside every hub's reach: no
-    /// free house slot lies in reach, but one lies beyond it.
+    /// True when the owner needs a marketplace: a house with a road that no
+    /// hub serves, or a next house that would fall outside every hub's reach.
+    /// A hub being built brings its reach, so it waits for that.
     mutating func needsMarketplace() -> Bool {
-        slot(for: .house) == nil && slot(for: .house, inReach: false) != nil
+        guard !hubUnderConstruction else { return false }
+        return !unservedHouses.isEmpty || (slot(for: .house) == nil && slot(for: .house, inReach: false) != nil)
     }
 
     /// The slot for `kind` with the ring roads to lay first: the first
@@ -79,14 +119,14 @@ struct RivalTownPlan {
         guard homeOpen || canOpen(Self.home) else { return nil }
         if kind == .lumberjackHut { return hutSlot(homeOpen: homeOpen) }
         if kind == .forester { return foresterSlot(homeOpen: homeOpen) }
-        let fits: (TileCoordinate) -> Bool = switch kind {
-        case .house where inReach: isInHubReach
-        case .marketplace: extendsHubReach
-        default: { _ in true }
-        }
         for block in Self.searchOrder where isOpened(block) || (touchesOpened(block) && canOpen(block)) {
-            if let anchor = candidateAnchors(for: kind, in: block).first(where: { fits($0) && isFree(kind, at: $0) }) {
-                return (roads(opening: [block], homeOpen: homeOpen), anchor)
+            for anchor in candidateAnchors(for: kind, in: block) where isFree(kind, at: anchor) {
+                let fits = switch kind {
+                case .house where inReach: isInHubReach(anchor)
+                case .marketplace: extendsHubReach(anchor)
+                default: true
+                }
+                if fits { return (roads(opening: [block], homeOpen: homeOpen), anchor) }
             }
         }
         return nil

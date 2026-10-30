@@ -14,7 +14,7 @@ extension World {
         spawnSupplyCarriers(consumers: consumers, events: &events)
         spawnRestockCarriers(service: service, events: &events)
         spawnExportCarriers(tileToIsland: tileToIsland, events: &events)
-        runPorterSystem(service: service)
+        runPorterSystem(service: service, events: &events)
     }
 
     private mutating func advanceCarriers(events: inout [WorldEvent]) {

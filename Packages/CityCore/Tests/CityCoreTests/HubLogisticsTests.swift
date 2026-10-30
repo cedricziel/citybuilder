@@ -125,3 +125,49 @@ func marketplaceClearsNoMarketInReach() {
     let home = peasants(at: 6, in: &world)
     #expect(world.buildingIssues()[home] == .noMarketInReach)
 }
+
+@Test func aHubRestocksFromAnotherHubsSurplus() {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.stockpiles[center]?.deposit(.food, amount: 30)
+    let market = addOperational(.marketplace, at: TileCoordinate(x: 30, y: 1), in: &world)
+    _ = peasants(at: 34, in: &world)
+    _ = world.tick()
+    let missions = restocks(to: market, in: world)
+    #expect(missions.map(\.source) == [center])
+    #expect(missions.first?.amount == 4)
+}
+
+@Test func aHubKeepsItsOwnReserveFromAnother() {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.stockpiles[center]?.deposit(.food, amount: 4)
+    _ = peasants(at: 6, in: &world)
+    let market = addOperational(.marketplace, at: TileCoordinate(x: 30, y: 1), in: &world)
+    _ = peasants(at: 34, in: &world)
+    _ = world.tick()
+    #expect(restocks(to: market, in: world).isEmpty)
+}
+
+@Test func aRestockOnFootCarriesABasket() {
+    var world = strip()
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.age = .antiquity
+    let store = addOperational(.warehouse, at: TileCoordinate(x: 4, y: 0), in: &world)
+    world.stockpiles[store]?.deposit(.food, amount: 40)
+    for x in [3, 6, 9, 12] {
+        _ = peasants(at: x, in: &world)
+    }
+    _ = world.tick()
+    #expect(restocks(to: center, in: world).first?.amount == 10)
+}
+
+@Test func aHubReachesFromEveryRoadBesideIt() {
+    var world = strip()
+    // The town center's road runs along its south side; a house on the far
+    // end of that side is nearer than the first road tile says.
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let home = peasants(at: 20, in: &world)
+    #expect(world.hubService().hubOf[home]?.hub == center)
+    #expect(world.hubService().hubOf[home]?.distance == 18)
+}

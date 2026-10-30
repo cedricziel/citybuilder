@@ -59,39 +59,75 @@ extension KeyedDecodingContainer {
 /// Which hub serves each house this tick. Spec: `population-and-needs` /
 /// Town center supplies house needs.
 struct HubService {
-    /// The hub serving each house, with the road distance to it.
-    var hubOf: [EntityID: (hub: EntityID, distance: Int)] = [:]
+    /// The hub serving a house, the road distance to it, and the house's
+    /// road tile nearest it.
+    struct Serving {
+        let hub: EntityID
+        let distance: Int
+        let road: TileCoordinate
+    }
+
+    /// The hub serving each house.
+    var hubOf: [EntityID: Serving] = [:]
     /// The houses each hub serves, in entity order.
     var housesOf: [EntityID: [EntityID]] = [:]
+    /// Road distance from each hub's road tiles, out to its radius.
+    var reach: [EntityID: [TileCoordinate: Int]] = [:]
     /// The operational hubs, in entity order.
     let hubs: [Building]
 }
 
 extension World {
+    /// The tiles orthogonally next to a footprint, outside it, row-major
+    /// around each footprint tile, each once.
+    static func tilesAround(anchor: TileCoordinate, footprint: Footprint) -> [TileCoordinate] {
+        var tiles: [TileCoordinate] = []
+        for dy in 0 ..< footprint.height {
+            for dx in 0 ..< footprint.width {
+                let x = anchor.x + dx, y = anchor.y + dy
+                for (nx, ny) in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)] {
+                    let inside = nx >= anchor.x && nx < anchor.x + footprint.width
+                        && ny >= anchor.y && ny < anchor.y + footprint.height
+                    let tile = TileCoordinate(x: nx, y: ny)
+                    if !inside, !tiles.contains(tile) { tiles.append(tile) }
+                }
+            }
+        }
+        return tiles
+    }
+
+    /// Every road tile next to the footprint, in `tilesAround` order.
+    func adjacentRoads(anchor: TileCoordinate, footprint: Footprint) -> [TileCoordinate] {
+        Self.tilesAround(anchor: anchor, footprint: footprint).filter(roadGraph.isConnected)
+    }
+
     /// Operational buildings with hub data, in entity order.
     func operationalHubs() -> [Building] {
         goodsBuffers().filter { $0.state == .operational && $0.kind.hub != nil }
     }
 
     /// Each operational house's serving hub: the nearest operational hub of
-    /// its owner within the hub's radius by road, ties to the lower ID.
-    /// Depends on buildings and roads only, so a tick builds it once.
+    /// its owner within the hub's radius by road, measured from any road
+    /// next to the hub to any road next to the house; ties go to the lower
+    /// ID. Depends on buildings and roads only, so a tick builds it once.
     func hubService() -> HubService {
         var service = HubService(hubs: operationalHubs())
+        for hub in service.hubs {
+            let roads = adjacentRoads(anchor: hub.anchor, footprint: hub.footprint)
+            service.reach[hub.id] = roadGraph.distances(from: roads, upTo: hub.kind.hub?.radius ?? 0)
+        }
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
             .sorted { $0.id.raw < $1.id.raw }
-        let reach = service.hubs.map { hub in
-            (hub, anyAdjacentRoad(anchor: hub.anchor, footprint: hub.footprint).map {
-                roadGraph.distances(from: $0, upTo: hub.kind.hub?.radius ?? 0)
-            } ?? [:])
-        }
         for house in houses {
-            guard let road = anyAdjacentRoad(anchor: house.anchor, footprint: house.footprint) else { continue }
-            for (hub, distances) in reach where hub.owner == house.owner {
-                guard let distance = distances[road] else { continue }
+            let roads = adjacentRoads(anchor: house.anchor, footprint: house.footprint)
+            for hub in service.hubs where hub.owner == house.owner {
+                let distances = service.reach[hub.id] ?? [:]
+                guard let (road, distance) = roads.compactMap({ road in distances[road].map { (road, $0) } })
+                    .min(by: { $0.1 < $1.1 })
+                else { continue }
                 if service.hubOf[house.id].map({ distance < $0.distance }) ?? true {
-                    service.hubOf[house.id] = (hub.id, distance)
+                    service.hubOf[house.id] = HubService.Serving(hub: hub.id, distance: distance, road: road)
                 }
             }
             if let hub = service.hubOf[house.id]?.hub {
@@ -114,8 +150,8 @@ extension World {
 
     /// Porters walk, unload, return and set out. Spec: `population-and-needs`
     /// / Market porters supply houses.
-    mutating func runPorterSystem(service: HubService) {
-        advancePorters()
+    mutating func runPorterSystem(service: HubService, events: inout [WorldEvent]) {
+        advancePorters(events: &events)
         var inbound = porterInbound()
         var out: [EntityID: Int] = [:]
         for porter in porters {
@@ -126,7 +162,7 @@ extension World {
         }
     }
 
-    private mutating func advancePorters() {
+    private mutating func advancePorters(events: inout [WorldEvent]) {
         var kept: [Porter] = []
         for var porter in porters {
             guard porter.hasArrived else {
@@ -136,7 +172,10 @@ extension World {
             }
             if porter.returning {
                 for load in porter.basket {
-                    stockpiles[porter.hub]?.deposit(load.good, amount: load.units)
+                    let placed = stockpiles[porter.hub]?.deposit(load.good, amount: load.units) ?? 0
+                    if placed < load.units {
+                        sendOn(Porter.Load(good: load.good, units: load.units - placed), from: porter, events: &events)
+                    }
                 }
                 continue
             }
@@ -155,20 +194,37 @@ extension World {
         porters = kept
     }
 
+    /// Leftovers a porter's hub could not take, full or gone, go on as a
+    /// carrier to the nearest store of the hub's owner with room; with none,
+    /// they are lost, as a carrier's are.
+    private mutating func sendOn(_ load: Porter.Load, from porter: Porter, events: inout [WorldEvent]) {
+        let here = porter.currentTile ?? porter.path.last ?? TileCoordinate(x: 0, y: 0)
+        let owner = buildings[porter.hub]?.owner ?? buildings[porter.house]?.owner ?? islandID(at: here).map(owner(ofIsland:))
+        guard let owner,
+              let (store, path) = findRoadConnectedBuffer(
+                  fromRoad: here, good: load.good,
+                  among: goodsBuffers(of: owner).filter { $0.state == .operational && $0.id != porter.hub }
+              )
+        else { return }
+        let id = EntityID(raw: nextEntityRaw)
+        nextEntityRaw &+= 1
+        let mission = Carrier.Mission.retrieve(good: load.good, amount: load.units, fromWarehouse: porter.hub, toConsumer: store)
+        carriers[id] = Carrier(id: id, path: path, mission: mission)
+        events.append(.carrierDeparted(carrier: id, from: here, good: load.good))
+    }
+
     /// Sends porters from `hub` while it has fewer than it keeps out, each
     /// to the served house with the lowest stock ratio.
     private mutating func dispatchPorters(
         from hub: Building, out: Int, service: HubService, inbound: inout [EntityID: [Good: Int]]
     ) {
         let houses = service.housesOf[hub.id] ?? []
-        guard let spec = hub.kind.hub,
-              let hubRoad = anyAdjacentRoad(anchor: hub.anchor, footprint: hub.footprint)
-        else { return }
+        guard let spec = hub.kind.hub, let distances = service.reach[hub.id] else { return }
         var out = out
         while out < spec.porters(serving: houses.count) {
+            // The path comes from the same search that found the house in reach, so a served house always has one.
             guard let trip = nextTrip(from: hub.id, among: houses, service: service, inbound: inbound),
-                  let houseRoad = anyAdjacentRoad(anchor: trip.anchor, footprint: trip.footprint),
-                  let path = roadPath(from: hubRoad, to: houseRoad)
+                  let road = service.hubOf[trip.id]?.road, let path = roadGraph.path(to: road, along: distances)
             else { return }
             let basket = fillBasket(for: trip.id, from: hub.id, units: spec.basketUnits, inbound: inbound[trip.id] ?? [:])
             for load in basket {
@@ -220,21 +276,26 @@ extension World {
         return best?.house
     }
 
-    /// One basket for `house`: per need the hub holds, in the tier's order,
-    /// what keeps the house within capacity and at most one consumption,
-    /// up to `units` in all.
+    /// One basket for `house`, in two passes over the needs the hub holds, in
+    /// the tier's order: first up to one consumption of each, then, with room
+    /// left in the basket, each topped up to the house's capacity; `units` in
+    /// all at most.
     private func fillBasket(for house: EntityID, from hub: EntityID, units: Int, inbound: [Good: Int]) -> [Porter.Load] {
         guard let pop = populations[house] else { return [] }
         let held = stockpiles[hub] ?? Stockpile(capacity: 0)
+        let needs = pop.tier.needs(in: culture)
+        var taken: [Good: Int] = [:]
         var left = units
-        var basket: [Porter.Load] = []
-        for good in pop.tier.needs(in: culture) where left > 0 {
-            let room = pop.stockCapacity(of: good) - pop.stock(of: good) - (inbound[good] ?? 0)
-            let take = min(room, pop.nextConsumption(of: good), held.quantity(of: good), left)
-            guard take > 0 else { continue }
-            basket.append(Porter.Load(good: good, units: take))
-            left -= take
+        for firstPass in [true, false] {
+            for good in needs where left > 0 {
+                let room = pop.stockCapacity(of: good) - pop.stock(of: good) - (inbound[good] ?? 0) - taken[good, default: 0]
+                let wanted = firstPass ? min(room, pop.nextConsumption(of: good)) : room
+                let take = min(wanted, held.quantity(of: good) - taken[good, default: 0], left)
+                guard take > 0 else { continue }
+                taken[good, default: 0] += take
+                left -= take
+            }
         }
-        return basket
+        return needs.compactMap { good in taken[good].map { Porter.Load(good: good, units: $0) } }
     }
 }
