@@ -61,3 +61,19 @@ func houseOutOfReachRaisesTheHintInsteadOfTheProblem() {
     #expect(session.banner?.title == title)
     #expect(session.hintedProblems.contains(InspectorViewModel.problemText(.noMarketInReach)))
 }
+
+@MainActor
+@Test("a hint raised only by a house near the edge leaves a later out-of-reach house to the problem hint")
+func nearEdgeHintLeavesTheOutOfReachProblemHint() {
+    let session = session(houseAt: 15)
+    session.step()
+    #expect(session.banner?.title == title)
+    #expect(!session.hintedProblems.contains(InspectorViewModel.problemText(.noMarketInReach)))
+    placeOperational(.house, at: TileCoordinate(x: 40, y: 4), residents: 2, in: &session.world)
+    var named = false
+    for _ in 0 ..< Int(GameSession.bannerTicks + GameSession.problemHintDelayTicks) + 50 where !named {
+        session.step()
+        named = session.banner?.description.hasPrefix("No market in reach") == true
+    }
+    #expect(named)
+}

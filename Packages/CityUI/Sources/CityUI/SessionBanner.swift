@@ -265,8 +265,10 @@ extension GameSession {
         let outOfReach = snapshot.buildingIssues.contains { $0.value == .noMarketInReach && isPlayers($0.key) }
         guard nearEdge != nil || outOfReach else { return }
         hintedDistantHouses = true
-        // This banner says what the problem hint's "No market in reach" would.
-        hintedProblems.insert(InspectorViewModel.problemText(.noMarketInReach))
+        if outOfReach {
+            // This banner says what the problem hint's "No market in reach" would.
+            hintedProblems.insert(InspectorViewModel.problemText(.noMarketInReach))
+        }
         let hub = nearEdge.flatMap { snapshot.buildings[$0.value.hub]?.kind } ?? .townCenter
         let radius = hub.hub?.radius ?? 0
         show(SessionBanner(
