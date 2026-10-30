@@ -49,6 +49,20 @@ public extension World {
         return nil
     }
 
+    /// The area a warned or running blight or fever threatens, in the amber
+    /// threat style, with the buildings it would strike as targets. Nil
+    /// without one. Spec: `rendering-2_5d` / Seasonal events are drawn on the map.
+    func threatenedArea() -> AreaOfEffect? {
+        guard let area = seasonalEvents.marked else { return nil }
+        let box = area.around
+        let columns = max(0, box.minX - area.radius) ... min(mapWidth - 1, box.maxX + area.radius)
+        let rows = max(0, box.minY - area.radius) ... min(mapHeight - 1, box.maxY + area.radius)
+        let tiles = Set(rows.flatMap { y in columns.map { TileCoordinate(x: $0, y: y) } })
+        let struck = buildings.values.filter { $0.owner == .player && $0.kind.isCrop && area.contains($0) }
+        let targets = struck.flatMap { $0.footprint.tiles(anchor: $0.anchor) }.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        return AreaOfEffect(tiles: tiles, targets: targets, count: nil, style: .threat)
+    }
+
     /// A fire watch's reach, eight tiles from its footprint, and the flammable buildings of its owner
     /// it would answer there (`fireWatchCovers`), whose tiles it tints. Spec: `seasonal-events` / A fire watch puts out fires in reach.
     private func fireWatchArea(at anchor: TileCoordinate, owner: Owner) -> AreaOfEffect {

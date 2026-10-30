@@ -325,9 +325,9 @@ func onlyEnabledEventsAreDrawn() {
 @Test("scenario: a disabled event is never warned, even scheduled")
 func disabledScheduledEventIsNeverWarned() {
     var world = eventsWorld(seed: 2)
-    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .blight, onset: .autumn)]
-    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
-    let events = runSeasons(&world, untilTick: firstTick(of: .winter, 1201))
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .fever, onset: .winter)]
+    addHouses(6, in: &world)
+    let events = runSeasons(&world, untilTick: firstTick(of: .spring, 1202) - 1)
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvent(forYear: 1201) == nil)
 }
@@ -374,8 +374,8 @@ func disabledPickIsAQuietYear() {
         (1202 ..< 1302).map { eventsWorld(seed: seed, size: 1).seasonalEvent(forYear: $0)?.event }
     }
     let fires = draws.count { $0 == .fire }
-    let others = draws.count { $0 != nil && $0 != .fire }
-    #expect(others == 0)
+    let disabled = draws.count { $0.map { !$0.isEnabled } ?? false }
+    #expect(disabled == 0)
     #expect((400 ... 600).contains(fires), "\(fires) fires in 4000 years")
 }
 

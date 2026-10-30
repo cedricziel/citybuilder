@@ -57,7 +57,10 @@ extension World {
                 events.append(.productionResumed(producer: id, kind: building.kind))
             }
             // Spec: `calendar-and-events` / Winter slows crops.
-            if !(isCropWinter && Self.seasonalCrops.contains(building.kind) && tickCount.isMultiple(of: 2)) {
+            // Spec: `seasonal-events` / Blight halves crop yields in a marked area. Blight never strikes in
+            // winter, so the two never stack.
+            let isSlowed = isCropWinter && Self.seasonalCrops.contains(building.kind) || isBlighted(building)
+            if !(isSlowed && tickCount.isMultiple(of: 2)) {
                 progress.ticksThisCycle &+= 1 + workshopBonus(for: building, sources: signatureSources)
             }
             if progress.ticksThisCycle >= recipe.cycleTicks {

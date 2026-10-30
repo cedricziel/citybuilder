@@ -98,6 +98,7 @@ extension World {
             return
         }
         seasonalEvents.warned = onset
+        seasonalEvents.marked = markedArea(for: onset.event.effect)
         events.append(.seasonalEventWarned(event: onset.event, onset: onset.season))
     }
 
@@ -124,8 +125,32 @@ extension World {
         let fire = seasonalEvents.fire
         seasonalEvents.active = nil
         seasonalEvents.fire = nil
+        seasonalEvents.marked = nil
         let toll = SeasonalEventToll(count: fire?.lost ?? 0, fires: fire?.caught.count ?? 0)
         events.append(.seasonalEventEnded(event: active.event, toll: toll))
+    }
+
+    static let blightRadius = 6
+
+    /// The area a blight threatens: around one operational player crop
+    /// field picked with the year's area generator. Nil for other events.
+    private func markedArea(for effect: SeasonalEffect) -> MarkedArea? {
+        guard effect == .blight else { return nil }
+        let fields = buildings.values
+            .filter { $0.owner == .player && $0.state == .operational && $0.kind.isCrop }
+            .sorted { $0.id.raw < $1.id.raw }
+        var rng = seasonalEventRNG(.area, year: date.year)
+        guard !fields.isEmpty else { return nil }
+        return MarkedArea(around: fields[Int(rng.next() % UInt64(fields.count))].bounds, radius: Self.blightRadius)
+    }
+
+    /// A player crop field in the marked area while a blight is under way:
+    /// it takes twice its cycle, like a field in winter, without stalling.
+    func isBlighted(_ building: Building) -> Bool {
+        guard seasonalEvents.active?.event.effect == .blight, building.kind.isCrop, building.owner == .player,
+              let area = seasonalEvents.marked
+        else { return false }
+        return area.contains(building)
     }
 
     /// Whether the town has what the event strikes. A chapter's event needs

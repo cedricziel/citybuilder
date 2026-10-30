@@ -19,10 +19,11 @@ struct AreaOfEffectCache {
 
 public extension GameSession {
     /// What the ghost reaches, else, with the inspect tool, what the
-    /// selected building reaches. Asked again at most once per tick and
-    /// site, as a mine's sites take a placement check each.
+    /// selected building reaches, else what a warned or running blight or
+    /// fever threatens. Asked again at most once per tick and site, as a
+    /// mine's sites take a placement check each.
     func areaOfEffect() -> AreaOfEffect? {
-        guard let source = areaOfEffectSource() else { return nil }
+        guard let source = areaOfEffectSource() else { return world.threatenedArea() }
         if let cache = areaOfEffectCache, cache.source == source, cache.tick == world.tickCount {
             return cache.area
         }

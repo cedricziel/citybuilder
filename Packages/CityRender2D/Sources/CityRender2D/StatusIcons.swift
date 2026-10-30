@@ -77,6 +77,9 @@ enum StatusIcons {
         for (id, issue) in snapshot.buildingIssues where isPlayers(id) {
             if let name = textureName(for: issue) { icons[id] = name }
         }
+        for id in snapshot.blightedFields where isPlayers(id) {
+            icons[id] = textureName(for: .blight)
+        }
         for building in snapshot.buildings.values where building.owner == .player {
             if building.state == .burning {
                 icons[building.id] = textureName(for: .burning)

@@ -44,7 +44,6 @@ items:
   - kind: Event
     id: blight
     effect: blight
-    enabled: false                 # step 2, after #238 M2 (design D14)
     seasons: [summer, autumn]
     weight: *hazard-weight
     banners:

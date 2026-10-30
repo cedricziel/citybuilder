@@ -34,7 +34,7 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 - [ ] 5.1 Tests first: "drawn last" for every draw path, including the porters M2 adds; blight's area and slowed cycles; fever's district, blocked advancement, residents leaving, physician cover; event losses leave the decline grace alone (#274)
 - [x] 5.2 Granary drawn last in the shared store-selection code, so every caller gets it (`World.isDrawnLast` / `granariesLast`: supply and hub restock through `nearestBuffer`, market sales, order dispatch, construction materials); the granary is offered in the palette
-- [ ] 5.3 Blight in the production cycle (beside the winter rule)
+- [x] 5.3 Blight in the production cycle (beside the winter rule): the marked area is picked at the warning, shown in the amber threat style and cleared at the end; blighted fields wear the blight icon; blight is `enabled: true`
 - [ ] 5.4 Herb garden, physician (fuel rules gated on a warned or active fever), fever in `World+Population.swift`
 
 ## 6. After #238 M2 and #277: festival

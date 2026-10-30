@@ -29,6 +29,8 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     public internal(set) var active: ActiveSeasonalEvent?
     /// The fires of a fire event under way.
     public internal(set) var fire: FireEventState?
+    /// The area a blight or a fever threatens, from its warning to its end.
+    public internal(set) var marked: MarkedArea?
     public internal(set) var counters = SeasonalEventCounters()
 
     public init() {}
@@ -222,5 +224,24 @@ public extension Difficulty {
 
     var festivalTaxBonusPercent: Int {
         self == .easy ? 15 : 10
+    }
+}
+
+/// The tiles a blight or a fever threatens: everything within `radius` of
+/// the footprint it was picked around (`add-event-counterplay` D6, D7).
+public struct MarkedArea: Codable, Hashable, Sendable {
+    public let around: TileBoundingBox
+    public let radius: Int
+
+    public init(around: TileBoundingBox, radius: Int) {
+        self.around = around
+        self.radius = radius
+    }
+
+    /// The building's footprint comes within the radius.
+    public func contains(_ building: Building) -> Bool {
+        let box = building.bounds
+        let gap = max(0, box.minX - around.maxX, around.minX - box.maxX, box.minY - around.maxY, around.minY - box.maxY)
+        return gap <= radius
     }
 }

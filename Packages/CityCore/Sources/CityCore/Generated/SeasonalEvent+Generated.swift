@@ -58,7 +58,7 @@ public enum SeasonalEvent: String, CaseIterable, Codable, Sendable {
     public var isEnabled: Bool {
         switch self {
         case .fire: true
-        case .blight: false
+        case .blight: true
         case .fever: false
         case .festival: false
         }
