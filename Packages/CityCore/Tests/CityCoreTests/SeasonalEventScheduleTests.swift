@@ -318,18 +318,9 @@ func onlyEnabledEventsAreDrawn() {
         (1202 ... 1210).compactMap { eventsWorld(seed: seed, difficulty: .hard, size: 1).seasonalEvent(forYear: $0)?.event }
     }
     let disabled = draws.filter { !$0.isEnabled }
-    #expect(!draws.isEmpty)
+    let drawn = Set(draws)
     #expect(disabled.isEmpty)
-}
-
-@Test("scenario: a disabled event is never warned, even scheduled")
-func disabledScheduledEventIsNeverWarned() {
-    var world = eventsWorld(seed: 2)
-    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .festival, onset: .summer)]
-    addHouses(6, in: &world)
-    let events = runSeasons(&world, untilTick: firstTick(of: .autumn, 1201))
-    #expect(events.seasonalEvents.isEmpty)
-    #expect(world.seasonalEvent(forYear: 1201) == nil)
+    #expect(drawn == Set(SeasonalEvent.allCases))
 }
 
 @Test func blightAndFestivalTargets() {
@@ -384,4 +375,39 @@ func seed42FireYears() {
     // Pinned: switching blight, fever or the festival on must not move these.
     let years = (1202 ..< 1262).filter { eventsWorld(seed: 42, size: 1).seasonalEvent(forYear: $0)?.event == .fire }
     #expect(years == [1203, 1211, 1232, 1238, 1251, 1252])
+}
+
+// MARK: - Events switched off in the pack (design D14)
+
+/// A pack with the festival switched off, as `enabled: false` would.
+private func festivalOff(_ event: SeasonalEvent) -> Bool {
+    event != .festival
+}
+
+@Test("scenario: a disabled event is never warned, even scheduled")
+func disabledScheduledEventIsNeverWarned() {
+    var world = eventsWorld(seed: 2)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .festival, onset: .summer)]
+    let decided = world.seasonalEvent(forYear: 1201, isEnabled: festivalOff)
+    let fever = ScheduledSeasonalEvent(year: 1201, event: .fever, onset: .autumn)
+    world.seasonalEvents.schedule = [fever]
+    let other = world.seasonalEvent(forYear: 1201, isEnabled: festivalOff)
+    #expect(decided == nil)
+    #expect(other == SeasonalEventOnset(event: .fever, season: .autumn))
+}
+
+@Test("scenario: a disabled pick is a quiet year in a pack that switches one off")
+func disabledPickInATestPack() {
+    let years = (UInt64(0) ..< 40).flatMap { seed in
+        (1202 ..< 1302).map { year in
+            let world = eventsWorld(seed: seed, size: 1)
+            return (world.seasonalEvent(forYear: year), world.seasonalEvent(forYear: year, isEnabled: festivalOff))
+        }
+    }
+    let festivals = years.count { $0.0?.event == .festival }
+    let quietened = years.count { $0.0?.event == .festival && $0.1 == nil }
+    let unchanged = years.allSatisfy { $0.0?.event == .festival || $0.0 == $0.1 }
+    #expect(festivals > 0)
+    #expect(quietened == festivals)
+    #expect(unchanged)
 }

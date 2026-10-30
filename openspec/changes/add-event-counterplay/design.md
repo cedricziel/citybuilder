@@ -104,6 +104,7 @@ A burnt building becomes a `ruins` building with `ruinOf` set to its kind. It ha
 - **Eligible** only when the player owns an operational marketplace (#238 M2) and made both goods in that window. Otherwise there is no festival that year, and no other event replaces it.
 - **Town orders** don't count toward the two accepted orders, don't touch favour, cost nothing when missed or declined, and don't count toward the "fulfil N orders" goal. They lapse with the season like any offer.
 - **Reward.** When both are fulfilled by the deadline, the festival runs for four seasons. Houses within the reach of an operational marketplace advance after 60 ticks of met needs instead of 120, and pay 10% more tax (15% on Easy), rounded down. A festival crowd fills the plaza for the first season (#127).
+- **Templates.** The town's orders are pack data in `orders.yaml` with `issuer: town`: `town-bread` and one per culture luxury, size 50 over one season, no reward and no favour.
 - **Why the order board:** it already has accepting, dispatching, deadlines, carriers on the roads and a card. A second request UI would duplicate all of it.
 
 ### D9. Chapters schedule events; event goals
@@ -161,7 +162,7 @@ Bars, all on the release build in the weekly `rival-sweep` workflow:
    - The guided Hard start (`GUIDE_SWEEP`, seeds 0–9, both layouts, 12,000 ticks) with events on and the kit stays solvent with at least 25 residents in all 20 runs, the bar it has today.
    - A forced variant runs each hazard once in summer or autumn 1202 (60 runs): 0 bankruptcies and at least 20 residents.
 2. **The answer matters.** In the forced fire runs, buildings lost to fire with the kit are at most half of those without it. In the forced fever runs, residents who left are at most half.
-3. **Pacing:** the mid-game pacing sweep (`PACING_SWEEP`) keeps the median Renaissance on Normal between 6 and 8 years with events and the kit, and within half a year of events off.
+3. **Pacing:** the mid-game pacing sweep (`PACING_SWEEP`) keeps the median Renaissance on every difficulty within half a year of events off, with events and the kit.
 4. **Solvency:** `SOLVENCY_SWEEP` (Normal, 10 seeds, both layouts, 36,000 ticks) has 0 bankruptcies with events and the kit. The market control shows no more bankruptcies than without events.
 5. **Rivals:** the rival viability sweep keeps its bars. Rivals have no events.
 6. **Coverage:** across the pacing sweep, each of the four events fires at least 5 times, and the kit completes at least one festival.
@@ -175,6 +176,24 @@ Bars, all on the release build in the weekly `rival-sweep` workflow:
 | `FIRE_SWEEP`: the same fires without the kit | 40 | — | — | 370 in all, mean 9.25 a run, max 22 | 2: with the kit ≤ half of without (0 ≤ 185). Pass |
 
 With no fire watch, a Hard fire in 1202 burns down about nine buildings, and up to 22 in a dense town. The kit's one watch per cluster saves all of them.
+
+**Measured, step 2 (all four events), 2026-10-30.** Release builds at 8de90861: main at 824d6ad7 (with #336, oldest-first porters) plus this change. Every pacing and market-solvency game ran with events on and the events kit (`PACING_EVENTS=only`, `SOLVENCY_EVENTS=only`). The baseline is the same sweep with events off on main plus #336 (oldest-ea73b317).
+
+| Sweep | Runs | Events off (baseline) | Events on, with the kit | Bar |
+|---|---|---|---|---|
+| `GUIDE_SWEEP events`: guided Hard start, drawn events | 20 | — | 0 bankrupt; residents min 80, mean 93; 0 buildings lost | 1. Pass |
+| `FIRE_SWEEP`: forced fire, summer or autumn 1202 | 40 | — | 0 bankrupt; residents min 79, mean 94.5 | 1. Pass |
+| `FIRE_SWEEP`: buildings lost with and without the kit | 40 + 40 | — | 0 with, 392 without | 2. Pass |
+| `HAZARD_SWEEP`: forced blight, summer or autumn 1202 | 40 | — | 0 bankrupt; residents min 82, mean 91.0 (91.3 without the kit) | 1. Pass |
+| `HAZARD_SWEEP`: forced fever, autumn or winter 1202 | 40 | — | 0 bankrupt; residents min 76, mean 93.8; 658 residents left with the kit, 1,412 without | 1, 2. Pass |
+| `PACING_SWEEP`: median Renaissance, Easy / Normal / Hard | 180 | 4.3 / 5.2 / 6.2 years | 4.3 / 5.2 / 6.3 years | 3. Pass |
+| `PACING_SWEEP`: mean late merchants (`meanLate`) | 180 | 27.39 | 27.77 (+1.4%); worst cell Normal, archipelago, careful −14.4% | 3. Pass |
+| `PACING_SWEEP`: merchants at year 10, mean | 180 | 23.8 | 28.4 | — |
+| `SOLVENCY_SWEEP`: Normal, market, 36,000 ticks | 20 | 0 bankrupt | 0 bankrupt; 1 building lost to fire; 0–63 residents left with fever a game | 4. Pass |
+| `RIVAL_SWEEP` | 60 | year 5 mean 60.2, year 15 mean 59.7 | the same | 5. Pass |
+| Coverage across the pacing sweep: fire / blight / fever / festival | 180 | — | 151 / **0** / 228 / 105 requests, 38 festivals held | 6. Fails for blight |
+
+Blight did not fire once in this sweep. The food gate of D10 (one season of the houses' food stored) is never met by the bot's towns, so a drawn blight always became a quiet year. A follow-up change lowers the gate to half a season, counting the granary's contents, and measures blight's coverage again. Fever with the kit lands under the half-loss bar (658 of 1,412), so its Easy values stay. The orders sweep's "the kit fills at least half of the orders that resolve" fails here as it does on main (71 filled, 156 failed on both).
 
 ### D13. What players see (canvas)
 

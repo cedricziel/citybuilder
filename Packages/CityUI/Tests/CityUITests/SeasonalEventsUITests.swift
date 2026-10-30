@@ -220,6 +220,67 @@ func chipOnAppleTV() {
     #expect(EventChipLayout.height(layout: phone) == DateChipLayout.height)
 }
 
+// MARK: - Festival
+
+/// End of spring 1204: a festival requested that spring is due then.
+private let spring1204End = 4 * CalendarState.ticksPerYear + CalendarState.ticksPerSeason - 1
+
+/// A session whose town asks for 12 bread and 8 wine by the end of spring 1204.
+@MainActor
+private func festivalSession() -> GameSession {
+    eventsSession { world in
+        world.orders.orders = [
+            order(1, issuer: .town, good: .bread, quantity: 12, reward: 0, deadline: spring1204End, template: .townBread),
+            order(2, issuer: .town, good: .wine, quantity: 8, reward: 0, deadline: spring1204End, template: .townWine)
+        ]
+        world.seasonalEvents.festival = FestivalRequest(orders: [1, 2])
+        world.seasonalEvents.active = ActiveSeasonalEvent(event: .festival, startTick: 0, lastTick: spring1204End + 1)
+    }
+}
+
+@MainActor
+@Test("scenario: Festival request names its deadline")
+func festivalRequestNamesItsDeadline() throws {
+    let session = festivalSession()
+    session.noteBannerEvents(in: [.seasonalEventWarned(event: .festival, onset: .spring)])
+    let banner = try #require(session.banner)
+    #expect(banner.title == "The town wants a festival")
+    let text = "Deliver 12 bread and 8 wine by End of Spring 1204. Accept both on the order board. "
+        + "Houses near the market then advance faster and pay more tax for a year."
+    #expect(banner.description == text)
+}
+
+@MainActor
+@Test("scenario: the festival banners for held and called off")
+func festivalHeldAndMissedBanners() throws {
+    let session = eventsSession { world in
+        world.seasonalEvents.festivalUntil = spring1204End
+    }
+    session.noteBannerEvents(in: [.seasonalEventStarted(event: .festival)])
+    let held = try #require(session.banner)
+    #expect(held.title == "Festival!")
+    #expect(held.description == "Houses near the market advance faster and pay 10% more tax until End of Spring 1204.")
+    showNextBanner(session)
+    session.noteBannerEvents(in: [.seasonalEventEnded(event: .festival, toll: SeasonalEventToll(count: 0))])
+    #expect(session.banner?.title == "The festival was called off")
+}
+
+@MainActor
+@Test("scenario: festival orders show no order banners")
+func festivalOrdersShowNoOrderBanners() {
+    let session = festivalSession()
+    session.noteBannerEvents(in: [.orderOffered(order: 1, issuer: .town)])
+    #expect(session.banner == nil)
+}
+
+@MainActor
+@Test("scenario: the festival chip shows the request again")
+func festivalChipReplaysTheRequest() {
+    let session = festivalSession()
+    session.replaySeasonalWarning()
+    #expect(session.banner?.title == "The town wants a festival")
+}
+
 @MainActor
 @Test("scenario: tapping the chip in a blight centres the camera on the marked area")
 func chipCentresTheMarkedArea() {

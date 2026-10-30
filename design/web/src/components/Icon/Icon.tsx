@@ -39,7 +39,8 @@ export type IconName =
   | "map.fill"
   | "map"
   | "ferry.fill"
-  | "scroll.fill";
+  | "scroll.fill"
+  | "party.popper.fill";
 
 export interface IconProps {
   /** The SF Symbol name as written in the Swift code, e.g. `"flag.checkered"`. */
@@ -234,6 +235,14 @@ const glyphs: Record<IconName, ReactElement> = {
         <ellipse cx="16.9" cy="9.5" rx="2.5" ry="2" />
       </g>
       <path d="M12 15v6.5M12 19c-2.6 0-4-1.1-4.6-2.8 2.1-.2 3.9.5 4.6 2.8Z" {...stroke} strokeWidth={1.7} />
+    </g>
+  ),
+  "party.popper.fill": (
+    <g>
+      <path d="M3 21 8.2 7.6l8.2 8.2Z" fill="currentColor" />
+      <path d="M13 3.5c.4 1.6-.2 2.8-1.6 3.6M20.5 11c-1.6-.4-2.8.2-3.6 1.6M17 4.5l-2.2 2.2" {...stroke} strokeWidth={1.8} />
+      <circle cx="19.5" cy="4.5" r="1.3" fill="currentColor" />
+      <circle cx="16" cy="9" r="1" fill="currentColor" />
     </g>
   ),
   "leaf.fill": (

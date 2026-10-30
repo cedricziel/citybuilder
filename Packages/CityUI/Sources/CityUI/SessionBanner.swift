@@ -87,10 +87,16 @@ extension GameSession {
     /// Order offers, fills, misses and lapses. Spec: `platform-shells` /
     /// Order notifications. Orders that are gone show nothing.
     private func noteOrderEvent(_ event: WorldEvent) {
+        let id: OrderID? = switch event {
+        case let .orderOffered(id, _), let .orderFulfilled(id, _): id
+        case let .orderFailed(id), let .orderExpired(id): id
+        default: nil
+        }
+        // The festival's own banners speak for the town's orders.
+        guard let id, let order = world.order(id), order.issuer.isBoardOrder else { return }
+        let name = OrdersBoardModel.name(of: order.issuer, in: world)
         switch event {
-        case let .orderOffered(id, _):
-            guard let order = world.order(id) else { return }
-            let name = OrdersBoardModel.name(of: order.issuer, in: world)
+        case .orderOffered:
             let verb = order.issuer == .crown ? "orders" : "wants"
             show(expiringAt: order.offerEndsTick, SessionBanner(
                 title: "\(name) \(verb) \(order.quantity) \(InspectorViewModel.goodName(order.good))",
@@ -98,27 +104,22 @@ extension GameSession {
                     + "Pays \(HUDViewModel.formatMoney(order.reward, locale: .current)) and \(order.favourGain) favour. "
                     + "Open the board to accept."
             ))
-        case let .orderFulfilled(id, reward):
-            guard let order = world.order(id) else { return }
-            let name = OrdersBoardModel.name(of: order.issuer, in: world)
+        case let .orderFulfilled(_, reward):
             show(SessionBanner(
                 title: "Order filled: \(order.quantity) \(InspectorViewModel.goodName(order.good))",
                 description: "\(name) pays \(HUDViewModel.formatMoney(reward, locale: .current)), "
                     + "and its favour rises to \(world.orders.favour.value(for: order.issuer))."
             ))
-        case let .orderFailed(id):
-            guard let order = world.order(id) else { return }
-            let name = OrdersBoardModel.name(of: order.issuer, in: world)
+        case .orderFailed:
             let target = order.issuer == .crown ? "the crown" : name
             show(SessionBanner(
                 title: "Order missed: \(InspectorViewModel.goodName(order.good)) for \(target)",
                 description: "The deadline passed with \(order.delivered) of \(order.quantity) delivered. "
                     + "\(name)'s favour falls by \(order.favourLoss)."
             ))
-        case let .orderExpired(id):
-            guard let order = world.order(id) else { return }
+        case .orderExpired:
             show(SessionBanner(
-                title: "An offer from \(OrdersBoardModel.name(of: order.issuer, in: world)) lapsed",
+                title: "An offer from \(name) lapsed",
                 description: "Ignoring an offer costs nothing."
             ))
         default:

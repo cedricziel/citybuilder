@@ -106,15 +106,15 @@ func physicianSparesTheHouse() {
 }
 
 @Test("scenario: a fever house can't advance")
-func feverHouseCannotAdvance() throws {
+func feverHouseCannotAdvance() {
     var world = feverWorld()
     _ = world.tick()
     let house = merchantHouse(in: &world)
     world.populations[house]?.tier = .citizens
     world.populations[house]?.population = 6
     _ = runTended(&world, house: house, untilTick: firstTick(of: .autumn, 1201) + 1)
-    let building = try #require(world.buildings[house])
-    #expect(world.isHeldBackByFever(building))
+    let held = world.feverHouses().map(\.id)
+    #expect(held == [house])
     #expect(world.snapshot().feverHouses.contains(house))
 }
 

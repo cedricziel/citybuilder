@@ -75,14 +75,14 @@ extension World {
     }
 
     private func isDispatchable(_ order: Order) -> Bool {
-        order.state == .accepted && order.issuer == .crown && order.delivered == 0
+        order.state == .accepted && order.issuer.deliversToTownCenter && order.delivered == 0
             && !orders.shipments.contains { $0.order == order.id }
     }
 
     /// Units of the order's good in the stores a shipment can start from.
     /// Goods in producers, on the road and on ships do not count.
     public func orderAvailable(for id: OrderID) -> Int {
-        guard let order = order(id), order.issuer == .crown else { return 0 }
+        guard let order = order(id), order.issuer.deliversToTownCenter else { return 0 }
         return reachableSources().reduce(0) { $0 + (stockpiles[$1.store.id]?.quantity(of: order.good) ?? 0) }
     }
 
@@ -94,8 +94,8 @@ extension World {
             .map { ($0, stockpiles[$0.store.id]?.quantity(of: order.good) ?? 0) }
             .filter { $0.1 > 0 }
             .sorted { lhs, rhs in
-                let left = (Self.isDrawnLast(lhs.0.store) ? 1 : 0, lhs.0.path.count, lhs.0.store.id.raw)
-                let right = (Self.isDrawnLast(rhs.0.store) ? 1 : 0, rhs.0.path.count, rhs.0.store.id.raw)
+                let left = (Self.drawRank(lhs.0.store), lhs.0.path.count, lhs.0.store.id.raw)
+                let right = (Self.drawRank(rhs.0.store), rhs.0.path.count, rhs.0.store.id.raw)
                 return left < right
             }
         let available = holding.reduce(0) { $0 + $1.1 }

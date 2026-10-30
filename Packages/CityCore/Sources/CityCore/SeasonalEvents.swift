@@ -33,6 +33,11 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     public internal(set) var fever: FeverEventState?
     /// The area a blight or a fever threatens, from its warning to its end.
     public internal(set) var marked: MarkedArea?
+    /// A festival requested and not yet held or called off.
+    public internal(set) var festival: FestivalRequest?
+    /// The last tick of a festival being held. It runs on past the event,
+    /// so it never blocks the next year's.
+    public internal(set) var festivalUntil: UInt64?
     public internal(set) var counters = SeasonalEventCounters()
 
     public init() {}
@@ -242,13 +247,17 @@ public struct MarkedArea: Codable, Hashable, Sendable {
 
     /// The building's footprint comes within the radius.
     public func contains(_ building: Building) -> Bool {
-        let box = building.bounds
-        let gap = max(0, box.minX - around.maxX, around.minX - box.maxX, box.minY - around.maxY, around.minY - box.maxY)
-        return gap <= radius
+        around.gap(to: building.bounds) <= radius
     }
 }
 
 /// A fever under way. Spec: `seasonal-events` / Fever holds a district back.
 public struct FeverEventState: Codable, Hashable, Sendable {
     public internal(set) var residentsLeft = 0
+}
+
+/// The town's two festival orders: bread, then the culture's luxury. Spec:
+/// `seasonal-events` / The town asks for a festival.
+public struct FestivalRequest: Codable, Hashable, Sendable {
+    public let orders: [OrderID]
 }

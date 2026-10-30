@@ -202,6 +202,16 @@ struct BotEvents {
 
     static let off = BotEvents()
 
+    /// A sweep's event arms from its env value: "1" runs each game with
+    /// events off and on, "only" with events on alone, anything else off.
+    static func arms(from value: String?) -> [Bool] {
+        switch value {
+        case "1": [false, true]
+        case "only": [true]
+        default: [false]
+        }
+    }
+
     static func drawn(answered: Bool) -> BotEvents {
         BotEvents(isOn: true, answers: answered)
     }

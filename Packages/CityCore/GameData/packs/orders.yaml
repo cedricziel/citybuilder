@@ -1,8 +1,10 @@
 # yaml-language-server: $schema=../schema/pack.schema.json
 # Timed requests from the crown and from rival towns (add-orders D4).
 #
-# issuer: crown | rival. A crown order delivers to a town center; a rival's by
-#   ship to its port, for a good the rival is short of.
+# issuer: crown | rival | town. A crown or town order delivers to a town
+#   center; a rival's by ship to its port, for a good the rival is short of.
+#   The town asks only for a festival (add-event-counterplay D8), outside
+#   the board's limits and favour.
 # seasons: the window from issue to the deadline, before difficulty scales it.
 # size: percent of the town's output of the good over the window.
 # min, max: bounds on the quantity; below min the order is not issued.
@@ -35,3 +37,17 @@ items:
       text: A neighbouring town is short of bread., minAge: medieval, seasons: 3, size: 70, min: 8, max: 40, reward: 40 }
   - { kind: Order, id: rival-tools,   issuer: rival, good: tools,  title: Tools for a neighbour,
       text: A neighbouring town is short of tools., minAge: medieval, seasons: 3, size: 70, min: 4, max: 20, reward: 40 }
+
+  # --- The town: a festival's bread and the culture's luxury ---------
+  # Half a season of the town's output, scaled by no difficulty; no money
+  # and no favour, since the festival itself is the reward.
+  - { kind: Order, id: town-bread,  issuer: town, good: bread,  title: Bread for the festival,
+      text: The town wants loaves for its festival., seasons: 1, size: 50, min: 6, max: 30, reward: 0, favour: 0, penalty: 0 }
+  - { kind: Order, id: town-wine,   issuer: town, good: wine,   title: Wine for the festival,
+      text: The town wants wine for its festival., seasons: 1, size: 50, min: 4, max: 20, reward: 0, favour: 0, penalty: 0 }
+  - { kind: Order, id: town-beer,   issuer: town, good: beer,   title: Beer for the festival,
+      text: The town wants beer for its festival., seasons: 1, size: 50, min: 4, max: 20, reward: 0, favour: 0, penalty: 0 }
+  - { kind: Order, id: town-tea,    issuer: town, good: tea,    title: Tea for the festival,
+      text: The town wants tea for its festival., seasons: 1, size: 50, min: 4, max: 20, reward: 0, favour: 0, penalty: 0 }
+  - { kind: Order, id: town-coffee, issuer: town, good: coffee, title: Coffee for the festival,
+      text: The town wants coffee for its festival., seasons: 1, size: 50, min: 4, max: 20, reward: 0, favour: 0, penalty: 0 }

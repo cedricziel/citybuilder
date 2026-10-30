@@ -3,7 +3,7 @@ import Foundation
 /// House growth, consumption and tier changes. Spec:
 /// `population-and-needs`.
 extension World {
-    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService) {
+    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService, festive: Set<EntityID>) {
         // Houses draw from shared buffers, so visit them in a fixed order.
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
@@ -22,7 +22,7 @@ extension World {
             updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace, feverHeld: held)
             updateTier(
                 &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
-                feverHeld: held
+                feverHeld: held, festive: festive.contains(building.id)
             )
             populations[building.id] = pop
         }
@@ -112,7 +112,7 @@ extension World {
     /// between tiers.
     private func updateTier( // swiftlint:disable:this function_parameter_count
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool,
-        feverHeld: Bool
+        feverHeld: Bool, festive: Bool
     ) {
         // Spec: `population-and-needs` / Market hubs gate tier advancement.
         // A need the house already eats counts while it is met: porters keep
@@ -132,7 +132,9 @@ extension World {
             return
         }
         pop.ticksAtTierCondition &+= 1
-        guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / modifiers.paceDivisor else { return }
+        // Spec: `population-and-needs` / Festivals speed advancement near the market.
+        let pace = canAdvance && festive ? max(modifiers.paceDivisor, Self.festivalPaceDivisor) : modifiers.paceDivisor
+        guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / pace else { return }
         pop.ticksAtTierCondition = 0
         if canAdvance, let next = pop.tier.next {
             pop.tier = next

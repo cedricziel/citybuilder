@@ -320,3 +320,24 @@ func scenarioAMissedOrderRaisesABanner() throws {
     ])
     #expect(session.banner == nil)
 }
+
+// MARK: - Festival orders (add-event-counterplay D8)
+
+@MainActor
+@Test("scenario: a festival order is a town card outside the limit")
+func festivalOrderIsATownCard() throws {
+    let session = boardSession([
+        order(1, state: .accepted),
+        order(2, state: .accepted),
+        order(3, issuer: .town, good: .bread, quantity: 10, reward: 0, template: .townBread)
+    ])
+    let card = try #require(session.ordersBoard.cards.first { $0.id == 3 })
+    #expect(card.isFestival)
+    #expect(card.issuerName == "Your town")
+    #expect(card.reward == "Festival")
+    #expect(card.favour == "No favour at stake")
+    #expect(card.canAccept)
+    #expect(!card.byShip)
+    let crown = try #require(session.ordersBoard.cards.first { $0.id == 1 })
+    #expect(!crown.isFestival)
+}

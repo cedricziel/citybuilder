@@ -21,16 +21,11 @@ extension World {
             .sorted { $0.id.raw < $1.id.raw }
     }
 
-    func isHeldBackByFever(_ house: Building) -> Bool {
-        feverHouses().contains { $0.id == house.id }
-    }
-
     /// Every leave interval from the onset, the last one on the season's
     /// last tick, each held-back house of 2 or more loses one resident. Not
     /// a shortage: the decline grace never sees it.
     mutating func runFeverSystem(events: inout [WorldEvent]) {
-        guard let active = seasonalEvents.active, active.event.effect == .fever,
-              (tickCount - active.startTick + 1).isMultiple(of: difficulty.feverLeaveTicks)
+        guard let active = seasonalEvents.active, (tickCount - active.startTick + 1).isMultiple(of: difficulty.feverLeaveTicks)
         else { return }
         for house in feverHouses() where (populations[house.id]?.population ?? 0) >= 2 {
             populations[house.id]?.population -= 1

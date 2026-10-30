@@ -180,7 +180,7 @@ At a fever's warning, the world SHALL pick one player house with residents with 
 
 ### Requirement: The town asks for a festival
 
-When a festival is decided, on the first tick of its season, the world SHALL issue two linked town orders: bread, and the player culture's luxury. Each SHALL ask for half of what the player made of the good in the last four closed seasons, scaled to one season and clamped to 6–30 bread and 4–20 luxury, capped at 75% of what the player's stores can hold of it. The deadline SHALL be the end of the festival window. The festival SHALL be issued only when the player owns an operational marketplace and made both goods in that window; otherwise that year has no seasonal event. When both orders are fulfilled by the deadline, the festival SHALL run for four seasons. During it, houses within the reach of an operational player marketplace SHALL advance after 60 consecutive ticks of met needs instead of 120, and SHALL pay the difficulty's festival bonus on their tax, rounded down.
+When a festival is decided, on the first tick of its season, the world SHALL issue two linked town orders: bread, and the player culture's luxury. Each SHALL ask for half of what the player made of the good in the last four closed seasons, scaled to one season and clamped to 6–30 bread and 4–20 luxury, capped at 75% of what the player's stores can hold of it. The deadline SHALL be the end of the festival window. The festival SHALL be issued only when the player owns an operational marketplace and made both goods in that window; otherwise that year has no seasonal event. When both orders are fulfilled by the deadline, the festival SHALL run for four seasons, the season it is held in included. When either order is declined, lapses or is missed, the festival SHALL be called off at once and the other order closed; goods already delivered stay with the town. During it, houses within the reach of an operational player marketplace SHALL advance after 60 consecutive ticks of met needs instead of 120, and SHALL pay the difficulty's festival bonus on their tax, rounded down.
 
 #### Scenario: A festival pays more tax
 
@@ -196,6 +196,11 @@ When a festival is decided, on the first tick of its season, the world SHALL iss
 
 - **WHEN** the bread order of a festival is fulfilled and the luxury order is not by the deadline
 - **THEN** no festival runs, and nothing else changes
+
+#### Scenario: Declining a festival order calls it off
+
+- **WHEN** the player declines the luxury order of a festival
+- **THEN** the bread order closes too, the "called off" banner shows, and no festival runs
 
 ### Requirement: Banner text
 
@@ -215,7 +220,7 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | fever | warning | Fever in the harbour towns | Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe. |
 | fever | onset | Fever in the town | Houses in the marked district can't advance, and some residents leave, until {date}. |
 | fever | end | The fever has passed | {residents} left the town. |
-| festival | request | The town wants a festival | Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year. |
+| festival | request | The town wants a festival | Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Accept both on the order board. Houses near the market then advance faster and pay more tax for a year. |
 | festival | held | Festival! | Houses near the market advance faster and pay {bonus}% more tax until {date}. |
 | festival | missed | The festival was called off | Goods already delivered stay with the town. There is no other penalty. |
 
@@ -229,7 +234,7 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 #### Scenario: Festival request names its deadline
 
 - **WHEN** a festival asking for 12 bread and 8 wine is requested in spring 1204 on Normal
-- **THEN** the request text reads "Deliver 12 bread and 8 wine by End of Spring 1204. Houses near the market then advance faster and pay more tax for a year."
+- **THEN** the request text reads "Deliver 12 bread and 8 wine by End of Spring 1204. Accept both on the order board. Houses near the market then advance faster and pay more tax for a year."
 
 #### Scenario: Fever end text
 

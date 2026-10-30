@@ -327,7 +327,7 @@
             "properties": {
               "kind": true,
               "id": { "$ref": "#/$defs/id" },
-              "issuer": { "description": "Who asks: the crown, or a rival town short of the good.", "enum": ["crown", "rival"] },
+              "issuer": { "description": "Who asks: the crown, a rival town short of the good, or the player's own town for a festival.", "enum": ["crown", "rival", "town"] },
               "good": { "$ref": "#/$defs/id" },
               "title": { "description": "The card heading.", "type": "string", "minLength": 1 },
               "text": { "description": "One line of flavour.", "type": "string", "maxLength": 100 },

@@ -250,6 +250,12 @@ extension World {
         store.kind == .granary
     }
 
+    /// The first sort key of a draw order: 0 for ordinary stores, 1 for
+    /// those drawn last.
+    static func drawRank(_ store: Building) -> Int {
+        isDrawnLast(store) ? 1 : 0
+    }
+
     /// `stores` in the order a draw takes from them: their own order, with
     /// the granaries moved to the end.
     static func granariesLast(_ stores: [Building]) -> [Building] {

@@ -39,22 +39,22 @@ Sections 1–4 can start before #238 M2: they don't touch house supply or the ma
 
 ## 6. After #238 M2 and #277: festival
 
-- [ ] 6.1 Tests first: eligibility (marketplace, both goods made), sizing, town orders outside the limits and favour, the four-season reward, missing it costs nothing
-- [ ] 6.2 The `town` issuer in `OrdersState`; the linked pair; the festival reward on advancement and tax; the festival card on the order board (look from 0.2)
+- [x] 6.1 Tests first: eligibility (marketplace, both goods made), sizing, town orders outside the limits and favour, the four-season reward, missing it costs nothing
+- [x] 6.2 The `town` issuer in `OrdersState`; the linked pair; the festival reward on advancement and tax; the festival card on the order board (look from 0.2)
 
 ## 7. Saves, determinism and sweeps
 
-- [ ] 7.1 Decode a save without the new keys; round-trip with a burning house, a watchman on the road, a warned blight and ruins; fixture from the previous version
+- [ ] 7.1 Decode a save without the new keys; round-trip with a burning house, a watchman on the road, a warned blight and ruins; fixture from the previous version (step 2: a save mid-blight and mid-fever plays on the same, and festival orders round-trip)
 - [ ] 7.2 Regenerate `DeterminismFixture` in its own commit; macOS and Linux agree; events off is equal to main
-- [ ] 7.3 PlayerBot `EventsKit`; the forced-hazard first-hour variant; the before-and-after sweeps of design D12 (code done for fire season: `EventsKit` builds fire watches, `BotEvents` drives drawn and forced events, and `EventsKitTests` holds the `GUIDE_SWEEP events` and `FIRE_SWEEP` runs behind `RIVAL_SWEEP=1`. Step 1 bars 1 and 2 pass with D10 unchanged; the table is in design D12. Bars 3–6 and the blight, fever and festival answers wait for step 2). Tune D10 until the bars hold and write the measured table into design D12
+- [ ] 7.3 PlayerBot `EventsKit`; the forced-hazard first-hour variant; the before-and-after sweeps of design D12 (code done for fire season: `EventsKit` builds fire watches, `BotEvents` drives drawn and forced events, and `EventsKitTests` holds the `GUIDE_SWEEP events` and `FIRE_SWEEP` runs behind `RIVAL_SWEEP=1`. Step 1 bars 1 and 2 pass with D10 unchanged; the table is in design D12. Step 2 code done: `EventsKit` builds a granary on a blight warning, a physician over a fever's district, a herb garden and buys herbs, and accepts and sends a festival; `HAZARD_SWEEP` runs forced blights and fevers; `PACING_EVENTS=1` and `SOLVENCY_EVENTS=1` add event arms to the pacing and solvency sweeps. Step 2 measured 2026-10-30 at 8de90861 against main with #336: bars 1–5 pass, bar 6 fails for blight, which a follow-up fixes; the table is in design D12). Tune D10 until the bars hold and write the measured table into design D12
 - [ ] 7.4 Seasonal events in the weekly `rival-sweep` workflow and the `GUIDE_SWEEP`, `PACING_SWEEP` and `SOLVENCY_SWEEP` lines
 
 ## 8. Art, rendering and statistics (after 0.2)
 
 - [ ] 8.1 Sprites from the approved canvas: fire and smoke effect, ruins per footprint, fire watch, watchman with a bucket, granary, physician, herb garden; status icons (flame, blight, fever, clear-me) (done: everything but the physician and herb garden, which come with step 2; ruins at 1×1, 2×2 and 3×3; `PendingArt` is gone, and the granary waits in `BuildPalette.held` until 5.2 lands)
-- [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127) (done: `WorldSnapshot.watchmen` and the bucket walk cycle, flames, glow and smoke on burning buildings, ruins at their footprint, the flame and clear-me icons, a fire watch's reach in teal and the amber style; still to come: blight and fever areas and icons with section 5, the festival crowd with section 6)
+- [ ] 8.2 CityRender2D: a real walker type for the watchman (today a zero-amount `.deliver` carrier in `snapshot().carriers`); effects, the amber threat and teal serves overlays, status icon mapping, the festival crowd hook (#127) (done: `WorldSnapshot.watchmen` and the bucket walk cycle, flames, glow and smoke on burning buildings, ruins at their footprint, the flame and clear-me icons, a fire watch's reach in teal and the amber style; blight and fever areas and icons with section 5, and the festival crowd: a festival's first season fills the player's plaza, one figure a spot)
 - [ ] 8.3 Statistics: event records per season, the axis markers, the fever series
-- [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge (done: `FireEffect`, the fire watch, granary and ruins previews, the watchman and the event icons; the event chip and festival card come with 2.4 and 6.2)
+- [ ] 8.4 `design/web`: components for the new buildings, ruins, fire effect, icons, event chip and festival card; previews; `npm run typecheck` and `npm run build`; republish after merge (done: `FireEffect`, the fire watch, granary and ruins previews, the watchman and the event icons; the festival card on `OrdersBoard` and the `party.popper.fill` icon; the event chip comes with 2.4)
 
 ## 9. Campaign hooks
 

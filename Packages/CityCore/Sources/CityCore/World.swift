@@ -257,14 +257,17 @@ public struct World: Codable, Sendable, Equatable {
         let service = hubService()
         runCarrierSystem(service: service, events: &events)
         runShipSystem(events: &events)
-        runPopulationSystem(signatureSources: signatureSources, service: service)
+        let festive = festivalHouses(service: service)
+        runPopulationSystem(signatureSources: signatureSources, service: service, festive: festive)
         runResearchSystem(signatureSources: signatureSources, events: &events)
         runCalendarSystem(events: &events)
         runSeasonalEventSystem(events: &events)
         runOrderSystem(events: &events)
         runGoalSystem(events: &events)
         runRivalSystem(events: &events)
-        runEconomySystem(signatureSources: signatureSources, events: &events)
+        // A festival held this tick already pays its bonus.
+        let taxed = festive.isEmpty ? festivalHouses(service: service) : festive
+        runEconomySystem(signatureSources: signatureSources, festive: taxed, events: &events)
         runScenarioRecords(events: &events)
         runStatisticsSystem(events: events)
 

@@ -63,6 +63,76 @@ func kitWaitsForTheMoney() {
     #expect(world.pendingCommands.isEmpty)
 }
 
+// MARK: - Blight, fever and the festival
+
+/// The street with a town center at (0, 4), below the road.
+private func townStreet() -> (world: World, center: EntityID) {
+    var world = streetWorld()
+    world.economy.balance = 2000
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 4), in: &world)
+    return (world, center)
+}
+
+/// Runs a turn, ticks the placement through, and runs the next turn to count it.
+private func turn(_ kit: inout EventsKit, _ world: inout World) {
+    kit.takeTurn(&world)
+    world.tick()
+    kit.takeTurn(&world)
+}
+
+@Test("scenario: the kit builds a granary on a blight warning, once")
+func kitBuildsAGranaryForBlight() {
+    var (world, _) = townStreet()
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+    var kit = EventsKit()
+    turn(&kit, &world)
+    let granaries = world.buildings.values.count { $0.kind == .granary }
+    #expect(granaries == 1)
+    #expect(kit.built[.granary] == 1)
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands.isEmpty)
+}
+
+@Test("scenario: the kit answers a fever with a physician, a herb garden and herbs")
+func kitAnswersAFever() throws {
+    var (world, center) = townStreet()
+    let house = try #require(world.buildings.values.filter { $0.kind == .house }.max { $0.id.raw < $1.id.raw })
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fever, season: .autumn)
+    world.seasonalEvents.marked = MarkedArea(around: house.bounds, radius: 6)
+    var kit = EventsKit()
+    turn(&kit, &world)
+    let physician = try #require(world.buildings.values.first { $0.kind == .physician })
+    #expect(World.footprintDistance(physician, house) <= World.physicianReach)
+    world.tick()
+    kit.takeTurn(&world)
+    #expect(kit.built[.herbGarden] == 1)
+    world.buildings[physician.id]?.state = .operational
+    world.stockpiles[physician.id] = World.newStockpile(for: .physician)
+    world.stockpiles[center]?.withdraw(.herbs, amount: 100)
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands.contains(.marketBuy(center, .herbs, EventsKit.herbsBought)))
+    #expect(kit.herbsBuys == 1)
+}
+
+@Test("scenario: the kit accepts a festival once the stores hold half of each good")
+func kitAcceptsAFestival() {
+    var (world, center) = townStreet()
+    world.seasonalEvents.active = ActiveSeasonalEvent(event: .festival, startTick: 0, lastTick: 2000)
+    let bread = world.testAddOrder(.town, good: .bread, quantity: 10, reward: 0, deadline: 1999)
+    let beer = world.testAddOrder(.town, good: .beer, quantity: 6, reward: 0, deadline: 1999)
+    world.testSetStock([.bread: 5, .beer: 2], in: center)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands.isEmpty)
+    world.testSetStock([.bread: 10, .beer: 3], in: center)
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands == [.acceptOrder(bread), .acceptOrder(beer)])
+    world.tick()
+    kit.takeTurn(&world)
+    #expect(world.pendingCommands == [.dispatchOrder(bread)])
+    #expect(kit.festivalsAccepted == 1)
+}
+
 // MARK: - Sweeps (design D12, bars 1 and 2): run in the sweep slot only
 
 @Test(
@@ -115,6 +185,37 @@ func forcedFireFirstHour(seed: UInt64) {
     }
 }
 
+@Test(
+    "scenario: a forced blight or fever in 1202 leaves the first hour standing",
+    .enabled(if: isFullSweep, "set RIVAL_SWEEP=1"),
+    arguments: Array(UInt64(0) ..< 10)
+)
+func forcedHazardFirstHour(seed: UInt64) {
+    for layout in [WorldLayout.singleIsland, .archipelago] {
+        for event in [SeasonalEvent.blight, .fever] {
+            for onset in event.seasons.prefix(2) {
+                let run = { (answered: Bool) in
+                    World.botGame(
+                        layout: layout, seed: seed, difficulty: .hard, tradesAtMarket: true,
+                        firstSteps: PlayerBot.guideSteps, events: .forced(event, onset, answered: answered), ticks: 12000
+                    )
+                }
+                let with = run(true), without = run(false)
+                let leftWith = with.seasonalEvents.counters.residentsLeftWithFever
+                let leftWithout = without.seasonalEvents.counters.residentsLeftWithFever
+                let residents = with.population(of: .player)
+                print(
+                    "HAZARD_SWEEP event=\(event) seed=\(seed) layout=\(layout.rawValue) onset=\(onset) "
+                        + "bankrupt=\(with.economy.gameOver) residents=\(residents) "
+                        + "residents_without=\(without.population(of: .player)) left_with=\(leftWith) left_without=\(leftWithout)"
+                )
+                #expect(!with.economy.gameOver, "\(event) \(layout) seed \(seed) \(onset)")
+                #expect(residents >= 20, "\(event) \(layout) seed \(seed) \(onset): \(residents) residents")
+            }
+        }
+    }
+}
+
 @Test("scenario: a watch on another road network doesn't cover a house")
 func watchOnAnotherNetworkDoesNotCover() throws {
     var world = streetWorld()
@@ -152,4 +253,53 @@ func buildingWithoutAPlotIsTriedOnce() {
     kit.takeTurn(&world)
     kit.takeTurn(&world)
     #expect(world.pendingCommands.isEmpty)
+}
+
+@Test("scenario: the kit looks further out when the town center is crowded")
+func kitLooksFurtherForAGranary() throws {
+    var world = eventsWorld(size: 40)
+    world.economy.balance = 2000
+    for x in 0 ... 39 {
+        SignatureFixture.inject(.road, at: TileCoordinate(x: x, y: 3), in: &world)
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+    }
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 0, y: 4), in: &world)
+    // Every free tile within 15 columns of the town center is taken.
+    let filler = EntityID(raw: 999_999)
+    for y in 0 ..< 40 {
+        for x in 0 ... 15 where world.occupiedTiles[TileCoordinate(x: x, y: y)] == nil {
+            world.occupiedTiles[TileCoordinate(x: x, y: y)] = filler
+        }
+    }
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    let placed = world.pendingCommands.compactMap { command -> TileCoordinate? in
+        if case let .place(.granary, anchor) = command { anchor } else { nil }
+    }
+    let anchor = try #require(placed.first)
+    #expect(anchor.x > 15)
+    #expect(world.buildings[center] != nil)
+}
+
+@Test("scenario: the kit guards houses and workshops, not lone fields")
+func kitLeavesFieldsUnguarded() {
+    var world = eventsWorld(size: 30)
+    world.economy.balance = 1000
+    for x in 0 ... 20 {
+        SignatureFixture.inject(.road, at: TileCoordinate(x: x, y: 3), in: &world)
+        world.roadGraph.addRoad(at: TileCoordinate(x: x, y: 3))
+    }
+    addOperational(.farm, at: TileCoordinate(x: 2, y: 4), in: &world)
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fire, season: .summer)
+    var kit = EventsKit()
+    kit.takeTurn(&world)
+    #expect(EventsKit.uncovered(in: world).isEmpty)
+    #expect(world.pendingCommands.isEmpty)
+}
+
+@Test func sweepEventArmsFromTheEnvironment() {
+    #expect(BotEvents.arms(from: "1") == [false, true])
+    #expect(BotEvents.arms(from: "only") == [true])
+    #expect(BotEvents.arms(from: nil) == [false])
 }

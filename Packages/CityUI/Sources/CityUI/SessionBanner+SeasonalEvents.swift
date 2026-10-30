@@ -9,7 +9,10 @@ extension GameSession {
     func seasonalEventBanner(for event: WorldEvent) -> SessionBanner? {
         switch event {
         case let .seasonalEventWarned(event, onset):
-            return Self.warningBanner(SeasonalEventOnset(event: event, season: onset))
+            return warningBanner(SeasonalEventOnset(event: event, season: onset))
+        case .seasonalEventStarted(.festival):
+            let end = world.seasonalEvents.festivalUntil.map { Self.endDate(of: $0, in: world) } ?? ""
+            return Self.banner(.festival, .held, ["bonus": "\(world.difficulty.festivalTaxBonusPercent)", "date": end])
         case let .seasonalEventStarted(event):
             let end = world.seasonalEvents.active.map { Self.endDate(of: $0.lastTick, in: world) } ?? ""
             return Self.banner(event, .onset, ["date": end])
@@ -20,6 +23,7 @@ extension GameSession {
             let moment: SeasonalBannerKind = switch (event.effect, toll.fires, toll.count) {
             case (.fire, 0, _): .endNoFire
             case (.fire, _, 0): .endNoLoss
+            case (.festival, _, _): .missed
             default: .end
             }
             let values = [
@@ -60,7 +64,18 @@ extension GameSession {
         if let fire = world.seasonalEvents.fire?.fires.first, let kind = world.buildings[fire.building]?.kind {
             return seasonalEventBanner(for: .buildingCaughtFire(building: fire.building, kind: kind))
         }
-        return world.currentSeasonalEvent.flatMap(Self.warningBanner)
+        return world.currentSeasonalEvent.flatMap(warningBanner)
+    }
+
+    /// A hazard's warning, or a festival's request with its orders.
+    private func warningBanner(_ onset: SeasonalEventOnset) -> SessionBanner? {
+        guard onset.event.effect == .festival else { return Self.warningBanner(onset) }
+        let pair = (world.seasonalEvents.festival?.orders ?? []).compactMap(world.order)
+        guard let bread = pair.first, let luxury = pair.last, pair.count == 2 else { return nil }
+        return Self.banner(onset.event, .request, [
+            "bread": "\(bread.quantity)", "luxury": "\(luxury.quantity)",
+            "luxuryGood": InspectorViewModel.goodName(luxury.good), "deadline": Self.endDate(of: bread.deadlineTick, in: world)
+        ])
     }
 
     /// The warning of `onset`, as first shown and as the chip shows it again.

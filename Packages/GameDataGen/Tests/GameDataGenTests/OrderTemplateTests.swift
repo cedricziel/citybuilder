@@ -109,3 +109,13 @@ func unknownAgeInOrderTemplate() {
     #expect(source.contains("case .rivalWood: .medieval"))
     #expect(source.contains("case .crownTimber: nil"))
 }
+
+@Test("scenario: the town issues festival orders with no reward or favour")
+func townOrderTemplateLoads() throws {
+    let town = templates
+        .replacingOccurrences(of: "issuer: crown", with: "issuer: town")
+        .replacingOccurrences(of: "reward: 125", with: "reward: 0\n    favour: 0\n    penalty: 0")
+    let data = try Fixtures.load(Fixtures.withExtraPack(town)).get()
+    let order = try #require(data.orders.first)
+    #expect(order.issuer == "town" && order.reward == 0 && order.favour == 0 && order.penalty == 0)
+}
