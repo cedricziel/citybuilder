@@ -110,12 +110,7 @@ extension World {
             : onset.season == today
         guard announces else { return }
         let scheduled = seasonalEvents.schedule.contains { $0.year == date.year }
-        // A drawn event also needs the food it would threaten stored (D10).
-        // Nothing stored is nothing to protect, even in a town without houses.
-        let food = storedFood()
-        let stocked = scheduled || onset.event.minFoodSeasons == 0
-            || (food > 0 && food >= onset.event.minFoodSeasons * seasonFoodDraw())
-        guard stocked, hasSeasonalEventTargets(onset.event.effect, scheduled: scheduled) else {
+        guard hasSeasonalEventTargets(onset.event.effect, scheduled: scheduled) else {
             seasonalEvents.plan = SeasonalEventPlan(year: date.year, onset: nil)
             return
         }
@@ -206,7 +201,8 @@ extension World {
             let flammable = owned.filter { Self.isFlammable($0.kind) }
             return flammable.count >= minimum && flammable.contains { Self.canIgnite($0.kind) }
         case .blight:
-            return owned.contains { isStruck(by: effect, $0) }
+            // A drawn blight needs a town of fields, as a drawn fire needs a town of buildings (D10).
+            return owned.count { isStruck(by: effect, $0) } >= minimum
         case .fever:
             return owned.count { isStruck(by: effect, $0) } >= minimum
         case .festival:
@@ -215,21 +211,6 @@ extension World {
     }
 
     static let seasonalEventMinimumTargets = 6
-
-    /// The food the player's houses eat in a season at their size now.
-    func seasonFoodDraw() -> Int {
-        let intervals = Int(CalendarState.ticksPerSeason / HousePopulation.consumptionIntervalTicks)
-        let perInterval = buildings.values
-            .filter { $0.kind == .house && $0.owner == .player && $0.state == .operational }
-            .reduce(0) { $0 + (populations[$1.id]?.consumption(of: .food, in: culture) ?? 0) }
-        return perInterval * intervals
-    }
-
-    /// Food in the player's operational stores, granaries and hubs included.
-    func storedFood() -> Int {
-        goodsBuffers(of: .player).filter { $0.state == .operational }
-            .reduce(0) { $0 + (stockpiles[$1.id]?.quantity(of: .food) ?? 0) }
-    }
 
     /// Houses and producers; not monuments, shipyards or signature buildings.
     static func canIgnite(_ kind: BuildingKind) -> Bool {

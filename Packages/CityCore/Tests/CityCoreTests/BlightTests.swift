@@ -135,35 +135,40 @@ func noBlightBeforeYear4() {
     #expect(SeasonalEvent.blight.firstYear == 4)
 }
 
-/// A town drawing a blight for summer 1203, with a farm, six houses of 4
-/// and a warehouse holding `food`, one tick before the warning.
-private func drawnBlightTown(food: Int) throws -> World {
+/// A town drawing a blight for summer 1203 with `fields` farms and six
+/// houses of 4, one tick before the warning.
+private func drawnBlightTown(fields: Int) throws -> World {
     let seed = try #require(seedDrawing(SeasonalEventOnset(event: .blight, season: .summer), in: 1203))
-    var world = eventsWorld(seed: seed, size: 30)
-    addOperational(.farm, at: TileCoordinate(x: 20, y: 20), in: &world)
+    var world = eventsWorld(seed: seed, size: 40)
+    for index in 0 ..< fields {
+        addOperational(.farm, at: TileCoordinate(x: index * 5, y: 20), in: &world)
+    }
     addHouses(6, in: &world)
-    let store = addOperational(.warehouse, at: TileCoordinate(x: 20, y: 10), in: &world)
-    world.stockpiles[store]?.deposit(.food, amount: food)
     _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1203) - 1)
     return world
 }
 
-@Test("scenario: A town with nothing stored gets a quiet year")
-func blightNeedsFoodStored() throws {
-    var world = try drawnBlightTown(food: 0)
+@Test("scenario: A town with six fields is warned of the blight")
+func blightWarnsATownWithSixFields() throws {
+    var world = try drawnBlightTown(fields: 6)
+    let events = runEvents(&world, untilTick: world.tickCount + 2)
+    #expect(events.seasonalEvents == [.seasonalEventWarned(event: .blight, onset: .summer)])
+}
+
+@Test("scenario: A town with five fields gets a quiet year")
+func blightQuietWithFiveFields() throws {
+    var world = try drawnBlightTown(fields: 5)
     let events = runEvents(&world, untilTick: world.tickCount + 2)
     #expect(events.seasonalEvents.isEmpty)
     #expect(world.seasonalEvents.plan?.onset == nil)
 }
 
-@Test("scenario: A town with a season of food stored is warned of the blight")
-func blightWarnsAStockedTown() throws {
-    var world = try drawnBlightTown(food: 0)
-    let draw = world.seasonFoodDraw()
-    let store = try #require(world.buildings.values.first { $0.kind == .warehouse })
-    world.stockpiles[store.id]?.deposit(.food, amount: draw)
-    let events = runEvents(&world, untilTick: world.tickCount + 2)
-    #expect(draw > 0)
+@Test("scenario: A scheduled blight needs one field")
+func scheduledBlightNeedsOneField() {
+    var world = eventsWorld(seed: 2, size: 30)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .blight, onset: .summer)]
+    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let events = runSeasons(&world, untilTick: firstTick(of: .spring, 1201) + 1)
     #expect(events.seasonalEvents == [.seasonalEventWarned(event: .blight, onset: .summer)])
 }
 
@@ -176,15 +181,4 @@ func fieldUnderConstructionIsNotBlighted() throws {
     let building = try #require(world.buildings[site])
     #expect(!world.isBlighted(building))
     #expect(!world.snapshot().blightedFields.contains(site))
-}
-
-@Test("scenario: a town with fields but no houses and no food stored gets a quiet year")
-func blightNeedsFoodEvenWithoutHouses() throws {
-    let seed = try #require(seedDrawing(SeasonalEventOnset(event: .blight, season: .summer), in: 1203))
-    var world = eventsWorld(seed: seed, size: 30)
-    addOperational(.farm, at: TileCoordinate(x: 20, y: 20), in: &world)
-    _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1203) + 1)
-    #expect(world.seasonFoodDraw() == 0)
-    #expect(world.seasonalEvents.warned == nil)
-    #expect(world.seasonalEvents.plan?.onset == nil)
 }

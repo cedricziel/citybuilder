@@ -34,7 +34,7 @@ public enum ItemSchema {
         "Tier": Fields(required: ["id", "name", "capacity", "taxPerResident", "needs"], optional: ["declineGrace"]),
         "Event": Fields(
             required: ["id", "effect", "seasons", "weight", "banners"],
-            optional: ["minAge", "enabled", "firstYear", "minFoodSeasons"]
+            optional: ["minAge", "enabled", "firstYear"]
         ),
         "Campaign": Fields(required: ["id", "title", "chapters"], optional: ["opensAfter"]),
         "Chapter": Fields(

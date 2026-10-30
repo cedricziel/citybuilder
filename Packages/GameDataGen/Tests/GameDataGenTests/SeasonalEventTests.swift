@@ -126,22 +126,19 @@ func eventEnabledFlag() throws {
     #expect(source.contains("case .festival: false"))
 }
 
-@Test("scenario: an event can set its first year and the food it needs stored")
-func eventFirstYearAndFoodCover() throws {
-    let gated = events.replacingOccurrences(of: "    effect: fire\n", with: "    effect: fire\n    firstYear: 4\n    minFoodSeasons: 1\n")
+@Test("scenario: an event can set its first year")
+func eventFirstYear() throws {
+    let gated = events.replacingOccurrences(of: "    effect: fire\n", with: "    effect: fire\n    firstYear: 4\n")
     let data = try Fixtures.load(Fixtures.withExtraPack(gated)).get()
     #expect(data.events.map(\.firstYear) == [4, 1])
-    #expect(data.events.map(\.minFoodSeasons) == [1, 0])
     let source = try emitted("SeasonalEvent+Generated.swift", from: Fixtures.withExtraPack(gated))
     #expect(source.contains("public var firstYear: Int {"))
     #expect(source.contains("case .fire: 4"))
-    #expect(source.contains("public var minFoodSeasons: Int {"))
-    #expect(source.contains("case .festival: 0"))
+    #expect(source.contains("case .festival: 1"))
 }
 
-@Test func eventFirstYearAndFoodCoverBounds() {
-    let bad = events.replacingOccurrences(of: "    effect: fire\n", with: "    effect: fire\n    firstYear: 0\n    minFoodSeasons: -1\n")
+@Test func eventFirstYearBounds() {
+    let bad = events.replacingOccurrences(of: "    effect: fire\n", with: "    effect: fire\n    firstYear: 0\n")
     let errors = Fixtures.errors(Fixtures.withExtraPack(bad))
     #expect(errors.contains { $0.contains("Event fire") && $0.contains("`firstYear`") }, "\(errors)")
-    #expect(errors.contains { $0.contains("Event fire") && $0.contains("`minFoodSeasons`") }, "\(errors)")
 }

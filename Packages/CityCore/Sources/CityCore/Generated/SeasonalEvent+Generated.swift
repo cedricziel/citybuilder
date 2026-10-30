@@ -72,15 +72,6 @@ public enum SeasonalEvent: String, CaseIterable, Codable, Sendable {
         case .festival: 1
         }
     }
-
-    public var minFoodSeasons: Int {
-        switch self {
-        case .fire: 0
-        case .blight: 1
-        case .fever: 0
-        case .festival: 0
-        }
-    }
 }
 
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

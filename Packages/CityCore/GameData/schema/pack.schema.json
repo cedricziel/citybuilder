@@ -291,7 +291,6 @@
               "minAge": { "description": "The first age the event can happen in. Defaults to the first age.", "$ref": "#/$defs/id" },
               "enabled": { "description": "False keeps the event out of every draw and schedule until its mechanic ships. Defaults to true.", "type": "boolean" },
               "firstYear": { "description": "The first game year, from 1, a draw may pick the event; an earlier pick is a quiet year. Defaults to 1.", "type": "integer", "minimum": 1 },
-              "minFoodSeasons": { "description": "Seasons of the town's food draw its stores must hold for the event to be warned; with less, the year is quiet. Defaults to 0.", "type": "integer", "minimum": 0 },
               "weight": {
                 "description": "Draw weight per difficulty.",
                 "type": "object",
