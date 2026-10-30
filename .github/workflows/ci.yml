@@ -214,6 +214,11 @@ jobs:
       - name: pre-commit run --all-files
         run: pre-commit run --all-files --show-diff-on-failure
 
+      # pre-commit runs l10n-check itself; this runs the checker's own tests
+      # (CI never calls `make test`, which runs them too).
+      - name: L10nCheck tests
+        run: swift test --package-path Tools/L10nCheck
+
       # Two PRs that each fit under SwiftLint's file_length limit can go
       # over it once both merge, failing lint for everyone. This warns at
       # 450 lines; it never fails the job.

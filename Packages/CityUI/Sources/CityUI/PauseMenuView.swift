@@ -15,7 +15,7 @@ public struct PauseMenuView: View {
 
     public var body: some View {
         VStack(spacing: 12) {
-            Text("Game Paused")
+            Text(l10n: "pause.title")
                 .font(.title2)
                 .fontWeight(.semibold)
                 .padding(.top, 24)
@@ -45,10 +45,10 @@ public struct PauseMenuView: View {
         }
         .frame(minWidth: 320, minHeight: 320)
         .padding(.vertical, 8)
-        .confirmationDialog("Save before quitting?", isPresented: $viewModel.isConfirmingQuit) {
-            Button("Save and Quit") { viewModel.confirmQuit(saving: true) }
-            Button("Quit Without Saving", role: .destructive) { viewModel.confirmQuit(saving: false) }
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog(GameText.string("pause.quitPrompt"), isPresented: $viewModel.isConfirmingQuit) {
+            Button(GameText.string("pause.saveAndQuit")) { viewModel.confirmQuit(saving: true) }
+            Button(GameText.string("pause.quitWithoutSaving"), role: .destructive) { viewModel.confirmQuit(saving: false) }
+            Button(GameText.string("common.cancel"), role: .cancel) {}
         }
     }
 

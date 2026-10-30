@@ -91,6 +91,13 @@ repos:
         files: ^Packages/(CityCore/(GameData/|Sources/CityCore/Generated/)|GameDataGen/Sources/)
         pass_filenames: false
 
+      - id: l10n-check
+        name: catalogs have reviewed German and follow the glossary (localization)
+        entry: make l10n-check
+        language: system
+        files: (\.xcstrings$|^Packages/[^/]+/Sources/.*\.swift$|^Apps/.*\.swift$|^Tools/L10nCheck/)
+        pass_filenames: false
+
       - id: forbid-xcodeproj
         name: Forbid committing generated Xcode project files
         entry: |

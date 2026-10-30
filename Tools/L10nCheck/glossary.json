@@ -1,0 +1,251 @@
+{
+  "terms": [
+    {
+      "term": "market",
+      "german": "Markt",
+      "avoid": [
+        "Basar"
+      ]
+    },
+    {
+      "term": "warehouse",
+      "german": "Lagerhaus",
+      "avoid": [
+        "Depot",
+        "Warenhaus"
+      ]
+    },
+    {
+      "term": "storage, stock",
+      "german": "Lager, Vorrat",
+      "avoid": [
+        "Inventar"
+      ]
+    },
+    {
+      "term": "granary",
+      "german": "Kornspeicher",
+      "avoid": [
+        "Silo"
+      ]
+    },
+    {
+      "term": "carrier, porter",
+      "german": "Träger",
+      "avoid": [
+        "Kurier",
+        "Transporteur"
+      ]
+    },
+    {
+      "term": "handcart",
+      "german": "Handkarren",
+      "avoid": [
+        "Schubkarre"
+      ]
+    },
+    {
+      "term": "goods",
+      "german": "Waren",
+      "avoid": [
+        "Güter",
+        "Items"
+      ]
+    },
+    {
+      "term": "order",
+      "german": "Auftrag",
+      "avoid": [
+        "Bestellung",
+        "Order"
+      ]
+    },
+    {
+      "term": "order board",
+      "german": "Auftragstafel",
+      "avoid": [
+        "Bestellbrett"
+      ]
+    },
+    {
+      "term": "rival town",
+      "german": "Nachbarstadt",
+      "avoid": [
+        "Gegner",
+        "Konkurrent"
+      ]
+    },
+    {
+      "term": "caravan",
+      "german": "Karawane",
+      "avoid": [
+        "Konvoi"
+      ]
+    },
+    {
+      "term": "blight",
+      "german": "Fäule",
+      "avoid": [
+        "Mehltau"
+      ]
+    },
+    {
+      "term": "crop failure",
+      "german": "Missernte",
+      "avoid": [
+        "Ernteausfall",
+        "Mißernte"
+      ]
+    },
+    {
+      "term": "fever",
+      "german": "Fieber",
+      "avoid": [
+        "Seuche"
+      ]
+    },
+    {
+      "term": "festival",
+      "german": "Fest",
+      "avoid": [
+        "Festival",
+        "Party"
+      ]
+    },
+    {
+      "term": "fire watch",
+      "german": "Feuerwache",
+      "avoid": [
+        "Feuerwehr"
+      ]
+    },
+    {
+      "term": "ruins",
+      "german": "Ruinen",
+      "avoid": [
+        "Trümmerhaufen"
+      ]
+    },
+    {
+      "term": "clear ruins",
+      "german": "Ruinen räumen",
+      "avoid": [
+        "Ruinen löschen"
+      ]
+    },
+    {
+      "term": "fuel",
+      "german": "Brennstoff",
+      "avoid": [
+        "Treibstoff"
+      ]
+    },
+    {
+      "term": "physician",
+      "german": "Medicus",
+      "avoid": [
+        "Doktor"
+      ]
+    },
+    {
+      "term": "residents",
+      "german": "Einwohner",
+      "avoid": [
+        "Bewohner"
+      ]
+    },
+    {
+      "term": "town center",
+      "german": "Rathaus",
+      "avoid": [
+        "Stadtzentrum"
+      ]
+    },
+    {
+      "term": "tax",
+      "german": "Steuern",
+      "avoid": [
+        "Abgaben"
+      ]
+    },
+    {
+      "term": "upkeep",
+      "german": "Unterhalt",
+      "avoid": [
+        "Wartung"
+      ]
+    },
+    {
+      "term": "treasury",
+      "german": "Stadtkasse",
+      "avoid": [
+        "Konto"
+      ]
+    },
+    {
+      "term": "bankrupt",
+      "german": "bankrott",
+      "avoid": [
+        "pleite"
+      ]
+    },
+    {
+      "term": "knowledge",
+      "german": "Wissen",
+      "avoid": [
+        "Kenntnisse"
+      ]
+    },
+    {
+      "term": "age (era)",
+      "german": "Zeitalter",
+      "avoid": [
+        "Ära",
+        "Epoche"
+      ]
+    },
+    {
+      "term": "spring",
+      "german": "Frühling",
+      "avoid": [
+        "Frühjahr"
+      ]
+    },
+    {
+      "term": "BC",
+      "german": "v. Chr.",
+      "avoid": [
+        "BC",
+        "vor Christus"
+      ]
+    },
+    {
+      "term": "harbour, port",
+      "german": "Hafen",
+      "avoid": [
+        "Port"
+      ]
+    },
+    {
+      "term": "shipyard",
+      "german": "Werft",
+      "avoid": [
+        "Schiffswerft"
+      ]
+    },
+    {
+      "term": "resume",
+      "german": "Weiter",
+      "avoid": [
+        "Fortsetzen"
+      ]
+    }
+  ],
+  "formal": [
+    "Sie können",
+    "Sie haben",
+    "Ihnen",
+    "wählen Sie",
+    "bauen Sie"
+  ]
+}

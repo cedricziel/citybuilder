@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "CityUI",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v18),
         .macOS(.v15),
@@ -19,7 +20,8 @@ let package = Package(
         .target(
             name: "CityUI",
             dependencies: ["CityCore", "CityRender2D"],
-            path: "Sources/CityUI"
+            path: "Sources/CityUI",
+            resources: [.copy("Resources/Localizable.xcstrings")]
         ),
         .testTarget(
             name: "CityUITests",

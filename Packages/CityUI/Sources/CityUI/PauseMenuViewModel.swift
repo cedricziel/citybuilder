@@ -116,19 +116,19 @@ public final class PauseMenuViewModel {
     /// is wired; Quit only on Mac.
     public var actions: [PauseMenuAction] {
         var result: [PauseMenuAction] = [
-            PauseMenuAction(kind: .resume, label: "Resume", systemImage: "play.fill"),
-            PauseMenuAction(kind: .saveGame, label: "Save Game", systemImage: "tray.and.arrow.down"),
-            PauseMenuAction(kind: .settings, label: "Settings", systemImage: "gear")
+            PauseMenuAction(kind: .resume, label: GameText.string("pause.resume"), systemImage: "play.fill"),
+            PauseMenuAction(kind: .saveGame, label: GameText.string("pause.saveGame"), systemImage: "tray.and.arrow.down"),
+            PauseMenuAction(kind: .settings, label: GameText.string("pause.settings"), systemImage: "gear")
         ]
         if onQuitToTitle != nil {
             result.append(
-                PauseMenuAction(kind: .quitToTitle, label: "Quit to Title", systemImage: "house")
+                PauseMenuAction(kind: .quitToTitle, label: GameText.string("pause.quitToTitle"), systemImage: "house")
             )
         }
         if platform == .mac, onQuit != nil {
             result.append(
                 PauseMenuAction(
-                    kind: .quit, label: "Quit",
+                    kind: .quit, label: GameText.string("pause.quit"),
                     systemImage: "power", role: .destructive
                 )
             )
@@ -151,9 +151,9 @@ public final class PauseMenuViewModel {
         case .saveGame:
             do {
                 try onSaveGame()
-                statusMessage = "Saved"
+                statusMessage = GameText.string("pause.saved")
             } catch {
-                statusMessage = "Couldn't save: \(error)"
+                statusMessage = GameText.string("pause.saveFailed", "\(error)")
             }
         case .settings:
             onSettings()
@@ -175,7 +175,7 @@ public final class PauseMenuViewModel {
             do {
                 try onSaveGame()
             } catch {
-                statusMessage = "Couldn't save: \(error)"
+                statusMessage = GameText.string("pause.saveFailed", "\(error)")
                 return
             }
         }

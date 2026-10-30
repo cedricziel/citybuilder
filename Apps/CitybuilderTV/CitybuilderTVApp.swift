@@ -15,6 +15,7 @@ struct CitybuilderTVApp: App {
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
+        Language.adoptAtLaunch()
         let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
         self.saveStore = saveStore
         saveSync = Self.makeSaveSync(store: saveStore)
