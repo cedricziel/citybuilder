@@ -173,8 +173,8 @@ extension World {
             }
             // Granaries last, though they hold no building material today.
             .sorted { lhs, rhs in
-                let left = (Self.isDrawnLast(lhs.value) ? 1 : 0, manhattan(anchor, lhs.value.anchor), lhs.key.raw)
-                let right = (Self.isDrawnLast(rhs.value) ? 1 : 0, manhattan(anchor, rhs.value.anchor), rhs.key.raw)
+                let left = (Self.drawRank(lhs.value), manhattan(anchor, lhs.value.anchor), lhs.key.raw)
+                let right = (Self.drawRank(rhs.value), manhattan(anchor, rhs.value.anchor), rhs.key.raw)
                 return left < right
             }
             .map(\.key)
