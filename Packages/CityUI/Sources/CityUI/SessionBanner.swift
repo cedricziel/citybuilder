@@ -14,11 +14,9 @@ extension GameSession {
     static let bannerGapTicks: UInt64 = 5
     /// Banners waiting at most; past it the oldest that isn't urgent goes.
     static let bannerQueueLimit = 8
-    static let gameOverBanner = SessionBanner(
-        title: "Bankrupt",
-        description: "The treasury stayed in the red too long and the town is lost. "
-            + "You can still save from the pause menu, or quit to the title to load a save or start a new game."
-    )
+    static var gameOverBanner: SessionBanner {
+        SessionBanner(title: GameText.string("banner.bankrupt.title"), description: GameText.string("banner.bankrupt.text"))
+    }
 
     public var isGameOver: Bool {
         world.isBankrupt
@@ -48,7 +46,7 @@ extension GameSession {
             case let .historyEvent(history):
                 show(SessionBanner(title: history.title, description: history.description))
             case let .ageAdvanced(age):
-                show(SessionBanner(title: "The \(age.displayName) age begins", description: age.blurb))
+                show(SessionBanner(title: GameText.string("banner.ageBegins", age.displayName), description: age.blurb))
             case .gameOver:
                 clearTool()
                 cancelPendingPlacement()
@@ -57,23 +55,26 @@ extension GameSession {
             case .scenarioWon, .scenarioLost:
                 noteScenarioEnd(event)
             case let .fuelRanOut(_, kind):
-                let fuel = kind.fuel.map(InspectorViewModel.fuelName) ?? "fuel"
+                let fuel = kind.fuel.map(InspectorViewModel.fuelName) ?? GameText.string("banner.fuelGeneric")
                 show(SessionBanner(
-                    title: "\(Self.sentenceCase(kind)) is out of \(fuel)",
+                    title: GameText.string("banner.fuelOut.title", Self.sentenceCase(kind), fuel),
                     description: kind.isCultureSignature
-                        ? "Its effect halves until carriers bring more."
-                        : "Its effects stop until carriers bring more."
+                        ? GameText.string("banner.fuelOut.halves")
+                        : GameText.string("banner.fuelOut.stops")
                 ))
             case .monumentCompleted:
-                show(SessionBanner(title: "The monument is complete", description: "Taxes rise by 10%."))
+                show(SessionBanner(title: GameText.string("banner.monument.title"), description: GameText.string("banner.monument.text")))
             case .commissionEnded:
                 show(SessionBanner(
-                    title: "The gallery's commission has ended",
-                    description: "Commission new art to inspire the houses again."
+                    title: GameText.string("banner.commission.title"),
+                    description: GameText.string("banner.commission.text")
                 ))
             case let .rivalAgeAdvanced(id, age):
                 guard let name = world.rival(id)?.name else { continue }
-                show(SessionBanner(title: "\(name) enters the \(age.displayName)", description: "A rival town grows."))
+                show(SessionBanner(
+                    title: GameText.string("banner.rivalAge.title", name, age.displayName),
+                    description: GameText.string("banner.rivalAge.text")
+                ))
             default:
                 if let seasonal = seasonalEventBanner(for: event) {
                     show(seasonal, isUrgent: event.isIgnition)
@@ -95,32 +96,46 @@ extension GameSession {
         // The festival's own banners speak for the town's orders.
         guard let id, let order = world.order(id), order.issuer.isBoardOrder else { return }
         let name = OrdersBoardModel.name(of: order.issuer, in: world)
+        // German declines "the crown" but not a town's name, so the crown has its own
+        // sentences; they name it as `OrdersBoardModel.name(of: .crown)` does.
+        let isCrown = order.issuer == .crown
+        let good = InspectorViewModel.goodName(order.good)
         switch event {
         case .orderOffered:
-            let verb = order.issuer == .crown ? "orders" : "wants"
             show(expiringAt: order.offerEndsTick, SessionBanner(
-                title: "\(name) \(verb) \(order.quantity) \(InspectorViewModel.goodName(order.good))",
-                description: "\(order.template.title), \(OrdersBoardModel.deadlineText(order, in: world)). "
-                    + "Pays \(HUDViewModel.formatMoney(order.reward, locale: .current)) and \(order.favourGain) favour. "
-                    + "Open the board to accept."
+                title: isCrown
+                    ? GameText.string("banner.order.offered.crown", order.quantity, good)
+                    : GameText.string("banner.order.offered.rival", name, order.quantity, good),
+                description: GameText.string(
+                    "banner.order.offered.text", order.template.title, OrdersBoardModel.deadlineText(order, in: world),
+                    HUDViewModel.formatMoney(order.reward), order.favourGain
+                )
             ))
         case let .orderFulfilled(_, reward):
             show(SessionBanner(
-                title: "Order filled: \(order.quantity) \(InspectorViewModel.goodName(order.good))",
-                description: "\(name) pays \(HUDViewModel.formatMoney(reward, locale: .current)), "
-                    + "and its favour rises to \(world.orders.favour.value(for: order.issuer))."
+                title: GameText.string("banner.order.filled.title", order.quantity, good),
+                description: GameText.string(
+                    "banner.order.filled.text",
+                    name,
+                    HUDViewModel.formatMoney(reward),
+                    world.orders.favour.value(for: order.issuer)
+                )
             ))
         case .orderFailed:
-            let target = order.issuer == .crown ? "the crown" : name
             show(SessionBanner(
-                title: "Order missed: \(InspectorViewModel.goodName(order.good)) for \(target)",
-                description: "The deadline passed with \(order.delivered) of \(order.quantity) delivered. "
-                    + "\(name)'s favour falls by \(order.favourLoss)."
+                title: isCrown
+                    ? GameText.string("banner.order.missed.title.crown", good)
+                    : GameText.string("banner.order.missed.title.rival", good, name),
+                description: isCrown
+                    ? GameText.string("banner.order.missed.text.crown", order.delivered, order.quantity, order.favourLoss)
+                    : GameText.string("banner.order.missed.text.rival", order.delivered, order.quantity, name, order.favourLoss)
             ))
         case .orderExpired:
             show(SessionBanner(
-                title: "An offer from \(name) lapsed",
-                description: "Ignoring an offer costs nothing."
+                title: isCrown
+                    ? GameText.string("banner.order.lapsed.title.crown")
+                    : GameText.string("banner.order.lapsed.title.rival", name),
+                description: GameText.string("banner.order.lapsed.text")
             ))
         default:
             return
@@ -177,8 +192,8 @@ extension GameSession {
 
     func showPinchZoomHint() {
         show(SessionBanner(
-            title: "Pinch to zoom",
-            description: "Pinch to see more of the island, or to look closer."
+            title: GameText.string("banner.pinch.title"),
+            description: GameText.string("banner.pinch.text")
         ))
     }
 
@@ -212,8 +227,8 @@ extension GameSession {
     /// Spec: `platform-shells` / Deficit hint.
     private static func deficitHint(upkeep: Int64, tax: Int64) -> SessionBanner {
         SessionBanner(
-            title: "In the red: upkeep $\(upkeep) vs tax $\(tax)",
-            description: "Residents pay tax only when fed. Build a farm, fill your houses, and sell surplus at the town center's market."
+            title: GameText.string("banner.deficit.title", upkeep, tax),
+            description: GameText.string("banner.deficit.text")
         )
     }
 
@@ -281,9 +296,8 @@ extension GameSession {
         let hub = nearEdge.flatMap { snapshot.buildings[$0.value.hub]?.kind } ?? .townCenter
         let radius = hub.hub?.radius ?? 0
         show(SessionBanner(
-            title: "Your town is outgrowing its market",
-            description: "Porters carry goods only \(radius) road tiles from the town center or a marketplace. "
-                + "Build a marketplace near your outer houses."
+            title: GameText.string("banner.outgrowing.title"),
+            description: GameText.string("banner.outgrowing.text", radius)
         ))
     }
 
@@ -301,16 +315,19 @@ extension GameSession {
     }
 
     static func problemHint(name: String, problem: String) -> SessionBanner {
-        SessionBanner(title: "\(name) has a problem", description: "\(problem). Tap it for details.")
+        SessionBanner(title: GameText.string("banner.problem.title", name), description: GameText.string("banner.problem.text", problem))
     }
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
         let good = GoodsCatalog.spec(for: idle.good).displayName.lowercased()
-        let builds = idle.users.map { "a " + $0.spokenName }
-        let named = builds.count < 2 ? builds.joined() : builds.dropLast().joined(separator: ", ") + " or " + builds[builds.count - 1]
+        let builds = idle.users.map { GameText.string("banner.idle.user", $0.spokenName) }
+        // Not ListFormatter: its English adds a comma before "or".
+        let named = builds.count < 2
+            ? builds.joined()
+            : builds.dropLast().joined(separator: ", ") + GameText.string("list.or") + builds[builds.count - 1]
         return SessionBanner(
-            title: "Nothing uses your \(good)",
-            description: "Build \(named) for it, or sell \(good) at the town center's market."
+            title: GameText.string("banner.idle.title", good),
+            description: GameText.string("banner.idle.text", named, good)
         )
     }
 
@@ -434,7 +451,7 @@ extension GameSession {
         switch event {
         case .scenarioWon:
             guard !noteChapterWin() else { return }
-            show(SessionBanner(title: "Scenario complete", description: "Every goal is met."))
+            show(SessionBanner(title: GameText.string("goals.scenarioComplete"), description: GameText.string("banner.won.text")))
             isWinSheetPresented = true
         case let .scenarioLost(reason):
             noteChapterLoss(reason)
@@ -445,6 +462,9 @@ extension GameSession {
 
     /// A save that failed when leaving a chapter game, which stays open.
     func noteSaveFailure(_ error: any Error) {
-        show(SessionBanner(title: "Couldn't save", description: "\(error). The game stays open; try again from the pause menu."))
+        show(SessionBanner(
+            title: GameText.string("banner.saveFailed.title"),
+            description: GameText.string("banner.saveFailed.text", "\(error)")
+        ))
     }
 }
