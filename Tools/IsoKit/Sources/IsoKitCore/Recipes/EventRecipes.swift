@@ -176,16 +176,21 @@ extension Recipes {
         }
     }
 
-    /// A low fenced plot of herb rows flecked with lavender, a small drying frame hung with bunches
-    /// and a wicker basket, so it reads neither as a farm nor as a tea garden (canvas, herb garden).
+    /// A low fenced plot of herb rows between tall lavender rows, a small drying frame hung with
+    /// bunches and a wicker basket, so it reads neither as a farm nor as a tea garden (canvas, herb
+    /// garden). The lavender stands tall and purple so the plot never reads as a cabbage field.
     static func herbGarden(_ kit: Builder) {
         kit.ground(SCNVector3(0.6, 0, 0.6), SCNVector3(7.4, 0, 7.4), .paint(Palette.soil))
-        for row in stride(from: CGFloat(1.2), to: 7.0, by: 1.1) {
-            for x in stride(from: CGFloat(1.0), to: 5.4, by: 0.55) {
-                kit.ball(SCNVector3(x, 0.18, row), radius: 0.24, Events.herb, scale: SCNVector3(1, 0.7, 1))
-            }
-            for x in stride(from: CGFloat(1.3), to: 5.4, by: 1.1) {
-                kit.ball(SCNVector3(x, 0.38, row + 0.05), radius: 0.09, Events.lavender, scale: SCNVector3(1, 1.4, 1))
+        for (index, row) in stride(from: CGFloat(1.2), to: 7.0, by: 1.1).enumerated() {
+            if index.isMultiple(of: 2) {
+                for x in stride(from: CGFloat(1.0), to: 5.4, by: 0.55) {
+                    kit.ball(SCNVector3(x, 0.18, row), radius: 0.24, Events.herb, scale: SCNVector3(1, 0.7, 1))
+                }
+            } else {
+                for x in stride(from: CGFloat(1.0), to: 5.4, by: 0.42) {
+                    kit.ball(SCNVector3(x, 0.2, row), radius: 0.16, Events.herb, scale: SCNVector3(1, 0.9, 1))
+                    kit.ball(SCNVector3(x, 0.62, row), radius: 0.15, Events.lavender, scale: SCNVector3(0.9, 2.6, 0.9))
+                }
             }
         }
         kit.fence(from: SCNVector3(0.4, 0, 7.6), to: SCNVector3(7.6, 0, 7.6), height: 0.6)

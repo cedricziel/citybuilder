@@ -8,9 +8,10 @@ leaves it alone.
 
 ## Visual identity
 
-Rendered by IsoKit in the shared light rig. A low fenced plot of herb rows
-flecked with lavender, a small drying frame hung with bunches and a wicker
-basket, so it reads neither as a farm nor as a tea garden. Design canvas:
+Rendered by IsoKit in the shared light rig. A low fenced plot of green herb rows
+between rows of tall purple lavender, a small drying frame hung with bunches
+and a wicker basket, so it reads neither as a farm, a cabbage field nor a tea
+garden. Design canvas:
 https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (Physician board, herb
 garden concept).
 
