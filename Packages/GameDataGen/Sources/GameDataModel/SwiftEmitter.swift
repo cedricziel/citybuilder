@@ -133,6 +133,7 @@ private struct Types {
             property("culture", "Culture?", all.map { ($0.id, optionalCase($0.culture)) }),
             property("obsoletedBy", "Tech?", all.map { ($0.id, optionalCase($0.obsoletedBy)) }),
             property("accepts", "Set<Good>?", all.map { ($0.id, $0.accepts.map { caseList($0.sorted()) } ?? "nil") }),
+            property("packFuel", "FuelSpec?", all.map { ($0.id, $0.fuel.map(fuelSpec) ?? "nil") }),
             property("isCrop", "Bool", all.map { ($0.id, "\($0.isCrop)") }),
             property("hub", "HubSpec?", all.map { ($0.id, $0.hub.map(hubSpec) ?? "nil") })
         ])
@@ -295,6 +296,10 @@ private struct Types {
             + "footprint: Footprint(width: \(building.footprint.width), height: \(building.footprint.height)), "
             + "cost: \(building.cost), upkeep: \(building.upkeep), buildDurationTicks: \(building.buildTicks), "
             + "shorePlacement: \(shore), materialCost: \(amounts(building.materials)), requiredTerrain: \(terrain))"
+    }
+
+    private func fuelSpec(_ fuel: Fuel) -> String {
+        "FuelSpec(good: .\(caseName(fuel.good)), amount: \(fuel.amount), intervalTicks: \(fuel.everyTicks))"
     }
 
     private func recipe(_ recipe: Recipe) -> String {

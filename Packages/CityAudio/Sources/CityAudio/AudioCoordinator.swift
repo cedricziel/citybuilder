@@ -177,6 +177,7 @@ public final class AudioCoordinator: @unchecked Sendable {
         case .buildingBurntDown: return "buildingBurntDown"
         case .ruinsCleared: return "ruinsCleared"
         case .demolitionRejected: return "demolitionRejected"
+        case .residentLeftWithFever: return "residentLeftWithFever"
         }
     }
 }

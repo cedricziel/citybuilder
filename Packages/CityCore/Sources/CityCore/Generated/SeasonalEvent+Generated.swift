@@ -59,7 +59,7 @@ public enum SeasonalEvent: String, CaseIterable, Codable, Sendable {
         switch self {
         case .fire: true
         case .blight: true
-        case .fever: false
+        case .fever: true
         case .festival: false
         }
     }

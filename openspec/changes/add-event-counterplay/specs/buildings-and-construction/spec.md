@@ -20,7 +20,7 @@ The catalog SHALL include a granary: town category, footprint 2×2, cost $120, 4
 
 ### Requirement: Physician and herb garden
 
-The catalog SHALL include a physician (town category, footprint 2×2, cost $90, 2 wood and 3 planks, upkeep 1, build time 25 ticks, no tech, storage 8) that burns 1 herbs every 100 ticks through the fuel rules while a fever is warned or under way. It SHALL also include a herb garden (gather category, footprint 2×2, cost $50, 2 wood, build time 20 ticks, no tech, recipe: 1 herbs every 60 ticks, not a crop).
+The catalog SHALL include a physician (town category, footprint 2×2, cost $90, 2 wood and 3 planks, upkeep 1, build time 25 ticks, no tech, storage 8) that burns 1 herbs every 100 ticks through the fuel rules while a fever is warned or under way. Its inspector SHALL name how many player houses it keeps safe within 8 tiles, and that it burns herbs only while a fever is warned or under way. It SHALL also include a herb garden (gather category, footprint 2×2, cost $50, 2 wood, build time 20 ticks, no tech, recipe: 1 herbs every 60 ticks, not a crop).
 
 #### Scenario: Physician idle in a quiet year
 

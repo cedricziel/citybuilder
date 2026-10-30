@@ -47,6 +47,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
     case gallery
     case steamEngine = "steam-engine"
     case powerPlant = "power-plant"
+    case herbGarden = "herb-garden"
+    case physician
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -112,6 +114,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: "Gallery"
         case .steamEngine: "Steam Engine"
         case .powerPlant: "Power Plant"
+        case .herbGarden: "Herb Garden"
+        case .physician: "Physician"
         }
     }
 
@@ -159,6 +163,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: 16
         case .powerPlant: 16
+        case .herbGarden: 16
+        case .physician: 8
         }
     }
 
@@ -206,6 +212,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 
@@ -253,6 +261,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 
@@ -300,6 +310,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 
@@ -347,6 +359,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: "town"
         case .steamEngine: "craft"
         case .powerPlant: "craft"
+        case .herbGarden: "gather"
+        case .physician: "town"
         }
     }
 
@@ -394,6 +408,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 
@@ -441,6 +457,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 
@@ -488,6 +506,57 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
+        }
+    }
+
+    public var packFuel: FuelSpec? {
+        switch self {
+        case .house: nil
+        case .warehouse: nil
+        case .granary: nil
+        case .fireWatch: nil
+        case .ruins: nil
+        case .road: nil
+        case .lumberjackHut: nil
+        case .forester: nil
+        case .sawmill: nil
+        case .farm: nil
+        case .bakery: nil
+        case .grainFarm: nil
+        case .windmill: nil
+        case .quernHouse: nil
+        case .mine: nil
+        case .charcoalBurner: nil
+        case .smelter: nil
+        case .toolsmith: nil
+        case .sheepFarm: nil
+        case .weaver: nil
+        case .library: nil
+        case .townCenter: nil
+        case .port: nil
+        case .shipyard: nil
+        case .marketplace: nil
+        case .hopGarden: nil
+        case .brewery: nil
+        case .meadHall: nil
+        case .vineyard: nil
+        case .winery: nil
+        case .forum: nil
+        case .teaGarden: nil
+        case .teaHouse: nil
+        case .templeGarden: nil
+        case .coffeeGrove: nil
+        case .roastery: nil
+        case .caravanserai: nil
+        case .monument: nil
+        case .guildHall: nil
+        case .gallery: nil
+        case .steamEngine: nil
+        case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: FuelSpec(good: .herbs, amount: 1, intervalTicks: 100)
         }
     }
 
@@ -535,6 +604,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: false
         case .steamEngine: false
         case .powerPlant: false
+        case .herbGarden: false
+        case .physician: false
         }
     }
 
@@ -582,6 +653,8 @@ public enum BuildingKind: String, CaseIterable, Codable, Sendable {
         case .gallery: nil
         case .steamEngine: nil
         case .powerPlant: nil
+        case .herbGarden: nil
+        case .physician: nil
         }
     }
 }
@@ -638,6 +711,8 @@ public enum BuildingCatalog {
         case .gallery: BuildingSpec(kind: .gallery, footprint: Footprint(width: 2, height: 2), cost: 180, upkeep: 2, buildDurationTicks: 35, shorePlacement: nil, materialCost: [.planks: 4, .wood: 2], requiredTerrain: nil)
         case .steamEngine: BuildingSpec(kind: .steamEngine, footprint: Footprint(width: 2, height: 2), cost: 220, upkeep: 3, buildDurationTicks: 40, shorePlacement: nil, materialCost: [.iron: 2, .planks: 4, .wood: 2], requiredTerrain: nil)
         case .powerPlant: BuildingSpec(kind: .powerPlant, footprint: Footprint(width: 3, height: 3), cost: 400, upkeep: 6, buildDurationTicks: 60, shorePlacement: nil, materialCost: [.iron: 4, .planks: 6], requiredTerrain: nil)
+        case .herbGarden: BuildingSpec(kind: .herbGarden, footprint: Footprint(width: 2, height: 2), cost: 50, upkeep: 0, buildDurationTicks: 20, shorePlacement: nil, materialCost: [.wood: 2], requiredTerrain: nil)
+        case .physician: BuildingSpec(kind: .physician, footprint: Footprint(width: 2, height: 2), cost: 90, upkeep: 1, buildDurationTicks: 25, shorePlacement: nil, materialCost: [.planks: 3, .wood: 2], requiredTerrain: nil)
         }
     }
 }

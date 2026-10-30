@@ -84,8 +84,9 @@ extension World {
 
     /// A fuelled building burned this tick when its burn tick left it fuelled.
     private mutating func recordFuelBurns() {
+        let feverSeason = isFeverSeason
         for building in buildings.values where building.owner == .player && building.state == .operational {
-            guard let fuel = building.kind.fuel, building.fuelled,
+            guard let fuel = building.kind.fuel, building.fuelled, burnsFuel(building, feverSeason: feverSeason),
                   tickCount.isMultiple(of: fuel.intervalTicks)
             else { continue }
             add(fuel.amount, to: \.usedByProduction, of: fuel.good)

@@ -121,7 +121,7 @@ public enum SpriteAnimation {
         // The hull is planked in four stages, held once finished, then launched off an empty
         // slipway for a beat before the next keel (#120).
         case .shipyard: Entry(frameCount: 5, timePerFrame: 2.5, loop: .forever, frameDurations: [2.5, 2.5, 2.5, 4.0, 1.25])
-        case .house, .warehouse, .road, .granary, .fireWatch, .ruins, .marketplace: nil
+        case .house, .warehouse, .road, .granary, .fireWatch, .ruins, .marketplace, .physician, .herbGarden: nil
         default: Entry(frameCount: 2, timePerFrame: 0.40, loop: .forever)
         }
     }

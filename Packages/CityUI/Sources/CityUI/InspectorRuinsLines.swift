@@ -41,6 +41,20 @@ extension InspectorViewModel {
         ]
     }
 
+    /// The houses a physician keeps safe and when it burns herbs. Spec:
+    /// `buildings-and-construction` / Physician and herb garden.
+    static func physicianLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {
+        guard building.kind == .physician, building.state == .operational, let fuel = building.kind.fuel else { return [] }
+        let houses = snapshot.buildings.values.count {
+            $0.kind == .house && $0.owner == building.owner && World.footprintDistance($0, building) <= World.physicianReach
+        }
+        return [
+            "Keeps \(houses) house\(houses == 1 ? "" : "s") within \(World.physicianReach) tiles safe from fever",
+            "Burns \(fuel.amount) \(InspectorViewModel.goodName(fuel.good)) every \(fuel.intervalTicks) ticks, "
+                + "only while a fever is warned or under way"
+        ]
+    }
+
     static func watchmanLine(_ walker: WatchmanWalker?, hasRoad: Bool) -> String {
         guard hasRoad else { return "Watchman: can't leave: no road" }
         guard let walker else { return "Watchman: at the watch" }

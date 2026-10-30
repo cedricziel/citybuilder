@@ -29,10 +29,13 @@ extension World {
     }
 
     private mutating func burnFuel(events: inout [WorldEvent]) {
-        let burners = buildings.values
-            .compactMap { building in building.kind.fuel.map { (building, $0) } }
-            .filter { $0.0.state == .operational && tickCount.isMultiple(of: $0.1.intervalTicks) }
-            .sorted { $0.0.id.raw < $1.0.id.raw }
+        let feverSeason = isFeverSeason
+        var burners: [(Building, FuelSpec)] = []
+        for building in buildings.values where building.state == .operational && burnsFuel(building, feverSeason: feverSeason) {
+            guard let fuel = building.kind.fuel, tickCount.isMultiple(of: fuel.intervalTicks) else { continue }
+            burners.append((building, fuel))
+        }
+        burners.sort { $0.0.id.raw < $1.0.id.raw }
         for (burner, fuel) in burners {
             let burned = (stockpiles[burner.id]?.quantity(of: fuel.good) ?? 0) >= fuel.amount
             if burned {
@@ -42,6 +45,17 @@ extension World {
             }
             buildings[burner.id]?.fuelled = burned
         }
+    }
+
+    /// A physician burns herbs only while a fever is warned or under way;
+    /// otherwise it keeps its stock and its fuelled state. Every other
+    /// fuelled building always burns.
+    func burnsFuel(_ building: Building, feverSeason: Bool) -> Bool {
+        building.kind != .physician || feverSeason
+    }
+
+    var isFeverSeason: Bool {
+        currentSeasonalEvent?.event.effect == .fever
     }
 
     /// Operational signature buildings whose effects are on: fuelled when

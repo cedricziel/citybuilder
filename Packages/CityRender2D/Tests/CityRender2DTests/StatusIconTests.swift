@@ -364,6 +364,18 @@ func blightedFieldShowsItsIcon() {
     #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-blight")
 }
 
+@Test("scenario: a house the fever holds back shows the fever icon")
+func feverHouseShowsItsIcon() {
+    let house = Building(id: buildingID, kind: .house, anchor: anchor, state: .operational)
+    let base = meadow([house])
+    let snapshot = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 12, mapHeight: 12,
+        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: [],
+        economy: base.economy, totalPopulation: 0, camera: base.camera, feverHouses: [buildingID]
+    )
+    #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-fever")
+}
+
 @Test("scenario: a blighted field's own issue wins over the blight icon")
 func blightedFieldKeepsItsIssue() {
     let farm = Building(id: buildingID, kind: .farm, anchor: anchor, state: .operational)

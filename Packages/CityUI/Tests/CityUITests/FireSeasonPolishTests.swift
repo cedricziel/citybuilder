@@ -277,3 +277,21 @@ func mapShowsTheMarkedArea() {
     }
     #expect(session.areaOfEffect()?.style == .threat)
 }
+
+@MainActor
+@Test("scenario: the physician inspector names its cover and when it burns herbs")
+func physicianInspector() {
+    var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false, seasonalEvents: true)
+    let anchor = TileCoordinate(x: 2, y: 2)
+    let physician = Building(id: EntityID(raw: 9000), kind: .physician, anchor: anchor, state: .operational)
+    world.buildings[physician.id] = physician
+    world.occupiedTiles[anchor] = physician.id
+    for (raw, x) in [(9001, 6), (9002, 12)] {
+        let house = Building(id: EntityID(raw: UInt32(raw)), kind: .house, anchor: TileCoordinate(x: x, y: 2), state: .operational)
+        world.buildings[house.id] = house
+    }
+    let model = InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
+    // The house at x = 6 is 3 tiles off; the one at x = 12 is 9.
+    #expect(model.keyLines.contains("Keeps 1 house within 8 tiles safe from fever"))
+    #expect(model.keyLines.contains("Burns 1 herbs every 100 ticks, only while a fever is warned or under way"))
+}

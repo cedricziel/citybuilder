@@ -107,6 +107,8 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let markedArea: MarkedArea?
     /// The player's crop fields a blight slows now.
     public let blightedFields: Set<EntityID>
+    /// The player's houses a fever holds back now.
+    public let feverHouses: Set<EntityID>
     /// True once the seasonal event has started, false while it is only warned.
     public let isSeasonalEventUnderWay: Bool
     /// The flammable buildings each fire watch would answer. Spec:
@@ -151,6 +153,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         watchmen: [WatchmanWalker] = [],
         markedArea: MarkedArea? = nil,
         blightedFields: Set<EntityID> = [],
+        feverHouses: Set<EntityID> = [],
         isSeasonalEventUnderWay: Bool = false,
         fireWatchCover: [EntityID: Int] = [:]
     ) {
@@ -188,6 +191,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.watchmen = watchmen
         self.markedArea = markedArea
         self.blightedFields = blightedFields
+        self.feverHouses = feverHouses
         self.isSeasonalEventUnderWay = isSeasonalEventUnderWay
         self.fireWatchCover = fireWatchCover
     }
@@ -298,6 +302,7 @@ public extension World {
             watchmen: watchmenAtWork,
             markedArea: seasonalEvents.marked,
             blightedFields: Set(buildings.values.filter(isBlighted).map(\.id)),
+            feverHouses: Set(feverHouses().map(\.id)),
             isSeasonalEventUnderWay: seasonalEvents.active != nil,
             fireWatchCover: fireWatchCoverCounts()
         )

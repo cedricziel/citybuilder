@@ -45,6 +45,8 @@ Design canvas: https://claude.ai/artifact/JMuRyVB1tHAFthEbFxdE2F (option A, "Dis
 - `status-grain-stuck`
 - `status-grapes-short`
 - `status-grapes-stuck`
+- `status-herbs-short`
+- `status-herbs-stuck`
 - `status-hops-short`
 - `status-hops-stuck`
 - `status-iron-short`

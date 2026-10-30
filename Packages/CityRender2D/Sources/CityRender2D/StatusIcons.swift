@@ -64,7 +64,7 @@ enum StatusIcons {
     }
 
     /// The icon for each of the player's buildings that needs one: a fire or ruins first, then its
-    /// issue, else a house's first short need in `Good` order, else no road, else a blight.
+    /// issue, else a house's first short need in `Good` order, else no road, else a blight or a fever.
     static func icons(in snapshot: WorldSnapshot) -> [EntityID: String] {
         let isPlayers = { (id: EntityID) in snapshot.buildings[id]?.owner == .player }
         var icons: [EntityID: String] = [:]
@@ -80,6 +80,9 @@ enum StatusIcons {
         // A field's own issue wins: the player can act on it.
         for id in snapshot.blightedFields where isPlayers(id) && icons[id] == nil {
             icons[id] = textureName(for: .blight)
+        }
+        for id in snapshot.feverHouses where isPlayers(id) && icons[id] == nil {
+            icons[id] = textureName(for: .fever)
         }
         for building in snapshot.buildings.values where building.owner == .player {
             if building.state == .burning {

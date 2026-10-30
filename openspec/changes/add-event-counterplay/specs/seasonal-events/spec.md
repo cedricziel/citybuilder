@@ -166,7 +166,7 @@ A drawn blight SHALL NOT come before the 4th year of a game, and SHALL be warned
 
 ### Requirement: Fever holds a district back
 
-At a fever's warning, the world SHALL pick one player house with residents with a derived generator and mark every house within 6 tiles of it. During the onset season, a marked house that is not within 8 tiles of a fuelled player physician SHALL NOT advance a tier. Every leave interval of the difficulty, counted from the onset, up to and including the tick that ends the season, each such house with 2 or more residents SHALL lose one resident. Physicians SHALL burn herbs only while a fever is warned or under way.
+At a fever's warning, the world SHALL pick one player house with residents with a derived generator and mark every house within 6 tiles of it. During the onset season, a marked house that is not within 8 tiles of a fuelled player physician SHALL NOT advance a tier or grow. Every leave interval of the difficulty, counted from the onset, up to and including the tick that ends the season, each such house with 2 or more residents SHALL lose one resident, and its growth count SHALL start again. Physicians SHALL burn herbs only while a fever is warned or under way.
 
 #### Scenario: Fever empties a house
 

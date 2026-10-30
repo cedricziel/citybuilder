@@ -100,6 +100,7 @@ public struct InspectorViewModel: Sendable {
         let signature = signatureLines(for: building, in: snapshot)
         let problemLines = problem.map { ["Problem: \($0)"] } ?? []
         let fire = fireLines(for: building, in: snapshot) + fireWatchLines(for: building, in: snapshot)
+            + physicianLines(for: building, in: snapshot)
         let bullets: [String] = fire + basics + reach + signature + houseLines + problemLines
         return InspectorViewModel(
             bullets: bullets,
@@ -250,7 +251,7 @@ extension InspectorViewModel {
     }
 
     private static let inReachMarker = " in reach: "
-    private static let fireMarkers = ["Burning", "Burnt down in ", "Covers ", "Watchman: "]
+    private static let fireMarkers = ["Burning", "Burnt down in ", "Covers ", "Watchman: ", "Keeps ", "Burns "]
 
     /// What the next tier wants beyond this one's needs, below the top
     /// tier. Spec: `platform-shells` / Inspector callout.
