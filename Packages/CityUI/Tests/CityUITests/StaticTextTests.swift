@@ -25,7 +25,9 @@ struct StaticTextTests {
         Label(key: "map.hintBack", english: "Back: close", german: "Zurück: schließen"),
         Label(key: "touch.longPressHint", english: "Long-press a tile to build", german: "Halte ein Feld gedrückt, um zu bauen"),
         Label(key: "mac.quit", english: "Quit Citybuilder", german: "Citybuilder beenden"),
-        Label(key: "settings.credits", english: "Credits", german: "Mitwirkende")
+        Label(key: "settings.credits", english: "Credits", german: "Mitwirkende"),
+        Label(key: "audio.spatial", english: "Spatial audio", german: "Raumklang"),
+        Label(key: "credits.title", english: "Credits & Licenses", german: "Mitwirkende & Lizenzen")
     ]
 
     @Test("each screen keeps its English and has German", arguments: labels)
