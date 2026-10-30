@@ -167,3 +167,14 @@ func feverDistrictShowsItsHouses() throws {
     #expect(threatened.allSatisfy { world.buildings[$0]?.kind == .house })
     #expect(World.isFlammable(.physician) && World.isFlammable(.herbGarden))
 }
+
+@Test("scenario: an idle physician books no herbs burned")
+func idlePhysicianBooksNoHerbs() {
+    var world = eventsWorld(size: 12)
+    let physician = addOperational(.physician, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.stockpiles[physician]?.deposit(.herbs, amount: 4)
+    world.buildings[physician]?.fuelled = true
+    _ = runEvents(&world, untilTick: 400)
+    let used = world.statistics.current.goods[.herbs]?.usedByProduction ?? 0
+    #expect(used == 0)
+}
