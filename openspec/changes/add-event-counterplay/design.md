@@ -104,6 +104,7 @@ A burnt building becomes a `ruins` building with `ruinOf` set to its kind. It ha
 - **Eligible** only when the player owns an operational marketplace (#238 M2) and made both goods in that window. Otherwise there is no festival that year, and no other event replaces it.
 - **Town orders** don't count toward the two accepted orders, don't touch favour, cost nothing when missed or declined, and don't count toward the "fulfil N orders" goal. They lapse with the season like any offer.
 - **Reward.** When both are fulfilled by the deadline, the festival runs for four seasons. Houses within the reach of an operational marketplace advance after 60 ticks of met needs instead of 120, and pay 10% more tax (15% on Easy), rounded down. A festival crowd fills the plaza for the first season (#127).
+- **Templates.** The town's orders are pack data in `orders.yaml` with `issuer: town`: `town-bread` and one per culture luxury, size 50 over one season, no reward and no favour.
 - **Why the order board:** it already has accepting, dispatching, deadlines, carriers on the roads and a card. A second request UI would duplicate all of it.
 
 ### D9. Chapters schedule events; event goals
