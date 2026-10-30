@@ -6,8 +6,8 @@ The inspector SHALL show how the market serves a house and how a market hub serv
 
 #### Scenario: A house names its stock and its market
 
-- **WHEN** the player taps a peasant house 8 road tiles from the town center, holding 2 food
-- **THEN** its callout lists "Stock: food 2/4" and "Market: town center, 8 road tiles"
+- **WHEN** the player taps a house of 2 peasants 8 road tiles from the town center, holding 2 food
+- **THEN** its callout lists "Stock: food 2/2" and "Market: town center, 8 road tiles"
 
 #### Scenario: A house out of reach names no market
 
