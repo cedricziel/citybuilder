@@ -27,6 +27,9 @@ enum Cloth {
     /// The fire watch's livery: a deep madder, darker than the worker's so the two never mix up.
     static let watch = NSColor(red: 0.50, green: 0.20, blue: 0.16, alpha: 1)
     static let bucket = NSColor(red: 0.40, green: 0.24, blue: 0.13, alpha: 1)
+    /// A porter's produce: greens and a red top, greyer than the target under the warm sun.
+    static let greens = NSColor(red: 0.30, green: 0.44, blue: 0.22, alpha: 1)
+    static let apples = NSColor(red: 0.60, green: 0.22, blue: 0.16, alpha: 1)
 }
 
 /// What a figure carries.
@@ -270,7 +273,9 @@ extension Builder {
                 at: rim + SCNVector3(0, -0.12, 0)
             )
             if full {
-                ball(rim + SCNVector3(0, 0.02, 0), radius: 0.15, Cloth.loaf, scale: SCNVector3(1, 0.55, 1))
+                // A heaped load, greens under a red top, so a filled basket reads against the wicker.
+                ball(rim + SCNVector3(0, 0.05, 0), radius: 0.16, Cloth.greens, scale: SCNVector3(1, 0.95, 1))
+                ball(rim + SCNVector3(0.02, 0.2, side * 0.02), radius: 0.1, Cloth.apples)
             }
         }
     }
