@@ -43,7 +43,9 @@ struct PlayerBot {
         // would fall outside every hub's reach, a guided house too.
         let needsMarketplace = plan.needsMarketplace()
         if let next = nextFirstStep(in: world) {
-            _ = place(next == .house && needsMarketplace ? .marketplace : next, in: &world, plan: &plan, stock: stock)
+            // A marketplace it can't place yet doesn't hold up the guided house.
+            if next == .house, needsMarketplace, place(.marketplace, in: &world, plan: &plan, stock: stock) { return }
+            _ = place(next, in: &world, plan: &plan, stock: stock)
             return
         }
         let kinds = (needsMarketplace ? [.marketplace] : [])
