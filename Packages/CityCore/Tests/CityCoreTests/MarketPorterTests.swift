@@ -477,3 +477,20 @@ func portersServeTheHigherTierFirst() {
     run(&world, ticks: 1)
     #expect(world.porters.map(\.house) == [citizens])
 }
+
+@Test("scenario: A rival's porters go by stock ratio alone")
+func aRivalsPortersGoByStockRatioAlone() {
+    var world = strip()
+    let hub = SignatureFixture.inject(.townCenter, at: TileCoordinate(x: 0, y: 0), in: &world, owner: .rival(1))
+    fill(hub, [.food: 10, .planks: 10], in: &world)
+    let peasants = SignatureFixture.inject(.house, at: TileCoordinate(x: 6, y: 4), in: &world, owner: .rival(1))
+    var pop = HousePopulation()
+    pop.population = 4
+    world.populations[peasants] = pop
+    let citizens = SignatureFixture.inject(.house, at: TileCoordinate(x: 12, y: 4), in: &world, owner: .rival(1))
+    pop.tier = .citizens
+    world.populations[citizens] = pop
+    stock(citizens, [.food: 3, .planks: 1], in: &world)
+    run(&world, ticks: 1)
+    #expect(world.porters.map(\.house) == [peasants])
+}

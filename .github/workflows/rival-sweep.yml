@@ -9,6 +9,8 @@ name: rival-sweep
 # - Mid-game pacing (#186): years to the first merchant, 20 merchants and
 #   the Renaissance for the scripted town's mid-game kit; a measurement
 #   with no pass bar. With the order kit on as well (add-orders D11).
+# To run the same sweeps locally, one at a time, use
+# scripts/sweeps/run-release-sweeps.sh (see scripts/sweeps/README.md).
 on:
   workflow_dispatch:
   schedule:
