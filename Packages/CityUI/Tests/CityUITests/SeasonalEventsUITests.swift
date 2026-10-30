@@ -245,7 +245,7 @@ func festivalRequestNamesItsDeadline() throws {
     session.noteBannerEvents(in: [.seasonalEventWarned(event: .festival, onset: .spring)])
     let banner = try #require(session.banner)
     #expect(banner.title == "The town wants a festival")
-    let text = "Deliver 12 bread and 8 wine by End of Spring 1204. "
+    let text = "Deliver 12 bread and 8 wine by End of Spring 1204. Accept both on the order board. "
         + "Houses near the market then advance faster and pay more tax for a year."
     #expect(banner.description == text)
 }

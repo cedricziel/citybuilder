@@ -82,7 +82,7 @@ items:
     banners:
       request:
         title: The town wants a festival
-        text: "Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Houses near the market then advance faster and pay more tax for a year."
+        text: "Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Accept both on the order board. Houses near the market then advance faster and pay more tax for a year."
       held:
         title: Festival!
         text: "Houses near the market advance faster and pay {bonus}% more tax until {date}."
