@@ -16,6 +16,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
     case rivalRations = "rival-rations"
     case rivalBread = "rival-bread"
     case rivalTools = "rival-tools"
+    case townBread = "town-bread"
+    case townWine = "town-wine"
+    case townBeer = "town-beer"
+    case townTea = "town-tea"
+    case townCoffee = "town-coffee"
 
     public var issuer: OrderIssuerKind {
         switch self {
@@ -30,6 +35,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: .rival
         case .rivalBread: .rival
         case .rivalTools: .rival
+        case .townBread: .town
+        case .townWine: .town
+        case .townBeer: .town
+        case .townTea: .town
+        case .townCoffee: .town
         }
     }
 
@@ -46,6 +56,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: .food
         case .rivalBread: .bread
         case .rivalTools: .tools
+        case .townBread: .bread
+        case .townWine: .wine
+        case .townBeer: .beer
+        case .townTea: .tea
+        case .townCoffee: .coffee
         }
     }
 
@@ -62,6 +77,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: "Food for a neighbour"
         case .rivalBread: "Bread for a neighbour"
         case .rivalTools: "Tools for a neighbour"
+        case .townBread: "Bread for the festival"
+        case .townWine: "Wine for the festival"
+        case .townBeer: "Beer for the festival"
+        case .townTea: "Tea for the festival"
+        case .townCoffee: "Coffee for the festival"
         }
     }
 
@@ -78,6 +98,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: "A neighbouring town is short of food."
         case .rivalBread: "A neighbouring town is short of bread."
         case .rivalTools: "A neighbouring town is short of tools."
+        case .townBread: "The town wants loaves for its festival."
+        case .townWine: "The town wants wine for its festival."
+        case .townBeer: "The town wants beer for its festival."
+        case .townTea: "The town wants tea for its festival."
+        case .townCoffee: "The town wants coffee for its festival."
         }
     }
 
@@ -94,6 +119,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: nil
         case .rivalBread: .medieval
         case .rivalTools: .medieval
+        case .townBread: nil
+        case .townWine: nil
+        case .townBeer: nil
+        case .townTea: nil
+        case .townCoffee: nil
         }
     }
 
@@ -110,6 +140,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 3
         case .rivalBread: 3
         case .rivalTools: 3
+        case .townBread: 1
+        case .townWine: 1
+        case .townBeer: 1
+        case .townTea: 1
+        case .townCoffee: 1
         }
     }
 
@@ -126,6 +161,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 60
         case .rivalBread: 70
         case .rivalTools: 70
+        case .townBread: 50
+        case .townWine: 50
+        case .townBeer: 50
+        case .townTea: 50
+        case .townCoffee: 50
         }
     }
 
@@ -142,6 +182,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 10
         case .rivalBread: 8
         case .rivalTools: 4
+        case .townBread: 6
+        case .townWine: 4
+        case .townBeer: 4
+        case .townTea: 4
+        case .townCoffee: 4
         }
     }
 
@@ -158,6 +203,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 50
         case .rivalBread: 40
         case .rivalTools: 20
+        case .townBread: 30
+        case .townWine: 20
+        case .townBeer: 20
+        case .townTea: 20
+        case .townCoffee: 20
         }
     }
 
@@ -174,6 +224,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 40
         case .rivalBread: 40
         case .rivalTools: 40
+        case .townBread: 0
+        case .townWine: 0
+        case .townBeer: 0
+        case .townTea: 0
+        case .townCoffee: 0
         }
     }
 
@@ -190,6 +245,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 2
         case .rivalBread: 2
         case .rivalTools: 2
+        case .townBread: 0
+        case .townWine: 0
+        case .townBeer: 0
+        case .townTea: 0
+        case .townCoffee: 0
         }
     }
 
@@ -206,6 +266,11 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         case .rivalRations: 2
         case .rivalBread: 2
         case .rivalTools: 2
+        case .townBread: 0
+        case .townWine: 0
+        case .townBeer: 0
+        case .townTea: 0
+        case .townCoffee: 0
         }
     }
 }
