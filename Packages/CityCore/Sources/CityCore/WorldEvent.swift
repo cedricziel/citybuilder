@@ -433,8 +433,8 @@ public extension WorldEvent {
         case .buildingBurntDown: return 41
         case .ruinsCleared: return 42
         case .demolitionRejected: return 43
-        case .residentLeftWithFever: return 44
         case .scenarioLost: return 44
+        case .residentLeftWithFever: return 45
         }
     }
 }
