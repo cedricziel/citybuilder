@@ -117,9 +117,12 @@ extension World {
             for (good, reserve) in (reserves[hub.id] ?? [:]).sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
                 let short = shortfall(of: good, at: hub.id, below: reserve)
                 let otherHubs = buffers.filter { $0.kind.hub != nil && surplus(of: good, at: $0) > 0 }
+                let stores = buffers.filter { $0.kind.hub == nil }
+                // Stores, then other hubs' surplus, and a granary's reserve last.
                 guard short > 0, inboundUnits(to: hub.id, good: good).ofGood == 0,
-                      let (source, path) = nearestBuffer(holding: good, toRoad: hubRoad, among: buffers.filter { $0.kind.hub == nil })
+                      let (source, path) = nearestBuffer(holding: good, toRoad: hubRoad, among: stores.filter { !Self.isDrawnLast($0) })
                       ?? nearestBuffer(holding: good, toRoad: hubRoad, among: otherHubs)
+                      ?? nearestBuffer(holding: good, toRoad: hubRoad, among: stores.filter(Self.isDrawnLast))
                 else { continue }
                 let spare = buildings[source]?.kind.hub == nil
                     ? stockpiles[source]?.quantity(of: good) ?? 0
