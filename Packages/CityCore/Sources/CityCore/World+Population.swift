@@ -106,9 +106,15 @@ extension World {
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool
     ) {
         // Spec: `population-and-needs` / Market hubs gate tier advancement.
+        // A need the house already eats counts while it is met: porters keep
+        // its stock, and they may have just emptied the hub into it. A need
+        // the next tier adds counts only while the serving hub holds it.
+        let eaten = Set(pop.tier.needs(in: culture))
         let canAdvance = pop.tier.next.map { next in
             pop.population >= modifiers.capacity(of: pop.tier)
-                && bindingNeeds(of: next, for: building.owner, advancing: true).allSatisfy { hubHolds($0, hub) }
+                && bindingNeeds(of: next, for: building.owner, advancing: true).allSatisfy { good in
+                    eaten.contains(good) ? pop.isSatisfied(good) : hubHolds(good, hub)
+                }
         } ?? false
         let mustDecline = pop.tier.previous != nil && pastGrace
         guard canAdvance || mustDecline else {

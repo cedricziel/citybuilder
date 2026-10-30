@@ -92,34 +92,56 @@ extension World {
     }
 
     /// Hubs short of a good their houses need pull it from the nearest other
-    /// store of their owner on their road, one carrier per good at a time.
-    /// Short means below the hub's reserve: its reserve consumptions of what
-    /// its served houses eat. Spec: `warehouses-and-logistics` / Market
-    /// hubs gather house goods.
+    /// store of their owner on their road, one carrier per good at a time;
+    /// with no store holding it, from the nearest other hub holding more than
+    /// its own reserve. Short means below the hub's reserve: its reserve
+    /// consumptions of what its served houses eat. A restock walks a basket
+    /// (the hub's porter load) or takes the owner's cart on a long road.
+    /// Spec: `warehouses-and-logistics` / Market hubs gather house goods.
     mutating func spawnRestockCarriers(service: HubService, events: inout [WorldEvent]) {
+        var reserves: [EntityID: [Good: Int]] = [:]
+        for hub in service.hubs {
+            let factor = hub.kind.hub?.reserveConsumptions ?? 0
+            for (good, eaten) in consumption(of: service.housesOf[hub.id] ?? []) {
+                reserves[hub.id, default: [:]][good] = factor * eaten
+            }
+        }
+        func surplus(of good: Good, at building: Building) -> Int {
+            (stockpiles[building.id]?.quantity(of: good) ?? 0) - (reserves[building.id]?[good] ?? 0)
+        }
         for hub in service.hubs {
             guard let spec = hub.kind.hub, let hubRoad = anyAdjacentRoad(anchor: hub.anchor, footprint: hub.footprint)
             else { continue }
-            let stores = goodsBuffers(of: hub.owner).filter { $0.state == .operational && $0.kind.hub == nil }
+            let buffers = goodsBuffers(of: hub.owner).filter { $0.state == .operational && $0.id != hub.id }
             let vehicle = CarrierConfig.vehicle(in: age(of: hub.owner))
-            for (good, eaten) in consumption(of: service.housesOf[hub.id] ?? []) {
-                let short = shortfall(of: good, at: hub.id, below: spec.reserveConsumptions * eaten)
+            for (good, reserve) in (reserves[hub.id] ?? [:]).sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
+                let short = shortfall(of: good, at: hub.id, below: reserve)
+                let otherHubs = buffers.filter { $0.kind.hub != nil && surplus(of: good, at: $0) > 0 }
                 guard short > 0, inboundUnits(to: hub.id, good: good).ofGood == 0,
-                      let (store, path) = nearestBuffer(holding: good, toRoad: hubRoad, among: stores)
+                      let (source, path) = nearestBuffer(holding: good, toRoad: hubRoad, among: buffers.filter { $0.kind.hub == nil })
+                      ?? nearestBuffer(holding: good, toRoad: hubRoad, among: otherHubs)
                 else { continue }
-                let held = stockpiles[store]?.quantity(of: good) ?? 0
-                let haul = CarrierConfig.haul(ready: min(held, short), along: path, vehicle: vehicle)
-                dispatchSupply(good, from: store, to: hub.id, along: path, haul: haul, events: &events)
+                let spare = buildings[source]?.kind.hub == nil
+                    ? stockpiles[source]?.quantity(of: good) ?? 0
+                    : buildings[source].map { surplus(of: good, at: $0) } ?? 0
+                var haul = CarrierConfig.haul(ready: min(spare, short), along: path, vehicle: vehicle)
+                if haul.vehicle == nil {
+                    haul.amount = min(spare, short, spec.basketUnits)
+                }
+                dispatchSupply(good, from: source, to: hub.id, along: path, haul: haul, events: &events)
             }
         }
     }
 
-    /// What `houses` eat of each good per interval, in `Good` order.
+    /// What `houses` eat of each good per interval, in `Good` order, counting
+    /// the needs their next tier adds too: a house advances only while its
+    /// hub holds those, so the hub keeps them before anyone eats them.
     private func consumption(of houses: [EntityID]) -> [(Good, Int)] {
         var eaten: [Good: Int] = [:]
         for house in houses {
             guard let pop = populations[house] else { continue }
-            for good in pop.tier.needs(in: culture) {
+            let needs = pop.tier.needs(in: culture) + (pop.tier.next?.needs(in: culture) ?? [])
+            for good in Set(needs) {
                 eaten[good, default: 0] += pop.nextConsumption(of: good)
             }
         }

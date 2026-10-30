@@ -71,7 +71,7 @@ func townCenterFoodSatisfiesAConnectedHouse() throws {
     #expect(world.hubService().hubOf[home]?.hub == hub)
     run(&world, ticks: 15)
     let pop = try #require(world.populations[home])
-    #expect(pop.stock(of: .food) == 2)
+    #expect(pop.stock(of: .food) == 4)
     #expect(pop.isSatisfied(.food))
 }
 
@@ -246,8 +246,8 @@ func hubSendsAPorterToAHouseShortOfFood() throws {
     let porter = try #require(world.porters.first)
     #expect(world.porters.count == 1)
     #expect(porter.house == home)
-    #expect(porter.basket == [Porter.Load(good: .food, units: 2)])
-    #expect(world.stockpiles[hub]?.quantity(of: .food) == 8)
+    #expect(porter.basket == [Porter.Load(good: .food, units: 4)])
+    #expect(world.stockpiles[hub]?.quantity(of: .food) == 6)
 }
 
 @Test("scenario: Porters go to the house that needs them most")
@@ -297,7 +297,8 @@ func basketHoldsOneConsumptionOfEachNeed() throws {
     run(&world, ticks: 1)
     let basket = try #require(world.porters.first?.basket)
     #expect(basket.map(\.good) == [.food, .planks, .bread, .tools])
-    #expect(basket.map(\.units) == [4, 1, 2, 1])
+    // One consumption of each need, then the two units left top up food.
+    #expect(basket.map(\.units) == [6, 1, 2, 1])
 }
 
 @Test func aBasketStopsAtItsLimit() throws {
@@ -317,15 +318,17 @@ func portersWalkBackEmpty() throws {
     let hub = center(in: &world)
     fill(hub, [.food: 10], in: &world)
     let home = house(at: 10, in: &world)
-    run(&world, ticks: 12)
+    run(&world, ticks: 1)
+    let trip = try #require(world.porters.first).path.count
+    run(&world, ticks: trip + 1)
     let porter = try #require(world.porters.first)
     #expect(porter.returning)
     #expect(porter.basket.isEmpty)
-    #expect(world.populations[home]?.stock(of: .food) == 2)
+    #expect(world.populations[home]?.stock(of: .food) == 4)
     #expect(world.porters.count == 1)
-    run(&world, ticks: 11)
-    #expect(world.porters.first?.returning == false)
-    #expect(world.populations[home]?.stock(of: .food) == 2)
+    run(&world, ticks: trip)
+    #expect(world.porters.isEmpty)
+    #expect(world.stockpiles[hub]?.quantity(of: .food) == 6)
 }
 
 @Test("scenario: Leftovers go back to the hub")
@@ -436,4 +439,29 @@ func loadingAnOlderSaveSeedsHouseStock() throws {
     #expect(porter.currentTile == porter.path[2])
     porter.pathIndex = porter.path.count
     #expect(porter.currentTile == nil)
+}
+
+@Test func leftoversAHubCannotTakeGoOnToAStore() {
+    var world = strip()
+    let hub = center(in: &world)
+    fill(hub, [.food: 2], in: &world)
+    let store = addOperational(.warehouse, at: TileCoordinate(x: 4, y: 0), in: &world)
+    let home = house(at: 10, in: &world)
+    run(&world, ticks: 1)
+    stock(home, [.food: 4], in: &world)
+    let trip = world.porters.first?.path.count ?? 0
+    run(&world, ticks: 2 * trip - 1)
+    world.buildings[hub] = nil
+    world.stockpiles[hub] = nil
+    run(&world, ticks: 1)
+    #expect(world.porters.isEmpty)
+    let onward = world.carriers.values.map(\.mission)
+    #expect(onward.map(\.destination) == [store])
+    #expect(onward.map(\.amount) == [2])
+}
+
+@Test func anOlderSavesEmptyHouseIsSeededForItsFirstResident() throws {
+    let legacy = Data(#"{"population":0,"tier":1,"satisfiedGoods":["food"],"shortGoods":[]}"#.utf8)
+    let pop = try JSONDecoder().decode(HousePopulation.self, from: legacy)
+    #expect(pop.stock(of: .food) == 1)
 }

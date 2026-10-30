@@ -212,7 +212,7 @@ extension HousePopulation: Codable {
         // house counts as met gets one consumption, so it is not short at
         // the first draw after loading (design D6).
         let entries = try container.decodeIfPresent([StockEntry].self, forKey: .stock)
-            ?? satisfiedGoods.sortedByRawValue.map { StockEntry(good: $0, units: Self.amount(of: $0, residents: population)) }
+            ?? satisfiedGoods.sortedByRawValue.map { StockEntry(good: $0, units: Self.amount(of: $0, residents: max(population, 1))) }
         stock = Dictionary(entries.filter { $0.units > 0 }.map { ($0.good, $0.units) }, uniquingKeysWith: { $1 })
     }
 
