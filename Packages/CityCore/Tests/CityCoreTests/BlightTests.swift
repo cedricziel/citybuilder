@@ -104,3 +104,16 @@ func markedAreaShowsAsAThreat() throws {
     #expect(!area.targets.contains(TileCoordinate(x: 3, y: 0)))
     #expect(eventsWorld().threatenedArea() == nil)
 }
+
+@Test("scenario: a save in the middle of a blight plays on the same")
+func blightSurvivesASaveAndLoad() throws {
+    var (world, _) = blightWorld()
+    _ = runEvents(&world, untilTick: world.tickCount + 50)
+    #expect(world.seasonalEvents.active?.event == .blight)
+    var loaded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
+    #expect(loaded.seasonalEvents == world.seasonalEvents)
+    let original = runEvents(&world, untilTick: world.tickCount + 200)
+    let reloaded = runEvents(&loaded, untilTick: loaded.tickCount + 200)
+    #expect(reloaded == original)
+    #expect(loaded.productions == world.productions)
+}

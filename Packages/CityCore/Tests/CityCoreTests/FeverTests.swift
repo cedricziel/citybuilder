@@ -63,7 +63,9 @@ func feverEmptiesAHouse() {
     let onset = firstTick(of: .autumn, 1201)
     let events = runTended(&world, house: house, untilTick: onset + CalendarState.ticksPerSeason)
     let left = events.count { $0 == .residentLeftWithFever(house: house) }
+    let population = world.populations[house]?.population
     #expect(left == 3)
+    #expect(population == 5)
     #expect(world.populations[house]?.tier == .merchants)
     #expect(world.seasonalEvents.counters.residentsLeftWithFever >= 3)
     let ended = events.first { if case .seasonalEventEnded(.fever, _) = $0 { true } else { false } }
@@ -166,4 +168,31 @@ func feverDistrictShowsItsHouses() throws {
     #expect(!threatened.isEmpty)
     #expect(threatened.allSatisfy { world.buildings[$0]?.kind == .house })
     #expect(World.isFlammable(.physician) && World.isFlammable(.herbGarden))
+}
+
+@Test("scenario: an idle physician books no herbs burned")
+func idlePhysicianBooksNoHerbs() {
+    var world = eventsWorld(size: 12)
+    let physician = addOperational(.physician, at: TileCoordinate(x: 0, y: 0), in: &world)
+    world.stockpiles[physician]?.deposit(.herbs, amount: 4)
+    world.buildings[physician]?.fuelled = true
+    _ = runEvents(&world, untilTick: 400)
+    let used = world.statistics.current.goods[.herbs]?.usedByProduction ?? 0
+    #expect(used == 0)
+}
+
+@Test("scenario: a save in the middle of a fever plays on the same")
+func feverSurvivesASaveAndLoad() throws {
+    var world = feverWorld()
+    _ = world.tick()
+    let house = merchantHouse(in: &world)
+    _ = runTended(&world, house: house, untilTick: firstTick(of: .autumn, 1201) + 250)
+    let left = world.seasonalEvents.fever?.residentsLeft
+    #expect(left == 1)
+    var loaded = try JSONDecoder().decode(World.self, from: JSONEncoder().encode(world))
+    #expect(loaded.seasonalEvents == world.seasonalEvents)
+    let original = runTended(&world, house: house, untilTick: world.tickCount + 400)
+    let reloaded = runTended(&loaded, house: house, untilTick: loaded.tickCount + 400)
+    #expect(reloaded == original)
+    #expect(loaded.populations == world.populations)
 }
