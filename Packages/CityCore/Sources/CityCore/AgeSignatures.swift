@@ -115,13 +115,7 @@ public extension World {
     /// apart, overlapping ones 0. Spec: `age-signatures` / Ranges are
     /// measured between footprints.
     static func footprintDistance(_ lhs: Building, _ rhs: Building) -> Int {
-        let left = lhs.bounds
-        let right = rhs.bounds
-        return max(
-            0,
-            right.minX - left.maxX, left.minX - right.maxX,
-            right.minY - left.maxY, left.minY - right.maxY
-        )
+        lhs.bounds.gap(to: rhs.bounds)
     }
 
     /// Owner seam for signature effects (design D3): effects reach only
@@ -158,6 +152,11 @@ public extension TileBoundingBox {
     /// This box grown by `tiles` on every side.
     func expanded(by tiles: Int) -> TileBoundingBox {
         TileBoundingBox(minX: minX - tiles, minY: minY - tiles, maxX: maxX + tiles, maxY: maxY + tiles)
+    }
+
+    /// Chebyshev gap to `other`: touching boxes are 1 apart, overlapping ones 0.
+    func gap(to other: TileBoundingBox) -> Int {
+        max(0, other.minX - maxX, minX - other.maxX, other.minY - maxY, minY - other.maxY)
     }
 }
 

@@ -151,25 +151,27 @@ extension World {
         events.append(.seasonalEventEnded(event: active.event, toll: toll))
     }
 
-    static let blightRadius = 6
+    static let markedAreaRadius = 6
 
-    /// The area a blight or fever threatens: around one operational player
-    /// crop field for a blight, one player house with residents for a fever,
+    /// What a blight or fever strikes: an operational player crop field, or
+    /// a player house with residents. Nothing for the other events.
+    func isStruck(by effect: SeasonalEffect, _ building: Building) -> Bool {
+        guard building.owner == .player, building.state == .operational else { return false }
+        switch effect {
+        case .blight: return building.kind.isCrop
+        case .fever: return building.kind == .house && (populations[building.id]?.population ?? 0) > 0
+        case .fire, .festival: return false
+        }
+    }
+
+    /// The area a blight or fever threatens: around one building it strikes,
     /// picked with the year's area or district generator. Nil for other events.
     private func markedArea(for effect: SeasonalEffect) -> MarkedArea? {
-        let draw: SeasonalEventDraw
-        let isTarget: (Building) -> Bool
-        switch effect {
-        case .blight: (draw, isTarget) = (.area, { $0.kind.isCrop })
-        case .fever: (draw, isTarget) = (.district, { $0.kind == .house && (self.populations[$0.id]?.population ?? 0) > 0 })
-        case .fire, .festival: return nil
-        }
-        let targets = buildings.values
-            .filter { $0.owner == .player && $0.state == .operational && isTarget($0) }
-            .sorted { $0.id.raw < $1.id.raw }
+        let draw: SeasonalEventDraw = effect == .fever ? .district : .area
+        let targets = buildings.values.filter { isStruck(by: effect, $0) }.sorted { $0.id.raw < $1.id.raw }
         var rng = seasonalEventRNG(draw, year: date.year)
         guard !targets.isEmpty else { return nil }
-        return MarkedArea(around: targets[Int(rng.next() % UInt64(targets.count))].bounds, radius: Self.blightRadius)
+        return MarkedArea(around: targets[Int(rng.next() % UInt64(targets.count))].bounds, radius: Self.markedAreaRadius)
     }
 
     /// A player crop field in the marked area while a blight is under way:
@@ -192,9 +194,9 @@ extension World {
             let flammable = owned.filter { Self.isFlammable($0.kind) }
             return flammable.count >= minimum && flammable.contains { Self.canIgnite($0.kind) }
         case .blight:
-            return owned.contains { $0.kind.isCrop }
+            return owned.contains { isStruck(by: effect, $0) }
         case .fever:
-            return owned.count { $0.kind == .house && (populations[$0.id]?.population ?? 0) > 0 } >= minimum
+            return owned.count { isStruck(by: effect, $0) } >= minimum
         case .festival:
             return festivalQuantities() != nil
         }

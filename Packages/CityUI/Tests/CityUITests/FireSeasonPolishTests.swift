@@ -273,6 +273,7 @@ func wideBannerClearsTheControls() {
 @Test("scenario: with nothing selected the map shows the blight's marked area")
 func mapShowsTheMarkedArea() {
     let session = session { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
         world.seasonalEvents.marked = MarkedArea(around: TileBoundingBox(minX: 4, minY: 4, maxX: 5, maxY: 5), radius: 6)
     }
     #expect(session.areaOfEffect()?.style == .threat)

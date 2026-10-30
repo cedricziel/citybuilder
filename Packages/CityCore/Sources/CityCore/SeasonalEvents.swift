@@ -247,9 +247,7 @@ public struct MarkedArea: Codable, Hashable, Sendable {
 
     /// The building's footprint comes within the radius.
     public func contains(_ building: Building) -> Bool {
-        let box = building.bounds
-        let gap = max(0, box.minX - around.maxX, around.minX - box.maxX, box.minY - around.maxY, around.minY - box.maxY)
-        return gap <= radius
+        around.gap(to: building.bounds) <= radius
     }
 }
 

@@ -53,15 +53,12 @@ public extension World {
     /// threat style, with the buildings it would strike as targets. Nil
     /// without one. Spec: `rendering-2_5d` / Seasonal events are drawn on the map.
     func threatenedArea() -> AreaOfEffect? {
-        guard let area = seasonalEvents.marked else { return nil }
-        let box = area.around
-        let columns = max(0, box.minX - area.radius) ... min(mapWidth - 1, box.maxX + area.radius)
-        let rows = max(0, box.minY - area.radius) ... min(mapHeight - 1, box.maxY + area.radius)
+        guard let area = seasonalEvents.marked, let effect = currentSeasonalEvent?.event.effect else { return nil }
+        let box = area.around.expanded(by: area.radius)
+        let columns = max(0, box.minX) ... min(mapWidth - 1, box.maxX)
+        let rows = max(0, box.minY) ... min(mapHeight - 1, box.maxY)
         let tiles = Set(rows.flatMap { y in columns.map { TileCoordinate(x: $0, y: y) } })
-        let isFever = currentSeasonalEvent?.event.effect == .fever
-        let struck = buildings.values.filter {
-            $0.owner == .player && (isFever ? $0.kind == .house : $0.kind.isCrop) && area.contains($0)
-        }
+        let struck = buildings.values.filter { isStruck(by: effect, $0) && area.contains($0) }
         let targets = struck.flatMap { $0.footprint.tiles(anchor: $0.anchor) }.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
         return AreaOfEffect(tiles: tiles, targets: targets, count: nil, style: .threat)
     }
