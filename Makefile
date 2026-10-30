@@ -1,4 +1,4 @@
-.PHONY: help audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-verify sprites-content sprites-art-verify sprites-svg-verify sprites-check app-icon
+.PHONY: help l10n-check audio audio-check music music-check generate build gamedata gamedata-check test test-coverage test-scenarios test-citycore-framework-free test-cli-no-audio test-audio-manifest lint format hooks clean sprites-venv sprites-test sprites sprites-verify sprites-content sprites-art-verify sprites-svg-verify sprites-check app-icon
 
 WORKSPACE := Citybuilder.xcworkspace
 PROJECT := Citybuilder.xcodeproj
@@ -32,6 +32,7 @@ help:
 	@echo "  test             Run all swift-testing suites across packages"
 	@echo "  test-coverage    Enforce CityCore coverage floors + diff-cover"
 	@echo "  test-scenarios   Verify every spec scenario maps to a test"
+	@echo "  l10n-check       Fail when a catalog key lacks reviewed German or breaks a glossary rule"
 	@echo "  audio            Render the procedural sounds into Resources/Audio"
 	@echo "  audio-check      Fail when a committed sound differs from its recipe"
 	@echo "  music            Render the original music into Resources/Audio/music"
@@ -65,6 +66,7 @@ test:
 	$(SWIFT) test --package-path Packages/CityRender2D --enable-code-coverage
 	$(SWIFT) test --package-path Packages/CityRender3D --enable-code-coverage
 	$(SWIFT) test --package-path Packages/CityAudio --enable-code-coverage
+	$(SWIFT) test --package-path Tools/L10nCheck
 
 test-coverage:
 	./scripts/check-coverage.sh
@@ -72,6 +74,9 @@ test-coverage:
 test-scenarios:
 	$(SWIFT) ./scripts/check-scenario-coverage.swift --self-test
 	$(SWIFT) ./scripts/check-scenario-coverage.swift
+
+l10n-check:
+	$(SWIFT) run -q --package-path Tools/L10nCheck l10n-check .
 
 test-citycore-framework-free:
 	./scripts/check-no-apple-ui-imports.sh
