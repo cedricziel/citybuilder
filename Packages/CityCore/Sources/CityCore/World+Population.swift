@@ -3,7 +3,7 @@ import Foundation
 /// House growth, consumption and tier changes. Spec:
 /// `population-and-needs`.
 extension World {
-    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService) {
+    mutating func runPopulationSystem(signatureSources sources: [Building], service: HubService, festive: Set<EntityID>) {
         // Houses draw from shared buffers, so visit them in a fixed order.
         let houses = buildings.values
             .filter { $0.kind == .house && $0.state == .operational }
@@ -11,7 +11,6 @@ extension World {
         let tracked = HouseTier.allNeeds(in: culture)
         let inbound = porterInbound()
         let feverHeld = Set(feverHouses().map(\.id))
-        let festive = festivalHouses(service: service)
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
             let modifiers = houseModifiers(of: building, sources: sources)
