@@ -65,6 +65,10 @@ struct HubService {
         let hub: EntityID
         let distance: Int
         let road: TileCoordinate
+
+        var market: MarketServing {
+            MarketServing(hub: hub, distance: distance)
+        }
     }
 
     /// The hub serving each house.

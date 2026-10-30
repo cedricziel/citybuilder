@@ -32,17 +32,16 @@ public extension World {
     /// the order a player has to fix them. A read-only query: it never
     /// touches simulation state.
     func buildingIssues() -> [EntityID: BuildingIssue] {
-        buildingIssues(tileToIsland: tileToIslandMap())
+        buildingIssues(tileToIsland: tileToIslandMap(), service: hubService())
     }
 
-    internal func buildingIssues(tileToIsland: [TileCoordinate: IslandID]) -> [EntityID: BuildingIssue] {
+    internal func buildingIssues(tileToIsland: [TileCoordinate: IslandID], service: HubService) -> [EntityID: BuildingIssue] {
         let components = roadComponents()
         let storageComponents = Set(goodsBuffers(of: .player).compactMap { buffer -> Int? in
             guard buffer.state == .operational else { return nil }
             let footprint = buffer.footprint
             return anyAdjacentRoad(anchor: buffer.anchor, footprint: footprint).flatMap { components[$0] }
         })
-        let service = hubService()
         var issues: [EntityID: BuildingIssue] = [:]
         for building in buildings.values where building.owner == .player && building.state == .operational {
             // A forester needs no road and no route to storage.
