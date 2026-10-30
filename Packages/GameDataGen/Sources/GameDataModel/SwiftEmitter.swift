@@ -229,8 +229,7 @@ private struct Types {
             }),
             property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) }),
             property("isEnabled", "Bool", all.map { ($0.id, "\($0.enabled)") }),
-            property("firstYear", "Int", all.map { ($0.id, "\($0.firstYear)") }),
-            property("minFoodSeasons", "Int", all.map { ($0.id, "\($0.minFoodSeasons)") })
+            property("firstYear", "Int", all.map { ($0.id, "\($0.firstYear)") })
         ])
     }
 

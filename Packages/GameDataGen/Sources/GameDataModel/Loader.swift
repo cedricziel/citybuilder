@@ -334,8 +334,7 @@ private struct ItemReader {
         return SeasonalEvent(
             id: id, effect: effect, seasons: seasons, minAge: fields.string("minAge", required: false),
             weights: weight, banners: banners, enabled: fields.bool("enabled", required: false) ?? true,
-            firstYear: fields.int("firstYear", required: false) ?? 1,
-            minFoodSeasons: fields.int("minFoodSeasons", required: false) ?? 0, origin: fields.origin
+            firstYear: fields.int("firstYear", required: false) ?? 1, origin: fields.origin
         )
     }
 }
