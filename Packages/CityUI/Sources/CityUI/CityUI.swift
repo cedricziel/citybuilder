@@ -224,6 +224,8 @@ public final class GameSession {
     public internal(set) var offersPinchHint = false
     /// Problems the building-problem hint has named this session, by their text.
     var hintedProblems: Set<String> = []
+    /// The distant-house market hint has shown this session.
+    var hintedDistantHouses = false
     /// What each building with a status icon is waiting on and since which tick, so a problem that
     /// the next tap would fix stays unnamed.
     var problemsSeen: [EntityID: (text: String, since: UInt64)] = [:]
@@ -261,6 +263,7 @@ public final class GameSession {
         refreshFirstSteps()
         noteIdleGoods()
         let snapshot = world.snapshot()
+        noteDistantHouses(in: snapshot)
         noteBuildingProblems(in: snapshot)
         hud.apply(snapshot)
         routeList.snapshot = snapshot
