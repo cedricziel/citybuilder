@@ -45,6 +45,10 @@ Debug builds take launch flags that set up a scene, so a shot needs no clicks an
 | `-uiTestSeedShore`       | A port, a shipyard and a ship on the coast, camera on the port.                                                                                            |
 | `-uiTestSeedPort`        | A Renaissance game with a player port, camera on it.                                                                                                       |
 | `-uiTestSeedLived`       | The town with farms and workshops working and residents in the houses.                                                                                     |
+| `-uiTestSeedFire`        | The town with a fire watch and a granary, two houses burning and two in ruins; a third house catches fire eight seconds in.                                |
+| `-uiTestSeedBlight`      | The lived town with seasonal events on, a tick before the blight warning: the marked area appears as the game starts.                                      |
+| `-uiTestSeedFever`       | The lived town with seasonal events on, a tick before the fever warning: the marked district appears as the game starts.                                   |
+| `-uiTestSeedFestival`    | The lived town with a marketplace and seasonal events on, a tick before the town asks for a festival (two orders).                                         |
 | `-uiTestSeedArchipelago` | A new archipelago game, the largest map (seed 0), for performance shots.                                                                                   |
 | `-uiTestOpenStocks`      | Opens the stocks tray under the status pill, for shots of the goods icons.                                                                                 |
 | `-uiTestShowStats`       | Shows the frame rate and the node and draw counts in the corner of the map.                                                                                |

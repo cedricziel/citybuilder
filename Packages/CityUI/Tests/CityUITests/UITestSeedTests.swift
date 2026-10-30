@@ -236,3 +236,15 @@ func ordersSeedWorksWithoutRivals() {
     world.seedOrdersShowcase()
     #expect(world.orders.orders.count == 4)
 }
+
+@Test("Each event flag starts the lived town a tick before its event is announced, with events on", arguments: [
+    ("-uiTestSeedBlight", SeasonalEvent.blight), ("-uiTestSeedFever", .fever), ("-uiTestSeedFestival", .festival)
+])
+func eventFlagsSeedAnAnnouncement(flag: String, event: SeasonalEvent) throws {
+    var world = try #require(UITestSeed.world(fromArguments: [flag]))
+    #expect(world.seasonalEvents.enabled)
+    #expect(world.snapshot().housePopulations.values.contains { $0.population > 0 })
+    #expect(world.camera == UITestSeed.townWorld().camera)
+    let events = world.tick().events
+    #expect(events.contains { if case .seasonalEventWarned(event, _) = $0 { true } else { false } })
+}

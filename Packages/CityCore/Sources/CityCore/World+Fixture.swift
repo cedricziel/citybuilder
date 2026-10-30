@@ -288,6 +288,32 @@ public extension World {
         dispatchWatchmen()
     }
 
+    /// Test helper: seasonal events on, and `event` planned for the first season change that announces
+    /// it, whose tick it returns: a hazard warned a season ahead, a festival asked for in its own season.
+    /// A festival's orders are sized from closed seasons' output, so the open season gets bread and the
+    /// luxury made, and the festival waits until that season has closed.
+    @discardableResult
+    mutating func seedSeasonalEvent(_ event: SeasonalEvent) -> UInt64 {
+        let season = CalendarState.ticksPerSeason
+        let isHazard = event.effect.isHazard
+        let lead = isHazard ? 1 : 0
+        let first = tickCount / season + (isHazard ? 1 : 2)
+        let changes = (first ..< first + 4).map { index in
+            let date = calendar.date(atTick: index * season)
+            return (tick: index * season, year: date.year, onset: Season.allCases[(date.season.rawValue + lead) % Season.allCases.count])
+        }
+        let change = changes.first { event.seasons.contains($0.onset) } ?? changes[0]
+        seasonalEvents.enabled = true
+        seasonalEvents.schedule = [ScheduledSeasonalEvent(year: change.year, event: event, onset: change.onset)]
+        seasonalEvents.plan = SeasonalEventPlan(year: change.year, onset: SeasonalEventOnset(event: event, season: change.onset))
+        if !isHazard {
+            for template in festivalTemplates {
+                statistics.current.goods[template.good, default: GoodFlow()].made += template.maxUnits
+            }
+        }
+        return change.tick
+    }
+
     /// Test helper: a treasury deep enough that a seeded town's upkeep never bankrupts it, so art
     /// reviews screenshot the town rather than the bankruptcy banner.
     mutating func seedTestFunds(_ amount: Int64 = 1_000_000) {

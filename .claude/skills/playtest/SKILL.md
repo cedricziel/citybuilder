@@ -81,6 +81,10 @@ Every `-uiTestâ€¦` flag works in Debug builds only. A launch with any `-uiTestâ€
 |---|---|
 | `-uiTestSeedTown` | The seed-0 island with four finished houses by the town center. With `-uiTestSeason`, `-uiTestCulture`, `-uiTestAge`. |
 | `-uiTestSeedLived` | The town with farms and workshops working and residents in the houses. |
+| `-uiTestSeedFire` | The town with two houses burning, two in ruins and a fire watch sending its watchman. |
+| `-uiTestSeedBlight` | The lived town with seasonal events on; the blight is warned as the game starts. |
+| `-uiTestSeedFever` | The lived town with seasonal events on; the fever is warned as the game starts. |
+| `-uiTestSeedFestival` | The lived town with a marketplace and seasonal events on; the town asks for a festival as the game starts. |
 | `-uiTestSeedPort` | A Renaissance game with a player port. |
 | `-uiTestSeedShore` | A port, a shipyard and a ship. |
 | `-uiTestSeedArchipelago` | A new archipelago game on the largest map. |
