@@ -129,8 +129,9 @@ A burnt building becomes a `ruins` building with `ruinOf` set to its kind. It ha
 | Fever: a resident leaves every | 300 ticks | 200 ticks | 150 ticks |
 | Festival window | 2 seasons | 1 season | 1 season |
 | Festival tax bonus | 15% | 10% | 10% |
+| First year with a blight | 4th | 4th | 4th |
 
-These are the first values. Task 7.3 tunes them against D12. The warning is always one season, on every difficulty: it is the promise the system makes. The year 1200 start makes the third year 1202. The guided Hard sweep covers 1200–1204, so it sees up to three event years.
+A drawn blight also needs something to protect: it is warned only when the player's stores hold at least one season of what the houses eat in food (`minFoodSeasons: 1`), else the year is quiet. A pick before an event's `firstYear` is a quiet year too, so the other events keep their years. Both live on the event item in the pack. A 5-year probe of a careful new player on Normal showed four of five blights landing in year 3 with 0–2 food stored, where a granary has nothing to keep. These are the first values. Task 7.3 tunes them against D12. The warning is always one season, on every difficulty: it is the promise the system makes. The year 1200 start makes the third year 1202. The guided Hard sweep covers 1200–1204, so it sees up to three event years.
 
 ### D11. Saves
 

@@ -294,3 +294,17 @@ func chipCentresTheMarkedArea() {
     #expect(camera.centerY == 31)
     #expect(session.banner?.title == "Damp weather: blight is coming")
 }
+
+@MainActor
+@Test("scenario: the chip centres on the marked area as the map clips it")
+func chipCentresTheClippedArea() {
+    let session = eventsSession { world in
+        world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+        world.seasonalEvents.marked = MarkedArea(around: TileBoundingBox(minX: 0, minY: 0, maxX: 1, maxY: 1), radius: 6)
+    }
+    session.replaySeasonalWarning(animated: false)
+    let camera = session.world.camera
+    // Tiles 0...7 on each axis: the area left of and above the map is not there.
+    #expect(camera.centerX == 4)
+    #expect(camera.centerY == 4)
+}

@@ -161,6 +161,8 @@ struct Validator {
         }
         if let age = event.minAge, refs.ages[age] == nil { report("`minAge` names unknown age `\(age)`") }
         if event.seasons.isEmpty { report("`seasons` must name at least one season") }
+        if event.firstYear < 1 { report("`firstYear` must be at least 1") }
+        if event.minFoodSeasons < 0 { report("`minFoodSeasons` must not be negative") }
         for season in event.seasons where !ItemSchema.seasons.contains(season) {
             report("`seasons` names unknown season `\(season)`")
         }
