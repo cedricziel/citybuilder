@@ -23,6 +23,7 @@ public struct CityRootView: View {
     @AppStorage var showsMinimap: Bool
     let settingsContent: (() -> AnyView)?
     let pauseMenuConfig: PauseMenuConfig?
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
     #if os(macOS)
     @Environment(\.openSettings) var openSettingsScene
     #endif

@@ -142,7 +142,7 @@ A burning building within 8 tiles (footprint gap) of an operational, road-connec
 
 ### Requirement: Blight halves crop yields in a marked area
 
-At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL take twice its recipe's cycle ticks, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
+A drawn blight SHALL NOT come before the 4th year of a game, and SHALL be warned only when the player's operational stores hold at least one season of what the player's houses eat in food; otherwise that year SHALL have no seasonal event. A scheduled blight SHALL NOT need the food. Both values SHALL come from the blight's pack item (`firstYear`, `minFoodSeasons`). At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL take twice its recipe's cycle ticks, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
 
 #### Scenario: Blighted farm takes twice as long
 
@@ -153,6 +153,16 @@ At a blight's warning, the world SHALL pick one operational player crop field wi
 
 - **WHEN** a farm 7 tiles from the blight's field runs through the blight season
 - **THEN** it completes cycles every 40 ticks
+
+#### Scenario: No blight before year 4
+
+- **WHEN** the events of 1202 are decided on Normal or Hard for many seeds
+- **THEN** none is a blight
+
+#### Scenario: A town with nothing stored gets a quiet year
+
+- **WHEN** a blight is drawn for summer and, at the start of spring, the player's stores hold less food than the houses eat in a season
+- **THEN** no warning comes and that year has no seasonal event
 
 ### Requirement: Fever holds a district back
 

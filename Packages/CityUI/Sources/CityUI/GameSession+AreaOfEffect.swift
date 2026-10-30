@@ -12,22 +12,29 @@ struct AreaOfEffectCache {
         let placing: Bool
     }
 
-    let source: Source
+    /// Nil for the area a blight or fever threatens, or under a red ghost.
+    let source: Source?
+    let hasGhost: Bool
     let tick: UInt64
     let area: AreaOfEffect?
 }
 
 public extension GameSession {
     /// What the ghost reaches, else, with the inspect tool, what the
-    /// selected building reaches. Asked again at most once per tick and
-    /// site, as a mine's sites take a placement check each.
+    /// selected building reaches, else what a warned or running blight or
+    /// fever threatens. Asked again at most once per tick and site, as a
+    /// mine's sites take a placement check each.
     func areaOfEffect() -> AreaOfEffect? {
-        guard let source = areaOfEffectSource() else { return nil }
-        if let cache = areaOfEffectCache, cache.source == source, cache.tick == world.tickCount {
+        let source = areaOfEffectSource()
+        let hasGhost = ghostSite() != nil
+        if let cache = areaOfEffectCache, cache.source == source, cache.hasGhost == hasGhost, cache.tick == world.tickCount {
             return cache.area
         }
-        let area = world.areaOfEffect(of: source.kind, at: source.anchor, owner: source.owner, placing: source.placing)
-        areaOfEffectCache = AreaOfEffectCache(source: source, tick: world.tickCount, area: area)
+        // A red ghost shows no area at all, not the threat behind it.
+        // A selected building with no reach of its own still shows the threat.
+        let own = source.flatMap { world.areaOfEffect(of: $0.kind, at: $0.anchor, owner: $0.owner, placing: $0.placing) }
+        let area = own ?? (hasGhost ? nil : world.threatenedArea())
+        areaOfEffectCache = AreaOfEffectCache(source: source, hasGhost: hasGhost, tick: world.tickCount, area: area)
         return area
     }
 

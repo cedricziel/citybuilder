@@ -236,6 +236,11 @@ public struct SeasonalEvent: Equatable, Sendable {
     /// False keeps the event out of every draw and schedule until its
     /// mechanic ships (`add-event-counterplay` D14).
     public var enabled: Bool
+    /// The first game year, from 1, a draw may pick it; 1 when unset.
+    public var firstYear: Int = 1
+    /// Seasons of the town's food draw its stores must hold for a warning;
+    /// 0 when unset.
+    public var minFoodSeasons: Int = 0
     public var origin: Origin
 
     public struct Banner: Equatable, Sendable {

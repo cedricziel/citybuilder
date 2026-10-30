@@ -184,7 +184,15 @@ extension GameSession {
     /// The event chip's tap: the warning of the event warned or under way
     /// again, or that a fire burns. Spec: `platform-shells` / Seasonal events
     /// show banners and a chip.
-    public func replaySeasonalWarning() {
+    public func replaySeasonalWarning(animated: Bool = true) {
+        // Spec: `platform-shells`: for blight and fever the chip also shows the marked area.
+        if let marked = world.seasonalEvents.marked {
+            // The marked area as the map clips it, as the threat overlay draws it.
+            let box = marked.around.expanded(by: marked.radius)
+            let (minX, maxX) = (max(0, box.minX), min(world.mapWidth - 1, box.maxX))
+            let (minY, maxY) = (max(0, box.minY), min(world.mapHeight - 1, box.maxY))
+            centerCamera(onX: Double(minX + maxX + 1) / 2, y: Double(minY + maxY + 1) / 2, animated: animated)
+        }
         guard let banner = seasonalChipBanner() else { return }
         // The player asked: it takes the slot at once, paused or not, and the
         // banner it interrupts comes back next.

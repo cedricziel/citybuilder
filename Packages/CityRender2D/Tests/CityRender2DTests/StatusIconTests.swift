@@ -351,3 +351,28 @@ func burningAndRuinsShowTheirIcons() {
     #expect(icons[EntityID(raw: 2)] == "status-ruins")
     #expect(icons[EntityID(raw: 3)] == nil)
 }
+
+@Test("scenario: a blighted field shows the blight icon")
+func blightedFieldShowsItsIcon() {
+    let farm = Building(id: buildingID, kind: .farm, anchor: anchor, state: .operational)
+    let base = meadow([farm])
+    let snapshot = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 12, mapHeight: 12,
+        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: [],
+        economy: base.economy, totalPopulation: 0, camera: base.camera, blightedFields: [buildingID]
+    )
+    #expect(StatusIcons.icons(in: snapshot)[buildingID] == "status-blight")
+}
+
+@Test("scenario: a blighted field's own issue wins over the blight icon")
+func blightedFieldKeepsItsIssue() {
+    let farm = Building(id: buildingID, kind: .farm, anchor: anchor, state: .operational)
+    let base = meadow([farm], roadless: [buildingID])
+    let snapshot = WorldSnapshot(
+        tickCount: base.tickCount, simulatedTime: base.simulatedTime, mapWidth: 12, mapHeight: 12,
+        terrainGrid: base.terrainGrid, occupiedTiles: base.occupiedTiles, buildings: base.buildings, carriers: [],
+        economy: base.economy, totalPopulation: 0, camera: base.camera,
+        roadDisconnectedBuildings: [buildingID], blightedFields: [buildingID]
+    )
+    #expect(StatusIcons.icons(in: snapshot)[buildingID] == StatusIcons.textureName(for: .noRoad))
+}

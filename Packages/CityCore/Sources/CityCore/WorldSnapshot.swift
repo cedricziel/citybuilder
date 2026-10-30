@@ -103,6 +103,10 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let seasonalEvent: SeasonalEventOnset?
     /// Turns any tick into a date, such as when ruins burnt down.
     public let calendar: CalendarState
+    /// The area a blight or fever threatens, from its warning to its end.
+    public let markedArea: MarkedArea?
+    /// The player's crop fields a blight slows now.
+    public let blightedFields: Set<EntityID>
     /// True once the seasonal event has started, false while it is only warned.
     public let isSeasonalEventUnderWay: Bool
     /// The flammable buildings each fire watch would answer. Spec:
@@ -145,6 +149,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         seasonalEvent: SeasonalEventOnset? = nil,
         calendar: CalendarState = .inactive,
         watchmen: [WatchmanWalker] = [],
+        markedArea: MarkedArea? = nil,
+        blightedFields: Set<EntityID> = [],
         isSeasonalEventUnderWay: Bool = false,
         fireWatchCover: [EntityID: Int] = [:]
     ) {
@@ -180,6 +186,8 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.seasonalEvent = seasonalEvent
         self.calendar = calendar
         self.watchmen = watchmen
+        self.markedArea = markedArea
+        self.blightedFields = blightedFields
         self.isSeasonalEventUnderWay = isSeasonalEventUnderWay
         self.fireWatchCover = fireWatchCover
     }
@@ -288,6 +296,8 @@ public extension World {
             seasonalEvent: currentSeasonalEvent,
             calendar: calendar,
             watchmen: watchmenAtWork,
+            markedArea: seasonalEvents.marked,
+            blightedFields: Set(buildings.values.filter(isBlighted).map(\.id)),
             isSeasonalEventUnderWay: seasonalEvents.active != nil,
             fireWatchCover: fireWatchCoverCounts()
         )
