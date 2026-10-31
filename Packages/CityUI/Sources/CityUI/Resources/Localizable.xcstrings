@@ -4327,6 +4327,24 @@
         }
       }
     },
+    "inspector.blighted" : {
+      "comment" : "%@ is when the blight ends, such as \"End of Summer 1202\"; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fäule: trägt nichts bis %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blighted: yields nothing until %@"
+          }
+        }
+      }
+    },
     "inspector.build" : {
       "comment" : "Build progress.",
       "extractionState" : "manual",
@@ -4521,6 +4539,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export"
+          }
+        }
+      }
+    },
+    "inspector.fever" : {
+      "comment" : "A house a fever holds back; %lld is the physician's reach in tiles; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fieber: steigt nicht auf, Einwohner ziehen fort. Ein Medicus mit Kräutern im Umkreis von %lld Feldern schützt das Haus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fever: can't advance, residents leave. A physician with herbs within %lld tiles keeps it safe"
           }
         }
       }
