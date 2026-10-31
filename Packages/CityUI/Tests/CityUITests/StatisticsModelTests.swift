@@ -169,6 +169,24 @@ func rivalsLinesAndStandings() {
     #expect(rows[2].wealth == "$1,120")
 }
 
+@Test("standings rows keep their identity whatever their names read")
+func standingsIdentityIgnoresNames() {
+    var first = season(0)
+    first.rivals = [
+        RivalStatistics(id: 1, residents: 9, age: .medieval, treasury: 840),
+        RivalStatistics(id: 2, residents: 30, age: .medieval, treasury: 1120)
+    ]
+    let model = StatisticsModel(
+        seasons: [first], calendar: calendar,
+        rivals: [1: ("You", "#B03A2E"), 2: ("You", "#2E6DB4")],
+        locale: Locale(identifier: "en_US")
+    )
+    let rows = model.standings
+    #expect(rows.map(\.name) == ["You", "You", "You"])
+    #expect(Set(rows.map(\.id)).count == 3)
+    #expect(rows.map(\.isPlayer) == [true, false, false])
+}
+
 @Test("a model built from a world reads its history, calendar and stuck producers")
 func modelFromWorld() {
     var world = World.fixtureWithTerrain(width: 8, height: 8, fill: .grass, seed: 1)
