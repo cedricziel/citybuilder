@@ -50,7 +50,7 @@ extension CityRootView {
                     .frame(maxWidth: .infinity)
                     // The event chip is the column's one control: Left and Right reach it.
                     .tvFocusSection()
-                    .panelAnimation(value: session.banner)
+                    .panelAnimation(presenceOf: session.banner)
                     rightColumn(layout: layout, worldViewSize: worldViewSize, boardFrame: boardFrame)
                 }
                 .padding(.leading, railInset)
@@ -94,7 +94,7 @@ extension CityRootView {
             sessionBanner
                 .padding(.bottom, SessionBannerLayout.bottomInset(controlsHeight: bottomControlsHeight))
         }
-        .panelAnimation(value: session.banner)
+        .panelAnimation(presenceOf: session.banner)
     }
 
     private var sessionBanner: some View {
