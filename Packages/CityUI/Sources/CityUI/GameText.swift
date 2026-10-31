@@ -9,8 +9,8 @@ public enum Language: String, Sendable {
     /// English, accented, padded and bracketed to expose long and bypassed text.
     case pseudo
 
-    /// The languages players get. German joins once all of it ships (design D9).
-    public static let shipped: [Language] = [.en]
+    /// The languages players get (design D9).
+    public static let shipped: [Language] = [.en, .de]
     /// `-CBPseudoLocale YES` on launch turns the pseudo-locale on.
     static let pseudoLocaleDefaultsKey = "CBPseudoLocale"
 
