@@ -9,9 +9,15 @@ import SwiftUI
 public struct PlacementHUDViewModel {
     let session: GameSession
     public let anchor: TileCoordinate
+    /// Why the checkmark would not place the building right now, shown
+    /// under it; nil when it would.
+    public let reason: String?
+
     /// Whether the checkmark would place the building right now. An
     /// invalid placement can still be confirmed: the HUD then says why.
-    public let isValid: Bool
+    public var isValid: Bool {
+        reason == nil
+    }
 
     /// Stable order: NE, SE, SW, NW.
     public var arrows: [NudgeDirection] {
@@ -44,7 +50,7 @@ public extension GameSession {
         return PlacementHUDViewModel(
             session: self,
             anchor: pending.anchor,
-            isValid: ghostState()?.valid ?? false
+            reason: placementRefusal(pending.kind, at: pending.anchor)?.message(in: world)
         )
     }
 }
@@ -59,6 +65,10 @@ public enum PlacementHUDLayout {
     /// Horizontal half-distance between confirm and cancel, and their drop
     /// below the lowest arrow.
     public static let actionGap: CGFloat = 32
+    /// Drop from the confirm row's center to the reason capsule's center.
+    public static let reasonDrop: CGFloat = 44
+    /// The reason capsule wraps to a second line past this width.
+    public static let reasonMaxWidth: CGFloat = 220
 
     static let halfTileWidth: CGFloat = 32
     static let halfTileHeight: CGFloat = 16

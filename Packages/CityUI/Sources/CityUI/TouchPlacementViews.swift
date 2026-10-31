@@ -120,6 +120,29 @@ private struct CoachmarkView: View {
     }
 }
 
+/// Why the checkmark is orange, under confirm and cancel while the ghost
+/// can't be placed. Styled like `PlacementRejectionBanner`.
+private struct PlacementReasonCapsule: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            // A rounded rectangle, not a capsule, so a wrapped German
+            // reason keeps its shape.
+            .background(Color.red.opacity(0.85), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(maxWidth: PlacementHUDLayout.reasonMaxWidth)
+            .fixedSize(horizontal: false, vertical: true)
+            .allowsHitTesting(false)
+            .accessibilityLabel(GameText.string("a11y.cantPlace", message))
+    }
+}
+
 private struct PlacementHUDOverlay: View {
     let session: GameSession
 
@@ -145,6 +168,10 @@ private struct PlacementHUDOverlay: View {
                         .position(x: center.x + PlacementHUDLayout.actionGap, y: below)
                     hudButton("xmark", label: GameText.string("common.cancel"), tint: .red, action: hud.cancel)
                         .position(x: center.x - PlacementHUDLayout.actionGap, y: below)
+                    if let reason = hud.reason {
+                        PlacementReasonCapsule(message: reason)
+                            .position(x: center.x, y: below + PlacementHUDLayout.reasonDrop)
+                    }
                 }
             }
             .ignoresSafeArea()
