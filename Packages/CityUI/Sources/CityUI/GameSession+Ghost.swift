@@ -28,8 +28,23 @@ extension GameSession {
     /// Whether the player may place `kind` at `tile` and can pay for it,
     /// the ghost's green tint.
     func isValidPlacement(_ kind: BuildingKind, at tile: TileCoordinate) -> Bool {
-        guard case .allowed = world.canPlace(kind, at: tile) else { return false }
-        return world.economy.balance >= BuildingCatalog.spec(for: kind).cost
+        placementRefusal(kind, at: tile) == nil
+    }
+
+    /// Why the world would turn down `kind` at `tile` right now, nil when
+    /// it would build it. Covers the money the simulation charges too.
+    func placementRefusal(_ kind: BuildingKind, at tile: TileCoordinate) -> PlacementRefusal? {
+        if case let .rejected(reason) = world.canPlace(kind, at: tile) { return .rejected(reason) }
+        return world.economy.balance >= BuildingCatalog.spec(for: kind).cost ? nil : .noMoney
+    }
+
+    /// Shows why `kind` can't go on `tile` and returns true, or returns
+    /// false when it can.
+    func refusesPlacement(_ kind: BuildingKind, at tile: TileCoordinate) -> Bool {
+        guard let refusal = placementRefusal(kind, at: tile) else { return false }
+        hud.showRejection(refusal.message(in: world), now: Date())
+        UISounds.play(.reject)
+        return true
     }
 
     func costBreakdown(
@@ -67,6 +82,20 @@ extension GameSession {
             onIsland: islandID, good: good, tileToIsland: tileToIsland
         )
         return supplied ? .queueable : .blocked
+    }
+
+    /// A placement the world would turn down: one of its rules, or a
+    /// price above the balance.
+    enum PlacementRefusal: Equatable {
+        case rejected(PlacementRejection)
+        case noMoney
+
+        func message(in world: World) -> String {
+            switch self {
+            case let .rejected(reason): PlacementRejectionText.message(for: reason, in: world)
+            case .noMoney: GameText.string("placement.noMoney")
+            }
+        }
     }
 
     public struct GhostPreview: Equatable, Sendable {

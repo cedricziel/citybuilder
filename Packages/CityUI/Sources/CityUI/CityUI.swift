@@ -381,11 +381,7 @@ public final class GameSession {
         case let .place(kind) where needsConfirmation(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
-            if case let .rejected(reason) = world.canPlace(kind, at: tile) {
-                hud.showRejection(reason, in: world, now: Date())
-                UISounds.play(.reject)
-                return
-            }
+            if refusesPlacement(kind, at: tile) { return }
             enqueue(.place(kind, at: tile))
         case .demolish:
             enqueue(.demolish(at: tile))
