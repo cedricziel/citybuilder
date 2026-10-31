@@ -18,6 +18,14 @@ enum DateChipLayout {
         guard layout.isPhone, typeSize < .accessibility1 else { return false }
         return !showsFirstSteps || hudWidth >= width + gap + firstStepsWidth
     }
+
+    /// How far the left column's chips reach below the top bar: the date
+    /// chip with its 4-point lift, then the event chip 8 points under it.
+    static func columnChipsHeight(showsDate: Bool, showsEvent: Bool, layout: HUDLayout) -> CGFloat {
+        let date: CGFloat = showsDate ? 4 + height : 0
+        let event: CGFloat = showsEvent ? EventChipLayout.height(layout: layout) : 0
+        return date + event + (showsDate && showsEvent ? 8 : 0)
+    }
 }
 
 /// A season glyph and "Autumn 1203", under the status pill on a phone.

@@ -120,12 +120,13 @@ public enum InspectorCalloutLayout {
     }
 
     /// The safe area minus the pill row, rail and dock, the minimap's band
-    /// while it shows, and the first-steps card's column (or, collapsed,
-    /// its capsule's band) while it shows. Spec: `platform-shells` /
+    /// while it shows, the first-steps card's column (or, collapsed, its
+    /// capsule's band) while it shows, and the band of the date and event
+    /// chips under the pill, `leadingChipsHeight` tall. Spec: `platform-shells` /
     /// Minimap layout, First-hour guide.
     public static func freeArea(
         size: CGSize, insets: EdgeInsets, layout: HUDLayout, showsMinimap: Bool, showsFirstSteps: Bool = false,
-        showsOrdersBoard: Bool = false
+        showsOrdersBoard: Bool = false, leadingChipsHeight: CGFloat = 0
     ) -> CGRect {
         // The open board collapses the first-steps card (`Order board layout`).
         let layout = showsOrdersBoard ? layout.withFirstStepsCollapsed : layout
@@ -154,6 +155,10 @@ public enum InspectorCalloutLayout {
         }
         if showsOrdersBoard {
             right = min(right, size.width - insets.trailing - margin - OrderBoardLayout.width(for: layout.idiom) - MinimapLayout.gap)
+        }
+        // The left column's chips draw over the callout, so it starts below them.
+        if leadingChipsHeight > 0 {
+            top = max(top, topBarBottom(topInset: insets.top, layout: layout) + leadingChipsHeight + MinimapLayout.gap)
         }
         return CGRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
     }
@@ -197,16 +202,25 @@ struct InspectorCalloutView<Actions: View>: View {
     /// The scroll view's current height; the rest of `size` is the
     /// header, footer, spacing and padding.
     @State private var scrollHeight: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         // The safe area is read before it is ignored: inside, the insets
         // read zero, and on Apple TV the callout then ran under the top bar.
         GeometryReader { safe in
-            fullScreen(insets: safe.safeAreaInsets)
+            fullScreen(insets: safe.safeAreaInsets, leadingChipsHeight: leadingChipsHeight(hudWidth: safe.size.width - layout.margin * 2))
         }
     }
 
-    private func fullScreen(insets: EdgeInsets) -> some View {
+    /// The date and event chips under the status pill, as the HUD layer shows them.
+    private func leadingChipsHeight(hudWidth: CGFloat) -> CGFloat {
+        let showsDate = !session.hud.dateText.isEmpty && DateChipLayout.isShown(
+            layout: layout, hudWidth: hudWidth, showsFirstSteps: session.firstStepsGuide != nil, typeSize: typeSize
+        )
+        return DateChipLayout.columnChipsHeight(showsDate: showsDate, showsEvent: session.hud.eventChip != nil, layout: layout)
+    }
+
+    private func fullScreen(insets: EdgeInsets, leadingChipsHeight: CGFloat) -> some View {
         // Full-screen coordinates, the same space the world view projects into.
         GeometryReader { proxy in
             let (anchor, half) = projection(viewSize: proxy.size)
@@ -216,7 +230,8 @@ struct InspectorCalloutView<Actions: View>: View {
                 showsOrdersBoard: session.isOrdersPresented && OrderBoardLayout.presentation(
                     in: proxy.size, insets: insets, layout: layout, showsMinimap: showsMinimap,
                     showsFirstSteps: session.firstStepsGuide != nil
-                ) == .column
+                ) == .column,
+                leadingChipsHeight: leadingChipsHeight
             )
             let placed = InspectorCalloutLayout.place(
                 anchor: anchor,
