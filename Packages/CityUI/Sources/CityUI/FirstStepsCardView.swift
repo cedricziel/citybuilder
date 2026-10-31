@@ -93,7 +93,7 @@ struct FirstStepsCardView: View {
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityValue(step.isMet ? "Done" : "Open")
+                .accessibilityValue(step.isMet ? GameText.string("a11y.done") : GameText.string("a11y.open"))
             }
         }
         .padding(.horizontal, 14)
@@ -102,7 +102,7 @@ struct FirstStepsCardView: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
         .onTapGesture { if layout.collapsesFirstSteps { isExpanded = false } }
         .accessibilityElement(children: .contain)
-        .accessibilityValue(layout.collapsesFirstSteps ? "Expanded" : "")
+        .accessibilityValue(layout.collapsesFirstSteps ? GameText.string("a11y.expanded") : "")
         .accessibilityActions {
             if layout.collapsesFirstSteps {
                 Button(GameText.string("firstSteps.collapse")) { isExpanded = false }

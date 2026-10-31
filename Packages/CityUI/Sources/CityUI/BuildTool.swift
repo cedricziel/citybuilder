@@ -11,8 +11,8 @@ public enum BuildTool: Hashable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .inspect: return "Inspect"
-        case .demolish: return "Demolish"
+        case .inspect: return GameText.string("tool.inspect")
+        case .demolish: return GameText.string("tool.demolish")
         case let .place(kind): return kind.displayName
         }
     }

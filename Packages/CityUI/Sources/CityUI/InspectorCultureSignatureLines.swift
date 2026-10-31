@@ -72,6 +72,6 @@ extension InspectorViewModel {
     }
 
     static func goodName(_ good: Good) -> String {
-        GoodsCatalog.spec(for: good).displayName.lowercased()
+        GameText.inSentence(GoodsCatalog.spec(for: good).displayName)
     }
 }

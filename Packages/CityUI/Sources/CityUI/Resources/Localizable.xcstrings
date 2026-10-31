@@ -73,6 +73,24 @@
         }
       }
     },
+    "a11y.done" : {
+      "comment" : "A met step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledigt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
     "a11y.eventChip" : {
       "comment" : "%@ is the event.",
       "extractionState" : "manual",
@@ -87,6 +105,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@: show it again"
+          }
+        }
+      }
+    },
+    "a11y.expanded" : {
+      "comment" : "An expanded card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgeklappt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded"
+          }
+        }
+      }
+    },
+    "a11y.hidden" : {
+      "comment" : "A hidden tray.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgeblendet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hidden"
           }
         }
       }
@@ -145,6 +199,24 @@
         }
       }
     },
+    "a11y.open" : {
+      "comment" : "An open step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
     "a11y.residentsPercent" : {
       "comment" : "How full a house is.",
       "extractionState" : "manual",
@@ -181,6 +253,24 @@
         }
       }
     },
+    "a11y.shown" : {
+      "comment" : "A shown tray.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingeblendet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shown"
+          }
+        }
+      }
+    },
     "a11y.speed" : {
       "comment" : "Accessibility label; %@ is the speed.",
       "extractionState" : "manual",
@@ -195,6 +285,120 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speed %@"
+          }
+        }
+      }
+    },
+    "aoe.grass" : {
+      "comment" : "Open grass tiles a forester can plant.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freie Wiese in Reichweite: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld open grass in reach"
+          }
+        }
+      }
+    },
+    "aoe.noGrass" : {
+      "comment" : "Forester site with no grass.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine freie Wiese in Reichweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No open grass in reach"
+          }
+        }
+      }
+    },
+    "aoe.noTrees" : {
+      "comment" : "Lumberjack site with no trees.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Bäume in Reichweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No trees in reach"
+          }
+        }
+      }
+    },
+    "aoe.site" : {
+      "comment" : "Building, tile count, ground.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bauplatz %1$@: %2$lld Felder %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ site: %2$lld %3$@ tiles"
+          }
+        }
+      }
+    },
+    "aoe.trees" : {
+      "comment" : "Trees a lumberjack hut can fell.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Baum in Reichweite"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Bäume in Reichweite"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tree in reach"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld trees in reach"
+                }
+              }
+            }
           }
         }
       }
@@ -1117,6 +1321,78 @@
         }
       }
     },
+    "build.category.craft" : {
+      "comment" : "Build rail category.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handwerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Craft"
+          }
+        }
+      }
+    },
+    "build.category.gather" : {
+      "comment" : "Build rail category.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sammeln"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gather"
+          }
+        }
+      }
+    },
+    "build.category.town" : {
+      "comment" : "Build rail category.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Town"
+          }
+        }
+      }
+    },
+    "build.road" : {
+      "comment" : "Build rail button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Straße"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Road"
+          }
+        }
+      }
+    },
     "campaigns.comingSoon" : {
       "comment" : "Shown while no campaign ships.",
       "extractionState" : "manual",
@@ -1339,6 +1615,78 @@
         }
       }
     },
+    "commands.pause" : {
+      "comment" : "Mac menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anhalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
+          }
+        }
+      }
+    },
+    "commands.speed" : {
+      "comment" : "Mac menu item; %@ is the speed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed %@"
+          }
+        }
+      }
+    },
+    "commands.zoomIn" : {
+      "comment" : "Mac menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hineinzoomen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom In"
+          }
+        }
+      }
+    },
+    "commands.zoomOut" : {
+      "comment" : "Mac menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herauszoomen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom Out"
+          }
+        }
+      }
+    },
     "common.cancel" : {
       "comment" : "Cancel button in any dialog.",
       "extractionState" : "manual",
@@ -1543,6 +1891,48 @@
         }
       }
     },
+    "count.dollar" : {
+      "comment" : "Spoken money.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Dollar"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Dollar"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dollar"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dollars"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "count.good" : {
       "comment" : "A count of goods.",
       "extractionState" : "manual",
@@ -1704,6 +2094,48 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld road tiles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.ship" : {
+      "comment" : "A count of ships.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Schiff"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Schiffe"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ship"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ships"
                 }
               }
             }
@@ -1879,6 +2311,42 @@
         }
       }
     },
+    "firstSteps.farm" : {
+      "comment" : "First step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baue einen Hof"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build a farm"
+          }
+        }
+      }
+    },
+    "firstSteps.farm.why" : {
+      "comment" : "First step reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höfe ernähren die Einwohner. Leere Häuser zahlen nichts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farms feed residents. Empty houses pay nothing."
+          }
+        }
+      }
+    },
     "firstSteps.hide" : {
       "comment" : "Accessibility label.",
       "extractionState" : "manual",
@@ -1893,6 +2361,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hide first steps"
+          }
+        }
+      }
+    },
+    "firstSteps.houses" : {
+      "comment" : "First step; %lld is the target.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baue %lld Häuser an einer Straße"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build %lld houses on a road"
+          }
+        }
+      }
+    },
+    "firstSteps.houses.why" : {
+      "comment" : "First step reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satte Einwohner ziehen ein und zahlen Steuern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fed residents move in and pay tax."
+          }
+        }
+      }
+    },
+    "firstSteps.market" : {
+      "comment" : "First step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkaufe Überschuss am Markt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sell surplus at the market"
+          }
+        }
+      }
+    },
+    "firstSteps.market.why.click" : {
+      "comment" : "First step reason, Mac.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke aufs Rathaus, wenn das Geld knapp wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the town center when cash runs low."
+          }
+        }
+      }
+    },
+    "firstSteps.market.why.select" : {
+      "comment" : "First step reason, Apple TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle das Rathaus, wenn das Geld knapp wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the town center when cash runs low."
+          }
+        }
+      }
+    },
+    "firstSteps.market.why.tap" : {
+      "comment" : "First step reason, touch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe aufs Rathaus, wenn das Geld knapp wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the town center when cash runs low."
           }
         }
       }
@@ -1915,6 +2491,24 @@
         }
       }
     },
+    "firstSteps.noFarm" : {
+      "comment" : "Warning while placing a house.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Hof: Einwohner brauchen Nahrung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No farm yet: residents need food"
+          }
+        }
+      }
+    },
     "firstSteps.perCollection" : {
       "comment" : "Explains the ledger's period.",
       "extractionState" : "manual",
@@ -1929,6 +2523,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Per collection, every 50 ticks."
+          }
+        }
+      }
+    },
+    "firstSteps.planks" : {
+      "comment" : "First step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stelle Bretter her: Holzfäller und Sägewerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make planks: a lumberjack and a sawmill"
+          }
+        }
+      }
+    },
+    "firstSteps.planks.why" : {
+      "comment" : "First step reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Haus braucht 4 Bretter. Der Markt verkauft sie auch."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A house needs 4 planks. The market sells them too."
           }
         }
       }
@@ -1969,6 +2599,42 @@
         }
       }
     },
+    "firstSteps.tax" : {
+      "comment" : "First step.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimm mehr Steuern ein, als der Unterhalt kostet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earn more tax than upkeep"
+          }
+        }
+      }
+    },
+    "firstSteps.tax.why" : {
+      "comment" : "First step reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Überschuss oben bestimmt deine Stadtkasse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The net above decides your treasury."
+          }
+        }
+      }
+    },
     "firstSteps.title" : {
       "comment" : "First-steps guide heading.",
       "extractionState" : "manual",
@@ -1983,6 +2649,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "First steps"
+          }
+        }
+      }
+    },
+    "firstSteps.upkeep" : {
+      "comment" : "Upkeep while placing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhalt %@ je Steuereinzug"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upkeep %@ per collection"
           }
         }
       }
@@ -2077,6 +2761,24 @@
         }
       }
     },
+    "hud.hideMinimap" : {
+      "comment" : "Minimap toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übersichtskarte ausblenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Minimap"
+          }
+        }
+      }
+    },
     "hud.island" : {
       "comment" : "Fallback island name.",
       "extractionState" : "manual",
@@ -2091,6 +2793,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Island"
+          }
+        }
+      }
+    },
+    "hud.money" : {
+      "comment" : "Status pill label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Money"
           }
         }
       }
@@ -2127,6 +2847,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pop."
+          }
+        }
+      }
+    },
+    "hud.populationValue" : {
+      "comment" : "Population in the status pill.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einw. %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pop. %lld"
+          }
+        }
+      }
+    },
+    "hud.rivalIsland" : {
+      "comment" : "A rival's island name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Nachbar)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (rival)"
+          }
+        }
+      }
+    },
+    "hud.showMinimap" : {
+      "comment" : "Minimap toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übersichtskarte zeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Minimap"
           }
         }
       }
@@ -3481,6 +4255,24 @@
         }
       }
     },
+    "manifest.buy" : {
+      "comment" : "Ship action at a rival port.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaufen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buy"
+          }
+        }
+      }
+    },
     "manifest.empty" : {
       "comment" : "Empty stop manifest.",
       "extractionState" : "manual",
@@ -3513,6 +4305,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Good"
+          }
+        }
+      }
+    },
+    "manifest.load" : {
+      "comment" : "Ship action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load"
+          }
+        }
+      }
+    },
+    "manifest.noOffer" : {
+      "comment" : "A good the rival doesn't trade.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein Angebot"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no offer"
+          }
+        }
+      }
+    },
+    "manifest.sell" : {
+      "comment" : "Ship action at a rival port.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkaufen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sell"
+          }
+        }
+      }
+    },
+    "manifest.unload" : {
+      "comment" : "Ship action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entladen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unload"
           }
         }
       }
@@ -3679,6 +4543,24 @@
         }
       }
     },
+    "market.buyQuote" : {
+      "comment" : "Price and amount left this season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kauf $%1$lld (%2$lld übrig)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "buy $%1$lld (%2$lld left)"
+          }
+        }
+      }
+    },
     "market.buys" : {
       "comment" : "What the market buys.",
       "extractionState" : "manual",
@@ -3697,6 +4579,42 @@
         }
       }
     },
+    "market.hideOtherGoods" : {
+      "comment" : "Collapses the other goods.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Waren ausblenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide other goods"
+          }
+        }
+      }
+    },
+    "market.otherGoods" : {
+      "comment" : "Expands the other goods.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Waren (%lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other goods (%lld)"
+          }
+        }
+      }
+    },
     "market.sellQuantity" : {
       "comment" : "Market trade button; %lld is the quantity.",
       "extractionState" : "manual",
@@ -3711,6 +4629,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sell %lld"
+          }
+        }
+      }
+    },
+    "market.sellQuote" : {
+      "comment" : "Price and amount left this season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkauf $%1$lld (%2$lld übrig)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sell $%1$lld (%2$lld left)"
           }
         }
       }
@@ -3765,6 +4701,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minimap"
+          }
+        }
+      }
+    },
+    "money.minus" : {
+      "comment" : "Spoken negative money.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "minus %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "minus %@"
           }
         }
       }
@@ -3963,6 +4917,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seasonal events"
+          }
+        }
+      }
+    },
+    "newGame.seasonalEventsHint" : {
+      "comment" : "Explains seasonal events.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feuer, Fäule und Fieber, jeweils eine Jahreszeit vorher angekündigt, und ein Fest, wenn die Stadt danach verlangt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire, blight and fever, each warned a season ahead, and a festival when the town asks for one."
           }
         }
       }
@@ -4237,6 +5209,60 @@
         }
       }
     },
+    "orders.chip" : {
+      "comment" : "HUD chip: accepted of allowed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufträge %1$lld/%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orders %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "orders.chip.a11y" : {
+      "comment" : "Spoken HUD chip.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufträge %1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orders %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "orders.chip.offerWaits" : {
+      "comment" : "Appended when an offer waits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ein Angebot wartet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", an offer waits"
+          }
+        }
+      }
+    },
     "orders.close" : {
       "comment" : "Accessibility label.",
       "extractionState" : "manual",
@@ -4251,6 +5277,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Close orders"
+          }
+        }
+      }
+    },
+    "orders.deadline" : {
+      "comment" : "%@ is a season and year.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bis %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "by %@"
           }
         }
       }
@@ -4273,6 +5317,42 @@
         }
       }
     },
+    "orders.delivered" : {
+      "comment" : "Delivered and ordered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld geliefert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivered %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "orders.deliveredByShip" : {
+      "comment" : "Delivered and ordered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld per Schiff geliefert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivered %1$lld of %2$lld by ship"
+          }
+        }
+      }
+    },
     "orders.empty" : {
       "comment" : "Empty orders board.",
       "extractionState" : "manual",
@@ -4287,6 +5367,240 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No orders yet. The crown sends one a year from the second year; neighbours ask when they are short."
+          }
+        }
+      }
+    },
+    "orders.favourGain" : {
+      "comment" : "Favour an order earns.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld Gunst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld favour"
+          }
+        }
+      }
+    },
+    "orders.festivalReward" : {
+      "comment" : "A festival order's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Festival"
+          }
+        }
+      }
+    },
+    "orders.inStores" : {
+      "comment" : "Stored and ordered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Lager %1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In stores %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "orders.issuer.crown" : {
+      "comment" : "The crown as an order issuer; the banners' crown keys must agree.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Krone"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Crown"
+          }
+        }
+      }
+    },
+    "orders.issuer.rival" : {
+      "comment" : "A rival with no name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachbar %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rival %@"
+          }
+        }
+      }
+    },
+    "orders.issuer.town" : {
+      "comment" : "The player's town as issuer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Stadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your town"
+          }
+        }
+      }
+    },
+    "orders.nextStep" : {
+      "comment" : "Favour needed and the perk it brings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Stufe bei %1$lld: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next step at %1$lld: %2$@"
+          }
+        }
+      }
+    },
+    "orders.noFavour" : {
+      "comment" : "Festival orders.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Gunst im Spiel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No favour at stake"
+          }
+        }
+      }
+    },
+    "orders.noTownCenter" : {
+      "comment" : "Order can't be sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Rathaus zum Liefern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No town center to send to"
+          }
+        }
+      }
+    },
+    "orders.offerEnds" : {
+      "comment" : "%@ is a season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angebot gilt bis Ende %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offer ends with %@"
+          }
+        }
+      }
+    },
+    "orders.onTheRoad" : {
+      "comment" : "Amount being carried.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", %lld unterwegs"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", %lld on the road"
+          }
+        }
+      }
+    },
+    "orders.perk.prices" : {
+      "comment" : "A rival favour perk.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preise %lld %% besser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prices %lld%% better"
+          }
+        }
+      }
+    },
+    "orders.perk.research" : {
+      "comment" : "A crown favour perk.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forschung kostet %lld %% weniger"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "research costs %lld%% less"
           }
         }
       }
@@ -4323,6 +5637,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Orders"
+          }
+        }
+      }
+    },
+    "orders.tooLate" : {
+      "comment" : "Appended to the stock status.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", zu spät zum Liefern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", too late to send"
           }
         }
       }
@@ -4507,6 +5839,276 @@
         }
       }
     },
+    "placement.alreadyBuilt" : {
+      "comment" : "%@ is the building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur einmal pro Stadt: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only one %@ per city"
+          }
+        }
+      }
+    },
+    "placement.closed" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht in diesem Kapitel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not in this chapter"
+          }
+        }
+      }
+    },
+    "placement.foreignIsland" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insel einer anderen Stadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another town's island"
+          }
+        }
+      }
+    },
+    "placement.locked" : {
+      "comment" : "%@ is the tech.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht Forschung: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs %@ research"
+          }
+        }
+      }
+    },
+    "placement.more" : {
+      "comment" : "An amount still missing of a good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch %1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more %2$@"
+          }
+        }
+      }
+    },
+    "placement.needsLand" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht ein Landfeld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs a land tile"
+          }
+        }
+      }
+    },
+    "placement.needsMore" : {
+      "comment" : "%@ lists the missing materials.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs %@"
+          }
+        }
+      }
+    },
+    "placement.needsTerrain" : {
+      "comment" : "%@ is the terrain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht Untergrund: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs %@ ground"
+          }
+        }
+      }
+    },
+    "placement.needsWater" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muss ans Wasser grenzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Must touch water"
+          }
+        }
+      }
+    },
+    "placement.obsolete" : {
+      "comment" : "%@ is the tech.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzt durch %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replaced by %@"
+          }
+        }
+      }
+    },
+    "placement.occupied" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feld belegt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tile occupied"
+          }
+        }
+      }
+    },
+    "placement.outOfBounds" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Außerhalb der Karte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outside the map"
+          }
+        }
+      }
+    },
+    "placement.rivalIsland" : {
+      "comment" : "%@ is the rival town.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insel von %@ – hier kannst du nicht bauen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s island — you can't build here."
+          }
+        }
+      }
+    },
+    "placement.water" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Wasser kann man nicht bauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't build on water"
+          }
+        }
+      }
+    },
+    "placement.wrongCulture" : {
+      "comment" : "%@ is the culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur für Städte der Kultur %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %@ towns build this"
+          }
+        }
+      }
+    },
     "problem.noMarketInReach" : {
       "comment" : "House problem.",
       "extractionState" : "manual",
@@ -4669,6 +6271,42 @@
         }
       }
     },
+    "research.cost" : {
+      "comment" : "A tech's cost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Wissen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld knowledge"
+          }
+        }
+      }
+    },
+    "research.locked" : {
+      "comment" : "Tech state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked"
+          }
+        }
+      }
+    },
     "research.requires" : {
       "comment" : "%@ lists the techs needed first.",
       "extractionState" : "manual",
@@ -4683,6 +6321,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Requires: %@"
+          }
+        }
+      }
+    },
+    "research.researched" : {
+      "comment" : "Tech state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erforscht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Researched"
           }
         }
       }
@@ -4723,6 +6379,132 @@
         }
       }
     },
+    "rivalMarket.buyingNothing" : {
+      "comment" : "Rival buys nothing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kauft nichts"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buying nothing"
+          }
+        }
+      }
+    },
+    "rivalMarket.buys" : {
+      "comment" : "Good, price, quantity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — $%2$lld — sucht %3$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — $%2$lld — wants %3$lld"
+          }
+        }
+      }
+    },
+    "rivalMarket.nothingForSale" : {
+      "comment" : "Rival sells nothing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts zu verkaufen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing for sale"
+          }
+        }
+      }
+    },
+    "rivalMarket.sells" : {
+      "comment" : "Good, price, quantity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — $%2$lld — %3$lld verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — $%2$lld — %3$lld available"
+          }
+        }
+      }
+    },
+    "routes.active" : {
+      "comment" : "Route state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        }
+      }
+    },
+    "routes.addStops" : {
+      "comment" : "Route drawing hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf Häfen und Wasser, um Halte zu setzen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap ports and water to add stops."
+          }
+        }
+      }
+    },
+    "routes.broken" : {
+      "comment" : "Route state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterbrochen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broken"
+          }
+        }
+      }
+    },
     "routes.commit" : {
       "comment" : "Saves the drawn route.",
       "extractionState" : "manual",
@@ -4737,6 +6519,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit"
+          }
+        }
+      }
+    },
+    "routes.crossesLand" : {
+      "comment" : "Route drawing hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein roter Abschnitt führt über Land. Setze Wasserhalte drumherum."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A red leg crosses land. Add water stops around it."
           }
         }
       }
@@ -4795,6 +6595,42 @@
         }
       }
     },
+    "routes.missingPort" : {
+      "comment" : "A stop whose port is gone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hafen fehlt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing port"
+          }
+        }
+      }
+    },
+    "routes.needsTwoPorts" : {
+      "comment" : "Route drawing hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Route braucht mindestens zwei Häfen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A route needs at least two ports."
+          }
+        }
+      }
+    },
     "routes.newRoute" : {
       "comment" : "Starts drawing a route.",
       "extractionState" : "manual",
@@ -4831,6 +6667,24 @@
         }
       }
     },
+    "routes.noLandStops" : {
+      "comment" : "Route drawing hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schiffe können nicht an Land halten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ships can't stop on land."
+          }
+        }
+      }
+    },
     "routes.pause" : {
       "comment" : "Pauses a route.",
       "extractionState" : "manual",
@@ -4845,6 +6699,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pause"
+          }
+        }
+      }
+    },
+    "routes.paused" : {
+      "comment" : "Route state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angehalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
           }
         }
       }
@@ -4867,6 +6739,114 @@
         }
       }
     },
+    "routes.rivalPort" : {
+      "comment" : "%@ is the rival town.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hafen von %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s port"
+          }
+        }
+      }
+    },
+    "routes.routeNumber" : {
+      "comment" : "A route's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route %lld"
+          }
+        }
+      }
+    },
+    "routes.sea" : {
+      "comment" : "A route stop at sea.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sea"
+          }
+        }
+      }
+    },
+    "routes.showOnMap" : {
+      "comment" : "Route list row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf der Karte zeigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show on map"
+          }
+        }
+      }
+    },
+    "routes.shownOnMap" : {
+      "comment" : "Route list row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf der Karte gezeigt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shown on map"
+          }
+        }
+      }
+    },
+    "routes.stop" : {
+      "comment" : "A route stop with no name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        }
+      }
+    },
     "routes.title" : {
       "comment" : "Ship routes list title and button.",
       "extractionState" : "manual",
@@ -4881,6 +6861,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Routes"
+          }
+        }
+      }
+    },
+    "routes.yourPort" : {
+      "comment" : "The player's port and its tile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Hafen (%1$lld, %2$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your port (%1$lld, %2$lld)"
           }
         }
       }
@@ -4993,6 +6991,24 @@
         }
       }
     },
+    "stats.a11y.goodRow" : {
+      "comment" : "Good and its net per season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, netto %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, net %2$lld"
+          }
+        }
+      }
+    },
     "stats.a11y.inStore" : {
       "comment" : "%@ is the good.",
       "extractionState" : "manual",
@@ -5043,6 +7059,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ made and used per season"
+          }
+        }
+      }
+    },
+    "stats.a11y.rowStopped" : {
+      "comment" : "Appended when producers are stopped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", %lld Betriebe angehalten, Ware staut sich"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", %lld producers stopped, output stuck"
           }
         }
       }
@@ -5263,6 +7297,78 @@
         }
       }
     },
+    "stats.series.bought" : {
+      "comment" : "Chart series name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einkäufe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bought"
+          }
+        }
+      }
+    },
+    "stats.series.tax" : {
+      "comment" : "Chart series name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steuern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tax"
+          }
+        }
+      }
+    },
+    "stats.series.trade" : {
+      "comment" : "Chart series name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trade"
+          }
+        }
+      }
+    },
+    "stats.series.upkeep" : {
+      "comment" : "Chart series name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhalt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upkeep"
+          }
+        }
+      }
+    },
     "stats.stopped" : {
       "comment" : "Chart title: producers stopped because their output had nowhere to go.",
       "extractionState" : "manual",
@@ -5353,6 +7459,150 @@
         }
       }
     },
+    "stats.you" : {
+      "comment" : "The player's town in charts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You"
+          }
+        }
+      }
+    },
+    "terrain.beach" : {
+      "comment" : "Terrain name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "beach"
+          }
+        }
+      }
+    },
+    "terrain.forest" : {
+      "comment" : "Terrain name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wald"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "forest"
+          }
+        }
+      }
+    },
+    "terrain.grass" : {
+      "comment" : "Terrain name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiese"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "grass"
+          }
+        }
+      }
+    },
+    "terrain.mountain" : {
+      "comment" : "Terrain name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mountain"
+          }
+        }
+      }
+    },
+    "terrain.rock" : {
+      "comment" : "Mountain ground for a mine.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fels"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rock"
+          }
+        }
+      }
+    },
+    "terrain.water" : {
+      "comment" : "Terrain name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wasser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "water"
+          }
+        }
+      }
+    },
+    "tileMenu.costs" : {
+      "comment" : "Why a build option is disabled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kostet $%lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Costs $%lld"
+          }
+        }
+      }
+    },
     "title.checkingCloud" : {
       "comment" : "Shown while iCloud is checked.",
       "extractionState" : "manual",
@@ -5367,6 +7617,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Checking iCloud for saves…"
+          }
+        }
+      }
+    },
+    "title.cloudSignIn" : {
+      "comment" : "Apple TV iCloud notice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich bei iCloud an, damit deine Städte erhalten bleiben. Sonst löscht Apple TV womöglich deinen Fortschritt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to iCloud to keep your cities. Without it, Apple TV may delete your progress."
+          }
+        }
+      }
+    },
+    "title.cloudUnreachable" : {
+      "comment" : "iCloud error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch einmal."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud could not be reached. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "title.conflictChanged" : {
+      "comment" : "iCloud conflict changed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während du gewählt hast, kam ein neuerer Spielstand aus iCloud. Wähle noch einmal."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A newer save arrived in iCloud while you were choosing. Choose again."
           }
         }
       }
@@ -5479,6 +7783,24 @@
         }
       }
     },
+    "title.loadFailedTitle" : {
+      "comment" : "Load failure alert title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Spielstand ließ sich nicht laden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This save could not be loaded"
+          }
+        }
+      }
+    },
     "title.newGame" : {
       "comment" : "Opens the new-game dialog.",
       "extractionState" : "manual",
@@ -5493,6 +7815,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Game…"
+          }
+        }
+      }
+    },
+    "tool.cost" : {
+      "comment" : "Good, stored, needed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld im Lager, %3$lld nötig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld in store, %3$lld needed"
+          }
+        }
+      }
+    },
+    "tool.cost.blocked" : {
+      "comment" : "Not enough materials.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Nicht genug"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Not enough"
+          }
+        }
+      }
+    },
+    "tool.cost.waits" : {
+      "comment" : "The building waits for materials.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Es wartet auf den Rest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. It waits for the rest"
+          }
+        }
+      }
+    },
+    "tool.demolish" : {
+      "comment" : "Tool name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abreißen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demolish"
+          }
+        }
+      }
+    },
+    "tool.demolishHint.click" : {
+      "comment" : "Demolish tool hint, Mac and Apple TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke auf ein Gebäude, um es abzureißen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click a building to demolish"
+          }
+        }
+      }
+    },
+    "tool.demolishHint.tap" : {
+      "comment" : "Demolish tool hint, touch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf ein Gebäude, um es abzureißen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a building to demolish"
+          }
+        }
+      }
+    },
+    "tool.dragPlace.click" : {
+      "comment" : "Place hint on Mac; %@ is the building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke oder ziehe, um %@ zu bauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click or drag to place %@"
+          }
+        }
+      }
+    },
+    "tool.dragPlace.tap" : {
+      "comment" : "Place hint on touch; %@ is the building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe oder ziehe, um %@ zu bauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap or drag to place %@"
+          }
+        }
+      }
+    },
+    "tool.inReach.trees" : {
+      "comment" : "Trees at a hut's site.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Bäume in Reichweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld trees in reach"
+          }
+        }
+      }
+    },
+    "tool.inspect" : {
+      "comment" : "Tool name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ansehen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspect"
+          }
+        }
+      }
+    },
+    "tool.placeTV" : {
+      "comment" : "Apple TV place hint; %@ is the building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewegen, dann klicken, um %@ zu bauen. Zurück bricht ab."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move, then click to place %@. Back to cancel."
+          }
+        }
+      }
+    },
+    "tool.positionPlace" : {
+      "comment" : "Place hint on touch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe zum Platzieren, dann auf ✓ zum Bauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to position, then tap ✓ to place"
+          }
+        }
+      }
+    },
+    "tool.roadStart" : {
+      "comment" : "Apple TV road hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke, um mit dem Straßenbau zu beginnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to start painting road"
+          }
+        }
+      }
+    },
+    "tool.roadStop" : {
+      "comment" : "Apple TV road hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke, um den Straßenbau zu beenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to stop painting road"
           }
         }
       }

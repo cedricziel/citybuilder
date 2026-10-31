@@ -41,7 +41,7 @@ extension CityRootView {
         }
         .buttonStyle(.plain)
         .hotkey(KeyEquivalent(MinimapLayout.hotkey))
-        .accessibilityLabel(showsMinimap ? "Hide Minimap" : "Show Minimap")
+        .accessibilityLabel(showsMinimap ? GameText.string("hud.hideMinimap") : GameText.string("hud.showMinimap"))
         .accessibilityIdentifier("hud.minimapToggle")
     }
 

@@ -47,7 +47,7 @@ struct RouteAuthoringOverlay: View {
     @ViewBuilder
     private func stopChip(index: Int, waypoint: Waypoint) -> some View {
         let snapshot = authoring.snapshot
-        let label = snapshot.map { RouteStopLabel.text(for: waypoint, in: $0) } ?? "Stop"
+        let label = snapshot.map { RouteStopLabel.text(for: waypoint, in: $0) } ?? GameText.string("routes.stop")
         if case let .port(id) = waypoint, let snapshot {
             Button {
                 editing = ManifestEditTarget(id: id, title: label, model: ManifestEditorModel(snapshot: snapshot, port: id))

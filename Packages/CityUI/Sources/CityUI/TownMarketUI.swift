@@ -34,8 +34,8 @@ public struct TownMarketSection: Equatable, Sendable {
             let buyable = quote.good.marketTerms.buyLimit > 0
             let sellable = quote.good.marketTerms.sellLimit > 0
             let sides = [
-                buyable ? "buy $\(quote.buyPrice) (\(quote.buyLeft) left)" : nil,
-                sellable ? "sell $\(quote.sellPrice) (\(quote.sellLeft) left)" : nil
+                buyable ? GameText.string("market.buyQuote", quote.buyPrice, quote.buyLeft) : nil,
+                sellable ? GameText.string("market.sellQuote", quote.sellPrice, quote.sellLeft) : nil
             ].compactMap(\.self)
             return Row(
                 good: quote.good,
@@ -100,7 +100,9 @@ struct TownMarketView: View {
                 Button {
                     showsOtherGoods.toggle()
                 } label: {
-                    Text(showsOtherGoods ? "Hide other goods" : "Other goods (\(market.otherRows.count))")
+                    Text(verbatim: showsOtherGoods
+                        ? GameText.string("market.hideOtherGoods")
+                        : GameText.string("market.otherGoods", market.otherRows.count))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.caption.weight(.semibold))

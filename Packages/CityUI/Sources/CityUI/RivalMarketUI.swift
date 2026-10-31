@@ -10,10 +10,10 @@ public struct RivalMarketSection: Equatable, Sendable {
     public let buys: [String]
 
     init(_ rival: RivalSummary) {
-        let sells = rival.sellOffers.map { "\(Self.name($0.good)) — $\($0.price) — \($0.quantity) available" }
-        let buys = rival.buyOffers.map { "\(Self.name($0.good)) — $\($0.price) — wants \($0.quantity)" }
-        self.sells = sells.isEmpty ? ["Nothing for sale"] : sells
-        self.buys = buys.isEmpty ? ["Buying nothing"] : buys
+        let sells = rival.sellOffers.map { GameText.string("rivalMarket.sells", Self.name($0.good), $0.price, $0.quantity) }
+        let buys = rival.buyOffers.map { GameText.string("rivalMarket.buys", Self.name($0.good), $0.price, $0.quantity) }
+        self.sells = sells.isEmpty ? [GameText.string("rivalMarket.nothingForSale")] : sells
+        self.buys = buys.isEmpty ? [GameText.string("rivalMarket.buyingNothing")] : buys
     }
 
     private static func name(_ good: Good) -> String {
@@ -51,10 +51,10 @@ public struct ManifestEditorModel: Sendable {
 
     public func label(for verb: ManifestVerb) -> String {
         switch (verb, rival != nil) {
-        case (.load, false): "Load"
-        case (.unload, false): "Unload"
-        case (.load, true): "Buy"
-        case (.unload, true): "Sell"
+        case (.load, false): GameText.string("manifest.load")
+        case (.unload, false): GameText.string("manifest.unload")
+        case (.load, true): GameText.string("manifest.buy")
+        case (.unload, true): GameText.string("manifest.sell")
         }
     }
 
@@ -66,7 +66,7 @@ public struct ManifestEditorModel: Sendable {
             let quantity = verb == .load
                 ? RivalMarket.sellQuantity(of: good, stock: rival.stock)
                 : RivalMarket.buyQuantity(of: good, stock: rival.stock)
-            guard quantity > 0 else { return ManifestGoodRow(good: good, price: nil, offer: "no offer") }
+            guard quantity > 0 else { return ManifestGoodRow(good: good, price: nil, offer: GameText.string("manifest.noOffer")) }
             return ManifestGoodRow(good: good, price: Self.price(of: good, verb), offer: "\(quantity)")
         }
     }

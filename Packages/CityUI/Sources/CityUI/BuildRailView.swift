@@ -29,13 +29,13 @@ struct BuildRailView: View {
             }
             separator
             item(
-                label: "Road",
+                label: GameText.string("build.road"),
                 art: .building(.road),
                 hotkey: BuildRailModel.roadHotkey,
                 isOn: session.selectedTool == .place(.road)
             ) { arm(.place(.road)) }
             item(
-                label: "Demolish",
+                label: GameText.string("tool.demolish"),
                 art: .symbol("xmark", .red),
                 hotkey: BuildRailModel.demolishHotkey,
                 isOn: session.selectedTool == .demolish

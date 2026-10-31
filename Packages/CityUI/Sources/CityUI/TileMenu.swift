@@ -39,9 +39,9 @@ extension TileMenuItem {
                 return "\(name) — $\(BuildingCatalog.spec(for: kind).cost)"
             }
             return reason.map { "\(name) — \($0)" } ?? name
-        case .demolish: return "Demolish"
+        case .demolish: return GameText.string("tool.demolish")
         case let .demolishPaid(title): return title
-        case .dismiss: return "Cancel"
+        case .dismiss: return GameText.string("common.cancel")
         }
     }
 }
@@ -79,7 +79,7 @@ public struct TileMenuViewModel: Equatable, Sendable {
         }
         let cost = BuildingCatalog.spec(for: kind).cost
         if money < cost {
-            return .build(kind, enabled: false, reason: "Costs $\(cost)")
+            return .build(kind, enabled: false, reason: GameText.string("tileMenu.costs", cost))
         }
         return .build(kind, enabled: true, reason: nil)
     }
