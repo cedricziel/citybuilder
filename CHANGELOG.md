@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.2.11](https://github.com/cedricziel/citybuilder/compare/v0.2.10...v0.2.11) (2026-10-31)
+
+
+### Features
+
+* **audio:** audio settings and credits text through the catalog ([898af5c](https://github.com/cedricziel/citybuilder/commit/898af5cef4ab22a6282dc7a77c72ed5e11395412))
+* **audio:** read the audio settings and credits text from the catalog ([c81b940](https://github.com/cedricziel/citybuilder/commit/c81b94053a5f6fa842d8d6b449e446f8e2e60729))
+* **core:** hand player text over as keys and messages ([3c41ad5](https://github.com/cedricziel/citybuilder/commit/3c41ad54d748019f4be2dcb05797283cfbe5c102))
+* **core:** hand player text over as keys and messages ([69fe9d9](https://github.com/cedricziel/citybuilder/commit/69fe9d9f3ca4943327314b3725cf11acb4fd4716)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **gamedata:** move pack text into a String Catalog ([9414672](https://github.com/cedricziel/citybuilder/commit/9414672d22403c02d509989410aaf0bf146aa0a1))
+* **gamedata:** move pack text into a String Catalog ([e1b920e](https://github.com/cedricziel/citybuilder/commit/e1b920e318c3f2530ddccdea70a9a2397c62fd62)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** banner and event-chip text through the catalog ([ea8330f](https://github.com/cedricziel/citybuilder/commit/ea8330fb771034c2baba8696123b0589ff8006d2))
+* **ui:** chapter, goal and campaign text through the catalog ([a7677db](https://github.com/cedricziel/citybuilder/commit/a7677dbea4e92b02d945fbca4dc843ce5199de3c))
+* **ui:** inspector text through the catalog ([a9697fc](https://github.com/cedricziel/citybuilder/commit/a9697fcb2d44eb493cb0b2bd06497ec3e38a081c))
+* **ui:** move the screens' static text to the String Catalog ([0fab94b](https://github.com/cedricziel/citybuilder/commit/0fab94b50f7a99b8297c6c56536179c05bcedc42))
+* **ui:** move the screens' static text to the String Catalog ([3584dbf](https://github.com/cedricziel/citybuilder/commit/3584dbf110c47b43bc535519ebfca574597e6cf5))
+* **ui:** read banner and event-chip text from the catalog ([14653a6](https://github.com/cedricziel/citybuilder/commit/14653a60a6c32a0e3c0776fa254540270045edcd))
+* **ui:** read chapter, goal and campaign text from the catalog ([47a7fa4](https://github.com/cedricziel/citybuilder/commit/47a7fa45424060250ac9df1212947c93bdf8683d))
+* **ui:** read inspector lines from the catalog ([a9acb0e](https://github.com/cedricziel/citybuilder/commit/a9acb0ed9c0b75cc05f4d9d1acf1328188dcac68))
+* **ui:** read view-model sentences from the catalog ([da4db37](https://github.com/cedricziel/citybuilder/commit/da4db371fdb8c4034f09dde44e58609072006b14))
+* **ui:** route text through a String Catalog with GameText ([afa8236](https://github.com/cedricziel/citybuilder/commit/afa8236c590affd50f416ac274bed500258bcd9b))
+* **ui:** show generated town names in the player's language ([dc4b0d8](https://github.com/cedricziel/citybuilder/commit/dc4b0d8a86b505c12806960a5feb4b121cacb758))
+* **ui:** show generated town names in the player's language ([aabcfbf](https://github.com/cedricziel/citybuilder/commit/aabcfbf253fb53e42ba0f92e5974a50649aea190)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** String Catalog, GameText lookup and l10n-check ([94828ba](https://github.com/cedricziel/citybuilder/commit/94828ba97eeeb0edd1993c796e9970a8e9ee77ef))
+* **ui:** view-model sentences through the catalog ([2fa0738](https://github.com/cedricziel/citybuilder/commit/2fa07386107438757c8422ca946690a73159dbae))
+
+
+### Bug Fixes
+
+* **audio:** word the German mute toggle as Alles stummschalten ([8fb79c2](https://github.com/cedricziel/citybuilder/commit/8fb79c2d4d091ee09ba3dc0c537142c2eee769d2))
+* **gamedata:** never overwrite a catalog the generator could not read ([84c8725](https://github.com/cedricziel/citybuilder/commit/84c87259b513cda1ed7c4ed62d558ca1bfb9ab9a)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **gamedata:** read catalogs with Codable so Linux builds ([38f2ad0](https://github.com/cedricziel/citybuilder/commit/38f2ad0510a56def8aaff9c6922b8aa7b58291f1)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **gamedata:** shorten two German building names to fit the drawer ([cd60ac1](https://github.com/cedricziel/citybuilder/commit/cd60ac14a6b0bc6ca4a4f3d1ff81976c934f28f4)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** fall back to stored chapter text and name the next chapter ([76fa636](https://github.com/cedricziel/citybuilder/commit/76fa6368e197dde8f717431f2865b7deac4e423c)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** fit the orders entry, event chip and touch hint in German ([342e431](https://github.com/cedricziel/citybuilder/commit/342e4311e6f0bb9b255e77fb938e0507b06140e9))
+* **ui:** keep years and tile coordinates ungrouped ([424d3e2](https://github.com/cedricziel/citybuilder/commit/424d3e2eeef9e6e976766104bff641234fa6e49c)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** key standings rows on the rival, not its name ([9376006](https://github.com/cedricziel/citybuilder/commit/9376006660860835bcf0f41ade5a0168c0cd723e)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** make the Apple TV orders entry a round button ([431a052](https://github.com/cedricziel/citybuilder/commit/431a0525228e0216508b09be4bc88c70aee8d353)), closes [#305](https://github.com/cedricziel/citybuilder/issues/305) [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** name the building on the inspector's kind line ([1215e5d](https://github.com/cedricziel/citybuilder/commit/1215e5d47b493d312a8097afc8e6faacd3de84cc)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** read the last HUD button labels from the catalog ([da878a5](https://github.com/cedricziel/citybuilder/commit/da878a5f0f6d5a65634914d0c369aab424f0dbff)), closes [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** read the String Catalog's JSON instead of compiled tables ([3ab5055](https://github.com/cedricziel/citybuilder/commit/3ab5055b1cb9fd4928a983705e2589004f7a57cd))
+* **ui:** say the gallery's German commission ran out ([f910b79](https://github.com/cedricziel/citybuilder/commit/f910b798c04e35bfc68058b781d27bf7eded00a4))
+* **ui:** shorten the touch hint when a reach count follows ([549486b](https://github.com/cedricziel/citybuilder/commit/549486bc24fe296fece3d08ab4b1a4f229717ede)), closes [#366](https://github.com/cedricziel/citybuilder/issues/366) [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** show the event chip's words only where they fit ([300184e](https://github.com/cedricziel/citybuilder/commit/300184e1bfd27a559ae850f19822a3a2ded62e73)), closes [#364](https://github.com/cedricziel/citybuilder/issues/364) [#351](https://github.com/cedricziel/citybuilder/issues/351)
+* **ui:** smooth the German for won chapters and goods landed by ship ([2432769](https://github.com/cedricziel/citybuilder/commit/2432769c40428181a17c6f920f3e6981aa66b3ec))
+* **ui:** stable standings ids and the last catalog bypasses ([1b7c6da](https://github.com/cedricziel/citybuilder/commit/1b7c6da075ed6fd08151945d937666aee200bf4e))
+* **ui:** word the German material shortfall and road hints ([41b450b](https://github.com/cedricziel/citybuilder/commit/41b450b0e6ae4b7d09c5fd8af138d2880219cf4f))
+* **ui:** word two German inspector lines ([63890d8](https://github.com/cedricziel/citybuilder/commit/63890d8ab1ac71061e332e4ee4e9efcbf5381f2d))
+
 ## [0.2.10](https://github.com/cedricziel/citybuilder/compare/v0.2.9...v0.2.10) (2026-10-30)
 
 
