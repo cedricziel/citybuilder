@@ -27,7 +27,7 @@ public enum GameDataCommand {
 
     --check writes nothing and fails when the output directory is not what
             generate would write.
-    --catalog is the pack-text String Catalog; generate keeps its other
+    --catalog is the pack-text String Catalog, required with --data; generate keeps its other
             languages and marks them for review when the English changes.
     --namespace nests every generated type in `enum <name>`, in one file.
     diff    lists changed values, then added and removed items, between two
@@ -51,6 +51,11 @@ public enum GameDataCommand {
         switch command {
         case "generate":
             let checkOnly = arguments.contains("--check")
+            // The default catalog belongs to the default packs: generating
+            // other packs into it would drop its keys and their translations.
+            if arguments.contains("--data"), !arguments.contains("--catalog") {
+                return Outcome(status: 64, error: "gamedata-gen: --data needs --catalog\n" + usage + "\n")
+            }
             arguments.removeAll { $0 == "--check" }
             guard let (positional, values) = options(
                 arguments, allowed: ["--data", "--out", "--catalog", "--namespace"],
