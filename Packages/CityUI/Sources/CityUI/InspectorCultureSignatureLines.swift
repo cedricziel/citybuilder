@@ -11,7 +11,7 @@ public struct ExportPicker: Equatable, Sendable {
 
     /// "None" or the good's display name.
     public static func title(of option: Good?) -> String {
-        option.map { GoodsCatalog.spec(for: $0).displayName } ?? "None"
+        option.map { GoodsCatalog.spec(for: $0).displayName } ?? GameText.string("common.none")
     }
 }
 
@@ -23,36 +23,45 @@ extension InspectorViewModel {
         in snapshot: WorldSnapshot
     ) -> [String] {
         guard let luxury = building.kind.fuel?.good else { return [] }
-        let served = building.isServed ? "Serving \(goodName(luxury)): " : ""
+        let luxuryName = goodName(luxury)
         let rate = building.servedRate
         switch building.kind {
         case .meadHall:
-            let count = count(coverage.relievedBuildings, "building")
-            return [building.isServed ? "\(served)no upkeep for \(count)" : "Halves upkeep of \(count)"]
+            let count = GameText.string("count.building", coverage.relievedBuildings)
+            return [building.isServed
+                ? GameText.string("inspector.meadHall.served", luxuryName, count)
+                : GameText.string("inspector.meadHall", count)]
         case .forum:
-            return ["\(served)+\(rate) tax per resident in \(count(coverage.taxedHouses, "house"))"]
+            let houses = GameText.string("count.house", coverage.taxedHouses)
+            return [building.isServed
+                ? GameText.string("inspector.forum.served", luxuryName, rate, houses)
+                : GameText.string("inspector.forum", rate, houses)]
         case .templeGarden:
             let residents = World.signatureTargets(of: building, among: snapshot.buildings.values)
                 .compactMap { snapshot.housePopulations[$0.target.id] }
                 .filter(\.contemplates)
                 .reduce(0) { $0 + Int($1.population) }
-            return ["\(served)+\(rate) knowledge per resident from \(count(residents, "resident"))"]
+            let from = GameText.string("count.resident", residents)
+            return [building.isServed
+                ? GameText.string("inspector.temple.served", luxuryName, rate, from)
+                : GameText.string("inspector.temple", rate, from)]
         case .caravanserai:
-            return caravanLines(for: building, luxury: luxury, tick: snapshot.tickCount)
+            return caravanLines(for: building, luxuryName: luxuryName, tick: snapshot.tickCount)
         default:
             return []
         }
     }
 
-    private static func caravanLines(for building: Building, luxury: Good, tick: UInt64) -> [String] {
+    private static func caravanLines(for building: Building, luxuryName: String, tick: UInt64) -> [String] {
         let interval = World.caravanIntervalTicks
-        var lines = ["Next caravan in \(clock(ticks: UInt32(interval - tick % interval)))"]
+        var lines = [GameText.string("inspector.nextCaravan", clock(ticks: UInt32(interval - tick % interval)))]
         if let sale = building.lastCaravan {
             let goods = Good.allCases.compactMap { good in sale.goods[good].map { "\($0) \(goodName(good))" } }
-            lines.append("Last caravan: \(goods.joined(separator: " and ")) for $\(sale.revenue)")
+            lines.append(GameText.string("inspector.lastCaravan", goods.joined(separator: GameText.string("list.and")), sale.revenue))
         }
-        let luxuryName = goodName(luxury)
-        lines.append(building.isServed ? "Serving \(luxuryName)" : "No \(luxuryName)")
+        lines.append(building.isServed
+            ? GameText.string("inspector.serving", luxuryName)
+            : GameText.string("inspector.noLuxury", luxuryName))
         return lines
     }
 
@@ -63,6 +72,6 @@ extension InspectorViewModel {
     }
 
     static func goodName(_ good: Good) -> String {
-        GoodsCatalog.spec(for: good).displayName.lowercased()
+        GameText.inSentence(GoodsCatalog.spec(for: good).displayName)
     }
 }

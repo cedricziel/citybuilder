@@ -17,41 +17,30 @@ public enum ToolStripText {
     }
 
     private static func baseHint(for tool: BuildTool, idiom: HUDIdiom, paintingRoad: Bool, inReach: Int?) -> String {
-        let name = tool.displayName.lowercased()
+        let name = GameText.inSentence(tool.displayName)
         // The Apple TV remote's touch surface clicks, so its hints say so.
-        let press = idiom == .tv ? "Click" : verb(for: idiom)
+        let touch = idiom == .phone || idiom == .pad
         let base = switch (tool, idiom) {
         case (.inspect, _): ""
-        case (.demolish, _): "\(press) a building to demolish"
-        case (.place(.road), .tv): paintingRoad ? "Click to stop painting road" : "Click to start painting road"
-        case (.place, .tv): "Move, then click to place \(name). Back to cancel."
-        case (.place(.road), _): "\(press) or drag to place \(name)"
+        case (.demolish, _): if touch { GameText.string("tool.demolishHint.tap") } else { GameText.string("tool.demolishHint.click") }
+        case (.place(.road), .tv): if paintingRoad { GameText.string("tool.roadStop") } else { GameText.string("tool.roadStart") }
+        case (.place, .tv): GameText.string("tool.placeTV", name)
         // Touch positions a building first: a tap shows the nudge arrows, and the check places it.
-        case (.place, .phone), (.place, .pad): "Tap to position, then tap ✓ to place"
-        case (.place, _): "\(press) or drag to place \(name)"
+        case (.place(.road), .phone), (.place(.road), .pad): GameText.string("tool.dragPlace.tap", name)
+        case (.place, .phone), (.place, .pad): GameText.string("tool.positionPlace")
+        case (.place, _): GameText.string("tool.dragPlace.click", name)
         }
-        guard case let .place(kind) = tool, let noun = inReachNoun(kind), let inReach else { return base }
-        let count = "\(inReach) \(noun) in reach"
+        guard case let .place(kind) = tool, let inReach, let count = inReachText(kind, count: inReach) else { return base }
         // The Apple TV instruction ends in a sentence, so the count leads.
         return idiom == .tv ? "\(count) · \(base)" : "\(base) · \(count)"
     }
 
-    /// The platform's word for activating something: "Tap", "Click" or
-    /// "Select".
-    static func verb(for idiom: HUDIdiom) -> String {
-        switch idiom {
-        case .phone, .pad: "Tap"
-        case .mac: "Click"
-        case .tv: "Select"
-        }
-    }
-
-    /// What a building of `kind` counts in its catchment, nil when it
-    /// counts nothing.
-    static func inReachNoun(_ kind: BuildingKind) -> String? {
+    /// "18 trees in reach" for a hut's site, "12 open grass in reach" for a forester's.
+    /// The hut's key has no singular, unlike `aoe.trees`, because the strip has always said "1 trees".
+    static func inReachText(_ kind: BuildingKind, count: Int) -> String? {
         switch kind {
-        case .lumberjackHut: "trees"
-        case .forester: "open grass"
+        case .lumberjackHut: GameText.string("tool.inReach.trees", count)
+        case .forester: GameText.string("aoe.grass", count)
         default: nil
         }
     }
@@ -83,7 +72,7 @@ public extension GameSession {
     /// go (`add-forestry` D5).
     func armedInReachCount(idiom: HUDIdiom) -> Int? {
         guard let (kind, anchor) = armedCandidateSite(idiom: idiom),
-              ToolStripText.inReachNoun(kind) != nil, isValidPlacement(kind, at: anchor)
+              ToolStripText.inReachText(kind, count: 0) != nil, isValidPlacement(kind, at: anchor)
         else { return nil }
         return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
     }
@@ -186,11 +175,11 @@ struct ToolStripView: View {
     }
 
     static func label(for good: Good, cost: GhostCost) -> String {
-        let base = "\(GoodsCatalog.spec(for: good).displayName): \(cost.have) in store, \(cost.need) needed"
+        let base = GameText.string("tool.cost", GoodsCatalog.spec(for: good).displayName, cost.have, cost.need)
         return switch cost.status {
         case .ok: base
-        case .queueable: "\(base). It waits for the rest"
-        case .blocked: "\(base). Not enough"
+        case .queueable: GameText.string("tool.cost.waits", base)
+        case .blocked: GameText.string("tool.cost.blocked", base)
         }
     }
 }

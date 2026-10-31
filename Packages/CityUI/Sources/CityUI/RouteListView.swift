@@ -63,7 +63,7 @@ private struct RouteRowView: View {
                     }
                     Spacer()
                     Image(systemName: isSelected ? "eye.fill" : "eye")
-                        .accessibilityLabel(isSelected ? "Shown on map" : "Show on map")
+                        .accessibilityLabel(isSelected ? GameText.string("routes.shownOnMap") : GameText.string("routes.showOnMap"))
                 }
                 .contentShape(Rectangle())
             }

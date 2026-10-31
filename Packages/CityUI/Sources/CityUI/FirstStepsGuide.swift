@@ -20,8 +20,8 @@ struct FirstStepsLedger: Equatable {
 
     /// "minus 24 dollars", for VoiceOver.
     static func spokenMoney(_ amount: Int64) -> String {
-        let dollars = "\(abs(amount)) \(abs(amount) == 1 ? "dollar" : "dollars")"
-        return amount < 0 ? "minus \(dollars)" : dollars
+        let dollars = GameText.string("count.dollar", abs(amount))
+        return amount < 0 ? GameText.string("money.minus", dollars) : dollars
     }
 }
 
@@ -76,12 +76,19 @@ struct FirstStepsGuide: Equatable {
 
     private static func text(_ step: Step, idiom: HUDIdiom) -> (String, String) {
         switch step {
-        case .farm: ("Build a farm", "Farms feed residents. Empty houses pay nothing.")
-        case .planks: ("Make planks: a lumberjack and a sawmill", "A house needs 4 planks. The market sells them too.")
-        case .houses: ("Build \(houses) houses on a road", "Fed residents move in and pay tax.")
-        case .tax: ("Earn more tax than upkeep", "The net above decides your treasury.")
-        case .market:
-            ("Sell surplus at the market", "\(ToolStripText.verb(for: idiom)) the town center when cash runs low.")
+        case .farm: (GameText.string("firstSteps.farm"), GameText.string("firstSteps.farm.why"))
+        case .planks: (GameText.string("firstSteps.planks"), GameText.string("firstSteps.planks.why"))
+        case .houses: (GameText.string("firstSteps.houses", houses), GameText.string("firstSteps.houses.why"))
+        case .tax: (GameText.string("firstSteps.tax"), GameText.string("firstSteps.tax.why"))
+        case .market: (GameText.string("firstSteps.market"), marketReason(idiom))
+        }
+    }
+
+    private static func marketReason(_ idiom: HUDIdiom) -> String {
+        switch idiom {
+        case .phone, .pad: GameText.string("firstSteps.market.why.tap")
+        case .mac: GameText.string("firstSteps.market.why.click")
+        case .tv: GameText.string("firstSteps.market.why.select")
         }
     }
 
@@ -142,8 +149,8 @@ extension GameSession {
         let hasFarm = world.buildings.values.contains {
             $0.owner == .player && $0.kind == .farm && $0.state == .operational
         }
-        if kind == .house, !hasFarm { return "No farm yet: residents need food" }
+        if kind == .house, !hasFarm { return GameText.string("firstSteps.noFarm") }
         let upkeep = world.upkeepPerCollection(of: kind, at: armedCandidateSite(idiom: idiom)?.anchor)
-        return upkeep > 0 ? "Upkeep \(FirstStepsLedger.money(upkeep)) per collection" : nil
+        return upkeep > 0 ? GameText.string("firstSteps.upkeep", FirstStepsLedger.money(upkeep)) : nil
     }
 }

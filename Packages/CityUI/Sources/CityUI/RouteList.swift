@@ -107,17 +107,17 @@ public struct RouteListRow: Identifiable, Hashable, Sendable {
 
     init(route: Route, position: Int, ships: Int, snapshot: WorldSnapshot) {
         id = route.id
-        title = "Route \(position)"
+        title = GameText.string("routes.routeNumber", position)
         stops = route.waypoints
             .filter { if case .port = $0 { true } else { false } }
             .map { RouteStopLabel.text(for: $0, in: snapshot) }
             .joined(separator: " → ")
         let state = switch route.state {
-        case .active: "Active"
-        case .paused: "Paused"
-        case .broken: "Broken"
+        case .active: GameText.string("routes.active")
+        case .paused: GameText.string("routes.paused")
+        case .broken: GameText.string("routes.broken")
         }
-        status = "\(state) · \(ships) \(ships == 1 ? "ship" : "ships")"
+        status = "\(state) · \(GameText.string("count.ship", ships))"
         isPaused = route.state == .paused
     }
 }
@@ -126,11 +126,11 @@ public struct RouteListRow: Identifiable, Hashable, Sendable {
 public enum RouteStopLabel {
     /// "Your port (3, 4)", "<rival>'s port" or "Sea".
     public static func text(for waypoint: Waypoint, in snapshot: WorldSnapshot) -> String {
-        guard case let .port(id) = waypoint else { return "Sea" }
-        guard let port = snapshot.buildings[id] else { return "Missing port" }
+        guard case let .port(id) = waypoint else { return GameText.string("routes.sea") }
+        guard let port = snapshot.buildings[id] else { return GameText.string("routes.missingPort") }
         if let rival = port.owner.rivalID.flatMap(snapshot.rival) {
-            return "\(rival.name)'s port"
+            return GameText.string("routes.rivalPort", rival.name)
         }
-        return "Your port (\(port.anchor.x), \(port.anchor.y))"
+        return GameText.string("routes.yourPort", port.anchor.x, port.anchor.y)
     }
 }

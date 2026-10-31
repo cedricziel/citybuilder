@@ -277,7 +277,7 @@ struct InspectorCalloutView<Actions: View>: View {
     /// screen.
     private func card(maxHeight: CGFloat) -> some View {
         let keyLines = viewModel.keyLines
-        let rest = viewModel.bullets.filter { !keyLines.contains($0) && !$0.hasPrefix("Kind:") }
+        let rest = viewModel.bullets.filter { !keyLines.contains($0) && !$0.hasPrefix(InspectorViewModel.marker("inspector.kind")) }
         let room = max(0, maxHeight - (size.height - scrollHeight))
         return VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
             header(keyLines)
@@ -318,7 +318,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 residentsMeter(fill)
             }
             ForEach(keyLines, id: \.self) { line in
-                if let problem = viewModel.problem, line.hasPrefix("Problem:") {
+                if let problem = viewModel.problem, line.hasPrefix(InspectorViewModel.marker("inspector.problem")) {
                     Label(problem, systemImage: "exclamationmark.triangle.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.orange)

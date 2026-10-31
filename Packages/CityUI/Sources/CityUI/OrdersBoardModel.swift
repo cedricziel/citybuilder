@@ -61,9 +61,10 @@ public struct OrdersBoardModel: Equatable {
 
     static func name(of issuer: OrderIssuer, in world: World) -> String {
         switch issuer {
-        case .crown: "The Crown"
-        case let .rival(id): world.rival(id)?.name ?? "Rival \(id)"
-        case .town: "Your town"
+        // The order banners' crown sentences (banner.order.*.crown) name it the same way.
+        case .crown: GameText.string("orders.issuer.crown")
+        case let .rival(id): world.rival(id)?.name ?? GameText.string("orders.issuer.rival", "\(id)")
+        case .town: GameText.string("orders.issuer.town")
         }
     }
 
@@ -76,7 +77,7 @@ public struct OrdersBoardModel: Equatable {
 
     /// "by Spring 1203": the date of the season the window ends in.
     static func deadlineText(_ order: Order, in world: World) -> String {
-        "by " + world.calendar.date(atTick: order.deadlineTick &- 1).displayText
+        GameText.string("orders.deadline", world.calendar.date(atTick: order.deadlineTick &- 1).displayText)
     }
 
     private static func card(_ order: Order, in world: World, locked: Bool, accepted: Int, locale: Locale) -> Card {
@@ -90,20 +91,20 @@ public struct OrdersBoardModel: Equatable {
         var progress = Double(order.delivered + inTransit) / Double(max(order.quantity, 1))
         var status = ""
         if !isAccepted {
-            let ends = world.calendar.date(atTick: order.offerEndsTick &- 1).season.displayName.lowercased()
-            status = "Offer ends with \(ends)"
+            let ends = GameText.inSentence(world.calendar.date(atTick: order.offerEndsTick &- 1).season.displayName)
+            status = GameText.string("orders.offerEnds", ends)
         } else if byShip {
-            status = "Delivered \(order.delivered) of \(order.quantity) by ship"
+            status = GameText.string("orders.deliveredByShip", order.delivered, order.quantity)
         } else if order.delivered > 0 || inTransit > 0 {
-            status = "Delivered \(order.delivered) of \(order.quantity)"
-            if inTransit > 0 { status += ", \(inTransit) on the road" }
+            status = GameText.string("orders.delivered", order.delivered, order.quantity)
+            if inTransit > 0 { status += GameText.string("orders.onTheRoad", inTransit) }
         } else if case .unavailable(.noRoad) = dispatch {
-            status = "No town center to send to"
+            status = GameText.string("orders.noTownCenter")
         } else {
             let stored = world.orderAvailable(for: order.id)
-            status = "In stores \(stored) of \(order.quantity)"
+            status = GameText.string("orders.inStores", stored, order.quantity)
             progress = Double(stored) / Double(max(order.quantity, 1))
-            if case .unavailable(.late) = dispatch { status += ", too late to send" }
+            if case .unavailable(.late) = dispatch { status += GameText.string("orders.tooLate") }
         }
         return Card(
             id: order.id,
@@ -114,8 +115,8 @@ public struct OrdersBoardModel: Equatable {
             goodName: GoodsCatalog.spec(for: order.good).displayName,
             quantity: order.quantity,
             deadline: deadlineText(order, in: world),
-            reward: isFestival ? "Festival" : HUDViewModel.formatMoney(order.reward, locale: locale),
-            favour: isFestival ? "No favour at stake" : "+\(order.favourGain) favour",
+            reward: isFestival ? GameText.string("orders.festivalReward") : HUDViewModel.formatMoney(order.reward, locale: locale),
+            favour: isFestival ? GameText.string("orders.noFavour") : GameText.string("orders.favourGain", order.favourGain),
             isAccepted: isAccepted,
             byShip: byShip,
             isFestival: isFestival,
@@ -129,14 +130,14 @@ public struct OrdersBoardModel: Equatable {
 
     private static func favourRows(in world: World) -> [FavourRow] {
         let crown = favourRow(
-            id: "crown", name: "The Crown", colourHex: crownColourHex, value: world.orders.favour.crown,
-            perks: OrderRules.crownResearchDiscountPercent.map { "research costs \($0)% less" }
+            id: "crown", name: GameText.string("orders.issuer.crown"), colourHex: crownColourHex, value: world.orders.favour.crown,
+            perks: OrderRules.crownResearchDiscountPercent.map { GameText.string("orders.perk.research", $0) }
         )
         let rivals = world.rivals.map { rival in
             favourRow(
                 id: "rival-\(rival.id)", name: rival.name, colourHex: rival.colour.hex,
                 value: world.orders.favour.value(for: .rival(rival.id)),
-                perks: OrderRules.rivalPriceBonusPercent.map { "prices \($0)% better" }
+                perks: OrderRules.rivalPriceBonusPercent.map { GameText.string("orders.perk.prices", $0) }
             )
         }
         return [crown] + rivals
@@ -146,7 +147,7 @@ public struct OrdersBoardModel: Equatable {
     private static func favourRow(id: String, name: String, colourHex: String, value: Int, perks: [String]) -> FavourRow {
         let step = OrderRules.step(of: value)
         let perk = step == 0
-            ? "Next step at \(OrderRules.stepThresholds[0]): \(perks[1])"
+            ? GameText.string("orders.nextStep", OrderRules.stepThresholds[0], perks[1])
             : perks[step].prefix(1).uppercased() + perks[step].dropFirst()
         return FavourRow(id: id, name: name, colourHex: colourHex, value: value, step: step, perk: perk)
     }
@@ -167,11 +168,11 @@ public struct OrdersChipModel: Equatable {
 
     /// "Orders 1/2".
     public var label: String {
-        "Orders \(accepted)/\(OrderRules.maxAccepted)"
+        GameText.string("orders.chip", accepted, OrderRules.maxAccepted)
     }
 
     public var accessibilityLabel: String {
-        label.replacingOccurrences(of: "/", with: " of ") + (hasOffer ? ", an offer waits" : "")
+        GameText.string("orders.chip.a11y", accepted, OrderRules.maxAccepted) + (hasOffer ? GameText.string("orders.chip.offerWaits") : "")
     }
 }
 

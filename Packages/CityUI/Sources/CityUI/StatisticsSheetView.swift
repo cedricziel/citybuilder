@@ -163,9 +163,9 @@ struct StatisticsGoodRowView: View {
     let isSelected: Bool
 
     private var spokenLabel: String {
-        var label = "\(row.name), net \(row.net)"
+        var label = GameText.string("stats.a11y.goodRow", row.name, row.net)
         if row.stoppedNow > 0 {
-            label += ", \(row.stoppedNow) producers stopped, output stuck"
+            label += GameText.string("stats.a11y.rowStopped", row.stoppedNow)
         }
         return label
     }

@@ -173,9 +173,9 @@ public final class RouteAuthoringViewModel {
     /// mode.
     public var message: String {
         switch commitRejectionReason {
-        case .fewerThanTwoPorts: return "A route needs at least two ports."
-        case .landCrossingSegment: return "A red leg crosses land. Add water stops around it."
-        case nil: return lastTapWasLand ? "Ships can't stop on land." : "Tap ports and water to add stops."
+        case .fewerThanTwoPorts: return GameText.string("routes.needsTwoPorts")
+        case .landCrossingSegment: return GameText.string("routes.crossesLand")
+        case nil: return lastTapWasLand ? GameText.string("routes.noLandStops") : GameText.string("routes.addStops")
         }
     }
 

@@ -30,9 +30,9 @@ public enum BuildCategory: String, CaseIterable, Hashable, Sendable {
 
     public var label: String {
         switch self {
-        case .town: "Town"
-        case .gather: "Gather"
-        case .craft: "Craft"
+        case .town: GameText.string("build.category.town")
+        case .gather: GameText.string("build.category.gather")
+        case .craft: GameText.string("build.category.craft")
         }
     }
 

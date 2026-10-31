@@ -46,23 +46,23 @@ public struct AudioSettingsView: View {
     public var body: some View {
         Form {
             Section {
-                Toggle("Mute all audio", isOn: $isMuted)
+                Toggle(GameText.string("audio.muteAll"), isOn: $isMuted)
                     .onChange(of: isMuted) { _, newValue in
                         settings.isMuted = newValue
                     }
             }
-            Section("Volume") {
-                valueControl("Music", value: $musicVolume, range: 0 ... 1, step: 0.1, format: .percent)
+            Section(GameText.string("audio.volume")) {
+                valueControl(GameText.string("audio.music"), value: $musicVolume, range: 0 ... 1, step: 0.1, format: .percent)
                     .onChange(of: musicVolume) { _, newValue in
                         settings.musicVolume = newValue
                     }
-                valueControl("SFX", value: $sfxVolume, range: 0 ... 1, step: 0.1, format: .percent)
+                valueControl(GameText.string("audio.sfx"), value: $sfxVolume, range: 0 ... 1, step: 0.1, format: .percent)
                     .onChange(of: sfxVolume) { _, newValue in
                         settings.sfxVolume = newValue
                     }
             }
-            Section("Spatial audio") {
-                Toggle("Spatial audio", isOn: $spatialEnabled)
+            Section(GameText.string("audio.spatial")) {
+                Toggle(GameText.string("audio.spatial"), isOn: $spatialEnabled)
                     .onChange(of: spatialEnabled) { _, newValue in
                         settings.spatialAudioEnabled = newValue
                         onSpatialEnabledChange?(newValue)
@@ -71,7 +71,7 @@ public struct AudioSettingsView: View {
                 spatialDistanceControls
                     .disabled(!spatialEnabled)
                 #else
-                DisclosureGroup("Advanced", isExpanded: $advancedExpanded) {
+                DisclosureGroup(GameText.string("audio.advanced"), isExpanded: $advancedExpanded) {
                     spatialDistanceControls
                 }
                 .disabled(!spatialEnabled)
@@ -82,12 +82,12 @@ public struct AudioSettingsView: View {
 
     @ViewBuilder
     private var spatialDistanceControls: some View {
-        valueControl("Reference distance", value: $spatialReference, range: 1 ... 16, step: 1, format: .integer)
+        valueControl(GameText.string("audio.referenceDistance"), value: $spatialReference, range: 1 ... 16, step: 1, format: .integer)
             .onChange(of: spatialReference) { _, newValue in
                 settings.spatialReferenceDistance = newValue
                 onSpatialDistancesChange?(newValue, spatialMax)
             }
-        valueControl("Max distance", value: $spatialMax, range: 8 ... 64, step: 4, format: .integer)
+        valueControl(GameText.string("audio.maxDistance"), value: $spatialMax, range: 8 ... 64, step: 4, format: .integer)
             .onChange(of: spatialMax) { _, newValue in
                 settings.spatialMaxDistance = newValue
                 onSpatialDistancesChange?(spatialReference, newValue)

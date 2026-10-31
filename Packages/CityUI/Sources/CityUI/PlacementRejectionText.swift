@@ -7,30 +7,43 @@ public enum PlacementRejectionText {
     // swiftlint:disable:next cyclomatic_complexity
     public static func message(for rejection: PlacementRejection) -> String {
         switch rejection {
-        case .outOfBounds: "Outside the map"
-        case .terrainNotBuildable: "Can't build on water"
-        case .tileOccupied: "Tile occupied"
-        case .shoreRequiresLandTile: "Needs a land tile"
-        case .shoreRequiresWaterTile: "Must touch water"
-        case let .needsTerrain(terrain): "Needs \(terrain.rawValue) ground"
-        case let .locked(tech): "Needs \(tech.displayName) research"
-        case let .obsolete(tech): "Replaced by \(tech.displayName)"
-        case let .wrongCulture(culture): "Only \(culture.displayName) towns build this"
-        case let .alreadyBuilt(kind): "Only one \(BuildTool.place(kind).displayName.lowercased()) per city"
-        case .foreignIsland: "Another town's island"
-        case .closed: "Not in this chapter"
+        case .outOfBounds: GameText.string("placement.outOfBounds")
+        case .terrainNotBuildable: GameText.string("placement.water")
+        case .tileOccupied: GameText.string("placement.occupied")
+        case .shoreRequiresLandTile: GameText.string("placement.needsLand")
+        case .shoreRequiresWaterTile: GameText.string("placement.needsWater")
+        case let .needsTerrain(terrain): GameText.string("placement.needsTerrain", terrain.localizedName)
+        case let .locked(tech): GameText.string("placement.locked", tech.displayName)
+        case let .obsolete(tech): GameText.string("placement.obsolete", tech.displayName)
+        case let .wrongCulture(culture): GameText.string("placement.wrongCulture", culture.displayName)
+        case let .alreadyBuilt(kind): GameText.string("placement.alreadyBuilt", GameText.inSentence(BuildTool.place(kind).displayName))
+        case .foreignIsland: GameText.string("placement.foreignIsland")
+        case .closed: GameText.string("placement.closed")
         case let .insufficientMaterials(shortfall):
-            "Needs " + Good.allCases.compactMap { good in
-                shortfall[good].map { "\($0) more \(GoodsCatalog.spec(for: good).displayName.lowercased())" }
-            }.joined(separator: ", ")
+            GameText.string("placement.needsMore", Good.allCases.compactMap { good in
+                shortfall[good].map { GameText.string("placement.more", $0, GameText.inSentence(GoodsCatalog.spec(for: good).displayName)) }
+            }.joined(separator: ", "))
         }
     }
 
     /// Like `message(for:)`, naming the rival whose island it is.
     public static func message(for rejection: PlacementRejection, in world: World) -> String {
         if case let .foreignIsland(.rival(id)) = rejection, let name = world.rival(id)?.name {
-            return "\(name)'s island — you can't build here."
+            return GameText.string("placement.rivalIsland", name)
         }
         return message(for: rejection)
+    }
+}
+
+extension TerrainType {
+    /// The terrain's name inside a sentence.
+    var localizedName: String {
+        switch self {
+        case .grass: GameText.string("terrain.grass")
+        case .forest: GameText.string("terrain.forest")
+        case .beach: GameText.string("terrain.beach")
+        case .water: GameText.string("terrain.water")
+        case .mountain: GameText.string("terrain.mountain")
+        }
     }
 }
