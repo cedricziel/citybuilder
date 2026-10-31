@@ -126,10 +126,10 @@ extension World {
     ) {
         // Spawning carriers moves goods, not buildings, so list the
         // candidate destinations once for every producer.
-        let buffers = goodsBuffers().filter { $0.state == .operational }
+        let buffers = Dictionary(grouping: goodsBuffers().filter { $0.state == .operational }, by: \.owner)
         let candidates = DestinationCandidates(
             buffers: buffers,
-            hubs: buffers.filter { $0.kind.hub != nil },
+            hubs: buffers.mapValues { $0.filter { $0.kind.hub != nil } },
             waitingSites: buildings.values
                 .filter { $0.state == .constructing && $0.constructionState == .waitingForMaterials }
                 .sorted { $0.id.raw < $1.id.raw },
@@ -165,9 +165,11 @@ extension World {
 
     /// Where producers may send output this tick, listed once.
     private struct DestinationCandidates {
-        let buffers: [Building]
+        /// Each owner's goods buffers in entity order: a producer stores
+        /// only with its own owner, even on a shared road network.
+        let buffers: [Owner: [Building]]
         /// The buffers that are market hubs, which house goods try first.
-        let hubs: [Building]
+        let hubs: [Owner: [Building]]
         let waitingSites: [Building]
         let consumers: [Good: [GoodConsumer]]
         let tileToIsland: [TileCoordinate: IslandID]
@@ -310,7 +312,7 @@ extension World {
     private mutating func storageHaul(
         of good: Good, held: Int, from producer: Building, road: TileCoordinate, among candidates: DestinationCandidates
     ) -> Haul? {
-        let buffers = candidates.buffers
+        let buffers = candidates.buffers[producer.owner] ?? []
         let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
         // Batching is for bulk nobody is waiting on: a good houses need, or
         // one a building of the owner is short of, never waits for a load.
@@ -329,7 +331,7 @@ extension World {
         let inbound = candidates.inbound.count(of:to:)
         // House goods gather at the market hubs first. Spec:
         // `warehouses-and-logistics` / Market hubs gather house goods.
-        let hubs = awaitedByHouses(good, owner: producer.owner) ? candidates.hubs : []
+        let hubs = awaitedByHouses(good, owner: producer.owner) ? candidates.hubs[producer.owner] ?? [] : []
         let hubHit = findRoadConnectedBuffer(fromRoad: road, good: good, among: hubs, inbound: inbound)
         let pool = hubHit == nil ? buffers : hubs
         guard var (warehouseId, path) = hubHit ?? findRoadConnectedBuffer(fromRoad: road, good: good, among: buffers, inbound: inbound)
