@@ -85,7 +85,7 @@ custom_rules:
 
   catalog_text_only:
     name: "catalog_text_only"
-    regex: '(\b(Text|Button|Label|Toggle|Picker|Section|LabeledContent|ContentUnavailableView|ProgressView|TextField|CommandMenu|Stepper|DisclosureGroup|Menu|Link|NavigationLink|Tab|GroupBox)|\.(navigationTitle|navigationSubtitle|accessibilityLabel|accessibilityHint|accessibilityValue|confirmationDialog|alert|help|badge))\(\s*"'
+    regex: '(\b(Text|Button|Label|Toggle|Picker|Section|LabeledContent|ContentUnavailableView|ProgressView|TextField|CommandMenu|Stepper|DisclosureGroup|Menu|Link|NavigationLink|Tab|GroupBox)|\.(navigationTitle|navigationSubtitle|accessibilityLabel|accessibilityHint|accessibilityValue|confirmationDialog|alert|help|badge))\(\s*("|[^(),"\n]*\?\??\s*"[A-Za-z])'
     message: >-
       Player-visible text comes from the String Catalog: use Text(l10n:) or
       GameText.string("key"), or Text(verbatim:) for text that is not language;

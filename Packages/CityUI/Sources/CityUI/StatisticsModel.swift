@@ -86,10 +86,16 @@ public struct StatisticsModel: Equatable, Sendable {
         public let residents: Int
         public let age: String
         public let wealth: String
-        public var isPlayer = false
+        /// The rival the row stands for; nil for the player. Names are
+        /// translated text, so they can't tell rows apart.
+        public var rival: RivalID?
 
-        public var id: String {
-            name
+        public var id: RivalID? {
+            rival
+        }
+
+        public var isPlayer: Bool {
+            rival == nil
         }
     }
 
@@ -270,14 +276,13 @@ public struct StatisticsModel: Equatable, Sendable {
         guard let latest = seasons.last else { return [] }
         let you = RivalRow(
             name: GameText.string("stats.you"), colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
-            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale),
-            isPlayer: true
+            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
         )
         let others = latest.rivals.map { rival in
             RivalRow(
                 name: rivalNames[rival.id] ?? "", colourHex: rivalColours[rival.id] ?? RivalColour.playerHex,
                 residents: rival.residents, age: rival.age.displayName,
-                wealth: HUDViewModel.formatMoney(rival.treasury, locale: locale)
+                wealth: HUDViewModel.formatMoney(rival.treasury, locale: locale), rival: rival.id
             )
         }
         return [you] + others

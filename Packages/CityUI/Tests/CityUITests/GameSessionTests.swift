@@ -169,7 +169,7 @@ func sessionTapInspectMode() {
 
     let inspector = session.inspector
     #expect(!inspector.bullets.isEmpty, "tap on a placed building must populate the inspector")
-    #expect(inspector.bullets.contains(where: { $0.contains("house") }))
+    #expect(inspector.bullets.contains(where: { $0.contains("House") }))
 }
 
 @MainActor

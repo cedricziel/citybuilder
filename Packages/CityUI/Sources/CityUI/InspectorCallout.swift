@@ -308,7 +308,7 @@ struct InspectorCalloutView<Actions: View>: View {
     private func header(_ keyLines: [String]) -> some View {
         VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(viewModel.title ?? "Building").font(.headline)
+                Text(viewModel.title ?? GameText.string("inspector.untitled")).font(.headline)
                 Spacer(minLength: 0)
                 if let tier = viewModel.tier {
                     Text(tier).font(.caption).foregroundStyle(.secondary)
@@ -350,11 +350,11 @@ struct InspectorCalloutView<Actions: View>: View {
     /// Details or Less, the actions, and Demolish.
     private var footer: some View {
         HStack(spacing: 8) {
-            Button(isExpanded ? "Less" : "Details") { isExpanded.toggle() }
+            Button(isExpanded ? GameText.string("inspector.less") : GameText.string("inspector.details")) { isExpanded.toggle() }
             Spacer(minLength: 0)
             actions()
             if viewModel.rival == nil {
-                Button(viewModel.demolish?.title ?? "Demolish", role: .destructive, action: session.demolishSelection)
+                Button(viewModel.demolish?.title ?? GameText.string("tool.demolish"), role: .destructive, action: session.demolishSelection)
                     .foregroundStyle(.red)
                     .disabled(session.isGameOver || viewModel.demolish?.isEnabled == false)
             }

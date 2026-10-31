@@ -1,3 +1,4 @@
+import CityCore
 import Testing
 @testable import CityUI
 
@@ -5,6 +6,13 @@ import Testing
 /// callout picks its lines by each template's text before the first
 /// placeholder, so those markers must work in every language.
 struct InspectorTextTests {
+    @Test("the kind line names the building, not its code name")
+    func kindLineNamesTheBuilding() {
+        let building = Building(id: EntityID(raw: 1), kind: .grainFarm, anchor: TileCoordinate(x: 1, y: 1), state: .operational)
+        let lines = InspectorViewModel.basicLines(for: building, buildProgress: "", hasRoad: true)
+        #expect(lines.contains("Kind: Grain Farm"))
+    }
+
     @Test("English markers match the old line prefixes")
     func englishMarkers() {
         let markers = InspectorViewModel.markerKeys.map { InspectorViewModel.marker($0) }
