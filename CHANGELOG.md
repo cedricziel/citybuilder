@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.2.13](https://github.com/cedricziel/citybuilder/compare/v0.2.12...v0.2.13) (2026-10-31)
+
+
+### Features
+
+* **citycore:** refund half the price when a building is demolished ([0cd71fe](https://github.com/cedricziel/citybuilder/commit/0cd71fe68d465737562f0f3477ef02231e3ccc36))
+* **cityui:** name why the placement HUD's checkmark is orange ([ec0a5f9](https://github.com/cedricziel/citybuilder/commit/ec0a5f94784de1aa7e7263200c278def26cf8e58))
+* **events:** make blight bite and buying food answer it ([4ad3d12](https://github.com/cedricziel/citybuilder/commit/4ad3d126b3d6a8f7a5b9ab040f57cbd5fff1db7c))
+* **events:** make blight ruin crops and the market answer it ([c77cb6f](https://github.com/cedricziel/citybuilder/commit/c77cb6fcd79fb423781221153e09514bce94f26d)), closes [#348](https://github.com/cedricziel/citybuilder/issues/348)
+* **ui:** ask before demolishing a standing building ([516b676](https://github.com/cedricziel/citybuilder/commit/516b67642c6d15e89b148fe20d8bf14ad27ca3b0))
+* **ui:** name an active blight or fever in the inspector ([a67a1b0](https://github.com/cedricziel/citybuilder/commit/a67a1b08fe4e79fd2de53f3bbdfe02546b7ee189))
+* **ui:** name an active blight or fever in the inspector ([aeabd8f](https://github.com/cedricziel/citybuilder/commit/aeabd8fcfac657abde24846512507a73343ceb11)), closes [#349](https://github.com/cedricziel/citybuilder/issues/349)
+
+
+### Bug Fixes
+
+* **citycore:** start Hard towns with the planks for a house ([4adb4e5](https://github.com/cedricziel/citybuilder/commit/4adb4e5ff0c8470e8fbf6c8a628c0a5b6b273600))
+* **citycore:** start Hard towns with the planks for a house ([ea1c866](https://github.com/cedricziel/citybuilder/commit/ea1c8664dc1a10a9ad74be8844a34e4ca54f90a3))
+* **citycore:** store a producer's goods only with its own owner ([c8f5e5f](https://github.com/cedricziel/citybuilder/commit/c8f5e5f40bc9b4eceb0bdf6a1090956aa7fd5fc3))
+* **citycore:** store a producer's goods only with its own owner ([a39d57f](https://github.com/cedricziel/citybuilder/commit/a39d57f137422fe5a1a516d00ab50b011b0e529c))
+* **cityui:** give the inspector's fee button its own row when it can't share one ([11d6da6](https://github.com/cedricziel/citybuilder/commit/11d6da6560c98ecfb9e408b4686c5134b5290322))
+* **cityui:** give the inspector's fee button its own row when it can't share one ([aee25d8](https://github.com/cedricziel/citybuilder/commit/aee25d81c8ef67a5d29acf707d7cdc353367e280))
+* **cityui:** keep placement confirm and cancel inside the safe area ([8e1d910](https://github.com/cedricziel/citybuilder/commit/8e1d9104b1d6f2e8dc52bd2b106826d98dda0974))
+* **cityui:** keep placement confirm and cancel inside the safe area ([af870b2](https://github.com/cedricziel/citybuilder/commit/af870b2560ca4bfe872de82a9389b9ec9aad0266))
+* **cityui:** say "Not enough money" instead of dropping a placement ([f553bd1](https://github.com/cedricziel/citybuilder/commit/f553bd188e05820bba1aad3f78b68cd0c10faafd))
+* **cityui:** say why the placement checkmark refuses ([f0df535](https://github.com/cedricziel/citybuilder/commit/f0df53554fed9c23e9a67257859441db367b44b8))
+* **cityui:** start the inspector callout below the date and event chips ([77b9b48](https://github.com/cedricziel/citybuilder/commit/77b9b486c9510140603a62b445c76d41ef94c06e))
+* **cityui:** start the inspector callout below the date and event chips ([e7726e8](https://github.com/cedricziel/citybuilder/commit/e7726e8bf2d7a099a8ace326451f0dd23350195b))
+* **orders-kit:** count only the output that reaches the stores ([9faf549](https://github.com/cedricziel/citybuilder/commit/9faf549be3f5b3a2dd9fe63f10a6a521760757c7))
+* **orders-kit:** count only the output that reaches the stores ([8b1ad07](https://github.com/cedricziel/citybuilder/commit/8b1ad07a4a389f422136c18572d960070374da23)), closes [#338](https://github.com/cedricziel/citybuilder/issues/338)
+* refund half the price on demolish and ask first ([3811682](https://github.com/cedricziel/citybuilder/commit/3811682c027548e68e34666b92d7df996c840e7f))
+* **ui:** connect every showcase house to the town's roads ([3015532](https://github.com/cedricziel/citybuilder/commit/30155329444c92caf190fa920d4f9cde89bfa19c))
+* **ui:** connect every showcase house to the town's roads ([587ef68](https://github.com/cedricziel/citybuilder/commit/587ef68011d43ffe38301440563cd582420fc27a))
+* **ui:** join showcase buildings to the roads in id order ([28b8fbd](https://github.com/cedricziel/citybuilder/commit/28b8fbd50a784a354a21ff3261d92e563ee9049a))
+
+
+### Performance
+
+* **citycore:** check a producer's waiting consumers only when a cart could wait ([f7235ad](https://github.com/cedricziel/citybuilder/commit/f7235adf93f0a1bf185411ebf35ae0b4bc2fb99a))
+
 ## [0.2.12](https://github.com/cedricziel/citybuilder/compare/v0.2.11...v0.2.12) (2026-10-31)
 
 
