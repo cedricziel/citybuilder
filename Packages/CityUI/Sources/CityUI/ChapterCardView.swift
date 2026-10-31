@@ -55,7 +55,7 @@ public struct ChapterCardContent: Equatable {
             buttons = [.begin]
             showsMap = true
         case let .ending(next):
-            eyebrow = GameText.string("chapter.wonEyebrow", number, world.difficulty.displayName)
+            eyebrow = GameText.string("chapter.wonEyebrow", number, GameText.string(world.difficulty.nameKey))
             title = chapter.title
             text = chapter.ending
             let bonus = world.goals.count(where: \.isBonus)

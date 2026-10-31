@@ -28,7 +28,7 @@ extension InspectorViewModel {
     static func fireLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {
         if building.state == .burning { return [GameText.string("inspector.burning")] }
         guard let tick = building.burntAtTick else { return [] }
-        return [GameText.string("inspector.burntDown", snapshot.calendar.date(atTick: tick).displayText)]
+        return [GameText.string("inspector.burntDown", GameText.date(snapshot.calendar.date(atTick: tick)))]
     }
 
     /// What a fire watch covers and where its watchman is. Spec:

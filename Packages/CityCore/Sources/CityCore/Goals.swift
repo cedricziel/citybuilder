@@ -59,22 +59,12 @@ public enum Scenario: String, CaseIterable, Hashable, Sendable {
     case steamAndSmoke = "steam-and-smoke"
     case islandRivalry = "island-rivalry"
 
-    public var title: String {
-        switch self {
-        case .firstHarvest: "First Harvest"
-        case .guildTown: "The Guild Town"
-        case .steamAndSmoke: "Steam and Smoke"
-        case .islandRivalry: "Island Rivalry"
-        }
+    public var titleKey: String {
+        "scenario.\(self).title"
     }
 
-    public var blurb: String {
-        switch self {
-        case .firstHarvest: "Grow an Antiquity village to 40 people and store 20 bread."
-        case .guildTown: "Raise 30 merchants and stock 30 tools."
-        case .steamAndSmoke: "Lead a Renaissance town into the Industrial age."
-        case .islandRivalry: "Out-build two rival towns and reach 80 residents."
-        }
+    public var blurbKey: String {
+        "scenario.\(self).blurb"
     }
 
     /// The layout the scenario is played on, nil when any will do.

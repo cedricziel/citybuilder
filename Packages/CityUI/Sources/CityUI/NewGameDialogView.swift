@@ -115,7 +115,7 @@ public struct NewGameDialogView: View {
             Text(l10n: "newGame.difficulty").font(.headline)
             Picker(GameText.string("newGame.difficulty"), selection: $viewModel.difficulty) {
                 ForEach(Difficulty.allCases, id: \.self) { difficulty in
-                    Text(difficulty.displayName).tag(difficulty)
+                    Text(l10n: difficulty.nameKey).tag(difficulty)
                 }
             }
             .pickerStyle(.segmented)
@@ -128,15 +128,15 @@ public struct NewGameDialogView: View {
             Text(l10n: "newGame.scenario").font(.headline)
             Picker(GameText.string("newGame.scenario"), selection: $viewModel.scenario) {
                 ForEach(Scenario.allCases, id: \.self) { scenario in
-                    Text(scenario.title).tag(scenario)
+                    Text(l10n: scenario.titleKey).tag(scenario)
                 }
             }
             .pickerStyle(.menu)
             .accessibilityIdentifier("newGame.scenario")
-            Text(viewModel.scenario.blurb)
+            Text(l10n: viewModel.scenario.blurbKey)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            Text(verbatim: "\(viewModel.scenario.age.displayName) · \(viewModel.scenario.difficulty.displayName)")
+            Text(verbatim: "\(viewModel.scenario.age.displayName) · \(GameText.string(viewModel.scenario.difficulty.nameKey))")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
         }

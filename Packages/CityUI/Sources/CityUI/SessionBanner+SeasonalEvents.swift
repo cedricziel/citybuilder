@@ -78,7 +78,7 @@ extension GameSession {
 
     /// The warning of `onset`, as first shown and as the chip shows it again.
     static func warningBanner(_ onset: SeasonalEventOnset) -> SessionBanner? {
-        banner(onset.event, .warning, ["season": onset.season.displayName.lowercased()])
+        banner(onset.event, .warning, ["season": GameText.inSentence(GameText.string(onset.season.nameKey))])
     }
 
     /// The pack's banner for `moment`, its placeholders filled.
@@ -93,6 +93,6 @@ extension GameSession {
 
     /// "End of Summer 1203": the season of `tick`, as the HUD shows a date.
     static func endDate(of tick: UInt64, in world: World) -> String {
-        GameText.string("banner.endOf", world.calendar.date(atTick: tick).displayText)
+        GameText.string("banner.endOf", GameText.date(world.calendar.date(atTick: tick)))
     }
 }

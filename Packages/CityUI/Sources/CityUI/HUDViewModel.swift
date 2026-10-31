@@ -49,7 +49,7 @@ public final class HUDViewModel {
     public func apply(_ snapshot: WorldSnapshot) {
         money = snapshot.economy.balance
         population = snapshot.totalPopulation
-        dateText = snapshot.date.displayText
+        dateText = GameText.date(snapshot.date)
         timeOfDaySymbol = Self.symbol(for: TimeOfDay(tick: snapshot.tickCount).phase)
         seasonSymbol = Self.symbol(for: snapshot.date.season)
         eventChip = snapshot.seasonalEvent.map { onset in

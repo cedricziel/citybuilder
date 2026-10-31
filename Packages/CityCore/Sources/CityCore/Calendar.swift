@@ -4,13 +4,8 @@ import Foundation
 public enum Season: Int, CaseIterable, Codable, Hashable, Sendable {
     case spring, summer, autumn, winter
 
-    public var displayName: String {
-        switch self {
-        case .spring: "Spring"
-        case .summer: "Summer"
-        case .autumn: "Autumn"
-        case .winter: "Winter"
-        }
+    public var nameKey: String {
+        "season.\(self)"
     }
 }
 
@@ -21,12 +16,6 @@ public struct GameDate: Hashable, Sendable {
     public init(year: Int, season: Season) {
         self.year = year
         self.season = season
-    }
-
-    /// Years ≤ 0 read as BC: year 0 is 1 BC (design D2 of
-    /// `add-historical-ages`).
-    public var displayText: String {
-        year > 0 ? "\(season.displayName) \(year)" : "\(season.displayName) \(1 - year) BC"
     }
 }
 
@@ -60,21 +49,18 @@ public enum HistoryEvent: Int, CaseIterable, Hashable, Sendable {
         self == .ratsInTheGranary
     }
 
-    public var title: String {
-        switch self {
-        case .bountifulHarvest: "Bountiful harvest"
-        case .tradeCaravan: "Trade caravan"
-        case .travellingScholar: "Travelling scholar"
-        case .ratsInTheGranary: "Rats in the granary"
-        }
+    public var titleKey: String {
+        "history.\(self).title"
     }
 
-    public var description: String {
-        switch self {
-        case .bountifulHarvest: "The fields gave more than expected: 8 food reaches the stores."
-        case .tradeCaravan: "A caravan passes through and pays well: +$150."
-        case .travellingScholar: "A visiting scholar shares what they know: +20 knowledge."
-        case .ratsInTheGranary: "Rats got into the stores: half the food is lost."
+    /// The event's text, with the amounts the simulation applies.
+    public var message: GameMessage {
+        let key = "history.\(self).text"
+        return switch self {
+        case .bountifulHarvest: GameMessage(key, ["food": .int(World.harvestFood)])
+        case .tradeCaravan: GameMessage(key, ["payment": .money(World.caravanPayment)])
+        case .travellingScholar: GameMessage(key, ["knowledge": .int(World.scholarKnowledge)])
+        case .ratsInTheGranary: GameMessage(key)
         }
     }
 }

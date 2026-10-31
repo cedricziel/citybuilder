@@ -43,11 +43,11 @@ Alternatives: `String(localized:bundle:)` at every call site works but follows t
 
 ### D4. CityCore exposes keys and typed arguments
 
-CityCore gains a framework-free `GameMessage { key: String; args: [String: MessageArg] }`. `MessageArg` holds `int`, `money`, `date(GameDate)`, `good(Good)`, `building(BuildingKind)`, `tier(HouseTier, Culture)`, `season(Season)` and `text(key)`. English `String` properties become keys and messages:
+CityCore gains a framework-free `GameMessage { key: String; args: [String: MessageArg] }`. `MessageArg` holds `int` and `money`, what history events need; further cases (`date`, `good`, `building`, `tier`, `season`, `text`) join when a message needs them. A message's catalog text names its arguments as `{food}`-style placeholders (D6), which CityUI fills after the lookup, so a translation can reorder them and `l10n-check` matches the names. English `String` properties become keys and messages:
 
 - `HistoryEvent.title`/`description` become `titleKey` and `message`, whose arguments are the constants the simulation uses (`World.harvestFood`, `caravanPayment`, `scholarKnowledge`). The amounts stop being duplicated in prose.
 - `Scenario.title`/`blurb`, `Season.displayName` and `Difficulty.displayName` become `titleKey`, `blurbKey` and `nameKey`.
-- `GameDate.displayText` goes away; CityUI formats a date from season and year with the keys `date.ad` and `date.bc`.
+- `GameDate.displayText` goes away; CityUI formats a date from season and year with the keys `date.ad` and `date.bc`; the year goes in as text, because `%lld` groups digits in German ("1.203").
 
 Everything new is computed from existing enums. Nothing is stored, encoded, hashed or read by a system, so the `World` value, saves, RNG draws and tick order are untouched. CityCore still imports only Foundation and never looks text up; the framework-free check keeps passing.
 

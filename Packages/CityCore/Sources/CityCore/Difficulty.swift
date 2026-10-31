@@ -4,8 +4,8 @@ import Foundation
 public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
     case easy, normal, hard
 
-    public var displayName: String {
-        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+    public var nameKey: String {
+        "difficulty.\(rawValue)"
     }
 
     public var startingBalance: Int64 {

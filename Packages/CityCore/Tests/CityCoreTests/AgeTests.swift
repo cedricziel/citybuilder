@@ -26,13 +26,6 @@ func scenarioSnapshotCarriesTheAge() {
     #expect(game(.industrial).snapshot().age == .industrial)
 }
 
-@Test("scenario: years before christ")
-func scenarioYearsBeforeChrist() {
-    #expect(GameDate(year: -499, season: .spring).displayText == "Spring 500 BC")
-    #expect(GameDate(year: 0, season: .winter).displayText == "Winter 1 BC")
-    #expect(GameDate(year: 1, season: .summer).displayText == "Summer 1")
-}
-
 @Test("scenario: start in the renaissance")
 func scenarioStartInTheRenaissance() {
     let world = game(.renaissance)
