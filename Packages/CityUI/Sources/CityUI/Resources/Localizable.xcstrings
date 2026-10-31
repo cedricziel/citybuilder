@@ -2965,6 +2965,60 @@
         }
       }
     },
+    "demolish.confirm.noRefund" : {
+      "comment" : "Demolish confirmation message when nothing is refunded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bekommst nichts zurück."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get nothing back."
+          }
+        }
+      }
+    },
+    "demolish.confirm.refund" : {
+      "comment" : "Demolish confirmation message; %@ is the money refunded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bekommst %@ zurück."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get %@ back."
+          }
+        }
+      }
+    },
+    "demolish.confirm.title" : {
+      "comment" : "Demolish confirmation title; %@ is the building name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ abreißen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demolish %@?"
+          }
+        }
+      }
+    },
     "difficulty.easy" : {
       "comment" : "A difficulty level.",
       "extractionState" : "manual",

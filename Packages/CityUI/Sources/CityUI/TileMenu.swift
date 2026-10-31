@@ -103,7 +103,7 @@ public extension GameSession {
     }
 
     /// Applies the player's pick. Buildings start a pending placement,
-    /// road arms the road tool, demolish acts at once.
+    /// road arms the road tool, demolish acts as the demolish tool does.
     func applyMenuChoice(_ choice: TileMenuChoice, at tile: TileCoordinate) {
         tileMenuRequest = nil
         guard !isGameOver else { return }
@@ -113,7 +113,7 @@ public extension GameSession {
         case let .build(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case .demolish:
-            enqueue(.demolish(at: tile))
+            requestDemolish(at: tile)
         case .dismiss:
             break
         }
