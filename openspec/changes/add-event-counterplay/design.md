@@ -84,7 +84,9 @@ A burnt building becomes a `ruins` building with `ruinOf` set to its kind. It ha
 ### D6. Blight and the granary
 
 - **Area.** At the warning, the world picks one operational player crop field (by entity ID, with the derived RNG). The area is every tile within 6 of its footprint. The area is marked on the map from the warning to the end of the blight, so the player can prepare.
-- **Effect.** During the onset season, crop fields in the area take twice their cycle, like a farm in winter, without being marked stalled. Blight never strikes in winter, so the two never stack. A field built in the area during the blight is blighted too.
+- **Effect.** During the onset season, crop fields in the area grow nothing: their cycle doesn't advance, and they aren't marked stalled. A field built in the area during the blight is blighted too. A first value had them take twice their cycle, like a farm in winter; the forced-blight sweep showed that barely hurt a town (#348, see D12).
+- **The market's relief.** From the warning to the end, the town market sells 150 food a season on top of food's limit of 10. Merchants bring grain to a blighted town. Bought food fills the town center first and then the other stores, a granary last, so a town with a granary can lay in a reserve in the warning season. Without the relief, the market's 10 food a season couldn't feed a town through a lost harvest, so "buy food at the market" was no answer.
+- **Toll.** A resident who leaves a player house whose food has been short past its decline grace while a blight is under way counts toward the blight's toll, anywhere in the town: a lost harvest starves the town, not only the marked area. The end banner names it, as fever's does, and a running total is kept for the sweeps.
 - **Granary.** A food store: `storagePerGood: 60`, accepts only food, grain, flour and bread, cost $120, 4 wood and 4 planks, upkeep 1, footprint 2×2, no tech. It fills like any store. **Every draw takes from it last:** houses, porters, producers, construction, the market and order dispatch use the other stores on the network first, and a granary only when they hold none of the good. Rats in the granary skip granaries. So a granary is a reserve that only shrinks in a shortage.
 - **Why "drawn last" instead of a separate reserve bucket:** it uses the per-good stores and the existing draw path, needs no new UI to "release" the reserve, and works the same for every shortage, not just blight.
 
@@ -153,7 +155,7 @@ A drawn blight also needs a town of fields: it is warned only when the player ow
 A PlayerBot `EventsKit` (tests only), the "events" kit of `add-campaigns` D10:
 
 - on a fire warning, it builds one fire watch per 8-tile cluster of houses and workshops that no watch covers;
-- on a blight warning, it builds a granary when it has none;
+- in a blight under way, it buys 40 food at the market whenever the stores hold less than 40 (a first version built a granary on the warning, which made no difference, see below);
 - on a fever warning, it builds a physician over the marked district and a herb garden, and buys herbs at the market when the physician holds fewer than 2;
 - it accepts a festival when its stores already hold half of each good, and sends it when stocked.
 
@@ -195,6 +197,20 @@ With no fire watch, a Hard fire in 1202 burns down about nine buildings, and up 
 | Coverage across the pacing sweep: fire / blight / fever / festival | 180 | — | 151 / **0** / 228 / 105 requests, 38 festivals held | 6. Fails for blight |
 
 Blight did not fire once in this sweep. The food gate of D10 (one season of the houses' food stored) is never met by the bot's towns, so a drawn blight always became a quiet year. A follow-up change replaces that gate with a count of crop fields (D10) and measures blight's coverage again. Measured at 4a981bc0 (2026-10-30, events-only pacing, 180 games): blight fired 124 times (Easy 18, Normal 36, Hard 70; fire 154, fever 226, festival 105 requests, 36 held). Against the events sweep above, meanLate moved −0.5% (worst cell −6.4%) and median Renaissance stayed 4.3 / 5.2 / 6.3 years; against events off (oldest-ea73b317) it is +0.9%, worst cell Normal, archipelago, careful −13.0%, 0 bankruptcies. Forced blights in 1202 (40 runs) stay solvent with 82 residents at least, but the kit's granary makes no measurable difference there: 91.2 residents with it, 91.3 without. Fever with the kit lands under the half-loss bar (658 of 1,412), so its Easy values stay. The orders sweep's "the kit fills at least half of the orders that resolve" fails here as it does on main (71 filled, 156 failed on both).
+
+**Blight follow-up (#348), 2026-10-31.** Blight fields now grow nothing instead of taking twice their cycle, the market sells 150 more food a season from the warning to the end, the toll counts residents who leave hungry, and the kit buys food in the blight instead of building a granary. Measured with a targeted probe, not the sweep slot: release build, the forced blight of `HAZARD_SWEEP` (Hard, the guided start, summer and autumn 1202, both layouts, seeds 0–3: 16 runs an arm), counting residents over the blight's season. The control arm runs the same games with no event.
+
+| Arm, 16 runs each | Residents at onset | Lowest in the blight | At its end | Left hungry (toll) | At 12,000 ticks | Bankrupt |
+|---|---|---|---|---|---|---|
+| No event (control) | 56.2 | 55.3 | 70.0 | — | 92.6 | 0 |
+| Before (main at cf730355), no kit | 56.2 | 43.4 | 51.1 | not counted | 91.6 | 0 |
+| Before, kit builds a granary | 53.1 | 40.5 | 49.4 | not counted | 90.4 | 0 |
+| After, no kit | 56.2 | 25.4 | 28.9 | 733 (45.8 a run) | 92.7 | 0 |
+| After, kit buys food | 56.2 | 55.6 | 74.6 | 125 (7.8 a run) | 89.8 | 0 |
+
+Before, a blight cost a town about 13 residents for its season, and the granary didn't help: the kit's town started lower, having spent the money on it. After, it costs about 31, and buying food in the blight saves all of them.
+
+Bar 2 for blight, read as "residents who leave hungry in the blight with the kit are at most half of those without it", passes on the probe (125 against 733). The sweep's own measure, residents at 12,000 ticks, still shows no gap (89.8 with the kit, 92.7 without, 92.6 with no event): towns regrow within two years, so the end count can't see a blight in 1202. The weekly `HAZARD_SWEEP` should print the toll; bars 3 and 4 (pacing and solvency with drawn blights) wait for the next sweep slot.
 
 ### D13. What players see (canvas)
 

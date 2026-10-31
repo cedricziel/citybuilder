@@ -3,7 +3,7 @@ import Testing
 @testable import CityCore
 
 // Scenarios from openspec/changes/add-event-counterplay (seasonal-events /
-// Blight halves crop yields in a marked area; goods-and-production / Crop
+// Blight ruins the crops in a marked area; goods-and-production / Crop
 // fields are marked in the game data).
 
 /// A world one tick before a scheduled blight in summer 1201 starts, with
@@ -16,9 +16,8 @@ private func blightWorld() -> (world: World, field: EntityID) {
     return (world, field)
 }
 
-/// Ticks until `building` completes its next cycle, from a fresh cycle. A
-/// slowed field counts every other tick, as in winter, so its 40-tick cycle
-/// takes 79 or 80 ticks by the parity of the tick it starts on.
+/// Ticks until `building` completes its next cycle, from a fresh cycle; 0
+/// when it completes none in 400 ticks.
 private func cycleTicks(of building: EntityID, in world: inout World) -> (ticks: UInt64, stalled: Bool) {
     world.productions[building] = ProductionProgress()
     var stalled = false
@@ -42,14 +41,16 @@ func blightMarksAnArea() throws {
     #expect(world.snapshot().markedArea == area)
 }
 
-@Test("scenario: Blighted farm takes twice as long")
-func blightedFarmTakesTwiceAsLong() {
+@Test("scenario: Blighted farm yields nothing")
+func blightedFarmYieldsNothing() {
     var (world, field) = blightWorld()
     _ = world.tick()
     #expect(world.seasonalEvents.active?.event == .blight)
+    let food = world.stockpiles[field]?.quantity(of: .food)
     let cycle = cycleTicks(of: field, in: &world)
-    #expect((79 ... 80).contains(cycle.ticks))
+    #expect(cycle.ticks == 0)
     #expect(!cycle.stalled)
+    #expect(world.stockpiles[field]?.quantity(of: .food) == food)
     #expect(world.snapshot().blightedFields.contains(field))
 }
 
@@ -78,7 +79,7 @@ func newFieldInTheAreaIsBlighted() {
     _ = world.tick()
     let late = addOperational(.grainFarm, at: TileCoordinate(x: 3, y: 3), in: &world)
     let cycle = cycleTicks(of: late, in: &world)
-    #expect((79 ... 80).contains(cycle.ticks))
+    #expect(cycle.ticks == 0)
 }
 
 @Test("scenario: the blight ends with its season and leaves the area")
@@ -181,4 +182,100 @@ func fieldUnderConstructionIsNotBlighted() throws {
     let building = try #require(world.buildings[site])
     #expect(!world.isBlighted(building))
     #expect(!world.snapshot().blightedFields.contains(site))
+}
+
+// MARK: - The market answers a blight
+
+@Test("scenario: the market sells more food from a blight's warning to its end")
+func marketSellsMoreFoodDuringABlight() {
+    var world = eventsWorld(seed: 2, size: 30)
+    world.seasonalEvents.schedule = [ScheduledSeasonalEvent(year: 1201, event: .blight, onset: .summer)]
+    addOperational(.farm, at: TileCoordinate(x: 0, y: 0), in: &world)
+    let center = addOperational(.townCenter, at: TileCoordinate(x: 10, y: 10), in: &world)
+    world.economy.balance = 10000
+    let usual = Good.food.marketTerms.buyLimit
+    #expect(world.marketLeft(.food, .bought) == usual)
+    _ = runSeasons(&world, untilTick: firstTick(of: .spring, 1201) + 1)
+    #expect(world.seasonalEvents.warned?.event == .blight)
+    let relief = usual + World.blightFoodRelief
+    #expect(world.marketLeft(.food, .bought) == relief)
+    #expect(world.marketQuotes.first { $0.good == .food }?.buyLeft == relief)
+    #expect(world.marketLeft(.wood, .bought) == Good.wood.marketTerms.buyLimit)
+    world.enqueue(.marketBuy(center, .food, 25))
+    _ = world.tick()
+    #expect(world.market.traded(.food, .bought) == 25)
+    #expect(world.marketLeft(.food, .bought) == relief - 25)
+    // The blight's own season gets the relief again, and it ends with the blight.
+    _ = runSeasons(&world, untilTick: firstTick(of: .summer, 1201) + 1)
+    #expect(world.seasonalEvents.active?.event == .blight)
+    #expect(world.marketLeft(.food, .bought) == relief)
+    _ = runSeasons(&world, untilTick: firstTick(of: .autumn, 1201) + 1)
+    #expect(world.marketLeft(.food, .bought) == usual)
+}
+
+// MARK: - The blight's toll
+
+/// The blight world one tick into its season, with an unfed, full house
+/// of 4 in the marked area.
+private func hungryHouseInABlight() -> (world: World, house: EntityID) {
+    var (world, _) = blightWorld()
+    _ = world.tick()
+    let house = addOperational(.house, at: TileCoordinate(x: 4, y: 4), residents: 4, in: &world)
+    return (world, house)
+}
+
+@Test("scenario: residents who leave hungry during a blight are its toll")
+func hungryResidentsAreTheBlightsToll() {
+    var (world, house) = hungryHouseInABlight()
+    let events = runEvents(&world, untilTick: firstTick(of: .autumn, 1201))
+    let left = 4 - Int(world.populations[house]?.population ?? 0)
+    #expect(left > 0)
+    #expect(world.seasonalEvents.counters.residentsLeftHungryInBlight == left)
+    #expect(events.contains(.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: left))))
+    #expect(world.seasonalEvents.blight == nil)
+}
+
+@Test("scenario: hunger outside a blight is no blight's toll")
+func hungerWithoutABlightIsNoToll() {
+    var world = eventsWorld(seed: 2, size: 30)
+    let house = addOperational(.house, at: TileCoordinate(x: 4, y: 4), residents: 4, in: &world)
+    _ = runEvents(&world, untilTick: 600)
+    #expect((world.populations[house]?.population ?? 4) < 4)
+    #expect(world.seasonalEvents.counters.residentsLeftHungryInBlight == 0)
+}
+
+@Test("scenario: a house above its capacity shrinking in a blight is no toll")
+func shrinkingAboveCapacityIsNoToll() throws {
+    var (world, house) = hungryHouseInABlight()
+    world.populations[house]?.population = 12
+    world.populations[house]?.addStock(.food, amount: 20)
+    world.populations[house]?.addStock(.planks, amount: 20)
+    _ = runEvents(&world, untilTick: world.tickCount + 120)
+    #expect(try #require(world.populations[house]?.population) < 12)
+    #expect(world.seasonalEvents.counters.residentsLeftHungryInBlight == 0)
+}
+
+@Test("scenario: a save from before the blight's toll loads with none")
+func saveWithoutTheBlightTollLoads() throws {
+    var (world, _) = hungryHouseInABlight()
+    _ = runEvents(&world, untilTick: world.tickCount + 300)
+    var json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(world)) as? [String: Any])
+    var events = try #require(json["seasonalEvents"] as? [String: Any])
+    events["counters"] = ["buildingsLostToFire": 1, "firesPutOut": 2, "residentsLeftWithFever": 3]
+    events["blight"] = nil
+    json["seasonalEvents"] = events
+    let loaded = try JSONDecoder().decode(World.self, from: JSONSerialization.data(withJSONObject: json))
+    #expect(loaded.seasonalEvents.counters.residentsLeftWithFever == 3)
+    #expect(loaded.seasonalEvents.counters.residentsLeftHungryInBlight == 0)
+    #expect(loaded.seasonalEvents.blight == nil)
+}
+
+@Test("scenario: a rival's hungry residents are no toll of the player's blight")
+func rivalHungerIsNoToll() {
+    var (world, _) = blightWorld()
+    _ = world.tick()
+    let rival = addOperational(.house, at: TileCoordinate(x: 4, y: 4), residents: 4, owner: .rival(1), in: &world)
+    _ = runEvents(&world, untilTick: world.tickCount + 300)
+    #expect((world.populations[rival]?.population ?? 4) < 4)
+    #expect(world.seasonalEvents.counters.residentsLeftHungryInBlight == 0)
 }

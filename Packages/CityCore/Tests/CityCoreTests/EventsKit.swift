@@ -5,7 +5,9 @@ import Foundation
 /// turn, while the event is warned or under way:
 /// - fire: a fire watch by the first house or workshop no watch covers, so
 ///   every 8-tile cluster ends up with one;
-/// - blight: a granary when the town has none;
+/// - blight: food from the market whenever the stores run low while the
+///   blight is under way; bought in the warning season, the houses would
+///   only eat it sooner;
 /// - fever: a physician over the marked district and a herb garden, and
 ///   herbs from the market while the physicians hold fewer than 2;
 /// - festival: accepts the town's orders once the stores hold half of each
@@ -15,19 +17,23 @@ struct EventsKit {
     static let cushion: Int64 = 50
     /// How far from its target the kit looks for a plot, in tiles.
     static let searchReach = 4
-    /// How far from the town center the kit looks for a granary or herb
-    /// garden plot, ring by ring: a grown town has no room right beside it,
-    /// and a crowded one may have none within 12.
+    /// How far from the town center the kit looks for a herb garden plot,
+    /// ring by ring: a grown town has no room right beside it, and a
+    /// crowded one may have none within 12.
     static let townReach = 20
     /// Herbs the kit buys at a time, and the physicians' stock it buys below.
     static let herbsBought = 4
     static let herbsLow = 2
+    /// Food the kit buys at a time in a blight, and the stores' food it buys below.
+    static let foodBought = 40
+    static let foodLow = 40
 
     /// Buildings the kit placed that stand, by kind: counted once the
     /// placement succeeded, at the kit's next turn.
     private(set) var built: [BuildingKind: Int] = [:]
     private(set) var festivalsAccepted = 0
     private(set) var herbsBuys = 0
+    private(set) var foodBuys = 0
     /// Where the last placement went, until the kit sees whether it stood.
     private var placed: (anchor: TileCoordinate, kind: BuildingKind)?
     /// Buildings with no plot a watch would cover from, not tried again.
@@ -84,10 +90,12 @@ struct EventsKit {
     // MARK: - Blight
 
     private mutating func answerBlight(_ world: inout World) {
-        guard !Self.owns(.granary, world), Self.canAfford(.granary, world), let center = Self.townCenter(world),
-              let anchor = Self.plot(for: .granary, near: center, in: world, reach: Self.townReach)
+        let left = world.marketLeft(.food, .bought)
+        guard world.seasonalEvents.active != nil, left > 0, let center = Self.townCenter(world),
+              world.storedQuantity(of: .food) < Self.foodLow
         else { return }
-        place(.granary, at: anchor, in: &world)
+        world.enqueue(.marketBuy(center.id, .food, min(left, Self.foodBought)))
+        foodBuys += 1
     }
 
     // MARK: - Fever

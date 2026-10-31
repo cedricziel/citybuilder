@@ -19,7 +19,9 @@ extension World {
             updateSatisfaction(&pop, of: tracked, hub: hub, inbound: inbound[building.id] ?? [:])
             let pastGrace = isPastGrace(pop, owner: building.owner)
             let held = feverHeld.contains(building.id)
-            updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace, feverHeld: held)
+            if updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace, feverHeld: held) {
+                noteHungryLeaving(building)
+            }
             updateTier(
                 &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
                 feverHeld: held, festive: festive.contains(building.id)
@@ -88,9 +90,10 @@ extension World {
     /// Inspired houses grow twice as fast; a house above its capacity
     /// shrinks even with its needs met (spec `age-signatures`).
     /// A house a fever holds back doesn't grow until the fever ends.
+    /// Returns true when a resident left because food ran short past its grace.
     private func updateGrowth(
         _ pop: inout HousePopulation, owner: Owner, modifiers: HouseModifiers, pastGrace: Bool, feverHeld: Bool
-    ) {
+    ) -> Bool {
         pop.ticksAtCurrentSatisfaction &+= 1
         let met = bindingNeeds(of: pop.tier, for: owner, advancing: false).allSatisfy(pop.isSatisfied)
         let streak = pop.ticksAtCurrentSatisfaction
@@ -103,9 +106,12 @@ extension World {
             pop.population &+= 1
             pop.ticksAtCurrentSatisfaction = 0
         } else if mustShrink {
+            let hungry = pop.population <= capacity && pop.shortIntervals(of: .food) >= declineGrace(of: pop.tier)
             pop.population &-= 1
             pop.ticksAtCurrentSatisfaction = 0
+            return hungry
         }
+        return false
     }
 
     /// Spec: `population-and-needs` / Houses advance and decline

@@ -2582,18 +2582,54 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Felder tragen wieder voll."
+            "value" : "Die Felder tragen wieder voll. Hungrig fortgezogen: {residents}."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The fields yield in full again."
+            "value" : "The fields yield in full again. {residents} left the town hungry."
           }
         }
       }
     },
     "seasonalEvent.blight.banner.end.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Fäule ist vorüber"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The blight has passed"
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.endNoLoss.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Felder tragen wieder voll. Niemand ist hungrig fortgezogen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fields yield in full again. No one left hungry."
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.endNoLoss.title" : {
       "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
       "extractionState" : "manual",
       "localizations" : {
@@ -2618,13 +2654,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Felder im markierten Gebiet tragen nur die Hälfte, bis {date}."
+            "value" : "Felder im markierten Gebiet tragen nichts, bis {date}. Der Markt verkauft mehr Nahrung."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fields in the marked area yield half until {date}."
+            "value" : "Fields in the marked area yield nothing until {date}. The market sells more food."
           }
         }
       }
@@ -2654,13 +2690,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nächste Jahreszeit tragen Felder im markierten Gebiet nur die Hälfte. Fülle einen Kornspeicher oder kaufe Nahrung am Markt."
+            "value" : "Nächste Jahreszeit tragen Felder im markierten Gebiet nichts. Fülle einen Kornspeicher oder kaufe Nahrung am Markt: Er verkauft mehr, bis die Fäule vorüber ist."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Next season, fields in the marked area yield half. Fill a granary, or buy food at the market."
+            "value" : "Next season, fields in the marked area yield nothing. Fill a granary, or buy food at the market: it sells more until the blight has passed."
           }
         }
       }
