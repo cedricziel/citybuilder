@@ -6,8 +6,8 @@ import Foundation
 /// goods. It ignores a rival's orders, which need a ship it has no route for.
 ///
 /// "Could fill" is what the stores hold plus 1.5 times the town's recent
-/// output of the good until the deadline, less what the houses used last
-/// season. It also keeps back what the next house tier will need: a first merchant that waits on tools the crown
+/// spare output of the good until the deadline (`spare`), less what the
+/// houses used last season. It also keeps back what the next house tier will need: a first merchant that waits on tools the crown
 /// took is a town the orders held back (measured on archipelago seed 7).
 struct OrdersKit {
     /// Share of the recent output the bot counts on, in percent.
@@ -48,10 +48,24 @@ struct OrdersKit {
         world.statistics.seasons.last?.goods[good]?.usedByHouses ?? 0
     }
 
+    /// Units of `good` a season that reached the stores and stayed there
+    /// over the recent closed seasons: what was made and bought, less what
+    /// production and building used and the market sold. The houses' share
+    /// is `consumption`. Wood a sawmill takes as it is made never reaches
+    /// the stores, so it can't fill an order (#338).
+    static func spare(of good: Good, in world: World) -> Int {
+        let closed = world.statistics.seasons.suffix(OrderRules.outputWindowSeasons)
+        guard !closed.isEmpty else { return 0 }
+        let spare = closed.reduce(0) { total, season in
+            guard let flow = season.goods[good] else { return total }
+            return total + flow.made + flow.bought - flow.usedByProduction - flow.usedByConstruction - flow.sold
+        }
+        return max(0, spare / closed.count)
+    }
+
     static func canFill(_ order: Order, in world: World) -> Bool {
         guard !reserved(in: world).contains(order.good) else { return false }
-        let closed = world.statistics.seasons.suffix(OrderRules.outputWindowSeasons)
-        let perSeason = closed.isEmpty ? 0 : closed.reduce(0) { $0 + ($1.goods[order.good]?.made ?? 0) } / closed.count
+        let perSeason = spare(of: order.good, in: world)
         let seasonsLeft = Int((order.deadlineTick &- min(order.deadlineTick, world.tickCount)) / CalendarState.ticksPerSeason)
         return world.orderAvailable(for: order.id) + perSeason * seasonsLeft * headroomPercent / 100
             >= order.quantity + consumption(of: order.good, in: world)
