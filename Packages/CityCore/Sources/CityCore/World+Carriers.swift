@@ -316,11 +316,12 @@ extension World {
         let vehicle = CarrierConfig.vehicle(in: age(of: producer.owner))
         // Batching is for bulk nobody is waiting on: a good houses need, or
         // one a building of the owner is short of, never waits for a load.
-        let awaited = awaitedByHouses(good, owner: producer.owner)
-            || candidates.consumers[good]?.contains {
+        // The consumer scan runs last, only when a cart could wait at all.
+        let waits = vehicle != nil && producer.haulWaitTicks < UInt32(CarrierConfig.haulMaxWait)
+            && !awaitedByHouses(good, owner: producer.owner)
+            && !(candidates.consumers[good]?.contains {
                 $0.building.owner == producer.owner && needsSupply($0.building.id, good: good, amount: $0.amount)
-            } ?? false
-        let waits = vehicle != nil && !awaited && producer.haulWaitTicks < UInt32(CarrierConfig.haulMaxWait)
+            } ?? false)
         func wait() -> Haul? {
             buildings[producer.id]?.haulWaitTicks += 1
             return nil
