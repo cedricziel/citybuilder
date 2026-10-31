@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.12](https://github.com/cedricziel/citybuilder/compare/v0.2.11...v0.2.12) (2026-10-31)
+
+
+### Features
+
+* **ui:** switch German on ([cf73035](https://github.com/cedricziel/citybuilder/commit/cf7303553c6f2d600430c245968fcf060a69e441))
+
+
+### Bug Fixes
+
+* **cityui:** look for compiled catalogs in the bundle's resources ([5bdb29f](https://github.com/cedricziel/citybuilder/commit/5bdb29f7675a2f869b6f14337f0e9d49ecb989da))
+* **cityui:** look for compiled catalogs in the bundle's resources ([e6080a8](https://github.com/cedricziel/citybuilder/commit/e6080a80927a5b79c84c4d95b0d42372d28f27b8))
+* **cityui:** read catalogs an Xcode archive compiled ([5f25c9d](https://github.com/cedricziel/citybuilder/commit/5f25c9d6ad17698226e593b2f3195d3b13ca6d9b))
+* **cityui:** read catalogs an Xcode archive compiled ([eb103ab](https://github.com/cedricziel/citybuilder/commit/eb103ab049ce7012f517b4755f58c13adc7fde49))
+
 ## [0.2.11](https://github.com/cedricziel/citybuilder/compare/v0.2.10...v0.2.11) (2026-10-31)
 
 
