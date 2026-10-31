@@ -162,6 +162,7 @@ func rivalsLinesAndStandings() {
     #expect(model.residentLineColours == [RivalColour.playerHex, "#B03A2E", "#2E6DB4"])
     let rows = model.standings
     #expect(rows.map(\.name) == ["You", "Saltwick", "Ravenmoor"])
+    #expect(rows.map(\.isPlayer) == [true, false, false])
     #expect(rows[0].residents == 8)
     #expect(rows[0].age == Age.renaissance.displayName)
     #expect(rows[0].wealth == "$1,950")

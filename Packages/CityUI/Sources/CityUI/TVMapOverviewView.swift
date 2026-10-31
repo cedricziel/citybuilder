@@ -75,7 +75,7 @@ private struct TVMapLegend: View {
 
     var body: some View {
         HStack(spacing: 24) {
-            item("You", Color(MinimapPalette.player))
+            item(GameText.string("stats.you"), Color(MinimapPalette.player))
             ForEach(rivals, id: \.name) { rival in
                 item(rival.name, Color(hex: rival.colourHex))
             }

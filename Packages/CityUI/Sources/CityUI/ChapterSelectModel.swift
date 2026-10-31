@@ -63,7 +63,12 @@ public final class ChapterSelectModel {
                 )
             }
             let won = rows.count { $0.state == .won }
-            return Section(id: campaign.id, title: campaign.displayTitle, tally: "\(won) of \(rows.count) won", rows: rows)
+            return Section(
+                id: campaign.id,
+                title: campaign.displayTitle,
+                tally: GameText.string("chapter.tally", won, rows.count),
+                rows: rows
+            )
         }
     }
 
@@ -76,7 +81,7 @@ public final class ChapterSelectModel {
         guard let id = selectedID, let campaign = progress.campaigns.first(where: { $0.chapters.contains(id) }),
               let index = campaign.chapters.firstIndex(of: id)
         else { return nil }
-        return "\(campaign.displayTitle) · Chapter \(index + 1)"
+        return "\(campaign.displayTitle) · \(GameText.string("chapter.number", index + 1))"
     }
 
     /// The chosen chapter's status line when it can't be started: its key

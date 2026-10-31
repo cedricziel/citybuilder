@@ -47,7 +47,7 @@ public struct ResearchPanelModel: Equatable {
                 cost: world.researchCost(of: tech),
                 progress: research.current == tech ? research.progress : 0,
                 prerequisites: Self.requirements(of: tech, in: world),
-                unlocks: tech.era.map { "The \($0.displayName) age" }
+                unlocks: tech.era.map { GameText.string("research.unlocksAge", $0.displayName) }
                     ?? tech.unlocks.filter { $0.isBuildable(in: world.culture) }
                     .map { BuildTool.place($0).displayName }.joined(separator: ", ")
             )
@@ -61,7 +61,7 @@ public struct ResearchPanelModel: Equatable {
         if let gate = tech.eraGate {
             parts.append("\(gate.residents) \(GameText.inSentence(gate.tier.displayName(in: world.culture)))")
         } else if tech.age > world.age {
-            parts.append("\(tech.age.displayName) age")
+            parts.append(GameText.string("research.waitsForAge", tech.age.displayName))
         }
         return parts.joined(separator: ", ")
     }

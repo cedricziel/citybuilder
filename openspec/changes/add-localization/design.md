@@ -99,7 +99,7 @@ A list in CityUI's tests names each tight label (the tool strip, the build rail,
 
 ### D12. Rival names are looked up at display time
 
-The UI looks a rival's stored name up under `rivalTown.<slug>` (`Bay of Knives` → `rivalTown.bayOfKnives`) and shows the stored name when the key is missing. The world and save keep the English name, so old saves, determinism and the CloudKit schema are untouched.
+The UI looks a rival's stored name up under `rivalTown.<slug>` (`Bay of Knives` → `rivalTown.bayOfKnives`) and shows the stored name when the key is missing. The world and save keep the English name, so old saves, determinism and the CloudKit schema are untouched. Rival towns take their island's name from `IslandNameTable`, so island names shown in the HUD go through the same lookup.
 
 ### Determinism
 

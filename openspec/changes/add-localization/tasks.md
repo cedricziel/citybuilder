@@ -52,9 +52,9 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 6. M6 — Rival names
 
-- [ ] 6.1 Tests-first: translate "A generated rival name shows in German" and "An unknown rival name shows as stored" into failing tests; confirm red
-- [ ] 6.2 Implement to green: `rivalTown.<slug>` keys for every generated name, looked up at display time (D12)
-- [ ] 6.3 Verify `make test-scenarios` and `make l10n-check` clean
+- [x] 6.1 Tests-first: translate "A generated rival name shows in German" and "An unknown rival name shows as stored" into failing tests; confirm red
+- [x] 6.2 Implement to green: `rivalTown.<slug>` keys for every generated name, looked up at display time (D12)
+- [x] 6.3 Verify `make test-scenarios` and `make l10n-check` clean
 
 ## 7. M7 — Tight labels, overflow fixes and switching German on
 

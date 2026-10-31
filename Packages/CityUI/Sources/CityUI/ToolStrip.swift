@@ -175,7 +175,7 @@ struct ToolStripView: View {
     }
 
     static func label(for good: Good, cost: GhostCost) -> String {
-        let base = GameText.string("tool.cost", GoodsCatalog.spec(for: good).displayName, cost.have, cost.need)
+        let base = GameText.string("tool.cost", good.displayName, cost.have, cost.need)
         return switch cost.status {
         case .ok: base
         case .queueable: GameText.string("tool.cost.waits", base)

@@ -30,8 +30,8 @@ struct PackTextTests {
     func packNames() {
         #expect(BuildingKind.grainFarm.displayName == "Grain Farm")
         #expect(BuildingKind.townCenter.displayName == "Town Ctr.")
-        #expect(GoodsCatalog.spec(for: .wood).displayName == "Wood")
-        #expect(GoodsCatalog.spec(for: .wood).stackUnit == "logs")
+        #expect(Good.wood.displayName == "Wood")
+        #expect(Good.wood.stackUnit == "logs")
         #expect(Tech.printingPress.displayName == "Printing Press")
         #expect(Age.industrial.displayName == "Industrial")
         #expect(Culture.eastAsian.displayName == "East Asian")

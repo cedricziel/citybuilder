@@ -39,7 +39,7 @@ public struct TownMarketSection: Equatable, Sendable {
             ].compactMap(\.self)
             return Row(
                 good: quote.good,
-                text: GoodsCatalog.spec(for: quote.good).displayName + " — " + sides.joined(separator: " · "),
+                text: quote.good.displayName + " — " + sides.joined(separator: " · "),
                 isBuyable: buyable,
                 isSellable: sellable,
                 canBuy: !isGameOver && quote.buyLeft > 0 && reach.room[quote.good, default: 0] > 0 && balance >= quote.buyPrice,

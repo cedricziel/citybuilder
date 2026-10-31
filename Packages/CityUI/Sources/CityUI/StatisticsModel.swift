@@ -86,6 +86,7 @@ public struct StatisticsModel: Equatable, Sendable {
         public let residents: Int
         public let age: String
         public let wealth: String
+        public var isPlayer = false
 
         public var id: String {
             name
@@ -102,7 +103,7 @@ public struct StatisticsModel: Equatable, Sendable {
     public init(world: World, locale: Locale = .current) {
         self.init(
             seasons: world.statistics.seasons, calendar: world.calendar, stuckNow: world.stuckProducerCounts,
-            rivals: Dictionary(uniqueKeysWithValues: world.rivals.map { ($0.id, ($0.name, $0.colour.hex)) }),
+            rivals: Dictionary(uniqueKeysWithValues: world.rivals.map { ($0.id, ($0.displayName, $0.colour.hex)) }),
             locale: locale
         )
     }
@@ -173,7 +174,7 @@ public struct StatisticsModel: Equatable, Sendable {
     private func row(for good: Good) -> GoodRow {
         let latest = seasons.last?.goods[good]
         return GoodRow(
-            good: good, name: GoodsCatalog.spec(for: good).displayName,
+            good: good, name: good.displayName,
             net: (latest?.made ?? 0) - (latest?.used ?? 0), stoppedNow: stuckNow[good] ?? 0,
             made: points { $0.goods[good]?.made ?? 0 }, used: points { $0.goods[good]?.used ?? 0 }
         )
@@ -269,7 +270,8 @@ public struct StatisticsModel: Equatable, Sendable {
         guard let latest = seasons.last else { return [] }
         let you = RivalRow(
             name: GameText.string("stats.you"), colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
-            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
+            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale),
+            isPlayer: true
         )
         let others = latest.rivals.map { rival in
             RivalRow(
