@@ -782,7 +782,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dampfmaschine"
+            "value" : "Kesselhaus"
           }
         },
         "en" : {
@@ -854,7 +854,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Werkzeugschmiede"
+            "value" : "Schmiede"
           }
         },
         "en" : {
