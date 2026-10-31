@@ -52,3 +52,17 @@ Selecting a fire watch SHALL show how many of its owner's flammable buildings it
 
 - **WHEN** the player selects a fire watch whose road reaches one house within 8 tiles, with a second house in reach but off its road
 - **THEN** the inspector reads "Covers 1 building within 8 tiles by road" and "Watchman: at the watch"
+
+### Requirement: The inspector names an active blight or fever
+
+While a blight is under way, the inspector of a player crop field it ruins SHALL show, among the callout's key lines, "Blighted: yields nothing until {end}", with {end} the end of the blight's season as the HUD shows a date. While a fever is under way, the inspector of a player house it holds back SHALL show "Fever: can't advance, residents leave. A physician with herbs within 8 tiles keeps it safe". A field or house outside the marked area, or one the event doesn't strike, SHALL show neither. Both lines SHALL have reviewed German.
+
+#### Scenario: a blighted field's inspector names the blight and its end
+
+- **WHEN** a farm in the marked area is inspected during a blight in summer 1202
+- **THEN** its key lines contain "Blighted: yields nothing until End of Summer 1202", and a farm outside the area shows no blight line
+
+#### Scenario: a house a fever holds back says so and names the answer
+
+- **WHEN** a house with residents in the marked district is inspected during a fever, with no physician in reach
+- **THEN** its key lines contain "Fever: can't advance, residents leave. A physician with herbs within 8 tiles keeps it safe", and a house outside the district, or any house during a blight, shows no fever line

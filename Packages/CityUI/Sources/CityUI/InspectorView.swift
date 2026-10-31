@@ -93,7 +93,8 @@ public struct InspectorViewModel: Sendable {
         let reach = inReachLine(for: building.kind, count: snapshot.catchments[entityID]) + hubLines(for: building, in: snapshot)
         let signature = signatureLines(for: building, in: snapshot)
         let problemLines = problem.map { [GameText.string("inspector.problem", $0)] } ?? []
-        let fire = fireLines(for: building, in: snapshot) + fireWatchLines(for: building, in: snapshot)
+        let fire = fireLines(for: building, in: snapshot) + seasonalEventLines(for: building, in: snapshot)
+            + fireWatchLines(for: building, in: snapshot)
             + physicianLines(for: building, in: snapshot)
         let bullets: [String] = fire + basics + reach + signature + houseLines + problemLines
         return InspectorViewModel(
@@ -262,7 +263,8 @@ extension InspectorViewModel {
     ]
     private static let houseMarkerKeys = ["inspector.residents", "inspector.needs", "inspector.next", "inspector.stock", "inspector.market"]
     private static let sharedMarkerKeys = [
-        "inspector.burning", "inspector.burntDown", "inspector.fireWatch.covers", "inspector.watchman",
+        "inspector.burning", "inspector.burntDown", "inspector.blighted", "inspector.fever", "inspector.fireWatch.covers",
+        "inspector.watchman",
         "inspector.physician.keeps", "inspector.physician.burns", "inspector.problem"
     ]
     static var markerKeys: [String] {
