@@ -123,12 +123,12 @@ struct TightLabelBudgetTests {
                     .map { GameText.string($0, name, in: language) }
             } + [GameText.string("chip.fireBurning", 12, in: language)]
         },
-        // #308. An iPad callout's footer less its padding: Details (50), a gap of 8, then the fee button.
+        // #308. Too long to share a row with Details and Actions, the fee button takes an iPad
+        // callout's footer row of its own: the callout's width less its padding.
         TightLabel(
             name: "inspector fee button",
             font: .caption,
-            width: InspectorCalloutLayout.width(for: .pad) - 2 * InspectorCalloutLayout.padding.width - 50 - 8,
-            pseudoIssue: 365
+            width: InspectorCalloutLayout.width(for: .pad) - 2 * InspectorCalloutLayout.padding.width
         ) { language in
             let fee = BuildingKind.allCases.map { World.clearingFee(of: $0) }.max() ?? 0
             let money = HUDViewModel.formatMoney(fee, locale: language.locale)
@@ -169,5 +169,40 @@ struct TightLabelBudgetTests {
     fileprivate static func width(of text: String, in font: PlatformFont) -> CGFloat {
         let attributed = NSAttributedString(string: text, attributes: [.font: font])
         return CGFloat(CTLineGetTypographicBounds(CTLineCreateWithAttributedString(attributed), nil, nil, nil))
+    }
+}
+
+/// #308: the iPad inspector's footer. On iOS it holds Details (or Less), Actions and the demolish
+/// button in one row of the callout's width less its padding, 8 points apart.
+extension TightLabelBudgetTests {
+    static let padFooterWidth = InspectorCalloutLayout.width(for: .pad) - 2 * InspectorCalloutLayout.padding.width
+
+    static func footerRowWidth(demolish: String, in language: Language) -> CGFloat {
+        let font = Font.caption.platformFont
+        func measure(_ key: String) -> CGFloat {
+            width(of: GameText.string(key, in: language), in: font)
+        }
+        let toggle = max(measure("inspector.details"), measure("inspector.less"))
+        return toggle + measure("touch.actions") + width(of: demolish, in: font) + 3 * 8
+    }
+
+    static func feeTitles(in language: Language) -> [String] {
+        let fee = BuildingKind.allCases.map { World.clearingFee(of: $0) }.max() ?? 0
+        let money = HUDViewModel.formatMoney(fee, locale: language.locale)
+        return ["inspector.clearRuins", "inspector.pullDown"].map { GameText.string($0, money, in: language) }
+    }
+
+    @Test("iPad: Details, Actions and a free Demolish share one footer row", arguments: [Language.en, .de])
+    func padFooterPlainDemolishSharesTheRow(_ language: Language) {
+        let needed = Self.footerRowWidth(demolish: GameText.string("tool.demolish", in: language), in: language)
+        #expect(needed <= Self.padFooterWidth, "the row needs \(Int(needed.rounded(.up))) of \(Int(Self.padFooterWidth)) points")
+    }
+
+    @Test("iPad: a fee button too long for the footer row moves to its own", arguments: [Language.en, .de])
+    func padFooterFeeMovesToItsOwnRow(_ language: Language) {
+        for title in Self.feeTitles(in: language) {
+            // Why the footer falls back to two rows: the fee doesn't fit beside Details and Actions.
+            #expect(Self.footerRowWidth(demolish: title, in: language) > Self.padFooterWidth)
+        }
     }
 }
