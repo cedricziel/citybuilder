@@ -46,3 +46,18 @@
   opacity: 0.35;
   cursor: default;
 }
+
+.cb-placement__reason {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  max-width: 200px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cb-red) 85%, transparent);
+  color: #fff;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+}
