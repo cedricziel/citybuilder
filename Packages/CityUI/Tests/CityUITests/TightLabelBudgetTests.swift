@@ -17,9 +17,9 @@ private typealias PlatformFont = UIFont
 /// ("Tight labels fit in German", "Tight labels fit in the pseudo-locale");
 /// design D11 of `add-localization`. Each label is measured with CoreText at
 /// the font the HUD draws it in. Text styles use their iOS sizes at the
-/// default type size (the HUD clamps Dynamic Type), Apple TV's where the
-/// label is the TV's. Widths are the narrowest device the label shows on:
-/// a 375-point phone in portrait unless the entry says otherwise.
+/// default type size (the HUD clamps Dynamic Type). Widths are the narrowest
+/// device the label shows on: a 375-point phone in portrait unless the entry
+/// says otherwise. Apple TV's orders entry has no label (#305).
 struct TightLabelBudgetTests {
     struct Font: Sendable {
         let size: CGFloat
@@ -31,8 +31,6 @@ struct TightLabelBudgetTests {
         static let subheadline = Font(size: 15, weight: .semibold)
         static let body = Font(size: 17)
         static let title2 = Font(size: 22, weight: .semibold)
-        /// Apple TV's subheadline.
-        static let tvSubheadline = Font(size: 29, weight: .semibold)
 
         fileprivate var platformFont: PlatformFont {
             isMonospaced
@@ -49,8 +47,6 @@ struct TightLabelBudgetTests {
         let width: CGFloat
         /// The view's `minimumScaleFactor`; 1 where the text never shrinks.
         var minimumScale: CGFloat = 1
-        /// The issue of a layout fix the label waits for, in every language.
-        var layoutIssue: Int?
         /// The issue tracking the label's pseudo overflow. German has no such escape.
         var pseudoIssue: Int?
         let texts: @Sendable (Language) -> [String]
@@ -117,10 +113,9 @@ struct TightLabelBudgetTests {
                 }
             }
         },
-        // The chip's text width less its glyph (18), the gap (6) and its padding (4 and 10).
-        TightLabel(
-            name: "event chip", font: .caption, width: EventChipLayout.fullTextWidth - 38, layoutIssue: 364, pseudoIssue: 365
-        ) { language in
+        // Beside the first-steps card the chip drops to its glyph where the words don't fit (#364); once
+        // the card is gone the words must fit the HUD, less the glyph (18), a gap of 6 and padding of 4 and 10.
+        TightLabel(name: "event chip", font: .caption, width: phoneHUDWidth - 38) { language in
             Season.allCases.flatMap { season in
                 let name = GameText.string(season.nameKey, in: language)
                 return ["chip.fireRisk", "chip.fireSeason", "chip.blight", "chip.fever", "chip.festival"]
@@ -142,20 +137,20 @@ struct TightLabelBudgetTests {
 
     @Test("scenario: tight labels fit in German", arguments: labels)
     func germanFits(_ label: TightLabel) {
-        Self.expectFits(label, in: .de, knownIssue: label.layoutIssue)
+        Self.expectFits(label, in: .de)
     }
 
     @Test("scenario: tight labels fit in the pseudo-locale", arguments: labels)
     func pseudoFits(_ label: TightLabel) {
-        Self.expectFits(label, in: .pseudo, knownIssue: label.pseudoIssue ?? label.layoutIssue)
+        Self.expectFits(label, in: .pseudo, knownIssue: label.pseudoIssue)
     }
 
     @Test("English fits every budget, so no budget starts out wrong", arguments: labels)
     func englishFits(_ label: TightLabel) {
-        Self.expectFits(label, in: .en, knownIssue: label.layoutIssue)
+        Self.expectFits(label, in: .en)
     }
 
-    static func expectFits(_ label: TightLabel, in language: Language, knownIssue: Int?) {
+    static func expectFits(_ label: TightLabel, in language: Language, knownIssue: Int? = nil) {
         let font = label.font.platformFont
         let check = {
             for text in label.texts(language) {

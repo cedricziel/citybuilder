@@ -43,21 +43,9 @@ public struct EventChip: Equatable, Sendable {
 }
 
 /// Where the chip fits: in the HUD's left column, beside the first-steps
-/// card when it shows. Where the column is too narrow for the words, only
-/// the glyph shows, so the text never truncates.
+/// card when it shows. Where the column is too narrow for the words in the
+/// player's language, only the glyph shows, so the text never truncates.
 enum EventChipLayout {
-    /// The chip's widest text, "Fire risk · Summer", with its glyph.
-    static let fullTextWidth: CGFloat = 160
-
-    /// The width the chip has: the HUD less the first-steps card and its gap.
-    static func room(hudWidth: CGFloat, showsFirstSteps: Bool) -> CGFloat {
-        showsFirstSteps ? hudWidth - DateChipLayout.firstStepsWidth - DateChipLayout.gap : hudWidth
-    }
-
-    static func showsText(layout: HUDLayout, hudWidth: CGFloat, showsFirstSteps: Bool) -> Bool {
-        !layout.isPhone || room(hudWidth: hudWidth, showsFirstSteps: showsFirstSteps) >= fullTextWidth
-    }
-
     /// The smallest side of the glyph-only chip's tap target.
     static let minimumTapSide: CGFloat = 44
 
@@ -73,41 +61,12 @@ enum EventChipLayout {
 struct EventChipView: View {
     let chip: EventChip?
     let layout: HUDLayout
-    let hudWidth: CGFloat
-    let showsFirstSteps: Bool
     let onTap: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         if let chip {
-            let showsText = EventChipLayout.showsText(layout: layout, hudWidth: hudWidth, showsFirstSteps: showsFirstSteps)
             Button(action: onTap) {
-                HStack(spacing: 6) {
-                    Image(systemName: chip.symbol)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 18, height: 18)
-                        .background(Color(red: 0.91, green: 0.51, blue: 0.05), in: Circle())
-                        .accessibilityHidden(true)
-                    if showsText {
-                        Text(chip.text)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                }
-                .foregroundStyle(amber)
-                .padding(.leading, 4)
-                .padding(.trailing, 10)
-                .frame(height: EventChipLayout.height(layout: layout))
-                .background(.thinMaterial, in: Capsule())
-                .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
-                // The glyph alone is too small to tap: its target grows to 44 points.
-                .frame(
-                    minWidth: showsText ? nil : EventChipLayout.minimumTapSide,
-                    minHeight: showsText ? nil : EventChipLayout.minimumTapSide
-                )
-                .contentShape(Rectangle())
+                EventChipLabel(chip: chip, layout: layout).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
@@ -115,6 +74,46 @@ struct EventChipView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .transition(.opacity)
         }
+    }
+}
+
+/// The chip's capsule: the words where the column holds them in the
+/// player's language, else the glyph alone.
+struct EventChipLabel: View {
+    let chip: EventChip
+    let layout: HUDLayout
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            capsule(showsText: true)
+            capsule(showsText: false)
+                // The glyph alone is too small to tap: its target grows to 44 points.
+                .frame(minWidth: EventChipLayout.minimumTapSide, minHeight: EventChipLayout.minimumTapSide)
+        }
+    }
+
+    private func capsule(showsText: Bool) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: chip.symbol)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 18, height: 18)
+                .background(Color(red: 0.91, green: 0.51, blue: 0.05), in: Circle())
+                .accessibilityHidden(true)
+            if showsText {
+                Text(chip.text)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+        .foregroundStyle(amber)
+        .padding(.leading, 4)
+        .padding(.trailing, 10)
+        .frame(height: EventChipLayout.height(layout: layout))
+        .background(.thinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1))
     }
 
     /// The canvas's #8a4b00, lifted for a dark material.
