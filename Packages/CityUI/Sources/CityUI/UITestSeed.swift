@@ -146,7 +146,9 @@ public enum UITestSeed {
         // Wait only on what the seed placed, so a starter building that never opens can't hold it up.
         settle(&world) { $0.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
         // A showcase town shows no building cut off from the roads.
-        for (id, issue) in world.buildingIssues() where issue == .noRoad {
+        // In id order, so the seed lays the same roads every run; a road laid for one building can connect the next.
+        let unconnected = world.buildingIssues().filter { $0.value == .noRoad }.keys.sorted { $0.raw < $1.raw }
+        for id in unconnected where world.buildingIssues()[id] == .noRoad {
             if let building = world.buildings[id], placed.contains(building.anchor) {
                 joinToRoads(building, in: &world)
             }
