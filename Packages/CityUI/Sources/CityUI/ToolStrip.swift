@@ -44,16 +44,6 @@ public enum ToolStripText {
         default: nil
         }
     }
-
-    /// What a building of `kind` counts in its catchment, nil when it
-    /// counts nothing.
-    static func inReachNoun(_ kind: BuildingKind) -> String? {
-        switch kind {
-        case .lumberjackHut: "trees"
-        case .forester: "open grass"
-        default: nil
-        }
-    }
 }
 
 /// Spec: `platform-shells` / Tool strip.
@@ -82,7 +72,7 @@ public extension GameSession {
     /// go (`add-forestry` D5).
     func armedInReachCount(idiom: HUDIdiom) -> Int? {
         guard let (kind, anchor) = armedCandidateSite(idiom: idiom),
-              ToolStripText.inReachNoun(kind) != nil, isValidPlacement(kind, at: anchor)
+              ToolStripText.inReachText(kind, count: 0) != nil, isValidPlacement(kind, at: anchor)
         else { return nil }
         return world.catchmentCount(kind: kind, anchor: anchor, owner: .player)
     }
