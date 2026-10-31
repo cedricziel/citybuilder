@@ -11,7 +11,7 @@ public enum ChapterText {
             GameText.string(
                 "goal.population",
                 count,
-                tier == .peasants ? GameText.string("goal.residents") : english(tierName(tier, culture))
+                tier == .peasants ? GameText.string("goal.residents") : GameText.inSentence(tierName(tier, culture))
             )
         case let .age(age): GameText.string("goal.age", age.displayName)
         case let .stock(good, count): GameText.string("goal.stock", count, goodName(good))
@@ -137,7 +137,7 @@ public enum ChapterText {
     }
 
     private static func goodName(_ good: Good) -> String {
-        english(GoodsCatalog.spec(for: good).displayName)
+        GameText.inSentence(GoodsCatalog.spec(for: good).displayName)
     }
 
     private static func ownGoal(_ kind: BuildingKind, count: Int) -> String {
@@ -149,7 +149,7 @@ public enum ChapterText {
     }
 
     /// English adds an article or a plural ending to a name; German takes it as is.
-    private static func english(_ name: String, _ form: (String) -> String = { $0 }) -> String {
+    private static func english(_ name: String, _ form: (String) -> String) -> String {
         Language.current == .de ? name : form(name.lowercased())
     }
 
