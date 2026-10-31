@@ -5918,7 +5918,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld %2$@"
+            "value" : "noch %1$lld %2$@"
           }
         },
         "en" : {
@@ -5954,7 +5954,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Braucht noch %@"
+            "value" : "Braucht %@"
           }
         },
         "en" : {
@@ -8042,7 +8042,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klicke, um Straße zu malen"
+            "value" : "Klicke, um mit dem Straßenbau zu beginnen"
           }
         },
         "en" : {
@@ -8060,7 +8060,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klicke, um das Straßenmalen zu beenden"
+            "value" : "Klicke, um den Straßenbau zu beenden"
           }
         },
         "en" : {
