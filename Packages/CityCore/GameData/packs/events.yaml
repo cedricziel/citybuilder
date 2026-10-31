@@ -50,13 +50,16 @@ items:
     banners:
       warning:
         title: "Damp weather: blight is coming"
-        text: Next season, fields in the marked area yield half. Fill a granary, or buy food at the market.
+        text: "Next season, fields in the marked area yield nothing. Fill a granary, or buy food at the market: it sells more until the blight has passed."
       onset:
         title: Blight in the fields
-        text: "Fields in the marked area yield half until {date}."
+        text: "Fields in the marked area yield nothing until {date}. The market sells more food."
       end:
         title: The blight has passed
-        text: The fields yield in full again.
+        text: "The fields yield in full again. {residents} left the town hungry."
+      endNoLoss:
+        title: The blight has passed
+        text: The fields yield in full again. No one left hungry.
 
   - kind: Event
     id: fever

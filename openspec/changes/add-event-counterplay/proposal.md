@@ -11,7 +11,7 @@ Design canvas: https://claude.ai/artifact/NfTHPHsBMu4gKzjgvxYfz5 (fire, ruins, f
   | Event | What happens | Counterplay |
   |---|---|---|
   | **Fire** | A house or workshop catches fire. After 150 ticks it spreads to every flammable building whose footprint touches it. After 300 ticks it burns down to ruins, which block the plot until cleared for a fee. | A **fire watch** (cheap 1×1 tower, 8 tiles, on the roads) sends a watchman who puts the fire out before it spreads. A road between two buildings is a firebreak. |
-  | **Blight** | Crop fields within 6 tiles of a marked field yield half for one season. | A **granary**: a food-only store that is drawn from last and that rats leave alone, so it holds a reserve. The town market and fields spread over the island help too. |
+  | **Blight** | Crop fields within 6 tiles of a marked field yield nothing for one season; residents who leave hungry are its toll. | The **town market** sells 150 more food a season from the warning to the end. A **granary**: a food-only store that is drawn from last and that rats leave alone, so it holds a reserve. Fields spread over the island help too. |
   | **Fever** | Houses in a marked district can't advance a tier for one season, and lose a resident every 200 ticks. | A **physician** that burns **herbs** covers 8 tiles: houses in reach are spared. Herbs come from a new **herb garden**, a one-step chain, or from the market. |
   | **Festival** | The town asks for bread and its culture's luxury within a season. | Deliver both, and houses in reach of a marketplace advance in half the time and pay 10% more tax for a year. |
 

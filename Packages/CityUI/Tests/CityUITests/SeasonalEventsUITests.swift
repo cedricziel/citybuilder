@@ -95,7 +95,20 @@ func blightOnsetNamesItsEnd() {
         world.seasonalEvents.active = ActiveSeasonalEvent(event: .blight, startTick: 600, lastTick: 1199)
     }
     session.noteBannerEvents(in: [.seasonalEventStarted(event: .blight)])
-    #expect(session.banner?.description == "Fields in the marked area yield half until End of Summer 1200.")
+    #expect(session.banner?.description == "Fields in the marked area yield nothing until End of Summer 1200. The market sells more food.")
+}
+
+@MainActor
+@Test("scenario: Blight end text")
+func blightEndText() {
+    let session = eventsSession()
+    session.noteBannerEvents(in: [.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: 5))])
+    #expect(session.banner?.title == "The blight has passed")
+    #expect(session.banner?.description == "The fields yield in full again. 5 residents left the town hungry.")
+    let none = eventsSession()
+    none.noteBannerEvents(in: [.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: 0))])
+    #expect(none.banner?.title == "The blight has passed")
+    #expect(none.banner?.description == "The fields yield in full again. No one left hungry.")
 }
 
 @MainActor
