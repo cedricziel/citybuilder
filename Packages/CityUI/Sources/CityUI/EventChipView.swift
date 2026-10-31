@@ -53,6 +53,12 @@ enum EventChipLayout {
     static func height(layout: HUDLayout) -> CGFloat {
         layout.focusableHeight(DateChipLayout.height)
     }
+
+    /// How far the glyph-only chip's tap target reaches past it above and below, so it is
+    /// `minimumTapSide` tall without making the column's row taller.
+    static func tapOutset(layout: HUDLayout) -> CGFloat {
+        max(0, (minimumTapSide - height(layout: layout)) / 2)
+    }
 }
 
 /// The amber glass chip of the approved canvas (Warning, option B). Tapping
@@ -66,7 +72,7 @@ struct EventChipView: View {
     var body: some View {
         if let chip {
             Button(action: onTap) {
-                EventChipLabel(chip: chip, layout: layout).contentShape(Rectangle())
+                EventChipLabel(chip: chip, layout: layout)
             }
             .buttonStyle(.plain)
             .hudChromeTypeSize()
@@ -85,11 +91,17 @@ struct EventChipLabel: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        // Each variant sets its own tap shape: one around the outer view would cut the glyph's
+        // target back to the row.
         ViewThatFits(in: .horizontal) {
-            capsule(showsText: true)
+            capsule(showsText: true).contentShape(Rectangle())
+            // The glyph alone is too small to tap: its target grows to 44 points, reaching
+            // past the row above and below rather than making it taller.
             capsule(showsText: false)
-                // The glyph alone is too small to tap: its target grows to 44 points.
-                .frame(minWidth: EventChipLayout.minimumTapSide, minHeight: EventChipLayout.minimumTapSide)
+                .frame(minWidth: EventChipLayout.minimumTapSide)
+                .padding(.vertical, EventChipLayout.tapOutset(layout: layout))
+                .contentShape(Rectangle())
+                .padding(.vertical, -EventChipLayout.tapOutset(layout: layout))
         }
     }
 
