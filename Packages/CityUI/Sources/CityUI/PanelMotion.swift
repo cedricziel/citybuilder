@@ -83,4 +83,10 @@ extension View {
     func panelAnimation(presenceOf content: (some Equatable)?) -> some View {
         panelAnimation(value: PanelMotion.presence(of: content))
     }
+
+    /// Swaps this panel's content at once when `value` changes, while the containers around it
+    /// may still animate where it sits.
+    func swapsContentAtOnce(on value: some Equatable) -> some View {
+        transaction(value: value) { $0.animation = nil }
+    }
 }

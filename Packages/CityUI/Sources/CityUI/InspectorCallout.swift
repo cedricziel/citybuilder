@@ -227,6 +227,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 avoiding: neighbourRects(viewSize: proxy.size)
             )
             card(maxHeight: bounds.height)
+                .swapsContentAtOnce(on: tile)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("inspector.callout")
                 .overlay(alignment: .topLeading) { pointer(side: placed.side, anchor: anchor, origin: placed.origin) }

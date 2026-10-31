@@ -225,7 +225,7 @@ extension CityRootView {
     }
 
     /// The inspector callout for the selected building, while inspecting.
-    /// It rises in, and glides when another tile is inspected.
+    /// It rises in, and glides when another tile is inspected; its text swaps at once.
     var inspectorCallout: some View {
         ZStack { inspectorCalloutContent }
             .panelAnimation(value: session.selectedTool == .inspect ? session.selectedTile : nil)
