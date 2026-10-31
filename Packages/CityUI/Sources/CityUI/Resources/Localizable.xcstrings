@@ -1904,7 +1904,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gewonnen auf %1$@ · %2$@"
+            "value" : "Gewonnen (%1$@) · %2$@"
           }
         },
         "en" : {
@@ -3386,7 +3386,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lande %1$lld %2$@ per Schiff daheim an"
+            "value" : "Bringe %1$lld %2$@ per Schiff nach Hause"
           }
         },
         "en" : {
@@ -3758,7 +3758,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ daheim angelandet %2$@"
+            "value" : "%1$@ per Schiff heimgebracht %2$@"
           }
         },
         "en" : {
