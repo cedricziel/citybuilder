@@ -59,6 +59,10 @@ targets:
       path: Apps/CitybuilderiOS/Info.plist
       properties:
         CFBundleDisplayName: Citybuilder
+        # Spec: `localization`. The languages the game ships; the system picks one.
+        CFBundleLocalizations:
+          - en
+          - de
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
@@ -131,6 +135,10 @@ targets:
       path: Apps/CitybuilderMac/Info.plist
       properties:
         CFBundleDisplayName: Citybuilder
+        # Spec: `localization`. The languages the game ships; the system picks one.
+        CFBundleLocalizations:
+          - en
+          - de
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
@@ -188,6 +196,10 @@ targets:
       path: Apps/CitybuilderTV/Info.plist
       properties:
         CFBundleDisplayName: Citybuilder
+        # Spec: `localization`. The languages the game ships; the system picks one.
+        CFBundleLocalizations:
+          - en
+          - de
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false

@@ -27,9 +27,11 @@ struct GameTextTests {
         #expect(GameText.string("pause.resume", in: language) == "Resume")
     }
 
-    @Test("German is not offered to players until it ships")
-    func germanNotShippedYet() {
-        #expect(Language.preferred(from: ["de"]) == .en)
+    @Test("scenario: German locale shows German text, with the shipped languages")
+    func germanShips() {
+        #expect(Language.shipped == [.en, .de])
+        #expect(Language.preferred(from: ["de-AT", "en"]) == .de)
+        #expect(Language.preferred(from: ["fr", "es"]) == .en)
     }
 
     @Test("a missing key shows the key, not an empty string")

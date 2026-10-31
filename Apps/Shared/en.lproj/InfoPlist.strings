@@ -1,0 +1,2 @@
+/* The app name under the icon. Spec: localization. */
+"CFBundleDisplayName" = "Citybuilder";
