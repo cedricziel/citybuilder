@@ -55,11 +55,6 @@ extension GameSession {
         }
     }
 
-    /// "1 building", "3 buildings".
-    nonisolated static func counted(_ count: Int, _ noun: String) -> String {
-        "\(count) \(noun)\(count == 1 ? "" : "s")"
-    }
-
     /// What the event chip shows again: while a fire burns, that it burns,
     /// else the warning.
     func seasonalChipBanner() -> SessionBanner? {

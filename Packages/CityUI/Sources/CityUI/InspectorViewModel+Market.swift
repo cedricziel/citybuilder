@@ -15,11 +15,11 @@ extension InspectorViewModel {
         house: EntityID, population: HousePopulation, culture: Culture, in snapshot: WorldSnapshot
     ) -> [String] {
         let stock = population.tier.needs(in: culture).map { good in
-            "\(GoodsCatalog.spec(for: good).displayName.lowercased()) \(population.stock(of: good))/\(population.stockCapacity(of: good))"
+            "\(goodName(good)) \(population.stock(of: good))/\(population.stockCapacity(of: good))"
         }
-        var lines = stock.isEmpty ? [] : ["Stock: " + stock.joined(separator: " · ")]
+        var lines = stock.isEmpty ? [] : [GameText.string("inspector.stock", stock.joined(separator: " · "))]
         if let serving = snapshot.marketServing[house], let hub = snapshot.buildings[serving.hub] {
-            lines.append("Market: \(hub.kind.spokenName), \(GameSession.counted(serving.distance, "road tile"))")
+            lines.append(GameText.string("inspector.market", hub.kind.spokenName, GameText.string("count.roadTile", serving.distance)))
         }
         return lines
     }
@@ -30,8 +30,8 @@ extension InspectorViewModel {
         let served = snapshot.marketServing.values.count { $0.hub == building.id }
         let out = snapshot.porters.count { $0.hub == building.id }
         return [
-            "Serves: \(GameSession.counted(served, "house")) within \(spec.radius) road tiles",
-            "Porters: \(out) of \(spec.porters(serving: served)) out"
+            GameText.string("inspector.serves", GameText.string("count.house", served), spec.radius),
+            GameText.string("inspector.porters", out, spec.porters(serving: served))
         ]
     }
 }

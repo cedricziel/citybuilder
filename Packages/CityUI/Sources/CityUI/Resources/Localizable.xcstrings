@@ -1411,6 +1411,24 @@
         }
       }
     },
+    "common.none" : {
+      "comment" : "No selection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        }
+      }
+    },
     "common.ok" : {
       "comment" : "Acknowledges an alert.",
       "extractionState" : "manual",
@@ -1567,6 +1585,48 @@
         }
       }
     },
+    "count.house" : {
+      "comment" : "A count of houses.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Haus"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Häuser"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld house"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld houses"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "count.resident" : {
       "comment" : "A count of residents.",
       "extractionState" : "manual",
@@ -1602,6 +1662,90 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld residents"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.roadTile" : {
+      "comment" : "A distance in road tiles.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Straßenfeld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Straßenfelder"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld road tile"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld road tiles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.workshop" : {
+      "comment" : "A count of workshops.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Werkstatt"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Werkstätten"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld workshop"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld workshops"
                 }
               }
             }
@@ -2005,6 +2149,186 @@
         }
       }
     },
+    "inspector.anchor" : {
+      "comment" : "The building's anchor tile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anker: (%1$lld, %2$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor: (%1$lld, %2$lld)"
+          }
+        }
+      }
+    },
+    "inspector.build" : {
+      "comment" : "Build progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bau: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build: %@"
+          }
+        }
+      }
+    },
+    "inspector.buildTicks" : {
+      "comment" : "Build progress in ticks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld Ticks"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld ticks"
+          }
+        }
+      }
+    },
+    "inspector.burning" : {
+      "comment" : "A burning building; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brennt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burning"
+          }
+        }
+      }
+    },
+    "inspector.burntDown" : {
+      "comment" : "%@ is the season; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrannt: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burnt down in %@"
+          }
+        }
+      }
+    },
+    "inspector.clearRuins" : {
+      "comment" : "Button; %@ is the fee.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruinen räumen — %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear ruins — %@"
+          }
+        }
+      }
+    },
+    "inspector.commissionArt" : {
+      "comment" : "Gallery button; %lld is the cost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunst in Auftrag geben ($%lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commission art ($%lld)"
+          }
+        }
+      }
+    },
+    "inspector.commissionEnds" : {
+      "comment" : "%@ is a clock time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunstauftrag endet in %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commission ends in %@"
+          }
+        }
+      }
+    },
+    "inspector.content" : {
+      "comment" : "A resident with no wish.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zufrieden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "content"
+          }
+        }
+      }
+    },
+    "inspector.energised" : {
+      "comment" : "House note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Strom: +2 Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Energised: +2 residents"
+          }
+        }
+      }
+    },
     "inspector.export" : {
       "comment" : "Picks the good a port exports.",
       "extractionState" : "manual",
@@ -2023,6 +2347,564 @@
         }
       }
     },
+    "inspector.fireWatch.covers" : {
+      "comment" : "Buildings a fire watch reaches; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schützt %1$@ im Umkreis von %2$lld Feldern über Straßen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Covers %1$@ within %2$lld tiles by road"
+          }
+        }
+      }
+    },
+    "inspector.footprint" : {
+      "comment" : "Width and height in tiles.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundfläche: %1$lld×%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Footprint: %1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "inspector.forum" : {
+      "comment" : "Rate, houses.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%1$lld Steuern je Einwohner in %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%1$lld tax per resident in %2$@"
+          }
+        }
+      }
+    },
+    "inspector.forum.served" : {
+      "comment" : "Luxury, rate, houses.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %1$@: +%2$lld Steuern je Einwohner in %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serving %1$@: +%2$lld tax per resident in %3$@"
+          }
+        }
+      }
+    },
+    "inspector.fuelled" : {
+      "comment" : "A fuelled building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Brennstoff"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuelled"
+          }
+        }
+      }
+    },
+    "inspector.inReach.grass" : {
+      "comment" : "Grass a forester can plant; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freie Wiese in Reichweite: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open grass in reach: %lld"
+          }
+        }
+      }
+    },
+    "inspector.inReach.trees" : {
+      "comment" : "Trees a lumberjack hut can fell; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bäume in Reichweite: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trees in reach: %lld"
+          }
+        }
+      }
+    },
+    "inspector.inspired" : {
+      "comment" : "House note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beflügelt durch Gönner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspired by patronage"
+          }
+        }
+      }
+    },
+    "inspector.kind" : {
+      "comment" : "The building's catalog id.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Art: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kind: %@"
+          }
+        }
+      }
+    },
+    "inspector.lastCaravan" : {
+      "comment" : "Goods sold and revenue.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Karawane: %1$@ für $%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last caravan: %1$@ for $%2$lld"
+          }
+        }
+      }
+    },
+    "inspector.market" : {
+      "comment" : "Serving market and its distance; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markt: %1$@, %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Market: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "inspector.meadHall" : {
+      "comment" : "Buildings relieved.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halbiert den Unterhalt von %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halves upkeep of %@"
+          }
+        }
+      }
+    },
+    "inspector.meadHall.served" : {
+      "comment" : "Luxury served, buildings relieved.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %1$@: kein Unterhalt für %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serving %1$@: no upkeep for %2$@"
+          }
+        }
+      }
+    },
+    "inspector.monument.complete" : {
+      "comment" : "A finished monument; the English % is literal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollendet: Steuern +10 Prozent"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete: taxes +10%"
+          }
+        }
+      }
+    },
+    "inspector.monument.stage" : {
+      "comment" : "Monument progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bauabschnitt %1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stage %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "inspector.needs" : {
+      "comment" : "A house's needs; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedarf: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs: %@"
+          }
+        }
+      }
+    },
+    "inspector.next" : {
+      "comment" : "Next tier and what it adds; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Stand: %1$@ brauchen %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: %1$@ need %2$@"
+          }
+        }
+      }
+    },
+    "inspector.nextCaravan" : {
+      "comment" : "%@ is a clock time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Karawane in %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next caravan in %@"
+          }
+        }
+      }
+    },
+    "inspector.noLuxury" : {
+      "comment" : "Luxury missing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No %@"
+          }
+        }
+      }
+    },
+    "inspector.outOfFuel" : {
+      "comment" : "%@ is the fuel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Out of %@"
+          }
+        }
+      }
+    },
+    "inspector.physician.burns" : {
+      "comment" : "Amount, good, interval; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbraucht %1$lld %2$@ alle %3$lld Ticks, nur solange Fieber droht oder umgeht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burns %1$lld %2$@ every %3$lld ticks, only while a fever is warned or under way"
+          }
+        }
+      }
+    },
+    "inspector.physician.keeps" : {
+      "comment" : "Houses a physician protects; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hält %1$@ im Umkreis von %2$lld Feldern fieberfrei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps %1$@ within %2$lld tiles safe from fever"
+          }
+        }
+      }
+    },
+    "inspector.porters" : {
+      "comment" : "Porters out of those kept; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Träger: %1$lld von %2$lld unterwegs"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porters: %1$lld of %2$lld out"
+          }
+        }
+      }
+    },
+    "inspector.power" : {
+      "comment" : "Houses and workshops energised.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versorgt %1$@, %2$@ mit Strom"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Energises %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "inspector.problem" : {
+      "comment" : "What stops a building; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem: %@"
+          }
+        }
+      }
+    },
+    "inspector.pullDown" : {
+      "comment" : "Button; %@ is the fee.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abreißen — %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull down — %@"
+          }
+        }
+      }
+    },
+    "inspector.ready" : {
+      "comment" : "Build progress of a finished building.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fertig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ready"
+          }
+        }
+      }
+    },
+    "inspector.residents" : {
+      "comment" : "Residents of capacity; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einwohner: %1$lld/%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Residents: %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "inspector.road" : {
+      "comment" : "Road connection; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Straße: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Road: %@"
+          }
+        }
+      }
+    },
+    "inspector.road.connected" : {
+      "comment" : "Connected to a road.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "angeschlossen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "connected"
+          }
+        }
+      }
+    },
+    "inspector.road.none" : {
+      "comment" : "No road connection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "none"
+          }
+        }
+      }
+    },
     "inspector.routeFromHere" : {
       "comment" : "Starts a ship route at this port.",
       "extractionState" : "manual",
@@ -2037,6 +2919,438 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Route from here"
+          }
+        }
+      }
+    },
+    "inspector.ruinsOf" : {
+      "comment" : "Title of ruins; %@ is what stood there.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruine: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruins of a %@"
+          }
+        }
+      }
+    },
+    "inspector.serves" : {
+      "comment" : "Houses served and reach; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versorgt: %1$@ im Umkreis von %2$lld Straßenfeldern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serves: %1$@ within %2$lld road tiles"
+          }
+        }
+      }
+    },
+    "inspector.serving" : {
+      "comment" : "Luxury served.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bietet %@ an"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serving %@"
+          }
+        }
+      }
+    },
+    "inspector.shortage" : {
+      "comment" : "Good, intervals short, intervals allowed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangel an %1$@: %2$lld von %3$lld Intervallen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short of %1$@: %2$lld of %3$lld intervals"
+          }
+        }
+      }
+    },
+    "inspector.smoky" : {
+      "comment" : "House note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verraucht: −2 Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoky: −2 residents"
+          }
+        }
+      }
+    },
+    "inspector.speedsUp" : {
+      "comment" : "%@ counts workshops.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschleunigt %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speeds up %@"
+          }
+        }
+      }
+    },
+    "inspector.state" : {
+      "comment" : "The building's state; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zustand: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State: %@"
+          }
+        }
+      }
+    },
+    "inspector.stateName.burning" : {
+      "comment" : "Building state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brennt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "burning"
+          }
+        }
+      }
+    },
+    "inspector.stateName.constructing" : {
+      "comment" : "Building state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "im Bau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "constructing"
+          }
+        }
+      }
+    },
+    "inspector.stateName.operational" : {
+      "comment" : "Building state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in Betrieb"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "operational"
+          }
+        }
+      }
+    },
+    "inspector.stateName.planned" : {
+      "comment" : "Building state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "geplant"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "planned"
+          }
+        }
+      }
+    },
+    "inspector.stateName.ruins" : {
+      "comment" : "Building state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruine"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ruins"
+          }
+        }
+      }
+    },
+    "inspector.steam" : {
+      "comment" : "Workshops sped up, houses smoked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschleunigt %1$@ · verraucht %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speeds up %1$@ · smokes %2$@"
+          }
+        }
+      }
+    },
+    "inspector.stock" : {
+      "comment" : "A house's stock; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorrat: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stock: %@"
+          }
+        }
+      }
+    },
+    "inspector.temple" : {
+      "comment" : "Rate, residents.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%1$lld Wissen je Einwohner aus %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%1$lld knowledge per resident from %2$@"
+          }
+        }
+      }
+    },
+    "inspector.temple.served" : {
+      "comment" : "Luxury, rate, residents.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %1$@: +%2$lld Wissen je Einwohner aus %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serving %1$@: +%2$lld knowledge per resident from %3$@"
+          }
+        }
+      }
+    },
+    "inspector.tier" : {
+      "comment" : "A house's tier.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stand: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tier: %@"
+          }
+        }
+      }
+    },
+    "inspector.wants" : {
+      "comment" : "A resident's wish.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wünscht %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wants %@"
+          }
+        }
+      }
+    },
+    "inspector.watchman" : {
+      "comment" : "The fire watch's watchman; also the callout's marker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wächter: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchman: %@"
+          }
+        }
+      }
+    },
+    "inspector.watchman.atWatch" : {
+      "comment" : "Watchman state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "auf der Wache"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "at the watch"
+          }
+        }
+      }
+    },
+    "inspector.watchman.dousing" : {
+      "comment" : "Watchman state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "löscht einen Brand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dousing a fire"
+          }
+        }
+      }
+    },
+    "inspector.watchman.noRoad" : {
+      "comment" : "Watchman state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kommt nicht los: keine Straße"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "can't leave: no road"
+          }
+        }
+      }
+    },
+    "inspector.watchman.walking" : {
+      "comment" : "Watchman state.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eilt zu einem Brand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "walking to a fire"
+          }
+        }
+      }
+    },
+    "list.and" : {
+      "comment" : "Joins two list items.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " und "
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " and "
           }
         }
       }
@@ -3189,6 +4503,168 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Game Paused"
+          }
+        }
+      }
+    },
+    "problem.noMarketInReach" : {
+      "comment" : "House problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Markt in Reichweite: baue einen Marktplatz in der Nähe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No market in reach: build a marketplace near it"
+          }
+        }
+      }
+    },
+    "problem.noRoad" : {
+      "comment" : "Building problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Straße: schließ es an eine Straße an"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No road: connect it to a road"
+          }
+        }
+      }
+    },
+    "problem.noRoomToPlant" : {
+      "comment" : "%lld is the forester's reach.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine freie Wiese im Umkreis von %lld Feldern zum Pflanzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No open grass within %lld tiles to plant"
+          }
+        }
+      }
+    },
+    "problem.noRouteToStorage" : {
+      "comment" : "Building problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Straße erreicht weder Lagerhaus noch Marktplatz noch Rathaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its road doesn't reach a warehouse, marketplace or the town center"
+          }
+        }
+      }
+    },
+    "problem.noTreesInReach" : {
+      "comment" : "%lld is the hut's reach.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Wald im Umkreis von %lld Feldern: baue einen Förster daneben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No forest within %lld tiles: build a forester beside it"
+          }
+        }
+      }
+    },
+    "problem.outputStuck" : {
+      "comment" : "%@ is the output good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ware staut sich: kein Platz für %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output stuck: no room for %@"
+          }
+        }
+      }
+    },
+    "problem.shortLeaving" : {
+      "comment" : "A house losing residents.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangel an %@: Einwohner ziehen fort"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short of %@: residents are leaving"
+          }
+        }
+      }
+    },
+    "problem.shortWillLeave" : {
+      "comment" : "A house about to lose residents.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangel an %@: Einwohner werden fortziehen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short of %@: residents will leave"
+          }
+        }
+      }
+    },
+    "problem.waitingFor" : {
+      "comment" : "%@ lists the missing inputs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for %@"
           }
         }
       }
