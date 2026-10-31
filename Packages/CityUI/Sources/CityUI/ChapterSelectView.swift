@@ -204,7 +204,7 @@ struct ChapterDetailView: View {
         Button {
             if let world = model.makeWorld() { onStart(world) }
         } label: {
-            Text(model.blockedReason ?? "Start chapter").frame(maxWidth: .infinity)
+            Text(verbatim: model.blockedReason ?? GameText.string("chapter.start")).frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)

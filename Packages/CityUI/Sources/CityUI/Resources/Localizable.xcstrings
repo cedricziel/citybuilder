@@ -1429,6 +1429,258 @@
         }
       }
     },
+    "chapter.backToChapters" : {
+      "comment" : "Card button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück zu den Kapiteln"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to chapters"
+          }
+        }
+      }
+    },
+    "chapter.before" : {
+      "comment" : "%@ is a year.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vor %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before %@"
+          }
+        }
+      }
+    },
+    "chapter.begin" : {
+      "comment" : "Starts a chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los geht's"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin"
+          }
+        }
+      }
+    },
+    "chapter.bonusPrefix" : {
+      "comment" : "Before a bonus goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonus: "
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonus: "
+          }
+        }
+      }
+    },
+    "chapter.comingLater" : {
+      "comment" : "Chapter status.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommt später"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coming later"
+          }
+        }
+      }
+    },
+    "chapter.keepBuilding" : {
+      "comment" : "Card button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiterbauen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep building"
+          }
+        }
+      }
+    },
+    "chapter.laurels" : {
+      "comment" : "Fact label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lorbeeren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laurels"
+          }
+        }
+      }
+    },
+    "chapter.laurelsOf" : {
+      "comment" : "Laurels won of possible.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "chapter.locked" : {
+      "comment" : "Chapter status.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked"
+          }
+        }
+      }
+    },
+    "chapter.lostBankrupt" : {
+      "comment" : "Loss detail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadtkasse war zu lange im Minus. Du kannst noch im Pausemenü speichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The treasury stayed in the red too long. You can still save from the pause menu."
+          }
+        }
+      }
+    },
+    "chapter.lostCollapse" : {
+      "comment" : "Loss detail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine ganze Jahreszeit lang blieben zu wenige Einwohner. Du kannst weiterbauen oder es noch einmal versuchen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too few residents stayed for a whole season. You can keep building, or try again."
+          }
+        }
+      }
+    },
+    "chapter.lostDeadline" : {
+      "comment" : "Loss detail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Jahr begann mit offenen Zielen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The year began with goals unmet."
+          }
+        }
+      }
+    },
+    "chapter.lostDeadlineGoal" : {
+      "comment" : "Year and unmet goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ begann, „%2$@“ war nicht erreicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ began with “%2$@” unmet."
+          }
+        }
+      }
+    },
+    "chapter.lostEyebrow" : {
+      "comment" : "Lost chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel %lld verloren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %lld lost"
+          }
+        }
+      }
+    },
     "chapter.lostIf" : {
       "comment" : "A chapter's lose conditions.",
       "extractionState" : "manual",
@@ -1443,6 +1695,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lost if"
+          }
+        }
+      }
+    },
+    "chapter.lostRace" : {
+      "comment" : "Loss detail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Nachbarstadt war vor dir am Ziel. Du kannst weiterbauen oder es noch einmal versuchen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A rival town reached the race goal before yours. You can keep building, or try again."
+          }
+        }
+      }
+    },
+    "chapter.next" : {
+      "comment" : "%@ is the next chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: %@"
+          }
+        }
+      }
+    },
+    "chapter.noRivals" : {
+      "comment" : "A chapter without rivals.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no rivals"
+          }
+        }
+      }
+    },
+    "chapter.number" : {
+      "comment" : "A chapter's number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %lld"
+          }
+        }
+      }
+    },
+    "chapter.open" : {
+      "comment" : "Chapter status.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
+    "chapter.retry" : {
+      "comment" : "Card button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel wiederholen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry chapter"
           }
         }
       }
@@ -1465,6 +1825,24 @@
         }
       }
     },
+    "chapter.start" : {
+      "comment" : "Starts the selected chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel beginnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start chapter"
+          }
+        }
+      }
+    },
     "chapter.starts" : {
       "comment" : "How a chapter starts.",
       "extractionState" : "manual",
@@ -1479,6 +1857,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starts"
+          }
+        }
+      }
+    },
+    "chapter.unlockOther" : {
+      "comment" : "Campaign and chapter that unlock this one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewinne Kapitel %2$lld von %1$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Win %1$@ chapter %2$lld"
+          }
+        }
+      }
+    },
+    "chapter.unlockSame" : {
+      "comment" : "What unlocks a chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewinne Kapitel %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Win chapter %lld"
+          }
+        }
+      }
+    },
+    "chapter.won" : {
+      "comment" : "Difficulty and laurels.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewonnen (%1$@) · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Won on %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "chapter.wonEyebrow" : {
+      "comment" : "Number and difficulty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel %1$lld gewonnen · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$lld won · %2$@"
           }
         }
       }
@@ -2017,6 +2467,48 @@
         }
       }
     },
+    "count.laurel" : {
+      "comment" : "A count of laurels.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Lorbeer"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Lorbeeren"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld laurel"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld laurels"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "count.resident" : {
       "comment" : "A count of residents.",
       "extractionState" : "manual",
@@ -2059,6 +2551,48 @@
         }
       }
     },
+    "count.rival" : {
+      "comment" : "A count of rival towns.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Nachbar"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Nachbarn"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rival"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rivals"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "count.roadTile" : {
       "comment" : "A distance in road tiles.",
       "extractionState" : "manual",
@@ -2094,6 +2628,48 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld road tiles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.season" : {
+      "comment" : "A count of seasons.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Jahreszeit"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Jahreszeiten"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld season"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seasons"
                 }
               }
             }
@@ -2178,6 +2754,48 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld workshops"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "count.year" : {
+      "comment" : "A count of years.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Jahr"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Jahre"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld years"
                 }
               }
             }
@@ -2307,6 +2925,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@ BC"
+          }
+        }
+      }
+    },
+    "date.yearBC" : {
+      "comment" : "A year before year 1.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld v. Chr."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld BC"
           }
         }
       }
@@ -2761,6 +3397,360 @@
         }
       }
     },
+    "goal.age" : {
+      "comment" : "%@ is the age.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreiche ein neues Zeitalter: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reach the %@ age"
+          }
+        }
+      }
+    },
+    "goal.forSeason" : {
+      "comment" : "Appended to a goal held for a season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " eine Jahreszeit lang"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " for a season"
+          }
+        }
+      }
+    },
+    "goal.holdSeason" : {
+      "comment" : "Goal still to hold.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · eine Jahreszeit halten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · hold a season"
+          }
+        }
+      }
+    },
+    "goal.holding" : {
+      "comment" : "Goal being held.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · wird gehalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · holding"
+          }
+        }
+      }
+    },
+    "goal.landed" : {
+      "comment" : "Amount and good.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bringe %1$lld %2$@ per Schiff nach Hause"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Land %1$lld %2$@ at home by ship"
+          }
+        }
+      }
+    },
+    "goal.netIncome" : {
+      "comment" : "%@ is money.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschuss von %@ je Jahreszeit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Net income of %@ a season"
+          }
+        }
+      }
+    },
+    "goal.orders" : {
+      "comment" : "Orders goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Erfülle einen Auftrag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Erfülle %lld Aufträge"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Fulfil an order"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Fulfil %lld orders"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "goal.outgrow" : {
+      "comment" : "Goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überflügle jede Nachbarstadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgrow every rival"
+          }
+        }
+      }
+    },
+    "goal.ownMany" : {
+      "comment" : "Own several buildings; English uses the plural.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Besitze %1$lld × %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "goal.ownOne" : {
+      "comment" : "Own one building; English adds its article.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Besitze: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own %@"
+          }
+        }
+      }
+    },
+    "goal.population" : {
+      "comment" : "A population goal: count and tier.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %2$@"
+          }
+        }
+      }
+    },
+    "goal.research" : {
+      "comment" : "%@ is the tech.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erforsche %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Research %@"
+          }
+        }
+      }
+    },
+    "goal.residents" : {
+      "comment" : "Population goal for the first tier.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "residents"
+          }
+        }
+      }
+    },
+    "goal.signature" : {
+      "comment" : "Signature projects goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vollende ein Prestigeprojekt"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vollende %lld Prestigeprojekte"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Complete a signature project"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Complete %lld signature projects"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "goal.stock" : {
+      "comment" : "A stock goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %2$@ im Lager"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %2$@ in store"
+          }
+        }
+      }
+    },
+    "goal.trade" : {
+      "comment" : "%@ is money.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verdiene %@ mit Handel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earn %@ from trade"
+          }
+        }
+      }
+    },
+    "goal.treasury" : {
+      "comment" : "%@ is money.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stadtkasse von %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treasury of %@"
+          }
+        }
+      }
+    },
     "goals.bonusHeader" : {
       "comment" : "Header over bonus goals.",
       "extractionState" : "manual",
@@ -2847,6 +3837,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Goals"
+          }
+        }
+      }
+    },
+    "goalsPanel.landed" : {
+      "comment" : "Good and progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ per Schiff heimgebracht %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ landed at home %2$@"
+          }
+        }
+      }
+    },
+    "goalsPanel.netIncome" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschuss letzte Jahreszeit %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Net income last season %@"
+          }
+        }
+      }
+    },
+    "goalsPanel.orders" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfüllte Aufträge %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orders fulfilled %@"
+          }
+        }
+      }
+    },
+    "goalsPanel.outgrow" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überflügle jede Nachbarstadt %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgrow every rival %@"
+          }
+        }
+      }
+    },
+    "goalsPanel.residents" : {
+      "comment" : "Population goal label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Residents"
+          }
+        }
+      }
+    },
+    "goalsPanel.signature" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prestigeprojekte %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature projects %@"
+          }
+        }
+      }
+    },
+    "goalsPanel.trade" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Handel verdient %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earned from trade %@"
+          }
+        }
+      }
+    },
+    "goalsPanel.treasury" : {
+      "comment" : "%@ is progress.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stadtkasse %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treasury %@"
           }
         }
       }
@@ -4363,6 +5497,24 @@
         }
       }
     },
+    "list.commaOr" : {
+      "comment" : "Joins lose conditions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", oder "
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", or "
+          }
+        }
+      }
+    },
     "list.or" : {
       "comment" : "Joins the last item of a list.",
       "extractionState" : "manual",
@@ -4377,6 +5529,168 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : " or "
+          }
+        }
+      }
+    },
+    "lost.aRival" : {
+      "comment" : "An unnamed rival.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Nachbarstadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A rival"
+          }
+        }
+      }
+    },
+    "lost.bankruptcy" : {
+      "comment" : "Chapter lost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadtkasse ist leer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The treasury ran dry"
+          }
+        }
+      }
+    },
+    "lost.collapse" : {
+      "comment" : "Chapter lost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt hat sich geleert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town emptied out"
+          }
+        }
+      }
+    },
+    "lost.deadline" : {
+      "comment" : "Chapter lost.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Jahr wechselte, bevor die Ziele erreicht waren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The year turned before the goals were met"
+          }
+        }
+      }
+    },
+    "lost.race" : {
+      "comment" : "%@ is the rival.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ war schneller"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ got there first"
+          }
+        }
+      }
+    },
+    "lostIf.bankruptcy" : {
+      "comment" : "A lose condition.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bankrott"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bankruptcy"
+          }
+        }
+      }
+    },
+    "lostIf.collapse" : {
+      "comment" : "Collapse floor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Stadt fällt eine Jahreszeit lang unter %lld Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the town falls below %lld residents for a season"
+          }
+        }
+      }
+    },
+    "lostIf.deadline" : {
+      "comment" : "%@ is a year.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ beginnt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ begins"
+          }
+        }
+      }
+    },
+    "lostIf.race" : {
+      "comment" : "%@ is the race target.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine Nachbarstadt erreicht zuerst %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a rival reaches %@ first"
           }
         }
       }
@@ -6505,6 +7819,114 @@
         }
       }
     },
+    "race.age" : {
+      "comment" : "%@ is the age a rival races to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "das Zeitalter %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the %@"
+          }
+        }
+      }
+    },
+    "race.firstToAge" : {
+      "comment" : "Race title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wer zuerst das Zeitalter %@ erreicht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First to the %@"
+          }
+        }
+      }
+    },
+    "race.firstToPopulation" : {
+      "comment" : "Race title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wer zuerst %lld Einwohner hat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First to %lld residents"
+          }
+        }
+      }
+    },
+    "race.population" : {
+      "comment" : "Population a rival races to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Einwohner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld residents"
+          }
+        }
+      }
+    },
+    "race.youAge" : {
+      "comment" : "Your age in a race.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You: %@"
+          }
+        }
+      }
+    },
+    "race.youCount" : {
+      "comment" : "Your standing in a race.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du %1$lld/%2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You %1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "research.cost" : {
       "comment" : "A tech's cost.",
       "extractionState" : "manual",
@@ -6609,6 +8031,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unlocks: %@"
+          }
+        }
+      }
+    },
+    "reward.banner" : {
+      "comment" : "A chapter reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banner „%@“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banner “%@”"
+          }
+        }
+      }
+    },
+    "reward.decor" : {
+      "comment" : "A chapter reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zierde „%@“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decor “%@”"
+          }
+        }
+      }
+    },
+    "reward.mapPreset" : {
+      "comment" : "A chapter reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartenvorlage „%@“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Map preset “%@”"
           }
         }
       }
@@ -8049,6 +9525,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Costs $%lld"
+          }
+        }
+      }
+    },
+    "time.lastSeason" : {
+      "comment" : "No time left but this season.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Jahreszeit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last season"
+          }
+        }
+      }
+    },
+    "time.left" : {
+      "comment" : "%@ is a duration.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ left"
           }
         }
       }
