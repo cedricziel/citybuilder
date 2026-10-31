@@ -86,6 +86,7 @@ public struct StatisticsModel: Equatable, Sendable {
         public let residents: Int
         public let age: String
         public let wealth: String
+        public var isPlayer = false
 
         public var id: String {
             name
@@ -269,7 +270,8 @@ public struct StatisticsModel: Equatable, Sendable {
         guard let latest = seasons.last else { return [] }
         let you = RivalRow(
             name: GameText.string("stats.you"), colourHex: RivalColour.playerHex, residents: latest.residents.values.reduce(0, +),
-            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale)
+            age: latest.age.displayName, wealth: HUDViewModel.formatMoney(latest.money.balance, locale: locale),
+            isPlayer: true
         )
         let others = latest.rivals.map { rival in
             RivalRow(

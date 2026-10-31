@@ -10,14 +10,10 @@ public struct RivalMarketSection: Equatable, Sendable {
     public let buys: [String]
 
     init(_ rival: RivalSummary) {
-        let sells = rival.sellOffers.map { GameText.string("rivalMarket.sells", Self.name($0.good), $0.price, $0.quantity) }
-        let buys = rival.buyOffers.map { GameText.string("rivalMarket.buys", Self.name($0.good), $0.price, $0.quantity) }
+        let sells = rival.sellOffers.map { GameText.string("rivalMarket.sells", $0.good.displayName, $0.price, $0.quantity) }
+        let buys = rival.buyOffers.map { GameText.string("rivalMarket.buys", $0.good.displayName, $0.price, $0.quantity) }
         self.sells = sells.isEmpty ? [GameText.string("rivalMarket.nothingForSale")] : sells
         self.buys = buys.isEmpty ? [GameText.string("rivalMarket.buyingNothing")] : buys
-    }
-
-    private static func name(_ good: Good) -> String {
-        good.displayName
     }
 }
 

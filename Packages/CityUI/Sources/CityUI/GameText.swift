@@ -93,8 +93,7 @@ public enum GameText {
     /// stored name as it is. The world and saves keep the English (design
     /// D12 of `add-localization`).
     public static func townName(_ stored: String, in language: Language = .current) -> String {
-        let key = townNameKey(stored)
-        return table.format(for: key, in: language.catalogLanguage.rawValue, arguments: []) == nil ? stored : string(key, in: language)
+        string(townNameKey(stored), orStored: stored, in: language)
     }
 
     /// `rivalTown.bayOfKnives` for "Bay of Knives".
