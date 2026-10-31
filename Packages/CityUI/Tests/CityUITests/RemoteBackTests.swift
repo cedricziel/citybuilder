@@ -99,6 +99,7 @@ func scenarioDemolishRemovesOnlyTheBuildingUnderTheReticle() {
     session.selectTool(.demolish)
     var mapper = RemoteInputMapper()
     select(&mapper, session, at: 0)
+    session.confirmDemolish()
     _ = mapper.handle(.click(.right), at: 1, session: session)
     _ = mapper.handle(.click(.right), at: 2, session: session)
     #expect(session.world.pendingCommands == [.demolish(at: tile(5, 5))])

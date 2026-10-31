@@ -76,7 +76,10 @@ extension RemoteInputMapper {
             return []
         }
         session.handleTap(at: reticle)
-        return []
+        // The demolish confirmation takes the remote until it closes.
+        guard session.demolishRequest != nil else { return [] }
+        focus = .hud
+        return [.focusHUD]
     }
 
     private static func tooltipTarget(in session: GameSession) -> EntityID? {

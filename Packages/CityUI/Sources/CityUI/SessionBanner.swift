@@ -51,6 +51,7 @@ extension GameSession {
                 clearTool()
                 cancelPendingPlacement()
                 tileMenuRequest = nil
+                demolishRequest = nil
                 routeAuthoring = nil
             case .scenarioWon, .scenarioLost:
                 noteScenarioEnd(event)
