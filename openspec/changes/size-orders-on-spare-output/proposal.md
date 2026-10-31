@@ -20,6 +20,6 @@ Orders are sized from what the town *made* of a good (#379). Since the market hu
 ## Impact
 
 - **CityCore**: `GoodFlow.spare`, `World.recentOrderUnits(for:)`.
-- **Determinism**: the `DeterminismFixture` issues orders, so its output changes; the macOS/Linux compare is unaffected.
+- **Determinism**: the `DeterminismFixture` issues no orders, so its output is unchanged (36,000 ticks, byte-identical before and after).
 - **Archive order**: the deltas modify requirements that `add-orders` and `add-event-counterplay` add, so this change archives after both.
 - No new player-visible text.
