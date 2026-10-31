@@ -296,7 +296,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Freie Wiese in Reichweite: %lld"
+            "value" : "Wiese in Reichweite: %lld"
           }
         },
         "en" : {
@@ -11199,6 +11199,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap to position, then tap ✓ to place"
+          }
+        }
+      }
+    },
+    "tool.positionPlace.short" : {
+      "comment" : "Place hint on touch when the in-reach count follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe zum Platzieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to position"
           }
         }
       }

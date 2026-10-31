@@ -68,7 +68,7 @@ func scenarioToolStripHintShowsTreesAtTheCandidateSite() throws {
     try session.handleHover(at: anchor(for: .lumberjackHut, reaching: 9, in: session.world))
     #expect(session.armedInReachCount(idiom: .phone) == 9)
     let hint = ToolStripText.hint(for: session.selectedTool, idiom: .phone, inReach: session.armedInReachCount(idiom: .phone))
-    #expect(hint == "Tap to position, then tap ✓ to place · 9 trees in reach")
+    #expect(hint == "Tap to position · 9 trees in reach")
 }
 
 @MainActor

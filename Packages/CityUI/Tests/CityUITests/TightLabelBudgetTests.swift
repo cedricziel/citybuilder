@@ -86,11 +86,12 @@ struct TightLabelBudgetTests {
         TightLabel(name: "tool strip title", font: .subheadline, width: toolStripWidth - costSuffixWidth) { language in
             BuildPalette.kinds.map { GameText.string($0.nameKey, in: language) } + strings("tool.demolish", in: language)
         },
-        // The hint with a hut's in-reach count appended truncates in English too (#366).
         TightLabel(name: "tool strip hint", font: .caption2, width: toolStripWidth, pseudoIssue: 365) { language in
             let road = GameText.inSentence(GameText.string(BuildingKind.road.nameKey, in: language), in: language)
+            let short = GameText.string("tool.positionPlace.short", in: language)
             return strings("tool.demolishHint.tap", "tool.positionPlace", in: language)
                 + [GameText.string("tool.dragPlace.tap", road, in: language)]
+                + ["tool.inReach.trees", "aoe.grass"].map { "\(short) · \(GameText.string($0, 18, in: language))" }
         },
         // The sheet is at least 320 wide; a row pads 24 outside and 12 inside, its icon takes 20 and a gap of 10.
         TightLabel(name: "pause menu action", font: .body, width: 320 - 48 - 24 - 30) { language in
