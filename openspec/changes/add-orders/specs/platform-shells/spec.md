@@ -65,7 +65,7 @@ The game screen SHALL raise a banner when an order is offered, fulfilled or miss
 
 ### Requirement: Orders chip in the HUD
 
-The HUD SHALL show an orders entry with the count of accepted orders over the open limit and a mark when an offer waits. On iPad, Mac and Apple TV it SHALL be a capsule ("Orders 1/2") at the left of the menu buttons; on an iPhone it SHALL be a round button with the count as its badge, and in the More menu of a phone in portrait it SHALL be an item. Activating it SHALL open or close the board. The entry SHALL be hidden in games without an active calendar.
+The HUD SHALL show an orders entry with the count of accepted orders over the open limit and a mark when an offer waits. On iPad and Mac it SHALL be a capsule ("Orders 1/2") at the left of the menu buttons; on an iPhone and on Apple TV, whose top bar has no room for the word in either language, it SHALL be a round button with the count as its badge, and in the More menu of a phone in portrait it SHALL be an item. Activating it SHALL open or close the board. The entry SHALL be hidden in games without an active calendar.
 
 #### Scenario: Chip counts accepted orders
 

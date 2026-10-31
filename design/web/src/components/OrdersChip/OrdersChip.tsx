@@ -7,7 +7,7 @@ export interface OrdersChipProps {
   accepted: number;
   /** An offer waits on the board: a red dot marks the chip. */
   offerWaiting?: boolean;
-  /** `capsule` ("Orders 1/2") on iPad, Mac and Apple TV; `round` with the count as a badge on a phone. Default `capsule`. */
+  /** `capsule` ("Orders 1/2") on iPad and Mac; `round` with the count as a badge on a phone and on Apple TV, whose top bar has no room for the word. Default `capsule`. */
   form?: "capsule" | "round";
   onClick?: () => void;
 }

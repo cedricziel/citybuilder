@@ -80,6 +80,12 @@ public struct HUDLayout: Equatable, Sendable {
         !isPhone
     }
 
+    /// The orders entry is a round button with the offer dot where the top
+    /// bar has no room for its word: on a phone, and on Apple TV (#305).
+    public var showsRoundOrdersEntry: Bool {
+        isPhone || idiom == .tv
+    }
+
     public var foldsMenus: Bool {
         isPhone && placement == .bottomDock
     }

@@ -137,12 +137,6 @@ struct TightLabelBudgetTests {
             let fee = BuildingKind.allCases.map { World.clearingFee(of: $0) }.max() ?? 0
             let money = HUDViewModel.formatMoney(fee, locale: language.locale)
             return ["inspector.clearRuins", "inspector.pullDown"].map { GameText.string($0, money, in: language) }
-        },
-        // #305. In playtest screenshot 40 (playtests/2026-10-29-fire-season) Apple TV's top bar leaves the
-        // chip about 110 points beside the pill and seven round buttons: less its padding of 12 a side, its
-        // scroll glyph (about 34) and two gaps of 6, the words get about 40.
-        TightLabel(name: "orders chip, Apple TV", font: .tvSubheadline, width: 40, layoutIssue: 305, pseudoIssue: 365) { language in
-            [GameText.string("orders.title", in: language) + " 0/\(OrderRules.maxAccepted)"]
         }
     ]
 
