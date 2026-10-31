@@ -1,5 +1,9 @@
 import Foundation
+import SwiftUI
 import Testing
+#if canImport(AppKit)
+import AppKit
+#endif
 @testable import CityCore
 @testable import CityUI
 
@@ -210,13 +214,18 @@ func tileMenuPricesRuins() {
     #expect(TileMenuItem.demolishPaid("Clear ruins — $15").title == "Clear ruins — $15")
 }
 
+// A 300-point phone with the first steps leaves the chip 78 points; without them, 300.
+#if canImport(AppKit)
+@MainActor
 @Test("scenario: the chip never truncates on a 300-point phone with the first steps")
 func chipOnANarrowPhoneWithFirstSteps() {
     let phone = HUDLayout.make(size: CGSize(width: 320, height: 568), idiom: .phone)
-    #expect(!EventChipLayout.showsText(layout: phone, hudWidth: 300, showsFirstSteps: true))
-    #expect(EventChipLayout.showsText(layout: phone, hudWidth: 300, showsFirstSteps: false))
-    #expect(EventChipLayout.showsText(layout: phone, hudWidth: 390, showsFirstSteps: true))
+    let chip = EventChip(SeasonalEventOnset(event: .fire, season: .summer), burning: 0)
+    let label = NSHostingController(rootView: EventChipLabel(chip: chip, layout: phone))
+    #expect(label.sizeThatFits(in: CGSize(width: 78, height: 100)).width == EventChipLayout.minimumTapSide)
+    #expect(label.sizeThatFits(in: CGSize(width: 300, height: 100)).width > 78)
 }
+#endif
 
 @Test("scenario: on Apple TV the chip is tall enough to focus")
 func chipOnAppleTV() {

@@ -20,6 +20,7 @@ public enum ToolStripText {
         let name = GameText.inSentence(tool.displayName)
         // The Apple TV remote's touch surface clicks, so its hints say so.
         let touch = idiom == .phone || idiom == .pad
+        let count: String? = if case let .place(kind) = tool, let inReach { inReachText(kind, count: inReach) } else { nil }
         let base = switch (tool, idiom) {
         case (.inspect, _): ""
         case (.demolish, _): if touch { GameText.string("tool.demolishHint.tap") } else { GameText.string("tool.demolishHint.click") }
@@ -27,10 +28,12 @@ public enum ToolStripText {
         case (.place, .tv): GameText.string("tool.placeTV", name)
         // Touch positions a building first: a tap shows the nudge arrows, and the check places it.
         case (.place(.road), .phone), (.place(.road), .pad): GameText.string("tool.dragPlace.tap", name)
-        case (.place, .phone), (.place, .pad): GameText.string("tool.positionPlace")
+        // With the count after it the full hint overflows a small phone's strip.
+        case (.place, .phone), (.place, .pad):
+            if count == nil { GameText.string("tool.positionPlace") } else { GameText.string("tool.positionPlace.short") }
         case (.place, _): GameText.string("tool.dragPlace.click", name)
         }
-        guard case let .place(kind) = tool, let inReach, let count = inReachText(kind, count: inReach) else { return base }
+        guard let count else { return base }
         // The Apple TV instruction ends in a sentence, so the count leads.
         return idiom == .tv ? "\(count) · \(base)" : "\(base) · \(count)"
     }

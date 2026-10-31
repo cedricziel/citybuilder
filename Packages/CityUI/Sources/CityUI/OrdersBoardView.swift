@@ -187,8 +187,8 @@ struct OrdersBoardSheet: View {
     }
 }
 
-/// The HUD entry: a capsule with the open count, or on a phone a round
-/// button with a badge. A dot marks a waiting offer.
+/// The HUD entry: a capsule with the open count, or on a phone and Apple TV
+/// a round button. A dot marks a waiting offer.
 struct OrdersChipView: View {
     let chip: OrdersChipModel
     let layout: HUDLayout
@@ -196,7 +196,7 @@ struct OrdersChipView: View {
 
     var body: some View {
         Button(action: action) {
-            if layout.isPhone {
+            if layout.showsRoundOrdersEntry {
                 Image(systemName: "scroll.fill")
                     .imageScale(.large)
                     .padding(8)
