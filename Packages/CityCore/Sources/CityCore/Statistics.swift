@@ -21,6 +21,14 @@ public struct GoodFlow: Codable, Hashable, Sendable {
         usedByHouses + usedByProduction + usedByConstruction
     }
 
+    /// What reached the stores and stayed there: made and bought, less what
+    /// production and building used and the market sold. The houses' share
+    /// counts, since the player can divert it. Negative in a season that
+    /// drew on its stock. Spec: `orders` / Order size follows the town's output.
+    var spare: Int {
+        made + bought - usedByProduction - usedByConstruction - sold
+    }
+
     /// Nothing made, used, sold, bought, stored or stuck.
     public var isEmpty: Bool {
         self == GoodFlow()

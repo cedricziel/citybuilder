@@ -37,12 +37,15 @@ struct OrdersFixture {
 
     /// Four closed seasons in which the player made `perSeason` units of each good.
     mutating func seedOutput(_ output: [Good: Int]) {
+        seedFlows(output.mapValues { GoodFlow.made($0) })
+    }
+
+    /// Four closed seasons with `flows` as each season's goods.
+    mutating func seedFlows(_ flows: [Good: GoodFlow]) {
         world.statistics.seasons = (0 ..< 4).map { season in
             var record = SeasonStatistics()
             record.season = season
-            for (good, made) in output {
-                record.goods[good] = GoodFlow.made(made)
-            }
+            record.goods = flows
             return record
         }
     }
@@ -60,9 +63,15 @@ struct OrdersFixture {
     /// Crosses the boundary of `season` with `output` as the last four seasons' output.
     @discardableResult
     mutating func cross(season: Int, output: [Good: Int]) -> [WorldEvent] {
+        cross(season: season, flows: output.mapValues { GoodFlow.made($0) })
+    }
+
+    /// Crosses the boundary of `season` with `flows` as each of the last four seasons' goods.
+    @discardableResult
+    mutating func cross(season: Int, flows: [Good: GoodFlow]) -> [WorldEvent] {
         let boundary = UInt64(season) * CalendarState.ticksPerSeason
         var events = run(to: boundary - 1)
-        seedOutput(output)
+        seedFlows(flows)
         events += run(to: boundary)
         return events
     }
@@ -92,9 +101,16 @@ struct OrdersFixture {
 }
 
 extension GoodFlow {
-    static func made(_ units: Int) -> GoodFlow {
+    static func made(
+        _ units: Int, bought: Int = 0, usedByHouses: Int = 0, usedByProduction: Int = 0, usedByConstruction: Int = 0, sold: Int = 0
+    ) -> GoodFlow {
         var flow = GoodFlow()
         flow.made = units
+        flow.bought = bought
+        flow.usedByHouses = usedByHouses
+        flow.usedByProduction = usedByProduction
+        flow.usedByConstruction = usedByConstruction
+        flow.sold = sold
         return flow
     }
 }
