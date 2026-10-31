@@ -55,7 +55,12 @@ public struct InspectorViewModel: Sendable {
 
     /// Build an inspector model from a snapshot + a target tile. Returns
     /// an empty model when the tile is unoccupied — the view hides itself.
-    public static func make(from snapshot: WorldSnapshot, tile: TileCoordinate, buildings: [EntityID: Building]) -> InspectorViewModel {
+    /// `fireWatchCover` counts what a fire watch covers (`World.fireWatchCover(of:)`); a snapshot
+    /// alone can't, so without it a watch covers nothing.
+    public static func make(
+        from snapshot: WorldSnapshot, tile: TileCoordinate, buildings: [EntityID: Building],
+        fireWatchCover: (Building) -> Int = { _ in 0 }
+    ) -> InspectorViewModel {
         guard let entityID = snapshot.occupiedTiles[tile],
               let building = buildings[entityID]
         else { return InspectorViewModel(bullets: []) }
@@ -94,7 +99,7 @@ public struct InspectorViewModel: Sendable {
         let signature = signatureLines(for: building, in: snapshot)
         let problemLines = problem.map { [GameText.string("inspector.problem", $0)] } ?? []
         let fire = fireLines(for: building, in: snapshot) + seasonalEventLines(for: building, in: snapshot)
-            + fireWatchLines(for: building, in: snapshot)
+            + fireWatchLines(for: building, covering: fireWatchCover(building), in: snapshot)
             + physicianLines(for: building, in: snapshot)
         let bullets: [String] = fire + basics + reach + signature + houseLines + problemLines
         return InspectorViewModel(

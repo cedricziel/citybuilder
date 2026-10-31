@@ -45,13 +45,12 @@ extension InspectorViewModel {
 
     /// What a fire watch covers and where its watchman is. Spec:
     /// `platform-shells` / Fire watch inspector.
-    static func fireWatchLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {
+    static func fireWatchLines(for building: Building, covering covers: @autoclosure () -> Int, in snapshot: WorldSnapshot) -> [String] {
         guard building.kind == .fireWatch, building.state == .operational else { return [] }
-        let covers = snapshot.fireWatchCover[building.id] ?? 0
         let walker = snapshot.watchmen.first { $0.watch == building.id }
         let hasRoad = !snapshot.roadDisconnectedBuildings.contains(building.id)
         return [
-            GameText.string("inspector.fireWatch.covers", GameText.string("count.building", covers), World.fireWatchReach),
+            GameText.string("inspector.fireWatch.covers", GameText.string("count.building", covers()), World.fireWatchReach),
             watchmanLine(walker, hasRoad: hasRoad)
         ]
     }

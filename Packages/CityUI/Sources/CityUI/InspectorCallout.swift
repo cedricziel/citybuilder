@@ -168,7 +168,9 @@ public extension GameSession {
     /// Inspector model derived from the current snapshot + selection.
     var inspector: InspectorViewModel {
         guard let selectedTile else { return InspectorViewModel(bullets: []) }
-        return InspectorViewModel.make(from: world.snapshot(), tile: selectedTile, buildings: world.buildings)
+        return InspectorViewModel.make(
+            from: world.snapshot(), tile: selectedTile, buildings: world.buildings, fireWatchCover: world.fireWatchCover(of:)
+        )
     }
 
     /// The callout's Demolish: demolishes the selected building, asking

@@ -113,9 +113,6 @@ public struct WorldSnapshot: Hashable, Sendable {
     public let isFestivalCrowd: Bool
     /// True once the seasonal event has started, false while it is only warned.
     public let isSeasonalEventUnderWay: Bool
-    /// The flammable buildings each fire watch would answer. Spec:
-    /// `platform-shells` / Fire watch inspector.
-    public let fireWatchCover: [EntityID: Int]
     /// Fire watchmen walking to a fire or dousing it. Spec: `rendering-2_5d` /
     /// Seasonal events are drawn on the map.
     public let watchmen: [WatchmanWalker]
@@ -157,8 +154,7 @@ public struct WorldSnapshot: Hashable, Sendable {
         blightedFields: Set<EntityID> = [],
         feverHouses: Set<EntityID> = [],
         isFestivalCrowd: Bool = false,
-        isSeasonalEventUnderWay: Bool = false,
-        fireWatchCover: [EntityID: Int] = [:]
+        isSeasonalEventUnderWay: Bool = false
     ) {
         self.tickCount = tickCount
         self.simulatedTime = simulatedTime
@@ -197,7 +193,6 @@ public struct WorldSnapshot: Hashable, Sendable {
         self.feverHouses = feverHouses
         self.isFestivalCrowd = isFestivalCrowd
         self.isSeasonalEventUnderWay = isSeasonalEventUnderWay
-        self.fireWatchCover = fireWatchCover
     }
 
     public func rival(_ id: RivalID) -> RivalSummary? {
@@ -308,8 +303,7 @@ public extension World {
             blightedFields: Set(buildings.values.filter(isBlighted).map(\.id)),
             feverHouses: Set(feverHouses().map(\.id)),
             isFestivalCrowd: isFestivalCrowd,
-            isSeasonalEventUnderWay: seasonalEvents.active != nil,
-            fireWatchCover: fireWatchCoverCounts()
+            isSeasonalEventUnderWay: seasonalEvents.active != nil
         )
     }
 

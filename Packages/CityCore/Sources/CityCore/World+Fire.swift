@@ -152,27 +152,19 @@ extension World {
         return watchmanPath(from: watch, to: target, goal: goal) != nil
     }
 
-    /// How many of its owner's flammable buildings each fire watch would
-    /// answer: in reach and on the same road network. One component labelling
-    /// serves every watch, so the snapshot can carry it each frame.
-    func fireWatchCoverCounts() -> [EntityID: Int] {
-        let watches = buildings.values.filter { $0.kind == .fireWatch }
-        guard !watches.isEmpty else { return [:] }
+    /// How many of its owner's flammable buildings `watch` would answer: in reach and on the
+    /// same road network. Worked out when asked, for the fire watch inspector, not for every snapshot.
+    public func fireWatchCover(of watch: Building) -> Int {
         let components = roadGraph.componentLabels()
         func network(_ building: Building) -> Int? {
             anyAdjacentRoad(anchor: building.anchor, footprint: building.footprint).flatMap { components[$0] }
         }
-        let flammable = buildings.values.filter { Self.isFlammable($0.kind) }
-        var counts: [EntityID: Int] = [:]
-        for watch in watches {
-            let home = network(watch)
-            counts[watch.id] = home == nil ? 0 : flammable.count { building in
-                building.id != watch.id && building.owner == watch.owner
-                    && Self.footprintDistance(watch, building) <= Self.fireWatchReach
-                    && network(building) == home
-            }
+        guard let home = network(watch) else { return 0 }
+        return buildings.values.count { building in
+            building.id != watch.id && building.owner == watch.owner && Self.isFlammable(building.kind)
+                && Self.footprintDistance(watch, building) <= Self.fireWatchReach
+                && network(building) == home
         }
-        return counts
     }
 
     /// The road path from a watch to a burning building within its reach.
