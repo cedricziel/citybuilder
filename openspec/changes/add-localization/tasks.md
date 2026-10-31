@@ -42,13 +42,13 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 5. M5 — Pack text keys
 
-- [ ] 5.1 Tests-first: translate "A pack name gets a derived key", "German values survive regeneration", "Changing English text marks German for review", "A removed pack item drops its keys", "Pack placeholders are named" and "A noun placeholder is filled with the localized noun" into failing tests (GameDataGenTests and CityUITests); confirm red
-- [ ] 5.2 Implement to green: the catalog emitter in GameDataGen with the merge rules and Xcode's JSON layout, writing to a `--catalog` path; `gamedata-check` covers `GameData.xcstrings`, and `scripts/check-gamedata-fixture-build.sh` passes a scratch catalog path (D5)
-- [ ] 5.3 Make catalog edits trigger the drift check: add `GameData.xcstrings` to the `gamedata-check` pre-commit `files:` pattern and to GameDataGen's inputs in `scripts/select_ci_jobs.py` (D5)
-- [ ] 5.4 Implement to green: generated Swift exposes key strings and drops the English members; CityUI resolves names, units, blurbs, banners and order texts through `GameData.xcstrings`, filling `{names}` after the lookup (D6)
-- [ ] 5.5 Author the German values for every pack key, following the glossary
-- [ ] 5.6 Refactor under a green bar
-- [ ] 5.7 Verify `make gamedata-check`, `make test-scenarios` and `make l10n-check` clean
+- [x] 5.1 Tests-first: translate "A pack name gets a derived key", "German values survive regeneration", "Changing English text marks German for review", "A removed pack item drops its keys", "Pack placeholders are named" and "A noun placeholder is filled with the localized noun" into failing tests (GameDataGenTests and CityUITests); confirm red
+- [x] 5.2 Implement to green: the catalog emitter in GameDataGen with the merge rules and Xcode's JSON layout, writing to a `--catalog` path; `gamedata-check` covers `GameData.xcstrings`, and `scripts/check-gamedata-fixture-build.sh` passes a scratch catalog path (D5)
+- [x] 5.3 Make catalog edits trigger the drift check: add `GameData.xcstrings` to the `gamedata-check` pre-commit `files:` pattern and to GameDataGen's inputs in `scripts/select_ci_jobs.py` (D5)
+- [x] 5.4 Implement to green: generated Swift exposes key strings and drops the English members; CityUI resolves names, units, blurbs, banners and order texts through `GameData.xcstrings`, filling `{names}` after the lookup (D6)
+- [x] 5.5 Author the German values for every pack key, following the glossary
+- [x] 5.6 Refactor under a green bar
+- [x] 5.7 Verify `make gamedata-check`, `make test-scenarios` and `make l10n-check` clean
 
 ## 6. M6 — Rival names
 

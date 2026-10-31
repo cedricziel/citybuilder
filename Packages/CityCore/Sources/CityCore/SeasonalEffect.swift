@@ -17,13 +17,14 @@ public enum SeasonalBannerKind: String, Codable, Sendable {
     case warning, onset, ignition, ignitionCovered, end, endNoLoss, endNoFire, request, held, missed
 }
 
-/// A banner's title and text, with placeholders CityUI fills.
+/// A banner's title and text as catalog keys; their text has `{names}`
+/// CityUI fills after the lookup.
 public struct SeasonalBanner: Hashable, Sendable {
-    public let title: String
-    public let text: String
+    public let titleKey: String
+    public let textKey: String
 
-    public init(title: String, text: String) {
-        self.title = title
-        self.text = text
+    public init(titleKey: String, textKey: String) {
+        self.titleKey = titleKey
+        self.textKey = textKey
     }
 }

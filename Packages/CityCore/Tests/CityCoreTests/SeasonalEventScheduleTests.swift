@@ -25,7 +25,7 @@ func catalogHasFourEvents() {
     #expect(SeasonalEvent.fever.seasons == [.autumn, .winter])
     #expect(SeasonalEvent.festival.seasons == [.spring, .summer])
     let warning = SeasonalEvent.fire.banners[.warning]
-    #expect(warning?.title == "Dry {season} ahead")
+    #expect(warning?.titleKey == "seasonalEvent.fire.banner.warning.title")
 }
 
 @Test("scenario: crop fields are marked in the game data")

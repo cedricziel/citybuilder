@@ -11,13 +11,13 @@ public enum Age: String, CaseIterable, Codable, Hashable, Sendable {
     case industrial
     case modern
 
-    public var displayName: String {
+    public var nameKey: String {
         switch self {
-        case .antiquity: "Antiquity"
-        case .medieval: "Medieval"
-        case .renaissance: "Renaissance"
-        case .industrial: "Industrial"
-        case .modern: "Modern"
+        case .antiquity: "age.antiquity.name"
+        case .medieval: "age.medieval.name"
+        case .renaissance: "age.renaissance.name"
+        case .industrial: "age.industrial.name"
+        case .modern: "age.modern.name"
         }
     }
 
@@ -31,13 +31,13 @@ public enum Age: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
-    public var blurb: String {
+    public var blurbKey: String {
         switch self {
-        case .antiquity: "Stone towns, hand mills and the first libraries."
-        case .medieval: "Timber and tile, windmills and guilds."
-        case .renaissance: "Printing, trade and tall stuccoed fronts."
-        case .industrial: "Steam, brick and smoking chimneys."
-        case .modern: "Electricity and concrete."
+        case .antiquity: "age.antiquity.blurb"
+        case .medieval: "age.medieval.blurb"
+        case .renaissance: "age.renaissance.blurb"
+        case .industrial: "age.industrial.blurb"
+        case .modern: "age.modern.blurb"
         }
     }
 

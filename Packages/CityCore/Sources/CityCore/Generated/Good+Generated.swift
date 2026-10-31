@@ -27,6 +27,58 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     case coffee
     case herbs
 
+    public var nameKey: String {
+        switch self {
+        case .wood: "good.wood.name"
+        case .planks: "good.planks.name"
+        case .food: "good.food.name"
+        case .bread: "good.bread.name"
+        case .grain: "good.grain.name"
+        case .flour: "good.flour.name"
+        case .ore: "good.ore.name"
+        case .charcoal: "good.charcoal.name"
+        case .iron: "good.iron.name"
+        case .tools: "good.tools.name"
+        case .wool: "good.wool.name"
+        case .cloth: "good.cloth.name"
+        case .hops: "good.hops.name"
+        case .beer: "good.beer.name"
+        case .grapes: "good.grapes.name"
+        case .wine: "good.wine.name"
+        case .teaLeaves: "good.teaLeaves.name"
+        case .tea: "good.tea.name"
+        case .coffeeCherries: "good.coffeeCherries.name"
+        case .coffee: "good.coffee.name"
+        case .herbs: "good.herbs.name"
+        }
+    }
+
+    public var unitKey: String {
+        switch self {
+        case .wood: "good.wood.unit"
+        case .planks: "good.planks.unit"
+        case .food: "good.food.unit"
+        case .bread: "good.bread.unit"
+        case .grain: "good.grain.unit"
+        case .flour: "good.flour.unit"
+        case .ore: "good.ore.unit"
+        case .charcoal: "good.charcoal.unit"
+        case .iron: "good.iron.unit"
+        case .tools: "good.tools.unit"
+        case .wool: "good.wool.unit"
+        case .cloth: "good.cloth.unit"
+        case .hops: "good.hops.unit"
+        case .beer: "good.beer.unit"
+        case .grapes: "good.grapes.unit"
+        case .wine: "good.wine.unit"
+        case .teaLeaves: "good.teaLeaves.unit"
+        case .tea: "good.tea.unit"
+        case .coffeeCherries: "good.coffeeCherries.unit"
+        case .coffee: "good.coffee.unit"
+        case .herbs: "good.herbs.unit"
+        }
+    }
+
     public var basePrice: Int64 {
         switch self {
         case .wood: 4
@@ -90,27 +142,27 @@ public enum GoodsCatalog {
 
     private static func makeSpec(_ good: Good) -> GoodSpec {
         switch good {
-        case .wood: GoodSpec(good: .wood, displayName: "Wood", stackUnit: "logs")
-        case .planks: GoodSpec(good: .planks, displayName: "Planks", stackUnit: "bundles")
-        case .food: GoodSpec(good: .food, displayName: "Food", stackUnit: "rations")
-        case .bread: GoodSpec(good: .bread, displayName: "Bread", stackUnit: "loaves")
-        case .grain: GoodSpec(good: .grain, displayName: "Grain", stackUnit: "sheaves")
-        case .flour: GoodSpec(good: .flour, displayName: "Flour", stackUnit: "sacks")
-        case .ore: GoodSpec(good: .ore, displayName: "Ore", stackUnit: "loads")
-        case .charcoal: GoodSpec(good: .charcoal, displayName: "Charcoal", stackUnit: "baskets")
-        case .iron: GoodSpec(good: .iron, displayName: "Iron", stackUnit: "bars")
-        case .tools: GoodSpec(good: .tools, displayName: "Tools", stackUnit: "sets")
-        case .wool: GoodSpec(good: .wool, displayName: "Wool", stackUnit: "fleeces")
-        case .cloth: GoodSpec(good: .cloth, displayName: "Cloth", stackUnit: "bolts")
-        case .hops: GoodSpec(good: .hops, displayName: "Hops", stackUnit: "bales")
-        case .beer: GoodSpec(good: .beer, displayName: "Beer", stackUnit: "casks")
-        case .grapes: GoodSpec(good: .grapes, displayName: "Grapes", stackUnit: "baskets")
-        case .wine: GoodSpec(good: .wine, displayName: "Wine", stackUnit: "amphorae")
-        case .teaLeaves: GoodSpec(good: .teaLeaves, displayName: "Tea Leaves", stackUnit: "baskets")
-        case .tea: GoodSpec(good: .tea, displayName: "Tea", stackUnit: "chests")
-        case .coffeeCherries: GoodSpec(good: .coffeeCherries, displayName: "Coffee Cherries", stackUnit: "sacks")
-        case .coffee: GoodSpec(good: .coffee, displayName: "Coffee", stackUnit: "sacks")
-        case .herbs: GoodSpec(good: .herbs, displayName: "Herbs", stackUnit: "bunches")
+        case .wood: GoodSpec(good: .wood)
+        case .planks: GoodSpec(good: .planks)
+        case .food: GoodSpec(good: .food)
+        case .bread: GoodSpec(good: .bread)
+        case .grain: GoodSpec(good: .grain)
+        case .flour: GoodSpec(good: .flour)
+        case .ore: GoodSpec(good: .ore)
+        case .charcoal: GoodSpec(good: .charcoal)
+        case .iron: GoodSpec(good: .iron)
+        case .tools: GoodSpec(good: .tools)
+        case .wool: GoodSpec(good: .wool)
+        case .cloth: GoodSpec(good: .cloth)
+        case .hops: GoodSpec(good: .hops)
+        case .beer: GoodSpec(good: .beer)
+        case .grapes: GoodSpec(good: .grapes)
+        case .wine: GoodSpec(good: .wine)
+        case .teaLeaves: GoodSpec(good: .teaLeaves)
+        case .tea: GoodSpec(good: .tea)
+        case .coffeeCherries: GoodSpec(good: .coffeeCherries)
+        case .coffee: GoodSpec(good: .coffee)
+        case .herbs: GoodSpec(good: .herbs)
         }
     }
 }

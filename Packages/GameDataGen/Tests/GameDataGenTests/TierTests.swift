@@ -124,7 +124,7 @@ func cultureOverridesOneTierName() throws {
     #expect(source.contains("case .merchants: [.planks, .wood, .cloth]"))
     #expect(source.contains("public var taxPerResident: Int64 {"))
     #expect(source.contains("case .merchants: 4"))
-    #expect(source.contains("case .peasants: \"Peasants\""))
+    #expect(source.contains("case .peasants: \"tier.peasants.name\""))
 }
 
 @Test func emitsTierNamesWithTheTiersOwnNameAsFallback() throws {
@@ -132,8 +132,11 @@ func cultureOverridesOneTierName() throws {
         of: "tiers: { peasants: Peasants, citizens: Citizens, merchants: Merchants }", with: "tiers: { merchants: Jarls }"
     )
     let source = try emitted("Culture+Generated.swift", from: Fixtures.withCulture(culture))
-    #expect(source.contains("case (.northernEuropean, .peasants): \"Peasants\""))
-    #expect(source.contains("case (.northernEuropean, .merchants): \"Jarls\""))
+    #expect(source.contains("case (.northernEuropean, .peasants): \"tier.peasants.name\""))
+    #expect(source.contains("case (.northernEuropean, .merchants): \"culture.northernEuropean.tierName.merchants\""))
+    let entries = try CatalogEmitter.entries(Fixtures.load(Fixtures.withCulture(culture)).get())
+    #expect(entries["culture.northernEuropean.tierName.merchants"]?.english == "Jarls")
+    #expect(entries["culture.northernEuropean.tierName.peasants"] == nil)
 }
 
 // MARK: - Decline grace (openspec/changes/decline-grace)

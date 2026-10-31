@@ -1,16 +1,12 @@
 import Foundation
 
-/// A good's display name and stack unit. `GoodsCatalog` is generated from
-/// the game-data packs.
+/// A good's catalog entry. `GoodsCatalog` is generated from the game-data
+/// packs; the good's name and unit are catalog keys on `Good`.
 public struct GoodSpec: Hashable, Sendable {
     public let good: Good
-    public let displayName: String
-    public let stackUnit: String
 
-    public init(good: Good, displayName: String, stackUnit: String) {
+    public init(good: Good) {
         self.good = good
-        self.displayName = displayName
-        self.stackUnit = stackUnit
     }
 }
 

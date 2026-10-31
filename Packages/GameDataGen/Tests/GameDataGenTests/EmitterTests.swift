@@ -56,8 +56,8 @@ func addingCulturePack() throws {
             + "buildDurationTicks: 30, shorePlacement: nil, materialCost: [.planks: 1, .wood: 4], requiredTerrain: nil)"
     ))
     #expect(source.contains("shorePlacement: ShorePlacement(minLandTiles: 1, minWaterTiles: 1)"))
-    #expect(source.contains("case .lumberjackHut: \"Lumberjack\""))
-    #expect(source.contains("case .sawmill: \"Sawmill\""))
+    #expect(source.contains("case .lumberjackHut: \"building.lumberjackHut.name\""))
+    #expect(source.contains("case .sawmill: \"building.sawmill.name\""))
     #expect(source.contains("case .house: 8"))
     #expect(source.contains("case .sawmill: nil"))
     #expect(source.contains("case .lumberjackHut: \"gather\""))
@@ -74,12 +74,13 @@ func addingCulturePack() throws {
 
 @Test func emitsCultureTechAndAgeValues() throws {
     let culture = try emitted("Culture+Generated.swift")
-    #expect(culture.contains("case (.northernEuropean, .merchants): \"Merchants\""))
+    #expect(culture.contains("case (.northernEuropean, .merchants): \"tier.merchants.name\""))
+    #expect(culture.contains("case .northernEuropean: \"culture.northernEuropean.blurb\""))
     #expect(culture.contains("LuxuryChain(raw: .hops, good: .beer, garden: .hopGarden, producer: .brewery)"))
     #expect(culture.contains("case .northernEuropean: [\"Astrid\", \"Bjorn\"]"))
     let tech = try emitted("Tech+Generated.swift")
     #expect(tech.contains("case .feudalOrder: (.citizens, 20)"))
-    #expect(tech.contains("case .feudalOrder: \"Feudal Order\""))
+    #expect(tech.contains("case .feudalOrder: \"tech.feudalOrder.name\""))
     #expect(tech.contains("case .seafaring: [.port]"))
     let age = try emitted("Age+Generated.swift")
     #expect(age.contains("case .antiquity: -499"))
@@ -88,8 +89,11 @@ func addingCulturePack() throws {
 
 @Test func escapesStringLiterals() throws {
     let extra = "items:\n  - { kind: Good, id: salt, name: 'Sea \"Salt\" \\ grey', unit: sacks, basePrice: 3, neededBy: [merchants] }\n"
+    let catalog = try CatalogEmitter.catalog(Fixtures.load(Fixtures.withExtraPack(extra)).get(), merging: nil)
+    #expect(catalog.contains(#""value" : "Sea \"Salt\" \\ grey""#))
     let source = try emitted("Good+Generated.swift", from: Fixtures.withExtraPack(extra))
-    #expect(source.contains(#"displayName: "Sea \"Salt\" \\ grey""#))
+    #expect(source.contains("case .salt: GoodSpec(good: .salt)"))
+    #expect(source.contains("case .salt: \"good.salt.unit\""))
 }
 
 @Test func everyFileCarriesTheGeneratedBanner() throws {

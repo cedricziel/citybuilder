@@ -27,7 +27,8 @@ cp "$root/Packages/GameDataGen/Tests/Fixtures/fixture-pack.yaml" "$data/packs/fi
 printf '  - fixture\n' >> "$data/index.yaml"
 
 $SWIFT run -q --package-path "$root/Packages/GameDataGen" gamedata-gen generate \
-    --data "$data" --out "$scratch/CityCore/Sources/CityCore/Generated"
+    --data "$data" --out "$scratch/CityCore/Sources/CityCore/Generated" \
+    --catalog "$scratch/CityUI/Sources/CityUI/Resources/GameData.xcstrings"
 
 for package in CityUI CityRender2D; do
     echo "==> swift build $package with the fixture pack"

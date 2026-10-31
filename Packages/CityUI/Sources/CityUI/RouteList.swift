@@ -131,6 +131,6 @@ public enum RouteStopLabel {
         if let rival = port.owner.rivalID.flatMap(snapshot.rival) {
             return GameText.string("routes.rivalPort", rival.name)
         }
-        return GameText.string("routes.yourPort", port.anchor.x, port.anchor.y)
+        return GameText.string("routes.yourPort", "\(port.anchor.x)", "\(port.anchor.y)")
     }
 }

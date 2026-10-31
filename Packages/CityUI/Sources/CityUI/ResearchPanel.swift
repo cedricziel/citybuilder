@@ -59,7 +59,7 @@ public struct ResearchPanelModel: Equatable {
     static func requirements(of tech: Tech, in world: World) -> String {
         var parts = tech.prerequisites.map(\.displayName)
         if let gate = tech.eraGate {
-            parts.append("\(gate.residents) \(gate.tier.displayName(in: world.culture).lowercased())")
+            parts.append("\(gate.residents) \(GameText.inSentence(gate.tier.displayName(in: world.culture)))")
         } else if tech.age > world.age {
             parts.append("\(tech.age.displayName) age")
         }

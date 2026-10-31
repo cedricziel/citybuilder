@@ -215,7 +215,8 @@ func theEmitterWritesTheCampaignCatalog() throws {
     let data = try Fixtures.load(Fixtures.withExtraPack(chapterPack)).get()
     let source = try #require(SwiftEmitter.emit(data)["Campaign+Generated.swift"])
     let expected = [
-        "Campaign(id: \"sea\", title: \"The Merchant Sea\", chapters: [\"two-shores\"], opensAfter: \"the-crossing\")",
+        "Campaign(id: \"sea\", title: \"The Merchant Sea\", chapters: [\"two-shores\"], opensAfter: \"the-crossing\", "
+            + "titleKey: \"campaign.sea.title\")",
         "start: ChapterStart(money: 1000, stock: [.planks: 5, .wood: 6])",
         "overrides: [.hard: ChapterStartOverride(money: 600, stock: nil, rivalAgeYears: nil)]",
         "GoalState(goal: .buildings(.house, 3), isBonus: false, holdsForSeason: false)",
@@ -227,11 +228,17 @@ func theEmitterWritesTheCampaignCatalog() throws {
         "GoalState(goal: .landedByShip(.planks, 60)", "GoalState(goal: .outgrowRivals", "GoalState(goal: .tradeEarnings(400)",
         "reward: .mapPreset(\"The Crossing\")",
         "events: [ScheduledSeasonalEvent(year: 1202, event: .fire, onset: .summer)], randomEvents: false",
-        "comingLater: true"
+        "comingLater: true",
+        "textKey: \"chapter.theCrossing\")"
     ]
     for line in expected {
         #expect(source.contains(line), "\(line)")
     }
+    let entries = CatalogEmitter.entries(data)
+    #expect(entries["campaign.sea.title"]?.english == "The Merchant Sea")
+    #expect(entries["chapter.theCrossing.title"]?.english == "The Crossing")
+    #expect(entries["chapter.theCrossing.reward"]?.english == "The Crossing")
+    #expect(["intro", "ending"].allSatisfy { entries["chapter.theCrossing.\($0)"] != nil })
     let empty = try #require(SwiftEmitter.emit(Fixtures.load().get())["Campaign+Generated.swift"])
     #expect(empty.contains("static let campaigns: [Campaign] = []"))
     #expect(empty.contains("static let chapters: [Chapter] = []"))

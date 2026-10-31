@@ -236,19 +236,19 @@
       }
     },
     "a11y.reticle" : {
-      "comment" : "Tile coordinates of the Apple TV reticle.",
+      "comment" : "Tile coordinates of the Apple TV reticle; passed as text so digits are never grouped.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fadenkreuz bei %1$lld, %2$lld"
+            "value" : "Fadenkreuz bei %1$@, %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reticle at %1$lld, %2$lld"
+            "value" : "Reticle at %1$@, %2$@"
           }
         }
       }
@@ -2930,19 +2930,19 @@
       }
     },
     "date.yearBC" : {
-      "comment" : "A year before year 1.",
+      "comment" : "A year before year 1; passed as text so digits are never grouped.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld v. Chr."
+            "value" : "%@ v. Chr."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld BC"
+            "value" : "%@ BC"
           }
         }
       }
@@ -4292,19 +4292,19 @@
       }
     },
     "inspector.anchor" : {
-      "comment" : "The building's anchor tile.",
+      "comment" : "The building's anchor tile; passed as text so digits are never grouped.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anker: (%1$lld, %2$lld)"
+            "value" : "Anker: (%1$@, %2$@)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor: (%1$lld, %2$lld)"
+            "value" : "Anchor: (%1$@, %2$@)"
           }
         }
       }
@@ -5966,19 +5966,19 @@
       }
     },
     "map.a11y.cursor" : {
-      "comment" : "Tile coordinates of the cursor.",
+      "comment" : "Tile coordinates of the cursor; passed as text so digits are never grouped.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Karte, Zeiger bei %1$lld, %2$lld"
+            "value" : "Karte, Zeiger bei %1$@, %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Map, cursor at %1$lld, %2$lld"
+            "value" : "Map, cursor at %1$@, %2$@"
           }
         }
       }
@@ -8576,19 +8576,19 @@
       }
     },
     "routes.yourPort" : {
-      "comment" : "The player's port and its tile.",
+      "comment" : "The player's port and its tile; passed as text so digits are never grouped.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dein Hafen (%1$lld, %2$lld)"
+            "value" : "Dein Hafen (%1$@, %2$@)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your port (%1$lld, %2$lld)"
+            "value" : "Your port (%1$@, %2$@)"
           }
         }
       }

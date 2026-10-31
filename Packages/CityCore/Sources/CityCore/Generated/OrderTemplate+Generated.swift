@@ -64,45 +64,45 @@ public enum OrderTemplate: String, CaseIterable, Codable, Sendable {
         }
     }
 
-    public var title: String {
+    public var titleKey: String {
         switch self {
-        case .crownWood: "Wood for the winter"
-        case .crownTimber: "Timber for the fleet"
-        case .crownRations: "Rations for the garrison"
-        case .crownBread: "Bread for the court"
-        case .crownIron: "Iron for the arsenal"
-        case .crownTools: "Tools for the works"
-        case .rivalWood: "Wood for a neighbour"
-        case .rivalTimber: "Planks for a neighbour"
-        case .rivalRations: "Food for a neighbour"
-        case .rivalBread: "Bread for a neighbour"
-        case .rivalTools: "Tools for a neighbour"
-        case .townBread: "Bread for the festival"
-        case .townWine: "Wine for the festival"
-        case .townBeer: "Beer for the festival"
-        case .townTea: "Tea for the festival"
-        case .townCoffee: "Coffee for the festival"
+        case .crownWood: "order.crownWood.title"
+        case .crownTimber: "order.crownTimber.title"
+        case .crownRations: "order.crownRations.title"
+        case .crownBread: "order.crownBread.title"
+        case .crownIron: "order.crownIron.title"
+        case .crownTools: "order.crownTools.title"
+        case .rivalWood: "order.rivalWood.title"
+        case .rivalTimber: "order.rivalTimber.title"
+        case .rivalRations: "order.rivalRations.title"
+        case .rivalBread: "order.rivalBread.title"
+        case .rivalTools: "order.rivalTools.title"
+        case .townBread: "order.townBread.title"
+        case .townWine: "order.townWine.title"
+        case .townBeer: "order.townBeer.title"
+        case .townTea: "order.townTea.title"
+        case .townCoffee: "order.townCoffee.title"
         }
     }
 
-    public var text: String {
+    public var textKey: String {
         switch self {
-        case .crownWood: "The crown stacks logs against a hard winter."
-        case .crownTimber: "The crown is building ships and wants planks."
-        case .crownRations: "The garrison\'s stores run low."
-        case .crownBread: "The court wants fresh loaves."
-        case .crownIron: "The arsenal needs bars for its smiths."
-        case .crownTools: "The crown\'s works need tools."
-        case .rivalWood: "A neighbouring town is short of wood."
-        case .rivalTimber: "A neighbouring town is short of planks."
-        case .rivalRations: "A neighbouring town is short of food."
-        case .rivalBread: "A neighbouring town is short of bread."
-        case .rivalTools: "A neighbouring town is short of tools."
-        case .townBread: "The town wants loaves for its festival."
-        case .townWine: "The town wants wine for its festival."
-        case .townBeer: "The town wants beer for its festival."
-        case .townTea: "The town wants tea for its festival."
-        case .townCoffee: "The town wants coffee for its festival."
+        case .crownWood: "order.crownWood.text"
+        case .crownTimber: "order.crownTimber.text"
+        case .crownRations: "order.crownRations.text"
+        case .crownBread: "order.crownBread.text"
+        case .crownIron: "order.crownIron.text"
+        case .crownTools: "order.crownTools.text"
+        case .rivalWood: "order.rivalWood.text"
+        case .rivalTimber: "order.rivalTimber.text"
+        case .rivalRations: "order.rivalRations.text"
+        case .rivalBread: "order.rivalBread.text"
+        case .rivalTools: "order.rivalTools.text"
+        case .townBread: "order.townBread.text"
+        case .townWine: "order.townWine.text"
+        case .townBeer: "order.townBeer.text"
+        case .townTea: "order.townTea.text"
+        case .townCoffee: "order.townCoffee.text"
         }
     }
 

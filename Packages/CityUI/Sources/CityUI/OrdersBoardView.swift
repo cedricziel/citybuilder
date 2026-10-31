@@ -27,7 +27,7 @@ struct OrderCardView: View {
                     .frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.title).font(.headline)
-                    Text(verbatim: "\(card.quantity) \(card.goodName.lowercased())")
+                    Text(verbatim: "\(card.quantity) \(GameText.inSentence(card.goodName))")
                         .font(.system(.subheadline, design: .monospaced))
                 }
                 Spacer(minLength: 0)

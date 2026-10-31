@@ -104,15 +104,16 @@ The generated `*.xcodeproj` / `*.xcworkspace` are gitignored — edit `project.y
 
 Goods, buildings (recipes, storage, placement), cultures, techs, ages and house tiers live in YAML packs under `Packages/CityCore/GameData/packs/`. `Packages/CityCore/GameData/index.yaml` lists the packs in load order, as paths without `.yaml`. Each pack has an optional `defaults:` block of anchors, shared with YAML merge keys (`<<: *name`; keys written on the item win), and an ordered `items:` list. Every item has a `kind` (`Good`, `Building`, `Culture`, `Tech`, `Age`, `Tier`) and a kebab-case `id`. References may point into any pack: a building names the tech that unlocks it with `unlockedBy`, and the generator derives each tech's unlock list. In the same way, a good joins a house tier's needs with `neededBy: [merchants]`, so a pack adds demand without editing `core.yaml`. Field tables per kind are in the format reference in the game-data-codegen change ([`FORMAT.md`](openspec/changes/game-data-codegen/examples/FORMAT.md)).
 
-`Packages/GameDataGen` (Swift, uses Yams, build-time only; CityCore never depends on it) validates every pack and writes Swift into `Packages/CityCore/Sources/CityCore/Generated/`. It rejects unknown fields, unknown references, duplicate ids, prerequisite cycles, inert buildings, goods that nothing consumes (no recipe input, material, culture luxury or tier need) and pack files missing from the manifest. The generated files are committed; never edit them by hand.
+`Packages/GameDataGen` (Swift, uses Yams, build-time only; CityCore never depends on it) validates every pack and writes Swift into `Packages/CityCore/Sources/CityCore/Generated/`. It also writes the player-visible pack text (names, units, blurbs, banners, order texts) into the String Catalog `Packages/CityUI/Sources/CityUI/Resources/GameData.xcstrings`, under keys like `building.grainFarm.name`; the generated Swift carries only the keys. It rejects unknown fields, unknown references, duplicate ids, prerequisite cycles, inert buildings, goods that nothing consumes (no recipe input, material, culture luxury or tier need) and pack files missing from the manifest. The generated files are committed; never edit them by hand.
 
 To change content:
 
 1. Edit a pack, or add one and list it in `index.yaml`.
 2. Run `make gamedata`.
-3. Commit the pack and the regenerated `Generated/` files together.
+3. Write the German for any new or changed text in `GameData.xcstrings`. The generator writes only English: it keeps every German value and marks one `needs_review` when its English changed, which `make l10n-check` rejects until the German is reviewed and marked `translated`.
+4. Commit the pack, the regenerated `Generated/` files and the catalog together.
 
-`make gamedata-check` fails when the committed files differ from the packs. It runs in CI (macOS and Linux) and in the pre-commit hook when files under `GameData/` or `Generated/` are staged.
+`make gamedata-check` fails when the committed files differ from the packs. It runs in CI (macOS and Linux) and in the pre-commit hook when files under `GameData/` or `Generated/`, or `GameData.xcstrings`, are staged.
 
 To review a content change, run `swift run --package-path Packages/GameDataGen gamedata-gen diff <ref>` from the repository root. It compares the packs at a git revision with the working tree, or with a second revision given as another argument. It prints one line per changed value (`Building sawmill: cost 120 → 130`), then the added and removed items. Anchors and merge keys are resolved first, so a changed anchor lists every item that merges it. Formatting, comments, key order and moving an item to another pack are not changes.
 

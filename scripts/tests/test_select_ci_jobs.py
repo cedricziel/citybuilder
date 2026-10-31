@@ -86,6 +86,13 @@ def test_a_gamedatagen_change_skips_the_apps_and_the_macos_determinism(repo: Pat
     assert not jobs.determinism_compare
 
 
+def test_a_game_data_catalog_change_runs_the_gamedata_check(repo: Path) -> None:
+    jobs = select(["Packages/CityUI/Sources/CityUI/Resources/GameData.xcstrings"], repo)
+
+    assert jobs.packages == ["CityAudio", "CityUI", "GameDataGen"]
+    assert jobs.determinism_linux
+
+
 def test_a_docs_only_change_runs_no_code_jobs(repo: Path) -> None:
     jobs = select(["CHANGELOG.md", "openspec/specs/x/spec.md", ".claude/notes.md"], repo)
 

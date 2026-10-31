@@ -52,11 +52,16 @@ public enum ChapterText {
         return (parts + [GameText.string("lostIf.bankruptcy")]).joined(separator: GameText.string("list.commaOr")).capitalizedFirst
     }
 
-    public static func reward(_ reward: ChapterReward) -> String {
+    /// The chapter's reward, its name from the catalog when the packs gave it one.
+    public static func reward(of chapter: Chapter) -> String {
+        reward(chapter.reward, named: chapter.rewardName)
+    }
+
+    static func reward(_ reward: ChapterReward, named name: String) -> String {
         switch reward {
-        case let .banner(name): GameText.string("reward.banner", name)
-        case let .decor(name): GameText.string("reward.decor", name)
-        case let .mapPreset(name): GameText.string("reward.mapPreset", name)
+        case .banner: GameText.string("reward.banner", name)
+        case .decor: GameText.string("reward.decor", name)
+        case .mapPreset: GameText.string("reward.mapPreset", name)
         }
     }
 
@@ -90,7 +95,7 @@ public enum ChapterText {
         let sameCampaign = owner.chapters.contains(chapterID)
         return sameCampaign
             ? GameText.string("chapter.unlockSame", index + 1)
-            : GameText.string("chapter.unlockOther", owner.title, index + 1)
+            : GameText.string("chapter.unlockOther", owner.displayTitle, index + 1)
     }
 
     /// "1 year, 2 seasons left": the whole seasons after this one before
@@ -107,7 +112,7 @@ public enum ChapterText {
 
     /// A year as the calendar shows it: BC at and below year 0.
     static func year(_ year: Int) -> String {
-        year > 0 ? "\(year)" : GameText.string("date.yearBC", 1 - year)
+        year > 0 ? "\(year)" : GameText.string("date.yearBC", "\(1 - year)")
     }
 
     /// "a mine", "an observatory".
@@ -154,11 +159,11 @@ public enum ChapterText {
     }
 
     private static func tierName(_ tier: HouseTier, _ culture: Culture?) -> String {
-        culture.map { culture in culture.tierName(tier) } ?? tier.displayName
+        culture.map(tier.displayName(in:)) ?? tier.displayName
     }
 }
 
-private extension String {
+extension String {
     var capitalizedFirst: String {
         prefix(1).uppercased() + dropFirst()
     }

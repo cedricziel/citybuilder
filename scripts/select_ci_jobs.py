@@ -13,7 +13,9 @@ script, its tests or the workflow.
 - A file under `Packages/<P>/` affects P and every package that depends
   on P, directly or transitively, per the `.package(path:)` entries in
   each `Packages/*/Package.swift`. CityCore affects every package:
-  GameDataGen writes CityCore's generated sources.
+  GameDataGen writes CityCore's generated sources. CityUI's
+  `GameData.xcstrings` is GameDataGen output too, so it also selects
+  GameDataGen and its `gamedata-check`.
 - `design/web/` (the React recreation of the HUD, which the app does
   not use) and `.design-sync/` (its design-system previews) select only
   the web build. So do the art it inlines (`Resources/*.atlas/`, the
@@ -56,6 +58,8 @@ WEB_BUILD = re.compile(
     r"|scripts/art/goods_icons\.py$|Apps/CitybuilderMac/Assets\.xcassets/AppIcon\.appiconset/)"
 )
 WEB_ONLY = re.compile(r"^(design/web/|\.design-sync/)")
+# Files GameDataGen writes outside its own package.
+GAMEDATA_OUTPUTS = re.compile(r"^Packages/CityUI/Sources/CityUI/Resources/GameData\.xcstrings$")
 FIXTURE_PACKAGES = re.compile(r"^for package in ([^;]+); do$", re.M)
 
 
@@ -170,6 +174,8 @@ def select(changed: list[str], root: Path) -> Jobs:
         if parts[0] != "Packages" or len(parts) < 3 or parts[1] not in graph:
             return replace(everything(root), web=web)
         touched.add(parts[1])
+        if GAMEDATA_OUTPUTS.match(path):
+            touched.add("GameDataGen")
     if "CityCore" in touched:
         return _jobs(root, set(graph), everything=False, web=web)
 

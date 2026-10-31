@@ -1,0 +1,3372 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "age.antiquity.blurb" : {
+      "comment" : "An age's description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steinerne Städte, Handmühlen und die ersten Bibliotheken."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stone towns, hand mills and the first libraries."
+          }
+        }
+      }
+    },
+    "age.antiquity.name" : {
+      "comment" : "An age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antike"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antiquity"
+          }
+        }
+      }
+    },
+    "age.industrial.blurb" : {
+      "comment" : "An age's description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dampf, Backstein und rauchende Schlote."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam, brick and smoking chimneys."
+          }
+        }
+      }
+    },
+    "age.industrial.name" : {
+      "comment" : "An age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Industriezeitalter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Industrial"
+          }
+        }
+      }
+    },
+    "age.medieval.blurb" : {
+      "comment" : "An age's description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fachwerk und Ziegel, Windmühlen und Zünfte."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timber and tile, windmills and guilds."
+          }
+        }
+      }
+    },
+    "age.medieval.name" : {
+      "comment" : "An age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittelalter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medieval"
+          }
+        }
+      }
+    },
+    "age.modern.blurb" : {
+      "comment" : "An age's description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elektrizität und Beton."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Electricity and concrete."
+          }
+        }
+      }
+    },
+    "age.modern.name" : {
+      "comment" : "An age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderne"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modern"
+          }
+        }
+      }
+    },
+    "age.renaissance.blurb" : {
+      "comment" : "An age's description.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buchdruck, Handel und hohe, verputzte Fassaden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Printing, trade and tall stuccoed fronts."
+          }
+        }
+      }
+    },
+    "age.renaissance.name" : {
+      "comment" : "An age's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renaissance"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renaissance"
+          }
+        }
+      }
+    },
+    "building.bakery.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bäckerei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bakery"
+          }
+        }
+      }
+    },
+    "building.brewery.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brauerei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brewery"
+          }
+        }
+      }
+    },
+    "building.caravanserai.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karawanserei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caravanserai"
+          }
+        }
+      }
+    },
+    "building.charcoalBurner.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Köhlerei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Charcoal"
+          }
+        }
+      }
+    },
+    "building.coffeeGrove.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaffeehain"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee Grove"
+          }
+        }
+      }
+    },
+    "building.farm.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hof"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farm"
+          }
+        }
+      }
+    },
+    "building.fireWatch.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feuerwache"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire Watch"
+          }
+        }
+      }
+    },
+    "building.forester.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förster"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forester"
+          }
+        }
+      }
+    },
+    "building.forum.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forum"
+          }
+        }
+      }
+    },
+    "building.gallery.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Galerie"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gallery"
+          }
+        }
+      }
+    },
+    "building.grainFarm.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getreidehof"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grain Farm"
+          }
+        }
+      }
+    },
+    "building.granary.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kornspeicher"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Granary"
+          }
+        }
+      }
+    },
+    "building.guildHall.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zunfthaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guild Hall"
+          }
+        }
+      }
+    },
+    "building.herbGarden.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kräutergarten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herb Garden"
+          }
+        }
+      }
+    },
+    "building.hopGarden.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hopfengarten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hop Garden"
+          }
+        }
+      }
+    },
+    "building.house.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "House"
+          }
+        }
+      }
+    },
+    "building.library.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bibliothek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library"
+          }
+        }
+      }
+    },
+    "building.lumberjackHut.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holzfäller"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lumberjack"
+          }
+        }
+      }
+    },
+    "building.marketplace.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marktplatz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marketplace"
+          }
+        }
+      }
+    },
+    "building.meadHall.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Methalle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mead Hall"
+          }
+        }
+      }
+    },
+    "building.mine.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bergwerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mine"
+          }
+        }
+      }
+    },
+    "building.monument.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkmal"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monument"
+          }
+        }
+      }
+    },
+    "building.physician.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medicus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Physician"
+          }
+        }
+      }
+    },
+    "building.port.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hafen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        }
+      }
+    },
+    "building.powerPlant.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kraftwerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Power Plant"
+          }
+        }
+      }
+    },
+    "building.quernHouse.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handmühle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quern House"
+          }
+        }
+      }
+    },
+    "building.road.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Straße"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Road"
+          }
+        }
+      }
+    },
+    "building.roastery.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rösterei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roastery"
+          }
+        }
+      }
+    },
+    "building.ruins.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruinen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruins"
+          }
+        }
+      }
+    },
+    "building.sawmill.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sägewerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sawmill"
+          }
+        }
+      }
+    },
+    "building.sheepFarm.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schäferei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sheep Farm"
+          }
+        }
+      }
+    },
+    "building.shipyard.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shipyard"
+          }
+        }
+      }
+    },
+    "building.smelter.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schmelzhütte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smelter"
+          }
+        }
+      }
+    },
+    "building.steamEngine.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dampfmaschine"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam Engine"
+          }
+        }
+      }
+    },
+    "building.teaGarden.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teegarten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea Garden"
+          }
+        }
+      }
+    },
+    "building.teaHouse.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teehaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea House"
+          }
+        }
+      }
+    },
+    "building.templeGarden.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempelgarten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temple Garden"
+          }
+        }
+      }
+    },
+    "building.toolsmith.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugschmiede"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toolsmith"
+          }
+        }
+      }
+    },
+    "building.townCenter.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rathaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Town Ctr."
+          }
+        }
+      }
+    },
+    "building.vineyard.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weinberg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vineyard"
+          }
+        }
+      }
+    },
+    "building.warehouse.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagerhaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warehouse"
+          }
+        }
+      }
+    },
+    "building.weaver.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weberei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weaver"
+          }
+        }
+      }
+    },
+    "building.windmill.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windmühle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windmill"
+          }
+        }
+      }
+    },
+    "building.winery.name" : {
+      "comment" : "A building's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelterei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Winery"
+          }
+        }
+      }
+    },
+    "culture.eastAsian.blurb" : {
+      "comment" : "A culture's description in the new-game dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holzhallen unter dunklen, weit vorspringenden Dächern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timber halls under dark, wide-eaved roofs."
+          }
+        }
+      }
+    },
+    "culture.eastAsian.name" : {
+      "comment" : "A culture's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostasien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "East Asian"
+          }
+        }
+      }
+    },
+    "culture.eastAsian.tierName.citizens" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunsthandwerker"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artisans"
+          }
+        }
+      }
+    },
+    "culture.eastAsian.tierName.merchants" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelehrte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scholars"
+          }
+        }
+      }
+    },
+    "culture.eastAsian.tierName.peasants" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bauern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farmers"
+          }
+        }
+      }
+    },
+    "culture.mediterranean.blurb" : {
+      "comment" : "A culture's description in the new-game dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiß getünchte Mauern, Terrakottadächer und Glockentürme."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whitewashed walls, terracotta roofs and bell towers."
+          }
+        }
+      }
+    },
+    "culture.mediterranean.name" : {
+      "comment" : "A culture's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittelmeer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mediterranean"
+          }
+        }
+      }
+    },
+    "culture.mediterranean.tierName.merchants" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patrizier"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patricians"
+          }
+        }
+      }
+    },
+    "culture.mediterranean.tierName.peasants" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plebejer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plebeians"
+          }
+        }
+      }
+    },
+    "culture.middleEastern.blurb" : {
+      "comment" : "A culture's description in the new-game dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sandstein, Flachdächer und Kuppeln."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sandstone, flat roofs and domes."
+          }
+        }
+      }
+    },
+    "culture.middleEastern.name" : {
+      "comment" : "A culture's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naher Osten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Middle Eastern"
+          }
+        }
+      }
+    },
+    "culture.middleEastern.tierName.citizens" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handwerker"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Craftsmen"
+          }
+        }
+      }
+    },
+    "culture.middleEastern.tierName.peasants" : {
+      "comment" : "A house tier's name in this culture.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bauern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farmers"
+          }
+        }
+      }
+    },
+    "culture.northernEuropean.blurb" : {
+      "comment" : "A culture's description in the new-game dialog.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fachwerkstädte unter steilen Ziegeldächern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Half-timbered towns under steep tiled roofs."
+          }
+        }
+      }
+    },
+    "culture.northernEuropean.name" : {
+      "comment" : "A culture's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nordeuropa"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Northern European"
+          }
+        }
+      }
+    },
+    "good.beer.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bier"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beer"
+          }
+        }
+      }
+    },
+    "good.beer.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fässer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "casks"
+          }
+        }
+      }
+    },
+    "good.bread.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brot"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread"
+          }
+        }
+      }
+    },
+    "good.bread.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laibe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "loaves"
+          }
+        }
+      }
+    },
+    "good.charcoal.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holzkohle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Charcoal"
+          }
+        }
+      }
+    },
+    "good.charcoal.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Körbe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "baskets"
+          }
+        }
+      }
+    },
+    "good.cloth.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloth"
+          }
+        }
+      }
+    },
+    "good.cloth.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ballen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bolts"
+          }
+        }
+      }
+    },
+    "good.coffee.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaffee"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee"
+          }
+        }
+      }
+    },
+    "good.coffee.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Säcke"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sacks"
+          }
+        }
+      }
+    },
+    "good.coffeeCherries.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaffeekirschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee Cherries"
+          }
+        }
+      }
+    },
+    "good.coffeeCherries.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Säcke"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sacks"
+          }
+        }
+      }
+    },
+    "good.flour.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehl"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flour"
+          }
+        }
+      }
+    },
+    "good.flour.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Säcke"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sacks"
+          }
+        }
+      }
+    },
+    "good.food.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahrung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food"
+          }
+        }
+      }
+    },
+    "good.food.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rationen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rations"
+          }
+        }
+      }
+    },
+    "good.grain.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getreide"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grain"
+          }
+        }
+      }
+    },
+    "good.grain.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sheaves"
+          }
+        }
+      }
+    },
+    "good.grapes.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trauben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grapes"
+          }
+        }
+      }
+    },
+    "good.grapes.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Körbe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "baskets"
+          }
+        }
+      }
+    },
+    "good.herbs.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kräuter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herbs"
+          }
+        }
+      }
+    },
+    "good.herbs.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bündel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bunches"
+          }
+        }
+      }
+    },
+    "good.hops.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hopfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hops"
+          }
+        }
+      }
+    },
+    "good.hops.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ballen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bales"
+          }
+        }
+      }
+    },
+    "good.iron.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eisen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iron"
+          }
+        }
+      }
+    },
+    "good.iron.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bars"
+          }
+        }
+      }
+    },
+    "good.ore.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ore"
+          }
+        }
+      }
+    },
+    "good.ore.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuhren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "loads"
+          }
+        }
+      }
+    },
+    "good.planks.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bretter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planks"
+          }
+        }
+      }
+    },
+    "good.planks.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bündel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bundles"
+          }
+        }
+      }
+    },
+    "good.tea.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tee"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea"
+          }
+        }
+      }
+    },
+    "good.tea.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kisten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chests"
+          }
+        }
+      }
+    },
+    "good.teaLeaves.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teeblätter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea Leaves"
+          }
+        }
+      }
+    },
+    "good.teaLeaves.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Körbe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "baskets"
+          }
+        }
+      }
+    },
+    "good.tools.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools"
+          }
+        }
+      }
+    },
+    "good.tools.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sätze"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sets"
+          }
+        }
+      }
+    },
+    "good.wine.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wine"
+          }
+        }
+      }
+    },
+    "good.wine.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amphoren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "amphorae"
+          }
+        }
+      }
+    },
+    "good.wood.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wood"
+          }
+        }
+      }
+    },
+    "good.wood.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stämme"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "logs"
+          }
+        }
+      }
+    },
+    "good.wool.name" : {
+      "comment" : "A good's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wolle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wool"
+          }
+        }
+      }
+    },
+    "good.wool.unit" : {
+      "comment" : "What one unit of a good is counted in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vliese"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fleeces"
+          }
+        }
+      }
+    },
+    "order.crownBread.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Königshof will frisches Brot."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The court wants fresh loaves."
+          }
+        }
+      }
+    },
+    "order.crownBread.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brot für den Königshof"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread for the court"
+          }
+        }
+      }
+    },
+    "order.crownIron.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zeughaus braucht Barren für seine Schmiede."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The arsenal needs bars for its smiths."
+          }
+        }
+      }
+    },
+    "order.crownIron.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eisen für das Zeughaus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iron for the arsenal"
+          }
+        }
+      }
+    },
+    "order.crownRations.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Vorräte der Garnison gehen zur Neige."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The garrison's stores run low."
+          }
+        }
+      }
+    },
+    "order.crownRations.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rationen für die Garnison"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rations for the garrison"
+          }
+        }
+      }
+    },
+    "order.crownTimber.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Krone baut Schiffe und will Bretter."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The crown is building ships and wants planks."
+          }
+        }
+      }
+    },
+    "order.crownTimber.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bretter für die Flotte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timber for the fleet"
+          }
+        }
+      }
+    },
+    "order.crownTools.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bauhütten der Krone brauchen Werkzeug."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The crown's works need tools."
+          }
+        }
+      }
+    },
+    "order.crownTools.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug für die Bauhütten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools for the works"
+          }
+        }
+      }
+    },
+    "order.crownWood.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Krone stapelt Holz für einen harten Winter."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The crown stacks logs against a hard winter."
+          }
+        }
+      }
+    },
+    "order.crownWood.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holz für den Winter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wood for the winter"
+          }
+        }
+      }
+    },
+    "order.rivalBread.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer Nachbarstadt fehlt Brot."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neighbouring town is short of bread."
+          }
+        }
+      }
+    },
+    "order.rivalBread.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brot für die Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread for a neighbour"
+          }
+        }
+      }
+    },
+    "order.rivalRations.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer Nachbarstadt fehlt Nahrung."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neighbouring town is short of food."
+          }
+        }
+      }
+    },
+    "order.rivalRations.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahrung für die Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food for a neighbour"
+          }
+        }
+      }
+    },
+    "order.rivalTimber.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer Nachbarstadt fehlen Bretter."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neighbouring town is short of planks."
+          }
+        }
+      }
+    },
+    "order.rivalTimber.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bretter für die Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planks for a neighbour"
+          }
+        }
+      }
+    },
+    "order.rivalTools.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer Nachbarstadt fehlt Werkzeug."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neighbouring town is short of tools."
+          }
+        }
+      }
+    },
+    "order.rivalTools.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug für die Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools for a neighbour"
+          }
+        }
+      }
+    },
+    "order.rivalWood.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einer Nachbarstadt fehlt Holz."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A neighbouring town is short of wood."
+          }
+        }
+      }
+    },
+    "order.rivalWood.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holz für die Nachbarn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wood for a neighbour"
+          }
+        }
+      }
+    },
+    "order.townBeer.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will Bier für ihr Fest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants beer for its festival."
+          }
+        }
+      }
+    },
+    "order.townBeer.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bier für das Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beer for the festival"
+          }
+        }
+      }
+    },
+    "order.townBread.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will Brot für ihr Fest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants loaves for its festival."
+          }
+        }
+      }
+    },
+    "order.townBread.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brot für das Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread for the festival"
+          }
+        }
+      }
+    },
+    "order.townCoffee.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will Kaffee für ihr Fest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants coffee for its festival."
+          }
+        }
+      }
+    },
+    "order.townCoffee.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaffee für das Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee for the festival"
+          }
+        }
+      }
+    },
+    "order.townTea.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will Tee für ihr Fest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants tea for its festival."
+          }
+        }
+      }
+    },
+    "order.townTea.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tee für das Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea for the festival"
+          }
+        }
+      }
+    },
+    "order.townWine.text" : {
+      "comment" : "An order's text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will Wein für ihr Fest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants wine for its festival."
+          }
+        }
+      }
+    },
+    "order.townWine.title" : {
+      "comment" : "An order's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wein für das Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wine for the festival"
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.end.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Felder tragen wieder voll."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fields yield in full again."
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.end.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Fäule ist vorüber"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The blight has passed"
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.onset.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Felder im markierten Gebiet tragen nur die Hälfte, bis {date}."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fields in the marked area yield half until {date}."
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.onset.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fäule auf den Feldern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blight in the fields"
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.warning.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Jahreszeit tragen Felder im markierten Gebiet nur die Hälfte. Fülle einen Kornspeicher oder kaufe Nahrung am Markt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next season, fields in the marked area yield half. Fill a granary, or buy food at the market."
+          }
+        }
+      }
+    },
+    "seasonalEvent.blight.banner.warning.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feuchtes Wetter: Fäule zieht auf"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Damp weather: blight is coming"
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.held.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Häuser nahe dem Markt steigen schneller auf und zahlen {bonus} Prozent mehr Steuern, bis {date}."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houses near the market advance faster and pay {bonus}% more tax until {date}."
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.held.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fest!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Festival!"
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.missed.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schon gelieferte Waren bleiben in der Stadt. Eine weitere Strafe gibt es nicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goods already delivered stay with the town. There is no other penalty."
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.missed.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fest wurde abgesagt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The festival was called off"
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.request.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liefere bis {deadline}: {bread} Brot und {luxury} {luxuryGood}. Nimm beides auf der Auftragstafel an. Häuser nahe dem Markt steigen dann ein Jahr lang schneller auf und zahlen mehr Steuern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deliver {bread} bread and {luxury} {luxuryGood} by {deadline}. Accept both on the order board. Houses near the market then advance faster and pay more tax for a year."
+          }
+        }
+      }
+    },
+    "seasonalEvent.festival.banner.request.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stadt will ein Fest"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The town wants a festival"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.end.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortgezogen: {residents}."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{residents} left the town."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.end.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fieber ist vorüber"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fever has passed"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.onset.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Häuser im markierten Viertel steigen nicht auf, und einige Einwohner ziehen fort, bis {date}."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houses in the marked district can't advance, and some residents leave, until {date}."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.onset.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fieber in der Stadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fever in the town"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.warning.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Jahreszeit kann es das markierte Viertel erreichen. Ein Medicus mit Kräutern schützt Häuser im Umkreis von 8 Feldern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fever.banner.warning.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fieber in den Hafenstädten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fever in the harbour towns"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.end.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrannt: {buildings}. Wähle die Ruinen und dann „Ruinen räumen“."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{buildings} burnt down. Select the ruins and choose Clear ruins."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.end.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Brände sind gelöscht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fires are out"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.endNoFire.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist kein Feuer ausgebrochen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No fire broke out."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.endNoFire.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Trockenzeit ist vorbei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dry spell is over"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.endNoLoss.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts ging verloren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing was lost."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.endNoLoss.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Brände sind gelöscht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fires are out"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.ignition.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brand: {building}. Ohne Feuerwache in Reichweite springt das Feuer auf angrenzende Gebäude über, und sie brennen zu Ruinen nieder."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A {building} is burning. Without a fire watch in reach, it spreads to touching buildings and burns down to ruins."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.ignition.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feuer!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire!"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.ignitionCovered.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brand: {building}. Eine Feuerwache in Reichweite schickt ihren Wächter zum Löschen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A {building} is burning. A fire watch in reach sends its watchman to put it out."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.ignitionCovered.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feuer!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire!"
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.warning.text" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Jahreszeit ist die Brandgefahr hoch. Eine Feuerwache löscht Brände im Umkreis von 8 Feldern, die ihre Straßen erreichen, und eine Straße zwischen Gebäuden hält die Flammen auf."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fire risk is high next season. A fire watch puts out fires within 8 tiles that its roads reach, and a road between buildings stops the flames."
+          }
+        }
+      }
+    },
+    "seasonalEvent.fire.banner.warning.title" : {
+      "comment" : "A seasonal event's banner. {names} are filled in after the lookup.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trockenheit droht: {season}"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dry {season} ahead"
+          }
+        }
+      }
+    },
+    "tech.cultivation.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ackerbau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cultivation"
+          }
+        }
+      }
+    },
+    "tech.electricity.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elektrizität"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Electricity"
+          }
+        }
+      }
+    },
+    "tech.feudalOrder.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lehnswesen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feudal Order"
+          }
+        }
+      }
+    },
+    "tech.metallurgy.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metallkunde"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metallurgy"
+          }
+        }
+      }
+    },
+    "tech.milling.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Müllerei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Milling"
+          }
+        }
+      }
+    },
+    "tech.mining.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bergbau"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mining"
+          }
+        }
+      }
+    },
+    "tech.printingPress.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buchdruck"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Printing Press"
+          }
+        }
+      }
+    },
+    "tech.scholarship.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelehrsamkeit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scholarship"
+          }
+        }
+      }
+    },
+    "tech.seafaring.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seefahrt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seafaring"
+          }
+        }
+      }
+    },
+    "tech.steamPower.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dampfkraft"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam Power"
+          }
+        }
+      }
+    },
+    "tech.weaving.name" : {
+      "comment" : "A technology's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webkunst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weaving"
+          }
+        }
+      }
+    },
+    "tier.citizens.name" : {
+      "comment" : "A house tier's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bürger"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citizens"
+          }
+        }
+      }
+    },
+    "tier.merchants.name" : {
+      "comment" : "A house tier's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaufleute"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merchants"
+          }
+        }
+      }
+    },
+    "tier.peasants.name" : {
+      "comment" : "A house tier's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bauern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peasants"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

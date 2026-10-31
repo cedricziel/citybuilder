@@ -91,8 +91,11 @@ func springHazardIsRejected() {
     #expect(source.contains("case .fire: .antiquity"))
     #expect(source.contains("case .festival: .medieval"))
     #expect(source.contains("case .fire: [.easy: 1, .normal: 1, .hard: 2]"))
-    #expect(source.contains("case .fire: [.warning: SeasonalBanner(title: \"Dry {season} ahead\", "))
-    #expect(source.contains(".ignition: SeasonalBanner(title: \"Fire!\", text: \"A {building} is burning.\")]"))
+    #expect(source.contains("case .fire: [.warning: SeasonalBanner(titleKey: \"seasonalEvent.fire.banner.warning.title\", "))
+    #expect(source.contains(
+        ".ignition: SeasonalBanner(titleKey: \"seasonalEvent.fire.banner.ignition.title\", "
+            + "textKey: \"seasonalEvent.fire.banner.ignition.text\")]"
+    ))
 }
 
 @Test("scenario: The sheep farm is not a crop")

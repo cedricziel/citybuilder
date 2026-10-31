@@ -144,8 +144,7 @@ extension GameSession {
 
     /// "Steam engine" from the palette's "Steam Engine".
     static func sentenceCase(_ kind: BuildingKind) -> String {
-        let name = BuildTool.place(kind).displayName.lowercased()
-        return name.prefix(1).uppercased() + name.dropFirst()
+        GameText.inSentence(BuildTool.place(kind).displayName).capitalizedFirst
     }
 
     /// Pay for a commission at the selected gallery. Spec: `platform-shells`
@@ -319,7 +318,7 @@ extension GameSession {
     }
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
-        let good = GoodsCatalog.spec(for: idle.good).displayName.lowercased()
+        let good = GameText.inSentence(GoodsCatalog.spec(for: idle.good).displayName)
         let builds = idle.users.map { GameText.string("banner.idle.user", $0.spokenName) }
         // Not ListFormatter: its English adds a comma before "or".
         let named = builds.count < 2

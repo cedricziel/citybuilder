@@ -19,16 +19,6 @@ func scenarioSnapshotCarriesTheCulture() {
     #expect(World.newGame(layout: .singleIsland, seed: 0, culture: .mediterranean).snapshot().culture == .mediterranean)
 }
 
-@Test("scenario: mediterranean top tier")
-func scenarioMediterraneanTopTier() {
-    #expect(HouseTier.merchants.displayName(in: .mediterranean) == "Patricians")
-}
-
-@Test("scenario: northern european names are unchanged")
-func scenarioNorthernEuropeanNamesAreUnchanged() {
-    #expect(HouseTier.allCases.map { $0.displayName(in: .northernEuropean) } == ["Peasants", "Citizens", "Merchants"])
-}
-
 @Test("culture raw values are kebab case")
 func cultureRawValuesAreKebabCase() {
     #expect(Culture.allCases.map(\.rawValue) == ["northern-european", "mediterranean", "east-asian", "middle-eastern"])

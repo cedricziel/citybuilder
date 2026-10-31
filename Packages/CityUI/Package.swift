@@ -21,7 +21,7 @@ let package = Package(
             name: "CityUI",
             dependencies: ["CityCore", "CityRender2D"],
             path: "Sources/CityUI",
-            resources: [.copy("Resources/Localizable.xcstrings")]
+            resources: [.copy("Resources/Localizable.xcstrings"), .copy("Resources/GameData.xcstrings")]
         ),
         .testTarget(
             name: "CityUITests",

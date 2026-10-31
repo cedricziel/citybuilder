@@ -18,7 +18,7 @@ extension GameSession {
             return Self.banner(event, .onset, ["date": end])
         case let .buildingCaughtFire(id, kind):
             let moment: SeasonalBannerKind = isAnswered(id) ? .ignitionCovered : .ignition
-            return Self.banner(.fire, moment, ["building": BuildTool.place(kind).displayName.lowercased()])
+            return Self.banner(.fire, moment, ["building": GameText.inSentence(BuildTool.place(kind).displayName)])
         case let .seasonalEventEnded(event, toll):
             let moment: SeasonalBannerKind = switch (event.effect, toll.fires, toll.count) {
             case (.fire, 0, _): .endNoFire
@@ -82,9 +82,14 @@ extension GameSession {
     }
 
     /// The pack's banner for `moment`, its placeholders filled.
-    static func banner(_ event: SeasonalEvent, _ moment: SeasonalBannerKind, _ values: [String: String]) -> SessionBanner? {
+    static func banner(
+        _ event: SeasonalEvent, _ moment: SeasonalBannerKind, _ values: [String: String], in language: Language = .current
+    ) -> SessionBanner? {
         guard let banner = event.banners[moment] else { return nil }
-        return SessionBanner(title: fill(banner.title, values), description: fill(banner.text, values))
+        return SessionBanner(
+            title: fill(GameText.string(banner.titleKey, in: language), values),
+            description: fill(GameText.string(banner.textKey, in: language), values)
+        )
     }
 
     static func fill(_ text: String, _ values: [String: String]) -> String {

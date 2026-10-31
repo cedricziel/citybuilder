@@ -17,19 +17,19 @@ public enum Tech: String, CaseIterable, Codable, Sendable {
     case steamPower = "steam-power"
     case electricity
 
-    public var displayName: String {
+    public var nameKey: String {
         switch self {
-        case .scholarship: "Scholarship"
-        case .milling: "Milling"
-        case .mining: "Mining"
-        case .metallurgy: "Metallurgy"
-        case .seafaring: "Seafaring"
-        case .weaving: "Weaving"
-        case .cultivation: "Cultivation"
-        case .feudalOrder: "Feudal Order"
-        case .printingPress: "Printing Press"
-        case .steamPower: "Steam Power"
-        case .electricity: "Electricity"
+        case .scholarship: "tech.scholarship.name"
+        case .milling: "tech.milling.name"
+        case .mining: "tech.mining.name"
+        case .metallurgy: "tech.metallurgy.name"
+        case .seafaring: "tech.seafaring.name"
+        case .weaving: "tech.weaving.name"
+        case .cultivation: "tech.cultivation.name"
+        case .feudalOrder: "tech.feudalOrder.name"
+        case .printingPress: "tech.printingPress.name"
+        case .steamPower: "tech.steamPower.name"
+        case .electricity: "tech.electricity.name"
         }
     }
 

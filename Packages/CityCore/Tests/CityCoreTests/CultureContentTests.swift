@@ -64,7 +64,7 @@ func scenarioOldSavesKeepTheirSatisfaction() throws {
 @Test("scenario: culture goods are catalogued")
 func scenarioCultureGoodsAreCatalogued() {
     let goods: [Good] = [.hops, .beer, .grapes, .wine, .teaLeaves, .tea, .coffeeCherries, .coffee]
-    #expect(goods.allSatisfy { !GoodsCatalog.spec(for: $0).displayName.isEmpty })
+    #expect(goods.allSatisfy { GoodsCatalog.spec(for: $0).good.nameKey.hasPrefix("good.") })
 }
 
 @Test("scenario: tea house spec")

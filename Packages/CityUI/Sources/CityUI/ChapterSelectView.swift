@@ -119,7 +119,7 @@ struct ChapterSelectView: View {
             ScrollView {
                 ChapterDetailView(model: model, chapter: chapter, mapImage: model.selectedMap) { world in onStart(chapter, world) }
             }
-            .navigationTitle(chapter.title)
+            .navigationTitle(chapter.displayTitle)
             #if !os(tvOS)
             .navigationBarTitleDisplayModeInline()
             #endif
@@ -142,8 +142,8 @@ struct ChapterDetailView: View {
             if let eyebrow = model.selectedEyebrow {
                 Text(eyebrow).font(.footnote).textCase(.uppercase).foregroundStyle(.secondary)
             }
-            Text(chapter.title).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
-            Text(chapter.intro).fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: chapter.displayTitle).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+            Text(verbatim: chapter.displayIntro).fixedSize(horizontal: false, vertical: true)
             goals
             facts
             picks
@@ -177,7 +177,7 @@ struct ChapterDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             LabeledContent(GameText.string("chapter.starts"), value: ChapterText.start(chapter))
             LabeledContent(GameText.string("chapter.lostIf"), value: ChapterText.lostIf(chapter.loseConditions(for: model.difficulty)))
-            LabeledContent(GameText.string("chapter.reward"), value: ChapterText.reward(chapter.reward))
+            LabeledContent(GameText.string("chapter.reward"), value: ChapterText.reward(of: chapter))
         }
         .font(.callout)
     }

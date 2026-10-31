@@ -26,6 +26,11 @@ struct StringTable: Sendable {
         }
     }
 
+    /// One table holding every key of `tables`.
+    init(merging tables: [StringTable]) {
+        entries = tables.reduce(into: [:]) { $0.merge($1.entries) { first, _ in first } }
+    }
+
     /// The format string for `key` in `language`, else in English; nil when
     /// no catalog has the key. A plural entry picks its form from the first
     /// integer among `arguments`.
