@@ -346,17 +346,6 @@ public final class GameSession {
         selectedTool = .inspect
     }
 
-    /// Place the armed building at the camera-center tile. Useful for
-    /// keyboard-driven flows and tests; the main interaction is
-    /// tap-on-tile through `handleTap`.
-    public func placeAtCameraCenter(_ kind: BuildingKind) {
-        let coord = TileCoordinate(
-            x: Int(world.camera.centerX.rounded()),
-            y: Int(world.camera.centerY.rounded())
-        )
-        enqueue(.place(kind, at: coord))
-    }
-
     // Gesture state. SwiftUI's DragGesture reports cumulative translation;
     // we track the previous reading to derive per-frame deltas.
     public var lastPanX: CGFloat = 0
