@@ -133,3 +133,9 @@ func theForesterSitsInTheGatherDrawerAfterTheLumberjackHut() {
     #expect(hut.map { gather.index(after: $0) }.map { gather[$0] } == .forester)
     #expect(BuildTool.place(.forester).displayName == "Forester")
 }
+
+@Test("scenario: a hut's hint is short enough for its count")
+func hutHintIsShortEnoughForItsCount() {
+    #expect(ToolStripText.hint(for: .place(.lumberjackHut), idiom: .phone, inReach: 9) == "Tap to position · 9 trees in reach")
+    #expect(ToolStripText.hint(for: .place(.lumberjackHut), idiom: .phone) == "Tap to position, then tap ✓ to place")
+}
