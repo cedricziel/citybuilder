@@ -33,12 +33,12 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 4. M4 — CityCore keyed messages
 
-- [ ] 4.1 Record the determinism fixture's post-tick JSON on `main` before the change
-- [ ] 4.2 Tests-first: translate "A history event carries its key and amount", "A date before year 1 reads per locale" and "Keyed messages leave the simulation unchanged" into failing tests; confirm red
-- [ ] 4.3 Implement to green: `GameMessage` and `MessageArg` in CityCore; `HistoryEvent`, `Scenario`, `Season` and `Difficulty` expose keys and messages; remove `GameDate.displayText` (D4)
-- [ ] 4.4 Implement to green: CityUI formats messages and dates through the catalog; add the keys with en + de
-- [ ] 4.5 Refactor under a green bar; confirm 100% diff coverage of the CityCore lines and `scripts/check-no-apple-ui-imports.sh` clean
-- [ ] 4.6 Verify `make test-scenarios` and `make l10n-check` clean
+- [x] 4.1 Record the determinism fixture's post-tick JSON on `main` before the change
+- [x] 4.2 Tests-first: translate "A history event carries its key and amount", "A date before year 1 reads per locale" and "Keyed messages leave the simulation unchanged" into failing tests; confirm red
+- [x] 4.3 Implement to green: `GameMessage` and `MessageArg` in CityCore; `HistoryEvent`, `Scenario`, `Season` and `Difficulty` expose keys and messages; remove `GameDate.displayText` (D4)
+- [x] 4.4 Implement to green: CityUI formats messages and dates through the catalog; add the keys with en + de
+- [x] 4.5 Refactor under a green bar; confirm 100% diff coverage of the CityCore lines and `scripts/check-no-apple-ui-imports.sh` clean
+- [x] 4.6 Verify `make test-scenarios` and `make l10n-check` clean
 
 ## 5. M5 — Pack text keys
 
