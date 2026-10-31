@@ -66,7 +66,7 @@ func scenarioRivalStartingState() throws {
     #expect(townCenter.owner == .rival(1))
     let stock = try #require(world.stockpiles[townCenter.id])
     #expect(stock.quantity(of: .wood) == 4)
-    #expect(stock.quantity(of: .planks) == 3)
+    #expect(stock.quantity(of: .planks) == 4)
     #expect(stock.quantity(of: .food) == 1)
     #expect(world.testTownCenter(onIsland: 3)?.owner == .player)
 }
