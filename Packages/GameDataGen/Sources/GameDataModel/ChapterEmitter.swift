@@ -20,7 +20,8 @@ struct ChapterEmitter {
     private func campaign(_ campaign: CampaignData) -> String {
         "Campaign(id: \(literal(campaign.id)), title: \(literal(campaign.title)), "
             + "chapters: [\(campaign.chapters.map(literal).joined(separator: ", "))], "
-            + "opensAfter: \(campaign.opensAfter.map(literal) ?? "nil"))"
+            + "opensAfter: \(campaign.opensAfter.map(literal) ?? "nil"), "
+            + "titleKey: \(literal(packKey("campaign", campaign.id, "title"))))"
     }
 
     private func chapter(_ chapter: ChapterData) -> String {
@@ -45,7 +46,8 @@ struct ChapterEmitter {
                 + "market: \(chapter.market), kits: [\(chapter.kits.map(literal).joined(separator: ", "))])",
             "comingLater: \(chapter.comingLater)",
             "events: [\(chapter.events.map(event).joined(separator: ", "))]",
-            "randomEvents: \(chapter.randomEvents)"
+            "randomEvents: \(chapter.randomEvents)",
+            "textKey: \(literal("chapter.\(unquotedCaseName(chapter.id))"))"
         ]
         return "Chapter(\(fields.joined(separator: ", ")))"
     }

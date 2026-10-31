@@ -39,9 +39,9 @@ public struct ChapterCardContent: Equatable {
         let number = (campaign?.chapters.firstIndex(of: chapter.id) ?? 0) + 1
         switch card {
         case .intro:
-            eyebrow = [campaign?.title, GameText.string("chapter.number", number)].compactMap(\.self).joined(separator: " · ")
-            title = chapter.title
-            text = chapter.intro
+            eyebrow = [campaign?.displayTitle, GameText.string("chapter.number", number)].compactMap(\.self).joined(separator: " · ")
+            title = chapter.displayTitle
+            text = chapter.displayIntro
             lines = world.goals.map { state in
                 (state.isBonus ? GameText.string("chapter.bonusPrefix") : "") + ChapterText.goal(state, culture: world.culture)
             }
@@ -56,13 +56,13 @@ public struct ChapterCardContent: Equatable {
             showsMap = true
         case let .ending(next):
             eyebrow = GameText.string("chapter.wonEyebrow", number, GameText.string(world.difficulty.nameKey))
-            title = chapter.title
-            text = chapter.ending
+            title = chapter.displayTitle
+            text = chapter.displayEnding
             let bonus = world.goals.count(where: \.isBonus)
             lines = []
             facts = [
                 Fact(label: GameText.string("chapter.laurels"), value: GameText.string("chapter.laurelsOf", world.laurels, bonus)),
-                Fact(label: GameText.string("chapter.reward"), value: ChapterText.reward(chapter.reward))
+                Fact(label: GameText.string("chapter.reward"), value: ChapterText.reward(of: chapter))
             ]
             buttons = [next.map(Button.start) ?? .backToChapters, .keepBuilding]
             showsMap = true

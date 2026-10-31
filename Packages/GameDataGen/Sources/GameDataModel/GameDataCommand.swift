@@ -16,16 +16,19 @@ public enum GameDataCommand {
     }
 
     public static let usage = """
-    usage: gamedata-gen generate [--check] [--data <dir>] [--out <dir>] [--namespace <name>]
+    usage: gamedata-gen generate [--check] [--data <dir>] [--out <dir>] [--catalog <file>] [--namespace <name>]
            gamedata-gen diff <old-ref> [<new-ref>] [--data <dir>]
            gamedata-gen hook pre|post   (Claude Code hook JSON on stdin)
 
     Defaults, relative to the current directory:
       --data Packages/CityCore/GameData
       --out  Packages/CityCore/Sources/CityCore/Generated
+      --catalog Packages/CityUI/Sources/CityUI/Resources/GameData.xcstrings
 
     --check writes nothing and fails when the output directory is not what
             generate would write.
+    --catalog is the pack-text String Catalog; generate keeps its other
+            languages and marks them for review when the English changes.
     --namespace nests every generated type in `enum <name>`, in one file.
     diff    lists changed values, then added and removed items, between two
             git revisions; without <new-ref>, against the working tree.
@@ -35,6 +38,7 @@ public enum GameDataCommand {
 
     static let defaultData = "Packages/CityCore/GameData"
     static let defaultOut = "Packages/CityCore/Sources/CityCore/Generated"
+    static let defaultCatalog = "Packages/CityUI/Sources/CityUI/Resources/GameData.xcstrings"
 
     public static func run(
         _ arguments: [String], standardInput: () -> Data, currentDirectory: URL
@@ -49,12 +53,12 @@ public enum GameDataCommand {
             let checkOnly = arguments.contains("--check")
             arguments.removeAll { $0 == "--check" }
             guard let (positional, values) = options(
-                arguments, allowed: ["--data", "--out", "--namespace"],
-                defaults: ["--data": defaultData, "--out": defaultOut]
+                arguments, allowed: ["--data", "--out", "--catalog", "--namespace"],
+                defaults: ["--data": defaultData, "--out": defaultOut, "--catalog": defaultCatalog]
             ), positional.isEmpty
             else { return usageError }
             return generate(
-                data: path(values["--data"]!), out: path(values["--out"]!),
+                data: path(values["--data"]!), out: path(values["--out"]!), catalog: path(values["--catalog"]!),
                 namespace: values["--namespace"], checkOnly: checkOnly
             )
         case "diff":
@@ -73,9 +77,9 @@ public enum GameDataCommand {
 
     private static let usageError = Outcome(status: 64, error: usage + "\n")
 
-    private static func generate(data: URL, out: URL, namespace: String?, checkOnly: Bool) -> Outcome {
+    private static func generate(data: URL, out: URL, catalog: URL, namespace: String?, checkOnly: Bool) -> Outcome {
         if checkOnly {
-            switch Generator.check(dataDirectory: data, outputDirectory: out, namespace: namespace) {
+            switch Generator.check(dataDirectory: data, outputDirectory: out, catalogFile: catalog, namespace: namespace) {
             case let .success(drift) where drift.isEmpty:
                 return Outcome(status: 0, output: "generated files in \(out.path) are up to date\n")
             case let .success(drift):
@@ -85,7 +89,7 @@ public enum GameDataCommand {
                 return Outcome(status: 1, error: "\(errors)\n")
             }
         }
-        switch Generator.generate(dataDirectory: data, outputDirectory: out, namespace: namespace) {
+        switch Generator.generate(dataDirectory: data, outputDirectory: out, catalogFile: catalog, namespace: namespace) {
         case let .success(files):
             return Outcome(status: 0, output: "wrote \(files.count) files to \(out.path)\n")
         case let .failure(errors):

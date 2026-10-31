@@ -10,21 +10,21 @@ public enum Culture: String, CaseIterable, Codable, Hashable, Sendable {
     case eastAsian = "east-asian"
     case middleEastern = "middle-eastern"
 
-    public var displayName: String {
+    public var nameKey: String {
         switch self {
-        case .northernEuropean: "Northern European"
-        case .mediterranean: "Mediterranean"
-        case .eastAsian: "East Asian"
-        case .middleEastern: "Middle Eastern"
+        case .northernEuropean: "culture.northernEuropean.name"
+        case .mediterranean: "culture.mediterranean.name"
+        case .eastAsian: "culture.eastAsian.name"
+        case .middleEastern: "culture.middleEastern.name"
         }
     }
 
-    public var blurb: String {
+    public var blurbKey: String {
         switch self {
-        case .northernEuropean: "Half-timbered towns under steep tiled roofs."
-        case .mediterranean: "Whitewashed walls, terracotta roofs and bell towers."
-        case .eastAsian: "Timber halls under dark, wide-eaved roofs."
-        case .middleEastern: "Sandstone, flat roofs and domes."
+        case .northernEuropean: "culture.northernEuropean.blurb"
+        case .mediterranean: "culture.mediterranean.blurb"
+        case .eastAsian: "culture.eastAsian.blurb"
+        case .middleEastern: "culture.middleEastern.blurb"
         }
     }
 
@@ -55,20 +55,20 @@ public enum Culture: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
-    public func tierName(_ tier: HouseTier) -> String {
+    public func tierNameKey(_ tier: HouseTier) -> String {
         switch (self, tier) {
-        case (.northernEuropean, .peasants): "Peasants"
-        case (.northernEuropean, .citizens): "Citizens"
-        case (.northernEuropean, .merchants): "Merchants"
-        case (.mediterranean, .peasants): "Plebeians"
-        case (.mediterranean, .citizens): "Citizens"
-        case (.mediterranean, .merchants): "Patricians"
-        case (.eastAsian, .peasants): "Farmers"
-        case (.eastAsian, .citizens): "Artisans"
-        case (.eastAsian, .merchants): "Scholars"
-        case (.middleEastern, .peasants): "Farmers"
-        case (.middleEastern, .citizens): "Craftsmen"
-        case (.middleEastern, .merchants): "Merchants"
+        case (.northernEuropean, .peasants): "tier.peasants.name"
+        case (.northernEuropean, .citizens): "tier.citizens.name"
+        case (.northernEuropean, .merchants): "tier.merchants.name"
+        case (.mediterranean, .peasants): "culture.mediterranean.tierName.peasants"
+        case (.mediterranean, .citizens): "tier.citizens.name"
+        case (.mediterranean, .merchants): "culture.mediterranean.tierName.merchants"
+        case (.eastAsian, .peasants): "culture.eastAsian.tierName.peasants"
+        case (.eastAsian, .citizens): "culture.eastAsian.tierName.citizens"
+        case (.eastAsian, .merchants): "culture.eastAsian.tierName.merchants"
+        case (.middleEastern, .peasants): "culture.middleEastern.tierName.peasants"
+        case (.middleEastern, .citizens): "culture.middleEastern.tierName.citizens"
+        case (.middleEastern, .merchants): "tier.merchants.name"
         }
     }
 }

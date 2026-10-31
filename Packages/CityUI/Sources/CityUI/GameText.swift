@@ -59,9 +59,12 @@ public enum Language: String, Sendable {
 /// call site (`GameText.string("pause.resume")`, `Text(l10n: "pause.title")`)
 /// so `l10n-check` can find them.
 public enum GameText {
-    /// The catalog, copied into the bundle as JSON (see `StringTable`).
-    private static let table: StringTable? = Bundle.module.url(forResource: "Localizable", withExtension: "xcstrings")
-        .flatMap { try? StringTable(json: Data(contentsOf: $0)) }
+    /// The hand-written catalog and the one generated from the packs,
+    /// copied into the bundle as JSON (see `StringTable`). Their keys never
+    /// overlap.
+    private static let table = StringTable(merging: ["Localizable", "GameData"].compactMap { name in
+        Bundle.module.url(forResource: name, withExtension: "xcstrings").flatMap { try? StringTable(json: Data(contentsOf: $0)) }
+    })
 
     /// The text for `key` in `language`, its format arguments filled. A
     /// missing key shows as itself.
@@ -70,7 +73,7 @@ public enum GameText {
     }
 
     static func string(_ key: String, arguments: [any CVarArg], in language: Language) -> String {
-        var format = table?.format(for: key, in: language.catalogLanguage.rawValue, arguments: arguments) ?? key
+        var format = table.format(for: key, in: language.catalogLanguage.rawValue, arguments: arguments) ?? key
         if language == .pseudo { format = PseudoLocale.transform(format) }
         return arguments.isEmpty ? format : String(format: format, locale: language.locale, arguments: arguments)
     }

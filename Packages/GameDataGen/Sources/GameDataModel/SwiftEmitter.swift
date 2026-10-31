@@ -75,11 +75,6 @@ func unquotedCaseName(_ id: String) -> String {
     return (words.first.map(String.init) ?? "") + words.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
 }
 
-/// `grain-farm` → `Grain Farm`.
-private func titleCased(_ id: String) -> String {
-    id.split(separator: "-").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " ")
-}
-
 /// `[.planks: 1, .wood: 4]`, sorted by good id.
 func amounts(_ amounts: GoodAmounts) -> String {
     guard !amounts.isEmpty else { return "[:]" }
@@ -107,6 +102,8 @@ private struct Types {
     var goods: String {
         let all = data.goods
         return enumDecl("Good", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("good", $0.id, "name"))) }),
+            property("unitKey", "String", all.map { ($0.id, literal(packKey("good", $0.id, "unit"))) }),
             property("basePrice", "Int64", all.map { ($0.id, "\($0.basePrice)") }),
             property("marketTerms", "MarketTerms", all.map { good in
                 (good.id, "MarketTerms(buyLimit: \(good.market.buy), sellLimit: \(good.market.sell))")
@@ -116,7 +113,7 @@ private struct Types {
 
     var goodsCatalog: String {
         catalog("GoodsCatalog", spec: "GoodSpec", for: "good", of: "Good", data.goods.map { good in
-            (good.id, "GoodSpec(good: .\(caseName(good.id)), displayName: \(literal(good.name)), stackUnit: \(literal(good.unit)))")
+            (good.id, "GoodSpec(good: .\(caseName(good.id)))")
         })
     }
 
@@ -124,7 +121,7 @@ private struct Types {
         let all = data.buildings
         return enumDecl("BuildingKind", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
             codable(aliases: all.flatMap { building in building.legacyIds.map { ($0, building.id) } }),
-            property("displayName", "String", all.map { ($0.id, literal($0.name ?? titleCased($0.id))) }),
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("building", $0.id, "name"))) }),
             property("storage", "Int?", all.map { ($0.id, $0.storage.map(String.init) ?? "nil") }),
             property("storagePerGood", "Int?", all.map { ($0.id, $0.storagePerGood.map(String.init) ?? "nil") }),
             property("plantTicks", "UInt64?", all.map { ($0.id, $0.plantTicks.map(String.init) ?? "nil") }),
@@ -154,17 +151,17 @@ private struct Types {
         let all = data.cultures
         let tierNames = all.flatMap { culture in
             data.tiers.map { tier in
-                ("(.\(caseName(culture.id)), .\(caseName(tier.id)))", literal(culture.tierName(tier)))
+                ("(.\(caseName(culture.id)), .\(caseName(tier.id)))", literal(tierNameKey(culture, tier)))
             }
         }
         return enumDecl("Culture", "String, CaseIterable, Codable, Hashable, Sendable", all.map(\.id), [
-            property("displayName", "String", all.map { ($0.id, literal($0.name)) }),
-            property("blurb", "String", all.map { ($0.id, literal($0.blurb)) }),
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("culture", $0.id, "name"))) }),
+            property("blurbKey", "String", all.map { ($0.id, literal(packKey("culture", $0.id, "blurb"))) }),
             property("luxuryChain", "LuxuryChain", all.map { ($0.id, luxury($0.luxury)) }),
             property("signature", "BuildingKind", all.map { ($0.id, ".\(caseName($0.signature))") }),
             property("residentNames", "[String]", all.map { ($0.id, "[\($0.residentNames.map(literal).joined(separator: ", "))]") }),
             tierNames.isEmpty ? "" : function(
-                "\(access)func tierName(_ tier: HouseTier) -> String",
+                "\(access)func tierNameKey(_ tier: HouseTier) -> String",
                 over: "(self, tier)",
                 tierNames,
                 quoted: false
@@ -175,7 +172,7 @@ private struct Types {
     var tech: String {
         let all = data.techs
         return enumDecl("Tech", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
-            property("displayName", "String", all.map { ($0.id, literal($0.name ?? titleCased($0.id))) }),
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("tech", $0.id, "name"))) }),
             property("cost", "Int", all.map { ($0.id, "\($0.cost)") }),
             property("prerequisites", "[Tech]", all.map { ($0.id, caseList($0.prerequisites)) }),
             property("unlocks", "[BuildingKind]", all.map { ($0.id, caseList(data.unlocks(of: $0.id))) }),
@@ -190,9 +187,9 @@ private struct Types {
     var age: String {
         let all = data.ages
         return enumDecl("Age", "String, CaseIterable, Codable, Hashable, Sendable", all.map(\.id), [
-            property("displayName", "String", all.map { ($0.id, literal($0.name ?? titleCased($0.id))) }),
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("age", $0.id, "name"))) }),
             property("startYear", "Int", all.map { ($0.id, "\($0.startYear)") }),
-            property("blurb", "String", all.map { ($0.id, literal($0.blurb)) }),
+            property("blurbKey", "String", all.map { ($0.id, literal(packKey("age", $0.id, "blurb"))) }),
             property("signature", "BuildingKind", all.map { ($0.id, ".\(caseName($0.signature))") }),
             property("rivalResidents", "Int", all.map { ($0.id, "\($0.rivalResidents)") }),
             property("orderEvery", "Int", all.map { ($0.id, "\($0.orderEvery)") })
@@ -204,8 +201,8 @@ private struct Types {
         return enumDecl("OrderTemplate", "String, CaseIterable, Codable, Sendable", all.map(\.id), [
             property("issuer", "OrderIssuerKind", all.map { ($0.id, ".\(caseName($0.issuer))") }),
             property("good", "Good", all.map { ($0.id, ".\(caseName($0.good))") }),
-            property("title", "String", all.map { ($0.id, literal($0.title)) }),
-            property("text", "String", all.map { ($0.id, literal($0.text)) }),
+            property("titleKey", "String", all.map { ($0.id, literal(packKey("order", $0.id, "title"))) }),
+            property("textKey", "String", all.map { ($0.id, literal(packKey("order", $0.id, "text"))) }),
             property("minAge", "Age?", all.map { ($0.id, optionalCase($0.minAge)) }),
             property("seasons", "Int", all.map { ($0.id, "\($0.seasons)") }),
             property("sizePercent", "Int", all.map { ($0.id, "\($0.size)") }),
@@ -227,7 +224,7 @@ private struct Types {
             property("weights", "[Difficulty: Int]", all.map { event in
                 (event.id, "[" + ItemSchema.difficulties.map { ".\($0): \(event.weights[$0] ?? 0)" }.joined(separator: ", ") + "]")
             }),
-            property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0.banners)) }),
+            property("banners", "[SeasonalBannerKind: SeasonalBanner]", all.map { ($0.id, banners($0)) }),
             property("isEnabled", "Bool", all.map { ($0.id, "\($0.enabled)") }),
             property("firstYear", "Int", all.map { ($0.id, "\($0.firstYear)") })
         ])
@@ -242,7 +239,7 @@ private struct Types {
             property("needs", "[Good]", all.map { ($0.id, caseList($0.needs)) }),
             property("taxPerResident", "Int64", all.map { ($0.id, "\($0.taxPerResident)") }),
             property("declineGrace", "Int", all.map { ($0.id, "\($0.declineGrace)") }),
-            property("displayName", "String", all.map { ($0.id, literal($0.name)) })
+            property("nameKey", "String", all.map { ($0.id, literal(packKey("tier", $0.id, "name"))) })
         ])
     }
 
@@ -310,12 +307,14 @@ private struct Types {
             + "garden: .\(caseName(chain.garden)), producer: .\(caseName(chain.producer)))"
     }
 
-    /// `[.warning: SeasonalBanner(title: …, text: …)]`, in `ItemSchema.eventBanners` order.
-    private func banners(_ banners: [SeasonalEvent.Banner]) -> String {
-        let ordered = ItemSchema.eventBanners.compactMap { key in banners.first { $0.key == key } }
+    /// `[.warning: SeasonalBanner(titleKey: …, textKey: …)]`, in `ItemSchema.eventBanners` order.
+    private func banners(_ event: SeasonalEvent) -> String {
+        let ordered = ItemSchema.eventBanners.compactMap { key in event.banners.first { $0.key == key } }
         guard !ordered.isEmpty else { return "[:]" }
-        return "[" + ordered.map { ".\($0.key): SeasonalBanner(title: \(literal($0.title)), text: \(literal($0.text)))" }
-            .joined(separator: ", ") + "]"
+        return "[" + ordered.map { banner in
+            let key = { (field: String) in literal(packKey("seasonalEvent", event.id, "banner.\(banner.key).\(field)")) }
+            return ".\(banner.key): SeasonalBanner(titleKey: \(key("title")), textKey: \(key("text")))"
+        }.joined(separator: ", ") + "]"
     }
 
     // MARK: - Declarations

@@ -10,12 +10,17 @@ public struct Campaign: Hashable, Sendable {
     /// The chapter whose win opens this campaign's first chapter; nil when
     /// it is open from the start.
     public let opensAfter: String?
+    /// The title's catalog key from the packs (design D5 of
+    /// `add-localization`); nil for a campaign built in code, which shows
+    /// `title`.
+    public let titleKey: String?
 
-    public init(id: String, title: String, chapters: [String], opensAfter: String? = nil) {
+    public init(id: String, title: String, chapters: [String], opensAfter: String? = nil, titleKey: String? = nil) {
         self.id = id
         self.title = title
         self.chapters = chapters
         self.opensAfter = opensAfter
+        self.titleKey = titleKey
     }
 }
 
@@ -120,6 +125,11 @@ public struct Chapter: Hashable, Sendable {
     public let comingLater: Bool
     public let events: [ScheduledSeasonalEvent]
     public let randomEvents: Bool
+    /// What the pack text's catalog keys start with, `chapter.firstFires`,
+    /// followed by `.title`, `.intro`, `.ending` or `.reward` (design D5 of
+    /// `add-localization`); nil for a chapter built in code, which shows its
+    /// stored text.
+    public let textKey: String?
 
     public init(
         id: String, title: String, intro: String, ending: String,
@@ -129,7 +139,7 @@ public struct Chapter: Hashable, Sendable {
         researched: [Tech] = [], goals: [GoalState], loseConditions: [LoseCondition] = [],
         rivalAgeYears: [Age: Int] = [:], difficulties: [Difficulty] = Difficulty.allCases,
         reward: ChapterReward, sweep: ChapterSweep = ChapterSweep(), comingLater: Bool = false,
-        events: [ScheduledSeasonalEvent] = [], randomEvents: Bool = true
+        events: [ScheduledSeasonalEvent] = [], randomEvents: Bool = true, textKey: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -155,6 +165,7 @@ public struct Chapter: Hashable, Sendable {
         self.comingLater = comingLater
         self.events = events
         self.randomEvents = randomEvents
+        self.textKey = textKey
     }
 }
 

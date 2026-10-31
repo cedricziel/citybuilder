@@ -88,7 +88,7 @@ repos:
         name: generated catalogs match the game-data packs (game-data-codegen)
         entry: make gamedata-check
         language: system
-        files: ^Packages/(CityCore/(GameData/|Sources/CityCore/Generated/)|GameDataGen/Sources/)
+        files: ^Packages/(CityCore/(GameData/|Sources/CityCore/Generated/)|GameDataGen/Sources/|CityUI/Sources/CityUI/Resources/GameData\.xcstrings$)
         pass_filenames: false
 
       - id: l10n-check

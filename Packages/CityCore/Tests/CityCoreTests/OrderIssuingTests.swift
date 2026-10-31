@@ -18,14 +18,12 @@ func scenarioBuiltInOrderTemplatesLoad() {
     #expect(OrderTemplate.crownTimber.good == .planks)
     #expect(OrderTemplate.crownTimber.sizePercent == 90)
     for template in OrderTemplate.allCases {
-        let titled: Bool = !template.title.isEmpty
-        let short: Bool = template.text.count <= 100
+        let titled: Bool = template.titleKey.hasPrefix("order.") && template.textKey.hasPrefix("order.")
         let window: Bool = (1 ... 8).contains(template.seasons)
         let size: Bool = (1 ... 300).contains(template.sizePercent)
         let bounds: Bool = template.minUnits >= 1 && template.minUnits <= template.maxUnits
         let rewards: Bool = template.rewardPercent >= 0 && template.favourGain >= 0 && template.favourLoss >= 0
         #expect(titled, "\(template)")
-        #expect(short, "\(template)")
         #expect(window, "\(template)")
         #expect(size, "\(template)")
         #expect(bounds, "\(template)")

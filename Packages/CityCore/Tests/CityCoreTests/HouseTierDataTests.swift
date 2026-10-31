@@ -10,17 +10,9 @@ func scenarioShippedTiersKeepTheirValues() {
     #expect(HouseTier.allCases.map(\.capacity) == [4, 6, 8])
     #expect(HouseTier.allCases.map(\.needs) == [[.food], [.food, .planks], [.food, .planks, .bread, .tools, .cloth]])
     #expect(HouseTier.allCases.map(\.taxPerResident) == [1, 2, 4])
-    #expect(HouseTier.allCases.map(\.displayName) == ["Peasants", "Citizens", "Merchants"])
-    let names: [Culture: [String]] = [
-        .northernEuropean: ["Peasants", "Citizens", "Merchants"],
-        .mediterranean: ["Plebeians", "Citizens", "Patricians"],
-        .eastAsian: ["Farmers", "Artisans", "Scholars"],
-        .middleEastern: ["Farmers", "Craftsmen", "Merchants"]
-    ]
-    #expect(Set(names.keys) == Set(Culture.allCases))
-    for (culture, expected) in names {
-        #expect(HouseTier.allCases.map { $0.displayName(in: culture) } == expected, "\(culture)")
-    }
+    #expect(HouseTier.allCases.map(\.nameKey) == ["tier.peasants.name", "tier.citizens.name", "tier.merchants.name"])
+    #expect(HouseTier.merchants.nameKey(in: .mediterranean) == "culture.mediterranean.tierName.merchants")
+    #expect(HouseTier.merchants.nameKey(in: .northernEuropean) == "tier.merchants.name")
 }
 
 @Test("scenario: a need without its own rate is eaten one per eight residents")

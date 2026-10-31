@@ -138,8 +138,8 @@ func chapterTextsRead() {
     #expect(ChapterText.start(chapter) == "Medieval, 1200, 1 rival")
     #expect(ChapterText.lostIf(chapter.loseConditions)
         == "1210 begins, or a rival reaches the Renaissance first, or the town falls below 40 residents for a season, or bankruptcy")
-    #expect(ChapterText.reward(.decor("Founder's stone")) == "Decor “Founder's stone”")
-    #expect(ChapterText.reward(.mapPreset("Two Shores")) == "Map preset “Two Shores”")
+    #expect(ChapterText.reward(.decor("Founder's stone"), named: "Founder's stone") == "Decor “Founder's stone”")
+    #expect(ChapterText.reward(.mapPreset("Two Shores"), named: "Two Shores") == "Map preset “Two Shores”")
     #expect(ChapterText.year(-496) == "497 BC")
     #expect(ChapterText.raceTarget(.population(60, atLeast: .peasants)) == "60 residents")
 }

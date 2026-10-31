@@ -67,6 +67,6 @@ extension InspectorViewModel {
     /// "Ruins of a house" for ruins, the palette name otherwise.
     static func title(of building: Building) -> String {
         guard let kind = building.ruinOf else { return BuildTool.place(building.kind).displayName }
-        return GameText.string("inspector.ruinsOf", BuildTool.place(kind).displayName.lowercased())
+        return GameText.string("inspector.ruinsOf", GameText.inSentence(BuildTool.place(kind).displayName))
     }
 }

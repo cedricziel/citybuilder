@@ -41,11 +41,11 @@ public enum HouseTier: UInt8, CaseIterable, Codable, Sendable {
         }
     }
 
-    public var displayName: String {
+    public var nameKey: String {
         switch self {
-        case .peasants: "Peasants"
-        case .citizens: "Citizens"
-        case .merchants: "Merchants"
+        case .peasants: "tier.peasants.name"
+        case .citizens: "tier.citizens.name"
+        case .merchants: "tier.merchants.name"
         }
     }
 }

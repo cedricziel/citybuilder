@@ -33,8 +33,8 @@ public extension HouseTier {
         return Good.allCases.filter(needed.contains)
     }
 
-    /// The culture's name for this tier (design D2).
-    func displayName(in culture: Culture) -> String {
-        culture.tierName(self)
+    /// The catalog key of the culture's name for this tier (design D2).
+    func nameKey(in culture: Culture) -> String {
+        culture.tierNameKey(self)
     }
 }

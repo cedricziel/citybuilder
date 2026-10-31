@@ -57,13 +57,13 @@ public final class ChapterSelectModel {
                 guard let chapter = progress.chapter(id) else { return nil }
                 let status = progress.status(of: id)
                 return Row(
-                    id: id, number: index + 1, title: chapter.title,
+                    id: id, number: index + 1, title: chapter.displayTitle,
                     status: ChapterText.status(of: id, status, campaigns: progress.campaigns),
                     state: Self.state(status)
                 )
             }
             let won = rows.count { $0.state == .won }
-            return Section(id: campaign.id, title: campaign.title, tally: "\(won) of \(rows.count) won", rows: rows)
+            return Section(id: campaign.id, title: campaign.displayTitle, tally: "\(won) of \(rows.count) won", rows: rows)
         }
     }
 
@@ -76,7 +76,7 @@ public final class ChapterSelectModel {
         guard let id = selectedID, let campaign = progress.campaigns.first(where: { $0.chapters.contains(id) }),
               let index = campaign.chapters.firstIndex(of: id)
         else { return nil }
-        return "\(campaign.title) · Chapter \(index + 1)"
+        return "\(campaign.displayTitle) · Chapter \(index + 1)"
     }
 
     /// The chosen chapter's status line when it can't be started: its key
