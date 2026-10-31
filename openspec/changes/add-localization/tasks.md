@@ -23,13 +23,13 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 3. M3 — CityUI sentence builders
 
-- [ ] 3.1 Tests-first: translate "Counts pick the plural form" and "English keeps today's text" into failing tests; add German assertions for each builder below; confirm red
-- [ ] 3.2 Implement to green: `SessionBanner` and its seasonal-event, fuel, monument, commission, rival and bankrupt banners, with plural keys (`count.building`, `count.resident`) (D6)
-- [ ] 3.3 Implement to green: `PlacementRejectionText` and the demolition texts
-- [ ] 3.4 Implement to green: inspector lines (production, needs, ruins, signatures, market, fuel)
-- [ ] 3.5 Implement to green: orders board, route list, manifest editor, town and rival market, first-steps guide, event chip, status pills
-- [ ] 3.6 Refactor under a green bar (one German template per sentence, no article before a noun placeholder, D7)
-- [ ] 3.7 Verify `make test-scenarios` and `make l10n-check` clean
+- [x] 3.1 Tests-first: translate "Counts pick the plural form" and "English keeps today's text" into failing tests; add German assertions for each builder below; confirm red
+- [x] 3.2 Implement to green: `SessionBanner` and its seasonal-event, fuel, monument, commission, rival and bankrupt banners, with plural keys (`count.building`, `count.resident`) (D6)
+- [x] 3.3 Implement to green: `PlacementRejectionText` and the demolition texts
+- [x] 3.4 Implement to green: inspector lines (production, needs, ruins, signatures, market, fuel)
+- [x] 3.5 Implement to green: orders board, route list, manifest editor, town and rival market, first-steps guide, event chip, status pills
+- [x] 3.6 Refactor under a green bar (one German template per sentence, no article before a noun placeholder, D7)
+- [x] 3.7 Verify `make test-scenarios` and `make l10n-check` clean
 
 ## 4. M4 — CityCore keyed messages
 
@@ -58,11 +58,11 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 
 ## 7. M7 — Tight labels, overflow fixes and switching German on
 
-- [ ] 7.1 Tests-first: translate "Tight labels fit in German" and "Tight labels fit in the pseudo-locale" into failing tests with the tight-label list and width budgets (D11); confirm which labels are over budget
-- [ ] 7.2 Design the layout fixes on a Claude Design canvas when they change the HUD visibly; get the go-ahead
-- [ ] 7.3 Implement to green: shorter German where the glossary allows, then layout fixes; keep `design/web` in step
-- [ ] 7.4 Implement to green: "German locale shows German text" end to end; add `de` to the supported languages, `knownRegions` and `CFBundleLocalizations` in `project.yml`
+- [x] 7.1 Tests-first: translate "Tight labels fit in German" and "Tight labels fit in the pseudo-locale" into failing tests with the tight-label list and width budgets (D11); confirm which labels are over budget
+- [x] 7.2 Design the layout fixes on a Claude Design canvas when they change the HUD visibly; get the go-ahead
+- [x] 7.3 Implement to green: shorter German where the glossary allows, then layout fixes; keep `design/web` in step
+- [x] 7.4 Implement to green: "German locale shows German text" end to end; add `de` to the supported languages, `knownRegions` and `CFBundleLocalizations` in `project.yml`
 - [x] 7.5 Translate "German text uses the glossary words" and "German text addresses the player with du" into tests over the shipped catalogs; make them green
-- [ ] 7.6 Playtest a German and a pseudo-locale session in the simulator for strings that bypass the catalog — DEFERRED (requires the orchestrator's simulator slot)
-- [ ] 7.7 Refactor under a green bar
-- [ ] 7.8 Verify `make test-scenarios` and `make l10n-check` clean for every scenario of the change
+- [ ] 7.6 Playtest a German and a pseudo-locale session in the simulator for strings that bypass the catalog
+- [x] 7.7 Refactor under a green bar
+- [x] 7.8 Verify `make test-scenarios` and `make l10n-check` clean for every scenario of the change
