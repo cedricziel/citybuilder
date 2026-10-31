@@ -93,12 +93,7 @@ public extension GameSession {
     /// the world would reject stays pending, with the reason on the HUD,
     /// so the player can nudge it somewhere valid.
     func confirmPendingPlacement() {
-        guard let pending = pendingPlacement else { return }
-        if case let .rejected(reason) = world.canPlace(pending.kind, at: pending.anchor) {
-            hud.showRejection(reason, in: world, now: Date())
-            UISounds.play(.reject)
-            return
-        }
+        guard let pending = pendingPlacement, !refusesPlacement(pending.kind, at: pending.anchor) else { return }
         enqueue(.place(pending.kind, at: pending.anchor))
         pendingPlacement = nil
     }

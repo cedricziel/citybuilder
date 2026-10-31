@@ -2965,6 +2965,60 @@
         }
       }
     },
+    "demolish.confirm.noRefund" : {
+      "comment" : "Demolish confirmation message when nothing is refunded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bekommst nichts zurück."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get nothing back."
+          }
+        }
+      }
+    },
+    "demolish.confirm.refund" : {
+      "comment" : "Demolish confirmation message; %@ is the money refunded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bekommst %@ zurück."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get %@ back."
+          }
+        }
+      }
+    },
+    "demolish.confirm.title" : {
+      "comment" : "Demolish confirmation title; %@ is the building name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ abreißen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demolish %@?"
+          }
+        }
+      }
+    },
     "difficulty.easy" : {
       "comment" : "A difficulty level.",
       "extractionState" : "manual",
@@ -7653,6 +7707,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Must touch water"
+          }
+        }
+      }
+    },
+    "placement.noMoney" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht genug Geld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough money"
           }
         }
       }

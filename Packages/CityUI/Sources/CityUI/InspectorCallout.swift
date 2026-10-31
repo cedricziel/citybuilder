@@ -171,12 +171,14 @@ public extension GameSession {
         return InspectorViewModel.make(from: world.snapshot(), tile: selectedTile, buildings: world.buildings)
     }
 
-    /// The callout's Demolish: demolishes the selected building and clears
-    /// the selection.
+    /// The callout's Demolish: demolishes the selected building, asking
+    /// first for a standing one, and clears the selection once it goes.
     func demolishSelection() {
         guard let tile = selectedTile else { return }
-        enqueue(.demolish(at: tile))
-        selectedTile = nil
+        requestDemolish(at: tile)
+        if demolishRequest == nil {
+            selectedTile = nil
+        }
     }
 }
 

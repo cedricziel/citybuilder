@@ -99,6 +99,7 @@ public struct CityRootView: View {
             if presented { buildRail.close() }
         }
         .touchPlacementDialogs(session: session)
+        .demolishConfirmation(session: session)
         .researchSheet(isPresented: $researchPresented, session: session)
         .goalsSheets(session: session, goalsPresented: $goalsPresented, onQuitToTitle: pauseMenuConfig?.onQuitToTitle)
         .standingsSheet(session: session, isPresented: $standingsPresented)
@@ -346,17 +347,6 @@ public final class GameSession {
         selectedTool = .inspect
     }
 
-    /// Place the armed building at the camera-center tile. Useful for
-    /// keyboard-driven flows and tests; the main interaction is
-    /// tap-on-tile through `handleTap`.
-    public func placeAtCameraCenter(_ kind: BuildingKind) {
-        let coord = TileCoordinate(
-            x: Int(world.camera.centerX.rounded()),
-            y: Int(world.camera.centerY.rounded())
-        )
-        enqueue(.place(kind, at: coord))
-    }
-
     // Gesture state. SwiftUI's DragGesture reports cumulative translation;
     // we track the previous reading to derive per-frame deltas.
     public var lastPanX: CGFloat = 0
@@ -369,7 +359,7 @@ public final class GameSession {
     ///   the player can place a run of roads or houses without re-arming.
     ///   On iOS a building other than a road starts a pending placement
     ///   instead (see `confirmsBuildingPlacement`).
-    /// - .demolish: enqueue a `.demolish` command.
+    /// - .demolish: demolish, asking first for a standing building.
     /// Ignored while a placement is pending.
     public func handleTap(at tile: TileCoordinate) {
         guard pendingPlacement == nil else { return }
@@ -381,14 +371,10 @@ public final class GameSession {
         case let .place(kind) where needsConfirmation(kind):
             beginPendingPlacement(kind: kind, at: tile)
         case let .place(kind):
-            if case let .rejected(reason) = world.canPlace(kind, at: tile) {
-                hud.showRejection(reason, in: world, now: Date())
-                UISounds.play(.reject)
-                return
-            }
+            if refusesPlacement(kind, at: tile) { return }
             enqueue(.place(kind, at: tile))
         case .demolish:
-            enqueue(.demolish(at: tile))
+            requestDemolish(at: tile)
         }
     }
 
@@ -404,6 +390,9 @@ public final class GameSession {
 
     /// Set by a long-press; the iOS shell shows the tile menu while non-nil.
     public var tileMenuRequest: TileMenuRequest?
+
+    /// A demolish waiting for the player's yes, shown while non-nil.
+    public var demolishRequest: DemolishRequest?
 
     /// Whether a building other than a road waits for a confirmation
     /// instead of committing on tap. On by default on iOS and Apple TV; macOS
@@ -456,7 +445,7 @@ public final class GameSession {
         case let .place(kind):
             enqueue(.place(kind, at: tile))
         case .demolish:
-            enqueue(.demolish(at: tile))
+            if demolishConfirmation(at: tile) == nil { enqueue(.demolish(at: tile)) }
         }
     }
 

@@ -209,6 +209,14 @@ extension World {
         return true
     }
 
+    /// What demolishing `building` pays back: half its price, rounded
+    /// down. Ruins and a burning building pay a fee instead. Spec:
+    /// `economy` / Demolishing refunds half the build cost.
+    public static func demolitionRefund(for building: Building) -> Int64 {
+        guard building.kind != .ruins, building.state != .burning else { return 0 }
+        return BuildingCatalog.spec(for: building.kind).cost / 2
+    }
+
     /// What clearing these ruins, or pulling this burning building down,
     /// costs: the fee of the kind that burnt or burns.
     public static func clearingFee(for building: Building) -> Int64 {

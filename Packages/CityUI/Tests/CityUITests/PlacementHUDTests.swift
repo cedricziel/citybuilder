@@ -88,6 +88,26 @@ func theCheckmarkSaysWhetherThePlacementWouldGoThrough() throws {
     #expect(try !#require(session.placementHUD).isValid)
 }
 
+@Test("an invalid placement names its reason beside the checkmark")
+@MainActor
+func anInvalidPlacementNamesItsReasonBesideTheCheckmark() throws {
+    let session = pendingSession()
+    #expect(try #require(session.placementHUD).reason == nil)
+    session.world.enqueue(.place(.road, at: tile(5, 5)))
+    session.step()
+    #expect(try #require(session.placementHUD).reason == "Tile occupied")
+}
+
+@Test("a placement the city can't afford says so beside the checkmark")
+@MainActor
+func aPlacementTheCityCantAffordSaysSoBesideTheCheckmark() throws {
+    let session = pendingSession()
+    session.world.economy.balance = 0
+    let hud = try #require(session.placementHUD)
+    #expect(!hud.isValid)
+    #expect(hud.reason == "Not enough money")
+}
+
 @Test("every HUD button is at least 44 points square")
 func everyHUDButtonIsAtLeast44PointsSquare() {
     #expect(PlacementHUDLayout.buttonSize >= 44)

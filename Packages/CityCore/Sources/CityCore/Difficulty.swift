@@ -21,7 +21,7 @@ public enum Difficulty: String, CaseIterable, Codable, Hashable, Sendable {
         switch self {
         case .easy: [(.wood, 10), (.planks, 8), (.food, 4)]
         case .normal: [(.wood, 6), (.planks, 5), (.food, 2)]
-        case .hard: [(.wood, 4), (.planks, 3), (.food, 1)]
+        case .hard: [(.wood, 4), (.planks, 4), (.food, 1)]
         }
     }
 

@@ -248,3 +248,13 @@ func eventFlagsSeedAnAnnouncement(flag: String, event: SeasonalEvent) throws {
     let events = world.tick().events
     #expect(events.contains { if case .seasonalEventWarned(event, _) = $0 { true } else { false } })
 }
+
+@Test("The title town and the town seeds show no building without a road")
+@MainActor
+func showcaseTownsHaveNoBuildingWithoutARoad() {
+    let snapshots = [TitleBackdrop.makeSnapshot(), UITestSeed.townWorld().snapshot(), UITestSeed.livedTownWorld().snapshot()]
+    for snapshot in snapshots {
+        let unconnected = snapshot.buildingIssues.filter { $0.value == .noRoad }.keys.compactMap { snapshot.buildings[$0]?.anchor }
+        #expect(unconnected.isEmpty, "no road at \(unconnected)")
+    }
+}
