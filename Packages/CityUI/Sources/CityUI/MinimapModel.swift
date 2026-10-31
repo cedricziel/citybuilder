@@ -138,7 +138,7 @@ public final class MinimapModel {
         }
         if newBuildings != buildings { buildings = newBuildings }
         if newShips != ships { ships = newShips }
-        let newRivals = snapshot.rivals.map { MinimapRival(name: $0.name, colourHex: $0.colour.hex) }
+        let newRivals = snapshot.rivals.map { MinimapRival(name: $0.displayName, colourHex: $0.colour.hex) }
         if newRivals != rivals { rivals = newRivals }
     }
 }

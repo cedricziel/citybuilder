@@ -70,7 +70,7 @@ extension GameSession {
                     description: GameText.string("banner.commission.text")
                 ))
             case let .rivalAgeAdvanced(id, age):
-                guard let name = world.rival(id)?.name else { continue }
+                guard let name = world.rival(id)?.displayName else { continue }
                 show(SessionBanner(
                     title: GameText.string("banner.rivalAge.title", name, age.displayName),
                     description: GameText.string("banner.rivalAge.text")
@@ -318,7 +318,7 @@ extension GameSession {
     }
 
     static func idleGoodHint(_ idle: IdleGood) -> SessionBanner {
-        let good = GameText.inSentence(GoodsCatalog.spec(for: idle.good).displayName)
+        let good = GameText.inSentence(idle.good.displayName)
         let builds = idle.users.map { GameText.string("banner.idle.user", $0.spokenName) }
         // Not ListFormatter: its English adds a comma before "or".
         let named = builds.count < 2

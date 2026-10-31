@@ -278,7 +278,7 @@ struct StatisticsRivalsTab: View {
                 ForEach(model.standings) { row in
                     HStack(spacing: 10) {
                         Circle().fill(Color(hex: row.colourHex)).frame(width: 12, height: 12)
-                        Text(row.name).fontWeight(row.name == "You" ? .bold : .regular)
+                        Text(row.name).fontWeight(row.name == GameText.string("stats.you") ? .bold : .regular)
                         Spacer()
                         Text(verbatim: "\(row.residents)").monospacedDigit()
                         Text(row.age).foregroundStyle(.secondary)

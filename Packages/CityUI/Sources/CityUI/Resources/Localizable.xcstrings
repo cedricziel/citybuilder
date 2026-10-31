@@ -1861,6 +1861,24 @@
         }
       }
     },
+    "chapter.tally" : {
+      "comment" : "Chapters won of a campaign's chapters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld gewonnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld won"
+          }
+        }
+      }
+    },
     "chapter.unlockOther" : {
       "comment" : "Campaign and chapter that unlock this one.",
       "extractionState" : "manual",
@@ -8035,6 +8053,42 @@
         }
       }
     },
+    "research.unlocksAge" : {
+      "comment" : "What an era tech unlocks: %@ is the age.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Zeitalter: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %@ age"
+          }
+        }
+      }
+    },
+    "research.waitsForAge" : {
+      "comment" : "The age a tech waits for: %@ is the age.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitalter %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ age"
+          }
+        }
+      }
+    },
     "reward.banner" : {
       "comment" : "A chapter reward.",
       "extractionState" : "manual",
@@ -8157,6 +8211,1158 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ — $%2$lld — %3$lld available"
+          }
+        }
+      }
+    },
+    "rivalTown.ashford" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eschenfurt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ashford"
+          }
+        }
+      }
+    },
+    "rivalTown.bayOfKnives" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messerbucht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bay of Knives"
+          }
+        }
+      }
+    },
+    "rivalTown.bramblerock" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brombeerfels"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bramblerock"
+          }
+        }
+      }
+    },
+    "rivalTown.briarwick" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dornwiek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Briarwick"
+          }
+        }
+      }
+    },
+    "rivalTown.cinderport" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aschenhafen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinderport"
+          }
+        }
+      }
+    },
+    "rivalTown.coldcliff" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaltklipp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coldcliff"
+          }
+        }
+      }
+    },
+    "rivalTown.cragsfoot" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klippfuß"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cragsfoot"
+          }
+        }
+      }
+    },
+    "rivalTown.dewspar" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taumast"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewspar"
+          }
+        }
+      }
+    },
+    "rivalTown.driftwell" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treibbrunn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driftwell"
+          }
+        }
+      }
+    },
+    "rivalTown.dunsea" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graumeer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunsea"
+          }
+        }
+      }
+    },
+    "rivalTown.eastreach" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eastreach"
+          }
+        }
+      }
+    },
+    "rivalTown.elderfen" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holunderfenn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elderfen"
+          }
+        }
+      }
+    },
+    "rivalTown.embershore" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glutstrand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Embershore"
+          }
+        }
+      }
+    },
+    "rivalTown.fairhaven" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schönhafen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fairhaven"
+          }
+        }
+      }
+    },
+    "rivalTown.foxbridge" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuchsbrück"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foxbridge"
+          }
+        }
+      }
+    },
+    "rivalTown.frostmere" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frostsee"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frostmere"
+          }
+        }
+      }
+    },
+    "rivalTown.glasswater" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glaswasser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasswater"
+          }
+        }
+      }
+    },
+    "rivalTown.greenwood" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grünwald"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Greenwood"
+          }
+        }
+      }
+    },
+    "rivalTown.gullhaven" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möwenhafen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gullhaven"
+          }
+        }
+      }
+    },
+    "rivalTown.hawkroost" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Habichtshorst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hawkroost"
+          }
+        }
+      }
+    },
+    "rivalTown.hollowfen" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hohlfenn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hollowfen"
+          }
+        }
+      }
+    },
+    "rivalTown.inglewood" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inglewald"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inglewood"
+          }
+        }
+      }
+    },
+    "rivalTown.ironkeep" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eisenburg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ironkeep"
+          }
+        }
+      }
+    },
+    "rivalTown.jasperreach" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaspisweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jasperreach"
+          }
+        }
+      }
+    },
+    "rivalTown.juniper" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wacholder"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juniper"
+          }
+        }
+      }
+    },
+    "rivalTown.kelpwall" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangwall"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelpwall"
+          }
+        }
+      }
+    },
+    "rivalTown.kirkstead" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirchstätt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirkstead"
+          }
+        }
+      }
+    },
+    "rivalTown.lanternfast" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laternenfeste"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanternfast"
+          }
+        }
+      }
+    },
+    "rivalTown.larkfield" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lerchenfeld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Larkfield"
+          }
+        }
+      }
+    },
+    "rivalTown.linden" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linden"
+          }
+        }
+      }
+    },
+    "rivalTown.lowtide" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebbstrand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lowtide"
+          }
+        }
+      }
+    },
+    "rivalTown.marinersRest" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seemannsruh"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mariner's Rest"
+          }
+        }
+      }
+    },
+    "rivalTown.marrow" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markgrund"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marrow"
+          }
+        }
+      }
+    },
+    "rivalTown.mossbar" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moosbank"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mossbar"
+          }
+        }
+      }
+    },
+    "rivalTown.mosshold" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moosburg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mosshold"
+          }
+        }
+      }
+    },
+    "rivalTown.nettlebay" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nesselbucht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nettlebay"
+          }
+        }
+      }
+    },
+    "rivalTown.northReach" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nordweite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "North Reach"
+          }
+        }
+      }
+    },
+    "rivalTown.northwatch" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nordwacht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Northwatch"
+          }
+        }
+      }
+    },
+    "rivalTown.oaktide" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eichflut"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oaktide"
+          }
+        }
+      }
+    },
+    "rivalTown.oldSalt" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altsalz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Old Salt"
+          }
+        }
+      }
+    },
+    "rivalTown.otterford" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otterfurt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otterford"
+          }
+        }
+      }
+    },
+    "rivalTown.petrelroost" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sturmvogelhorst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Petrelroost"
+          }
+        }
+      }
+    },
+    "rivalTown.pinecrest" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiefernkamm"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinecrest"
+          }
+        }
+      }
+    },
+    "rivalTown.quailbrook" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachtelbach"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quailbrook"
+          }
+        }
+      }
+    },
+    "rivalTown.quartzbay" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quarzbucht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quartzbay"
+          }
+        }
+      }
+    },
+    "rivalTown.ravenshore" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rabenstrand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ravenshore"
+          }
+        }
+      }
+    },
+    "rivalTown.redthorn" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotdorn"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redthorn"
+          }
+        }
+      }
+    },
+    "rivalTown.sablecliff" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobelklipp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablecliff"
+          }
+        }
+      }
+    },
+    "rivalTown.saltford" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salzfurt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltford"
+          }
+        }
+      }
+    },
+    "rivalTown.stillwick" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stillwiek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stillwick"
+          }
+        }
+      }
+    },
+    "rivalTown.stoneholm" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steinholm"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoneholm"
+          }
+        }
+      }
+    },
+    "rivalTown.thornfast" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dornfeste"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thornfast"
+          }
+        }
+      }
+    },
+    "rivalTown.tidemoor" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezeitenmoor"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidemoor"
+          }
+        }
+      }
+    },
+    "rivalTown.tinmouth" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zinnmünde"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tinmouth"
+          }
+        }
+      }
+    },
+    "rivalTown.umberwick" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umbrawiek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umberwick"
+          }
+        }
+      }
+    },
+    "rivalTown.underholm" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterholm"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Underholm"
+          }
+        }
+      }
+    },
+    "rivalTown.vellholm" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vellholm"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vellholm"
+          }
+        }
+      }
+    },
+    "rivalTown.vesperdeep" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vespertief"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vesperdeep"
+          }
+        }
+      }
+    },
+    "rivalTown.wexford" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wexfurt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wexford"
+          }
+        }
+      }
+    },
+    "rivalTown.whaleback" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walrücken"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whaleback"
+          }
+        }
+      }
+    },
+    "rivalTown.windward" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luvstrand"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windward"
+          }
+        }
+      }
+    },
+    "rivalTown.yarrowmoor" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schafgarbenmoor"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yarrowmoor"
+          }
+        }
+      }
+    },
+    "rivalTown.yewmark" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eibenmark"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yewmark"
+          }
+        }
+      }
+    },
+    "rivalTown.zephyrhold" : {
+      "comment" : "A generated island and rival town name; the save keeps the English.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyrburg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyrhold"
           }
         }
       }

@@ -15,16 +15,6 @@ extension Good {
     }
 }
 
-extension GoodSpec {
-    var displayName: String {
-        good.displayName
-    }
-
-    var stackUnit: String {
-        good.stackUnit
-    }
-}
-
 extension BuildingKind {
     var displayName: String {
         GameText.string(nameKey)
@@ -114,5 +104,18 @@ extension ChapterReward {
         switch self {
         case let .banner(name), let .decor(name), let .mapPreset(name): name
         }
+    }
+}
+
+extension RivalTown {
+    /// The stored name in the player's language when the game generated it.
+    var displayName: String {
+        GameText.townName(name)
+    }
+}
+
+extension RivalSummary {
+    var displayName: String {
+        GameText.townName(name)
     }
 }

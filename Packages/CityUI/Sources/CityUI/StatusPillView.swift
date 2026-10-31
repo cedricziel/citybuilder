@@ -228,7 +228,7 @@ struct StocksTrayView: View {
                     .foregroundStyle(.secondary)
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
                     ForEach(chips, id: \.good) { chip in
-                        let name = GoodsCatalog.spec(for: chip.good).displayName
+                        let name = chip.good.displayName
                         HStack(spacing: 6) {
                             GoodChipView(good: chip.good, text: "\(chip.count)")
                             Text(name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -269,7 +269,7 @@ struct GoodChipView: View {
                 .foregroundStyle(color)
         }
         .fixedSize()
-        .help(help ?? GoodsCatalog.spec(for: good).displayName)
+        .help(help ?? good.displayName)
         .accessibilityElement(children: .combine)
     }
 }

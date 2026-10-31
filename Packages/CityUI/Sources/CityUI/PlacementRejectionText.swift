@@ -21,14 +21,14 @@ public enum PlacementRejectionText {
         case .closed: GameText.string("placement.closed")
         case let .insufficientMaterials(shortfall):
             GameText.string("placement.needsMore", Good.allCases.compactMap { good in
-                shortfall[good].map { GameText.string("placement.more", $0, GameText.inSentence(GoodsCatalog.spec(for: good).displayName)) }
+                shortfall[good].map { GameText.string("placement.more", $0, GameText.inSentence(good.displayName)) }
             }.joined(separator: ", "))
         }
     }
 
     /// Like `message(for:)`, naming the rival whose island it is.
     public static func message(for rejection: PlacementRejection, in world: World) -> String {
-        if case let .foreignIsland(.rival(id)) = rejection, let name = world.rival(id)?.name {
+        if case let .foreignIsland(.rival(id)) = rejection, let name = world.rival(id)?.displayName {
             return GameText.string("placement.rivalIsland", name)
         }
         return message(for: rejection)

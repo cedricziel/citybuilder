@@ -129,7 +129,7 @@ public enum RouteStopLabel {
         guard case let .port(id) = waypoint else { return GameText.string("routes.sea") }
         guard let port = snapshot.buildings[id] else { return GameText.string("routes.missingPort") }
         if let rival = port.owner.rivalID.flatMap(snapshot.rival) {
-            return GameText.string("routes.rivalPort", rival.name)
+            return GameText.string("routes.rivalPort", rival.displayName)
         }
         return GameText.string("routes.yourPort", "\(port.anchor.x)", "\(port.anchor.y)")
     }

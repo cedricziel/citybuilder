@@ -17,7 +17,7 @@ public struct RivalMarketSection: Equatable, Sendable {
     }
 
     private static func name(_ good: Good) -> String {
-        GoodsCatalog.spec(for: good).displayName
+        good.displayName
     }
 }
 

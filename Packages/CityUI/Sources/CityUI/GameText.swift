@@ -84,6 +84,21 @@ public enum GameText {
         language == .de ? name : name.lowercased()
     }
 
+    /// A town or island name the game generated, in `language`; any other
+    /// stored name as it is. The world and saves keep the English (design
+    /// D12 of `add-localization`).
+    public static func townName(_ stored: String, in language: Language = .current) -> String {
+        let key = townNameKey(stored)
+        return table.format(for: key, in: language.catalogLanguage.rawValue, arguments: []) == nil ? stored : string(key, in: language)
+    }
+
+    /// `rivalTown.bayOfKnives` for "Bay of Knives".
+    static func townNameKey(_ name: String) -> String {
+        let words = name.replacingOccurrences(of: "'", with: "").split { !$0.isLetter && !$0.isNumber }
+        let first = words.first.map { $0.lowercased() } ?? ""
+        return "rivalTown." + first + words.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }.joined()
+    }
+
     public static func number(_ value: Int, in language: Language = .current) -> String {
         value.formatted(.number.locale(language.locale))
     }

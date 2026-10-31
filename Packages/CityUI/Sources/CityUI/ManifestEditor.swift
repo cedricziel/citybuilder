@@ -42,7 +42,7 @@ public extension ManifestEditorModel {
     }
 
     private func line(_ verb: ManifestVerb, good: Good, quantity: Int) -> String {
-        let text = "\(label(for: verb)) \(quantity) \(GoodsCatalog.spec(for: good).displayName)"
+        let text = "\(label(for: verb)) \(quantity) \(good.displayName)"
         guard rival != nil else { return text }
         return "\(text) — \(Self.price(of: good, verb))"
     }
@@ -51,7 +51,7 @@ public extension ManifestEditorModel {
 public extension ManifestGoodRow {
     /// "Wood", or at a rival port "Wood — $5 — 12" / "Iron — no offer".
     var title: String {
-        let name = GoodsCatalog.spec(for: good).displayName
+        let name = good.displayName
         return ([name] + [price, offer].compactMap(\.self)).joined(separator: " — ")
     }
 }
