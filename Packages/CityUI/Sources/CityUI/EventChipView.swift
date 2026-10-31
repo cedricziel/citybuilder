@@ -18,7 +18,7 @@ public struct EventChip: Equatable, Sendable {
     /// "Fire risk · Summer" while warned, "Fire · 2 burning" or "Fire season ·
     /// Summer" once under way, "Blight · Summer", "Festival · by Autumn".
     public var text: String {
-        let season = season.displayName
+        let season = GameText.string(season.nameKey)
         return switch event.effect {
         case .fire:
             switch burning {

@@ -185,7 +185,7 @@ struct ChapterDetailView: View {
     @ViewBuilder
     private var picks: some View {
         Picker(GameText.string("newGame.difficulty"), selection: $model.difficulty) {
-            ForEach(model.difficulties, id: \.self) { Text($0.displayName).tag($0) }
+            ForEach(model.difficulties, id: \.self) { Text(l10n: $0.nameKey).tag($0) }
         }
         .pickerStyle(.segmented)
         .accessibilityIdentifier("campaigns.difficulty")

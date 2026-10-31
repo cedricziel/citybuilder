@@ -71,5 +71,5 @@ func scenarioIslandRivalrySetup() {
     #expect(world.rivals.count == 2)
     #expect(world.goals.map(\.goal) == [.outgrowRivals, .population(80, atLeast: .peasants)])
     #expect(scenario.rawValue == "island-rivalry")
-    #expect(scenario.blurb == "Out-build two rival towns and reach 80 residents.")
+    #expect(scenario.blurbKey == "scenario.islandRivalry.blurb")
 }

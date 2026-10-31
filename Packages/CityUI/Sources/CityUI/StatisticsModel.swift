@@ -136,7 +136,7 @@ public struct StatisticsModel: Equatable, Sendable {
 
     /// "Spring 1203", for a season number.
     public func title(ofSeason season: Int) -> String {
-        calendar.date(atTick: UInt64(season) * CalendarState.ticksPerSeason).displayText
+        GameText.date(calendar.date(atTick: UInt64(season) * CalendarState.ticksPerSeason))
     }
 
     /// The year on the axis at the start of a year, nothing between.

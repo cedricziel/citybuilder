@@ -44,7 +44,7 @@ extension GameSession {
         for event in events {
             switch event {
             case let .historyEvent(history):
-                show(SessionBanner(title: history.title, description: history.description))
+                show(SessionBanner(title: GameText.string(history.titleKey), description: GameText.string(history.message)))
             case let .ageAdvanced(age):
                 show(SessionBanner(title: GameText.string("banner.ageBegins", age.displayName), description: age.blurb))
             case .gameOver:

@@ -76,7 +76,7 @@ public enum ChapterText {
         case .open: "Open"
         case .comingLater: "Coming later"
         case let .won(record):
-            "Won on \(record.difficulty.displayName) · \(record.laurels) \(record.laurels == 1 ? "laurel" : "laurels")"
+            "Won on \(GameText.string(record.difficulty.nameKey)) · \(record.laurels) \(record.laurels == 1 ? "laurel" : "laurels")"
         case let .locked(key): key.map { lockKey($0, for: chapterID, campaigns: campaigns) } ?? "Locked"
         }
     }

@@ -77,7 +77,7 @@ public struct OrdersBoardModel: Equatable {
 
     /// "by Spring 1203": the date of the season the window ends in.
     static func deadlineText(_ order: Order, in world: World) -> String {
-        GameText.string("orders.deadline", world.calendar.date(atTick: order.deadlineTick &- 1).displayText)
+        GameText.string("orders.deadline", GameText.date(world.calendar.date(atTick: order.deadlineTick &- 1)))
     }
 
     private static func card(_ order: Order, in world: World, locked: Bool, accepted: Int, locale: Locale) -> Card {
@@ -91,7 +91,7 @@ public struct OrdersBoardModel: Equatable {
         var progress = Double(order.delivered + inTransit) / Double(max(order.quantity, 1))
         var status = ""
         if !isAccepted {
-            let ends = GameText.inSentence(world.calendar.date(atTick: order.offerEndsTick &- 1).season.displayName)
+            let ends = GameText.inSentence(GameText.string(world.calendar.date(atTick: order.offerEndsTick &- 1).season.nameKey))
             status = GameText.string("orders.offerEnds", ends)
         } else if byShip {
             status = GameText.string("orders.deliveredByShip", order.delivered, order.quantity)

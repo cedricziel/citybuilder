@@ -2275,6 +2275,96 @@
         }
       }
     },
+    "date.ad" : {
+      "comment" : "A date: %1$@ is the season, %2$@ the year, written without digit grouping.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "date.bc" : {
+      "comment" : "A date before year 1: %1$@ is the season, %2$@ the year, written without digit grouping.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ v. Chr."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ BC"
+          }
+        }
+      }
+    },
+    "difficulty.easy" : {
+      "comment" : "A difficulty level.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leicht"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy"
+          }
+        }
+      }
+    },
+    "difficulty.hard" : {
+      "comment" : "A difficulty level.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard"
+          }
+        }
+      }
+    },
+    "difficulty.normal" : {
+      "comment" : "A difficulty level.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
     "firstSteps.a11y.collapsed" : {
       "comment" : "Spoken summary of the collapsed guide.",
       "extractionState" : "manual",
@@ -2757,6 +2847,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Goals"
+          }
+        }
+      }
+    },
+    "history.bountifulHarvest.text" : {
+      "comment" : "{food} is the food the harvest adds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Felder trugen mehr als erwartet: {food} Nahrung kommt ins Lager."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fields gave more than expected: {food} food reaches the stores."
+          }
+        }
+      }
+    },
+    "history.bountifulHarvest.title" : {
+      "comment" : "A history event's banner title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiche Ernte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bountiful harvest"
+          }
+        }
+      }
+    },
+    "history.ratsInTheGranary.text" : {
+      "comment" : "A history event's banner text.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ratten sind ins Lager eingedrungen: Die Hälfte der Nahrung ist verloren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rats got into the stores: half the food is lost."
+          }
+        }
+      }
+    },
+    "history.ratsInTheGranary.title" : {
+      "comment" : "A history event's banner title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ratten im Kornspeicher"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rats in the granary"
+          }
+        }
+      }
+    },
+    "history.tradeCaravan.text" : {
+      "comment" : "{payment} is the money the caravan pays.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Karawane zieht durch und zahlt gut: +{payment}."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A caravan passes through and pays well: +{payment}."
+          }
+        }
+      }
+    },
+    "history.tradeCaravan.title" : {
+      "comment" : "A history event's banner title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handelskarawane"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trade caravan"
+          }
+        }
+      }
+    },
+    "history.travellingScholar.text" : {
+      "comment" : "{knowledge} is the knowledge the scholar adds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein reisender Gelehrter lehrt, was er weiß: +{knowledge} Wissen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A visiting scholar shares what they know: +{knowledge} knowledge."
+          }
+        }
+      }
+    },
+    "history.travellingScholar.title" : {
+      "comment" : "A history event's banner title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fahrender Gelehrter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travelling scholar"
           }
         }
       }
@@ -6879,6 +7113,222 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your port (%1$lld, %2$lld)"
+          }
+        }
+      }
+    },
+    "scenario.firstHarvest.blurb" : {
+      "comment" : "A built-in scenario's goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass ein Dorf der Antike auf 40 Einwohner wachsen und lagere 20 Brot."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grow an Antiquity village to 40 people and store 20 bread."
+          }
+        }
+      }
+    },
+    "scenario.firstHarvest.title" : {
+      "comment" : "A built-in scenario's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die erste Ernte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Harvest"
+          }
+        }
+      }
+    },
+    "scenario.guildTown.blurb" : {
+      "comment" : "A built-in scenario's goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorge für 30 Kaufleute und lagere 30 Werkzeuge."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raise 30 merchants and stock 30 tools."
+          }
+        }
+      }
+    },
+    "scenario.guildTown.title" : {
+      "comment" : "A built-in scenario's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zunftstadt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Guild Town"
+          }
+        }
+      }
+    },
+    "scenario.islandRivalry.blurb" : {
+      "comment" : "A built-in scenario's goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überflügle zwei Nachbarstädte und erreiche 80 Einwohner."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Out-build two rival towns and reach 80 residents."
+          }
+        }
+      }
+    },
+    "scenario.islandRivalry.title" : {
+      "comment" : "A built-in scenario's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wettstreit der Inseln"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Island Rivalry"
+          }
+        }
+      }
+    },
+    "scenario.steamAndSmoke.blurb" : {
+      "comment" : "A built-in scenario's goal.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führe eine Stadt der Renaissance ins Industriezeitalter."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lead a Renaissance town into the Industrial age."
+          }
+        }
+      }
+    },
+    "scenario.steamAndSmoke.title" : {
+      "comment" : "A built-in scenario's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dampf und Rauch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam and Smoke"
+          }
+        }
+      }
+    },
+    "season.autumn" : {
+      "comment" : "A season's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herbst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autumn"
+          }
+        }
+      }
+    },
+    "season.spring" : {
+      "comment" : "A season's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frühling"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spring"
+          }
+        }
+      }
+    },
+    "season.summer" : {
+      "comment" : "A season's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summer"
+          }
+        }
+      }
+    },
+    "season.winter" : {
+      "comment" : "A season's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Winter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Winter"
           }
         }
       }
