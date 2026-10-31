@@ -80,6 +80,11 @@ public final class HUDViewModel {
     }
 
     /// "$1,234" (or "-$1,234") with locale-grouped digits.
+    /// Money grouped the way the player's language groups digits.
+    static func formatMoney(_ amount: Int64) -> String {
+        formatMoney(amount, locale: Language.current.locale)
+    }
+
     static func formatMoney(_ amount: Int64, locale: Locale) -> String {
         let prefix = amount < 0 ? "-" : ""
         return "\(prefix)$\(abs(amount).formatted(.number.grouping(.automatic).locale(locale)))"

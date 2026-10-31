@@ -61,6 +61,7 @@ public struct OrdersBoardModel: Equatable {
 
     static func name(of issuer: OrderIssuer, in world: World) -> String {
         switch issuer {
+        // The order banners' crown sentences (banner.order.*.crown) name it the same way.
         case .crown: GameText.string("orders.issuer.crown")
         case let .rival(id): world.rival(id)?.name ?? GameText.string("orders.issuer.rival", "\(id)")
         case .town: GameText.string("orders.issuer.town")
