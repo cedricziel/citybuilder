@@ -69,7 +69,7 @@ public enum ChapterText {
     public static func lost(_ reason: LossReason, in world: World) -> String {
         switch reason {
         case .deadline: GameText.string("lost.deadline")
-        case let .rivalRace(id): GameText.string("lost.race", world.rival(id)?.name ?? GameText.string("lost.aRival"))
+        case let .rivalRace(id): GameText.string("lost.race", world.rival(id)?.displayName ?? GameText.string("lost.aRival"))
         case .collapse: GameText.string("lost.collapse")
         case .bankruptcy: GameText.string("lost.bankruptcy")
         }
@@ -142,7 +142,7 @@ public enum ChapterText {
     }
 
     private static func goodName(_ good: Good) -> String {
-        GameText.inSentence(GoodsCatalog.spec(for: good).displayName)
+        GameText.inSentence(good.displayName)
     }
 
     private static func ownGoal(_ kind: BuildingKind, count: Int) -> String {

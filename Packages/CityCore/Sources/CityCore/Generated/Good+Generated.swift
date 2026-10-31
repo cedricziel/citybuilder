@@ -132,39 +132,4 @@ public enum Good: String, CaseIterable, Codable, Sendable {
     }
 }
 
-public enum GoodsCatalog {
-    public static let all: [GoodSpec] = Good.allCases.map(makeSpec)
-    private static let specs = Dictionary(uniqueKeysWithValues: all.map { ($0.good, $0) })
-
-    public static func spec(for good: Good) -> GoodSpec {
-        specs[good] ?? makeSpec(good)
-    }
-
-    private static func makeSpec(_ good: Good) -> GoodSpec {
-        switch good {
-        case .wood: GoodSpec(good: .wood)
-        case .planks: GoodSpec(good: .planks)
-        case .food: GoodSpec(good: .food)
-        case .bread: GoodSpec(good: .bread)
-        case .grain: GoodSpec(good: .grain)
-        case .flour: GoodSpec(good: .flour)
-        case .ore: GoodSpec(good: .ore)
-        case .charcoal: GoodSpec(good: .charcoal)
-        case .iron: GoodSpec(good: .iron)
-        case .tools: GoodSpec(good: .tools)
-        case .wool: GoodSpec(good: .wool)
-        case .cloth: GoodSpec(good: .cloth)
-        case .hops: GoodSpec(good: .hops)
-        case .beer: GoodSpec(good: .beer)
-        case .grapes: GoodSpec(good: .grapes)
-        case .wine: GoodSpec(good: .wine)
-        case .teaLeaves: GoodSpec(good: .teaLeaves)
-        case .tea: GoodSpec(good: .tea)
-        case .coffeeCherries: GoodSpec(good: .coffeeCherries)
-        case .coffee: GoodSpec(good: .coffee)
-        case .herbs: GoodSpec(good: .herbs)
-        }
-    }
-}
-
 // swiftlint:enable superfluous_disable_command cyclomatic_complexity file_length line_length type_body_length

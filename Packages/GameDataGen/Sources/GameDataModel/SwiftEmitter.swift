@@ -25,7 +25,7 @@ public enum SwiftEmitter {
     public static func emit(_ data: GameData, namespace: String? = nil) -> [String: String] {
         let types = Types(data: data, access: namespace == nil ? "public " : "")
         let files = [
-            ("Good+Generated.swift", types.goods + types.goodsCatalog),
+            ("Good+Generated.swift", types.goods),
             ("BuildingKind+Generated.swift", types.buildingKind + types.buildingCatalog),
             ("ProductionCatalog+Generated.swift", types.productionCatalog),
             ("Culture+Generated.swift", types.culture),
@@ -109,12 +109,6 @@ private struct Types {
                 (good.id, "MarketTerms(buyLimit: \(good.market.buy), sellLimit: \(good.market.sell))")
             })
         ])
-    }
-
-    var goodsCatalog: String {
-        catalog("GoodsCatalog", spec: "GoodSpec", for: "good", of: "Good", data.goods.map { good in
-            (good.id, "GoodSpec(good: .\(caseName(good.id)))")
-        })
     }
 
     var buildingKind: String {

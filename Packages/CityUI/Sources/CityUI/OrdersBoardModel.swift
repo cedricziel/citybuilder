@@ -63,7 +63,7 @@ public struct OrdersBoardModel: Equatable {
         switch issuer {
         // The order banners' crown sentences (banner.order.*.crown) name it the same way.
         case .crown: GameText.string("orders.issuer.crown")
-        case let .rival(id): world.rival(id)?.name ?? GameText.string("orders.issuer.rival", "\(id)")
+        case let .rival(id): world.rival(id)?.displayName ?? GameText.string("orders.issuer.rival", "\(id)")
         case .town: GameText.string("orders.issuer.town")
         }
     }
@@ -112,7 +112,7 @@ public struct OrdersBoardModel: Equatable {
             issuerColourHex: colourHex(of: order.issuer, in: world),
             title: order.template.title,
             good: order.good,
-            goodName: GoodsCatalog.spec(for: order.good).displayName,
+            goodName: order.good.displayName,
             quantity: order.quantity,
             deadline: deadlineText(order, in: world),
             reward: isFestival ? GameText.string("orders.festivalReward") : HUDViewModel.formatMoney(order.reward, locale: locale),
@@ -135,7 +135,7 @@ public struct OrdersBoardModel: Equatable {
         )
         let rivals = world.rivals.map { rival in
             favourRow(
-                id: "rival-\(rival.id)", name: rival.name, colourHex: rival.colour.hex,
+                id: "rival-\(rival.id)", name: rival.displayName, colourHex: rival.colour.hex,
                 value: world.orders.favour.value(for: .rival(rival.id)),
                 perks: OrderRules.rivalPriceBonusPercent.map { GameText.string("orders.perk.prices", $0) }
             )

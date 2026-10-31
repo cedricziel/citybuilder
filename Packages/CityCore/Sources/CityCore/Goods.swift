@@ -1,15 +1,5 @@
 import Foundation
 
-/// A good's catalog entry. `GoodsCatalog` is generated from the game-data
-/// packs; the good's name and unit are catalog keys on `Good`.
-public struct GoodSpec: Hashable, Sendable {
-    public let good: Good
-
-    public init(good: Good) {
-        self.good = good
-    }
-}
-
 /// Storage container holding mixed goods. A pooled stockpile (producers,
 /// houses) shares one total `capacity` between its goods; a per-good one
 /// (town centers, warehouses, ports) holds up to `capacity` of each good,

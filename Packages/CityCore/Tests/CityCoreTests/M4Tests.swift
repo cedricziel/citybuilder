@@ -17,7 +17,7 @@ private func mapWithForestNeighbor() -> World {
 
 @Test("scenario: catalog enumerable")
 func scenarioCatalogEnumerable() {
-    let goods = Set(GoodsCatalog.all.map(\.good))
+    let goods = Set(Good.allCases)
     let expected: Set<Good> = [.wood, .planks, .food]
     #expect(expected.isSubset(of: goods))
 }

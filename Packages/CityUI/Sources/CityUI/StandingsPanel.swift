@@ -20,7 +20,7 @@ public struct StandingsPanelModel: Equatable {
         rows = world.standings().enumerated().map { index, standing in
             Row(
                 id: index,
-                name: standing.name,
+                name: standing.owner == .player ? GameText.string("stats.you") : GameText.townName(standing.name),
                 colourHex: standing.colourHex,
                 population: "\(standing.population)",
                 age: standing.age.displayName,

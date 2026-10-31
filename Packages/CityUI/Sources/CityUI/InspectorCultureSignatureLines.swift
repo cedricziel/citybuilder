@@ -11,7 +11,7 @@ public struct ExportPicker: Equatable, Sendable {
 
     /// "None" or the good's display name.
     public static func title(of option: Good?) -> String {
-        option.map { GoodsCatalog.spec(for: $0).displayName } ?? GameText.string("common.none")
+        option.map(\.displayName) ?? GameText.string("common.none")
     }
 }
 
@@ -72,6 +72,6 @@ extension InspectorViewModel {
     }
 
     static func goodName(_ good: Good) -> String {
-        GameText.inSentence(GoodsCatalog.spec(for: good).displayName)
+        GameText.inSentence(good.displayName)
     }
 }

@@ -193,7 +193,7 @@ public struct InspectorView: View {
             VStack(alignment: .leading, spacing: 4) {
                 if let rival = viewModel.rival {
                     Label {
-                        Text(rival.name).font(.caption.bold())
+                        Text(verbatim: rival.displayName).font(.caption.bold())
                     } icon: {
                         Circle().fill(Color(hex: rival.colour.hex)).frame(width: 10, height: 10)
                     }

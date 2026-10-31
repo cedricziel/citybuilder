@@ -55,7 +55,7 @@ public struct GoalsPanelModel: Equatable {
         case let .age(age):
             return GameText.string("goal.age", age.displayName)
         case let .stock(good, _):
-            return "\(GoodsCatalog.spec(for: good).displayName) \(count)"
+            return "\(good.displayName) \(count)"
         case .outgrowRivals:
             return GameText.string("goalsPanel.outgrow", count)
         case .orders:
@@ -73,7 +73,7 @@ public struct GoalsPanelModel: Equatable {
         case .tradeEarnings:
             return GameText.string("goalsPanel.trade", amount)
         case let .landedByShip(good, _):
-            return GameText.string("goalsPanel.landed", GoodsCatalog.spec(for: good).displayName, count)
+            return GameText.string("goalsPanel.landed", good.displayName, count)
         }
     }
 
@@ -91,7 +91,7 @@ public struct GoalsPanelModel: Equatable {
             return Race(
                 title: GameText.string("race.firstToAge", age.displayName),
                 player: GameText.string("race.youAge", world.age.displayName),
-                rival: "\(leader.name) \(standing(leader))/\(need)"
+                rival: "\(leader.displayName) \(standing(leader))/\(need)"
             )
         case let .population(count, tier):
             let standing = { (owner: Owner) in world.residents(of: owner, atLeast: tier) }
@@ -100,7 +100,7 @@ public struct GoalsPanelModel: Equatable {
             return Race(
                 title: GameText.string("race.firstToPopulation", count),
                 player: GameText.string("race.youCount", standing(.player), count),
-                rival: "\(leader.name) \(standing(leader.owner))/\(count)"
+                rival: "\(leader.displayName) \(standing(leader.owner))/\(count)"
             )
         }
     }

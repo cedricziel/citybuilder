@@ -61,7 +61,7 @@ public final class HUDViewModel {
             // stocks row.
             snapshot.islandSummaries[$0.id]
         }
-        currentIslandRival = currentIsland.flatMap { snapshot.rival(onIsland: $0.id)?.name }
+        currentIslandRival = currentIsland.flatMap { snapshot.rival(onIsland: $0.id)?.displayName }
     }
 
     private func resolveIsland(in snapshot: WorldSnapshot) -> IslandSummary? {
@@ -111,7 +111,7 @@ public final class HUDViewModel {
     /// Name of the currently displayed island, or nil when the HUD's
     /// island row is hidden (camera never landed on any island).
     public var currentIslandName: String? {
-        currentIslandRival.map { GameText.string("hud.rivalIsland", $0) } ?? currentIsland?.name
+        currentIslandRival.map { GameText.string("hud.rivalIsland", $0) } ?? currentIsland.map { GameText.townName($0.name) }
     }
 
     public func toggleStocksTray() {
