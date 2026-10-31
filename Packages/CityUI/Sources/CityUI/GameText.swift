@@ -65,7 +65,7 @@ public enum GameText {
         let copied = ["Localizable", "GameData"].compactMap { name in
             Bundle.module.url(forResource: name, withExtension: "xcstrings").flatMap { try? StringTable(json: Data(contentsOf: $0)) }
         }
-        return copied.isEmpty ? StringTable(compiledIn: Bundle.module.bundleURL) : StringTable(merging: copied)
+        return copied.isEmpty ? StringTable(compiledIn: Bundle.module.resourceURL ?? Bundle.module.bundleURL) : StringTable(merging: copied)
     }()
 
     /// The text for `key` in `language`, its format arguments filled. A
