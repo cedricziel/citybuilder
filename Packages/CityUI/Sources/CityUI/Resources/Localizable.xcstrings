@@ -4471,6 +4471,24 @@
         }
       }
     },
+    "inspector.details" : {
+      "comment" : "Shows the inspector's other lines.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
     "inspector.energised" : {
       "comment" : "House note.",
       "extractionState" : "manual",
@@ -4683,6 +4701,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last caravan: %1$@ for $%2$lld"
+          }
+        }
+      }
+    },
+    "inspector.less" : {
+      "comment" : "Hides the inspector's other lines again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weniger"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less"
           }
         }
       }
@@ -5385,6 +5421,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tier: %@"
+          }
+        }
+      }
+    },
+    "inspector.untitled" : {
+      "comment" : "Inspector title of a building without a name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebäude"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
           }
         }
       }
@@ -9403,6 +9457,24 @@
         }
       }
     },
+    "routes.assignShip" : {
+      "comment" : "Gives a route an idle ship.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schiff zuweisen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign ship"
+          }
+        }
+      }
+    },
     "routes.broken" : {
       "comment" : "Route state.",
       "extractionState" : "manual",
@@ -9579,6 +9651,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New route"
+          }
+        }
+      }
+    },
+    "routes.noIdleShip" : {
+      "comment" : "Disabled assign button: every ship is busy.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Schiff frei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No idle ship"
           }
         }
       }

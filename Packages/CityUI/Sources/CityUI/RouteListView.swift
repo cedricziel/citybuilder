@@ -74,7 +74,7 @@ private struct RouteRowView: View {
                 } else {
                     Button(GameText.string("routes.pause"), systemImage: "pause.fill") { list.pause(row.id) }
                 }
-                Button(canAssignShip ? "Assign ship" : "No idle ship", systemImage: "ferry") {
+                Button(canAssignShip ? GameText.string("routes.assignShip") : GameText.string("routes.noIdleShip"), systemImage: "ferry") {
                     list.assignIdleShip(to: row.id)
                 }
                 .disabled(!canAssignShip)

@@ -65,7 +65,9 @@ extension CityRootView {
                 Button(GameText.string("routes.title"), systemImage: "ferry.fill") { routesPresented = true }
             }
             #if !os(tvOS)
-            Button(showsMinimap ? "Hide Minimap" : "Show Minimap", systemImage: "map") { showsMinimap.toggle() }
+            Button(showsMinimap ? GameText.string("hud.hideMinimap") : GameText.string("hud.showMinimap"), systemImage: "map") {
+                showsMinimap.toggle()
+            }
             #endif
             if settingsContent != nil {
                 Button(GameText.string("common.settings"), systemImage: "gearshape.fill") { settingsPresented = true }
