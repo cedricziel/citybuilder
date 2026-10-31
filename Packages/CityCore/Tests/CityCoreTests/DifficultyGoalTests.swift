@@ -13,6 +13,14 @@ func scenarioEasyStart() throws {
     #expect(world.stockpiles[center.id]?.quantity(of: .food) == 4)
 }
 
+@Test("scenario: every start affords a house", arguments: Difficulty.allCases)
+func scenarioEveryStartAffordsAHouse(difficulty: Difficulty) throws {
+    let world = World.newGame(layout: .singleIsland, seed: 0, difficulty: difficulty)
+    let center = try #require(world.goodsBuffers().first)
+    let housePlanks = try #require(BuildingCatalog.spec(for: .house).materialCost[.planks])
+    #expect((world.stockpiles[center.id]?.quantity(of: .planks) ?? 0) >= housePlanks)
+}
+
 @Test("scenario: hard upkeep")
 func scenarioHardUpkeep() {
     #expect(Difficulty.hard.scaledUpkeep(4) == 5)
