@@ -63,6 +63,6 @@ Each milestone is one PR. Every key a milestone adds ships with its English and 
 - [x] 7.3 Implement to green: shorter German where the glossary allows, then layout fixes; keep `design/web` in step
 - [x] 7.4 Implement to green: "German locale shows German text" end to end; add `de` to the supported languages, `knownRegions` and `CFBundleLocalizations` in `project.yml`
 - [x] 7.5 Translate "German text uses the glossary words" and "German text addresses the player with du" into tests over the shipped catalogs; make them green
-- [ ] 7.6 Playtest a German and a pseudo-locale session in the simulator for strings that bypass the catalog
+- [ ] 7.6 Playtest a German session for strings that bypass the catalog (the owner plays the TestFlight build)
 - [x] 7.7 Refactor under a green bar
 - [x] 7.8 Verify `make test-scenarios` and `make l10n-check` clean for every scenario of the change
