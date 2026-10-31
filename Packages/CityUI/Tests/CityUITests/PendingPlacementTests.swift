@@ -136,6 +136,18 @@ func confirmingARejectedPlacementKeepsItPendingAndSaysWhy() {
     #expect(session.hud.rejectionMessage(at: Date()) == "Tile occupied")
 }
 
+@Test("confirming a placement the city can't afford keeps it pending and says why")
+@MainActor
+func confirmingAnUnaffordablePlacementKeepsItPendingAndSaysWhy() {
+    let session = makeSession()
+    session.world.economy.balance = 0
+    session.beginPendingPlacement(kind: .house, at: tile(3, 4))
+    session.confirmPendingPlacement()
+    #expect(session.pendingPlacement?.anchor == tile(3, 4))
+    #expect(session.world.pendingCommands.isEmpty)
+    #expect(session.hud.rejectionMessage(at: Date()) == "Not enough money")
+}
+
 @Test("scenario: cancelPendingPlacement clears the pending state without enqueuing")
 @MainActor
 func scenarioCancelPendingPlacementClearsThePendingStateWithoutEnqueuing() {

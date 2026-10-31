@@ -7675,6 +7675,24 @@
         }
       }
     },
+    "placement.noMoney" : {
+      "comment" : "Why a building can't go here.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht genug Geld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough money"
+          }
+        }
+      }
+    },
     "placement.obsolete" : {
       "comment" : "%@ is the tech.",
       "extractionState" : "manual",
