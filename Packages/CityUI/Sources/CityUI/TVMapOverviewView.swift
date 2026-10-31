@@ -33,7 +33,7 @@ struct TVMapOverviewView: View {
             .ignoresSafeArea()
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("tv.overview")
-            .accessibilityLabel(GameText.string("map.a11y.cursor", overview.cursorTile.x, overview.cursorTile.y))
+            .accessibilityLabel(GameText.string("map.a11y.cursor", "\(overview.cursorTile.x)", "\(overview.cursorTile.y)"))
         }
     }
 

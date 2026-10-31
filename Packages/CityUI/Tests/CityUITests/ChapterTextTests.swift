@@ -26,7 +26,7 @@ struct ChapterTextTests {
     @Test("years before year 1 read BC")
     func yearsBC() {
         #expect(ChapterText.year(0) == "1 BC")
-        #expect(GameText.string("date.yearBC", 1, in: .de) == "1 v. Chr.")
+        #expect(GameText.string("date.yearBC", "1", in: .de) == "1 v. Chr.")
     }
 
     @Test("orders goals pick their plural form")

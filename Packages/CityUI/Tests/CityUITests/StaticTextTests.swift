@@ -39,7 +39,7 @@ struct StaticTextTests {
     @Test("format keys fill their arguments in order")
     func formatOrder() {
         #expect(GameText.string("firstSteps.progress", 2, 5) == "First steps 2/5")
-        #expect(GameText.string("map.a11y.cursor", 3, 7, in: .de) == "Karte, Zeiger bei 3, 7")
+        #expect(GameText.string("map.a11y.cursor", "3", "7", in: .de) == "Karte, Zeiger bei 3, 7")
         #expect(GameText.string("manifest.add", "Load") == "Add Load")
         #expect(GameText.string("manifest.add", "Laden", in: .de) == "Laden hinzufügen")
     }

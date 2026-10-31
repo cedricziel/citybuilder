@@ -107,7 +107,7 @@ public enum ChapterText {
 
     /// A year as the calendar shows it: BC at and below year 0.
     static func year(_ year: Int) -> String {
-        year > 0 ? "\(year)" : GameText.string("date.yearBC", 1 - year)
+        year > 0 ? "\(year)" : GameText.string("date.yearBC", "\(1 - year)")
     }
 
     /// "a mine", "an observatory".

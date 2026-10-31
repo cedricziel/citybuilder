@@ -117,7 +117,7 @@ public struct InspectorViewModel: Sendable {
         let road = hasRoad ? GameText.string("inspector.road.connected") : GameText.string("inspector.road.none")
         return [
             GameText.string("inspector.kind", building.kind.rawValue),
-            GameText.string("inspector.anchor", building.anchor.x, building.anchor.y),
+            GameText.string("inspector.anchor", "\(building.anchor.x)", "\(building.anchor.y)"),
             GameText.string("inspector.footprint", building.footprint.width, building.footprint.height),
             GameText.string("inspector.state", stateName(of: building)),
             GameText.string("inspector.build", buildProgress),
