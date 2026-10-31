@@ -39,32 +39,35 @@ public struct ChapterCardContent: Equatable {
         let number = (campaign?.chapters.firstIndex(of: chapter.id) ?? 0) + 1
         switch card {
         case .intro:
-            eyebrow = [campaign?.title, "Chapter \(number)"].compactMap(\.self).joined(separator: " · ")
+            eyebrow = [campaign?.title, GameText.string("chapter.number", number)].compactMap(\.self).joined(separator: " · ")
             title = chapter.title
             text = chapter.intro
             lines = world.goals.map { state in
-                (state.isBonus ? "Bonus: " : "") + ChapterText.goal(state, culture: world.culture)
+                (state.isBonus ? GameText.string("chapter.bonusPrefix") : "") + ChapterText.goal(state, culture: world.culture)
             }
             facts = world.loseConditions.compactMap { state in
                 guard case let .deadline(year) = state.condition else { return nil }
-                return Fact(label: "Before \(ChapterText.year(year))", value: ChapterText.timeLeft(until: year, from: world.date))
+                return Fact(
+                    label: GameText.string("chapter.before", ChapterText.year(year)),
+                    value: ChapterText.timeLeft(until: year, from: world.date)
+                )
             }
             buttons = [.begin]
             showsMap = true
         case let .ending(next):
-            eyebrow = "Chapter \(number) won · \(world.difficulty.displayName)"
+            eyebrow = GameText.string("chapter.wonEyebrow", number, world.difficulty.displayName)
             title = chapter.title
             text = chapter.ending
             let bonus = world.goals.count(where: \.isBonus)
             lines = []
             facts = [
-                Fact(label: "Laurels", value: "\(world.laurels) of \(bonus)"),
-                Fact(label: "Reward", value: ChapterText.reward(chapter.reward))
+                Fact(label: GameText.string("chapter.laurels"), value: GameText.string("chapter.laurelsOf", world.laurels, bonus)),
+                Fact(label: GameText.string("chapter.reward"), value: ChapterText.reward(chapter.reward))
             ]
             buttons = [next.map(Button.start) ?? .backToChapters, .keepBuilding]
             showsMap = true
         case let .lost(reason):
-            eyebrow = "Chapter \(number) lost"
+            eyebrow = GameText.string("chapter.lostEyebrow", number)
             title = ChapterText.lost(reason, in: world)
             text = Self.detail(reason, in: world)
             lines = []
@@ -77,14 +80,20 @@ public struct ChapterCardContent: Equatable {
     private static func detail(_ reason: LossReason, in world: World) -> String {
         switch reason {
         case .deadline:
-            guard let unmet = world.goals.first(where: { !$0.isBonus && !$0.isMet }) else { return "The year began with goals unmet." }
-            return "\(ChapterText.year(world.date.year)) began with “\(ChapterText.goal(unmet, culture: world.culture))” unmet."
+            guard let unmet = world.goals.first(where: { !$0.isBonus && !$0.isMet }) else {
+                return GameText.string("chapter.lostDeadline")
+            }
+            return GameText.string(
+                "chapter.lostDeadlineGoal",
+                ChapterText.year(world.date.year),
+                ChapterText.goal(unmet, culture: world.culture)
+            )
         case .rivalRace:
-            return "A rival town reached the race goal before yours. You can keep building, or try again."
+            return GameText.string("chapter.lostRace")
         case .collapse:
-            return "Too few residents stayed for a whole season. You can keep building, or try again."
+            return GameText.string("chapter.lostCollapse")
         case .bankruptcy:
-            return "The treasury stayed in the red too long. You can still save from the pause menu."
+            return GameText.string("chapter.lostBankrupt")
         }
     }
 }
@@ -184,12 +193,12 @@ struct ChapterCardBody: View {
 
     static func label(_ button: ChapterCardContent.Button) -> String {
         switch button {
-        case .begin: "Begin"
-        case let .start(next): "Next: \(next.title)"
-        case .backToChapters: "Back to chapters"
-        case .retry: "Retry chapter"
-        case .keepBuilding: "Keep building"
-        case .close: "Close"
+        case .begin: GameText.string("chapter.begin")
+        case let .start(next): GameText.string("chapter.next", next.title)
+        case .backToChapters: GameText.string("chapter.backToChapters")
+        case .retry: GameText.string("chapter.retry")
+        case .keepBuilding: GameText.string("chapter.keepBuilding")
+        case .close: GameText.string("common.close")
         }
     }
 }

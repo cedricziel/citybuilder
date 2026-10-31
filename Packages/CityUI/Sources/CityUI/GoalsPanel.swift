@@ -41,7 +41,7 @@ public struct GoalsPanelModel: Equatable {
     static func text(for state: GoalState, in world: World) -> String {
         let text = text(for: state.goal, in: world)
         guard state.holdsForSeason, !state.isMet else { return text }
-        return text + (state.heldSince == nil ? " · hold a season" : " · holding")
+        return text + (state.heldSince == nil ? GameText.string("goal.holdSeason") : GameText.string("goal.holding"))
     }
 
     static func text(for goal: Goal, in world: World) -> String {
@@ -50,30 +50,30 @@ public struct GoalsPanelModel: Equatable {
         let amount = "\(ChapterText.money(progress.current))/\(ChapterText.money(progress.target))"
         switch goal {
         case let .population(_, tier):
-            let label = tier == .peasants ? "Residents" : tier.displayName(in: world.culture)
+            let label = tier == .peasants ? GameText.string("goalsPanel.residents") : tier.displayName(in: world.culture)
             return "\(label) \(count)"
         case let .age(age):
-            return "Reach the \(age.displayName) age"
+            return GameText.string("goal.age", age.displayName)
         case let .stock(good, _):
             return "\(GoodsCatalog.spec(for: good).displayName) \(count)"
         case .outgrowRivals:
-            return "Outgrow every rival \(count)"
+            return GameText.string("goalsPanel.outgrow", count)
         case .orders:
-            return "Orders fulfilled \(count)"
+            return GameText.string("goalsPanel.orders", count)
         case let .buildings(kind, _):
             return "\(kind.displayName) \(count)"
         case .signatureProjects:
-            return "Signature projects \(count)"
+            return GameText.string("goalsPanel.signature", count)
         case let .research(tech):
-            return "Research \(tech.displayName)"
+            return GameText.string("goal.research", tech.displayName)
         case .treasury:
-            return "Treasury \(amount)"
+            return GameText.string("goalsPanel.treasury", amount)
         case .netIncome:
-            return "Net income last season \(amount)"
+            return GameText.string("goalsPanel.netIncome", amount)
         case .tradeEarnings:
-            return "Earned from trade \(amount)"
+            return GameText.string("goalsPanel.trade", amount)
         case let .landedByShip(good, _):
-            return "\(GoodsCatalog.spec(for: good).displayName) landed at home \(count)"
+            return GameText.string("goalsPanel.landed", GoodsCatalog.spec(for: good).displayName, count)
         }
     }
 
@@ -89,8 +89,8 @@ public struct GoalsPanelModel: Equatable {
                 return nil
             }
             return Race(
-                title: "First to the \(age.displayName)",
-                player: "You: \(world.age.displayName)",
+                title: GameText.string("race.firstToAge", age.displayName),
+                player: GameText.string("race.youAge", world.age.displayName),
                 rival: "\(leader.name) \(standing(leader))/\(need)"
             )
         case let .population(count, tier):
@@ -98,8 +98,8 @@ public struct GoalsPanelModel: Equatable {
             guard let leader = world.rivals.max(by: { (standing($0.owner), -Int($0.id)) < (standing($1.owner), -Int($1.id)) })
             else { return nil }
             return Race(
-                title: "First to \(count) residents",
-                player: "You \(standing(.player))/\(count)",
+                title: GameText.string("race.firstToPopulation", count),
+                player: GameText.string("race.youCount", standing(.player), count),
                 rival: "\(leader.name) \(standing(leader.owner))/\(count)"
             )
         }

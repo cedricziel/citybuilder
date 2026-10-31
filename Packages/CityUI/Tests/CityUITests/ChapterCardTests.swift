@@ -33,7 +33,7 @@ func scenarioIntroPausesTheGame() throws {
     let content = try #require(ChapterCardContent(session: session))
     #expect(content.eyebrow == "The Long Chronicle · Chapter 2")
     #expect(content.text == "Intro of c2.")
-    #expect(content.lines == ["40 residents", "Bonus: Treasury of " + HUDViewModel.formatMoney(1500, locale: .current)])
+    #expect(content.lines == ["40 residents", "Bonus: Treasury of " + ChapterText.money(1500)])
     #expect(content.facts.first?.label == "Before 1206" && content.facts.first?.value == "5 years, 3 seasons left")
     #expect(content.buttons == [.begin])
     session.step()
