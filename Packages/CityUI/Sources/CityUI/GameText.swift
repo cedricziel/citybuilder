@@ -59,12 +59,14 @@ public enum Language: String, Sendable {
 /// call site (`GameText.string("pause.resume")`, `Text(l10n: "pause.title")`)
 /// so `l10n-check` can find them.
 public enum GameText {
-    /// The hand-written catalog and the one generated from the packs,
-    /// copied into the bundle as JSON (see `StringTable`). Their keys never
-    /// overlap.
-    private static let table = StringTable(merging: ["Localizable", "GameData"].compactMap { name in
-        Bundle.module.url(forResource: name, withExtension: "xcstrings").flatMap { try? StringTable(json: Data(contentsOf: $0)) }
-    })
+    /// The hand-written catalog and the one generated from the packs, as
+    /// JSON or compiled (see `StringTable`). Their keys never overlap.
+    private static let table: StringTable = {
+        let copied = ["Localizable", "GameData"].compactMap { name in
+            Bundle.module.url(forResource: name, withExtension: "xcstrings").flatMap { try? StringTable(json: Data(contentsOf: $0)) }
+        }
+        return copied.isEmpty ? StringTable(compiledIn: Bundle.module.bundleURL) : StringTable(merging: copied)
+    }()
 
     /// The text for `key` in `language`, its format arguments filled. A
     /// missing key shows as itself.

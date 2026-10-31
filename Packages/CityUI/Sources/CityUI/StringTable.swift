@@ -1,9 +1,10 @@
 import Foundation
 
-/// A String Catalog read from its `.xcstrings` JSON. GameText reads the
-/// catalog itself rather than through `Bundle`'s compiled tables: SwiftPM
-/// 6.3 copies an `.xcstrings` file unchanged instead of compiling it, so a
-/// `Bundle` lookup would find nothing under `swift test` there.
+/// A String Catalog, read from its `.xcstrings` JSON or from the tables
+/// Xcode compiles it into. SwiftPM 6.3 copies an `.xcstrings` file
+/// unchanged, so `Bundle`'s own lookup finds nothing under `swift test`,
+/// while an Xcode archive compiles the file even though the package says
+/// to copy it.
 struct StringTable: Sendable {
     private enum Value: Sendable {
         case text(String)
@@ -24,6 +25,37 @@ struct StringTable: Sendable {
                 return localization.stringUnit.map { .text($0.value) }
             }
         }
+    }
+
+    /// The tables an Xcode archive compiles the catalogs into: each
+    /// `<language>.lproj` holds `.strings` for text and `.stringsdict` for
+    /// plurals.
+    init(compiledIn bundle: URL) {
+        let lprojs = (try? FileManager.default.contentsOfDirectory(at: bundle, includingPropertiesForKeys: nil)) ?? []
+        var entries: [String: [String: Value]] = [:]
+        for lproj in lprojs where lproj.pathExtension == "lproj" {
+            let language = lproj.deletingPathExtension().lastPathComponent
+            for file in (try? FileManager.default.contentsOfDirectory(at: lproj, includingPropertiesForKeys: nil)) ?? [] {
+                guard let data = try? Data(contentsOf: file),
+                      let table = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+                else { continue }
+                let plurals = file.pathExtension == "stringsdict"
+                for (key, value) in table {
+                    entries[key, default: [:]][language] = plurals ? Self.plural(value) : (value as? String).map(Value.text)
+                }
+            }
+        }
+        self.entries = entries
+    }
+
+    /// A `.stringsdict` entry whose whole text is one plural variable, the
+    /// shape a catalog's plural variation compiles to.
+    private static func plural(_ entry: Any) -> Value? {
+        guard let entry = entry as? [String: Any], let format = entry["NSStringLocalizedFormatKey"] as? String,
+              format.hasPrefix("%#@"), format.hasSuffix("@"),
+              let variable = entry[String(format.dropFirst(3).dropLast())] as? [String: Any]
+        else { return nil }
+        return .plural(variable.compactMapValues { $0 as? String }.filter { !$0.key.hasPrefix("NSString") })
     }
 
     /// One table holding every key of `tables`.
