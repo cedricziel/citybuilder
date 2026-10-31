@@ -341,3 +341,12 @@ func festivalOrderIsATownCard() throws {
     let crown = try #require(session.ordersBoard.cards.first { $0.id == 1 })
     #expect(!crown.isFestival)
 }
+
+@Test("scenario: the orders entry is a round button on a phone and on Apple TV")
+func ordersEntryShape() {
+    let round: [HUDIdiom] = [.phone, .tv]
+    for idiom in [HUDIdiom.phone, .pad, .mac, .tv] {
+        let layout = HUDLayout.make(size: CGSize(width: 1920, height: 1080), idiom: idiom)
+        #expect(layout.showsRoundOrdersEntry == round.contains(idiom), "\(idiom)")
+    }
+}
