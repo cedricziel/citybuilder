@@ -91,7 +91,7 @@ struct PackTextTests {
     }
 
     /// No chapter ships yet, so a history event's keys stand in for the
-    /// generated `chapter.<id>` ones.
+    /// generated `chapter.<id>` ones; the event has no `.intro`.
     @Test("a pack chapter reads its text from the catalog; a chapter built in code shows its own")
     func chapterText() {
         func chapter(textKey: String?) -> Chapter {
@@ -104,6 +104,7 @@ struct PackTextTests {
         #expect([stored.displayTitle, stored.displayIntro, stored.displayEnding, stored.rewardName] == ["Stored", "Intro", "End", "Hearth"])
         let pack = chapter(textKey: "history.bountifulHarvest")
         #expect(pack.displayTitle == "Bountiful harvest")
-        #expect(pack.displayIntro == "history.bountifulHarvest.intro")
+        #expect(pack.displayIntro == "Intro")
+        #expect(Campaign(id: "x", title: "Stored", chapters: [], titleKey: "campaign.gone.title").displayTitle == "Stored")
     }
 }

@@ -70,31 +70,31 @@ extension OrderTemplate {
 
 extension Campaign {
     var displayTitle: String {
-        titleKey.map { GameText.string($0) } ?? title
+        titleKey.map { GameText.string($0, orStored: title) } ?? title
     }
 }
 
 /// A chapter from the packs reads its text from the catalog; one built in
-/// code shows what it stores.
+/// code, or one whose key the catalog lacks, shows what it stores.
 extension Chapter {
     var displayTitle: String {
-        text("title") ?? title
+        text("title", stored: title)
     }
 
     var displayIntro: String {
-        text("intro") ?? intro
+        text("intro", stored: intro)
     }
 
     var displayEnding: String {
-        text("ending") ?? ending
+        text("ending", stored: ending)
     }
 
     var rewardName: String {
-        text("reward") ?? reward.name
+        text("reward", stored: reward.name)
     }
 
-    private func text(_ field: String) -> String? {
-        textKey.map { GameText.string("\($0).\(field)") }
+    private func text(_ field: String, stored: String) -> String {
+        textKey.map { GameText.string("\($0).\(field)", orStored: stored) } ?? stored
     }
 }
 

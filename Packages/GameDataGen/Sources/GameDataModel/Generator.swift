@@ -12,7 +12,7 @@ public enum Generator {
             let files = SwiftEmitter.emit(data, namespace: namespace)
             do {
                 if let catalogFile {
-                    let catalog = try CatalogEmitter.catalog(data, merging: try? Data(contentsOf: catalogFile))
+                    let catalog = try CatalogEmitter.catalog(data, merging: committedCatalog(catalogFile))
                     try Data(catalog.utf8).write(to: catalogFile, options: .atomic)
                 }
                 try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
@@ -47,16 +47,26 @@ public enum Generator {
             }
             if let catalogFile {
                 let name = catalogFile.lastPathComponent
-                if let committed = try? Data(contentsOf: catalogFile) {
+                switch Result(catching: { try committedCatalog(catalogFile) }) {
+                case .success(nil):
+                    drift.append("\(name) is missing")
+                case let .success(committed?):
                     let expected = try? CatalogEmitter.catalog(data, merging: committed)
                     if expected.map({ Data($0.utf8) }) != committed { drift.append("\(name) differs") }
-                } else {
-                    drift.append("\(name) is missing")
+                case .failure:
+                    drift.append("\(name) cannot be read")
                 }
             }
             let leftovers = generatedFiles(in: outputDirectory).filter { files[$0] == nil }.map { "\($0) is no longer generated" }
             return (drift + leftovers).sorted()
         }
+    }
+
+    /// The committed catalog, nil when there is none yet. Any other read
+    /// failure throws, so generating never replaces a catalog it could not
+    /// read and loses its translations.
+    private static func committedCatalog(_ file: URL) throws -> Data? {
+        FileManager.default.fileExists(atPath: file.path) ? try Data(contentsOf: file) : nil
     }
 
     private static func load(_ dataDirectory: URL) -> Result<GameData, GameDataErrors> {

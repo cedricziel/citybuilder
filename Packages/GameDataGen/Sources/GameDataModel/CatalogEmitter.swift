@@ -82,54 +82,85 @@ public enum CatalogEmitter {
 
     /// The catalog file for `data`, merged into the committed catalog's JSON.
     public static func catalog(_ data: GameData, merging committed: Data?) throws -> String {
-        let old = try committed.map { try JSONSerialization.jsonObject(with: $0) as? [String: Any] ?? [:] }
-        let oldStrings = old?["strings"] as? [String: Any] ?? [:]
-        var strings: [String: Any] = [:]
+        let old = try committed.map { try JSONDecoder().decode(JSONValue.self, from: $0) }
+        let oldStrings = old?["strings"]?.object ?? [:]
+        var strings: [String: JSONValue] = [:]
         for (key, entry) in entries(data) {
-            let previous = oldStrings[key] as? [String: Any]
-            var localizations = previous?["localizations"] as? [String: Any] ?? [:]
-            let oldEnglish = ((localizations["en"] as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String
-            if let oldEnglish, oldEnglish != entry.english {
+            var localizations = oldStrings[key]?["localizations"]?.object ?? [:]
+            if let oldEnglish = localizations["en"]?["stringUnit"]?["value"], oldEnglish != .string(entry.english) {
                 for (language, value) in localizations where language != "en" {
-                    localizations[language] = markedForReview(value)
+                    localizations[language] = value.settingUnitState("needs_review")
                 }
             }
-            localizations["en"] = ["stringUnit": ["state": "translated", "value": entry.english]]
-            strings[key] = ["comment": entry.comment, "extractionState": "manual", "localizations": localizations]
+            localizations["en"] = .object(["stringUnit": .object(["state": .string("translated"), "value": .string(entry.english)])])
+            strings[key] = .object([
+                "comment": .string(entry.comment), "extractionState": .string("manual"), "localizations": .object(localizations)
+            ])
         }
-        return CatalogJSON.write(["sourceLanguage": "en", "strings": strings, "version": "1.0"]) + "\n"
-    }
-
-    private static func markedForReview(_ localization: Any) -> Any {
-        guard var localization = localization as? [String: Any], var unit = localization["stringUnit"] as? [String: Any] else {
-            return localization
-        }
-        unit["state"] = "needs_review"
-        localization["stringUnit"] = unit
-        return localization
+        let catalog = JSONValue.object(["sourceLanguage": .string("en"), "strings": .object(strings), "version": .string("1.0")])
+        return catalog.written() + "\n"
     }
 }
 
-/// JSON the way the committed catalogs are written: two-space indent,
-/// `"key" : value`, keys sorted, non-ASCII kept as is.
-enum CatalogJSON {
-    static func write(_ value: Any, indent: String = "") -> String {
-        switch value {
-        case let object as [String: Any]:
-            guard !object.isEmpty else { return "{}" }
-            let inner = indent + "  "
-            let members = object.keys.sorted().map { inner + quoted($0) + " : " + write(object[$0]!, indent: inner) }
-            return "{\n" + members.joined(separator: ",\n") + "\n" + indent + "}"
-        case let array as [Any]:
-            guard !array.isEmpty else { return "[]" }
-            let inner = indent + "  "
-            return "[\n" + array.map { inner + write($0, indent: inner) }.joined(separator: ",\n") + "\n" + indent + "]"
-        case let text as String:
-            return quoted(text)
-        case let number as NSNumber:
-            return CFGetTypeID(number) == CFBooleanGetTypeID() ? (number.boolValue ? "true" : "false") : number.stringValue
-        default:
-            return "null"
+/// A JSON value read and written the way the committed catalogs are: two
+/// spaces of indent, `"key" : value`, keys sorted, non-ASCII kept as is.
+/// Codable rather than `JSONSerialization`, so booleans stay booleans on
+/// every platform.
+enum JSONValue: Equatable, Decodable {
+    case object([String: JSONValue])
+    case array([JSONValue])
+    case string(String)
+    case bool(Bool)
+    case number(Double)
+    case null
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .number(value)
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode([JSONValue].self) {
+            self = .array(value)
+        } else {
+            self = try .object(container.decode([String: JSONValue].self))
+        }
+    }
+
+    var object: [String: JSONValue]? {
+        if case let .object(members) = self { members } else { nil }
+    }
+
+    subscript(key: String) -> JSONValue? {
+        object?[key]
+    }
+
+    /// A localization with its string unit's state set; anything else as is.
+    func settingUnitState(_ state: String) -> JSONValue {
+        guard var localization = object, var unit = localization["stringUnit"]?.object else { return self }
+        unit["state"] = .string(state)
+        localization["stringUnit"] = .object(unit)
+        return .object(localization)
+    }
+
+    func written(indent: String = "") -> String {
+        let inner = indent + "  "
+        switch self {
+        case let .object(members):
+            guard !members.isEmpty else { return "{}" }
+            let lines = members.keys.sorted().map { inner + Self.quoted($0) + " : " + members[$0]!.written(indent: inner) }
+            return "{\n" + lines.joined(separator: ",\n") + "\n" + indent + "}"
+        case let .array(values):
+            guard !values.isEmpty else { return "[]" }
+            return "[\n" + values.map { inner + $0.written(indent: inner) }.joined(separator: ",\n") + "\n" + indent + "]"
+        case let .string(text): return Self.quoted(text)
+        case let .bool(value): return value ? "true" : "false"
+        case let .number(value): return value.rounded() == value && abs(value) < 1e15 ? String(Int64(value)) : String(value)
+        case .null: return "null"
         }
     }
 

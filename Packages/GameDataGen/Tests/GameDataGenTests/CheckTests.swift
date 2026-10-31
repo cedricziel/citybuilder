@@ -89,3 +89,31 @@ func catalogIsGeneratedAndChecked() throws {
     #expect(outcome.status == 0)
     #expect(FileManager.default.fileExists(atPath: catalog.path))
 }
+
+@Test("custom packs need their own catalog path")
+func customDataNeedsCatalog() throws {
+    let data = try scratch(), out = try scratch()
+    try write(Fixtures.source(), to: data)
+    let outcome = GameDataCommand.run(
+        ["generate", "--data", data.path, "--out", out.path],
+        standardInput: { Data() },
+        currentDirectory: data
+    )
+    #expect(outcome.status == 64)
+    #expect(outcome.error.contains("--data needs --catalog"))
+    #expect(try contents(of: out).isEmpty)
+}
+
+@Test("a catalog that cannot be read is neither replaced nor called missing")
+func unreadableCatalogIsKept() throws {
+    let data = try scratch(), out = try scratch(), catalog = try scratch().appendingPathComponent("GameData.xcstrings")
+    try write(Fixtures.source(), to: data)
+    try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+    #expect(throws: GameDataErrors.self) {
+        try Generator.generate(dataDirectory: data, outputDirectory: out, catalogFile: catalog).get()
+    }
+    var isDirectory: ObjCBool = false
+    #expect(FileManager.default.fileExists(atPath: catalog.path, isDirectory: &isDirectory) && isDirectory.boolValue)
+    let drift = try Generator.check(dataDirectory: data, outputDirectory: out, catalogFile: catalog).get()
+    #expect(drift.contains("GameData.xcstrings cannot be read"))
+}

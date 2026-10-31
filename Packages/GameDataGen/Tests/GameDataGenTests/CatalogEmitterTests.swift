@@ -93,6 +93,28 @@ struct CatalogEmitterTests {
         #expect(entry("good.wood.name", in: json) != nil)
     }
 
+    @Test("values Xcode adds to a kept entry survive, booleans included")
+    func xcodeValuesSurvive() throws {
+        let english = try CatalogEmitter.catalog(Fixtures.load().get(), merging: nil)
+        let edited = english.replacingOccurrences(
+            of: "\"good.wood.name\" : {\n", with: "\"good.wood.name\" : {\n      \"shouldTranslate\" : false,\n"
+        )
+        #expect(edited != english)
+        let merged = try CatalogEmitter.catalog(Fixtures.load().get(), merging: Data(edited.utf8))
+        #expect(!merged.contains("shouldTranslate"), "an entry is rebuilt from the packs, keeping only its localizations")
+        let unit = { (lines: String) in "\"stringUnit\" : {\n" + lines + "\"state\" : \"translated\",\n            \"value\" : " }
+        let pad = "            "
+        let german = edited.replacingOccurrences(
+            of: "\"en\" : {\n          " + unit(pad) + "\"Wood\"",
+            with: "\"de\" : {\n          " + unit(pad + "\"flagged\" : true,\n" + pad) + "\"Holz\"\n          }\n        },\n"
+                + "        \"en\" : {\n          " + unit(pad) + "\"Wood\""
+        )
+        #expect(german != edited)
+        let kept = try CatalogEmitter.catalog(Fixtures.load().get(), merging: Data(german.utf8))
+        #expect(kept.contains("\"flagged\" : true,"))
+        #expect(kept.contains("\"value\" : \"Holz\""))
+    }
+
     @Test("a catalog that is not JSON fails the merge")
     func malformedCatalog() throws {
         #expect(throws: (any Error).self) {
