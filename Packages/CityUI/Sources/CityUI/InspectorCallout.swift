@@ -364,20 +364,39 @@ struct InspectorCalloutView<Actions: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Details or Less, the actions, and Demolish.
+    /// Details or Less, the actions, and Demolish. A paid demolish such as
+    /// "Clear ruins — $15" is too long to share the row on an iPad, so it
+    /// moves to a row of its own rather than wrap.
     private var footer: some View {
-        HStack(spacing: 8) {
-            Button(isExpanded ? GameText.string("inspector.less") : GameText.string("inspector.details")) { isExpanded.toggle() }
-            Spacer(minLength: 0)
-            actions()
-            if viewModel.rival == nil {
-                Button(viewModel.demolish?.title ?? GameText.string("tool.demolish"), role: .destructive, action: session.demolishSelection)
-                    .foregroundStyle(.red)
-                    .disabled(session.isGameOver || viewModel.demolish?.isEnabled == false)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                footerToggleAndActions
+                demolishButton
+            }
+            VStack(alignment: .trailing, spacing: InspectorCalloutLayout.spacing) {
+                HStack(spacing: 8) { footerToggleAndActions }
+                demolishButton
             }
         }
         .font(.caption.weight(.semibold))
         .buttonStyle(.borderless)
+    }
+
+    @ViewBuilder
+    private var footerToggleAndActions: some View {
+        Button(isExpanded ? GameText.string("inspector.less") : GameText.string("inspector.details")) { isExpanded.toggle() }
+        Spacer(minLength: 0)
+        actions()
+    }
+
+    @ViewBuilder
+    private var demolishButton: some View {
+        if viewModel.rival == nil {
+            Button(viewModel.demolish?.title ?? GameText.string("tool.demolish"), role: .destructive, action: session.demolishSelection)
+                .foregroundStyle(.red)
+                .lineLimit(1)
+                .disabled(session.isGameOver || viewModel.demolish?.isEnabled == false)
+        }
     }
 
     private func residentsMeter(_ fill: Double) -> some View {
