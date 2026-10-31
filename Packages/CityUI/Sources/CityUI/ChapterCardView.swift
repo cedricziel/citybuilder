@@ -194,7 +194,7 @@ struct ChapterCardBody: View {
     static func label(_ button: ChapterCardContent.Button) -> String {
         switch button {
         case .begin: GameText.string("chapter.begin")
-        case let .start(next): GameText.string("chapter.next", next.title)
+        case let .start(next): GameText.string("chapter.next", next.displayTitle)
         case .backToChapters: GameText.string("chapter.backToChapters")
         case .retry: GameText.string("chapter.retry")
         case .keepBuilding: GameText.string("chapter.keepBuilding")

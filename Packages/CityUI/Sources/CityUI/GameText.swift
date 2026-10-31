@@ -72,6 +72,11 @@ public enum GameText {
         string(key, arguments: arguments, in: language)
     }
 
+    /// The text for `key`, or `stored` when no catalog has the key.
+    static func string(_ key: String, orStored stored: String, in language: Language = .current) -> String {
+        table.format(for: key, in: language.catalogLanguage.rawValue, arguments: []) == nil ? stored : string(key, in: language)
+    }
+
     static func string(_ key: String, arguments: [any CVarArg], in language: Language) -> String {
         var format = table.format(for: key, in: language.catalogLanguage.rawValue, arguments: arguments) ?? key
         if language == .pseudo { format = PseudoLocale.transform(format) }
