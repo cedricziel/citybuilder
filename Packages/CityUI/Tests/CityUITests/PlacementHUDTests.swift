@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import SwiftUI
 import Testing
 @testable import CityCore
 @testable import CityUI
@@ -145,4 +146,96 @@ func eachArrowPointsAlongItsIsoDiagonalOnScreen() {
     #expect(se.width > 0 && se.height > 0)
     #expect(sw.width < 0 && sw.height > 0)
     #expect(nw.width < 0 && nw.height < 0)
+}
+
+// iPhone 17 in landscape: 874 x 402 points, the Dynamic Island and the
+// rounded corners inset both sides, the home indicator the bottom.
+private let landscapePhone = CGSize(width: 874, height: 402)
+private let landscapeInsets = EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)
+
+private func safeRect(_ size: CGSize, _ insets: EdgeInsets) -> CGRect {
+    CGRect(
+        x: insets.leading, y: insets.top,
+        width: size.width - insets.leading - insets.trailing,
+        height: size.height - insets.top - insets.bottom
+    )
+}
+
+private func buttonFrame(_ center: CGPoint) -> CGRect {
+    let half = PlacementHUDLayout.buttonSize / 2
+    return CGRect(x: center.x - half, y: center.y - half, width: half * 2, height: half * 2)
+}
+
+@Test("a ghost mid-screen keeps confirm and cancel right under its lowest arrows")
+func aGhostMidScreenKeepsConfirmAndCancelRightUnderItsLowestArrows() {
+    let center = CGPoint(x: 437, y: 120)
+    let row = PlacementHUDLayout.actionRow(
+        center: center, viewSize: landscapePhone, insets: landscapeInsets, reasonSize: nil
+    )
+    let below = center.y + PlacementHUDLayout.arrowRadius + PlacementHUDLayout.actionGap
+    #expect(row.confirm == CGPoint(x: center.x + PlacementHUDLayout.actionGap, y: below))
+    #expect(row.cancel == CGPoint(x: center.x - PlacementHUDLayout.actionGap, y: below))
+}
+
+@Test("iPhone landscape: a low ghost lifts confirm and cancel above the home indicator")
+func iPhoneLandscapeALowGhostLiftsConfirmAndCancelAboveTheHomeIndicator() {
+    // The playtest's shot 06: the ghost in the lower half of the screen.
+    let center = CGPoint(x: 360, y: 300)
+    let unclamped = center.y + PlacementHUDLayout.arrowRadius + PlacementHUDLayout.actionGap
+    #expect(unclamped + PlacementHUDLayout.buttonSize / 2 > landscapePhone.height)
+    let row = PlacementHUDLayout.actionRow(
+        center: center, viewSize: landscapePhone, insets: landscapeInsets, reasonSize: nil
+    )
+    let safe = safeRect(landscapePhone, landscapeInsets)
+    #expect(safe.contains(buttonFrame(row.confirm)))
+    #expect(safe.contains(buttonFrame(row.cancel)))
+    #expect(row.confirm.y == row.cancel.y)
+}
+
+@Test("iPhone landscape: the refusal reason stays on screen under the lifted buttons")
+func iPhoneLandscapeTheRefusalReasonStaysOnScreenUnderTheLiftedButtons() {
+    let center = CGPoint(x: 360, y: 300)
+    let reasonHeight: CGFloat = 40
+    let row = PlacementHUDLayout.actionRow(
+        center: center, viewSize: landscapePhone, insets: landscapeInsets,
+        reasonSize: CGSize(width: 180, height: reasonHeight)
+    )
+    let safe = safeRect(landscapePhone, landscapeInsets)
+    #expect(safe.contains(buttonFrame(row.confirm)))
+    #expect(row.reason.y - row.confirm.y == PlacementHUDLayout.reasonDrop)
+    #expect(row.reason.y + reasonHeight / 2 <= safe.maxY)
+}
+
+@Test("a ghost off the bottom of the screen still leaves confirm and cancel reachable")
+func aGhostOffTheBottomOfTheScreenStillLeavesConfirmAndCancelReachable() {
+    let row = PlacementHUDLayout.actionRow(
+        center: CGPoint(x: 437, y: 700), viewSize: landscapePhone, insets: landscapeInsets,
+        reasonSize: CGSize(width: 120, height: 22)
+    )
+    let safe = safeRect(landscapePhone, landscapeInsets)
+    #expect(safe.contains(buttonFrame(row.confirm)))
+    #expect(row.reason.y + 11 <= safe.maxY)
+}
+
+@Test("a ghost at the side edge keeps confirm and cancel clear of the Dynamic Island")
+func aGhostAtTheSideEdgeKeepsConfirmAndCancelClearOfTheDynamicIsland() {
+    let safe = safeRect(landscapePhone, landscapeInsets)
+    let leading = PlacementHUDLayout.actionRow(
+        center: CGPoint(x: 20, y: 100), viewSize: landscapePhone, insets: landscapeInsets, reasonSize: nil
+    )
+    #expect(safe.contains(buttonFrame(leading.cancel)))
+    #expect(leading.confirm.x - leading.cancel.x == PlacementHUDLayout.actionGap * 2)
+    let trailing = PlacementHUDLayout.actionRow(
+        center: CGPoint(x: 860, y: 100), viewSize: landscapePhone, insets: landscapeInsets, reasonSize: nil
+    )
+    #expect(safe.contains(buttonFrame(trailing.confirm)))
+}
+
+@Test("a wide refusal reason at the side edge stays clear of the Dynamic Island")
+func aWideRefusalReasonAtTheSideEdgeStaysClearOfTheDynamicIsland() {
+    let reason = CGSize(width: PlacementHUDLayout.reasonMaxWidth, height: 40)
+    let row = PlacementHUDLayout.actionRow(
+        center: CGPoint(x: 20, y: 100), viewSize: landscapePhone, insets: landscapeInsets, reasonSize: reason
+    )
+    #expect(row.reason.x - reason.width / 2 >= landscapeInsets.leading)
 }
