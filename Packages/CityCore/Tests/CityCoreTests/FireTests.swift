@@ -471,16 +471,14 @@ func burnDownLeavesRuins() throws {
     #expect(world.populations[house] == nil)
 }
 
-@Test("scenario: the snapshot counts what each fire watch covers")
-func snapshotCountsFireWatchCover() {
+@Test("scenario: a fire watch counts what it covers, only when asked")
+func fireWatchCountsItsCover() throws {
     var world = fireWorld()
     let (watch, _) = watchAndHouse(in: &world)
     // In reach, but on no road the watch could walk.
     addOperational(.house, at: TileCoordinate(x: 4, y: 0), in: &world)
     let lonely = addOperational(.fireWatch, at: TileCoordinate(x: 20, y: 20), in: &world)
-    let snapshot = world.snapshot()
-    #expect(snapshot.fireWatchCover[watch] == 1)
-    #expect(snapshot.fireWatchCover[lonely] == 0)
-    #expect(snapshot.isSeasonalEventUnderWay)
-    #expect(fireWorld().snapshot().fireWatchCover.isEmpty)
+    #expect(try world.fireWatchCover(of: #require(world.buildings[watch])) == 1)
+    #expect(try world.fireWatchCover(of: #require(world.buildings[lonely])) == 0)
+    #expect(world.snapshot().isSeasonalEventUnderWay)
 }

@@ -238,6 +238,16 @@ func chipOnANarrowPhoneWithFirstSteps() {
     #expect(label.sizeThatFits(in: CGSize(width: 78, height: 100)).width == EventChipLayout.minimumTapSide)
     #expect(label.sizeThatFits(in: CGSize(width: 300, height: 100)).width > 78)
 }
+
+@MainActor
+@Test("scenario: the glyph-only chip's tap target takes no room in the column")
+func glyphOnlyChipKeepsTheRowShort() {
+    let phone = HUDLayout.make(size: CGSize(width: 320, height: 568), idiom: .phone)
+    let chip = EventChip(SeasonalEventOnset(event: .fire, season: .summer), burning: 0)
+    let label = NSHostingController(rootView: EventChipLabel(chip: chip, layout: phone))
+    #expect(label.sizeThatFits(in: CGSize(width: 78, height: 100)).height == DateChipLayout.height)
+    #expect(DateChipLayout.height + 2 * EventChipLayout.tapOutset(layout: phone) == EventChipLayout.minimumTapSide)
+}
 #endif
 
 @Test("scenario: on Apple TV the chip is tall enough to focus")

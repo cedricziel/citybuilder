@@ -146,7 +146,10 @@ func fireBannerNamesTheWatch() {
 func fireWatchInspector() {
     let session = WatchFixture().session
     let tile = TileCoordinate(x: 1, y: 2)
-    let model = InspectorViewModel.make(from: session.world.snapshot(), tile: tile, buildings: session.world.buildings)
+    let world = session.world
+    let model = InspectorViewModel.make(
+        from: world.snapshot(), tile: tile, buildings: world.buildings, fireWatchCover: world.fireWatchCover(of:)
+    )
     #expect(model.keyLines.contains("Covers 1 building within 8 tiles by road"))
     #expect(model.keyLines.contains("Watchman: at the watch"))
 }
