@@ -82,6 +82,13 @@ public final class TVRemoteController {
         }
     }
 
+    /// The demolish confirmation closed: the remote returns to the map.
+    public func demolishConfirmationClosed(at time: TimeInterval) {
+        guard mapper.focus == .hud else { return }
+        send(.focusChanged(.map), at: time)
+        applyEffect?(.focusMap)
+    }
+
     /// Controller input acts only while the map owns the remote; in the
     /// HUD the focus engine handles the same presses (design D3). The
     /// adapter still sees every snapshot, so its edges stay correct.

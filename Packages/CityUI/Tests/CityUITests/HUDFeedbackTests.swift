@@ -38,7 +38,7 @@ func scenarioOccupiedTileMessage() {
 func scenarioRejectionMessageExpires() {
     let hud = HUDViewModel()
     let start = Date(timeIntervalSinceReferenceDate: 1000)
-    hud.showRejection(.tileOccupied, in: World.newGame(), now: start)
+    hud.showRejection("Tile occupied", now: start)
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(1)) == "Tile occupied")
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(2.5)) == nil)
 }
@@ -47,8 +47,8 @@ func scenarioRejectionMessageExpires() {
 func newerRejectionReplacesOlder() {
     let hud = HUDViewModel()
     let start = Date(timeIntervalSinceReferenceDate: 1000)
-    hud.showRejection(.tileOccupied, in: World.newGame(), now: start)
-    hud.showRejection(.terrainNotBuildable, in: World.newGame(), now: start.addingTimeInterval(2))
+    hud.showRejection("Tile occupied", now: start)
+    hud.showRejection("Can't build on water", now: start.addingTimeInterval(2))
     #expect(hud.rejectionMessage(at: start.addingTimeInterval(3)) == "Can't build on water")
 }
 
@@ -64,6 +64,20 @@ func tappingOccupiedTileShowsFeedback() throws {
     session.handleTap(at: townCenter.anchor)
 
     #expect(session.hud.rejectionMessage(at: Date()) == "Tile occupied")
+    #expect(session.world.pendingCommands.isEmpty)
+}
+
+@MainActor
+@Test("tapping a building the city can't afford says so and enqueues nothing")
+func tappingAnUnaffordableBuildingShowsFeedback() {
+    let session = GameSession(world: World.fixtureWithTerrain(width: 12, height: 12, fill: .grass, seed: 1))
+    session.confirmsBuildingPlacement = false
+    session.world.economy.balance = 0
+    session.selectTool(.place(.house))
+
+    session.handleTap(at: TileCoordinate(x: 3, y: 4))
+
+    #expect(session.hud.rejectionMessage(at: Date()) == "Not enough money")
     #expect(session.world.pendingCommands.isEmpty)
 }
 

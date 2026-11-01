@@ -22,7 +22,7 @@ extension GameSession {
         case let .seasonalEventEnded(event, toll):
             let moment: SeasonalBannerKind = switch (event.effect, toll.fires, toll.count) {
             case (.fire, 0, _): .endNoFire
-            case (.fire, _, 0): .endNoLoss
+            case (.fire, _, 0), (.blight, _, 0): .endNoLoss
             case (.festival, _, _): .missed
             default: .end
             }

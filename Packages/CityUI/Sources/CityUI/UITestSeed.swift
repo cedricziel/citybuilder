@@ -74,21 +74,47 @@ public enum UITestSeed {
     /// Ticks from the start of `fireWorld` to its third fire.
     static let fireSeedSecondCall: UInt64 = 80
 
-    /// Lays a road on a tile beside `building` that touches the town's roads, if there is one.
+    /// Lays the shortest run of road from a tile beside `building` to the town's roads, if there is
+    /// one within 8 tiles.
     private static func joinToRoads(_ building: Building, in world: inout World) {
         let roads = Set(world.buildings.values.filter { $0.kind == .road }.map(\.anchor))
         func neighbours(_ tile: TileCoordinate) -> [TileCoordinate] {
             [(1, 0), (-1, 0), (0, 1), (0, -1)].map { TileCoordinate(x: tile.x + $0.0, y: tile.y + $0.1) }
         }
-        let beside = building.footprint.tiles(anchor: building.anchor).flatMap(neighbours)
-        guard let link = beside.first(where: { tile in
-            guard case .allowed = world.canPlace(.road, at: tile) else { return false }
-            return neighbours(tile).contains(where: roads.contains)
-        })
-        else { return }
-        world.enqueue(.place(.road, at: link))
+        func paveable(_ tile: TileCoordinate) -> Bool {
+            if case .allowed = world.canPlace(.road, at: tile) { return true }
+            return false
+        }
+        // Breadth first from the building's sides, so the first tile that touches a road ends the shortest run.
+        var cameFrom: [TileCoordinate: TileCoordinate?] = [:]
+        var frontier = building.footprint.tiles(anchor: building.anchor).flatMap(neighbours).filter(paveable)
+        for tile in frontier {
+            cameFrom[tile] = .some(nil)
+        }
+        var end: TileCoordinate?
+        for _ in 0 ..< 8 where end == nil {
+            end = frontier.first { neighbours($0).contains(where: roads.contains) }
+            var next: [TileCoordinate] = []
+            for tile in frontier where end == nil {
+                for step in neighbours(tile) where cameFrom[step] == nil && paveable(step) {
+                    cameFrom[step] = tile
+                    next.append(step)
+                }
+            }
+            frontier = next
+        }
+        var run: [TileCoordinate] = []
+        var cursor = end
+        while let tile = cursor {
+            run.append(tile)
+            cursor = cameFrom[tile] ?? nil
+        }
+        guard !run.isEmpty else { return }
+        for tile in run {
+            world.enqueue(.place(.road, at: tile))
+        }
         _ = world.tick()
-        settle(&world) { $0.buildings.values.contains { $0.anchor == link && $0.state != .operational } }
+        settle(&world) { $0.buildings.values.contains { run.contains($0.anchor) && $0.state != .operational } }
     }
 
     /// `-uiTestSeedTown`: the default sandbox start (single island, seed 0) with finished peasant
@@ -119,6 +145,14 @@ public enum UITestSeed {
         }
         // Wait only on what the seed placed, so a starter building that never opens can't hold it up.
         settle(&world) { $0.buildings.values.contains { placed.contains($0.anchor) && $0.state != .operational } }
+        // A showcase town shows no building cut off from the roads.
+        // In id order, so the seed lays the same roads every run; a road laid for one building can connect the next.
+        let unconnected = world.buildingIssues().filter { $0.value == .noRoad }.keys.sorted { $0.raw < $1.raw }
+        for id in unconnected where world.buildingIssues()[id] == .noRoad {
+            if let building = world.buildings[id], placed.contains(building.anchor) {
+                joinToRoads(building, in: &world)
+            }
+        }
         if let season {
             for _ in 0 ..< CalendarState.ticksPerYear where world.date.season != season {
                 _ = world.tick()

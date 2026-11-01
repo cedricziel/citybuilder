@@ -120,35 +120,76 @@ private struct CoachmarkView: View {
     }
 }
 
+/// Why the checkmark is orange, under confirm and cancel while the ghost
+/// can't be placed. Styled like `PlacementRejectionBanner`.
+private struct PlacementReasonCapsule: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            // A rounded rectangle, not a capsule, so a wrapped German
+            // reason keeps its shape.
+            .background(Color.red.opacity(0.85), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(maxWidth: PlacementHUDLayout.reasonMaxWidth)
+            .fixedSize(horizontal: false, vertical: true)
+            .allowsHitTesting(false)
+            .accessibilityLabel(GameText.string("a11y.cantPlace", message))
+    }
+}
+
 private struct PlacementHUDOverlay: View {
     let session: GameSession
+    @State private var reasonSize: CGSize = .zero
 
     var body: some View {
         if let hud = session.placementHUD {
-            GeometryReader { proxy in
-                let center = PlacementHUDLayout.viewPoint(
-                    forTile: hud.anchor, camera: session.world.camera, viewSize: proxy.size
-                )
-                ZStack {
-                    ForEach(hud.arrows, id: \.self) { direction in
-                        let offset = PlacementHUDLayout.arrowOffset(for: direction)
-                        hudButton(Self.symbol(for: direction), label: "Move \(direction)") {
-                            hud.nudge(direction)
-                        }
-                        .disabled(!hud.isEnabled(direction))
-                        .position(x: center.x + offset.width, y: center.y + offset.height)
+            // The safe area is read before it is ignored: inside, the
+            // insets read zero.
+            GeometryReader { safe in
+                overlay(hud, insets: safe.safeAreaInsets)
+            }
+        }
+    }
+
+    private func overlay(_ hud: PlacementHUDViewModel, insets: EdgeInsets) -> some View {
+        GeometryReader { proxy in
+            let center = PlacementHUDLayout.viewPoint(
+                forTile: hud.anchor, camera: session.world.camera, viewSize: proxy.size
+            )
+            // Confirm and cancel sit side by side under the ghost so the
+            // building being placed stays visible, unless that would put
+            // them off screen.
+            let row = PlacementHUDLayout.actionRow(
+                center: center, viewSize: proxy.size, insets: insets,
+                reasonSize: hud.reason == nil ? nil : reasonSize
+            )
+            ZStack {
+                ForEach(hud.arrows, id: \.self) { direction in
+                    let offset = PlacementHUDLayout.arrowOffset(for: direction)
+                    hudButton(Self.symbol(for: direction), label: "Move \(direction)") {
+                        hud.nudge(direction)
                     }
-                    // Confirm and cancel sit side by side under the ghost so
-                    // the building being placed stays visible.
-                    let below = center.y + PlacementHUDLayout.arrowRadius + PlacementHUDLayout.actionGap
-                    hudButton("checkmark", label: GameText.string("touch.place"), tint: hud.isValid ? .green : .orange, action: hud.confirm)
-                        .position(x: center.x + PlacementHUDLayout.actionGap, y: below)
-                    hudButton("xmark", label: GameText.string("common.cancel"), tint: .red, action: hud.cancel)
-                        .position(x: center.x - PlacementHUDLayout.actionGap, y: below)
+                    .disabled(!hud.isEnabled(direction))
+                    .position(x: center.x + offset.width, y: center.y + offset.height)
+                }
+                hudButton("checkmark", label: GameText.string("touch.place"), tint: hud.isValid ? .green : .orange, action: hud.confirm)
+                    .position(row.confirm)
+                hudButton("xmark", label: GameText.string("common.cancel"), tint: .red, action: hud.cancel)
+                    .position(row.cancel)
+                if let reason = hud.reason {
+                    PlacementReasonCapsule(message: reason)
+                        .onGeometryChange(for: CGSize.self, of: \.size) { reasonSize = $0 }
+                        .position(row.reason)
                 }
             }
-            .ignoresSafeArea()
         }
+        .ignoresSafeArea()
     }
 
     private static func symbol(for direction: NudgeDirection) -> String {

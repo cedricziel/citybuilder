@@ -80,17 +80,27 @@ private func turn(_ kit: inout EventsKit, _ world: inout World) {
     kit.takeTurn(&world)
 }
 
-@Test("scenario: the kit builds a granary on a blight warning, once")
-func kitBuildsAGranaryForBlight() {
-    var (world, _) = townStreet()
-    world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
-    var kit = EventsKit()
-    turn(&kit, &world)
-    let granaries = world.buildings.values.count { $0.kind == .granary }
-    #expect(granaries == 1)
-    #expect(kit.built[.granary] == 1)
-    kit.takeTurn(&world)
-    #expect(world.pendingCommands.isEmpty)
+@Test("scenario: the kit buys food in a blight while the stores run low")
+func kitBuysFoodForBlight() {
+    let (street, center) = townStreet()
+    func run(food: Int, spent: Bool = false, warnedOnly: Bool = false) -> [Command] {
+        var world = street
+        world.testSetStock([.food: food], in: center)
+        if warnedOnly {
+            world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+        } else {
+            world.seasonalEvents.active = ActiveSeasonalEvent(event: .blight, startTick: 0, lastTick: 599)
+        }
+        if spent { world.market.record(world.marketLeft(.food, .bought), of: .food, .bought) }
+        var kit = EventsKit()
+        kit.takeTurn(&world)
+        #expect(kit.foodBuys == world.pendingCommands.count)
+        return world.pendingCommands
+    }
+    #expect(run(food: EventsKit.foodLow - 1) == [.marketBuy(center, .food, EventsKit.foodBought)])
+    #expect(run(food: EventsKit.foodLow).isEmpty)
+    #expect(run(food: 0, spent: true).isEmpty)
+    #expect(run(food: 0, warnedOnly: true).isEmpty)
 }
 
 @Test("scenario: the kit answers a fever with a physician, a herb garden and herbs")
@@ -203,11 +213,14 @@ func forcedHazardFirstHour(seed: UInt64) {
                 let with = run(true), without = run(false)
                 let leftWith = with.seasonalEvents.counters.residentsLeftWithFever
                 let leftWithout = without.seasonalEvents.counters.residentsLeftWithFever
+                let hungryWith = with.seasonalEvents.counters.residentsLeftHungryInBlight
+                let hungryWithout = without.seasonalEvents.counters.residentsLeftHungryInBlight
                 let residents = with.population(of: .player)
                 print(
                     "HAZARD_SWEEP event=\(event) seed=\(seed) layout=\(layout.rawValue) onset=\(onset) "
                         + "bankrupt=\(with.economy.gameOver) residents=\(residents) "
-                        + "residents_without=\(without.population(of: .player)) left_with=\(leftWith) left_without=\(leftWithout)"
+                        + "residents_without=\(without.population(of: .player)) left_with=\(leftWith) left_without=\(leftWithout) "
+                        + "hungry_with=\(hungryWith) hungry_without=\(hungryWithout)"
                 )
                 #expect(!with.economy.gameOver, "\(event) \(layout) seed \(seed) \(onset)")
                 #expect(residents >= 20, "\(event) \(layout) seed \(seed) \(onset): \(residents) residents")
@@ -256,7 +269,7 @@ func buildingWithoutAPlotIsTriedOnce() {
 }
 
 @Test("scenario: the kit looks further out when the town center is crowded")
-func kitLooksFurtherForAGranary() throws {
+func kitLooksFurtherForAHerbGarden() throws {
     var world = eventsWorld(size: 40)
     world.economy.balance = 2000
     for x in 0 ... 39 {
@@ -271,11 +284,11 @@ func kitLooksFurtherForAGranary() throws {
             world.occupiedTiles[TileCoordinate(x: x, y: y)] = filler
         }
     }
-    world.seasonalEvents.warned = SeasonalEventOnset(event: .blight, season: .summer)
+    world.seasonalEvents.warned = SeasonalEventOnset(event: .fever, season: .autumn)
     var kit = EventsKit()
     kit.takeTurn(&world)
     let placed = world.pendingCommands.compactMap { command -> TileCoordinate? in
-        if case let .place(.granary, anchor) = command { anchor } else { nil }
+        if case let .place(.herbGarden, anchor) = command { anchor } else { nil }
     }
     let anchor = try #require(placed.first)
     #expect(anchor.x > 15)

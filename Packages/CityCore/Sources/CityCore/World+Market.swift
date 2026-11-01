@@ -25,9 +25,15 @@ public extension World {
             guard terms.buyLimit > 0 || terms.sellLimit > 0 else { return nil }
             return MarketQuote(
                 good: good, buyPrice: good.marketPrice(.bought), sellPrice: good.marketPrice(.sold),
-                buyLeft: market.left(good, .bought), sellLeft: market.left(good, .sold)
+                buyLeft: marketLeft(good, .bought), sellLeft: marketLeft(good, .sold)
             )
         }
+    }
+
+    /// Units of `good` the market still trades in `direction` this season,
+    /// a blight's relief included.
+    func marketLeft(_ good: Good, _ direction: TradeDirection) -> Int {
+        market.left(good, direction, extra: marketRelief(good, direction))
     }
 
     /// True when `id` is an operational player town center, so it trades.
@@ -67,7 +73,7 @@ extension World {
     ) {
         guard quantity > 0, let center = marketTownCenter(townCenter) else { return }
         let price = good.marketPrice(direction)
-        let wanted = min(quantity, market.left(good, direction))
+        let wanted = min(quantity, marketLeft(good, direction))
         let units = switch direction {
         case .bought:
             depositAffordable(good, upTo: wanted, at: price, into: purchaseBuffers(of: center))

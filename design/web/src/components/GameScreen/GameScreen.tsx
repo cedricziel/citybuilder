@@ -62,6 +62,8 @@ export interface GameScreenProps {
   placing?: {
     art: PlacedBuilding["art"];
     valid?: boolean;
+    /** Why an invalid ghost would be refused, under the HUD's confirm and cancel: "Tile occupied". */
+    reason?: string;
     /** What the ghost's site reaches, in the count capsule over it: "18 trees in reach". */
     count?: { text: string; tone?: AreaCountTone };
     /** The gold ring on the ground, in map tiles; the ghost stands at (4, 4). */
@@ -226,7 +228,7 @@ export function GameScreen({
       </div>
       {touch && placing ? (
         <div className="cb-game__placing">
-          <PlacementHUD valid={placing.valid ?? true}>
+          <PlacementHUD valid={placing.valid ?? true} reason={placing.reason}>
             <span />
           </PlacementHUD>
         </div>

@@ -213,8 +213,9 @@ func sessionTapWithDemolishTool() {
 
     session.selectTool(.demolish)
     session.handleTap(at: anchor)
+    session.confirmDemolish()
     session.world.tick()
-    #expect(session.world.occupiedTiles[anchor] == nil, "demolish tool removes the building on tap")
+    #expect(session.world.occupiedTiles[anchor] == nil, "demolish tool removes the building on a confirmed tap")
 }
 
 @MainActor

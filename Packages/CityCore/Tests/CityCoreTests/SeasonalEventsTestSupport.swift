@@ -15,8 +15,10 @@ func eventsWorld(seed: UInt64 = 1, difficulty: Difficulty = .normal, age: Age = 
 /// Puts an operational player building at `anchor` without construction;
 /// a house gets `residents`.
 @discardableResult
-func addOperational(_ kind: BuildingKind, at anchor: TileCoordinate, residents: UInt32 = 0, in world: inout World) -> EntityID {
-    let id = SignatureFixture.inject(kind, at: anchor, in: &world)
+func addOperational(
+    _ kind: BuildingKind, at anchor: TileCoordinate, residents: UInt32 = 0, owner: Owner = .player, in world: inout World
+) -> EntityID {
+    let id = SignatureFixture.inject(kind, at: anchor, in: &world, owner: owner)
     if kind == .house {
         var population = HousePopulation()
         population.population = residents

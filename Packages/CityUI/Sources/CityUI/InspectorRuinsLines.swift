@@ -31,6 +31,18 @@ extension InspectorViewModel {
         return [GameText.string("inspector.burntDown", GameText.date(snapshot.calendar.date(atTick: tick)))]
     }
 
+    /// A crop field a blight under way ruins, until the end of its season,
+    /// or a house a fever holds back, with its answer. Spec:
+    /// `platform-shells` / The inspector names an active blight or fever.
+    static func seasonalEventLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {
+        if snapshot.blightedFields.contains(building.id) {
+            let end = GameText.string("banner.endOf", GameText.date(snapshot.date))
+            return [GameText.string("inspector.blighted", end)]
+        }
+        guard snapshot.feverHouses.contains(building.id) else { return [] }
+        return [GameText.string("inspector.fever", World.physicianReach)]
+    }
+
     /// What a fire watch covers and where its watchman is. Spec:
     /// `platform-shells` / Fire watch inspector.
     static func fireWatchLines(for building: Building, in snapshot: WorldSnapshot) -> [String] {

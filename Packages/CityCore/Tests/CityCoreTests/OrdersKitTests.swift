@@ -32,3 +32,24 @@ import Testing
     kit.takeTurn(&fixture.world)
     #expect(fixture.world.pendingCommands.contains(.dispatchOrder(id)))
 }
+
+/// Wood the sawmills take as it is made never reaches the stores, so it
+/// can't fill an order (#338).
+@Test func theKitCountsOnlyTheOutputTheTownDoesNotUseItself() throws {
+    var fixture = OrdersFixture()
+    fixture.seedOutput([.wood: 60])
+    for season in fixture.world.statistics.seasons.indices {
+        fixture.world.statistics.seasons[season].goods[.wood]?.usedByProduction = 50
+        fixture.world.statistics.seasons[season].goods[.wood]?.usedByConstruction = 10
+    }
+    let id = fixture.world.testAddOrder(good: .wood, quantity: 45)
+    let order = try #require(fixture.world.order(id))
+    #expect(!OrdersKit.canFill(order, in: fixture.world))
+    for season in fixture.world.statistics.seasons.indices {
+        fixture.world.statistics.seasons[season].goods[.wood]?.usedByProduction = 30
+        fixture.world.statistics.seasons[season].goods[.wood]?.sold = 5
+        fixture.world.statistics.seasons[season].goods[.wood]?.bought = 5
+    }
+    // 60 + 5 - 30 - 10 - 5 = 20 spare a season, 2 seasons at 150%: 60.
+    #expect(OrdersKit.canFill(order, in: fixture.world))
+}

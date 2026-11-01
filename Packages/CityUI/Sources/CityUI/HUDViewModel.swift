@@ -90,10 +90,10 @@ public final class HUDViewModel {
         return "\(prefix)$\(abs(amount).formatted(.number.grouping(.automatic).locale(locale)))"
     }
 
-    /// Show `rejection` as the HUD's transient message, replacing any
-    /// message already showing.
-    public func showRejection(_ rejection: PlacementRejection, in world: World, now: Date) {
-        self.rejection = (PlacementRejectionText.message(for: rejection, in: world), now)
+    /// Show why a placement was refused as the HUD's transient message,
+    /// replacing any message already showing.
+    public func showRejection(_ message: String, now: Date) {
+        rejection = (message, now)
     }
 
     /// The rejection message to show at `date`, or nil once it expired.

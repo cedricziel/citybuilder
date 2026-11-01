@@ -25,6 +25,17 @@ public enum RemoteDirection: Hashable, Sendable, CaseIterable {
 public extension GameSession {
     nonisolated static let zoomStep = 1.5
 
+    /// Place the armed building at the camera-center tile. Useful for
+    /// keyboard-driven flows and tests; the main interaction is
+    /// tap-on-tile through `handleTap`.
+    func placeAtCameraCenter(_ kind: BuildingKind) {
+        let coord = TileCoordinate(
+            x: Int(world.camera.centerX.rounded()),
+            y: Int(world.camera.centerY.rounded())
+        )
+        enqueue(.place(kind, at: coord))
+    }
+
     /// Switches the session to the Apple TV input rules.
     func useAppleTVInput() {
         clampsCameraToMap = true

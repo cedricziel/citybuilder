@@ -8,6 +8,8 @@ export type NudgeDirection = "ne" | "se" | "sw" | "nw";
 export interface PlacementHUDProps {
   /** Whether confirming would place the building now: green check when valid, orange when not. Default true. */
   valid?: boolean;
+  /** Why an invalid placement would be refused, e.g. "Tile occupied"; shown under confirm and cancel while `valid` is false. */
+  reason?: string;
   /** Directions whose nudge would leave the map; drawn disabled. */
   disabled?: NudgeDirection[];
   /** The ghost building drawn on the pending tile. Omit to draw only the tile diamond. */
@@ -32,9 +34,10 @@ const below = center.y + 84 + 32;
 /**
  * The iOS touch-placement HUD around a pending building: four 44px glass
  * arrows along the iso diagonals (84px out), then cancel (red) and confirm
- * (green, orange when invalid) side by side under the ghost.
+ * (green, orange when invalid) side by side under the ghost. An invalid
+ * placement names its reason in a red pill under those two.
  */
-export function PlacementHUD({ valid = true, disabled = [], building, children, onNudge, onConfirm, onCancel }: PlacementHUDProps) {
+export function PlacementHUD({ valid = true, reason, disabled = [], building, children, onNudge, onConfirm, onCancel }: PlacementHUDProps) {
   return (
     <div className="cb-placement">
       <div className="cb-placement__ghost" style={{ left: center.x, top: center.y }}>
@@ -59,6 +62,11 @@ export function PlacementHUD({ valid = true, disabled = [], building, children, 
       ))}
       <HUDCircle icon="xmark" label="Cancel" tint="var(--cb-red)" x={center.x - 32} y={below} onClick={onCancel} />
       <HUDCircle icon="checkmark" label="Place" tint={valid ? "var(--cb-green)" : "var(--cb-orange)"} x={center.x + 32} y={below} onClick={onConfirm} />
+      {!valid && reason ? (
+        <div className="cb-placement__reason" role="status" aria-label={`Can't place: ${reason}`} style={{ left: center.x, top: below + 44 }}>
+          {reason}
+        </div>
+      ) : null}
     </div>
   );
 }

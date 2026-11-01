@@ -134,7 +134,10 @@ extension World {
             seasonalEvents.fire = FireEventState(ignitionTicks: fireIgnitionTicks())
         }
         if onset.event.effect == .fever {
-            seasonalEvents.fever = FeverEventState()
+            seasonalEvents.fever = ResidentsToll()
+        }
+        if onset.event.effect == .blight {
+            seasonalEvents.blight = ResidentsToll()
         }
         events.append(.seasonalEventStarted(event: onset.event))
     }
@@ -148,10 +151,11 @@ extension World {
             extinguish(fire.building, events: &events)
         }
         let fire = seasonalEvents.fire
-        let left = seasonalEvents.fever?.residentsLeft ?? 0
+        let left = (seasonalEvents.fever?.residentsLeft ?? 0) + (seasonalEvents.blight?.residentsLeft ?? 0)
         seasonalEvents.active = nil
         seasonalEvents.fire = nil
         seasonalEvents.fever = nil
+        seasonalEvents.blight = nil
         seasonalEvents.marked = nil
         let toll = SeasonalEventToll(count: (fire?.lost ?? 0) + left, fires: fire?.caught.count ?? 0)
         events.append(.seasonalEventEnded(event: active.event, toll: toll))
@@ -181,7 +185,7 @@ extension World {
     }
 
     /// A player crop field in the marked area while a blight is under way:
-    /// it takes twice its cycle, like a field in winter, without stalling.
+    /// it grows nothing, without stalling.
     func isBlighted(_ building: Building) -> Bool {
         guard seasonalEvents.active?.event.effect == .blight, building.state == .operational, building.kind.isCrop,
               building.owner == .player,
@@ -211,6 +215,23 @@ extension World {
     }
 
     static let seasonalEventMinimumTargets = 6
+
+    /// Food the market sells on top of its seasonal limit in each season
+    /// from a blight's warning to its end. Spec: `seasonal-events` / The
+    /// market answers a blight.
+    public static let blightFoodRelief = 150
+
+    /// What the market adds to `good`'s limit in `direction` this season.
+    func marketRelief(_ good: Good, _ direction: TradeDirection) -> Int {
+        good == .food && direction == .bought && currentSeasonalEvent?.event.effect == .blight ? Self.blightFoodRelief : 0
+    }
+
+    /// Counts a resident who left `house` hungry while a blight is under way.
+    mutating func noteHungryLeaving(_ house: Building) {
+        guard house.owner == .player, seasonalEvents.blight != nil else { return }
+        seasonalEvents.blight?.residentsLeft += 1
+        seasonalEvents.counters.residentsLeftHungryInBlight += 1
+    }
 
     /// Houses and producers; not monuments, shipyards or signature buildings.
     static func canIgnite(_ kind: BuildingKind) -> Bool {

@@ -34,9 +34,10 @@ public struct MarketLedger: Codable, Hashable, Sendable {
         (direction == .bought ? bought : sold)[good, default: 0]
     }
 
-    /// Units of `good` the market still trades in `direction` this season.
-    public func left(_ good: Good, _ direction: TradeDirection) -> Int {
-        max(0, good.marketTerms.limit(direction) - traded(good, direction))
+    /// Units of `good` the market still trades in `direction` this season,
+    /// with `extra` on top of its limit.
+    public func left(_ good: Good, _ direction: TradeDirection, extra: Int = 0) -> Int {
+        max(0, good.marketTerms.limit(direction) + extra - traded(good, direction))
     }
 
     mutating func record(_ units: Int, of good: Good, _ direction: TradeDirection) {

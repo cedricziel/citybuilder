@@ -95,7 +95,20 @@ func blightOnsetNamesItsEnd() {
         world.seasonalEvents.active = ActiveSeasonalEvent(event: .blight, startTick: 600, lastTick: 1199)
     }
     session.noteBannerEvents(in: [.seasonalEventStarted(event: .blight)])
-    #expect(session.banner?.description == "Fields in the marked area yield half until End of Summer 1200.")
+    #expect(session.banner?.description == "Fields in the marked area yield nothing until End of Summer 1200. The market sells more food.")
+}
+
+@MainActor
+@Test("scenario: Blight end text")
+func blightEndText() {
+    let session = eventsSession()
+    session.noteBannerEvents(in: [.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: 5))])
+    #expect(session.banner?.title == "The blight has passed")
+    #expect(session.banner?.description == "The fields yield in full again. 5 residents left the town hungry.")
+    let none = eventsSession()
+    none.noteBannerEvents(in: [.seasonalEventEnded(event: .blight, toll: SeasonalEventToll(count: 0))])
+    #expect(none.banner?.title == "The blight has passed")
+    #expect(none.banner?.description == "The fields yield in full again. No one left hungry.")
 }
 
 @MainActor
@@ -322,4 +335,49 @@ func chipCentresTheClippedArea() {
     // Tiles 0...7 on each axis: the area left of and above the map is not there.
     #expect(camera.centerX == 4)
     #expect(camera.centerY == 4)
+}
+
+/// A new world in summer 1202 with a player `kind` at (2, 2), inside the
+/// area of a `event` under way since the season began.
+@MainActor
+private func inspectedInEvent(_ kind: BuildingKind, _ event: SeasonalEvent, marked: Bool = true) -> InspectorViewModel {
+    var world = World.newGame(layout: .singleIsland, seed: 0, rivals: false)
+    let id = EntityID(raw: world.nextEntityRaw)
+    world.nextEntityRaw += 1
+    let anchor = TileCoordinate(x: 2, y: 2)
+    let building = Building(id: id, kind: kind, anchor: anchor, state: .operational)
+    world.buildings[id] = building
+    world.occupiedTiles[anchor] = id
+    var population = HousePopulation()
+    population.population = 4
+    if kind == .house { world.populations[id] = population }
+    let start = 2 * CalendarState.ticksPerYear + CalendarState.ticksPerSeason
+    world.tickCount = start + 100
+    world.seasonalEvents.active = ActiveSeasonalEvent(event: event, startTick: start, lastTick: start + CalendarState.ticksPerSeason - 1)
+    let around = marked ? building.bounds : Building(id: id, kind: kind, anchor: TileCoordinate(x: 40, y: 40)).bounds
+    world.seasonalEvents.marked = MarkedArea(around: around, radius: 6)
+    return InspectorViewModel.make(from: world.snapshot(), tile: anchor, buildings: world.buildings)
+}
+
+@MainActor
+@Test("scenario: a blighted field's inspector names the blight and its end")
+func blightedFieldInspector() {
+    let model = inspectedInEvent(.farm, .blight)
+    #expect(model.keyLines.contains("Blighted: yields nothing until End of Summer 1202"))
+    #expect(!inspectedInEvent(.farm, .blight, marked: false).bullets.contains { $0.hasPrefix("Blighted") })
+}
+
+@MainActor
+@Test("scenario: a house a fever holds back says so and names the answer")
+func feverHouseInspector() {
+    let model = inspectedInEvent(.house, .fever)
+    #expect(model.keyLines.contains("Fever: can't advance, residents leave. A physician with herbs within 8 tiles keeps it safe"))
+    #expect(!inspectedInEvent(.house, .fever, marked: false).bullets.contains { $0.hasPrefix("Fever") })
+    #expect(!inspectedInEvent(.house, .blight).bullets.contains { $0.hasPrefix("Fever") || $0.hasPrefix("Blighted") })
+}
+
+@Test("the event lines read in German")
+func eventLinesInGerman() {
+    #expect(GameText.string("inspector.blighted", "Ende Sommer 1202", in: .de) == "Fäule: trägt nichts bis Ende Sommer 1202")
+    #expect(GameText.string("inspector.fever", 8, in: .de).hasSuffix("im Umkreis von 8 Feldern schützt das Haus"))
 }

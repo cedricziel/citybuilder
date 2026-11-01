@@ -123,6 +123,9 @@ func scenarioDemolishFromTheCallout() {
     session.world.tick()
     session.handleTap(at: anchor)
     session.demolishSelection()
+    #expect(session.world.pendingCommands.isEmpty)
+    #expect(session.selectedTile == anchor)
+    session.confirmDemolish()
     #expect(session.world.pendingCommands == [.demolish(at: anchor)])
     #expect(session.selectedTile == nil)
 }

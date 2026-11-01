@@ -140,14 +140,19 @@ A burning building within 8 tiles (footprint gap) of an operational, road-connec
 - **WHEN** a house 9 tiles from the only fire watch catches fire
 - **THEN** no watchman is sent
 
-### Requirement: Blight halves crop yields in a marked area
+### Requirement: Blight ruins the crops in a marked area
 
-A drawn blight SHALL NOT come before the 4th year of a game (the blight's pack item sets `firstYear`), and SHALL be warned only when the player owns at least 6 operational crop fields, as a drawn fire needs 6 buildings that can burn; otherwise that year SHALL have no seasonal event. A scheduled blight SHALL need one crop field. At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL take twice its recipe's cycle ticks, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
+A drawn blight SHALL NOT come before the 4th year of a game (the blight's pack item sets `firstYear`), and SHALL be warned only when the player owns at least 6 operational crop fields, as a drawn fire needs 6 buildings that can burn; otherwise that year SHALL have no seasonal event. A scheduled blight SHALL need one crop field. At a blight's warning, the world SHALL pick one operational player crop field with a derived generator, and mark every tile within 6 of its footprint. During the onset season, every player crop field in the marked area SHALL make no progress on its cycle and so yield nothing, without being marked stalled, including fields built in the area during the blight. A crop field is a building with `crop: true`: the farm, the grain farm and each culture's crop.
 
-#### Scenario: Blighted farm takes twice as long
+#### Scenario: Blighted farm yields nothing
 
 - **WHEN** a farm in the marked area starts a cycle at the start of a blight season
-- **THEN** it completes the cycle after 80 ticks and is never marked stalled
+- **THEN** it completes no cycle in 400 ticks, its food stays as it was, and it is never marked stalled
+
+#### Scenario: a field built in the area during the blight is blighted too
+
+- **WHEN** a grain farm is built in the marked area while the blight is under way
+- **THEN** it completes no cycle in 400 ticks
 
 #### Scenario: Farm outside the area
 
@@ -173,6 +178,44 @@ A drawn blight SHALL NOT come before the 4th year of a game (the blight's pack i
 
 - **WHEN** a chapter schedules a blight and the player owns one crop field at its warning
 - **THEN** the blight is warned
+
+### Requirement: The market answers a blight
+
+From a blight's warning to its end, the town market SHALL sell 50 food a season on top of food's seasonal buy limit, in the warning season and again in the onset season; the market panel's "left" SHALL include it. No other good's limit, and no sale to the market, SHALL change.
+
+#### Scenario: the market sells more food from a blight's warning to its end
+
+- **WHEN** a blight is warned for summer and the player buys 25 food in spring
+- **THEN** the market has food's limit plus 50 left before the buy and 25 fewer after it, has food's limit plus 50 again in summer, and food's plain limit in autumn, while wood keeps its plain limit
+
+### Requirement: A blight's toll is the residents who leave hungry
+
+While a blight is under way, each resident who leaves a player house because its food has been short past the decline grace SHALL count toward the blight's toll, whether the house is in the marked area or not. A house shrinking above its capacity, a rival's house, and hunger outside a blight SHALL NOT count. The toll SHALL be the count of `seasonalEventEnded` and SHALL add to a running total of residents who left hungry in a blight, kept in the save; a save without the total SHALL load with 0.
+
+#### Scenario: residents who leave hungry during a blight are its toll
+
+- **WHEN** a full house of 4 with no food stands through a blight season
+- **THEN** the blight ends with a toll of the residents the house lost, and the running total counts the same
+
+#### Scenario: hunger outside a blight is no blight's toll
+
+- **WHEN** a house with no food loses residents with no blight under way
+- **THEN** the running total stays 0
+
+#### Scenario: a house above its capacity shrinking in a blight is no toll
+
+- **WHEN** a fed peasant house of 12 shrinks toward its capacity during a blight
+- **THEN** the running total stays 0
+
+#### Scenario: a rival's hungry residents are no toll of the player's blight
+
+- **WHEN** a rival's house with no food loses residents during a blight
+- **THEN** the running total stays 0
+
+#### Scenario: a save from before the blight's toll loads with none
+
+- **WHEN** a save written mid-blight before the toll existed is loaded
+- **THEN** it loads with no residents counted toward the toll and its other counters kept
 
 ### Requirement: Fever holds a district back
 
@@ -224,9 +267,10 @@ The seasonal event banners SHALL use this text, with `{season}` the onset season
 | fire | end, losses | The fires are out | {buildings} burnt down. Select the ruins and choose Clear ruins. |
 | fire | end, none lost | The fires are out | Nothing was lost. |
 | fire | end, no fire broke out | The dry spell is over | No fire broke out. |
-| blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield half. Fill a granary, or buy food at the market. |
-| blight | onset | Blight in the fields | Fields in the marked area yield half until {date}. |
-| blight | end | The blight has passed | The fields yield in full again. |
+| blight | warning | Damp weather: blight is coming | Next season, fields in the marked area yield nothing. Fill a granary, or buy food at the market: it sells more until the blight has passed. |
+| blight | onset | Blight in the fields | Fields in the marked area yield nothing until {date}. The market sells more food. |
+| blight | end, residents left hungry | The blight has passed | The fields yield in full again. {residents} left the town hungry. |
+| blight | end, no one left hungry | The blight has passed | The fields yield in full again. No one left hungry. |
 | fever | warning | Fever in the harbour towns | Next season it may reach the marked district. A physician with herbs keeps houses within 8 tiles safe. |
 | fever | onset | Fever in the town | Houses in the marked district can't advance, and some residents leave, until {date}. |
 | fever | end | The fever has passed | {residents} left the town. |
@@ -250,6 +294,11 @@ The text SHALL live in the event items of the pack, so a change of wording edits
 
 - **WHEN** a fever ends after 7 residents left
 - **THEN** the banner title is "The fever has passed" and its text is "7 residents left the town."
+
+#### Scenario: Blight end text
+
+- **WHEN** a blight ends after 5 residents left hungry, or after none did
+- **THEN** the banner title is "The blight has passed" and its text is "The fields yield in full again. 5 residents left the town hungry.", or "The fields yield in full again. No one left hungry."
 
 ### Requirement: Chapters schedule events
 

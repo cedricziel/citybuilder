@@ -30,7 +30,10 @@ public struct SeasonalEventsState: Codable, Hashable, Sendable {
     /// The fires of a fire event under way.
     public internal(set) var fire: FireEventState?
     /// A fever under way: the residents it has sent away.
-    public internal(set) var fever: FeverEventState?
+    public internal(set) var fever: ResidentsToll?
+    /// A blight under way: the residents who left hungry. Nil in saves
+    /// from before the toll, which then count none.
+    public internal(set) var blight: ResidentsToll?
     /// The area a blight or a fever threatens, from its warning to its end.
     public internal(set) var marked: MarkedArea?
     /// A festival requested and not yet held or called off.
@@ -103,7 +106,8 @@ public struct ActiveSeasonalEvent: Codable, Hashable, Sendable {
 
 /// What the town lost to an event, for its end banner.
 public struct SeasonalEventToll: Hashable, Sendable {
-    /// Buildings burnt down, or residents who left with fever.
+    /// Buildings burnt down, residents who left with fever, or residents
+    /// who left hungry in a blight.
     public let count: Int
     /// Fires that broke out; a fire event without any ends "no fire broke out".
     public let fires: Int
@@ -184,8 +188,19 @@ public struct SeasonalEventCounters: Codable, Hashable, Sendable {
     public internal(set) var buildingsLostToFire = 0
     public internal(set) var firesPutOut = 0
     public internal(set) var residentsLeftWithFever = 0
+    /// Residents who left a house short of food while a blight was under way.
+    public internal(set) var residentsLeftHungryInBlight = 0
 
     public init() {}
+
+    /// Saves from before a counter have none of it.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        buildingsLostToFire = try container.decodeIfPresent(Int.self, forKey: .buildingsLostToFire) ?? 0
+        firesPutOut = try container.decodeIfPresent(Int.self, forKey: .firesPutOut) ?? 0
+        residentsLeftWithFever = try container.decodeIfPresent(Int.self, forKey: .residentsLeftWithFever) ?? 0
+        residentsLeftHungryInBlight = try container.decodeIfPresent(Int.self, forKey: .residentsLeftHungryInBlight) ?? 0
+    }
 }
 
 /// The difficulty's seasonal-event knobs. Spec: `difficulty-and-goals` /
@@ -251,8 +266,9 @@ public struct MarkedArea: Codable, Hashable, Sendable {
     }
 }
 
-/// A fever under way. Spec: `seasonal-events` / Fever holds a district back.
-public struct FeverEventState: Codable, Hashable, Sendable {
+/// The residents a fever or a blight under way has sent away: with fever,
+/// or hungry.
+public struct ResidentsToll: Codable, Hashable, Sendable {
     public internal(set) var residentsLeft = 0
 }
 

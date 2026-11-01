@@ -21,6 +21,11 @@ extension CityRootView {
         .onChange(of: session.selectedTool) { _, tool in
             tvRemote?.toolChanged(to: tool, at: CACurrentMediaTime())
         }
+        .onChange(of: session.demolishRequest == nil) { _, closed in
+            if closed {
+                tvRemote?.demolishConfirmationClosed(at: CACurrentMediaTime())
+            }
+        }
     }
 }
 
