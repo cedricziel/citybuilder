@@ -207,11 +207,11 @@ extension World {
         return quantity >= template.minUnits ? quantity : nil
     }
 
-    /// The template's size of what the town made of its good over the last
-    /// closed seasons, scaled to its window; nil when it made none.
+    /// The template's size of the town's spare output of its good over the
+    /// last closed seasons, scaled to its window; nil when there was none.
     func recentOrderUnits(for template: OrderTemplate) -> Int? {
         let closed = statistics.seasons.suffix(OrderRules.outputWindowSeasons)
-        let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.made ?? 0) }
+        let recent = closed.reduce(0) { $0 + ($1.goods[template.good]?.spare ?? 0) }
         guard !closed.isEmpty, recent > 0 else { return nil }
         return recent * template.seasons * template.sizePercent / (closed.count * 100)
     }
