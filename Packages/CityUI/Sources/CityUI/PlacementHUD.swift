@@ -85,6 +85,40 @@ public enum PlacementHUDLayout {
         )
     }
 
+    /// Smallest gap between a HUD control and the safe area's edge.
+    public static let edgeMargin: CGFloat = 8
+
+    /// Centers of cancel, confirm and the reason capsule.
+    public struct ActionRow: Equatable {
+        public let cancel: CGPoint
+        public let confirm: CGPoint
+        public let reason: CGPoint
+    }
+
+    /// Where cancel, confirm and the reason capsule sit for a ghost
+    /// centered at `center`: under the lowest arrows, but moved inside the
+    /// safe area when a low or edge ghost would push them off screen, so
+    /// the player can always confirm without panning first.
+    /// `reasonSize` is the capsule's measured size, nil without one.
+    public static func actionRow(center: CGPoint, viewSize: CGSize, insets: EdgeInsets, reasonSize: CGSize?) -> ActionRow {
+        let halfButton = buttonSize / 2
+        let lowestExtent = reasonSize.map { reasonDrop + $0.height / 2 } ?? halfButton
+        let maxY = viewSize.height - insets.bottom - edgeMargin - lowestExtent
+        let minY = insets.top + edgeMargin + halfButton
+        let y = max(min(center.y + arrowRadius + actionGap, maxY), minY)
+        func inside(_ x: CGFloat, halfWidth: CGFloat) -> CGFloat {
+            let lowest = insets.leading + edgeMargin + halfWidth
+            let highest = viewSize.width - insets.trailing - edgeMargin - halfWidth
+            return max(min(x, highest), lowest)
+        }
+        let x = inside(center.x, halfWidth: actionGap + halfButton)
+        return ActionRow(
+            cancel: CGPoint(x: x - actionGap, y: y),
+            confirm: CGPoint(x: x + actionGap, y: y),
+            reason: CGPoint(x: inside(x, halfWidth: (reasonSize?.width ?? 0) / 2), y: y + reasonDrop)
+        )
+    }
+
     /// Offset of an arrow button from the tile center: along the rendered
     /// diamond's diagonal for that direction, at a fixed distance so the
     /// buttons stay large enough at any zoom.

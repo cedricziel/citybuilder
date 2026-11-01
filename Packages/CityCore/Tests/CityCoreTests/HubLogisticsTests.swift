@@ -185,3 +185,30 @@ func hubRestocksFromAnotherHubBeforeAGranary() {
     let sources = restocks(to: center, in: world).map(\.source)
     #expect(sources == [market])
 }
+
+@Test("a producer never stores goods in another owner's warehouse on a shared road")
+func aProducerNeverStoresGoodsInAnotherOwnersWarehouse() throws {
+    var world = strip()
+    let rivalStore = addOperational(.warehouse, at: TileCoordinate(x: 14, y: 0), in: &world)
+    world.buildings[rivalStore]?.owner = .rival(1)
+    let ownStore = addOperational(.warehouse, at: TileCoordinate(x: 30, y: 0), in: &world)
+    let hut = addOperational(.lumberjackHut, at: TileCoordinate(x: 18, y: 4), in: &world)
+    // A cart load, so the longer haul to its own store leaves at once.
+    world.stockpiles[hut]?.deposit(.wood, amount: CarrierConfig.haulMinLoad)
+    _ = world.tick()
+    let carrier = try #require(world.carriers.values.first)
+    #expect(carrier.mission.destination == ownStore)
+}
+
+@Test("a producer never gathers house goods at another owner's hub on a shared road")
+func aProducerNeverGathersHouseGoodsAtAnotherOwnersHub() throws {
+    var world = strip()
+    let rivalCenter = addOperational(.townCenter, at: TileCoordinate(x: 14, y: 0), in: &world)
+    world.buildings[rivalCenter]?.owner = .rival(1)
+    let ownCenter = addOperational(.townCenter, at: TileCoordinate(x: 30, y: 0), in: &world)
+    let bakery = addOperational(.bakery, at: TileCoordinate(x: 18, y: 4), in: &world)
+    world.stockpiles[bakery]?.deposit(.bread, amount: 1)
+    _ = world.tick()
+    let carrier = try #require(world.carriers.values.first)
+    #expect(carrier.mission.destination == ownCenter)
+}
