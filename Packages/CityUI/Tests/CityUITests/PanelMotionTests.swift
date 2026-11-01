@@ -22,3 +22,12 @@ func panelsFadeUnderReduceMotion() {
     #expect(PanelMotion.style(.slide(.bottom), reduceMotion: true) == .fade)
     #expect(PanelMotion.duration(reduceMotion: true) == 0.15)
 }
+
+@Test("scenario: a banner that replaces another swaps its text at once")
+func bannerSwapDoesNotAnimate() {
+    let order = SessionBanner(title: "The Crown orders", description: "Twenty planks by autumn.")
+    let festival = SessionBanner(title: "Festival", description: "The town asks for a festival.")
+    // The banner's container animates on this key: the same for both banners, so the swap draws no cross-fade.
+    #expect(PanelMotion.presence(of: order) == PanelMotion.presence(of: festival))
+    #expect(PanelMotion.presence(of: order) != PanelMotion.presence(of: nil as SessionBanner?))
+}

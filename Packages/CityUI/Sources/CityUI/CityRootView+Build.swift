@@ -50,7 +50,7 @@ extension CityRootView {
                     .frame(maxWidth: .infinity)
                     // The event chip is the column's one control: Left and Right reach it.
                     .tvFocusSection()
-                    .panelAnimation(value: session.banner)
+                    .panelAnimation(presenceOf: session.banner)
                     rightColumn(layout: layout, worldViewSize: worldViewSize, boardFrame: boardFrame)
                 }
                 .padding(.leading, railInset)
@@ -94,7 +94,7 @@ extension CityRootView {
             sessionBanner
                 .padding(.bottom, SessionBannerLayout.bottomInset(controlsHeight: bottomControlsHeight))
         }
-        .panelAnimation(value: session.banner)
+        .panelAnimation(presenceOf: session.banner)
     }
 
     private var sessionBanner: some View {
@@ -225,7 +225,7 @@ extension CityRootView {
     }
 
     /// The inspector callout for the selected building, while inspecting.
-    /// It rises in, and glides when another tile is inspected.
+    /// It rises in, and glides when another tile is inspected; its text swaps at once.
     var inspectorCallout: some View {
         ZStack { inspectorCalloutContent }
             .panelAnimation(value: session.selectedTool == .inspect ? session.selectedTile : nil)
