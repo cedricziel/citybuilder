@@ -56,10 +56,7 @@ struct OrdersKit {
     static func spare(of good: Good, in world: World) -> Int {
         let closed = world.statistics.seasons.suffix(OrderRules.outputWindowSeasons)
         guard !closed.isEmpty else { return 0 }
-        let spare = closed.reduce(0) { total, season in
-            guard let flow = season.goods[good] else { return total }
-            return total + flow.made + flow.bought - flow.usedByProduction - flow.usedByConstruction - flow.sold
-        }
+        let spare = closed.reduce(0) { $0 + ($1.goods[good]?.spare ?? 0) }
         return max(0, spare / closed.count)
     }
 

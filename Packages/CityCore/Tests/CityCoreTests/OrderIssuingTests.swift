@@ -4,7 +4,8 @@ import Testing
 
 // Scenarios from openspec/changes/add-orders (orders / The crown issues
 // orders on a schedule, Rivals issue orders, Order size follows the town's
-// output, The board holds offers that lapse).
+// output, The board holds offers that lapse) and
+// openspec/changes/size-orders-on-spare-output.
 
 // MARK: - Templates
 
@@ -243,6 +244,39 @@ func scenarioDifficultyScalesTheSizeAndTheTime() {
 func scenarioTooLittleOutputIsNotAskedFor() {
     var fixture = OrdersFixture()
     fixture.cross(season: 4, output: [.planks: 3])
+    #expect(fixture.orders.isEmpty)
+}
+
+/// 60 made and 5 bought, less 30 used by a workshop, 10 by building and 5
+/// sold: 20 a season reach the stores and stay. The houses' 15 still count,
+/// as the player may divert them (#379).
+@Test("scenario: size follows spare output")
+func scenarioSizeFollowsSpareOutput() {
+    var fixture = OrdersFixture()
+    let planks = GoodFlow.made(60, bought: 5, usedByHouses: 15, usedByProduction: 30, usedByConstruction: 10, sold: 5)
+    fixture.cross(season: 4, flows: [.planks: planks])
+    // 80 spare over 4 seasons × 2 seasons × 90% / 4.
+    #expect(fixture.orders.first?.quantity == 36)
+}
+
+/// A sawmill that takes every log as it is cut leaves no wood to ask for
+/// (#379).
+@Test("scenario: output the town uses up is not asked for")
+func scenarioOutputTheTownUsesUpIsNotAskedFor() {
+    var fixture = OrdersFixture()
+    fixture.cross(season: 4, flows: [.wood: .made(60, usedByProduction: 60)])
+    #expect(fixture.orders.isEmpty)
+}
+
+@Test("scenario: a season that drew on its stock counts against the window")
+func scenarioASeasonThatDrewOnItsStockCountsAgainstTheWindow() {
+    var fixture = OrdersFixture()
+    let boundary = 4 * CalendarState.ticksPerSeason
+    fixture.run(to: boundary - 1)
+    fixture.seedFlows([.planks: .made(30)])
+    fixture.world.statistics.seasons[0].goods[.planks] = .made(0, usedByConstruction: 100)
+    fixture.run(to: boundary)
+    // 90 - 100 over the window: nothing spare.
     #expect(fixture.orders.isEmpty)
 }
 
