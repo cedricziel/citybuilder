@@ -26,7 +26,7 @@ XcodeGen:
 | SwiftLint     | 0.65.1         |
 | pre-commit    | 4.6.2          |
 | libimagequant | 4.4.1          |
-| jpeg-turbo    | 3.2.0          |
+| jpeg-turbo    | 3.2.1          |
 | XcodeGen      | 2.46.0         |
 
 `scripts/ci/install-pinned-tools.sh` holds the pins; when you change
