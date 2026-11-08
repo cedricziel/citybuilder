@@ -161,7 +161,7 @@ struct StatisticsGoodsTab: View {
             }
             .listRowBackground(Parchment.raised)
         }
-        .scrollContentBackground(.hidden)
+        .parchmentListBackground()
         .tvFocusSection()
         .tvDefaultFocus($focusedGood, current)
     }
@@ -220,6 +220,17 @@ extension CityRootView {
 }
 
 extension View {
+    /// Lets the parchment show behind the list. tvOS lists draw no
+    /// background of their own and have no `scrollContentBackground`.
+    @ViewBuilder
+    func parchmentListBackground() -> some View {
+        #if os(tvOS)
+        self
+        #else
+        scrollContentBackground(.hidden)
+        #endif
+    }
+
     func statisticsSheet(session: GameSession) -> some View {
         let isPresented = Binding(get: { session.isStatisticsPresented }, set: { session.isStatisticsPresented = $0 })
         return sheet(isPresented: isPresented) {
