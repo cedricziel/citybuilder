@@ -76,7 +76,7 @@ export function Inspector({
         </div>
       ) : null}
       {residentsFill !== undefined ? (
-        <div className="cb-inspector__meter" aria-label={`Residents ${Math.round(residentsFill * 100)}%`}>
+        <div className="cb-inspector__meter" role="img" aria-label={`Residents ${Math.round(residentsFill * 100)}%`}>
           <i style={{ width: `${Math.round(residentsFill * 100)}%` }} />
         </div>
       ) : null}
@@ -86,6 +86,7 @@ export function Inspector({
             <span
               key={need.good}
               className={`cb-inspector__chip${need.met ? "" : " cb-inspector__chip--short"}`}
+              role="img"
               aria-label={`${goodName(need.good)}, ${need.met ? "met" : "short"}`}
             >
               <GoodIcon good={need.good} size={18} />
