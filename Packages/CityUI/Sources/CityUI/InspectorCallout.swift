@@ -247,7 +247,7 @@ struct InspectorCalloutView<Actions: View>: View {
                 .swapsContentAtOnce(on: tile)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("inspector.callout")
-                .overlay(alignment: .topLeading) { pointer(side: placed.side, anchor: anchor, origin: placed.origin) }
+                .background(alignment: .topLeading) { pointer(side: placed.side, anchor: anchor, origin: placed.origin) }
                 .onGeometryChange(for: CGSize.self, of: \.size) { size = $0 }
                 .offset(x: placed.origin.x, y: placed.origin.y)
         }
@@ -300,7 +300,7 @@ struct InspectorCalloutView<Actions: View>: View {
         let rest = viewModel.bullets.filter { !keyLines.contains($0) && !$0.hasPrefix(InspectorViewModel.marker("inspector.kind")) }
         let room = max(0, maxHeight - (size.height - scrollHeight))
         return VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
-            header(keyLines)
+            header(viewModel.calloutKeyLines)
             if isExpanded {
                 // The scroll view takes what the header and footer leave,
                 // and no more than the details need.
@@ -320,34 +320,34 @@ struct InspectorCalloutView<Actions: View>: View {
         .padding(.horizontal, InspectorCalloutLayout.padding.width)
         .padding(.vertical, InspectorCalloutLayout.padding.height)
         .frame(width: InspectorCalloutLayout.width(for: layout.idiom), alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+        .parchmentPanel()
     }
 
-    /// Title, tier, residents meter and key lines.
+    /// Picture, title, tier, residents meter, need chips, recipe and key lines.
     private func header(_ keyLines: [String]) -> some View {
         VStack(alignment: .leading, spacing: InspectorCalloutLayout.spacing) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(viewModel.title ?? GameText.string("inspector.untitled")).font(.headline)
-                Spacer(minLength: 0)
-                if let tier = viewModel.tier {
-                    Text(tier).font(.caption).foregroundStyle(.secondary)
-                }
-            }
+            CalloutTitle(kind: selectedKind, title: viewModel.title ?? GameText.string("inspector.untitled"), tier: viewModel.tier)
             if let fill = viewModel.residentsFill {
                 residentsMeter(fill)
             }
+            if !viewModel.needChips.isEmpty {
+                NeedChipsView(chips: viewModel.needChips)
+            }
+            if let recipe = viewModel.recipe {
+                RecipeRow(recipe: recipe)
+            }
             ForEach(keyLines, id: \.self) { line in
                 if let problem = viewModel.problem, line.hasPrefix(InspectorViewModel.marker("inspector.problem")) {
-                    Label(problem, systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.orange)
-                        .fixedSize(horizontal: false, vertical: true)
+                    ProblemAlert(text: problem)
                 } else {
                     InspectorKeyLine(line: line)
                 }
             }
         }
+    }
+
+    private var selectedKind: BuildingKind? {
+        session.world.occupiedTiles[tile].flatMap { session.world.buildings[$0]?.kind }
     }
 
     /// The other lines and the building's controls, the market among them.
@@ -396,7 +396,7 @@ struct InspectorCalloutView<Actions: View>: View {
     private var demolishButton: some View {
         if viewModel.rival == nil {
             Button(viewModel.demolish?.title ?? GameText.string("tool.demolish"), role: .destructive, action: session.demolishSelection)
-                .foregroundStyle(.red)
+                .foregroundStyle(Parchment.alert)
                 .lineLimit(1)
                 .disabled(session.isGameOver || viewModel.demolish?.isEnabled == false)
         }
@@ -404,11 +404,11 @@ struct InspectorCalloutView<Actions: View>: View {
 
     private func residentsMeter(_ fill: Double) -> some View {
         Capsule()
-            .fill(HUDMetrics.fill)
-            .frame(height: 4)
+            .fill(Parchment.ink.opacity(0.18))
+            .frame(height: 6)
             .overlay(alignment: .leading) {
                 GeometryReader { proxy in
-                    Capsule().fill(Color.green).frame(width: proxy.size.width * fill)
+                    Capsule().fill(Parchment.meter).frame(width: proxy.size.width * fill)
                 }
             }
             .accessibilityLabel(GameText.string("a11y.residentsPercent", Int((fill * 100).rounded())))
@@ -425,7 +425,8 @@ struct InspectorCalloutView<Actions: View>: View {
         case .above: CGSize(width: alongX, height: size.height - 6)
         }
         return Rectangle()
-            .fill(.regularMaterial)
+            .fill(Parchment.paper)
+            .overlay(Rectangle().strokeBorder(Parchment.edge, lineWidth: Parchment.edgeWidth))
             .frame(width: 12, height: 12)
             .rotationEffect(.degrees(45))
             .offset(offset)

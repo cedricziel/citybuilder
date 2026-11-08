@@ -26,6 +26,10 @@ public struct InspectorViewModel: Sendable {
     public let problem: String?
     /// Demolish when it costs money (ruins, a burning building), nil when free.
     public let demolish: DemolishButton?
+    /// A house's needs, one chip each; empty for other buildings.
+    public let needChips: [NeedChip]
+    /// What a producer takes in and makes per cycle, nil for other buildings.
+    public let recipe: RecipeSummary?
 
     public init(
         bullets: [String],
@@ -38,7 +42,9 @@ public struct InspectorViewModel: Sendable {
         market: RivalMarketSection? = nil,
         routeStartPort: EntityID? = nil,
         problem: String? = nil,
-        demolish: DemolishButton? = nil
+        demolish: DemolishButton? = nil,
+        needChips: [NeedChip] = [],
+        recipe: RecipeSummary? = nil
     ) {
         self.bullets = bullets
         self.title = title
@@ -51,6 +57,8 @@ public struct InspectorViewModel: Sendable {
         self.routeStartPort = routeStartPort
         self.problem = problem
         self.demolish = demolish
+        self.needChips = needChips
+        self.recipe = recipe
     }
 
     /// Build an inspector model from a snapshot + a target tile. Returns
@@ -77,10 +85,12 @@ public struct InspectorViewModel: Sendable {
         var houseLines: [String] = []
         var tier: String?
         var residentsFill: Double?
+        var needChips: [NeedChip] = []
         if let pop = snapshot.housePopulations[entityID] {
             let capacity = (snapshot.houseModifiers[entityID] ?? .none).capacity(of: pop.tier)
             tier = pop.tier.displayName(in: culture)
             residentsFill = capacity > 0 ? min(1, Double(pop.population) / Double(capacity)) : 0
+            needChips = NeedChip.chips(for: pop, in: culture)
             let needs = pop.tier.needs(in: culture).map { "\($0.rawValue) \(pop.isSatisfied($0) ? "✓" : "✗")" }
             let modifiers = snapshot.houseModifiers[entityID]
             houseLines = [
@@ -114,7 +124,9 @@ public struct InspectorViewModel: Sendable {
             market: building.kind == .port ? rival.map(RivalMarketSection.init) : nil,
             routeStartPort: building.kind == .port ? entityID : nil,
             problem: problem,
-            demolish: rival == nil ? demolishButton(for: building, balance: snapshot.economy.balance) : nil
+            demolish: rival == nil ? demolishButton(for: building, balance: snapshot.economy.balance) : nil,
+            needChips: needChips,
+            recipe: RecipeSummary(kind: building.kind)
         )
     }
 
