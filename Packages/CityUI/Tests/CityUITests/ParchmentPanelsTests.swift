@@ -61,3 +61,10 @@ func scenarioRecipeForABakery() throws {
 func scenarioNoRecipeForAHouse() throws {
     #expect(try inspector(for: .house).recipe == nil)
 }
+
+@Test("scenario: output badge on drawer tiles")
+func scenarioOutputBadgeOnDrawerTiles() {
+    #expect(BuildDrawerView.badge(for: .lumberjackHut) == .wood)
+    #expect(BuildDrawerView.badge(for: .forester) == nil)
+    #expect(BuildDrawerView.badge(for: .house) == nil)
+}
