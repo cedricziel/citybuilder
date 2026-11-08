@@ -1,0 +1,12 @@
+.cb-parchment {
+  background: var(--cb-parchment);
+  border: 2px solid var(--cb-parchment-edge);
+  box-shadow: 0 4px 9px rgba(0, 0, 0, 0.3);
+  color: var(--cb-parchment-ink);
+  box-sizing: border-box;
+}
+
+.cb-parchment-title {
+  font-family: var(--cb-font-serif);
+  font-weight: 700;
+}

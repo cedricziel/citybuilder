@@ -389,7 +389,7 @@ export function StatisticsPanel(props: StatisticsPanelProps) {
   useEffect(() => setCurrent(tab), [tab]);
   const tabs: StatisticsTab[] = standings && standings.length > 1 ? ["Goods", "Money", "People", "Rivals"] : ["Goods", "Money", "People"];
   return (
-    <Sheet title="Statistics" width={width} height={height} onDone={onDone}>
+    <Sheet title="Statistics" width={width} height={height} onDone={onDone} className="cb-sheet--parchment">
       <div className="cb-stat">
         <SegmentedPicker
           options={tabs}

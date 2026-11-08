@@ -55,3 +55,20 @@
   overflow-y: auto;
   padding: 8px 0 20px;
 }
+
+/* The Statistics sheet on parchment, the same in light and dark mode. */
+.cb-sheet.cb-sheet--grouped.cb-sheet--parchment {
+  --cb-label: var(--cb-parchment-ink);
+  --cb-secondary-label: rgba(61, 41, 20, 0.72);
+  --cb-separator: rgba(107, 74, 41, 0.35);
+  --cb-bg-elevated: #f7ecd0;
+  --cb-fill-secondary: rgba(107, 74, 41, 0.12);
+  --cb-red: #8a2a1a;
+  --cb-accent: #8a2a1a;
+  background: var(--cb-parchment);
+  color: var(--cb-parchment-ink);
+}
+
+.cb-sheet.cb-sheet--grouped.cb-sheet--parchment .cb-inset-list {
+  background: #f7ecd0;
+}
