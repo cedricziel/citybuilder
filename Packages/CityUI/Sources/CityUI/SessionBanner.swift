@@ -242,7 +242,8 @@ extension GameSession {
         let asked = firstStepsGuide?.openStepKinds ?? []
         guard let idle = world.idleGoods(of: .player).first(where: {
             !hintedIdleGoods.contains($0.good) && asked.isDisjoint(with: $0.users)
-        }) else { return }
+        })
+        else { return }
         hintedIdleGoods.insert(idle.good)
         show(Self.idleGoodHint(idle))
     }
