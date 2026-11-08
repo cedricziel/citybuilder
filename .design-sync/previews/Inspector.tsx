@@ -2,71 +2,91 @@ import { Inspector, WorldBackdrop } from "@citybuilder/ui";
 
 const OnMap = ({ children, h = 300 }: { children: React.ReactNode; h?: number }) => (
   <WorldBackdrop width={460} height={h} zoom={2}>
-    <div style={{ position: "absolute", left: 16, bottom: 16, right: 16 }}>{children}</div>
+    <div style={{ position: "absolute", left: 16, top: 16 }}>{children}</div>
   </WorldBackdrop>
 );
 
 export const House = () => (
-  <OnMap>
+  <OnMap h={260}>
     <Inspector
-      lines={[
-        "Kind: house",
-        "Anchor: (12, 9)",
-        "Footprint: 2×2",
-        "State: operational",
-        "Build: ready",
-        "Road: connected",
-        "Tier: Citizens",
-        "Residents: 6/8",
-        "Needs: food ✓ · planks ✓ · beer ✗",
-        "Ingrid · Citizens · wants beer",
-        "Henrik · Citizens · wants beer",
+      title="House"
+      art="house-tier2"
+      tier="Citizens"
+      residentsFill={0.75}
+      needs={[
+        { good: "food", met: true },
+        { good: "planks", met: false },
       ]}
+      lines={["Residents: 6/8", "Next: Merchants need bread, tools, cloth, beer"]}
     />
   </OnMap>
 );
 
 export const NextTier = () => (
-  <OnMap h={240}>
+  <OnMap h={220}>
     <Inspector
-      lines={[
-        "Kind: house",
-        "State: operational",
-        "Road: connected",
-        "Tier: Peasants",
-        "Residents: 4/6",
-        "Needs: food ✓",
-        "Next: Citizens need planks",
-      ]}
+      title="House"
+      art="house"
+      tier="Peasants"
+      residentsFill={0.5}
+      needs={[{ good: "food", met: true }]}
+      lines={["Residents: 2/4", "Next: Citizens need planks"]}
     />
   </OnMap>
 );
 
 export const OutputStuck = () => (
-  <OnMap h={200}>
-    <Inspector lines={["Kind: bakery", "State: operational", "Road: connected", "Problem: Output stuck: no room for bread"]} />
+  <OnMap h={240}>
+    <Inspector
+      title="Bakery"
+      art="bakery"
+      recipe={{ inputs: [{ good: "flour", amount: 1 }], outputs: [{ good: "bread", amount: 1 }] }}
+      lines={["State: operational", "Road: connected"]}
+      problem="Output stuck: no room for bread"
+    />
+  </OnMap>
+);
+
+export const Gatherer = () => (
+  <OnMap h={220}>
+    <Inspector
+      title="Lumberjack"
+      art="lumberjack-hut"
+      recipe={{ inputs: [], outputs: [{ good: "wood", amount: 1 }] }}
+      lines={["State: operational", "Road: connected", "Trees in reach: 9"]}
+    />
   </OnMap>
 );
 
 export const UnderConstruction = () => (
-  <OnMap h={200}>
-    <Inspector lines={["Kind: sawmill", "Anchor: (7, 4)", "Footprint: 2×2", "State: constructing", "Build: 14/40 ticks", "Road: none"]} />
+  <OnMap h={220}>
+    <Inspector
+      title="Sawmill"
+      art="sawmill"
+      recipe={{ inputs: [{ good: "wood", amount: 1 }], outputs: [{ good: "planks", amount: 1 }] }}
+      lines={["State: constructing", "Road: none"]}
+      problem="No road: connect it to a road"
+    />
   </OnMap>
 );
 
 export const Gallery = () => (
   <OnMap h={220}>
     <Inspector
-      lines={["Kind: gallery", "State: operational", "Road: connected", "Commission: none"]}
+      title="Gallery"
+      art="gallery"
+      lines={["State: operational", "Road: connected"]}
       commission={{ title: "Commission art — $400", enabled: true }}
     />
   </OnMap>
 );
 
 export const Caravanserai = () => (
-  <OnMap h={200}>
+  <OnMap h={220}>
     <Inspector
-      lines={["Kind: caravanserai", "State: operational", "Road: connected"]}
+      title="Caravanserai"
+      art="caravanserai"
+      lines={["State: operational", "Road: connected"]}
       exportPicker={{ options: ["None", "Tea", "Coffee", "Wine"], selected: "Tea" }}
     />
   </OnMap>

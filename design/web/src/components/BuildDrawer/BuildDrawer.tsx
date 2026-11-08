@@ -1,7 +1,8 @@
 import { buildingSprites } from "../../generated/buildings";
 import type { BuildingArt } from "../BuildingSprite/BuildingSprite";
-import { Glass } from "../Glass/Glass";
+import { GoodIcon, type Good } from "../GoodIcon/GoodIcon";
 import { Icon } from "../Icon/Icon";
+import { Parchment } from "../Parchment/Parchment";
 import "./BuildDrawer.css";
 
 export interface DrawerTile {
@@ -16,6 +17,8 @@ export interface DrawerTile {
    * half opacity, disabled, and the caption reads "Needs Mining" instead of the price.
    */
   needs?: string;
+  /** The good its recipe makes first, drawn as a badge in the top-trailing corner. Omit for no recipe (house, road, forester). */
+  makes?: Good;
 }
 
 export interface BuildDrawerProps {
@@ -45,9 +48,9 @@ export function drawerCaption(tile: DrawerTile): string {
  */
 export function BuildDrawer({ category, tiles, armed, columns = 3, tileWidth = 92, onSelect, onClose }: BuildDrawerProps) {
   return (
-    <Glass radius={12} padding={10} className="cb-drawer">
+    <Parchment radius={12} padding={10} className="cb-drawer">
       <div className="cb-drawer__header">
-        <span className="cb-headline">{category}</span>
+        <span className="cb-headline cb-parchment-title">{category}</span>
         <button type="button" className="cb-drawer__close" aria-label="Close" onClick={onClose}>
           <Icon name="xmark" size={12} />
         </button>
@@ -67,6 +70,11 @@ export function BuildDrawer({ category, tiles, armed, columns = 3, tileWidth = 9
               aria-label={locked ? `${tile.label}, locked` : tile.label}
               onClick={() => onSelect?.(tile.label)}
             >
+              {tile.makes ? (
+                <span className="cb-drawer__badge">
+                  <GoodIcon good={tile.makes} size={14} />
+                </span>
+              ) : null}
               <span className="cb-drawer__art">
                 <img src={buildingSprites[tile.art]} alt="" />
               </span>
@@ -79,17 +87,17 @@ export function BuildDrawer({ category, tiles, armed, columns = 3, tileWidth = 9
           );
         })}
       </div>
-    </Glass>
+    </Parchment>
   );
 }
 
 /** The Gather drawer of a young medieval town: Mining and Cultivation not yet researched. */
 export const gatherDrawerTiles: DrawerTile[] = [
-  { label: "Lumberjack", art: "lumberjack-hut", cost: 80 },
+  { label: "Lumberjack", art: "lumberjack-hut", cost: 80, makes: "wood" },
   { label: "Forester", art: "forester", cost: 60 },
-  { label: "Farm", art: "farm", cost: 60 },
-  { label: "Grain Farm", art: "grain-farm", cost: 60 },
-  { label: "Sheep Farm", art: "sheep-farm", cost: 60, needs: "Weaving" },
-  { label: "Mine", art: "mine", cost: 120, needs: "Mining" },
-  { label: "Hop Garden", art: "hop-garden", cost: 60, needs: "Cultivation" },
+  { label: "Farm", art: "farm", cost: 60, makes: "food" },
+  { label: "Grain Farm", art: "grain-farm", cost: 60, makes: "grain" },
+  { label: "Sheep Farm", art: "sheep-farm", cost: 60, needs: "Weaving", makes: "wool" },
+  { label: "Mine", art: "mine", cost: 120, needs: "Mining", makes: "ore" },
+  { label: "Hop Garden", art: "hop-garden", cost: 60, needs: "Cultivation", makes: "hops" },
 ];

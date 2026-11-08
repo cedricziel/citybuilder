@@ -4903,6 +4903,60 @@
         }
       }
     },
+    "inspector.need.met" : {
+      "comment" : "%@ is a good the house needs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, vorhanden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, met"
+          }
+        }
+      }
+    },
+    "inspector.need.short" : {
+      "comment" : "%@ is a good the house needs and lacks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, fehlt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, short"
+          }
+        }
+      }
+    },
+    "inspector.need.shortTag" : {
+      "comment" : "Tag on a need chip the house lacks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fehlt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "short"
+          }
+        }
+      }
+    },
     "inspector.needs" : {
       "comment" : "A house's needs; also the callout's marker.",
       "extractionState" : "manual",
@@ -5115,6 +5169,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ready"
+          }
+        }
+      }
+    },
+    "inspector.recipe.makes" : {
+      "comment" : "%@ lists what a producer makes per cycle, such as \"1 wood\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macht %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Makes %@"
+          }
+        }
+      }
+    },
+    "inspector.recipe.makesFrom" : {
+      "comment" : "%1$@ is what a producer makes per cycle, %2$@ what it takes in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macht %1$@ aus %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Makes %1$@ from %2$@"
           }
         }
       }

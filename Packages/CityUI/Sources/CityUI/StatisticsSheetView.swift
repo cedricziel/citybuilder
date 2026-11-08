@@ -31,11 +31,17 @@ struct StatisticsSheetView: View {
                 ScrollView { StatisticsGoodDetailView(model: model, good: good).padding() }
             }
             .background { tabHotkeys }
+            .background(Parchment.paper)
             .navigationTitle(GameText.string("stats.title"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button(GameText.string("common.done"), action: done).cancelActionHotkey() }
             }
         }
+        // Spec: `platform-shells` / Parchment panels.
+        .foregroundStyle(Parchment.ink)
+        .tint(Parchment.alert)
+        .environment(\.colorScheme, .light)
+        .presentationBackground(Parchment.paper)
         #if os(macOS)
         .frame(minWidth: 820, idealWidth: 880, minHeight: 640, idealHeight: 720)
         #endif
@@ -137,8 +143,9 @@ struct StatisticsGoodsTab: View {
                     GameText.string("stats.producersStopped", model.stoppedProducersNow),
                     systemImage: "exclamationmark.octagon.fill"
                 )
-                .foregroundStyle(.red)
+                .foregroundStyle(Parchment.alert)
                 .font(.footnote.weight(.semibold))
+                .listRowBackground(Color.clear)
             }
             ForEach(goods) { row in
                 if selectionPushes {
@@ -152,7 +159,9 @@ struct StatisticsGoodsTab: View {
                     .accessibilityAddTraits(row.good == current ? .isSelected : [])
                 }
             }
+            .listRowBackground(Parchment.raised)
         }
+        .parchmentListBackground()
         .tvFocusSection()
         .tvDefaultFocus($focusedGood, current)
     }
@@ -183,8 +192,8 @@ struct StatisticsGoodRowView: View {
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
-                    .background(.red, in: Capsule())
-                    .foregroundStyle(.white)
+                    .background(Parchment.alert, in: Capsule())
+                    .foregroundStyle(Parchment.onAlert)
             }
             Text(row.net > 0 ? "+\(row.net)" : "\(row.net)").monospacedDigit().foregroundStyle(.secondary)
         }
@@ -211,6 +220,17 @@ extension CityRootView {
 }
 
 extension View {
+    /// Lets the parchment show behind the list. tvOS lists draw no
+    /// background of their own and have no `scrollContentBackground`.
+    @ViewBuilder
+    func parchmentListBackground() -> some View {
+        #if os(tvOS)
+        self
+        #else
+        scrollContentBackground(.hidden)
+        #endif
+    }
+
     func statisticsSheet(session: GameSession) -> some View {
         let isPresented = Binding(get: { session.isStatisticsPresented }, set: { session.isStatisticsPresented = $0 })
         return sheet(isPresented: isPresented) {

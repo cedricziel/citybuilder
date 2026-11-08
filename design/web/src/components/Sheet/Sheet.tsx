@@ -15,6 +15,8 @@ export interface SheetProps {
   /** Height in px; content scrolls past it. Default auto. */
   height?: number;
   style?: CSSProperties;
+  /** Extra class on the sheet, such as `cb-sheet--parchment`. */
+  className?: string;
   children?: ReactNode;
 }
 
@@ -22,9 +24,9 @@ export interface SheetProps {
  * An iOS sheet with a `NavigationStack` bar: large title and a bold "Done".
  * The goals, research, pause and new-game views all present in one.
  */
-export function Sheet({ title, doneLabel = "Done", onDone, background = "grouped", width, height, style, children }: SheetProps) {
+export function Sheet({ title, doneLabel = "Done", onDone, background = "grouped", width, height, style, className, children }: SheetProps) {
   return (
-    <div className={`cb-sheet cb-sheet--${background}`} style={{ width, height, ...style }}>
+    <div className={["cb-sheet", `cb-sheet--${background}`, className ?? ""].filter(Boolean).join(" ")} style={{ width, height, ...style }}>
       <div className="cb-sheet__grabber" />
       {title || doneLabel ? (
         <div className="cb-sheet__bar">

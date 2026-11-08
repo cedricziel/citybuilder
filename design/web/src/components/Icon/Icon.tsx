@@ -27,6 +27,8 @@ export type IconName =
   | "camera.macro"
   | "leaf.fill"
   | "snowflake"
+  | "arrow.right"
+  | "exclamationmark.triangle.fill"
   | "arrow.up.right"
   | "arrow.down.right"
   | "arrow.down.left"
@@ -255,6 +257,19 @@ const glyphs: Record<IconName, ReactElement> = {
     <g {...stroke} strokeWidth={1.9}>
       <path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5" />
       <path d="m9.5 4.2 2.5 2 2.5-2M9.5 19.8l2.5-2 2.5 2" />
+    </g>
+  ),
+  "arrow.right": (
+    <g {...stroke} strokeWidth={2.6}>
+      <path d="M4 12h15" />
+      <path d="m13 6 6 6-6 6" />
+    </g>
+  ),
+  "exclamationmark.triangle.fill": (
+    <g>
+      <path d="M10.3 3.6a2 2 0 0 1 3.4 0l8 13.8A2 2 0 0 1 20 20.4H4a2 2 0 0 1-1.7-3l8-13.8Z" fill="currentColor" />
+      <path d="M12 9v4.5" stroke="var(--cb-icon-cutout, #8a2a1a)" strokeWidth={2.4} strokeLinecap="round" />
+      <circle cx="12" cy="17" r="1.3" fill="var(--cb-icon-cutout, #8a2a1a)" />
     </g>
   ),
   "arrow.up.right": arrow(0),

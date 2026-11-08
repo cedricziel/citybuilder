@@ -155,7 +155,7 @@ struct BuildDrawerView: View {
             let columnCount = layout.drawerColumns
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(category.label).font(.headline)
+                    Text(category.label).font(Parchment.title())
                     Spacer()
                     Button { rail.close() } label: {
                         Image(systemName: "xmark")
@@ -183,7 +183,7 @@ struct BuildDrawerView: View {
             }
             .padding(10)
             .fixedSize(horizontal: true, vertical: false)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: HUDMetrics.cornerRadius, style: .continuous))
+            .parchmentPanel(cornerRadius: HUDMetrics.cornerRadius)
             .hudChromeTypeSize()
             .panelTransition(PanelMotion.drawerStyle(for: layout.placement))
         }
@@ -214,18 +214,28 @@ struct BuildDrawerView: View {
                 // and shrinks until the longer word fits the tile.
                 Text(session.drawerCaption(for: kind))
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(locked ? Parchment.ink : Parchment.paper)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
+                    .padding(.horizontal, 5)
+                    .background(locked ? Color.clear : Parchment.ink, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
-            .background(HUDMetrics.fill.opacity(0.6), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(isArmed ? Parchment.raised : Parchment.sunk, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay {
-                if isArmed {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.accentColor, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(isArmed ? Parchment.alert : Parchment.edge.opacity(0.25), lineWidth: isArmed ? 2 : 1)
+            }
+            .overlay(alignment: .topTrailing) {
+                if let good = Self.badge(for: kind) {
+                    GoodIcon(good: good, size: 14)
+                        .padding(3)
+                        .background(Parchment.raised, in: Circle())
+                        .overlay(Circle().strokeBorder(Parchment.edge, lineWidth: 1))
+                        .padding(3)
                 }
             }
             .opacity(locked ? 0.5 : 1)
@@ -235,6 +245,12 @@ struct BuildDrawerView: View {
         .disabled(locked)
         .accessibilityLabel(accessibility.label)
         .accessibilityValue(accessibility.value)
+    }
+
+    /// The good a building makes, shown in its tile's corner; nil without
+    /// a recipe. Spec: `platform-shells` / Drawer tiles show what they make.
+    static func badge(for kind: BuildingKind) -> Good? {
+        RecipeSummary(kind: kind)?.outputs.first?.good
     }
 
     /// What VoiceOver reads for a drawer tile: its name, marked when
