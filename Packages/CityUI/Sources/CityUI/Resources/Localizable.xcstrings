@@ -11383,6 +11383,24 @@
         }
       }
     },
+    "tool.cost.hint" : {
+      "comment" : "Hint on a material chip in the tool strip: the first number is the stock, the second what the building needs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt zuerst den Vorrat der Insel, dann den Bedarf des Gebäudes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the island stock first, then what the building needs."
+          }
+        }
+      }
+    },
     "tool.cost.waits" : {
       "comment" : "The building waits for materials.",
       "extractionState" : "manual",

@@ -122,6 +122,7 @@ struct ToolStripView: View {
                                 help: Self.label(for: good, cost: cost)
                             )
                             .accessibilityLabel(Self.label(for: good, cost: cost))
+                            .accessibilityHint(GameText.string("tool.cost.hint"))
                         }
                     }
                 }
