@@ -19,11 +19,19 @@ public struct AtomicDiskWriter: FileWriter, Sendable {
             withIntermediateDirectories: true
         )
         let tmp = url.appendingPathExtension("tmp")
-        try data.write(to: tmp, options: [.atomic])
-        if FileManager.default.fileExists(atPath: url.path) {
-            _ = try? FileManager.default.removeItem(at: url)
+        do {
+            try data.write(to: tmp, options: [.atomic])
+            if FileManager.default.fileExists(atPath: url.path) {
+                _ = try FileManager.default.replaceItemAt(url, withItemAt: tmp)
+            } else {
+                try FileManager.default.moveItem(at: tmp, to: url)
+            }
+        } catch {
+            if (try? tmp.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) != true {
+                try? FileManager.default.removeItem(at: tmp)
+            }
+            throw error
         }
-        try FileManager.default.moveItem(at: tmp, to: url)
     }
 
     public func read(from url: URL) throws -> Data {

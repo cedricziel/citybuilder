@@ -66,10 +66,40 @@ public final class SaveStore: @unchecked Sendable {
         }
     }
 
+    /// The single backup of `gameID`'s save: the autosave before the latest one.
+    public func backupURL(for gameID: UUID) -> URL {
+        url(for: gameID).appendingPathExtension("bak")
+    }
+
+    /// Writes an autosave. The save it replaces becomes the backup, but only
+    /// when it still decodes, so a damaged file never replaces a good backup.
+    /// A failed backup does not stop the save. A failed save leaves both
+    /// files as they were.
+    public func autosave(_ world: World, gameID: UUID, at date: Date = Date()) throws {
+        let main = url(for: gameID)
+        if writer.exists(at: main), let previous = try? writer.read(from: main), (try? decode(previous)) != nil {
+            try? writer.write(previous, to: backupURL(for: gameID))
+        }
+        try save(world, gameID: gameID, at: date)
+    }
+
+    /// Loads `gameID`'s save. When the save cannot be read or decoded and a
+    /// backup exists, the backup is loaded instead; the save's own error is
+    /// thrown when the backup fails too.
     public func load(gameID: UUID) throws -> World {
+        do {
+            return try loadFile(at: url(for: gameID))
+        } catch {
+            let backup = backupURL(for: gameID)
+            guard writer.exists(at: backup), let world = try? loadFile(at: backup) else { throw error }
+            return world
+        }
+    }
+
+    private func loadFile(at url: URL) throws -> World {
         let data: Data
         do {
-            data = try writer.read(from: url(for: gameID))
+            data = try writer.read(from: url)
         } catch {
             throw SaveError.ioFailed(reason: "\(error)")
         }
@@ -145,6 +175,8 @@ public final class SaveStore: @unchecked Sendable {
 
     public func delete(gameID: UUID) throws {
         let target = url(for: gameID)
+        let backup = backupURL(for: gameID)
+        if writer.exists(at: backup) { try? writer.remove(at: backup) }
         guard writer.exists(at: target) else { return }
         try writer.remove(at: target)
     }
