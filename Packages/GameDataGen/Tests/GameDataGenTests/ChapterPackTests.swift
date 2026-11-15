@@ -234,6 +234,7 @@ func theEmitterWritesTheCampaignCatalog() throws {
     for line in expected {
         #expect(source.contains(line), "\(line)")
     }
+    #expect(!source.contains(",\n    ]"), "SwiftLint rejects trailing commas")
     let entries = CatalogEmitter.entries(data)
     #expect(entries["campaign.sea.title"]?.english == "The Merchant Sea")
     #expect(entries["chapter.theCrossing.title"]?.english == "The Crossing")

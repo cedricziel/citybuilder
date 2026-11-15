@@ -14,7 +14,7 @@ struct ChapterEmitter {
     }
 
     private func list(_ items: [String]) -> String {
-        items.isEmpty ? "[]" : "[\n" + items.map { "        " + $0 + ",\n" }.joined() + "    ]"
+        items.isEmpty ? "[]" : "[\n" + items.map { "        " + $0 }.joined(separator: ",\n") + "\n    ]"
     }
 
     private func campaign(_ campaign: CampaignData) -> String {
