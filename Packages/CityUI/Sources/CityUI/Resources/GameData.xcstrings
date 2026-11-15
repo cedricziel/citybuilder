@@ -973,6 +973,384 @@
         }
       }
     },
+    "campaign.theLongChronicle.title" : {
+      "comment" : "A campaign's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die lange Chronik"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Long Chronicle"
+          }
+        }
+      }
+    },
+    "chapter.acrossTheWater.ending" : {
+      "comment" : "A chapter's ending card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Segel kennt man nun auch in einem fremden Hafen. Was der Insel fehlt, bringt jetzt das Meer."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sails are known in a harbour that is not your own. What the island lacks, the sea can now bring."
+          }
+        }
+      }
+    },
+    "chapter.acrossTheWater.intro" : {
+      "comment" : "A chapter's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es gibt andere Küsten, und an einer davon lebt schon jemand. Baue einen Hafen und eine Werft und finde heraus, was deine Nachbarn für deinen Überschuss zahlen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are other shores, and someone already lives on one of them. Build a port and a hull, and find out what your neighbours will pay for what you have too much of."
+          }
+        }
+      }
+    },
+    "chapter.acrossTheWater.reward" : {
+      "comment" : "The name of a chapter's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übers Wasser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Across the Water"
+          }
+        }
+      }
+    },
+    "chapter.acrossTheWater.title" : {
+      "comment" : "A chapter's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übers Wasser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Across the Water"
+          }
+        }
+      }
+    },
+    "chapter.breadAndStone.ending" : {
+      "comment" : "A chapter's ending card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Denkmal steht auf dem Hügel, gebaut aus Brot und Schweiß. Auf jedem Tisch liegt ein Laib, und die Gelehrten sagen, ein neues Zeitalter bricht an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The monument stands on the hill, raised on bread and sweat. Every table has a loaf, and the scholars say a new age is turning."
+          }
+        }
+      }
+    },
+    "chapter.breadAndStone.intro" : {
+      "comment" : "A chapter's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Dorf wird satt, aber nur von Brei. Die Alten sprechen von Laiben und von einem Stein, der alle hier überdauert. Mahle das Korn, backe das Brot und errichte ein Denkmal, das man vom Meer aus sieht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The village eats, but it eats porridge. The elders speak of loaves, and of a stone that will outlast everyone here. Mill the grain, bake the bread and raise a monument the sea can see."
+          }
+        }
+      }
+    },
+    "chapter.breadAndStone.reward" : {
+      "comment" : "The name of a chapter's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gründerstein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Founder's stone"
+          }
+        }
+      }
+    },
+    "chapter.breadAndStone.title" : {
+      "comment" : "A chapter's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brot und Stein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread and Stone"
+          }
+        }
+      }
+    },
+    "chapter.firstFires.ending" : {
+      "comment" : "A chapter's ending card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Herde haben sich vermehrt. Steuermünzen klingen in der Stadtkasse, und die Händler der Küste kennen den Weg zu deinem Markt. Ein Dorf hat Wurzeln geschlagen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hearths have multiplied. Tax coins ring in the strongbox, and traders on the coast now know the way to your market. A village has taken root."
+          }
+        }
+      }
+    },
+    "chapter.firstFires.intro" : {
+      "comment" : "A chapter's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An einer leeren Küste steigt Rauch aus einem einzigen Herd. Zwölf Familien sind dir mit Saatgut und Äxten gefolgt, mehr haben sie nicht. Gib ihnen Dächer und volle Schüsseln vor dem dritten Winter, dann nennen sie diesen Ort ihr Zuhause."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoke rises from one hearth on an empty shore. Twelve families followed you here with seed grain, axes and little else. Give them roofs and full bowls before the third winter, and they will call this place home."
+          }
+        }
+      }
+    },
+    "chapter.firstFires.reward" : {
+      "comment" : "The name of a chapter's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herdfeuer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hearth"
+          }
+        }
+      }
+    },
+    "chapter.firstFires.title" : {
+      "comment" : "A chapter's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erste Feuer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Fires"
+          }
+        }
+      }
+    },
+    "chapter.oreAndAnvil.ending" : {
+      "comment" : "A chapter's ending card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Schmiede klingen die Hämmer, und jedes Haus hat sein Werkzeug. Die Stadt hat gelernt, Eisen zu bearbeiten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hammers ring in the smithy, and every house has its tools. The town has learned to work iron."
+          }
+        }
+      }
+    },
+    "chapter.oreAndAnvil.intro" : {
+      "comment" : "A chapter's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Häuser wollen Werkzeug, und in den Hügeln liegt Erz. Lerne Bergbau und Schmelzen, setze einen Schmied an die Arbeit und fülle die Lager mit Werkzeug. Eine Stadt, die ihr Werkzeug selbst macht, kann alles bauen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The houses want tools, and the hills hide ore. Learn to mine and smelt, set a smith to work, and fill the stores with tools. A town that makes its own tools can build anything."
+          }
+        }
+      }
+    },
+    "chapter.oreAndAnvil.reward" : {
+      "comment" : "The name of a chapter's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amboss"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anvil"
+          }
+        }
+      }
+    },
+    "chapter.oreAndAnvil.title" : {
+      "comment" : "A chapter's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erz und Amboss"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ore and Anvil"
+          }
+        }
+      }
+    },
+    "chapter.theGuildCharter.ending" : {
+      "comment" : "A chapter's ending card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zunftmeister haben den Brief gesiegelt. Karren voller Werkzeug verlassen die Schmieden, und die ersten Händler fragen nach Häusern am Platz. Vom ersten Herd zur Zunftstadt: Die Chronik ist geschrieben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The guild masters have sealed the charter. Carts of tools leave the smithies, and the first merchants ask for houses on the square. From one hearth to a guild town, the chronicle is written."
+          }
+        }
+      }
+    },
+    "chapter.theGuildCharter.intro" : {
+      "comment" : "A chapter's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Händler lassen sich nur nieder, wo es Werkzeug zu kaufen gibt und eine Zunft für sie bürgt. Der Zunftbrief gehört dir, wenn die Stadt ihn sich verdient: ein Zunfthaus, hundert Einwohner und eine volle Stadtkasse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merchants will not settle where there are no tools to buy and no guild to vouch for them. The charter is yours if the town can earn it: a guild hall, a hundred townsfolk, and a full strongbox."
+          }
+        }
+      }
+    },
+    "chapter.theGuildCharter.reward" : {
+      "comment" : "The name of a chapter's reward.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zunftschlüssel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guild key"
+          }
+        }
+      }
+    },
+    "chapter.theGuildCharter.title" : {
+      "comment" : "A chapter's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Zunftbrief"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Guild Charter"
+          }
+        }
+      }
+    },
     "culture.eastAsian.blurb" : {
       "comment" : "A culture's description in the new-game dialog.",
       "extractionState" : "manual",

@@ -1,4 +1,141 @@
 # yaml-language-server: $schema=../schema/pack.schema.json
-# Campaigns and their chapters (add-campaigns D1, D9). Chapters arrive
-# with M4, once their targets are tuned against the economy rework.
-items: []
+# Campaigns and their chapters (add-campaigns D1, D9). The Long Chronicle
+# ships first, tuned on today's rules: its goals stay inside what the
+# PlayerBot reaches (CampaignChapterBotTests records the margins).
+items:
+  - kind: Campaign
+    id: the-long-chronicle
+    title: The Long Chronicle
+    chapters: [first-fires, bread-and-stone, ore-and-anvil, across-the-water, the-guild-charter]
+
+  - kind: Chapter
+    id: first-fires
+    title: First Fires
+    intro: >-
+      Smoke rises from one hearth on an empty shore. Twelve families followed you here with seed grain,
+      axes and little else. Give them roofs and full bowls before the third winter, and they will call
+      this place home.
+    ending: >-
+      The hearths have multiplied. Tax coins ring in the strongbox, and traders on the coast now know the
+      way to your market. A village has taken root.
+    layout: single-island
+    seed: 101
+    age: antiquity
+    money: 1000
+    stock: { wood: 6, planks: 5, food: 2 }
+    goals:
+      - { buildings: house, count: 3 }
+      - { residents: 24 }
+      - { netIncome: 60 }
+      - { tradeEarnings: 60 }
+    bonus:
+      - { treasury: 1200 }
+      - { buildings: forester, count: 2 }
+    lose: { deadline: -496 }
+    reward: { banner: Hearth }
+    sweep: { firstSteps: true, market: true }
+
+  - kind: Chapter
+    id: bread-and-stone
+    title: Bread and Stone
+    intro: >-
+      The village eats, but it eats porridge. The elders speak of loaves, and of a stone that will outlast
+      everyone here. Mill the grain, bake the bread and raise a monument the sea can see.
+    ending: >-
+      The monument stands on the hill, raised on bread and sweat. Every table has a loaf, and the scholars
+      say a new age is turning.
+    layout: single-island
+    seed: 102
+    age: antiquity
+    money: 1000
+    stock: { wood: 8, planks: 6, food: 4 }
+    closedTechs: [feudal-order]
+    goals:
+      - { residents: 40 }
+      - { stock: bread, count: 20 }
+      - { residents: 10, tier: citizens }
+    bonus:
+      - { signatureProjects: 1 }
+      - { research: scholarship }
+    lose: { deadline: -495 }
+    reward: { decor: Founder's stone }
+    sweep: { firstSteps: true, order: careful, market: true }
+
+  - kind: Chapter
+    id: ore-and-anvil
+    title: Ore and Anvil
+    intro: >-
+      The houses want tools, and the hills hide ore. Learn to mine and smelt, set a smith to work, and fill
+      the stores with tools. A town that makes its own tools can build anything.
+    ending: >-
+      Hammers ring in the smithy, and every house has its tools. The town has learned to work iron.
+    layout: single-island
+    seed: 103
+    age: medieval
+    money: 1200
+    stock: { wood: 10, planks: 8, food: 4 }
+    closedTechs: [seafaring]
+    goals:
+      - { research: metallurgy }
+      - { buildings: toolsmith, count: 1 }
+      - { stock: tools, count: 10 }
+      - { residents: 30, tier: citizens }
+    bonus:
+      - { buildings: guild-hall, count: 1 }
+      - { residents: 10, tier: merchants }
+    lose: { deadline: 1205 }
+    reward: { banner: Anvil }
+    sweep: { firstSteps: true, order: careful, market: true }
+
+  - kind: Chapter
+    id: across-the-water
+    title: Across the Water
+    intro: >-
+      There are other shores, and someone already lives on one of them. Build a port and a hull, and find
+      out what your neighbours will pay for what you have too much of.
+    ending: >-
+      Your sails are known in a harbour that is not your own. What the island lacks, the sea can now bring.
+    layout: archipelago
+    seed: 104
+    age: medieval
+    rivals: 1
+    money: 1500
+    stock: { wood: 10, planks: 10, food: 6 }
+    goals:
+      - { research: seafaring }
+      - { buildings: port, count: 1 }
+      - { buildings: shipyard, count: 1 }
+      - { tradeEarnings: 400 }
+      - { residents: 30, tier: citizens }
+    bonus:
+      - { outgrowRivals: true }
+      - { treasury: 2000 }
+    lose: { deadline: 1205 }
+    reward: { mapPreset: Across the Water }
+    sweep: { firstSteps: true, order: careful, market: true, kits: [sea] }
+
+  - kind: Chapter
+    id: the-guild-charter
+    title: The Guild Charter
+    intro: >-
+      Merchants will not settle where there are no tools to buy and no guild to vouch for them. The charter
+      is yours if the town can earn it: a guild hall, a hundred townsfolk, and a full strongbox.
+    ending: >-
+      The guild masters have sealed the charter. Carts of tools leave the smithies, and the first merchants
+      ask for houses on the square. From one hearth to a guild town, the chronicle is written.
+    layout: single-island
+    seed: 105
+    age: medieval
+    money: 1200
+    stock: { wood: 10, planks: 10, food: 6 }
+    goals:
+      - { buildings: guild-hall, count: 1 }
+      - { residents: 100 }
+      - { residents: 50, tier: citizens }
+      - { treasury: 1500 }
+    bonus:
+      - { residents: 10, tier: merchants }
+      - { age: renaissance }
+    lose: { deadline: 1205 }
+    reward: { banner: Guild key }
+    sweep: { firstSteps: true, order: careful, market: true, kits: [signature] }

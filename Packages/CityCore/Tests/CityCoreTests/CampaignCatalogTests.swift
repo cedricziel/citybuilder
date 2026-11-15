@@ -2,13 +2,26 @@ import Testing
 @testable import CityCore
 
 // openspec/changes/add-campaigns (campaigns / Campaigns and chapters are
-// game data). The real chapters arrive with M4; until then the catalog
-// is empty and lookups find nothing.
+// game data, Built-in campaigns load).
+
+@Test("scenario: built-in campaigns load")
+func scenarioBuiltInCampaignsLoad() throws {
+    let chronicle = try #require(CampaignCatalog.campaign("the-long-chronicle"))
+    #expect(chronicle.chapters == ["first-fires", "bread-and-stone", "ore-and-anvil", "across-the-water", "the-guild-charter"])
+    #expect(chronicle.opensAfter == nil)
+    for id in chronicle.chapters {
+        let chapter = try #require(CampaignCatalog.chapter(id))
+        #expect(!chapter.comingLater, "\(id)")
+        #expect(chapter.goals.contains { !$0.isBonus }, "\(id)")
+        #expect(chapter.loseConditions.contains { if case .deadline = $0 { true } else { false } }, "\(id)")
+        #expect(chapter.intro.count <= 320 && chapter.ending.count <= 320, "\(id)")
+    }
+}
 
 @Test("the campaign catalog finds chapters and campaigns by id")
 func theCampaignCatalogFindsByID() {
-    #expect(CampaignCatalog.chapter("first-fires") == nil)
-    #expect(CampaignCatalog.campaign("the-long-chronicle") == nil)
+    #expect(CampaignCatalog.chapter("first-fires")?.title == "First Fires")
+    #expect(CampaignCatalog.chapter("no-such-chapter") == nil)
     let campaign = Campaign(id: "test", title: "Test", chapters: ["test-chapter"])
     #expect(campaign.opensAfter == nil)
     let chapter = Chapter.testChapter(overrides: [.hard: ChapterStartOverride(money: 700)])
