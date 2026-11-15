@@ -565,6 +565,42 @@
         }
       }
     },
+    "banner.autosaveFailed.text" : {
+      "comment" : "Banner text when an autosave failed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein letzter Spielstand ist sicher. Speichere im Pausenmenü."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your last save is safe. Save from the pause menu."
+          }
+        }
+      }
+    },
+    "banner.autosaveFailed.title" : {
+      "comment" : "Banner title when an autosave failed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisches Speichern fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autosave failed"
+          }
+        }
+      }
+    },
     "banner.bankrupt.text" : {
       "comment" : "Game-over banner text.",
       "extractionState" : "manual",
@@ -7473,6 +7509,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unload at their port"
+          }
+        }
+      }
+    },
+    "pause.autosaved" : {
+      "comment" : "Pause menu line after an autosave; %@ is how long ago, such as \"now\" or \"2 minutes ago\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch gespeichert: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autosaved %@"
           }
         }
       }

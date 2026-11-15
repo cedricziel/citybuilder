@@ -158,6 +158,11 @@ public final class GameSession {
     /// Requirement: Paused session does not tick the world.
     public var isPaused: Bool = false
 
+    /// Autosave hooks (`GameSession+Autosave.swift`); the shell owns the clock.
+    public var onPlayStep: (@MainActor () -> Void)?
+    public var onSeasonChange: (@MainActor () -> Void)?
+    public var lastAutosave: Date?
+
     /// Ticks per timer firing. Session state, never saved.
     public var speed: GameSpeed = .normal
     /// Route mode's view-model; non-nil while the player authors a route.
@@ -276,6 +281,7 @@ public final class GameSession {
         // building positions, not the prior tick's.
         audioSnapshotConsumer?(snapshot)
         audioEventConsumer?(result.events)
+        notifyAutosaveHooks(after: result.events)
     }
 
     /// One firing of the 10 Hz timer: `speed` ticks.
