@@ -142,6 +142,9 @@ public final class GameSession {
     /// every tick's events are forwarded after the snapshot is applied.
     /// Per spec `audio-playback` "AudioCoordinator consumes per-tick events".
     public var audioEventConsumer: AudioEventConsumer?
+    /// Haptic feedback for placements, refusals and event warnings. The
+    /// phone buzzes; other platforms and tests swap it.
+    @ObservationIgnored public var haptics: any HapticPlaying = GameSession.platformHaptics()
     /// Optional sink for the per-tick `WorldSnapshot`. When non-nil, the
     /// session pushes each tick's snapshot to the audio layer before the
     /// matching events, so the coordinator can resolve entity positions
@@ -373,6 +376,7 @@ public final class GameSession {
         case let .place(kind):
             if refusesPlacement(kind, at: tile) { return }
             enqueue(.place(kind, at: tile))
+            haptics.play(.placed)
         case .demolish:
             requestDemolish(at: tile)
         }
