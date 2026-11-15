@@ -128,4 +128,31 @@ SHIPS_ON_THE_SOUND = Piece(
     ],
 )
 
-PIECES = [BRIDGE_AT_DAWN, HEARTH_AND_HARVEST, MARKET_DAY, LONG_NIGHT, SHIPS_ON_THE_SOUND]
+# "Lanterns on the Quay": the evening harbour theme. G Dorian, a steady 4/4,
+# the raised sixth (E) over a minor tonic.
+_QUAY_A = ("g4:1 bb4:1 d5:1.5 c5:.5  a4:1 c5:1 f5:2  g5:1.5 f5:.5 d5:1 bb4:1  a4:2 d5:1 f5:1  "
+           "bb4:1 d5:1 g5:2  e5:1 g5:1 e5:1 c5:1  d5:1.5 e5:.5 f5:1 a4:1  g4:4")
+_QUAY_B = ("d5:1 f5:1 bb5:2  a5:1 f5:1 c5:2  e5:1 g5:1 c6:2  a5:2 f5:1 d5:1  "
+           "d5:1 f5:1 bb5:1.5 a5:.5  g5:1 e5:1 c5:2  f5:1 a5:1 f5:2  d5:2 a4:2")
+_QUAY_A_CHORDS = "Gm F Gm Dm Gm C Dm Gm"
+_QUAY_B_CHORDS = "Bb F C Dm Bb C Dm Dm"
+
+LANTERNS_ON_THE_QUAY = Piece(
+    path="music/lanterns-on-the-quay.caf",
+    title="Lanterns on the Quay",
+    bpm=84,
+    beats_per_bar=4,
+    tonic="g2",
+    seed=337,
+    sections=[
+        Section("Gm F Gm Dm", "", "harp", ("harp", "drone")),
+        Section(_QUAY_A_CHORDS, _QUAY_A, "recorder", ("harp", "drone")),
+        Section(_QUAY_A_CHORDS, _QUAY_A, "lute", ("harp", "drone"), octave=-1),
+        Section(_QUAY_B_CHORDS, _QUAY_B, "recorder", ("lute", "drone", "drum")),
+        Section(_QUAY_A_CHORDS, _QUAY_A, "recorder", ("harp", "lute", "drone", "drum")),
+        Section(_QUAY_B_CHORDS, _QUAY_B, "lute", ("harp", "drone", "drum"), octave=-1),
+        Section("C Dm Gm Gm", "", "harp", ("harp", "drone")),
+    ],
+)
+
+PIECES = [BRIDGE_AT_DAWN, HEARTH_AND_HARVEST, MARKET_DAY, LONG_NIGHT, SHIPS_ON_THE_SOUND, LANTERNS_ON_THE_QUAY]

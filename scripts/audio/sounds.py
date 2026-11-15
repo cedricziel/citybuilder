@@ -514,6 +514,42 @@ def embers() -> list[float]:
 D4, E4, F4, G4, A4, B4, C5, D5, E5, A5 = 293.66, 329.63, 349.23, 392.0, 440.0, 493.88, 523.25, 587.33, 659.26, 880.0
 
 
+def ui_click() -> list[float]:
+    """A soft click: a small wooden tick with a hint of body, a touch heavier than `tick`."""
+    rng = dsp.Rng(241)
+    out = wood_knock(SR, 780, rng, 0.09)
+    return dsp.fade_edges(room(out, SR, wet=0.15), 0.0003, 0.03, SR)
+
+
+def place_thunk() -> list[float]:
+    """A mallet driving a peg: a dull low knock, a short settle after it, and a little room."""
+    rng = dsp.Rng(251)
+    out = dsp.silence(int(0.5 * SR))
+    dsp.mix_into(out, wood_knock(SR, 118, rng, 0.45), 0, 1.0)
+    dsp.mix_into(out, wood_knock(SR, 236, rng, 0.2), int(0.012 * SR), 0.35)
+    dsp.mix_into(out, wood_knock(SR, 96, rng, 0.2), int(0.11 * SR), 0.18)
+    return dsp.fade_edges(room(out, SR, wet=0.4), 0.0005, 0.12, SR)
+
+
+def coin_pickup() -> list[float]:
+    """A coin lifted and set down: a bright double ring, then a few settling clinks."""
+    rng = dsp.Rng(263)
+    out = dsp.silence(int(1.2 * SR))
+    dsp.mix_into(out, bell(SR, 1760, 0.45, rng), 0, 0.7)
+    dsp.mix_into(out, bell(SR, 2637, 0.5, rng), int(0.07 * SR), 0.55)
+    dsp.mix_into(out, coins(269, 3), int(0.22 * SR), 0.5)
+    return dsp.fade_edges(room(out, SR, wet=0.25), 0.0005, 0.25, SR)
+
+
+def game_over() -> list[float]:
+    """Two bells tolling down a fourth, the second left to ring out."""
+    rng = dsp.Rng(271)
+    out = dsp.silence(int(2.6 * SR))
+    dsp.mix_into(out, bell(SR, D4, 0.9, rng), 0, 0.9)
+    dsp.mix_into(out, bell(SR, A4 / 2, 1.2, rng), int(0.7 * SR), 1.0)
+    return dsp.fade_edges(room(out, SR, wet=0.4), 0.0005, 0.4, SR)
+
+
 SOUNDS = [
     Sound("loop/sawmill.caf", "Sawmill: frame saw", "loop", sawmill),
     Sound("loop/lumberjack.caf", "Lumberjack: axe on timber", "loop", lumberjack),
@@ -549,6 +585,11 @@ SOUNDS = [
     Sound("ui/toggle.caf", "A latch clicking over", "sfx", ui_toggle),
     Sound("ui/open.caf", "Parchment unfurling", "sfx", ui_open),
     Sound("ui/close.caf", "Parchment rolled up", "sfx", ui_close),
+    Sound("ui/click.caf", "A soft wooden click", "sfx", ui_click),
+    Sound("ui/place-thunk.caf", "A mallet driving a peg", "sfx", place_thunk),
+    Sound("construction/chime.caf", "Two small bells: work finished", "sfx", lambda: chimes([D5 * 2, A5 * 2], 0.09, 257, 0.22)),
+    Sound("economy/coin.caf", "A coin set down", "sfx", coin_pickup),
+    Sound("economy/game-over.caf", "Two bells tolling down", "sfx", game_over),
 ]
 
 

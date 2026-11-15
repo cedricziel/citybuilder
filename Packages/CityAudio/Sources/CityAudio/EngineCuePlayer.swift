@@ -296,10 +296,10 @@ public final class EngineCuePlayer {
 
     private func loadFile(at path: String) -> AVAudioFile? {
         if let cached = fileCache[path] { return cached }
-        // `path` is a relative manifest path like "music/bards-tale.m4a".
+        // `path` is a relative manifest path like "music/lanterns-on-the-quay.caf".
         // `Bundle.url(forResource:...)` expects the *basename* without the
         // extension, plus an optional subdirectory — passing the full
-        // "music/bards-tale" silently fails to find anything.
+        // "music/lanterns-on-the-quay" silently fails to find anything.
         //
         // Xcode's resource-bundling flattens the subdirectory structure by
         // default (every file lands at the .app root), so we try multiple

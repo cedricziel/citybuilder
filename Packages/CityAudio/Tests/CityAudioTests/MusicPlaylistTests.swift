@@ -6,13 +6,13 @@ import Testing
 
 @Test("scenario: single track loops with default gap")
 func scenarioSingleTrackLoopsWithDefaultGap() {
-    let playlist = MusicPlaylist(tracks: [Bindings.MusicTrack(file: "music/bards-tale.m4a")])
+    let playlist = MusicPlaylist(tracks: [Bindings.MusicTrack(file: "music/lanterns-on-the-quay.caf")])
     // Every call to nextTrack() returns the same single track — the gap
     // is enforced by the caller waiting `gapSecondsBetweenTracks` between
     // plays.
-    #expect(playlist.nextTrack()?.file == "music/bards-tale.m4a")
-    #expect(playlist.nextTrack()?.file == "music/bards-tale.m4a")
-    #expect(playlist.nextTrack()?.file == "music/bards-tale.m4a")
+    #expect(playlist.nextTrack()?.file == "music/lanterns-on-the-quay.caf")
+    #expect(playlist.nextTrack()?.file == "music/lanterns-on-the-quay.caf")
+    #expect(playlist.nextTrack()?.file == "music/lanterns-on-the-quay.caf")
     #expect(playlist.gapSecondsBetweenTracks == 30.0)
 }
 

@@ -28,8 +28,8 @@ func musicCoversTheMenuAndEverySeason() throws {
 func originalMusicIsCredited() throws {
     let (manifest, bindings) = try shipped()
     let music = try #require(bindings.music)
-    let files = Set(music.tracks.map(\.file) + [music.title?.file].compactMap(\.self)).subtracting(["music/bards-tale.m4a"])
-    #expect(files.count == 5)
+    let files = Set(music.tracks.map(\.file) + [music.title?.file].compactMap(\.self))
+    #expect(files.count == 6)
     for file in files {
         let entry = try #require(manifest.entries.first { $0.path == file }, "\(file) has no manifest entry")
         #expect(entry.author == "Citybuilder original score")
