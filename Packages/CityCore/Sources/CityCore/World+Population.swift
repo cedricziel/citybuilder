@@ -11,8 +11,10 @@ extension World {
         let tracked = HouseTier.allNeeds(in: culture)
         let inbound = porterInbound()
         let feverHeld = Set(feverHouses().map(\.id))
+        var advanced = recentAdvances(of: houses, service: service)
         for building in houses {
             var pop = populations[building.id] ?? HousePopulation()
+            pop.ticksSinceAdvance = Self.ticksSinceAdvance(after: pop)
             let modifiers = houseModifiers(of: building, sources: sources)
             let hub = service.hubOf[building.id]?.hub
             consumeIfDue(&pop, building: building)
@@ -22,12 +24,42 @@ extension World {
             if updateGrowth(&pop, owner: building.owner, modifiers: modifiers, pastGrace: pastGrace, feverHeld: held) {
                 noteHungryLeaving(building)
             }
+            let tier = pop.tier
+            let waiting = hub.flatMap { hub in pop.tier.next.map { advanced.contains(HubTier(hub: hub, tier: $0)) } } ?? false
             updateTier(
                 &pop, building: building, modifiers: modifiers, hub: hub, pastGrace: pastGrace,
-                feverHeld: held, festive: festive.contains(building.id)
+                feverHeld: held, festive: festive.contains(building.id), waiting: waiting
             )
+            if pop.tier > tier, let hub {
+                advanced.insert(HubTier(hub: hub, tier: pop.tier))
+            }
             populations[building.id] = pop
         }
+    }
+
+    /// A tier a hub's houses have moved up into.
+    private struct HubTier: Hashable {
+        let hub: EntityID
+        let tier: HouseTier
+    }
+
+    /// The hubs and tiers a house moved up into within the last
+    /// `advanceSpacingTicks`, counting this tick. Spec: `population-and-needs`
+    /// / Houses move up one at a time per hub.
+    private func recentAdvances(of houses: [Building], service: HubService) -> Set<HubTier> {
+        var recent: Set<HubTier> = []
+        for building in houses {
+            guard let pop = populations[building.id], let hub = service.hubOf[building.id]?.hub,
+                  Self.ticksSinceAdvance(after: pop) < HousePopulation.advanceSpacingTicks
+            else { continue }
+            recent.insert(HubTier(hub: hub, tier: pop.tier))
+        }
+        return recent
+    }
+
+    /// The house's count after this tick, held at the spacing so saves stay small.
+    private static func ticksSinceAdvance(after pop: HousePopulation) -> UInt64 {
+        min(pop.ticksSinceAdvance &+ 1, HousePopulation.advanceSpacingTicks)
     }
 
     private mutating func consumeIfDue(_ pop: inout HousePopulation, building: Building) {
@@ -118,7 +150,7 @@ extension World {
     /// between tiers.
     private func updateTier( // swiftlint:disable:this function_parameter_count
         _ pop: inout HousePopulation, building: Building, modifiers: HouseModifiers, hub: EntityID?, pastGrace: Bool,
-        feverHeld: Bool, festive: Bool
+        feverHeld: Bool, festive: Bool, waiting: Bool
     ) {
         // Spec: `population-and-needs` / Market hubs gate tier advancement.
         // A need the house already eats counts while it is met: porters keep
@@ -137,13 +169,21 @@ extension World {
             pop.ticksAtTierCondition = 0
             return
         }
-        pop.ticksAtTierCondition &+= 1
         // Spec: `population-and-needs` / Festivals speed advancement near the market.
         let pace = canAdvance && festive ? max(modifiers.paceDivisor, Self.festivalPaceDivisor) : modifiers.paceDivisor
-        guard pop.ticksAtTierCondition >= HousePopulation.tierChangeTicks / pace else { return }
+        let threshold = HousePopulation.tierChangeTicks / pace
+        // Another house of this hub just moved up into the next tier: this
+        // one stays ready and moves up once the spacing has passed.
+        if canAdvance, waiting, !mustDecline {
+            pop.ticksAtTierCondition = min(pop.ticksAtTierCondition &+ 1, threshold)
+            return
+        }
+        pop.ticksAtTierCondition &+= 1
+        guard pop.ticksAtTierCondition >= threshold else { return }
         pop.ticksAtTierCondition = 0
-        if canAdvance, let next = pop.tier.next {
+        if canAdvance, !waiting, let next = pop.tier.next {
             pop.tier = next
+            pop.ticksSinceAdvance = 0
         } else if let previous = pop.tier.previous {
             pop.tier = previous
             pop.population = min(pop.population, modifiers.capacity(of: previous))

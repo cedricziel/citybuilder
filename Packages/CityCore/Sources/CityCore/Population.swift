@@ -28,6 +28,9 @@ public struct HousePopulation: Hashable, Sendable {
     /// a tier. Spec: `population-and-needs` / Houses advance and
     /// decline between tiers.
     public var ticksAtTierCondition: UInt64 = 0
+    /// Ticks since the house last moved up a tier, saturating. Spec:
+    /// `population-and-needs` / Houses move up one at a time per hub.
+    public var ticksSinceAdvance: UInt64 = HousePopulation.advanceSpacingTicks
     /// Goods the last consumption could not draw in full; a good leaves
     /// the set with the next consumption of it that succeeds.
     public private(set) var shortGoods: Set<Good> = []
@@ -43,6 +46,9 @@ public struct HousePopulation: Hashable, Sendable {
     public static let growthIntervalTicks: UInt64 = 60
     public static let declineIntervalTicks: UInt64 = 60
     public static let tierChangeTicks: UInt64 = 120
+    /// Ticks after a house moves up before another house of the same hub
+    /// may move up into that tier.
+    public static let advanceSpacingTicks: UInt64 = 100
     /// Ticks between consumption. Spec: `population-and-needs` / Houses
     /// consume food and planks.
     public static let consumptionIntervalTicks: UInt64 = 100
@@ -158,7 +164,7 @@ public struct HousePopulation: Hashable, Sendable {
 extension HousePopulation: Codable {
     private enum CodingKeys: String, CodingKey {
         case population, tier, satisfiedGoods, shortGoods, shortIntervals
-        case ticksAtCurrentSatisfaction, ticksAtTierCondition, stock
+        case ticksAtCurrentSatisfaction, ticksAtTierCondition, stock, ticksSinceAdvance
     }
 
     /// Per-good flag keys written before design D2.
@@ -200,6 +206,7 @@ extension HousePopulation: Codable {
             UInt64.self, forKey: .ticksAtCurrentSatisfaction
         ) ?? 0
         ticksAtTierCondition = try container.decodeIfPresent(UInt64.self, forKey: .ticksAtTierCondition) ?? 0
+        ticksSinceAdvance = try container.decodeIfPresent(UInt64.self, forKey: .ticksSinceAdvance) ?? Self.advanceSpacingTicks
         let legacy = try decoder.container(keyedBy: LegacyKey.self)
         satisfiedGoods = try container.decodeIfPresent([Good].self, forKey: .satisfiedGoods).map(Set.init)
             ?? Self.decodeFlags(LegacyKey.satisfied, from: legacy)
@@ -223,6 +230,7 @@ extension HousePopulation: Codable {
         try container.encode(satisfiedGoods.sortedByRawValue, forKey: .satisfiedGoods)
         try container.encode(ticksAtCurrentSatisfaction, forKey: .ticksAtCurrentSatisfaction)
         try container.encode(ticksAtTierCondition, forKey: .ticksAtTierCondition)
+        try container.encode(ticksSinceAdvance, forKey: .ticksSinceAdvance)
         try container.encode(shortGoods.sortedByRawValue, forKey: .shortGoods)
         let runs = shortIntervals.sorted { $0.key.rawValue < $1.key.rawValue }.map { ShortRun(good: $0.key, intervals: $0.value) }
         try container.encode(runs, forKey: .shortIntervals)
