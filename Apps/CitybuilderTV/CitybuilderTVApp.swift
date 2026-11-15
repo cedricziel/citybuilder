@@ -10,6 +10,7 @@ struct CitybuilderTVApp: App {
     private let audio: AudioStack
     private let saveStore: SaveStore
     private let saveSync: TVSaveSync
+    private let autosave: AutosaveHub
     private let campaignProgress = CampaignProgressStore.make()
     @Environment(\.scenePhase) private var scenePhase
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
@@ -18,7 +19,12 @@ struct CitybuilderTVApp: App {
         Language.adoptAtLaunch()
         let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
         self.saveStore = saveStore
-        saveSync = Self.makeSaveSync(store: saveStore)
+        let saveSync = Self.makeSaveSync(store: saveStore)
+        self.saveSync = saveSync
+        autosave = AutosaveHub(
+            store: saveStore, gameID: Self.defaultGameID, isEnabled: AutosaveHub.isEnabledForLaunch,
+            didSave: { gameID in Task { await saveSync.didSave(gameID: gameID) } }
+        )
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
@@ -96,7 +102,7 @@ struct CitybuilderTVApp: App {
         WindowGroup {
             TitleScreenHost(
                 saveStore: SaveStoreFacadeAdapter(store: saveStore),
-                sessionFactory: { [audio] world in
+                sessionFactory: { [audio, autosave] world in
                     let session = GameSession(
                         world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
@@ -114,6 +120,7 @@ struct CitybuilderTVApp: App {
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
                     audio.beginSession()
+                    autosave.attach(to: session)
                     return session
                 },
                 pauseMenuFactory: { [saveStore, saveSync] session in
@@ -141,6 +148,7 @@ struct CitybuilderTVApp: App {
                 titleSettings: { SettingsSheet(audio: audio) }
             )
             .onChange(of: scenePhase) { _, phase in
+                if phase == .background { autosave.appLeftForeground() }
                 guard phase == .active else { return }
                 Task { [saveSync] in await saveSync.retryPendingUploads() }
             }
