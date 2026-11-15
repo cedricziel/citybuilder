@@ -120,7 +120,7 @@ struct PlayerBot {
             price += Int64(missing) * good.marketPrice(.bought)
         }
         let cost = BuildingCatalog.spec(for: kind).cost + Self.cushion + price
-        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) ?? roadsideMineSlot(kind, in: world) else { return false }
+        guard world.economy.balance >= cost, let slot = plan.slot(for: kind) ?? fallbackSlot(kind, in: world) else { return false }
         guard world.economy.balance >= cost + BuildingCatalog.spec(for: .road).cost * Int64(slot.roads.count)
         else { return false }
         for command in buys + slot.roads.map({ .place(.road, at: $0) }) + [.place(kind, at: slot.anchor)] {

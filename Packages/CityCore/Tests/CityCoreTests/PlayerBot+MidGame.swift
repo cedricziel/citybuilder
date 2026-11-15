@@ -113,13 +113,16 @@ extension PlayerBot {
         return missing
     }
 
-    /// A mine site the town plan's block corners miss, such as the
-    /// starter mine site beside the town center: the nearest anchor
-    /// within `mineSearchRadius` tiles where a mine may stand and a road
-    /// touches, or a short road would join it to the network.
-    func roadsideMineSlot(_ kind: BuildingKind, in world: World) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
-        guard kind == .mine else { return nil }
-        let footprint = BuildingCatalog.spec(for: .mine).footprint
+    /// A site the town plan's block corners miss: the starter mine site
+    /// beside the town center, or a shore for a port or a shipyard.
+    func fallbackSlot(_ kind: BuildingKind, in world: World) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
+        [.mine, .port, .shipyard].contains(kind) ? roadsideSlot(kind, in: world) : nil
+    }
+
+    /// The nearest anchor for `kind` within `mineSearchRadius` tiles of the
+    /// town center that a road touches, or that a short road would join.
+    func roadsideSlot(_ kind: BuildingKind, in world: World) -> (roads: [TileCoordinate], anchor: TileCoordinate)? {
+        let footprint = BuildingCatalog.spec(for: kind).footprint
         let tileToIsland = world.tileToIslandMap()
         var near: [(dx: Int, dy: Int)] = []
         for dy in -Self.mineSearchRadius ... Self.mineSearchRadius {
@@ -130,7 +133,7 @@ extension PlayerBot {
         near.sort { $0.dx * $0.dx + $0.dy * $0.dy < $1.dx * $1.dx + $1.dy * $1.dy }
         for (dx, dy) in near {
             let anchor = TileCoordinate(x: center.anchor.x + dx, y: center.anchor.y + dy)
-            guard world.siteRejection(.mine, at: anchor, for: .player, tileToIsland: tileToIsland) == nil else { continue }
+            guard world.siteRejection(kind, at: anchor, for: .player, tileToIsland: tileToIsland) == nil else { continue }
             if world.anyAdjacentRoad(anchor: anchor, footprint: footprint) != nil { return ([], anchor) }
             if let link = Self.roadLink(to: anchor, footprint: footprint, in: world, tileToIsland: tileToIsland) {
                 return (link, anchor)
