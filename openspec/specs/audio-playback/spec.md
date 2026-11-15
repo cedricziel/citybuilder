@@ -716,4 +716,4 @@ Each original piece SHALL have a manifest entry by "Citybuilder original score",
 
 #### Scenario: Original music is credited
 - **WHEN** the shipped manifest is loaded
-- **THEN** every file under `music/` other than `bards-tale.m4a` has an entry by "Citybuilder original score" whose title says it is original and generated in-repo
+- **THEN** every file under `music/` has an entry by "Citybuilder original score" whose title says it is original and generated in-repo

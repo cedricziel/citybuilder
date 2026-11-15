@@ -109,8 +109,8 @@ func manifestRoundTripPreservesEntries() throws {
         Manifest.Entry(
             path: "ui/click.caf",
             title: "UI Click",
-            author: "Kenney",
-            source: "https://kenney.nl/assets/interface-sounds",
+            author: "Citybuilder sound generator",
+            source: "https://github.com/cedricziel/citybuilder/tree/main/scripts/audio",
             license: .cc0
         ),
         Manifest.Entry(
@@ -227,7 +227,7 @@ func bindingsRoundTripPreservesStructure() throws {
             ]
         ],
         music: Bindings.MusicSection(
-            tracks: [Bindings.MusicTrack(file: "music/bards-tale.m4a")],
+            tracks: [Bindings.MusicTrack(file: "music/lanterns-on-the-quay.caf")],
             shuffle: "no-repeat-within-last-two",
             gapSecondsBetweenTracks: 30.0
         )
