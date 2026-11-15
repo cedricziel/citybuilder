@@ -225,3 +225,18 @@ func scenarioTheSheetDoesNotChangeTheWorld() {
     #expect(session.world.pendingCommands.isEmpty)
     #expect(session.world == before)
 }
+
+@Suite("Statistics tab titles")
+struct StatisticsTabTitleTests {
+    @Test("every tab has a catalog key with a German value that differs from the raw name")
+    func tabsAreLocalized() {
+        for tab in StatisticsModel.Tab.allCases {
+            let key = "stats.tab.\(tab.rawValue)"
+            let german = GameText.string(key, in: .de)
+            #expect(german != key, "missing key \(key)")
+            #expect(GameText.string(key, in: .en) != key)
+            #expect(german != tab.rawValue.capitalized || tab == .rivals)
+        }
+        #expect(GameText.string("stats.tab.money", in: .de) == "Geld")
+    }
+}

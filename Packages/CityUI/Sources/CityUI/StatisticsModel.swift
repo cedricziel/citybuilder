@@ -13,7 +13,7 @@ public struct StatisticsModel: Equatable, Sendable {
         }
 
         public var title: String {
-            rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+            GameText.string("stats.tab.\(rawValue)")
         }
     }
 
