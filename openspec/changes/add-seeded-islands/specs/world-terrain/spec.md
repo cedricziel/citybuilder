@@ -129,19 +129,19 @@ After world generation on a generated map, including town centers, starter grove
 
 #### Scenario: Fewer islands seat fewer rivals
 - **WHEN** a generated archipelago game at Medium size with 3 islands is created at Hard
-- **THEN** it has 2 rivals, one on each island other than home
+- **THEN** it passes validation, has fewer than 3 rivals, and every rival sits on an island other than home
 
 #### Scenario: Generated starts do not depend on difficulty
 - **WHEN** generated archipelago games with the same seed and map settings are created at Easy, Normal and Hard
 - **THEN** their terrain is byte-identical, their town centers stand on the same anchors, and they record the same attempt
 
-### Requirement: Island profile hook
-World generation SHALL call one island-profile step after the island list is detected and before town centers are placed, on classic and generated maps alike. This change SHALL leave the step empty. A later change MAY use it to give islands resource profiles based on their climate, and MAY change terrain on an island there, but MUST NOT add or remove land. On a generated map the validation SHALL run after that step. Generated islands SHALL get their climate from the existing climate band rule.
+### Requirement: Generated islands carry a climate
+A generated map SHALL give world generation an island list with exactly the requested number of islands, each with a climate from the climate band rule, before any later step such as island profiles uses it. The generator itself SHALL NOT decide climates, and the classic maps' island lists SHALL stay as they are.
 
-#### Scenario: The empty profile step changes nothing
+#### Scenario: The classic island list is unchanged
 - **WHEN** a classic archipelago game is created for seed 0xC17B
 - **THEN** its terrain hash and island list equal those recorded from `main` before this change
 
 #### Scenario: Generated islands carry a climate
-- **WHEN** a generated archipelago game at Medium size with 5 islands is created for seed 6
+- **WHEN** the island list is detected from the generator terrain of a generated archipelago at Medium size with 5 islands for seed 6
 - **THEN** every island is temperate when its bounding box's centre lies in the north half of the map and tropical otherwise

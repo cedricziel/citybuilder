@@ -5,19 +5,19 @@ Every test is written first and seen to fail. Test names are `@Test("scenario: <
 ## 1. Pin the classic maps before touching anything
 
 - [ ] 1.1 On a fresh branch from `main`, add `Packages/CityCore/Tests/CityCoreTests/MapHashSupport.swift` with `terrainHash(_ grid: [TerrainType]) -> UInt64`: FNV-1a 64 (offset `0xcbf29ce484222325`, prime `0x100000001b3`) over the UTF-8 bytes of the raw values joined with `\n`.
-- [ ] 1.2 Add `ClassicMapPinTests.swift`: record the terrain hash and the island list (ids, tile counts, bounds) of `World.newGame()`, `World.newGame(layout: .archipelago, seed: 0)` and `World.newGame(layout: .archipelago, seed: 0xC17B)` on `main` as constants. Scenarios "A new game without map settings is classic" and "The empty profile step changes nothing". Commit this before any production change, so it is green on `main`.
+- [ ] 1.2 Add `ClassicMapPinTests.swift`: record the terrain hash and the island list (ids, tile counts, bounds) of `World.newGame()`, `World.newGame(layout: .archipelago, seed: 0)` and `World.newGame(layout: .archipelago, seed: 0xC17B)` on `main` as constants. Scenarios "A new game without map settings is classic" and "The classic island list is unchanged". Commit this before any production change, so it is green on `main`.
 
-## 2. Map settings and the profile hook
+## 2. Map settings
 
 - [ ] 2.1 Tests first: "Generated map sides follow the size" (it fails until 3.x lands; mark it `.disabled` until then if needed to keep commits green), "Map settings persist across save/load".
 - [ ] 2.2 Add `Packages/CityCore/Sources/CityCore/MapSettings.swift` with `MapStyle`, `MapSize` and `MapSettings` as in design D1, and `side(for:)` per the D2 table.
 - [ ] 2.3 In `World.swift`, add `map: MapSettings` (default `.classic`) and `mapAttempt: Int?`, decoded with `decodeIfPresent` following the file's existing pattern for new fields. Don't bump `SaveFile.currentVersion`.
-- [ ] 2.4 Add `World+IslandProfiles.swift` with an empty `mutating func applyIslandProfiles()`, and call it in `World.generate` right after `world.islands = …` and before `seedTownCenters()` (design D9). Scenario "Generated islands carry a climate" comes with task 3.
+- [ ] 2.4 Don't add a profile hook; profiles belong to `add-island-specialization` (design D9). If that change is already on `main`, add the generated-archipelago profile test from D9 under task 5.
 - [ ] 2.5 Add `map: MapSettings = .classic` as the last parameter of `World.newGame(layout:seed:…)`. The classic branch stays exactly as it is today and sets `world.map = .classic`.
 
 ## 3. Generator
 
-- [ ] 3.1 Tests first in `SeededMapGeneratorTests.swift`: "Different seeds give different outlines", "Outlines are not ellipses", "Generated islands have no lakes and no islets", "The home island covers the map's centre", "Island count follows the settings", "The sea is one body", "Islands keep a channel between them", "Shares are counted", "Mountains stay inland", "Single-island layout deterministic per seed" and "Archipelago layout deterministic per seed" (update both to pass map settings), "Generated islands carry a climate". Scenario tests that inspect generator terrain call `SeededMapGenerator.terrain(…)` directly. Add `SeededMapGenerator.blueprints(…)` as `internal` for the ellipse test.
+- [ ] 3.1 Tests first in `SeededMapGeneratorTests.swift`: "Different seeds give different outlines", "Outlines are not ellipses", "Generated islands have no lakes and no islets", "The home island covers the map's centre", "Island count follows the settings", "The sea is one body", "Islands keep a channel between them", "Shares are counted", "Mountains stay inland", "Single-island layout deterministic per seed" and "Archipelago layout deterministic per seed" (update both to pass map settings) and "Generated islands carry a climate". Scenario tests that inspect generator terrain call `SeededMapGenerator.terrain(…)` directly. Add `SeededMapGenerator.blueprints(…)` as `internal` for the ellipse test.
 - [ ] 3.2 `Packages/CityCore/Sources/CityCore/SeededIslands/MapHash.swift` and `ValueNoise.swift` (design D3), with unit tests for known lattice values and that `fbm` stays in 0…4095.
 - [ ] 3.3 `SeededIslands/IslandShaper.swift`: raw mask, two majority passes, spurs and notches, largest component, lake fill, minimum size (design D4); then beach, mountain and forest by count (design D6). Return nil on a failed minimum size.
 - [ ] 3.4 `SeededIslands/ArchipelagoPlanner.swift`: the single-island blueprint and the archipelago placement with the radius table, 200 tries per island and the RNG draw order (design D5). Return nil when an island can't be placed.
@@ -67,5 +67,5 @@ Every test is written first and seen to fail. Test names are `@Test("scenario: <
 # M3: follow-ups (separate changes)
 
 - [ ] 9.1 Chapter packs and scenarios may name map settings (`map:` in the chapter data, `ChapterEmitter`, `Validator+Chapters`). Terrain directives must be retuned per chapter, so this is its own change.
-- [ ] 9.2 Hand-off to `add-island-specialization`: profiles attach in `applyIslandProfiles()` (design D9).
+- [ ] 9.2 Coordinate with `add-island-specialization`: its colony rule needs at least three islands; check the 3-island archipelago once both are on `main` (design D9).
 - [ ] 9.3 Optional: show the player when a generated request fell back to the classic map.

@@ -29,7 +29,7 @@ Saves: `World` is `Codable` end to end. `terrainGrid`, `mapWidth`, `mapHeight`, 
 
 **Non-Goals:**
 
-- Per-island resource profiles (`add-island-specialization`). This change only leaves the hook (D9).
+- Per-island resource profiles and climate overrides (`add-island-specialization`, PR #439). D9 says how the two fit.
 - New terrain types, rivers, elevation or new art.
 - Generated maps for scenarios and campaign chapters (follow-up M3, not in this change's M1 or M2).
 - Moving town-center placement rules: the existing fair-start, grove and mine-site rules run unchanged on generated terrain.
@@ -181,7 +181,7 @@ return world
 
 Bounds: at most 8 attempts. Each attempt does one terrain build (O(S²)) and one run of the existing pipeline. The fallback is the classic map, which the existing sweeps prove fair (`scenario: every start is fair across seeds`), so generation always ends and every start is fair. The property test (D13) requires that no seed in its range falls back. A fallback in the field is a quality bug, not a fairness bug.
 
-Rivals: `seedRivals` seats `min(difficulty.rivalCount, islands − 1)` rivals, as today's `prefix` already does. Three islands on Hard give two rivals. The validator checks every town center whoever owns it, and the existing rule "start placement independent of difficulty" keeps positions the same whether rivals are on or off.
+Rivals: `seedRivals` takes a prefix of the other islands, so fewer islands seat fewer rivals. Today three islands on Hard give two rivals; `add-island-specialization` also keeps the colony island free, which leaves one. Generation must pass either way. The validator checks every town center whoever owns it, and the existing rule "start placement independent of difficulty" keeps positions the same whether rivals are on or off.
 
 ### D8. New Game dialog
 
@@ -211,11 +211,13 @@ This is not a significant visual change in the sense of `CLAUDE.md`: no new scre
 
 ### D9. Seam for island profiles
 
-`World.generate` gets one call, `world.applyIslandProfiles()`, after `world.islands` is set and before `seedTownCenters()`. It lives in `World+IslandProfiles.swift` and does nothing in this change. `add-island-specialization` fills it in: it may read `islands` (with `climate`) and change terrain on an island. It must not add or remove land, so the island list stays valid. Because the validator runs after the hook, a profile that breaks a fair start makes the attempt fail and retry like any other failure.
+`add-island-specialization` (PR #439) owns profiles. It adds `World.assignIslandProfiles()` in `World+IslandProfiles.swift`, called in `World.generate` after town centers, groves, mine sites and directives and before `seedRivals`. It reads the final terrain and the island list, may override the climate of the home and colony islands, and doesn't change terrain. This change adds no hook and no file of that name, so the two changes don't collide in either merge order.
 
-The hook runs for classic maps too. A profile that changes classic terrain changes the classic presets, so that change has to say so and rerun the classic sweeps.
+The seam is the island list. A generated map hands `World.generate` terrain whose `IslandDetector` list has exactly the requested islands, each with a climate from the existing default rule (bounding-box centre in the north half → temperate, otherwise tropical). Profiles then attach to those islands exactly as they do on a classic map. `IslandBlueprint` carries no climate, so the generator never decides one.
 
-Climate is not changed here. Generated islands get it from the existing `IslandDetector` rule (bounding-box centre in the north half → temperate, south half → tropical). `IslandBlueprint` carries no climate, so there is exactly one place that decides it.
+The validator (D7) runs on the world `World.generate` returns, so it runs after profiles are assigned. Because profiles don't change terrain, none of the seven checks depends on them. If a later profile rule does change terrain, it is covered by the same retry.
+
+If `add-island-specialization` merges first, the M1 implementer adds one test: a generated archipelago gets a profile on every island, and a colony island when it has at least three islands.
 
 ### D10. Rendering
 

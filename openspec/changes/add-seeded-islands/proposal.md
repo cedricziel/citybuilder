@@ -9,7 +9,7 @@ Every single-island game is played on the same 96×96 map, and the archipelago i
 - **Classic maps stay.** Today's two maps become the `classic` map style and keep their generators byte-for-byte. `World.newGame(layout:seed:)` without a map argument still builds them, so scenarios, campaign chapters, UI-test seeds, the title backdrop, the determinism fixture and every existing test keep their maps.
 - **New Game options.** In Sandbox mode the New Game dialog gets a **Map** menu picker (Classic, Small, Medium, Large) and, for an archipelago with a generated map, an **Islands** menu picker (3 to 7). Both use the dialog's existing `Picker` controls; no new screen. Scenario mode locks the map to Classic. The dialog now opens with a Medium map and a random seed, so a new game gets a new map. All new text has a German translation.
 - **Saves.** The world's terrain is already stored in the save, not regenerated, so existing saves load unchanged. A new `map` field records the settings; saves without it decode as Classic. No save version bump.
-- **Seam for island profiles.** Islands keep their climate from the existing default rule. World generation gets one named hook, called after islands are detected and before town centers are placed, where the separate `add-island-specialization` change attaches per-island resource profiles. Validation runs after that hook.
+- **Seam for island profiles.** Profiles belong to `add-island-specialization` (PR #439), which assigns them in `World.generate` after town centers are placed and before rivals are seated, and doesn't change terrain. This change adds no hook of its own: a generated map gives that step its island list, and the validator checks the finished world after it.
 
 ## Capabilities
 
@@ -19,7 +19,7 @@ None.
 
 ### Modified Capabilities
 
-- `world-terrain`: map style and size join the layout; seeded outlines and archipelago placement; validation with bounded retries and the classic fallback; the island-profile hook.
+- `world-terrain`: map style and size join the layout; seeded outlines and archipelago placement; validation with bounded retries and the classic fallback.
 - `platform-shells`: New Game offers map size and island count.
 - `persistence-save-load`: saves before seeded maps decode as Classic.
 - `fixed-point-math`: the determinism gate also covers a generated archipelago.
