@@ -95,6 +95,7 @@ public extension GameSession {
     func confirmPendingPlacement() {
         guard let pending = pendingPlacement, !refusesPlacement(pending.kind, at: pending.anchor) else { return }
         enqueue(.place(pending.kind, at: pending.anchor))
+        haptics.play(.placed)
         pendingPlacement = nil
     }
 

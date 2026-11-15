@@ -44,6 +44,7 @@ extension GameSession {
         guard let refusal = placementRefusal(kind, at: tile) else { return false }
         hud.showRejection(refusal.message(in: world), now: Date())
         UISounds.play(.reject)
+        haptics.play(.refused)
         return true
     }
 

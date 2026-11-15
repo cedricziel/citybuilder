@@ -33,6 +33,16 @@ extension GameSession {
         return state.banner
     }
 
+    /// The one haptic an event earns, if any: success for a monument or a won
+    /// scenario, a warning for a seasonal event's warning.
+    private func noteHaptics(for event: WorldEvent) {
+        switch event {
+        case .monumentCompleted, .scenarioWon: haptics.play(.success)
+        case .seasonalEventWarned: haptics.play(.warning)
+        default: break
+        }
+    }
+
     func noteBannerEvents(in events: [WorldEvent]) {
         // The tick's banners queue first, so a Fire! among them wins a free slot.
         isQueueingTickBanners = true
@@ -42,6 +52,7 @@ extension GameSession {
             noteDeficitHint(in: events)
         }
         for event in events {
+            noteHaptics(for: event)
             switch event {
             case let .historyEvent(history):
                 show(SessionBanner(title: GameText.string(history.titleKey), description: GameText.string(history.message)))

@@ -10843,6 +10843,78 @@
         }
       }
     },
+    "stats.tab.goods" : {
+      "comment" : "Statistics sheet tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goods"
+          }
+        }
+      }
+    },
+    "stats.tab.money" : {
+      "comment" : "Statistics sheet tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Money"
+          }
+        }
+      }
+    },
+    "stats.tab.people" : {
+      "comment" : "Statistics sheet tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevölkerung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People"
+          }
+        }
+      }
+    },
+    "stats.tab.rivals" : {
+      "comment" : "Statistics sheet tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rivalen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rivals"
+          }
+        }
+      }
+    },
     "stats.title" : {
       "comment" : "Statistics sheet title and button.",
       "extractionState" : "manual",
@@ -11307,6 +11379,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@. Not enough"
+          }
+        }
+      }
+    },
+    "tool.cost.hint" : {
+      "comment" : "Hint on a material chip in the tool strip: the first number is the stock, the second what the building needs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt zuerst den Vorrat der Insel, dann den Bedarf des Gebäudes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the island stock first, then what the building needs."
           }
         }
       }
