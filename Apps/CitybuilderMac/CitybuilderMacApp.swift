@@ -16,12 +16,15 @@ struct CitybuilderMacApp: App {
     private let fullscreenTracker: MacFullscreenTracker
     private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
     private let campaignProgress = CampaignProgressStore.make()
+    @Environment(\.scenePhase) private var scenePhase
+    private let autosave: AutosaveHub
     /// Stable slot used by Continue + pause-menu Save. Spec
     /// `add-title-screen-and-new-game` design D6.
     private static let defaultGameID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     init() {
         Language.adoptAtLaunch()
+        autosave = AutosaveHub(store: saveStore, gameID: Self.defaultGameID, isEnabled: AutosaveHub.isEnabledForLaunch)
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         self.fullscreenTracker = MacFullscreenTracker()
@@ -90,7 +93,7 @@ struct CitybuilderMacApp: App {
                     store: saveStore,
                     defaultGameID: Self.defaultGameID
                 ),
-                sessionFactory: { [audio] world in
+                sessionFactory: { [audio, autosave] world in
                     let session = GameSession(
                         world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
@@ -108,9 +111,10 @@ struct CitybuilderMacApp: App {
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
                     audio.beginSession()
+                    autosave.attach(to: session)
                     return session
                 },
-                pauseMenuFactory: { [saveStore] session in
+                pauseMenuFactory: { [saveStore, autosave] session in
                     // onQuitToTitle is injected by TitleScreenHost — spec
                     // `wire-quit-to-title` D2 (centralized in the host).
                     PauseMenuConfig(
@@ -118,7 +122,10 @@ struct CitybuilderMacApp: App {
                         onSaveGame: { [saveStore, session] in
                             try saveStore.save(session.world, gameID: Self.defaultGameID)
                         },
-                        onQuit: { MacAppTerminator.terminate() }
+                        onQuit: {
+                            autosave.stopForQuit()
+                            MacAppTerminator.terminate()
+                        }
                     )
                 },
                 campaignProgress: campaignProgress,
@@ -127,6 +134,12 @@ struct CitybuilderMacApp: App {
             .frame(minWidth: 900, minHeight: 600)
             .onAppear {
                 fullscreenTracker.applyLaunchFullscreenIfNeeded()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { autosave.appLeftForeground() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+                autosave.appLeftForeground()
             }
         }
         .commands {

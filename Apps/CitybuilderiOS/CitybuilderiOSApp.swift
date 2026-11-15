@@ -10,6 +10,8 @@ struct CitybuilderiOSApp: App {
     private let audio: AudioStack
     private let saveStore = SaveStore(baseDirectory: Self.uiTestSaveDirectory)
     private let campaignProgress = CampaignProgressStore.make()
+    @Environment(\.scenePhase) private var scenePhase
+    private let autosave: AutosaveHub
     /// Stable slot used by Continue + pause-menu Save. The title-screen
     /// flow reads this UUID when the player taps Continue; the in-game
     /// Save Game button writes to it. Spec
@@ -18,6 +20,7 @@ struct CitybuilderiOSApp: App {
 
     init() {
         Language.adoptAtLaunch()
+        autosave = AutosaveHub(store: saveStore, gameID: Self.defaultGameID, isEnabled: AutosaveHub.isEnabledForLaunch)
         let audio = AudioStack(cloudStore: UbiquitousAudioSettingsStore())
         self.audio = audio
         UISounds.sink = { [audio] sound in audio.playInterfaceSound(sound.rawValue) }
@@ -89,7 +92,7 @@ struct CitybuilderiOSApp: App {
                     store: saveStore,
                     defaultGameID: Self.defaultGameID
                 ),
-                sessionFactory: { [audio] world in
+                sessionFactory: { [audio, autosave] world in
                     let session = GameSession(
                         world: Self.uiTestWorld(replacing: world),
                         audioEventConsumer: { events in
@@ -107,6 +110,7 @@ struct CitybuilderiOSApp: App {
                     // Leaving the game silences its workshop loops.
                     session.onEnd = { audio.endSession() }
                     audio.beginSession()
+                    autosave.attach(to: session)
                     return session
                 },
                 pauseMenuFactory: { [saveStore] session in
@@ -123,6 +127,9 @@ struct CitybuilderiOSApp: App {
                 inGameSettings: { AudioSettingsSheet(audio: audio) },
                 titleSettings: { AudioSettingsSheet(audio: audio) }
             )
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { autosave.appLeftForeground() }
+            }
         }
     }
 }

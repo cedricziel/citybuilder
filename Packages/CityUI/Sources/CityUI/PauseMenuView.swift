@@ -41,6 +41,12 @@ public struct PauseMenuView: View {
                         }
                     }
             }
+            if let line = viewModel.session.autosaveLine() {
+                Text(line)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("pause.autosaved")
+            }
             Spacer(minLength: 0)
         }
         .frame(minWidth: 320, minHeight: 320)
