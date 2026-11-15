@@ -21,7 +21,7 @@ Loading SHALL reject a chapter whose goal names an unknown good, building, tech 
 #### Scenario: Built-in campaigns load
 
 - **WHEN** the game data loads
-- **THEN** it holds the campaigns The Long Chronicle with 6 chapters, The Merchant Sea with 5 and Hard Ground with 4
+- **THEN** it holds The Long Chronicle with 5 chapters, from First Fires to The Guild Charter, none of them coming later
 
 #### Scenario: Unknown good in a goal is rejected
 

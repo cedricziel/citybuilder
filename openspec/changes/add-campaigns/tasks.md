@@ -1,6 +1,6 @@
 ## 0. Gate
 
-- [ ] 0.1 Confirm visible-distribution M2 (#238) and the wool → cloth chain (#239) have merged. Rerun the baseline in design.md on the new main and update the chapter targets before starting M1. Open: the gate is about the chapter targets, which wait for #238 M2. The M1 mechanics (section 1) went ahead without it; the rerun belongs before chapters are tuned in M4.
+- [ ] 0.1 Confirm visible-distribution M2 (#238) and the wool → cloth chain (#239) have merged. Rerun the baseline in design.md on the new main and update the chapter targets before starting M1. Open: the gate is about the chapter targets, which wait for #238 M2. The M1 mechanics (section 1) went ahead without it; the rerun belongs before chapters are tuned in M4. The first Chronicle went ahead without the rerun too (design D14) and is tuned against today's main; rerun before the remaining chapters.
 - [x] 0.2 Claude Design canvas for the chapter select screen and the intro, ending and lost cards: today's New Game dialog and win sheet as the "before", 2–3 options, a recommendation, and the owner's go-ahead. Canvas: https://claude.ai/artifact/7RVf4CiyHoJpgyBgEa1Q35. Approved: chapter select C (split view) and cards B (sheet with a map header); see design D13.
 
 ## 1. M1 — Goals and lose conditions
@@ -42,14 +42,14 @@
 
 ## 4. M4 — Eleven chapters that need nothing new
 
-- [ ] 4.1 PlayerBot kits: signature, sea and trade (design D10), each with its own test.
+- [ ] 4.1 PlayerBot kits: signature, sea and trade (design D10), each with its own test. Open: the signature and sea kits exist (`PlayerBot+Chapters.swift`) and the chapter tests use them; the trade kit and tests of each kit alone are still to come.
 - [ ] 4.2 Chapter sweep harness behind `RIVAL_SWEEP=1`: the guided and naive bots, chapter seed +0…+9, Easy, Normal and Hard; prints a `CHAPTER_SWEEP` line per run.
-- [ ] 4.3 Author The Long Chronicle 1–6 in `campaigns.yaml`. Tune each against the gates and record the measured table in design D10.
+- [x] 4.3 Author The Long Chronicle 1–6 in `campaigns.yaml`. Tune each against the gates and record the measured table in design D10. Shipped as five chapters on today's rules (design D14), each won on Normal on its own seed with 1.3–2.3 years to spare; the table is in D14. Steam and Smoke and The Electric Age wait until merchants hold, and the D10 gates wait for the sweep harness (4.2).
 - [ ] 4.4 Author The Merchant Sea 1, 2 and 4, and tune them.
 - [ ] 4.5 Author The Merchant Sea 5 with its three rivals and its held "outgrow every rival" goal. Rival attitudes (#263) stay off, and the chapter has no rival-race loss. Tune it.
 - [ ] 4.6 Author Hard Ground 1, and tune it.
 - [ ] 4.7 Mark The Merchant Sea 3 and Hard Ground 2, 3 and 4 as coming later in the pack.
-- [ ] 4.8 Write the card text into the pack, and check that each text is 320 characters or fewer.
+- [x] 4.8 Write the card text into the pack, and check that each text is 320 characters or fewer. Done for The Long Chronicle, in English and German; the other campaigns follow with their chapters.
 - [ ] 4.9 Add the "Guided play wins every chapter" and "Hard stays hard" sweep tests for these chapters.
 - [ ] 4.10 Refactor under a green bar.
 

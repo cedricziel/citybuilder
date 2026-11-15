@@ -272,6 +272,39 @@ The canvas is https://claude.ai/artifact/7RVf4CiyHoJpgyBgEa1Q35. It shows today'
 
 *Alternatives:* a road of chapters drawn on the map (select B) needs a hand-placed path per campaign and hides each locked chapter's key behind a tap. Parchment cards (cards A) would spend the in-world surface on long menu text. Glass cards over the live map (cards C) make 320 characters hard to read over busy art.
 
+### D14. The first Chronicle ships on today's rules
+
+Decided on 2026-11-14, without the owner, while they were away: The Long Chronicle ships now, in five chapters, instead of waiting for the economy rework (#238, #239) that D9 and the Risks section waited for. The Campaigns screen had nothing to start, and the chapters can be retuned as data when the economy changes (D1). The D9 table stays the target for the full six-chapter Chronicle.
+
+Rules for this version:
+
+- No goal needs merchants who hold, steam or electricity. Merchants appear only as bonus goals.
+- Every chapter uses existing goal kinds, lose conditions and screens. The engine gained no new mechanics.
+- Chapter 3 of D9, The Guild Charter, is split. Its mining and tools half becomes Ore and Anvil, chapter 3. Its guild hall becomes the closing chapter, chapter 5. Steam and Smoke and The Electric Age wait until merchants hold.
+- Bonus goals that the bot misses are kept as laurels for players: the monument, merchants, the Renaissance.
+
+| # | Chapter | Map, age | Start (Normal) | Goals | Bonus | Lose | Teaches |
+|---|---|---|---|---|---|---|---|
+| 1 | **First Fires** | single island, seed 101; Antiquity | $1,000; 6 wood, 5 planks, 2 food | own 3 houses; 24 residents; net income ≥ $60 a season; earn $60 from trade | treasury ≥ $1,200; own 2 foresters | deadline 497 BC (−496) | food, houses, tax, the market |
+| 2 | **Bread and Stone** | single island, seed 102; Antiquity; Feudal Order closed | $1,000; 8 wood, 6 planks, 4 food | 40 residents; 20 bread in store; 10 citizens | complete the monument; research Scholarship | deadline 496 BC (−495) | the bread chain, citizens |
+| 3 | **Ore and Anvil** | single island, seed 103; Medieval; Seafaring closed | $1,200; 10 wood, 8 planks, 4 food | research Metallurgy; own a toolsmith; 10 tools in store; 30 citizens | own a guild hall; 10 merchants | deadline 1205 | research, the tools chain |
+| 4 | **Across the Water** | archipelago, seed 104; Medieval, 1 rival | $1,500; 10 wood, 10 planks, 6 food | research Seafaring; own a port and a shipyard; earn $400 from trade; 30 citizens | outgrow every rival; treasury ≥ $2,000 | deadline 1205 | ports, ships, trade beside a rival |
+| 5 | **The Guild Charter** | single island, seed 105; Medieval | $1,200; 10 wood, 10 planks, 6 food | own a guild hall; 100 residents; 50 citizens; treasury ≥ $1,500 | 10 merchants; reach the Renaissance | deadline 1205 | the age's signature, a large town, saving up |
+
+Bankruptcy loses every chapter. Easy deadlines fall later, as D5 and `Chapter.loseConditions(for:)` set. Rewards: banner "Hearth", decor "Founder's stone", banner "Anvil", map preset "Across the Water", banner "Guild key".
+
+**Measured on Normal, on the chapter seed, Northern European** (`CampaignChapterBotTests`, a turn every 50 ticks, 2,400 ticks a year). Each chapter is played by the bot its `sweep` names: guide steps, the market and the careful mid-game order, except First Fires, which has no mid-game order. Across the Water adds the sea kit and The Guild Charter the signature kit (`PlayerBot+Chapters.swift`).
+
+| Chapter | Won at tick | Won after | Margin to the deadline |
+|---|---|---|---|
+| First Fires | 3,450 | 1.4 years | 3,750 ticks, 1.6 years |
+| Bread and Stone | 6,250 | 2.6 years | 3,350 ticks, 1.4 years |
+| Ore and Anvil | 8,850 | 3.7 years | 3,150 ticks, 1.3 years |
+| Across the Water | 8,500 | 3.5 years | 3,500 ticks, 1.5 years |
+| The Guild Charter | 6,520 | 2.7 years | 5,480 ticks, 2.3 years |
+
+These are single runs, not the D10 gates. The ten-seed sweep on every difficulty (task 4.2) is still to come. Until it runs, Hard is unmeasured: its money is ×0.7 and its stock ×0.5.
+
 ## Baseline measurements
 
 The first values in D9 come from a scratch sweep on main at 3936db41. It is not committed. The PlayerBot played guided, with the market, for 10 years: the careful mid-game kit for Medieval starts, and no mid-game kit for Antiquity starts. Seeds 0–3, single island and archipelago; the Easy archipelago arms are left out of the table. Each cell shows residents / merchants, the age, and stored bread / tools.
@@ -298,7 +331,7 @@ What this means for the chapters:
 
 ## Risks / Trade-offs
 
-- **[Risk]** The economy rework moves every number again after the chapters are tuned. → Chapters are data (D1), and the sweep runs weekly. A chapter that falls out of its gates fails the sweep and gets a data retune, not a redesign. Implementation waits for #238 M2 and #239 (#237).
+- **[Risk]** The economy rework moves every number again after the chapters are tuned. → Chapters are data (D1), and the sweep runs weekly. A chapter that falls out of its gates fails the sweep and gets a data retune, not a redesign. The first Chronicle did not wait for #238 M2 and #239 (D14). It is retuned as data once they land.
 - **[Risk]** Fixed seeds make a chapter feel scripted on a replay. → History events and rival choices vary with the difficulty. Map presets let a player who wants variety take the map into the sandbox.
 - **[Risk]** Bot kits grow into a second AI that is harder to maintain than the rival AI. → Kits stay in test support, reuse `RivalTownPlan` and `RivalAI` where they can, and each one is a few dozen lines with its own test.
 - **[Risk]** Required features (orders #255, winter #259, events #257, handcarts #238 M3) slip, and four chapters wait. → Those chapters ship in the last milestone. Until then the pack marks them as coming later, and unlocking skips them (`campaigns` / Chapter progression). Winning Merchant Sea 2 opens Merchant Sea 4, and winning Hard Ground 1 opens nothing more until a later chapter ships. So The Long Chronicle is complete from M4, The Merchant Sea is playable with a gap, and Hard Ground has one chapter until its features land.
